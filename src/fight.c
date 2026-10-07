@@ -2639,6 +2639,11 @@ void kill_quest_completion_check(struct char_data *killer, struct char_data *ch)
   if (!ch)
     return;
 
+  /* Match XP attribution: a nearby pet owner's party earns kill credit. */
+  if (IS_PET(killer) && !IS_NPC(killer->master) &&
+      IN_ROOM(killer->master) == IN_ROOM(killer))
+    killer = killer->master;
+
   /* check for killer first */
   autoquest_trigger_check(killer, ch, NULL, 0, AQ_MOB_KILL);
   autoquest_trigger_check(killer, ch, NULL, 0, AQ_MOB_MULTI_KILL);

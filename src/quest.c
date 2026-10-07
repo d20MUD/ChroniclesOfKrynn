@@ -880,6 +880,44 @@ void generic_complete_quest(struct char_data *ch, int index)
   }
 }
 
+/* One collected or returned quest item advances the same objective for nearby
+ * party members. Rewards and subsequent quest steps remain per character. */
+static void complete_group_item_objective(struct char_data *ch, int index)
+{
+  qst_vnum quest_vnum = GET_QUEST(ch, index);
+  int quest_type = GET_QUEST_TYPE(ch, index);
+  int member_index;
+  struct char_data *member;
+  struct iterator_data it;
+
+  if (quest_vnum == NOTHING || GET_QUEST_COUNTER(ch, index) <= 0)
+    return;
+
+  if (GROUP(ch))
+  {
+    for (member = merge_iterator(&it, GROUP(ch)->members); member;
+         member = next_in_list(&it))
+    {
+      if (member == ch || IS_NPC(member) || IN_ROOM(member) != IN_ROOM(ch))
+        continue;
+
+      for (member_index = 0; member_index < MAX_CURRENT_QUESTS; member_index++)
+      {
+        if (GET_QUEST(member, member_index) == quest_vnum &&
+            GET_QUEST_TYPE(member, member_index) == quest_type &&
+            GET_QUEST_COUNTER(member, member_index) > 0)
+        {
+          generic_complete_quest(member, member_index);
+          break;
+        }
+      }
+    }
+    remove_iterator(&it);
+  }
+
+  generic_complete_quest(ch, index);
+}
+
 void autoquest_trigger_check(struct char_data *ch, struct char_data *vict, struct obj_data *object,
                              int variable, int type)
 {
@@ -931,8 +969,8 @@ void autoquest_trigger_check(struct char_data *ch, struct char_data *vict, struc
       break;
 
     case AQ_OBJ_FIND:
-      if (QST_TARGET(rnum) == GET_OBJ_VNUM(object))
-        generic_complete_quest(ch, index);
+      if (object && QST_TARGET(rnum) == GET_OBJ_VNUM(object))
+        complete_group_item_objective(ch, index);
       break;
 
     case AQ_HOUSE_FIND:
@@ -1028,7 +1066,7 @@ void autoquest_trigger_check(struct char_data *ch, struct char_data *vict, struc
       if (IS_NPC(vict) && (GET_MOB_VNUM(vict) == QST_RETURNMOB(rnum)))
         if (object && (GET_OBJ_VNUM(object) == QST_TARGET(rnum)))
         {
-          generic_complete_quest(ch, index);
+          complete_group_item_objective(ch, index);
 
           /* we are now removing the object once returned so the mob isn't killed and robbed -zusuk */
           obj = get_obj_in_list_num(real_object(QST_TARGET(rnum)), vict->carrying);
