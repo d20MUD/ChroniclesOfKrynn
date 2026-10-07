@@ -7696,6 +7696,8 @@ ACMD(do_store)
 {
   struct obj_data *obj = NULL, *next_obj = NULL;
   int i = 0;
+  int first_spell_slot = 1, last_spell_slot = 3;
+  bool has_spell = FALSE;
   char arg1[MEDIUM_STRING] = {'\0'}, arg2[MEDIUM_STRING] = {'\0'};
 
   two_arguments(argument, arg1, sizeof(arg1), arg2, sizeof(arg2));
@@ -7733,8 +7735,33 @@ ACMD(do_store)
       send_to_char(ch, "You don't seem to be carrying anything by that description.\r\n");
       return;
     }
-    if (GET_OBJ_VAL(obj, i) <= 0 || GET_OBJ_VAL(obj, i) >= NUM_SPELLS ||
-        !strcmp(spell_info[GET_OBJ_VAL(obj, i)].name, "!UNUSED!"))
+    if (!IS_OBJ_CONSUMABLE(obj))
+    {
+      send_to_char(ch, "You can only store potions, scrolls, wands or staves.\r\n");
+      return;
+    }
+
+    /* Value 0 is caster level. Scroll/potion spells occupy values 1-3;
+     * wands and staves store their spell in value 3. */
+    if (GET_OBJ_TYPE(obj) == ITEM_WAND || GET_OBJ_TYPE(obj) == ITEM_STAFF)
+      first_spell_slot = 3;
+
+    for (i = first_spell_slot; i <= last_spell_slot; i++)
+    {
+      int spellnum = GET_OBJ_VAL(obj, i);
+
+      if (spellnum <= 0)
+        continue; /* Empty spell slot. */
+
+      if (spellnum >= MAX_SPELLS || is_unused_spell(spellnum))
+      {
+        send_to_char(ch, "The spell on that item is not valid for storing.\r\n");
+        return;
+      }
+      has_spell = TRUE;
+    }
+
+    if (!has_spell)
     {
       send_to_char(ch, "The spell on that item is not valid for storing.\r\n");
       return;
