@@ -2935,6 +2935,9 @@ static int handle_obj(struct obj_data *temp, struct char_data *ch, int locate,
     return FALSE;
 
   auto_equip(ch, temp, locate);
+  /* Equipment restrictions can leave a saved worn item in inventory. */
+  if (locate > 0 && temp->worn_by != ch)
+    locate = LOC_INVENTORY;
 
   /* What to do with a new loaded item:
    * If there's a list with <locate> less than 1 below this: (equipped items

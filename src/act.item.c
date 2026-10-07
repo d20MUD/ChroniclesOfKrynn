@@ -5715,6 +5715,12 @@ void perform_wear(struct char_data *ch, struct obj_data *obj, int where)
   if (!wear_otrigger(obj, ch, where) || (obj->carried_by != ch))
     return;
 
+  if (violates_only_equip_one(ch, obj))
+  {
+    act("You can only equip one $p at a time.", FALSE, ch, obj, 0, TO_CHAR);
+    return;
+  }
+
   wear_message(ch, obj, where);
   obj_from_char(obj);
   equip_char(ch, obj, where);

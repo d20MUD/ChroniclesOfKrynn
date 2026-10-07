@@ -2109,6 +2109,27 @@ int invalid_prof(struct char_data *ch, struct obj_data *obj)
   return TRUE;
 }
 
+/* Restrict copies of the same prototype, not unrelated flagged items. */
+bool violates_only_equip_one(struct char_data *ch, struct obj_data *obj)
+{
+  int pos;
+  struct obj_data *equipped;
+
+  if (!ch || !obj || GET_OBJ_RNUM(obj) == NOTHING)
+    return FALSE;
+
+  for (pos = 0; pos < NUM_WEARS; pos++)
+  {
+    equipped = GET_EQ(ch, pos);
+    if (equipped && equipped != obj && GET_OBJ_RNUM(equipped) == GET_OBJ_RNUM(obj) &&
+        (OBJ_FLAGGED(obj, ITEM_ONLY_EQUIP_ONE) ||
+         OBJ_FLAGGED(equipped, ITEM_ONLY_EQUIP_ONE)))
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
 void equip_char(struct char_data *ch, struct obj_data *obj, int pos)
 {
   int j;
@@ -2136,6 +2157,12 @@ void equip_char(struct char_data *ch, struct obj_data *obj, int pos)
   if (IN_ROOM(obj) != NOWHERE)
   {
     log("SYSERR: EQUIP: Obj is in_room when equip.");
+    return;
+  }
+  if (violates_only_equip_one(ch, obj))
+  {
+    act("You can only equip one $p at a time.", FALSE, ch, obj, 0, TO_CHAR);
+    obj_to_char(obj, ch);
     return;
   }
   /*  Changed this - proficiencies are handles in the places where they apply penalties.
