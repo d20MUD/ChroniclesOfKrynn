@@ -5606,7 +5606,9 @@ void assign_feats(void)
         "Grants greater invisibility for 3 rounds when backstabbing a marked target. Will not work "
         "if already invisible.");
   feato(FEAT_SWIFT_DEATH, "swift death", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
-        "Backstabs use a swift action.", "Backstabs use a swift action.");
+        "Backstabs use a swift action. Assassination marks are ready immediately.",
+        "Backstabs use a swift action. Removes the three-round study time when marking a "
+        "target for assassination.");
   feato(FEAT_ANGEL_OF_DEATH, "angel of death", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
         "Backstabs have a +3 to attack roll and +10 to damage.  Stacks with true death. Also "
         "removes requirement to wait 3 rounds to mark a target.",

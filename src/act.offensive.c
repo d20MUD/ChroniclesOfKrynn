@@ -13843,7 +13843,8 @@ ACMD(do_mark)
   }
 
   GET_MARK(ch) = vict;
-  GET_MARK_ROUNDS(ch) = 0;
+  /* Swift Death removes the study time for an assassin's selected target. */
+  GET_MARK_ROUNDS(ch) = is_assassin && HAS_FEAT(ch, FEAT_SWIFT_DEATH) ? 3 : 0;
 
   /* Inquisitors piggyback on the mark system for Studied Target */
   if (is_inquisitor)
@@ -13862,7 +13863,10 @@ ACMD(do_mark)
   }
   else
   {
-    act("You begin to mark $N for assassination.", FALSE, ch, 0, vict, TO_CHAR);
+    if (HAS_FEAT(ch, FEAT_SWIFT_DEATH))
+      act("You instantly mark $N for assassination.", FALSE, ch, 0, vict, TO_CHAR);
+    else
+      act("You begin to mark $N for assassination.", FALSE, ch, 0, vict, TO_CHAR);
     if (is_inquisitor)
       act("$n studies $N carefully, marking a new quarry.", FALSE, ch, 0, vict, TO_NOTVICT);
   }
