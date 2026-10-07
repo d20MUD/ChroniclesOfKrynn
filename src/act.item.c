@@ -7073,6 +7073,31 @@ void auc_send_to_all(char *messg, bool buyer)
   }
 }
 
+/* Keep apply's weapon-first syntax for both oils and poisons. */
+ACMD(do_apply)
+{
+  char weapon_arg[MAX_INPUT_LENGTH], coating_arg[MAX_INPUT_LENGTH];
+  char poison_args[2 * MAX_INPUT_LENGTH + 2];
+  struct obj_data *coating;
+
+  two_arguments(argument, weapon_arg, sizeof(weapon_arg), coating_arg, sizeof(coating_arg));
+  if (!*weapon_arg || !*coating_arg)
+  {
+    send_to_char(ch, "Usage: apply <weapon|ammo|primary|offhand|claws> <poison|oil>\r\n");
+    return;
+  }
+
+  coating = get_obj_in_list_vis(ch, coating_arg, NULL, ch->carrying);
+  if (coating && GET_OBJ_TYPE(coating) == ITEM_POISON)
+  {
+    snprintf(poison_args, sizeof(poison_args), "%s %s", coating_arg, weapon_arg);
+    do_applypoison(ch, poison_args, cmd, subcmd);
+    return;
+  }
+
+  do_applyoil(ch, argument, cmd, subcmd);
+}
+
 ACMD(do_applyoil)
 {
   struct obj_data *oil = NULL, *weapon = NULL;

@@ -209,6 +209,7 @@ cpp_extern const struct command_info cmd_info[] = {
     {"adjure", "adjure", POS_RESTING, do_gen_preparation, 0, SCMD_ADJURE, FALSE, ACTION_NONE, {0, 0}, NULL},
     {"autoblast", "autoblast", POS_FIGHTING, do_gen_tog, 1, SCMD_AUTO_BLAST, FALSE, ACTION_NONE, {1, 0}, can_eldritch_blast},
     {"autofire", "autofire", POS_FIGHTING, do_autofire, 1, 0, FALSE, ACTION_NONE, {0, 0}, NULL},
+    {"apply", "apply", POS_STANDING, do_apply, 1, 0, FALSE, ACTION_STANDARD | ACTION_MOVE, {6, 6}, NULL},
     {"applyoil", "applyoil", POS_STANDING, do_applyoil, 1, 0, FALSE, ACTION_STANDARD | ACTION_MOVE, {6, 6}, NULL},
     {"applypoison", "applypoison", POS_STANDING, do_applypoison, 1, 0, FALSE, ACTION_STANDARD | ACTION_MOVE, {6, 6}, NULL},
     {"abundantstep", "abundantstep", POS_STANDING, do_abundantstep, 1, 0, FALSE, ACTION_MOVE, {0, 6}, NULL},
