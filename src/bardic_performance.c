@@ -1054,7 +1054,11 @@ int bardic_performance_engine(struct char_data *ch, int performance_num)
   }
 
   /* find an instrument */
-  instrument = GET_EQ(ch, WEAR_HOLD_1);
+  instrument = GET_EQ(ch, WEAR_INSTRUMENT);
+  if (!instrument || GET_OBJ_TYPE(instrument) != ITEM_INSTRUMENT)
+  {
+    instrument = GET_EQ(ch, WEAR_HOLD_1);
+  }
   if (!instrument || GET_OBJ_TYPE(instrument) != ITEM_INSTRUMENT)
   {
     instrument = GET_EQ(ch, WEAR_HOLD_2);
