@@ -19457,6 +19457,15 @@ bool can_purchase_perk(struct char_data *ch, int perk_id, int class_id, char *er
     }
   }
 
+  /* Master Assassin requires Assassinate II as well as maxed Sneak Attack III. */
+  if (perk_id == PERK_ROGUE_MASTER_ASSASSIN &&
+      get_perk_rank(ch, PERK_ROGUE_ASSASSINATE_2, perk_class) < 1)
+  {
+    if (error_msg)
+      snprintf(error_msg, error_len, "You must first purchase: Assassinate II");
+    return FALSE;
+  }
+
   /* Special prerequisite check for Last Stand - requires both Toughness I and Resilience at max */
   if (perk_id == PERK_FIGHTER_LAST_STAND)
   {
