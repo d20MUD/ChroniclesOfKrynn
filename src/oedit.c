@@ -1900,7 +1900,7 @@ static void oedit_disp_trap_menu(struct descriptor_data *d)
   clear_screen(d);
   if (!trap)
   {
-    write_to_output(d, "Object Trap Menu\r\n"
+    write_to_output(d, "\tnObject Trap Menu\r\n"
                        "No trap attached to this object.\r\n\r\n"
                        "1) Create default trap\r\n"
                        "0) Back\r\n"
@@ -1910,7 +1910,7 @@ static void oedit_disp_trap_menu(struct descriptor_data *d)
   }
 
   write_to_output(d,
-                  "Object Trap Menu\r\n"
+                  "\tnObject Trap Menu\r\n"
                   "1) Remove trap          : Yes\r\n"
                   "2) Trigger type         : %s\r\n"
                   "3) Trap type            : %s (%d)\r\n"
@@ -2117,8 +2117,8 @@ static void oedit_disp_menu(struct descriptor_data *d)
     snprintf(buf5, sizeof(buf5), "Not Set");
   }
 
-  write_to_output(d, "%sY%s) Trap Setup             : %s%s%s\r\nEnter choice : ", grn, nrm, cyn,
-                  buf5, nrm);
+  write_to_output(d, "%sY%s) Trap Setup             : %s%s\tn\r\nEnter choice : ", grn, nrm, cyn,
+                  buf5);
   OLC_MODE(d) = OEDIT_MAIN_MENU;
 }
 

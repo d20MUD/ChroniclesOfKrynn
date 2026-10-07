@@ -2311,7 +2311,8 @@ bool can_see_hidden(struct char_data *ch, struct char_data *hider)
     return TRUE;
 
   /* do spot check here */
-  bool can_see = FALSE, challenge = d20(ch), dc = (d20(hider) + 10);
+  bool can_see = FALSE;
+  int challenge = d20(ch), dc = (d20(hider) + 10);
 
   // challenger bonuses/penalty (ch)
   if (!IS_NPC(ch))
