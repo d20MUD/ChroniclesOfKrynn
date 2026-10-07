@@ -24684,7 +24684,7 @@ int get_master_of_elements_override(struct char_data *ch, int dam_type)
   if (!ch || IS_NPC(ch))
     return dam_type;
 
-  if (!HAS_FEAT(ch, PERK_WIZARD_MASTER_OF_ELEMENTS))
+  if (!has_perk(ch, PERK_WIZARD_MASTER_OF_ELEMENTS))
     return dam_type;
 
   preferred_type = GET_MASTER_OF_ELEMENTS_TYPE(ch);
