@@ -2611,6 +2611,9 @@ int crafting_mote_by_bonus_location(int location, int specific, int bonus_type)
   case APPLY_AC_NEW:
     switch (bonus_type)
     {
+    case BONUS_TYPE_UNIVERSAL:
+    case BONUS_TYPE_ENHANCEMENT:
+      return ARMOR_ENHANCEMENT_MOTE;
     case BONUS_TYPE_DEFLECTION:
       return CRAFTING_MOTE_FIRE;
     case BONUS_TYPE_NATURALARMOR:
@@ -10171,6 +10174,17 @@ void show_mote_bonuses(struct char_data *ch, int mote)
       }
       break;
     case APPLY_AC_NEW:
+      if (crafting_mote_by_bonus_location(i, 0, BONUS_TYPE_UNIVERSAL) == mote)
+      {
+        send_to_char(ch, "%s (Universal/Enhancement), ", apply_types[i]);
+        length += strlen(apply_types[i]) + 26;
+        if (length > 80)
+        {
+          send_to_char(ch, "\r\n");
+          length = 0;
+        }
+        found = TRUE;
+      }
       if (crafting_mote_by_bonus_location(i, 0, BONUS_TYPE_DEFLECTION) == mote)
       {
         send_to_char(ch, "%s (Deflection), ", apply_types[i]);
