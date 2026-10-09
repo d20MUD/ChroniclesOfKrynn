@@ -5997,7 +5997,7 @@ ACMD(do_dazzling_display)
   for (tch = world[IN_ROOM(ch)].people; tch; tch = next_tch)
   {
     next_tch = tch->next_in_room;
-    if (AFF_FLAGGED(ch, AFF_DAZZLED))
+    if (AFF_FLAGGED(tch, AFF_DAZZLED))
       continue;
     if (!aoeOK(ch, tch, ABILITY_DAZZLING_DISPLAY))
       continue;
@@ -6013,7 +6013,7 @@ ACMD(do_dazzling_display)
     af.modifier = 0;
     af.duration = 1 + ((challenge - roll) / 5);
     SET_BIT_AR(af.bitvector, AFF_DAZZLED);
-    affect_to_char(ch, &af);
+    affect_to_char(tch, &af);
     act("You are dazzled by $n's fearsome weapon display.", false, ch, 0, tch, TO_VICT);
     act("$N is dazzled by your fearsome weapon display.", false, ch, 0, tch, TO_CHAR);
     act("$N is dazzled by $n's fearsome weapon display.", false, ch, 0, tch, TO_NOTVICT);
