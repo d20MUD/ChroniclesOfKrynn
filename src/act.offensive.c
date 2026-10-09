@@ -2788,7 +2788,7 @@ void perform_assist(struct char_data *ch, struct char_data *helpee)
 {
   struct char_data *opponent = NULL;
 
-  if (!ch)
+  if (!ch || !helpee)
     return;
 
   /* hit same opponent as person you are helping */
@@ -2804,11 +2804,10 @@ void perform_assist(struct char_data *ch, struct char_data *helpee)
   else if (!CAN_SEE(ch, opponent))
     act("You can't see who is fighting $M!", FALSE, ch, 0, helpee, TO_CHAR);
   /* prevent accidental pkill */
-  else if (!IS_NPC(opponent) || (IS_NPC(opponent) && opponent->master && !IS_NPC(opponent->master)))
-  {
-    if (!pvp_ok(ch, opponent, true))
-      return;
-  }
+  else if ((!IS_NPC(ch) || (ch->master && !IS_NPC(ch->master))) &&
+           (!IS_NPC(opponent) || (opponent->master && !IS_NPC(opponent->master))) &&
+           !pvp_ok(ch, opponent, true))
+    return;
   else if (!MOB_CAN_FIGHT(ch))
   {
     send_to_char(ch, "You can't fight!\r\n");
