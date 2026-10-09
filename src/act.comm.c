@@ -546,7 +546,7 @@ ACMD(do_tell)
   {
     send_to_char(ch, "%s", CONFIG_NOPERSON);
   }
-  else if (CONFIG_USE_INTRO_SYSTEM && !IS_NPC(vict) && GET_LEVEL(ch) < LVL_IMMORT &&
+  else if (CONFIG_USE_INTRO_SYSTEM && !IS_NPC(ch) && !IS_NPC(vict) && GET_LEVEL(ch) < LVL_IMMORT &&
            !has_intro(ch, vict))
   {
     send_to_char(ch, "You don't know anyone by that name.\r\n");
