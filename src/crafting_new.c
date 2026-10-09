@@ -13479,6 +13479,20 @@ int get_golem_repair_material_type(int golem_type)
   }
 }
 
+/* Pet saves preserve the prototype, but not flags assigned during crafting. */
+void restore_crafted_golem_identity(struct char_data *golem)
+{
+  if (!golem || !IS_NPC(golem))
+    return;
+
+  if (get_golem_type_from_vnum(GET_MOB_VNUM(golem)) < 0 ||
+      get_golem_size_from_vnum(GET_MOB_VNUM(golem)) < 0)
+    return;
+
+  SET_BIT_AR(MOB_FLAGS(golem), MOB_GOLEM);
+  GET_REAL_RACE(golem) = RACE_TYPE_CONSTRUCT;
+}
+
 /**
  * Check if a player can repair a golem
  * Returns true if player has enough materials and meets requirements
@@ -13488,6 +13502,8 @@ bool can_repair_golem(struct char_data *ch, struct char_data *golem, int *materi
 {
   int golem_vnum, golem_type, golem_size;
   int missing_hp, repair_percent;
+
+  restore_crafted_golem_identity(golem);
 
   if (!ch || !golem || !IS_NPC(golem) || !MOB_FLAGGED(golem, MOB_GOLEM))
     return false;

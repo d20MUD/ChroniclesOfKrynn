@@ -5889,6 +5889,7 @@ void load_char_pets(struct char_data *ch)
     SET_BIT_AR(AFF_FLAGS(mob), AFF_CHARM);
     GET_LEVEL(mob) = atoi(row[1]);
     autoroll_mob(mob, TRUE, TRUE);
+    restore_crafted_golem_identity(mob);
     if (GET_MOB_VNUM(mob) == 10) // MOB_CLONE define from magic.c
     {
       mob->player.name = strdup(GET_NAME(ch));

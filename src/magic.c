@@ -11238,11 +11238,11 @@ void mag_masses(int level, struct char_data *ch, struct obj_data *obj, int spell
 
 int aoeOK(struct char_data *ch, struct char_data *tch, int spellnum)
 {
-  // immorts that are nohas
-  if (!IS_NPC(tch) && GET_LEVEL(tch) >= LVL_IMMORT && PRF_FLAGGED(tch, PRF_NOHASSLE))
+  if (!ch || !tch)
     return 0;
 
-  if (!tch)
+  // immorts that are nohas
+  if (!IS_NPC(tch) && GET_LEVEL(tch) >= LVL_IMMORT && PRF_FLAGGED(tch, PRF_NOHASSLE))
     return 0;
 
   // rare reverse where we want to always AOE.
@@ -11337,7 +11337,8 @@ int aoeOK(struct char_data *ch, struct char_data *tch, int spellnum)
       return 0;
 
     // charmee shouldn't hit pc's
-    if (IS_NPC(ch) && AFF_FLAGGED(ch, AFF_CHARM) && !IS_NPC(ch->master) && !IS_NPC(tch))
+    if (IS_NPC(ch) && AFF_FLAGGED(ch, AFF_CHARM) &&
+        (!ch->master || !IS_NPC(ch->master)) && !IS_NPC(tch))
       return 0;
   }
 
@@ -11400,10 +11401,15 @@ void mag_areas(int level, struct char_data *ch, struct obj_data *obj, int spelln
   struct char_data *tch = NULL, *next_tch = NULL;
   const char *to_char = NULL, *to_room = NULL;
   int isEffect = FALSE, is_eff_and_dam = FALSE, is_uneffect = FALSE;
-  int temp_meta = 0, temp_class = GET_CASTING_CLASS(ch);
+  int temp_meta = 0, temp_class;
 
   if (ch == NULL)
     return;
+
+  if (IN_ROOM(ch) == NOWHERE || IN_ROOM(ch) < 0 || IN_ROOM(ch) > top_of_world)
+    return;
+
+  temp_class = GET_CASTING_CLASS(ch);
 
   /* to add spells just add the message here plus an entry in mag_damage for
    * the damaging part of the spell.   */

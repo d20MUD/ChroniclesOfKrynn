@@ -412,6 +412,7 @@ bool has_crafting_station_in_room(struct char_data *ch, int skill);
 void recover_golem_materials(struct char_data *ch, struct char_data *golem, int recovery_percent);
 int get_golem_type_from_vnum(int vnum);
 int get_golem_size_from_vnum(int vnum);
+void restore_crafted_golem_identity(struct char_data *golem);
 int get_golem_repair_material_cost(int golem_type, int golem_size);
 int get_golem_repair_dc(int golem_type, int golem_size);
 int get_golem_repair_material_type(int golem_type);

@@ -2910,6 +2910,9 @@ ACMD(do_golemrepair)
     return;
   }
 
+  /* Recover crafting-only flags for pets loaded by older builds. */
+  restore_crafted_golem_identity(golem);
+
   /* Check if this is actually a golem */
   if (!MOB_FLAGGED(golem, MOB_GOLEM))
   {
