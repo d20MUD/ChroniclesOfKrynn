@@ -10805,7 +10805,8 @@ void mag_affects_full(int level, struct char_data *ch, struct char_data *victim,
     apply_absolute_geas_debuffs(ch, victim, GET_PSIONIC_LEVEL(ch));
   }
 
-  if (HAS_FEAT(ch, FEAT_DRAGON_LINK) && is_riding_dragon_mount(ch) && !recursive_call)
+  if (HAS_FEAT(ch, FEAT_DRAGON_LINK) && is_riding_dragon_mount(ch) && !recursive_call &&
+      ch == victim && !spell_info[spellnum].violent)
   {
     mag_affects_full(level, (ch), RIDING(ch), wpn, spellnum, savetype, casttype, metamagic, true);
   }

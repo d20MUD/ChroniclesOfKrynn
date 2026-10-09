@@ -6234,7 +6234,7 @@ void mag_assign_spells(void)
   spello(SPELL_LITANY_OF_DEFENSE, "litany of defense", 30, 15, 1, POS_FIGHTING, TAR_CHAR_ROOM,
          FALSE, MAG_AFFECTS, "The litany of defense expires.", 4, 8, TRANSMUTATION, FALSE);
   spello(SPELL_LITANY_OF_RIGHTEOUSNESS, "litany of righteousness", 30, 15, 1, POS_FIGHTING,
-         TAR_CHAR_ROOM, FALSE, MAG_AFFECTS, "The litany of righteousness expires.", 4, 8, EVOCATION,
+         TAR_CHAR_ROOM | TAR_SELF_ONLY, FALSE, MAG_AFFECTS, "The litany of righteousness expires.", 4, 8, EVOCATION,
          FALSE);
 
   spello(ABILITY_AFFECT_BANE_WEAPON, "bane weapon", 0, 0, 0, POS_FIGHTING, TAR_IGNORE, FALSE,
