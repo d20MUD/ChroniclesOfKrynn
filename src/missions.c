@@ -970,6 +970,9 @@ room_rnum get_random_road_room(int type)
       tot_rooms++;
   }
 
+  if (tot_rooms == 0)
+    return NOWHERE;
+
   rand_room = dice(1, tot_rooms);
 
   for (cnt = 0; cnt <= top_of_world; cnt++)

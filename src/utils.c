@@ -11357,6 +11357,17 @@ bool is_road_room(room_rnum room, int type)
   if (GET_ROOM_ZONE(room) == -1)
     return false;
 
+  /* Hunting roads need not belong to a zone listed on the area grid. */
+  if (type == 2)
+  {
+    if (ZONE_FLAGGED(GET_ROOM_ZONE(room), ZONE_CLOSED))
+      return false;
+    if (world[room].sector_type == SECT_ROAD_EW ||
+        world[room].sector_type == SECT_ROAD_INT ||
+        world[room].sector_type == SECT_ROAD_NS)
+      return true;
+  }
+
   if (ZONE_FLAGGED(GET_ROOM_ZONE(room), ZONE_MISSIONS) && type == 1)
     return true;
   else if (ZONE_FLAGGED(GET_ROOM_ZONE(room), ZONE_HUNTS) && type == 2)

@@ -537,6 +537,60 @@ int get_hunt_room(int start, int x, int y)
 }
 
 #if defined(CAMPAIGN_DL)
+/* Check exit connectivity, independent of tracking flags and closed doors. */
+static bool hunt_room_has_path(room_rnum source, room_rnum target)
+{
+  room_rnum *queue, room, next_room;
+  bool *visited, reachable = false;
+  int direction, head = 0, tail = 0;
+
+  if (source < 0 || source > top_of_world || target < 0 || target > top_of_world)
+    return false;
+
+  CREATE(queue, room_rnum, top_of_world + 1);
+  CREATE(visited, bool, top_of_world + 1);
+  queue[tail++] = source;
+  visited[source] = true;
+
+  while (head < tail)
+  {
+    room = queue[head++];
+    if (room == target)
+      reachable = true;
+    if (reachable)
+      break;
+
+    for (direction = 0; direction < DIR_COUNT; direction++)
+    {
+      if (!world[room].dir_option[direction])
+        continue;
+      next_room = world[room].dir_option[direction]->to_room;
+      if (next_room < 0 || next_room > top_of_world || visited[next_room])
+        continue;
+      visited[next_room] = true;
+      queue[tail++] = next_room;
+    }
+  }
+
+  free(visited);
+  free(queue);
+  return reachable;
+}
+
+static bool hunt_room_reaches_city(room_rnum room)
+{
+  const room_vnum city_vnums[] = {6530, 2200, 1317};
+  room_rnum city;
+  int i;
+
+  for (i = 0; i < 3; i++)
+  {
+    city = real_room(city_vnums[i]);
+    if (hunt_room_has_path(room, city) && hunt_room_has_path(city, room))
+      return true;
+  }
+  return false;
+}
 
 void select_hunt_coords(int which_hunt)
 {
@@ -548,8 +602,20 @@ void select_hunt_coords(int which_hunt)
     which_hunt = 0;
 
 #if defined(CAMPAIGN_DL)
-  if ((room = get_random_road_room(2)) != NOWHERE)
-    active_hunts[which_hunt][1] = world[room].number;
+  int attempt;
+
+  for (attempt = 0; attempt < 1024; attempt++)
+  {
+    room = get_random_road_room(2);
+    if (room == NOWHERE)
+      break;
+    if (hunt_room_reaches_city(room))
+    {
+      active_hunts[which_hunt][1] = world[room].number;
+      return;
+    }
+  }
+  active_hunts[which_hunt][0] = HUNT_TYPE_NONE;
 #else
 
   int x = 0, y = 0, start = 0;

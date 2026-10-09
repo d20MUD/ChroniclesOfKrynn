@@ -186,7 +186,7 @@ void assign_psionic_powers(void)
   psiono(PSIONIC_MIND_TRAP, "mind trap", 5, true, 1, 100, TELEPATHY, TAR_CHAR_ROOM | TAR_SELF_ONLY,
          false, MAG_AFFECTS, "Your mind trap triggers!", 3);
   psiono(PSIONIC_PSIONIC_BLAST, "psionic blast", 5, true, 2, 100, TELEPATHY,
-         TAR_CHAR_ROOM | TAR_NOT_SELF, true, MAG_MASSES,
+         TAR_IGNORE, true, MAG_MASSES,
          "The stunning affect of being hit by a psionic blast expires.", 3);
   // psiono(PSIONIC_FORCED_SHARED_PAIN, "forced shared pain", 5, true, PSYCHOMETABOLISM, TAR_CHAR_ROOM | TAR_NOT_SELF, true, MAG_AFFECTS, "You're no longer being forced to share pain.", 3);
   psiono(PSIONIC_SHARPENED_EDGE, "sharpened edge", 5, false, 0, 0, METACREATIVITY, TAR_CHAR_ROOM,
