@@ -442,24 +442,31 @@ void check_hunt_room(room_rnum room)
 
 void create_hunt_mob(room_rnum room, int which_hunt)
 {
-  if (room == NOWHERE)
+  if (room == NOWHERE || which_hunt <= HUNT_TYPE_NONE || which_hunt >= NUM_HUNT_TYPES)
     return;
 
-  struct char_data *mob = read_mobile(HUNTS_MOB_VNUM, VIRTUAL);
+  struct char_data *mob = NULL, *existing = NULL;
   char mob_descs[1000];
   int i = 0;
-
-  if (!mob)
-  {
-    // send_to_char(ch, "Mob load error.\r\n");
-    return;
-  }
 
   if (is_hunt_mob_in_room(room, which_hunt))
   {
     send_to_room(room, "\tYYou've come across a hunt target!\tn\r\n");
     return;
   }
+
+  /* A fleeing target still belongs to this hunt. Older reset targets have a cooldown. */
+  for (existing = character_list; existing; existing = existing->next)
+  {
+    if (IS_NPC(existing) && MOB_FLAGGED(existing, MOB_HUNTS_TARGET) &&
+        existing->mob_specials.hunt_type == which_hunt &&
+        existing->mob_specials.hunt_cooldown < 0)
+      return;
+  }
+
+  mob = read_mobile(HUNTS_MOB_VNUM, VIRTUAL);
+  if (!mob)
+    return;
 
   // set descriptions
   mob->player.name = strdup(hunt_table[which_hunt].name);
