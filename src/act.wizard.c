@@ -806,6 +806,29 @@ ACMD(do_teleport)
   }
 }
 
+static int vnum_quest(const char *search, struct char_data *ch)
+{
+  qst_rnum nr;
+  int found = 0;
+  int length = strlen(search);
+  const char *title;
+
+  for (nr = 0; nr < total_quests; nr++)
+  {
+    if (!QST_NAME(nr))
+      continue;
+    for (title = QST_NAME(nr); *title; title++)
+    {
+      if (!strn_cmp(title, search, length))
+      {
+        send_to_char(ch, "%3d. [%5d] %s\r\n", ++found, QST_NUM(nr), QST_NAME(nr));
+        break;
+      }
+    }
+  }
+  return found;
+}
+
 ACMD(do_vnum)
 {
   char buf[MAX_INPUT_LENGTH] = {'\0'}, buf2[MAX_INPUT_LENGTH] = {'\0'};
@@ -815,7 +838,7 @@ ACMD(do_vnum)
 
   if (!*buf || !*buf2)
   {
-    send_to_char(ch, "Usage: vnum { obj | mob | room | trig } <name>\r\n");
+    send_to_char(ch, "Usage: vnum { obj | mob | room | trig | q } <name>\r\n");
     return;
   }
   if (is_abbrev(buf, "mob") && (good_arg = 1))
@@ -834,8 +857,12 @@ ACMD(do_vnum)
     if (!vnum_trig(buf2, ch))
       send_to_char(ch, "No triggers by that name.\r\n");
 
+  if (is_abbrev(buf, "quest") && (good_arg = 1))
+    if (!vnum_quest(buf2, ch))
+      send_to_char(ch, "No quests with that text in the title.\r\n");
+
   if (!good_arg)
-    send_to_char(ch, "Usage: vnum { obj | mob | room | trig } <name>\r\n");
+    send_to_char(ch, "Usage: vnum { obj | mob | room | trig | q } <name>\r\n");
 }
 
 #define ZOCMD zone_table[zrnum].cmd[subcmd]

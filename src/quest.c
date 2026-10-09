@@ -562,11 +562,34 @@ void remove_completed_quest(struct char_data *ch, qst_vnum vnum)
   }
 }
 
+/* Successful dialogue resolves its fallback without granting fallback rewards. */
+static qst_vnum quest_completion_next(struct char_data *ch, qst_rnum rnum)
+{
+  qst_vnum next = QST_NEXT(rnum);
+  qst_vnum alternative = QST_DIAGN(rnum);
+  qst_rnum alternative_rnum;
+
+  if (QST_TYPE(rnum) != AQ_DIALOGUE || is_dialogue_quest_failed(ch, QST_NUM(rnum)) ||
+      alternative <= 0 || alternative == QST_NUM(rnum))
+    return next;
+
+  alternative_rnum = real_quest(alternative);
+  if (alternative_rnum == NOTHING)
+    return next;
+
+  add_completed_quest(ch, alternative);
+  if (QST_NEXT(alternative_rnum) != NOTHING)
+    next = QST_NEXT(alternative_rnum);
+
+  return next;
+}
+
 /* called when a quest is completed! */
 void complete_quest(struct char_data *ch, int index)
 {
   qst_rnum rnum = -1;
   qst_vnum vnum = GET_QUEST(ch, index);
+  qst_vnum next_vnum;
   struct obj_data *new_obj = NULL;
   int happy_qp = 0, happy_gold = 0, happy_exp = 0;
   struct descriptor_data *pt = NULL;
@@ -814,14 +837,16 @@ void complete_quest(struct char_data *ch, int index)
       (IS_SET(QST_FLAGS(rnum), AQ_REPEATABLE) && !is_complete(ch, GET_QUEST(ch, index))))
     add_completed_quest(ch, vnum);
 
+  next_vnum = quest_completion_next(ch, rnum);
+
   /* clear the quest data from ch, clean slate */
   clear_quest(ch, index);
 
   /* does this quest have a next step built in? */
-  if ((real_quest(QST_NEXT(rnum)) != NOTHING) && (QST_NEXT(rnum) != vnum) &&
-      !is_complete(ch, QST_NEXT(rnum)))
+  if ((real_quest(next_vnum) != NOTHING) && (next_vnum != vnum) &&
+      !is_complete(ch, next_vnum))
   {
-    rnum = real_quest(QST_NEXT(rnum));
+    rnum = real_quest(next_vnum);
     /* we will just use the slot we completed to insert this quest */
     set_quest(ch, rnum, index);
     send_to_char(ch, "\tW***The next stage of your quest awaits:\tn\r\n\r\n%s\r\n", QST_INFO(rnum));

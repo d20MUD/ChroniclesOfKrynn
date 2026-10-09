@@ -12,6 +12,9 @@ AM_CFLAGS = -std=gnu90 @MYFLAGS@
 # Main program
 bin_PROGRAMS = circle
 
+# Keep core structure layouts consistent even when dependency tracking is disabled.
+$(circle_OBJECTS) $(cutest_OBJECTS): $(srcdir)/src/structs.h
+
 # Source files for the main program
 circle_SOURCES = \
 	src/account.c \
