@@ -8867,6 +8867,61 @@ void recite_scroll(struct char_data *ch, char *argument)
   save_char(ch, 0);
 }
 
+/* Stored wands use target-first syntax, with optional spell-name quotes.
+ * Also accept the familiar cast-style form: 'spell name' target. */
+static bool parse_wand_arguments(char *argument, char *target, char *spell)
+{
+  char input[MEDIUM_STRING];
+  char *start, *end;
+  char quote;
+  size_t len;
+
+  target[0] = spell[0] = '\0';
+  if (!argument || strlen(argument) >= sizeof(input))
+    return FALSE;
+
+  snprintf(input, sizeof(input), "%s", argument);
+  len = strlen(input);
+  while (len > 0 && isspace((unsigned char)input[len - 1]))
+    input[--len] = '\0';
+  start = input;
+  skip_spaces(&start);
+
+  if (*start == '\'' || *start == '"')
+  {
+    quote = *start++;
+    end = strchr(start, quote);
+    if (!end)
+      return FALSE;
+    *end++ = '\0';
+    snprintf(spell, MEDIUM_STRING, "%s", start);
+    skip_spaces(&end);
+    snprintf(target, MEDIUM_STRING, "%s", end);
+  }
+  else
+  {
+    half_chop(start, target, spell);
+    len = strlen(spell);
+    if (len > 0 && (spell[0] == '\'' || spell[0] == '"'))
+    {
+      if (len < 2 || spell[len - 1] != spell[0])
+        return FALSE;
+      spell[len - 1] = '\0';
+      memmove(spell, spell + 1, len - 1);
+    }
+  }
+
+  /* Trim trailing whitespace without altering spaces inside spell names. */
+  len = strlen(target);
+  while (len > 0 && isspace((unsigned char)target[len - 1]))
+    target[--len] = '\0';
+  len = strlen(spell);
+  while (len > 0 && isspace((unsigned char)spell[len - 1]))
+    spell[--len] = '\0';
+
+  return *target && *spell;
+}
+
 void use_wand(struct char_data *ch, char *argument)
 {
   int spellnum = 0, i = 0, spell_level = 99, metamagic = 0, charges_needed = 1;
@@ -8886,23 +8941,17 @@ void use_wand(struct char_data *ch, char *argument)
     }
   }
 
-  half_chop(temp_argument, arg1, arg2);
-
-  if (!*arg1)
+  if (!parse_wand_arguments(temp_argument, arg1, arg2))
   {
-    send_to_char(ch, "You need to specify the person you wish to use the wand on.\r\n");
-    return;
-  }
-
-  if (!*arg2)
-  {
-    send_to_char(ch, "You need to specify the spell name of the wand you wish to use.\r\n");
+    send_to_char(ch, "Usage: use <target> <spell name>\r\n"
+                     "Examples: use self mirror image; use goblin 'magic missile'\r\n"
+                     "You can also use: use 'magic missile' goblin\r\n");
     return;
   }
 
   spellnum = find_skill_num(arg2);
 
-  if ((spellnum < 1) || (spellnum > MAX_SPELLS))
+  if ((spellnum < 1) || (spellnum >= MAX_SPELLS))
   {
     send_to_char(ch, "That is not a valid spell name.\r\n");
     return;
@@ -8923,7 +8972,7 @@ void use_wand(struct char_data *ch, char *argument)
     else
     {
       send_to_char(ch, "There doesn't seem to be anyone here by that description.\r\n");
-      send_to_char(ch, "Syntax: recite (target) (spell name)\r\n");
+      send_to_char(ch, "Syntax: use (target) (spell name)\r\n");
       return;
     }
   }
@@ -8988,7 +9037,7 @@ void use_wand(struct char_data *ch, char *argument)
   act("$n points a wand at YOU!", TRUE, ch, 0, vict, TO_VICT);
   act("$n points a wand at $N.", TRUE, ch, 0, vict, TO_NOTVICT);
 
-  call_magic(ch, vict, NULL, spellnum, metamagic, spell_level, CAST_WAND);
+  call_magic(ch, vict, obj, spellnum, metamagic, spell_level, CAST_WAND);
   USE_SWIFT_ACTION(ch);
 
   save_char(ch, 0);

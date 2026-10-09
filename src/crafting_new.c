@@ -93,7 +93,7 @@ int materials_sort_info[NUM_CRAFT_MATS];
   "craft shortdesc (short desc string)\r\n"                                                        \
   "craft roomdesc (room desc string)\r\n"                                                          \
   "craft extradesc (extra desc string\r\n"                                                         \
-  "craft bonuses (slot) (bonus location) (bonus type) (modifier) (specific)\r\n"                   \
+  "craft bonuses (slot) (bonus location) (bonus type) (modifier) [specific]\r\n"                   \
   "craft enhancement (enhancement modifier\r\n"                                                    \
   "craft instrument (quality|effectiveness|breakability) (amount)\r\n"                             \
   "craft materials (add|remove) (material type)\r\n"                                               \
@@ -342,13 +342,15 @@ static void show_craft_tutorial(struct char_data *ch)
    "-- misc        rings, necklaces, earrings, cloaks, belts, etc.\r\n")
 #define NEWCRAFT_CREATE_BONUSES_NOARG                                                              \
   "You need to specify all of the bonus information:\r\n"                                          \
-  "Eg. craft bonuses (slot) (bonus location) (bonus type) (modifier) (specific)\r\n"               \
+  "Usage: craft bonuses (slot) (bonus location) (bonus type) (modifier) [specific]\r\n"               \
   "-- slot needs to be 1-6 as an item can only have 6 bonuses total\r\n"                           \
   "-- bonus location is what the bonus affects. Eg. strength, hit-points, reflex-save, etc. Type " \
   "'applies' for a list.\r\n"                                                                      \
   "-- bonus type is either enhancement or universal. See HELP CRAFTING for more info\r\n"          \
   "-- modifier is how much the bonus will affect that associated stat\r\n"                         \
-  "-- specific is only required for feat, skill, and spell slot bonus types\r\n"                   \
+  "-- specific is only required for skill and spell slot bonus locations\r\n"                   \
+  "-- grant-feat crafting is not supported\r\n"                                                  \
+  "Eg. craft bonuses 1 armor-class universal 1\r\n"                                               \
   "\r\n"                                                                                           \
   "To reset a bonus slot type: craft bonus [slot] reset\r\n"
 
@@ -2255,11 +2257,19 @@ void set_crafting_bonuses(struct char_data *ch, const char *argument)
 
   if (!*arg1 || !*arg2 || !*arg3 || !*arg4)
   {
+    send_to_char(ch, "Specify the bonus slot, location, type, and modifier.\r\n"
+                     "The specific argument is optional except for skills and spell slots.\r\n");
     send_to_char(ch, "%s", NEWCRAFT_CREATE_BONUSES_NOARG);
     return;
   }
 
   // determine bonus location
+
+  if (is_abbrev(arg2, apply_types[APPLY_FEAT]))
+  {
+    send_to_char(ch, "Grant-feat bonuses cannot currently be crafted.\r\n");
+    return;
+  }
 
   if (GET_CRAFT(ch).affected[slot].location != APPLY_NONE)
   {
@@ -2293,6 +2303,13 @@ void set_crafting_bonuses(struct char_data *ch, const char *argument)
   }
 
   location = i;
+
+  if (does_craft_apply_type_have_specific_value(location) && !*arg5)
+  {
+    send_to_char(ch, "This bonus requires a specific skill or spellcasting class as the fifth "
+                     "argument.\r\n");
+    return;
+  }
 
   wear_loc = get_craft_wear_loc(ch);
 
