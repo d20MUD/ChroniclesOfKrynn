@@ -5718,7 +5718,7 @@ void save_char_pets(struct char_data *ch)
     if (valid_pet_name(tch->player.name))
     {
       *end2++ = '\'';
-      end2 += mysql_real_escape_string(conn, end2, GET_NAME(tch), strlen(GET_NAME(tch)));
+      end2 += mysql_real_escape_string(conn, end2, tch->player.name, strlen(tch->player.name));
       *end2++ = '\'';
     }
     else
@@ -5902,9 +5902,15 @@ void load_char_pets(struct char_data *ch)
       mob->player.name = strdup(GET_NAME(ch));
       mob->player.short_descr = strdup(GET_NAME(ch));
     }
-    if (strlen(row[11]) > 0)
+    if (row[11] && *row[11] && strcmp(row[11], mob->player.name))
     {
-      snprintf(desc1, sizeof(desc1), "%s", row[11]);
+      /* Keep prototype aliases, including for old saves that stored the short description. */
+      if (!strncmp(row[11], mob->player.name, strlen(mob->player.name)) &&
+          (row[11][strlen(mob->player.name)] == '\0' ||
+           isspace((unsigned char)row[11][strlen(mob->player.name)])))
+        snprintf(desc1, sizeof(desc1), "%s", row[11]);
+      else
+        snprintf(desc1, sizeof(desc1), "%s %s", mob->player.name, row[11]);
       mob->player.name = strdup(desc1);
     }
     if (strlen(row[12]) > 0)
