@@ -164,6 +164,7 @@ void quest_timeout(struct char_data *ch, int index);
 void check_timed_quests(void);
 void quest_walkto(struct char_data *ch, char argument[MAX_STRING_LENGTH]);
 SPECIAL_DECL(questmaster);
+bool is_questmaster_mob(struct char_data *mob);
 ACMD_DECL(do_quest);
 ACMD_DECL(do_questcomplete);
 ACMD_DECL(do_questline);

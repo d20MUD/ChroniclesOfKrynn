@@ -1082,7 +1082,7 @@ static void list_one_char(struct char_data *i, struct char_data *ch)
 
     if (IS_NPC(i) && (i->mob_specials.quest))
       send_to_char(ch, "\tn(\tR!\tn) ");
-    if (IS_NPC(i) && (GET_MOB_SPEC(i) == questmaster))
+    if (is_questmaster_mob(i))
       send_to_char(ch, "\tn(\tY!\tn) ");
     if (IS_NPC(i) && is_quest_target_mob(ch, i))
       send_to_char(ch, "\tG(Quest)\tn ");

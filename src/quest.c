@@ -3556,6 +3556,24 @@ ACMD(do_aqref)
   return;
 }
 
+/* Shopkeepers may wrap the questmaster procedure as a secondary function. */
+bool is_questmaster_mob(struct char_data *mob)
+{
+  qst_rnum rnum;
+
+  if (!mob || !IS_NPC(mob))
+    return FALSE;
+
+  if (GET_MOB_SPEC(mob) == questmaster)
+    return TRUE;
+
+  for (rnum = 0; rnum < total_quests; rnum++)
+    if (QST_MASTER(rnum) == GET_MOB_VNUM(mob))
+      return TRUE;
+
+  return FALSE;
+}
+
 /* here is the mobile-spec proc for the quest master */
 SPECIAL(questmaster)
 {
