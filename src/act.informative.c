@@ -1532,6 +1532,12 @@ void look_at_room(struct char_data *ch, int ignore_brief)
   if (target_room == NOWHERE)
     return;
 
+  if (ROOM_FLAGGED(target_room, ROOM_FOG) && GET_LEVEL(ch) < LVL_IMMORT)
+  {
+    send_to_char(ch, "A thick fog obscures the room and its contents.\r\n");
+    return;
+  }
+
   /* Check if room is dark (magical darkness or normal darkness) */
   if (ROOM_FLAGGED(target_room, ROOM_MAGICDARK) || IS_DARK(target_room))
     room_dark = TRUE;
@@ -9620,6 +9626,13 @@ ACMD(do_scan)
           !IS_SET(world[scanned_room].dir_option[door]->exit_info, EX_CLOSED))
       {
         scanned_room = world[scanned_room].dir_option[door]->to_room;
+
+        if (ROOM_FLAGGED(scanned_room, ROOM_FOG) && GET_LEVEL(ch) < LVL_IMMORT)
+        {
+          send_to_char(ch, "%s: A thick fog obscures your view.\r\n", dirs[door]);
+          found = TRUE;
+          break;
+        }
 
         if (IS_DARK(scanned_room) && !CAN_SEE_IN_DARK(ch))
         {

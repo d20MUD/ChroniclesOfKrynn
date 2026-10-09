@@ -266,16 +266,18 @@ if (ROOM_FLAGGED(room_rnum, ROOM_FLAGNAME)) {
 
 ### ROOM_FOG (Index: 27)
 **Effect:** Creates fog that obscures vision and limits visibility.
+- Select **28) Fog** in the room editor; the code index is zero-based.
 - Hides room descriptions and contents from mortal characters
 - Limits automap functionality
 - Reduces scan range and visibility
 - Staff (LVL_IMMORT+) can see through fog
-- Can be removed by gust of wind spell
+- Gust of Wind clears this flag and temporary fog/cloud room effects.
+- Wind Wall also clears this flag in the recipient's room while retaining its protective effect.
 
 **Code References:**
 - `act.informative.c:1199, 1259, 1447, 1550, 1572, 8458, 8617, 8977` - Vision restrictions
 - `asciimap.c:760` - Automap limitation
-- `spells.c:515, 519` - Gust of wind removes fog
+- `magic.c` - `mag_room` (Gust of Wind) and `mag_affects_full` (Wind Wall) clear the fog flag
 - `utils.c:917, 3699` - Weather and vision checks
 
 ### ROOM_NOTRACK (Index: 6)

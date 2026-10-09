@@ -237,6 +237,10 @@ bool can_see_map(struct char_data *ch)
   else if ((CONFIG_MAP == MAP_IMM_ONLY) && (GET_LEVEL(ch) < LVL_IMMORT))
     return FALSE;
 
+  if (IN_ROOM(ch) != NOWHERE && GET_LEVEL(ch) < LVL_IMMORT &&
+      ROOM_FLAGGED(IN_ROOM(ch), ROOM_FOG))
+    return FALSE;
+
   return TRUE;
 }
 
@@ -259,6 +263,10 @@ static void MapArea(room_rnum room, struct char_data *ch, int x, int y, int min,
     map[x][y] = SECT(room);
 
   if ((x < min) || (y < min) || (x > max) || (y > max))
+    return;
+
+  /* Fog hides the exits beyond this room from mortal map viewers. */
+  if (GET_LEVEL(ch) < LVL_IMMORT && ROOM_FLAGGED(room, ROOM_FOG))
     return;
 
   /* Check for exits */
@@ -430,6 +438,10 @@ const char *get_map_string(struct char_data *ch, room_vnum target_room)
   int size, centre, x, y, min, max;
   int ew_size = 0, ns_size = 0;
   bool worldmap;
+
+  if (!can_see_map(ch) ||
+      (GET_LEVEL(ch) < LVL_IMMORT && ROOM_FLAGGED(target_room, ROOM_FOG)))
+    return "";
 
   worldmap = show_worldmap(ch);
 
@@ -923,6 +935,12 @@ ACMD(do_map)
   int radius;
   bool mortal;
 
+  if (GET_LEVEL(ch) < LVL_IMMORT && ROOM_FLAGGED(IN_ROOM(ch), ROOM_FOG))
+  {
+    send_to_char(ch, "The fog in this room prevents you from seeing the map.\r\n");
+    return;
+  }
+
   if (!can_see_map(ch))
   {
     send_to_char(ch, "Sorry, the map is disabled!\r\n");
@@ -941,13 +959,6 @@ ACMD(do_map)
   else if (AFF_FLAGGED(ch, AFF_BLIND) && GET_LEVEL(ch) < LVL_IMMORT && !has_blindsense(ch))
   {
     send_to_char(ch, "You can't see the map while blind!\r\n");
-    return;
-  }
-  else if (GET_LEVEL(ch) < LVL_IMMORT && ROOM_FLAGGED(IN_ROOM(ch), ROOM_FOG))
-  {
-    send_to_char(
-        ch,
-        "THe fog in this room prevents you from seeing beyond your immediate surroundings!\r\n");
     return;
   }
 

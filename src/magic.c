@@ -9318,6 +9318,11 @@ void mag_affects_full(int level, struct char_data *ch, struct char_data *victim,
     break;
 
   case SPELL_WIND_WALL:
+    if (ROOM_FLAGGED(IN_ROOM(victim), ROOM_FOG))
+    {
+      REMOVE_BIT_AR(ROOM_FLAGS(IN_ROOM(victim)), ROOM_FOG);
+      send_to_room(IN_ROOM(victim), "The wall of wind disperses the fog.\r\n");
+    }
     af[0].duration = level;
     SET_BIT_AR(af[0].bitvector, AFF_WIND_WALL);
     to_vict = "You are surrounded by a swirling wall of wind.";
@@ -14975,6 +14980,13 @@ void mag_room(int level, struct char_data *ch, struct obj_data *obj, int spellnu
     struct raff_node *raff, *next_raff;
     struct char_data *tch, *next_tch;
     bool cleared_something = FALSE;
+
+    /* Builder-set fog is separate from temporary room spell effects. */
+    if (ROOM_FLAGGED(IN_ROOM(ch), ROOM_FOG))
+    {
+      REMOVE_BIT_AR(ROOM_FLAGS(IN_ROOM(ch)), ROOM_FOG);
+      cleared_something = TRUE;
+    }
 
     /* Remove fog-related room affections */
     for (raff = raff_list; raff; raff = next_raff)
