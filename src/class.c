@@ -9022,6 +9022,7 @@ void load_class_list(void)
   feat_assignment(CLASS_ALCHEMIST, FEAT_POISON_RESIST, Y, 5, Y);
   feat_assignment(CLASS_ALCHEMIST, FEAT_BOMBS, Y, 5, Y);
   /* level 6 class feats */
+  feat_assignment(CLASS_ALCHEMIST, FEAT_APPLY_POISON, Y, 6, Y);
   feat_assignment(CLASS_ALCHEMIST, FEAT_SWIFT_POISONING, Y, 6, Y);
   feat_assignment(CLASS_ALCHEMIST, FEAT_ALCHEMICAL_DISCOVERY, Y, 6, Y);
   /* level 7 class feats */
@@ -9037,7 +9038,6 @@ void load_class_list(void)
   /* level 11 class feats */
   feat_assignment(CLASS_ALCHEMIST, FEAT_BOMBS, Y, 11, Y);
   /* level 12 class feats */
-  feat_assignment(CLASS_ALCHEMIST, FEAT_APPLY_POISON, Y, 12, Y);
   feat_assignment(CLASS_ALCHEMIST, FEAT_ALCHEMICAL_DISCOVERY, Y, 12, Y);
   /* level 13 class feats */
   feat_assignment(CLASS_ALCHEMIST, FEAT_BOMBS, Y, 13, Y);

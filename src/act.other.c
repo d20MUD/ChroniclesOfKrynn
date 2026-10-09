@@ -1335,7 +1335,7 @@ ACMD(do_applypoison)
 
   two_arguments(argument, arg1, sizeof(arg1), arg2, sizeof(arg2));
 
-  if (!HAS_FEAT(ch, FEAT_APPLY_POISON))
+  if (!HAS_FEAT(ch, FEAT_APPLY_POISON) && !HAS_FEAT(ch, FEAT_SWIFT_POISONING))
   {
     send_to_char(ch, "You do not know how!\r\n");
     return;
