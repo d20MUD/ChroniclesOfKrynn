@@ -1110,7 +1110,7 @@ cpp_extern const struct command_info cmd_info[] = {
     {"unaffect", "unaffect", POS_DEAD, do_wizutil, LVL_STAFF, SCMD_UNAFFECT, TRUE, ACTION_NONE, {0, 0}, NULL},
     {"uncommune", "uncommune", POS_RECLINING, do_consign_to_oblivion, 0, SCMD_UNCOMMUNE, FALSE, ACTION_NONE, {0, 0}, NULL},
     {"unconjure", "unconjure", POS_RECLINING, do_consign_to_oblivion, 0, SCMD_UNCONJURE, FALSE, ACTION_NONE, {0, 0}, NULL},
-    {"undeath", "undeath", POS_FIGHTING, do_touch_of_undeath, 0, 0, FALSE, ACTION_SWIFT, {0, 0}, NULL},
+    {"undeath", "undeath", POS_FIGHTING, do_touch_of_undeath, 0, 0, FALSE, ACTION_STANDARD, {0, 0}, NULL},
     {"unsheath", "unshe", POS_SITTING, do_unsheath, 1, 0, FALSE, ACTION_NONE, {0, 6}, NULL},
     {"unstore", "unstore", POS_FIGHTING, do_unstore, 1, 0, FALSE, ACTION_MOVE, {0, 0}, NULL},
     {"unstablemutagen", "unstablemutagen", POS_RECLINING, do_unstablemutagen, 1, 0, FALSE, ACTION_NONE, {0, 0}, NULL},

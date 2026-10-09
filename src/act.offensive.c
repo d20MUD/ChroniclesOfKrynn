@@ -13498,6 +13498,9 @@ ACMD(do_touch_of_undeath)
   if (!pvp_ok(ch, vict, true))
     return;
 
+  /* Attempting the touch costs an action even when the target avoids it. */
+  USE_STANDARD_ACTION(ch);
+
   if (!attack_roll(ch, vict, ATTACK_TYPE_PRIMARY, TRUE, 0))
   {
     act("You reach out to touch $N with your undead arm, but $E avoids you.", FALSE, ch, 0, vict,
@@ -13518,9 +13521,7 @@ ACMD(do_touch_of_undeath)
   call_magic(ch, vict, 0, spellnum, 0, compute_arcane_level(ch), CASTING_TYPE_ARCANE);
 
   if (!IS_NPC(ch))
-    start_daily_use_cooldown(ch, FEAT_TOUCH_OF_CORRUPTION);
-
-  USE_STANDARD_ACTION(ch);
+    start_daily_use_cooldown(ch, FEAT_TOUCH_OF_UNDEATH);
 }
 
 void apply_blackguard_cruelty(struct char_data *ch, struct char_data *vict, char *cruelty)
