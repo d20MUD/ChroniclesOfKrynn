@@ -39,6 +39,7 @@
 #include "spec_procs.h" /* for is_wearing() */
 #include "evolutions.h"
 #include "perks.h"
+#include "hunts.h"
 
 /* externs */
 extern char cast_arg2[MAX_INPUT_LENGTH];
@@ -6437,7 +6438,6 @@ struct breath_weapon_data
   int dam;
   int dam_type;
   int spellnum;
-  bool is_morphed;
 };
 
 /* Callback for breath weapon AoE damage */
@@ -6448,10 +6448,7 @@ static int breath_weapon_callback(struct char_data *ch, struct char_data *tch, v
   if (process_iron_golem_immunity(ch, tch, breath->dam_type, breath->dam))
     return 0;
 
-  if (breath->is_morphed)
-    damage(ch, tch, breath->dam, breath->spellnum, breath->dam_type, FALSE);
-  else
-    damage(ch, tch, breath->dam, SPELL_FIRE_BREATHE, DAM_FIRE, FALSE);
+  damage(ch, tch, breath->dam, breath->spellnum, breath->dam_type, FALSE);
 
   return 1;
 }
@@ -6507,6 +6504,33 @@ ACMD(do_breathe)
     }
   }
 
+  else if (IS_NPC(ch) && MOB_FLAGGED(ch, MOB_HUNTS_TARGET) &&
+           ch->mob_specials.hunt_type >= 0 && ch->mob_specials.hunt_type < NUM_HUNT_TYPES)
+  {
+    int hunt_type = ch->mob_specials.hunt_type;
+
+    if (hunt_table[hunt_type].abilities[HUNT_ABIL_FROST_BREATH])
+    {
+      dam_type = DAM_COLD;
+      spellnum = SPELL_FROST_BREATHE;
+    }
+    else if (hunt_table[hunt_type].abilities[HUNT_ABIL_ACID_BREATH])
+    {
+      dam_type = DAM_ACID;
+      spellnum = SPELL_ACID_BREATHE;
+    }
+    else if (hunt_table[hunt_type].abilities[HUNT_ABIL_POISON_BREATH])
+    {
+      dam_type = DAM_POISON;
+      spellnum = SPELL_POISON_BREATHE;
+    }
+    else if (hunt_table[hunt_type].abilities[HUNT_ABIL_LIGHTNING_BREATH])
+    {
+      dam_type = DAM_ELECTRIC;
+      spellnum = SPELL_LIGHTNING_BREATHE;
+    }
+  }
+
   send_to_char(ch, "You exhale breathing out %s!\r\n", damtypes[dam_type]);
   snprintf(buf, sizeof(buf), "$n exhales breathing %s!", damtypes[dam_type]);
   act(buf, FALSE, ch, 0, 0, TO_ROOM);
@@ -6519,9 +6543,7 @@ ACMD(do_breathe)
   breath_data.dam = dam;
   breath_data.dam_type = dam_type;
   breath_data.spellnum = spellnum;
-  breath_data.is_morphed = IS_MORPHED(ch);
-
-  aoe_effect(ch, SPELL_FIRE_BREATHE, breath_weapon_callback, &breath_data);
+  aoe_effect(ch, spellnum, breath_weapon_callback, &breath_data);
 
   USE_STANDARD_ACTION(ch);
 
@@ -15062,7 +15084,8 @@ void perform_slam(struct char_data *ch, struct char_data *vict)
     diceTwo = 2;
 
 
-  if (vict->char_specials.recently_slammed == 0)
+  /* An unconscious target cannot anticipate a repeated slam. */
+  if (vict->char_specials.recently_slammed == 0 || !AWAKE(vict))
   {
     if (combat_maneuver_check(ch, vict, COMBAT_MANEUVER_TYPE_SLAM, 0) > 0)
     {

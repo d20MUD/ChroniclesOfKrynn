@@ -1344,6 +1344,8 @@ void assign_feats(void)
         "using the selected weapon.");
   feat_prereq_weapon_proficiency(FEAT_WEAPON_SPECIALIZATION);
   feat_prereq_cfeat(FEAT_WEAPON_SPECIALIZATION, FEAT_WEAPON_FOCUS);
+  feat_prereq_bab(FEAT_WEAPON_SPECIALIZATION, 4);
+  feat_prereq_class_level(FEAT_WEAPON_SPECIALIZATION, CLASS_WARRIOR, 4);
   feato(FEAT_GREATER_WEAPON_SPECIALIZATION, "greater weapon specialization", TRUE, TRUE, FALSE,
         FEAT_TYPE_COMBAT, "+4 damage with weapon",
         "Choose one type of weapon, such as halberd, for which you have already "

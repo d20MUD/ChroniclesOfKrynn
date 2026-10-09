@@ -288,7 +288,7 @@ void load_hunts(void)
            SIZE_LARGE);
   add_hunt_ability(HUNT_TYPE_YOUNG_WHITE_DRAGON, HUNT_ABIL_CAUSE_FEAR);
   add_hunt_ability(HUNT_TYPE_YOUNG_WHITE_DRAGON, HUNT_ABIL_FLIGHT);
-  add_hunt_ability(HUNT_TYPE_YOUNG_WHITE_DRAGON, HUNT_ABIL_ACID_BREATH);
+  add_hunt_ability(HUNT_TYPE_YOUNG_WHITE_DRAGON, HUNT_ABIL_FROST_BREATH);
 
   add_hunt(HUNT_TYPE_ADULT_WHITE_DRAGON, 25, "adult white dragon",
            "This dragon’s scales are a frosty white. Its head is crowned with slender horns, with "
@@ -298,7 +298,7 @@ void load_hunts(void)
            SIZE_HUGE);
   add_hunt_ability(HUNT_TYPE_ADULT_WHITE_DRAGON, HUNT_ABIL_CAUSE_FEAR);
   add_hunt_ability(HUNT_TYPE_ADULT_WHITE_DRAGON, HUNT_ABIL_FLIGHT);
-  add_hunt_ability(HUNT_TYPE_ADULT_WHITE_DRAGON, HUNT_ABIL_ACID_BREATH);
+  add_hunt_ability(HUNT_TYPE_ADULT_WHITE_DRAGON, HUNT_ABIL_FROST_BREATH);
 
   add_hunt(HUNT_TYPE_OLD_WHITE_DRAGON, 30, "old white dragon",
            "This dragon’s scales are a frosty white. Its head is crowned with slender horns, with "
@@ -308,7 +308,7 @@ void load_hunts(void)
            SIZE_GARGANTUAN);
   add_hunt_ability(HUNT_TYPE_OLD_WHITE_DRAGON, HUNT_ABIL_CAUSE_FEAR);
   add_hunt_ability(HUNT_TYPE_OLD_WHITE_DRAGON, HUNT_ABIL_FLIGHT);
-  add_hunt_ability(HUNT_TYPE_OLD_WHITE_DRAGON, HUNT_ABIL_ACID_BREATH);
+  add_hunt_ability(HUNT_TYPE_OLD_WHITE_DRAGON, HUNT_ABIL_FROST_BREATH);
 
   add_hunt(
       HUNT_TYPE_DRAGON_TURTLE, 25, "dragon turtle",
