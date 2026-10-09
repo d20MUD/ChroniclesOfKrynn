@@ -437,9 +437,11 @@ void wld_command_interpreter(room_data *room, char *argument);
  * mob id's: MOB_ID_BASE to ROOM_ID_BASE - 1
  * room id's: ROOM_ID_BASE to OBJ_ID_BASE - 1
  * object id's: OBJ_ID_BASE and higher */
-#define MOB_ID_BASE 1000000  /* 50000 player IDNUMS should suffice */
-#define ROOM_ID_BASE 1050000 /* 1000000 Mobs */
-#define OBJ_ID_BASE 1300000  /* 250000 Rooms */
+/* Leave room for persistent player IDs and long-running mobile allocation.
+ * These values must also fit the integer UID parsers used by DG commands. */
+#define MOB_ID_BASE 10000000
+#define ROOM_ID_BASE 100000000
+#define OBJ_ID_BASE 200000000
 
 #define SCRIPT(o) ((o)->script)
 #define SCRIPT_MEM(c) ((c)->memory)

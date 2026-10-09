@@ -17585,6 +17585,12 @@ void perform_violence(struct char_data *ch, int phase)
       send_to_char(ch, "Your free movement breaks the stun!\r\n");
       act("$n's free movement breaks the stun!", TRUE, ch, 0, 0, TO_ROOM);
     }
+    else
+    {
+      send_to_char(ch, "You are stunned and unable to react!\r\n");
+      act("$n seems to be stunned and unable to react!", TRUE, ch, 0, 0, TO_ROOM);
+      return;
+    }
   }
 
   /* make sure this goes after attack-stopping affects like paralyze */
