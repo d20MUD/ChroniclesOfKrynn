@@ -2501,6 +2501,9 @@ void perform_cooldowns(struct char_data *ch, struct char_data *k)
   if ((pMudEvent = char_has_mud_event(k, eD_ROLL)))
     send_to_char(ch, "Defensive Roll Cooldown  - Duration: %d seconds\r\n",
                  (int)(event_time(pMudEvent->pEvent) / 10));
+  if ((pMudEvent = char_has_mud_event(k, eLICH_TOUCH)))
+    send_to_char(ch, "Lich Touch Cooldown  - Duration: %d seconds\r\n",
+                 (int)(event_time(pMudEvent->pEvent) / PASSES_PER_SEC));
   if ((pMudEvent = char_has_mud_event(k, eLICH_REJUV)))
     send_to_char(ch, "Lich Rejuvenation Cooldown  - Duration: %d seconds\r\n",
                  (int)(event_time(pMudEvent->pEvent) / 10));
