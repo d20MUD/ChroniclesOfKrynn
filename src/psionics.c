@@ -303,7 +303,7 @@ void assign_psionic_powers(void)
          TAR_CHAR_ROOM | TAR_NOT_SELF, true, MAG_DAMAGE | MAG_AFFECTS,
          "Your psychically impaled mind has healed", 10);
   psiono(PSIONIC_RAZOR_STORM, "razor storm", 30, true, 1, 100, METACREATIVITY,
-         TAR_CHAR_ROOM | TAR_NOT_SELF, true, MAG_AREAS, NULL, 10);
+         TAR_IGNORE, true, MAG_AREAS, NULL, 10);
   psiono(PSIONIC_PSYCHOKINETIC_THRASHING, "psychokinetic thrashing", 30, true, 1, 100,
          PSYCHOKINESIS, TAR_CHAR_ROOM | TAR_NOT_SELF, true, MAG_DAMAGE, NULL, 10);
   psiono(PSIONIC_EPIC_PSIONIC_WARD, "epic psionic ward", 30, true, 10, 100, TELEPATHY,

@@ -1162,7 +1162,9 @@ SAVING_WILL here...  */
 
   /* the rest of the routine handling follows: */
 
-  if (IS_SET(SINFO.routines, MAG_DAMAGE))
+  if (spellnum == PSIONIC_DEADLY_FEAR && GET_AUGMENT_PSP(caster) >= 8)
+    mag_areas(spell_level, caster, ovict, spellnum, metamagic, savetype, casttype);
+  else if (IS_SET(SINFO.routines, MAG_DAMAGE))
     if (mag_damage(spell_level, caster, cvict, ovict, spellnum, metamagic, savetype, casttype) ==
         -1)
       return (-1); /* Successful and target died, don't cast again. */

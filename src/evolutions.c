@@ -324,7 +324,7 @@ void assign_evolutions(void)
              "shadow form evolution, this benefit increases to 50 percent.");
   evolutiono(EVOLUTION_SHADOW_FORM, "shadow form", 2, false, 1, true, 0, 0, 0, 0, 0, 0,
              EVOLUTION_REQ_TYPE_NONE,
-             "The eidilon can become incorporeal at will. This effect can be toggled on and off "
+             "The eidolon can become incorporeal at will. This effect can be toggled on and off "
              "with the shadowform command. "
              "Your eidolon will need to do this themselves. Eg. order eidolon shadowform. "
              "This effect will only work indoors or outside at night, dusk or dawn.");
@@ -1491,7 +1491,7 @@ ACMD(do_eidolon)
     GET_SHORT(eidolon) = desc;
     desc = strdup(arg2);
     (eidolon)->player.name = desc;
-    send_to_char(ch, "You change your eidilon's short description to: %s\r\n", desc);
+    send_to_char(ch, "You change your eidolon's short description to: %s\r\n", desc);
     return;
   }
   else if (is_abbrev(arg, "longdesc"))
@@ -1534,7 +1534,7 @@ ACMD(do_eidolon)
     eidolon->player.long_descr = desc;
     snprintf(buf, sizeof(buf), "%s\n", GET_EIDOLON_LONG_DESCRIPTION(ch));
     eidolon->player.description = strdup(buf);
-    send_to_char(ch, "You change your eidilon's long description to: %s\r\n", arg2);
+    send_to_char(ch, "You change your eidolon's long description to: %s\r\n", arg2);
     return;
   }
   else if (is_abbrev(arg, "bondsenses"))

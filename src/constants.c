@@ -1686,8 +1686,8 @@ const char *wear_where[] = {
     "\tY{Worn As Ammo Pouch}\tn ",    "\tY{Worn In Ear}\tn        ",
     "\tY{Worn In Ear}\tn        ", // 25
     "\tY{Worn On Eyes}\tn       ",    "\tY{Worn As Badge}\tn      ",
-    "\tY{Worn On Shoulders}\tn  ",    "\tY{Worn In Ankle}\tn      ",
-    "\tY{Worn In Ankle}\tn      ", // 30
+    "\tY{Worn On Shoulders}\tn  ",    "\tY{Worn On Ankle}\tn      ",
+    "\tY{Worn On Ankle}\tn      ", // 30
     "\tY{Worn As Sheath}\tn     ",    "\tY{Used As Instrument}\tn ",
     "\tC{Harvesting Sickle}\tn  ", // WEAR_CRAFT_SICKLE
     "\tC{Chopping Axe}\tn       ", // WEAR_CRAFT_AXE

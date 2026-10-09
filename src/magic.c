@@ -11188,19 +11188,6 @@ void mag_masses(int level, struct char_data *ch, struct obj_data *obj, int spell
     skip_groups = true;
     break;
 
-  case PSIONIC_DEADLY_FEAR:
-    // because this only benefits from intervals of 2 psp.
-    // we aren't deducting psp in mag_damage, we do it here.
-    if (GET_AUGMENT_PSP(ch) < 8)
-    {
-      // need to spend 4 augmented psp or more in order for it to be an AoE effect
-      mag_affects(level, ch, tch, obj, spellnum, metamagic, 1, casttype);
-      return;
-    }
-    isEffect = TRUE;
-    skip_groups = true;
-    break;
-
   case PSIONIC_SHATTER_MIND_BLANK:
     isUnEffect = TRUE;
     skip_groups = true;
@@ -11668,6 +11655,10 @@ void mag_areas(int level, struct char_data *ch, struct obj_data *obj, int spelln
   case PSIONIC_UPHEAVAL:
     to_char = "You manifest a psychic upheaval that assails the minds of all nearby!";
     to_room = "A psychic upheaval from $n assails your mind with anguish!";
+    break;
+  case PSIONIC_DEADLY_FEAR:
+    to_char = "You manifest a wave of deadly fear!";
+    to_room = "A wave of deadly fear spreads from $n!";
     break;
   case PSIONIC_SHRAPNEL_BURST:
     to_char = "You spread your arms, shooting out thousands of shrapnel!";
