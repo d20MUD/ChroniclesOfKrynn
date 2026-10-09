@@ -44,6 +44,7 @@
 #include "char_descs.h"
 #include "treasure.h"
 #include "perks.h"
+#include "crafting_new.h"
 #include <time.h>
 
 /* kavir's protocol (isspace_ignoretabes() was moved to utils.h */
@@ -1405,7 +1406,8 @@ bool is_golem_mob(struct char_data *mob)
 {
   if (!mob || !IS_NPC(mob))
     return false;
-  return MOB_FLAGGED(mob, MOB_GOLEM);
+  /* Follower checks load a bare prototype before crafting adds runtime flags. */
+  return MOB_FLAGGED(mob, MOB_GOLEM) || get_golem_type_from_vnum(GET_MOB_VNUM(mob)) >= 0;
 }
 
 /* Enumeration for follower categories */

@@ -447,7 +447,7 @@ int determine_harvest_material_for_room(room_rnum room)
     return 0;
 
   int zone_low = zone_table[world[room].zone].min_level;
-  int zone_high = zone_table[world[room].zone].min_level;
+  int zone_high = zone_table[world[room].zone].max_level;
   int zone_level = MIN(30, MAX(1, ((zone_high - zone_low) / 2) + zone_low));
   int grade = determine_grade_by_zone_level(zone_level);
   int group = determine_random_material_group_by_sector_type(world[room].sector_type);
@@ -460,7 +460,7 @@ int determine_harvest_material_for_room(room_rnum room)
     grade++;
   }
 
-  grade = MAX(1, grade);
+  grade = MIN(5, MAX(1, grade));
 
   int material = determine_material_type_by_group_and_grade(group, grade);
 
