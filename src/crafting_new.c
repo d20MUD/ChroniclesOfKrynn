@@ -3467,6 +3467,8 @@ bool is_wearing_tool_for_crafting_ability(struct char_data *ch, int ability)
     has_tool = GET_EQ(ch, WEAR_CRAFT_ARMOR_HAMMER);
     break;
   case ABILITY_CRAFT_WEAPONSMITHING:
+  case ABILITY_CRAFT_WOODWORKING:
+    /* Woodworking recipes share the weapon crafting tool. */
     has_tool = GET_EQ(ch, WEAR_CRAFT_WEAPON_HAMMER);
     break;
   case ABILITY_CRAFT_JEWELCRAFTING:
