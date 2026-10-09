@@ -2940,17 +2940,23 @@ void do_stat_object(struct char_data *ch, struct obj_data *j, int mode)
       sprinttype(j->affected[i].location, apply_types, buf, sizeof(buf));
       if (j->affected[i].location == APPLY_FEAT)
       {
+        char feat_name[MEDIUM_STRING];
+        const char *specific_name;
         feat_num = j->affected[i].modifier;
         if (feat_num < 0 || feat_num >= NUM_FEATS)
           feat_num = FEAT_UNDEFINED;
+        specific_name = feat_specific_name(feat_num, j->affected[i].specific);
+        snprintf(feat_name, sizeof(feat_name), "%s%s%s%s", feat_list[feat_num].name,
+                 specific_name ? " (" : "", specific_name ? specific_name : "",
+                 specific_name ? ")" : "");
 
         if (mode == ITEM_STAT_MODE_G_LORE)
           send_to_group(NULL, GROUP(ch), "%s %s:(%d) %s (%s)\r\n", found++ ? "," : "", buf,
-                        j->affected[i].modifier, feat_list[feat_num].name,
+                        j->affected[i].modifier, feat_name,
                         bonus_types[j->affected[i].bonus_type]);
         else
           send_to_char(ch, "%s %s:(%d) %s (%s)", found++ ? "," : "", buf, j->affected[i].modifier,
-                       feat_list[feat_num].name, bonus_types[j->affected[i].bonus_type]);
+                       feat_name, bonus_types[j->affected[i].bonus_type]);
       }
       else if (j->affected[i].location == APPLY_SKILL)
       {

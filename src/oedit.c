@@ -489,12 +489,16 @@ static void oedit_disp_prompt_apply_menu(struct descriptor_data *d)
       sprinttype(OLC_OBJ(d)->affected[counter].location, apply_types, apply_buf, sizeof(apply_buf));
       if (OLC_OBJ(d)->affected[counter].location == APPLY_FEAT)
       {
+        int feat = OLC_OBJ(d)->affected[counter].modifier;
+        const char *specific;
+        char feat_name[MEDIUM_STRING];
+        if (feat <= 0 || feat >= NUM_FEATS)
+          feat = FEAT_UNDEFINED;
+        specific = feat_specific_name(feat, OLC_OBJ(d)->affected[counter].specific);
+        snprintf(feat_name, sizeof(feat_name), "%s%s%s%s", feat_list[feat].name,
+                 specific ? " (" : "", specific ? specific : "", specific ? ")" : "");
         write_to_output(d, " %s%d%s) Grant Feat %s (%s)\r\n", grn, counter + 1, nrm,
-                        feat_list[(OLC_OBJ(d)->affected[counter].modifier < NUM_FEATS &&
-                                           OLC_OBJ(d)->affected[counter].modifier > 0
-                                       ? OLC_OBJ(d)->affected[counter].modifier
-                                       : 0)]
-                            .name,
+                        feat_name,
                         bonus_types[OLC_OBJ(d)->affected[counter].bonus_type]);
       }
       else if (OLC_OBJ(d)->affected[counter].location == APPLY_SKILL)
@@ -3552,6 +3556,8 @@ void oedit_parse(struct descriptor_data *d, char *arg)
       }
     }
     OLC_OBJ(d)->affected[OLC_VAL(d)].modifier = atoi(arg);
+    if (OLC_OBJ(d)->affected[OLC_VAL(d)].location == APPLY_FEAT)
+      OLC_OBJ(d)->affected[OLC_VAL(d)].specific = random_feat_specific(atoi(arg));
     oedit_disp_apply_prompt_bonus_type_menu(d);
     return;
 
@@ -3577,6 +3583,9 @@ void oedit_parse(struct descriptor_data *d, char *arg)
         OLC_OBJ(d)->affected[OLC_VAL(d)].modifier = 0;
         break;
       }
+    if (OLC_OBJ(d)->affected[OLC_VAL(d)].location == APPLY_FEAT)
+      OLC_OBJ(d)->affected[OLC_VAL(d)].specific =
+          random_feat_specific(OLC_OBJ(d)->affected[OLC_VAL(d)].modifier);
     oedit_disp_apply_prompt_bonus_type_menu(d);
     return;
 

@@ -7087,18 +7087,8 @@ bool is_valid_craft_feat(int feat)
   if (feat_list[feat].epic)
     return FALSE;
 
-  // no combat feats for now. Requires extra code to pick which weapon that we aren't spending time on yet
-  if (!feat_list[feat].combat_feat)
+  if (!feat_list[feat].in_game)
     return FALSE;
-
-  // no skill or spell focus for similar reason
-  switch (feat)
-  {
-  case FEAT_SPELL_FOCUS:
-  case FEAT_GREATER_SPELL_FOCUS:
-  case FEAT_SKILL_FOCUS:
-    return FALSE;
-  }
 
   // we only allow general, combat, spellcasting, metamagic, psionic and teamwork feats
   if (feat_list[feat].feat_type == FEAT_TYPE_GENERAL ||

@@ -77,6 +77,8 @@ int has_feat_requirement_check(struct char_data *ch, int featnum)
 /* checks if ch has feat (compare) as one of his/her combat feats (cfeat) */
 bool has_combat_feat(struct char_data *ch, int cfeat, int compare)
 {
+  if (!ch || cfeat < 0 || cfeat >= NUM_CFEATS || compare < 0 || compare >= FT_ARRAY_MAX * 32)
+    return FALSE;
   if (ch->desc && LEVELUP(ch))
   {
     if ((IS_SET_AR(LEVELUP(ch)->combat_feats[(cfeat)], (compare))))
@@ -86,7 +88,7 @@ bool has_combat_feat(struct char_data *ch, int cfeat, int compare)
   if ((IS_SET_AR((ch)->char_specials.saved.combat_feats[(cfeat)], (compare))))
     return TRUE;
 
-  return FALSE;
+  return compute_has_combat_feat(ch, cfeat, compare);
 }
 
 /* checks if ch has feat (compare) as one of his/her spells (school) feats (sfeat) [unfinished] */
@@ -7667,7 +7669,7 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       else if ((subfeat = feat_to_cfeat(i)) != -1)
       {
         /* This is a 'combat feat' */
-        for (j = 1; j < NUM_WEAPON_TYPES; j++)
+        for (j = 0; j < NUM_WEAPON_TYPES; j++)
         {
           /* we are not going to show extra composite bows */
           if (j == WEAPON_TYPE_COMPOSITE_LONGBOW_2 || j == WEAPON_TYPE_COMPOSITE_LONGBOW_3 ||
@@ -7706,7 +7708,7 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
         /* This is a 'skill' feat */
         for (j = 0; j < NUM_ABILITIES; j++)
         {
-          if (ch->player_specials->saved.skill_focus[j][subfeat] != FALSE)
+          if (HAS_SKILL_FEAT(ch, j, subfeat))
           {
             if (mode == 1)
             {
@@ -9790,6 +9792,54 @@ int feat_to_skfeat(int feat)
   }
 }
 
+static bool valid_feat_skill(int skill)
+{
+  if (skill < START_GENERAL_ABILITIES || skill > END_GENERAL_ABILITIES)
+    return false;
+  switch (skill)
+  {
+  case ABILITY_UNUSED_1:
+  case ABILITY_UNUSED_2:
+  case ABILITY_UNUSED_3:
+  case ABILITY_UNUSED_4:
+  case ABILITY_UNUSED_5:
+  case ABILITY_UNUSED_6:
+  case ABILITY_UNUSED_7:
+    return false;
+  }
+  return true;
+}
+
+int random_feat_specific(int feat)
+{
+  int skill;
+  if (feat == FEAT_FERAL_COMBAT_TRAINING)
+    return rand_number(WEAPON_FAMILY_NATURAL_BITE, WEAPON_FAMILY_NATURAL_CLAW);
+  if (feat_to_cfeat(feat) != -1)
+    return rand_number(0, NUM_WEAPON_FAMILIES - 1);
+  if (feat_to_sfeat(feat) != -1)
+    return rand_number(NOSCHOOL + 1, NUM_SCHOOLS - 1);
+  if (feat_to_skfeat(feat) != -1)
+  {
+    do
+      skill = get_random_skill();
+    while (!valid_feat_skill(skill));
+    return skill;
+  }
+  return 0;
+}
+
+const char *feat_specific_name(int feat, int specific)
+{
+  if (feat_to_cfeat(feat) != -1 && specific >= 0 && specific < NUM_WEAPON_FAMILIES)
+    return weapon_family[specific];
+  if (feat_to_sfeat(feat) != -1 && specific > NOSCHOOL && specific < NUM_SCHOOLS)
+    return spell_schools[specific];
+  if (feat_to_skfeat(feat) != -1 && valid_feat_skill(specific))
+    return ability_names[specific];
+  return NULL;
+}
+
 /* sorcerer draconic bloodline heritages */
 int get_draconic_heritage_subfeat(int feat)
 {
@@ -9852,9 +9902,8 @@ bool valid_item_feat(int featnum)
   if (featnum < 1 || featnum >= FEAT_LAST_FEAT)
     return false;
 
-  if (feat_list[featnum].can_learn && feat_list[featnum].combat_feat == FALSE &&
+  if (feat_list[featnum].can_learn &&
       feat_list[featnum].epic == FALSE && feat_list[featnum].in_game &&
-      feat_to_skfeat(featnum) == -1 &&
       (feat_list[featnum].feat_type == FEAT_TYPE_COMBAT ||
        feat_list[featnum].feat_type == FEAT_TYPE_CRAFT ||
        feat_list[featnum].feat_type == FEAT_TYPE_GENERAL ||

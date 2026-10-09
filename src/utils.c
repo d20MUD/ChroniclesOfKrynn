@@ -580,13 +580,58 @@ int compute_channel_energy_level(struct char_data *ch)
 
 /* check to see if CH has a weapon attached to a combat feat
 this use to be a nice(?) compact macro, but circumstances forced expansion */
+static bool has_item_typed_feat(struct char_data *ch, int subfeat, int specific,
+                                int (*feat_mapper)(int))
+{
+  struct obj_data *obj;
+  int slot, i, feat;
+
+  if (!ch || subfeat < 0)
+    return false;
+  for (slot = 0; slot < NUM_WEARS; slot++)
+  {
+    obj = GET_EQ(ch, slot);
+    if (!obj)
+      continue;
+    for (i = 0; i < MAX_OBJ_AFFECT; i++)
+    {
+      feat = obj->affected[i].modifier;
+      if (obj->affected[i].location == APPLY_FEAT && feat > FEAT_UNDEFINED &&
+          feat < FEAT_LAST_FEAT && obj->affected[i].specific == specific &&
+          feat_mapper(feat) == subfeat)
+        return true;
+    }
+  }
+  return false;
+}
+
+bool compute_has_school_feat(struct char_data *ch, int sfeat, int school)
+{
+  if (!ch || sfeat < 0 || sfeat >= NUM_SFEATS || school <= NOSCHOOL || school >= NUM_SCHOOLS)
+    return false;
+  return IS_SET(ch->char_specials.saved.school_feats[sfeat], (1 << school)) ||
+         has_item_typed_feat(ch, sfeat, school, feat_to_sfeat);
+}
+
+bool compute_has_skill_feat(struct char_data *ch, int ability, int skfeat)
+{
+  if (!ch || !ch->player_specials || ability < 0 || ability > MAX_ABILITIES ||
+      skfeat < 0 || skfeat >= NUM_SKFEATS)
+    return false;
+  return ch->player_specials->saved.skill_focus[ability][skfeat] ||
+         has_item_typed_feat(ch, skfeat, ability, feat_to_skfeat);
+}
+
 bool compute_has_combat_feat(struct char_data *ch, int cfeat, int weapon)
 {
   bool using_comp = FALSE;
   bool has_comp_feat = FALSE;
 
-  if (cfeat == -1)
+  if (!ch || cfeat < 0 || cfeat >= NUM_CFEATS || weapon < 0 || weapon >= FT_ARRAY_MAX * 32)
     return false;
+
+  if (has_item_typed_feat(ch, cfeat, weapon, feat_to_cfeat))
+    return true;
 
   /* had to add special test to weapon combat feats because of the way
      I set up composite bows with various strength modifiers -zusuk */

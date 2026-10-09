@@ -60,6 +60,8 @@ int find_feat_num(const char *name);
 int feat_to_cfeat(int feat);
 int feat_to_sfeat(int feat);
 int feat_to_skfeat(int feat);
+int random_feat_specific(int feat);
+const char *feat_specific_name(int feat, int specific);
 void list_feats(struct char_data *ch, const char *arg, int list_type, struct char_data *viewer);
 extern struct feat_info feat_list[];
 extern int feat_sort_info[MAX_FEATS];

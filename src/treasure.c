@@ -1666,6 +1666,7 @@ void cp_modify_object_applies(struct char_data *ch, struct obj_data *obj, int en
     {
       obj->affected[1].location = APPLY_FEAT;
       obj->affected[1].modifier = feat_num;
+      obj->affected[1].specific = random_feat_specific(feat_num);
       obj->affected[1].bonus_type = adjust_bonus_type(APPLY_FEAT);
     }
 
@@ -1712,6 +1713,7 @@ void cp_modify_object_applies(struct char_data *ch, struct obj_data *obj, int en
     {
       obj->affected[5].location = APPLY_FEAT;
       obj->affected[5].modifier = feat_num;
+      obj->affected[5].specific = random_feat_specific(feat_num);
       obj->affected[5].bonus_type = adjust_bonus_type(APPLY_FEAT);
     }
   }

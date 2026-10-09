@@ -1170,7 +1170,7 @@ SAVING_WILL here...  */
       return (-1); /* Successful and target died, don't cast again. */
 
   if (IS_SET(SINFO.routines, MAG_LOOPS))
-    mag_loops(spell_level, caster, cvict, ovict, spellnum, savetype, casttype, metamagic);
+    mag_loops(spell_level, caster, cvict, ovict, spellnum, metamagic, savetype, casttype);
 
   if (IS_SET(SINFO.routines, MAG_AFFECTS))
     mag_affects(spell_level, caster, cvict, ovict, spellnum, savetype, casttype, metamagic);
@@ -2098,6 +2098,8 @@ void finishCasting(struct char_data *ch)
     /* Summoner Arcane Channeler Tree - caster level bonuses */
     int cast_level =
         (CASTING_CLASS(ch) == CLASS_PSIONICIST) ? GET_PSIONIC_LEVEL(ch) : CASTER_LEVEL(ch);
+    if (CASTING_CLASS(ch) == CLASS_SHADOWDANCER)
+      cast_level = ARCANE_LEVEL(ch) + CLASS_LEVEL(ch, CLASS_SHADOWDANCER);
     if (!IS_NPC(ch) && GET_CASTING_CLASS(ch) == CLASS_SUMMONER && spellnum > 0 &&
         spellnum < NUM_SPELLS)
     {

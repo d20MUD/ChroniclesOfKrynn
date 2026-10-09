@@ -158,6 +158,8 @@ int compute_arcane_level(struct char_data *ch);
 bool can_npc_command(struct char_data *ch);
 int compute_divine_level(struct char_data *ch);
 bool compute_has_combat_feat(struct char_data *ch, int cfeat, int weapon);
+bool compute_has_school_feat(struct char_data *ch, int sfeat, int school);
+bool compute_has_skill_feat(struct char_data *ch, int ability, int skfeat);
 int compute_dexterity_bonus(struct char_data *ch);
 int compute_strength_bonus(struct char_data *ch);
 int compute_constitution_bonus(struct char_data *ch);
@@ -1553,9 +1555,9 @@ void char_from_furniture(struct char_data *ch);
 //#define HAS_COMBAT_FEAT(ch,i,j) ( IS_SET_AR((ch)->char_specials.saved.combat_feats[i], j) )
 #define HAS_COMBAT_FEAT(ch, i, j) ((compute_has_combat_feat((ch), (i), (j))))
 #define SET_COMBAT_FEAT(ch, i, j) (SET_BIT_AR((ch)->char_specials.saved.combat_feats[(i)], (j)))
-#define HAS_SCHOOL_FEAT(ch, i, j) (IS_SET((ch)->char_specials.saved.school_feats[(i)], (1 << (j))))
+#define HAS_SCHOOL_FEAT(ch, i, j) (compute_has_school_feat((ch), (i), (j)))
 #define SET_SCHOOL_FEAT(ch, i, j) (SET_BIT((ch)->char_specials.saved.school_feats[(i)], (1 << (j))))
-#define HAS_SKILL_FEAT(ch, i, j) ((ch)->player_specials->saved.skill_focus[i][j])
+#define HAS_SKILL_FEAT(ch, i, j) (compute_has_skill_feat((ch), (i), (j)))
 #define SET_SKILL_FEAT(ch, i, j)                                                                   \
   (((ch)->player_specials->saved.skill_focus[i][j])                                                \
        ? (ch)->player_specials->saved.skill_focus[i][j] = FALSE                                    \
