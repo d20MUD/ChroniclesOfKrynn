@@ -1860,7 +1860,8 @@ void update_pos_dam(struct char_data *victim)
     }
   }
 
-  if (GET_HIT(victim) <= -11)
+  /* NPCs die at zero HP; the negative-HP incapacitation range is for players. */
+  if (GET_HIT(victim) <= -11 || (IS_NPC(victim) && GET_HIT(victim) <= 0))
   {
     if (HAS_REAL_FEAT(victim, FEAT_RELENTLESS_ENDURANCE) && dice(1, 4) == 1)
     {
@@ -1943,7 +1944,7 @@ void update_pos(struct char_data *victim)
   if ((GET_HIT(victim) > 0) && (GET_POS(victim) > POS_STUNNED))
     return;
 
-  if (GET_HIT(victim) <= -11)
+  if (GET_HIT(victim) <= -11 || (IS_NPC(victim) && GET_HIT(victim) <= 0))
     change_position(victim, POS_DEAD);
   else if (GET_HIT(victim) <= -6)
     change_position(victim, POS_MORTALLYW);
