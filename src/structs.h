@@ -6956,6 +6956,7 @@ struct player_invention
 
 struct player_special_data_saved
 {
+  int color_256; /* Protocol preference: 0 automatic, 1 on, -1 explicitly off. */
   int skills[MAX_SKILLS + 1];         // saved skills
   int spells[MAX_SPELLS];             // saved spells, should be MAX_SPELLS + 1 from spells.h
   ubyte abilities[MAX_ABILITIES + 1]; // abilities

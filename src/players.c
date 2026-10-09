@@ -2158,8 +2158,13 @@ int load_char(const char *name, struct char_data *ch)
         break;
 
       case 'X':
-        if (!strcmp(tag, "XTrm") && ch->desc)
-          ch->desc->pProtocol->pVariables[eMSDP_256_COLORS]->ValueInt = atoi(line);
+        if (!strcmp(tag, "XTrm"))
+        {
+          ch->player_specials->saved.color_256 = atoi(line);
+          if (ch->desc)
+            ch->desc->pProtocol->pVariables[eMSDP_256_COLORS]->ValueInt =
+                ch->player_specials->saved.color_256;
+        }
         break;
 
       default:
@@ -2991,9 +2996,11 @@ void save_char(struct char_data *ch, int mode)
   if (ch->desc)
   {
     BUFFER_WRITE("GMCP: %d\n", ch->desc->pProtocol->bGMCP);
-    BUFFER_WRITE("XTrm: %d\n", ch->desc->pProtocol->pVariables[eMSDP_256_COLORS]->ValueInt);
+    ch->player_specials->saved.color_256 =
+        ch->desc->pProtocol->pVariables[eMSDP_256_COLORS]->ValueInt;
     BUFFER_WRITE("UTF8: %d\n", ch->desc->pProtocol->pVariables[eMSDP_UTF_8]->ValueInt);
   }
+  BUFFER_WRITE("XTrm: %d\n", ch->player_specials->saved.color_256);
 
   if (GET_PREMADE_BUILD_CLASS(ch) != PFDEF_PREMADE_BUILD)
     BUFFER_WRITE("PreB: %d\n", GET_PREMADE_BUILD_CLASS(ch));

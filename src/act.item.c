@@ -9424,7 +9424,6 @@ bool setup_outfit_item(struct char_data *ch, struct obj_data *obj)
   {
     snprintf(descA, sizeof(descA), "chest %s", GET_OUTFIT_DESC(ch));
     snprintf(descB, sizeof(descB), "%s (chest)", GET_OUTFIT_DESC(ch));
-    CAP(GET_OUTFIT_DESC(ch));
     snprintf(descC, sizeof(descC), "%s (chest) lies here.\r\n", GET_OUTFIT_DESC(ch));
     set_armor_object(obj, outfit_type_to_armor_type(GET_OUTFIT_TYPE(ch), ITEM_WEAR_BODY));
   }
@@ -9432,7 +9431,6 @@ bool setup_outfit_item(struct char_data *ch, struct obj_data *obj)
   {
     snprintf(descA, sizeof(descA), "helm %s", GET_OUTFIT_DESC(ch));
     snprintf(descB, sizeof(descB), "%s (helm)", GET_OUTFIT_DESC(ch));
-    CAP(GET_OUTFIT_DESC(ch));
     snprintf(descC, sizeof(descC), "%s (helm) lies here.\r\n", GET_OUTFIT_DESC(ch));
     set_armor_object(obj, outfit_type_to_armor_type(GET_OUTFIT_TYPE(ch), ITEM_WEAR_HEAD));
   }
@@ -9440,7 +9438,6 @@ bool setup_outfit_item(struct char_data *ch, struct obj_data *obj)
   {
     snprintf(descA, sizeof(descA), "sleeves %s", GET_OUTFIT_DESC(ch));
     snprintf(descB, sizeof(descB), "%s (sleeves)", GET_OUTFIT_DESC(ch));
-    CAP(GET_OUTFIT_DESC(ch));
     snprintf(descC, sizeof(descC), "%s (sleeves) lies here.\r\n", GET_OUTFIT_DESC(ch));
     set_armor_object(obj, outfit_type_to_armor_type(GET_OUTFIT_TYPE(ch), ITEM_WEAR_ARMS));
   }
@@ -9448,7 +9445,6 @@ bool setup_outfit_item(struct char_data *ch, struct obj_data *obj)
   {
     snprintf(descA, sizeof(descA), "leggings %s", GET_OUTFIT_DESC(ch));
     snprintf(descB, sizeof(descB), "%s (leggings)", GET_OUTFIT_DESC(ch));
-    CAP(GET_OUTFIT_DESC(ch));
     snprintf(descC, sizeof(descC), "%s (leggings) lies here.\r\n", GET_OUTFIT_DESC(ch));
     set_armor_object(obj, outfit_type_to_armor_type(GET_OUTFIT_TYPE(ch), ITEM_WEAR_LEGS));
   }
@@ -9456,9 +9452,10 @@ bool setup_outfit_item(struct char_data *ch, struct obj_data *obj)
   {
     snprintf(descA, sizeof(descA), "%s", GET_OUTFIT_DESC(ch));
     snprintf(descB, sizeof(descB), "%s", GET_OUTFIT_DESC(ch));
-    CAP(GET_OUTFIT_DESC(ch));
     snprintf(descC, sizeof(descC), "%s lies here.\r\n", GET_OUTFIT_DESC(ch));
   }
+  CAP(descC);
+
   /* Don't free these strings - they point to the prototype object strings
    * which are shared and should not be freed */
   obj->name = strdup(descA);

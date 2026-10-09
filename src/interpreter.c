@@ -2281,6 +2281,9 @@ static int perform_dupe_check(struct descriptor_data *d)
   free_char(d->character); /* get rid of the old char */
   d->character = target;
   d->character->desc = d;
+  if (target->player_specials->saved.color_256 != 0)
+    d->pProtocol->pVariables[eMSDP_256_COLORS]->ValueInt =
+        target->player_specials->saved.color_256;
   d->original = NULL;
   d->character->char_specials.timer = 0;
   d->character->char_specials.linkdead_at = 0;

@@ -1038,6 +1038,8 @@ void prefedit_parse(struct descriptor_data *d, char *arg)
         d->pProtocol->pVariables[eMSDP_256_COLORS]->ValueInt = -1;
       else
         d->pProtocol->pVariables[eMSDP_256_COLORS]->ValueInt = 1;
+      d->character->player_specials->saved.color_256 =
+          d->pProtocol->pVariables[eMSDP_256_COLORS]->ValueInt;
       break;
 
     case 'k':
