@@ -11254,8 +11254,10 @@ int aoeOK(struct char_data *ch, struct char_data *tch, int spellnum)
   if (tch == ch)
     return 0;
 
-  if ((!IS_NPC(ch) && PRF_FLAGGED(ch, PRF_CONTAIN_AOE)) ||
-      (IS_NPC(ch) && ch->master && !IS_NPC(ch->master) && PRF_FLAGGED(ch->master, PRF_CONTAIN_AOE)))
+  /* Death throes are involuntary and resolve after fighting has been cleared. */
+  if (spellnum != ABILITY_BOZAK_DRACONIAN_DEATH_THROES &&
+      ((!IS_NPC(ch) && PRF_FLAGGED(ch, PRF_CONTAIN_AOE)) ||
+       (IS_NPC(ch) && ch->master && !IS_NPC(ch->master) && PRF_FLAGGED(ch->master, PRF_CONTAIN_AOE))))
   {
     if (!FIGHTING(ch) || !FIGHTING(tch))
     {
@@ -11852,7 +11854,7 @@ void mag_areas(int level, struct char_data *ch, struct obj_data *obj, int spelln
       {
         if (tch != ch)
         { // funny results from potions/scrolls
-          if (IN_ROOM(tch) == IN_ROOM(ch))
+          if (IN_ROOM(tch) == IN_ROOM(ch) && GET_POS(ch) > POS_DEAD)
           {
             hit(tch, ch, TYPE_UNDEFINED, DAM_RESERVED_DBC, 0, FALSE);
           }
