@@ -2842,7 +2842,8 @@ EVENTFUNC(event_crafting)
       exp = GET_LEVEL(ch) * 2;
     }
 
-    if (GET_CRAFTING_TYPE(ch) == SCMD_RESIZE)
+    /* Reforging reshapes an existing item and must not reward repeat loops. */
+    if (GET_CRAFTING_TYPE(ch) == SCMD_RESIZE || GET_CRAFTING_TYPE(ch) == SCMD_REFORGE)
       exp = 0;
     if (exp > 0)
     {
@@ -2857,7 +2858,7 @@ EVENTFUNC(event_crafting)
     GET_CRAFTING_TICKS(ch)--;
 
     /* skill notch */
-    if (GET_SKILL(ch, SKILL_FAST_CRAFTER) < 99)
+    if (GET_CRAFTING_TYPE(ch) != SCMD_REFORGE && GET_SKILL(ch, SKILL_FAST_CRAFTER) < 99)
       increase_skill(ch, SKILL_FAST_CRAFTER);
 
     if (GET_LEVEL(ch) >= LVL_IMMORT)
@@ -2894,11 +2895,6 @@ EVENTFUNC(event_crafting)
       break;
 
     case SCMD_REFORGE:
-      if (GET_OBJ_TYPE(GET_CRAFTING_OBJ(ch)) == ITEM_WEAPON)
-        skill = SKILL_WEAPON_SMITHING;
-      else
-        skill = SKILL_ARMOR_SMITHING;
-
       snprintf(buf, sizeof(buf), "You finish reforging $p.");
       act(buf, false, ch, GET_CRAFTING_OBJ(ch), 0, TO_CHAR);
       snprintf(buf, sizeof(buf), "$n finishes reforging $p.");
