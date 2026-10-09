@@ -838,7 +838,7 @@ ACMD(do_vnum)
 
   if (!*buf || !*buf2)
   {
-    send_to_char(ch, "Usage: vnum { obj | mob | room | trig | q } <name>\r\n");
+    send_to_char(ch, "Usage: vnum { obj | mob | r/room | trig | q } <name>\r\n");
     return;
   }
   if (is_abbrev(buf, "mob") && (good_arg = 1))
@@ -851,7 +851,7 @@ ACMD(do_vnum)
 
   if (is_abbrev(buf, "room") && (good_arg = 1))
     if (!vnum_room(buf2, ch))
-      send_to_char(ch, "No rooms by that name.\r\n");
+      send_to_char(ch, "No rooms with that text in the title.\r\n");
 
   if (is_abbrev(buf, "trig") && (good_arg = 1))
     if (!vnum_trig(buf2, ch))
@@ -862,7 +862,7 @@ ACMD(do_vnum)
       send_to_char(ch, "No quests with that text in the title.\r\n");
 
   if (!good_arg)
-    send_to_char(ch, "Usage: vnum { obj | mob | room | trig | q } <name>\r\n");
+    send_to_char(ch, "Usage: vnum { obj | mob | r/room | trig | q } <name>\r\n");
 }
 
 #define ZOCMD zone_table[zrnum].cmd[subcmd]

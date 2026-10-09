@@ -4601,11 +4601,27 @@ int vnum_object(char *searchname, struct char_data *ch)
 int vnum_room(char *searchname, struct char_data *ch)
 {
   int nr, found = 0;
+  int length;
+  const char *title;
+
+  if (!searchname || !*searchname)
+    return 0;
+  length = strlen(searchname);
 
   for (nr = 0; nr <= top_of_world; nr++)
-    if (isname(searchname, world[nr].name))
-      send_to_char(ch, "%3d. [%5d] %-40s %s\r\n", ++found, world[nr].number, world[nr].name,
-                   world[nr].proto_script ? "[TRIG]" : "");
+  {
+    if (!world[nr].name)
+      continue;
+    for (title = world[nr].name; *title; title++)
+    {
+      if (!strn_cmp(title, searchname, length))
+      {
+        send_to_char(ch, "%3d. [%5d] %-40s %s\r\n", ++found, world[nr].number, world[nr].name,
+                     world[nr].proto_script ? "[TRIG]" : "");
+        break;
+      }
+    }
+  }
   return (found);
 }
 

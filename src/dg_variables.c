@@ -986,7 +986,8 @@ void find_replacement(void *go, struct script_data *sc, trig_data *trig, int typ
             int cl = get_class_by_name(subfield);
             if (cl >= 0 && cl < NUM_CLASSES)
             {
-              if (CLASS_LEVEL(c, cl))
+              if ((IS_NPC(c) && GET_CLASS(c) == cl) ||
+                  (!IS_NPC(c) && CLASS_LEVEL(c, cl) > 0))
               {
                 strcpy(str, "1");
               }
