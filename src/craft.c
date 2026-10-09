@@ -2602,6 +2602,12 @@ SPECIAL(crafting_quest)
     cquest_report(ch);
   else if (!strcmp(arg, "new"))
   {
+    if (CONFIG_CRAFTING_SYSTEM != CRAFTING_SYSTEM_KITS)
+    {
+      send_to_char(ch, "This office's supply orders use the retired crafting system. "
+                       "Visit a quartermaster and use 'supplyorder request' for a current order.\r\n");
+      return 1;
+    }
     if (GET_AUTOCQUEST_VNUM(ch) && GET_AUTOCQUEST_MAKENUM(ch) <= 0)
     {
       send_to_char(ch, "You can't take a new supply order until you've "

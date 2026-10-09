@@ -8579,6 +8579,8 @@ void complete_supply_order(struct char_data *ch)
   }
 
   /* Clear supply order data without penalty/cooldown since it was completed successfully */
+  remove_supply_order_materials(ch);
+  GET_CRAFT(ch).crafting_recipe = CRAFT_RECIPE_NONE;
   GET_CRAFT(ch).crafting_method = 0;
   GET_CRAFT(ch).crafting_item_type = 0;
   GET_CRAFT(ch).crafting_specific = 0;
@@ -9779,6 +9781,7 @@ void request_new_supply_order(struct char_data *ch)
     GET_CRAFT(ch).craft_variant = variant;
     GET_CRAFT(ch).crafting_method = SCMD_NEWCRAFT_SUPPLYORDER;
     GET_CRAFT(ch).supply_num_required = quantity;
+    GET_NSUPPLY_NUM_MADE(ch) = 0;
     GET_CRAFT(ch).skill_type = crafting_recipes[recipe].variant_skill[variant];
     
     send_to_char(ch, "You've requested a new supply order to make %d %ss.\r\n", quantity,
@@ -9986,7 +9989,14 @@ void abandon_supply_order(struct char_data *ch)
 {
   int i = 0;
 
-  reset_acraft(ch);
+  if (!player_has_supply_order(ch))
+  {
+    send_to_char(ch, "You don't have an active supply order to abandon.\r\n");
+    return;
+  }
+
+  /* Refund assigned materials before clearing the project. */
+  remove_supply_order_materials(ch);
 
   /* Clear all supply order data */
   GET_CRAFT(ch).crafting_method = 0;
@@ -9997,6 +10007,8 @@ void abandon_supply_order(struct char_data *ch)
   GET_CRAFT(ch).supply_active_slot = -1;
   GET_CRAFT(ch).skill_type = 0;
   GET_CRAFT(ch).craft_duration = 0;
+  GET_CRAFT(ch).crafting_recipe = CRAFT_RECIPE_NONE;
+  GET_NSUPPLY_NUM_MADE(ch) = 0;
   
   /* Materials already refunded above */
   for (i = 0; i < NUM_CRAFT_GROUPS; i++)
@@ -10005,15 +10017,6 @@ void abandon_supply_order(struct char_data *ch)
     GET_CRAFT(ch).materials[i][1] = 0;
   }
 
-  if (GET_CRAFT(ch).crafting_method != SCMD_NEWCRAFT_SUPPLYORDER)
-  {
-    send_to_char(ch, "You don't have an active supply order to abandon.\r\n");
-    return;
-  }
-
-  /* Refund any materials that were added */
-  remove_supply_order_materials(ch);
-  
   send_to_char(ch, "You have abandoned your supply order and lost all progress.\r\n");
 }
 
@@ -10825,6 +10828,7 @@ int select_contract_by_id(struct char_data *ch, int contract_id)
   GET_CRAFT(ch).craft_variant = contract->variant;
   GET_CRAFT(ch).crafting_method = SCMD_NEWCRAFT_SUPPLYORDER;
   GET_CRAFT(ch).supply_num_required = contract->quantity;
+  GET_NSUPPLY_NUM_MADE(ch) = 0;
   GET_CRAFT(ch).skill_type = crafting_recipes[contract->recipe].variant_skill[contract->variant];
 
   // Store contract type and advanced features
