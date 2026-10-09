@@ -1202,6 +1202,10 @@ void perform_rage(struct char_data *ch)
   struct affected_type af[RAGE_AFFECTS];
   int bonus = 0, duration = 0, i = 0;
 
+  /* Combat AI must obey the same eligibility checks as the rage command. */
+  if (!ch || can_rage(ch, FALSE) != CAN_CMD)
+    return;
+
   if (char_has_mud_event(ch, eRAGE))
   {
     send_to_char(ch, "You must wait longer before you can use this ability "

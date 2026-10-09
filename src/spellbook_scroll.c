@@ -262,6 +262,8 @@ ACMD(do_scribe)
   char arg2[MAX_INPUT_LENGTH] = {'\0'};
   char *s = NULL, buf[READ_SIZE] = {'\0'};
   int i = 0, spellnum = -1, found = FALSE;
+  int artificer_level = 0;
+  bool consume_prepared_spell = FALSE;
   struct obj_data *obj = NULL, *scroll = NULL, *next_obj = NULL;
 
   half_chop_c(argument, arg1, sizeof(arg1), arg2, sizeof(arg2));
@@ -374,14 +376,25 @@ ACMD(do_scribe)
       return;
     }
 
-    if (!is_spell_in_collection(ch, CLASS_WIZARD, spellnum, METAMAGIC_NONE))
+    consume_prepared_spell = is_spell_in_collection(ch, CLASS_WIZARD, spellnum, METAMAGIC_NONE);
+    artificer_level = CLASS_LEVEL(ch, CLASS_ARTIFICER);
+
+    if (!consume_prepared_spell && artificer_level <= 0)
     {
       send_to_char(ch, "You must have the spell committed to memory before "
                        "you can scribe it!\r\n");
       return;
     }
 
-    GET_OBJ_VAL(obj, 0) = GET_LEVEL(ch);
+    if (!consume_prepared_spell &&
+        artificer_level < spell_info[spellnum].min_level[CLASS_WIZARD])
+    {
+      send_to_char(ch, "You need artificer level %d to scribe that spell.\r\n",
+                   spell_info[spellnum].min_level[CLASS_WIZARD]);
+      return;
+    }
+
+    GET_OBJ_VAL(obj, 0) = consume_prepared_spell ? GET_LEVEL(ch) : artificer_level;
     GET_OBJ_VAL(obj, 1) = spellnum;
     GET_OBJ_VAL(obj, 2) = -1;
     GET_OBJ_VAL(obj, 3) = -1;
@@ -399,7 +412,7 @@ ACMD(do_scribe)
     return;
   }
 
-  if (!found)
+  if (consume_prepared_spell)
   {
     send_to_char(ch,
                  "The magical energy committed for the spell '%s' has been "
