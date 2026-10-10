@@ -10901,6 +10901,23 @@ struct obj_data *get_wielded(struct char_data *ch, /* Wielder */
   return wielded;
 }
 
+/* Shared by attack calculations and the player stats display. */
+int get_attack_bonus_cap(struct char_data *ch)
+{
+  int cap = MAX_BAB;
+  if (ch && IS_POWERFUL_BEING(ch) && FIGHTING(ch) &&
+      !affected_by_spell(FIGHTING(ch), SPELL_IRONSKIN) &&
+      !affected_by_spell(FIGHTING(ch), SPELL_EPIC_WARDING))
+  {
+    cap++;
+    if (GET_LEVEL(ch) > 30) cap++;
+    if (GET_LEVEL(ch) > 31) cap++;
+    if (GET_LEVEL(ch) > 32) cap += 2;
+    if (GET_LEVEL(ch) > 33) cap += 2;
+  }
+  return cap;
+}
+
 int compute_attack_bonus(struct char_data *ch,     /* Attacker */
                          struct char_data *victim, /* Defender */
                          int attack_type)
@@ -12184,40 +12201,8 @@ int compute_attack_bonus_full(struct char_data *ch,     /* Attacker */
   for (i = 0; i < NUM_BONUS_TYPES; i++)
     calc_bab += bonuses[i];
 
-  int maximum_bab = MAX_BAB;
-
-  /* powerful being mechanics */
-  if (IS_POWERFUL_BEING(ch) && FIGHTING(ch))
-  {
-    /* this bonus will only kick in IF the defender doesn't have iron skin & epic warding */
-    if (!affected_by_spell(FIGHTING(ch), SPELL_IRONSKIN) &&
-        !affected_by_spell(FIGHTING(ch), SPELL_EPIC_WARDING))
-    {
-      maximum_bab++;
-      calc_bab++;
-
-      if (GET_LEVEL(ch) > 30)
-      {
-        maximum_bab++;
-        calc_bab++;
-      }
-      if (GET_LEVEL(ch) > 31)
-      {
-        maximum_bab++;
-        calc_bab++;
-      }
-      if (GET_LEVEL(ch) > 32)
-      {
-        maximum_bab += 2;
-        calc_bab += 2;
-      }
-      if (GET_LEVEL(ch) > 33)
-      {
-        maximum_bab += 2;
-        calc_bab += 2;
-      }
-    }
-  }
+  int maximum_bab = get_attack_bonus_cap(ch);
+  calc_bab += maximum_bab - MAX_BAB;
 
   if (attack_type == ATTACK_TYPE_RANGED || attack_type == ATTACK_TYPE_BOMB_TOSS)
     formation_penalty = formation_ranged_penalty(ch);

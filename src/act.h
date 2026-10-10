@@ -245,6 +245,7 @@ ACMD_DECL(do_materials);
 ACMD_DECL(do_gold);
 ACMD_DECL(do_gmcptest);
 ACMD_DECL(do_statcap);
+ACMD_DECL(do_stats);
 ACMD_DECL(do_help);
 ACMD_DECL(do_history);
 ACMD_DECL(do_inventory);

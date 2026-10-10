@@ -506,7 +506,7 @@ void reset_char_points(struct char_data *ch)
 }
 
 /* this is our system to limit the stats of characters
-     -added a viewable mode! 0 = default, 1 = view
+     -modes: 0 = enforce caps, 1 = legacy cap view, 2 = stats report
 -zusuk */
 #define BASE_STAT_CAP 22
 #define HP_CAP 500
@@ -516,6 +516,11 @@ void reset_char_points(struct char_data *ch)
 #define AC_CAP -160
 #define SAVE_CAP 15
 #define SPELL_RESIST_CAP 75
+static void show_stat_limit(struct char_data *ch, const char *name, int current, int cap)
+{
+  send_to_char(ch, "%-28s %10d %10d\r\n", name, current, cap);
+}
+
 void compute_char_cap(struct char_data *ch, int mode)
 {
   int psp_cap, move_cap, hit_cap, dam_cap, spell_resist_cap, class, class_level = 0;
@@ -525,7 +530,8 @@ void compute_char_cap(struct char_data *ch, int mode)
 
   /* values are between 1..stat-cap, not < 1 and not > stat-cap */
 
-  (ch)->points.size = MAX(SIZE_FINE, MIN(GET_SIZE(ch), SIZE_COLOSSAL));
+  if (!mode)
+    (ch)->points.size = MAX(SIZE_FINE, MIN(GET_SIZE(ch), SIZE_COLOSSAL));
 
   /* can add more restrictions to npc's above this line if we like */
   if (IS_NPC(ch))
@@ -778,6 +784,65 @@ void compute_char_cap(struct char_data *ch, int mode)
   /* rage is calculated in above switch */
 
   /*************/
+
+  if (mode == 2)
+  {
+    struct char_data *opponent = FIGHTING(ch) ? FIGHTING(ch) : ch;
+    int attack_cap = get_attack_bonus_cap(ch);
+    int conceal_cap = MAX_CONCEAL, attack_type = ATTACK_TYPE_PRIMARY;
+    struct obj_data *weapon = GET_EQ(ch, WEAR_WIELD_1);
+    if (!weapon)
+      weapon = GET_EQ(ch, WEAR_WIELD_2H);
+
+    send_to_char(ch, "\tCYour statistics and current caps\tn\r\n"
+                     "%-28s %10s %10s\r\n", "Statistic", "Current", "Cap");
+    show_stat_limit(ch, "STR", GET_STR(ch), str_cap);
+    show_stat_limit(ch, "DEX", GET_DEX(ch), dex_cap);
+    show_stat_limit(ch, "CON", GET_CON(ch), con_cap);
+    show_stat_limit(ch, "INT", GET_INT(ch), int_cap);
+    show_stat_limit(ch, "WIS", GET_WIS(ch), wis_cap);
+    show_stat_limit(ch, "CHA", GET_CHA(ch), cha_cap);
+    if (IS_WILDSHAPED(ch) || IS_MORPHED(ch))
+      weapon = NULL;
+    if (!weapon)
+      attack_type = ATTACK_TYPE_UNARMED;
+    else if (GET_OBJ_TYPE(weapon) == ITEM_WEAPON && GET_OBJ_VAL(weapon, 0) >= 0 &&
+             GET_OBJ_VAL(weapon, 0) < NUM_WEAPON_TYPES &&
+             IS_SET(weapon_list[GET_OBJ_VAL(weapon, 0)].weaponFlags, WEAPON_FLAG_RANGED))
+      attack_type = ATTACK_TYPE_RANGED;
+    show_stat_limit(ch, attack_type == ATTACK_TYPE_RANGED ? "Attack bonus (ranged)" : "Attack bonus (melee)",
+                    compute_attack_bonus(ch, opponent, attack_type),
+                    attack_cap + (attack_type == ATTACK_TYPE_RANGED ? formation_ranged_penalty(ch) : 0));
+    show_stat_limit(ch, "Armor class", compute_armor_class(NULL, ch, FALSE, MODE_ARMOR_CLASS_NORMAL),
+                    CONFIG_PLAYER_AC_CAP);
+    show_stat_limit(ch, "Hitroll (stat)", GET_HITROLL(ch), hit_cap);
+    show_stat_limit(ch, "Damroll (stat)", GET_DAMROLL(ch), dam_cap);
+    send_to_char(ch, "%-28s %10s %10d\r\n", "Total damage bonus", "--", MAX_DAM_BONUS);
+    show_stat_limit(ch, "Spell resistance (stat)", GET_SPELL_RES(ch), spell_resist_cap);
+    show_stat_limit(ch, "Save - Fortitude", compute_mag_saves(ch, SAVING_FORT, 0),
+                    MIN(99, compute_mag_saves(ch, SAVING_FORT, MAX_GOLD) + save_fort_cap));
+    show_stat_limit(ch, "Save - Reflex", compute_mag_saves(ch, SAVING_REFL, 0),
+                    MIN(99, compute_mag_saves(ch, SAVING_REFL, MAX_GOLD) + save_rflx_cap));
+    show_stat_limit(ch, "Save - Will", compute_mag_saves(ch, SAVING_WILL, 0),
+                    MIN(99, compute_mag_saves(ch, SAVING_WILL, MAX_GOLD) + save_will_cap));
+    show_stat_limit(ch, "Save - Poison", compute_mag_saves(ch, SAVING_POISON, 0),
+                    MIN(99, compute_mag_saves(ch, SAVING_POISON, MAX_GOLD) + save_psn_cap));
+    show_stat_limit(ch, "Save - Death", compute_mag_saves(ch, SAVING_DEATH, 0),
+                    MIN(99, compute_mag_saves(ch, SAVING_DEATH, MAX_GOLD) + save_dth_cap));
+    show_stat_limit(ch, "Maximum PSP", GET_MAX_PSP(ch), psp_cap);
+    show_stat_limit(ch, "Maximum movement", GET_MAX_MOVE(ch), move_cap);
+    send_to_char(ch, "%-28s %10d %10s\r\n", "Maximum hit points", GET_MAX_HIT(ch), "No fixed cap");
+    if (char_has_mud_event(ch, eVANISH))
+      conceal_cap += 25 + (HAS_FEAT(ch, FEAT_IMPROVED_VANISH) ? 75 : 0);
+    show_stat_limit(ch, "Concealment (%)", compute_concealment(ch, NULL), conceal_cap);
+    send_to_char(ch, "%-28s %10s %10d\r\n", "Damage reduction", "--", MAX_DAM_REDUC);
+    send_to_char(ch, "%-28s %10s %10d\r\n", "Energy absorption", "--", MAX_ENERGY_ABSORB);
+    send_to_char(ch, "Caps use your current class levels, base stats and active effects.\r\n"
+                     "Combat values depend on your opponent; ranged caps include formation penalties.\r\n"
+                     "Damage bonus excludes weapon dice. Reduction/absorption caps are per damage type.\r\n"
+                     "-- means only the cap is shown for that statistic.\r\n");
+    return;
+  }
 
   /* viewable mode! */
   if (mode)

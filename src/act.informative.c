@@ -3651,6 +3651,13 @@ ACMD(do_statcap)
   compute_char_cap(ch, 1);
 }
 
+ACMD(do_stats)
+{
+  if (IS_NPC(ch))
+    return;
+  compute_char_cap(ch, 2);
+}
+
 /* commnand to check your gold balance! */
 ACMD(do_gold)
 {

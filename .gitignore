@@ -327,6 +327,7 @@ lib/text/help/*
 !lib/text/help/README
 !lib/text/help/.gitkeep
 !lib/text/help/formation.hlp
+!lib/text/help/stats.hlp
 
 ####################
 # Unit Tests

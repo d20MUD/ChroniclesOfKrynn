@@ -1014,7 +1014,8 @@ cpp_extern const struct command_info cmd_info[] = {
     {"spot", "spot", POS_STANDING, do_spot, 1, 0, FALSE, ACTION_NONE, {0, 0}, NULL},
     {"stand", "st", POS_RECLINING, do_stand, 0, 0, FALSE, ACTION_STANDARD, {6, 0}, NULL},
     {"stat", "stat", POS_DEAD, do_stat, LVL_IMMORT, 0, TRUE, ACTION_NONE, {0, 0}, NULL},
-    {"stats", "stats", POS_RESTING, do_auctionhouse, 0, 0, FALSE, ACTION_NONE, {0, 0}, NULL},
+    {"statcap", "statcap", POS_RECLINING, do_stats, 0, 0, TRUE, ACTION_NONE, {0, 0}, NULL},
+    {"stats", "stats", POS_RECLINING, do_stats, 0, 0, TRUE, ACTION_NONE, {0, 0}, NULL},
     {"steal", "ste", POS_STANDING, do_steal, 1, 0, FALSE, ACTION_NONE, {0, 0}, NULL},
     {"stonesendurance", "stonese", POS_FIGHTING, do_stones_endurance, 0, 0, TRUE, ACTION_NONE, {0, 0}, can_stones_endurance},
     {"store", "store", POS_RECLINING, do_store, 1, 0, FALSE, ACTION_MOVE, {0, 0}, NULL},
@@ -1061,7 +1062,6 @@ cpp_extern const struct command_info cmd_info[] = {
     {"staffevents", "staffevents", POS_SLEEPING, do_staffevents, 1, 0, TRUE, ACTION_NONE, {0, 0}, NULL},
     {"summon", "summon", POS_RECLINING, do_summon, 1, 0, FALSE, ACTION_NONE, {0, 0}, NULL},
     {"summonerpreference", "summonerpreference", POS_STANDING, do_summonerpreference, 1, 0, FALSE, ACTION_NONE, {0, 0}, NULL},
-    {"statcap", "statcap", POS_RECLINING, do_statcap, 0, 0, TRUE, ACTION_NONE, {0, 0}, NULL},
     /*pubsub*/
     {"subscribe", "sub", POS_DEAD, do_subscribe, 0, 0, TRUE, ACTION_NONE, {0, 0}, NULL},
 
