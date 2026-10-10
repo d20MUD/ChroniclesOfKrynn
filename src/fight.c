@@ -479,7 +479,7 @@ bool is_tanking(struct char_data *ch)
   struct char_data *vict;
   for (vict = world[ch->in_room].people; vict; vict = vict->next_in_room)
   {
-    if (FIGHTING(vict) == ch)
+    if (FIGHTING(vict) == ch && formation_can_melee_target(vict, ch))
       return TRUE;
   }
 
@@ -10923,7 +10923,7 @@ int compute_attack_bonus_full(struct char_data *ch,     /* Attacker */
                               int attack_type,          /* Type of attack  */
                               bool display) // whether to show info on the attack bonus breakdown
 {
-  int i = 0;
+  int i = 0, formation_penalty = 0;
   int bonuses[NUM_BONUS_TYPES];
   int calc_bab = BAB(ch); /* Start with base attack bonus */
   struct obj_data *wielded = NULL;
@@ -12219,19 +12219,24 @@ int compute_attack_bonus_full(struct char_data *ch,     /* Attacker */
     }
   }
 
+  if (attack_type == ATTACK_TYPE_RANGED || attack_type == ATTACK_TYPE_BOMB_TOSS)
+    formation_penalty = formation_ranged_penalty(ch);
+  if (display && formation_penalty)
+    send_to_char(ch, "%2d: %-50s\r\n", formation_penalty, "Front-row ranged penalties");
+
   if (display)
   {
     send_to_char(ch, "\tC");
     draw_line(ch, 80, '-', '-');
     send_to_char(ch, "\tn");
-    send_to_char(ch, "%2d: %-50s\r\n", MIN(maximum_bab, calc_bab), "Total Mod");
+    send_to_char(ch, "%2d: %-50s\r\n", MIN(maximum_bab, calc_bab) + formation_penalty, "Total Mod");
     if (calc_bab >= maximum_bab)
     {
       send_to_char(ch, "%2d: %-50s\r\n", maximum_bab, "Capped At");
     }
   }
 
-  return (MIN(maximum_bab, calc_bab));
+  return MIN(maximum_bab, calc_bab) + formation_penalty;
 }
 
 /* compute a combat maneuver bonus (attack) value */
@@ -14884,10 +14889,6 @@ int hit(struct char_data *ch, struct char_data *victim, int type, int dam_type, 
 
   GET_ATTACKS_THIS_ROUND(ch)++;
 
-  // each hit we want to reset the preserve organs proc.  This is to prevent double dipping
-  // from sneak attacks and crits
-  victim->preserve_organs_procced = FALSE;
-
   struct obj_data *wielded =
       get_wielded(ch, attack_type); /* Wielded weapon for this hand (uses offhand) */
   /*if (GET_EQ(ch, WEAR_WIELD_2H) && attack_type != ATTACK_TYPE_RANGED)
@@ -14912,6 +14913,31 @@ int hit(struct char_data *ch, struct char_data *victim, int type, int dam_type, 
                   Needs improvement. */
     return (HIT_RESULT_ACTION);
   }
+
+  /* Enforce formation before consuming ammo, rolling attacks or starting combat. */
+  if (!formation_allows_attack(ch, attack_type, wielded))
+  {
+    if (!IS_NPC(ch) && GET_ATTACKS_THIS_ROUND(ch) == 1)
+      send_to_char(ch, "You cannot use that attack from the %s row.\r\n",
+                   formation_row_name(get_formation_row(ch)));
+    return HIT_MISS;
+  }
+  if (attack_type != ATTACK_TYPE_RANGED && attack_type != ATTACK_TYPE_BOMB_TOSS &&
+      attack_type != ATTACK_TYPE_PSIONICS && attack_type != ATTACK_TYPE_ELDRITCH_BLAST &&
+      IS_NPC(ch) && !formation_can_melee_target(ch, victim))
+  {
+    struct char_data *target;
+    /* An opportunity attack cannot be redirected onto a different ally. */
+    if (type == TYPE_ATTACK_OF_OPPORTUNITY)
+      return HIT_MISS;
+    target = formation_melee_target(ch, victim);
+    if (!target)
+      return HIT_MISS;
+    if (FIGHTING(ch) == victim)
+      FIGHTING(ch) = target;
+    victim = target;
+  }
+  victim->preserve_organs_procced = FALSE;
 
   /* hitting pets:  some protection from a toggle if you like */
   if (victim->master == ch)
@@ -15985,7 +16011,8 @@ static int perform_staggered_attack(struct char_data *ch, int mode, int phase)
 
   if (can_fire_ammo(ch, TRUE) && FIRING(ch))
   {
-    if (is_tanking(ch) && !IS_NPC(ch) && !HAS_FEAT(ch, FEAT_POINT_BLANK_SHOT))
+    if (is_tanking(ch) && !IS_NPC(ch) && !HAS_FEAT(ch, FEAT_POINT_BLANK_SHOT) &&
+        (!GROUP(ch) || get_formation_row(ch) != FORMATION_FRONT))
     {
       send_to_char(ch, "You are too close to use your ranged weapon.\r\n");
       stop_fighting(ch);
@@ -15993,7 +16020,7 @@ static int perform_staggered_attack(struct char_data *ch, int mode, int phase)
       return 0;
     }
 
-    if (is_tanking(ch))
+    if (is_tanking(ch) && (!GROUP(ch) || get_formation_row(ch) != FORMATION_FRONT))
     {
       if (!IS_NPC(ch) && HAS_FEAT(ch, FEAT_IMPROVED_PRECISE_SHOT))
         penalty += 4;
@@ -16255,6 +16282,21 @@ int perform_attacks(struct char_data *ch, int mode, int phase)
    and then exit.  Otherwise you will fall through and perform a melee attack
    (unless you have a ranged weapon equipped, in which case exit) */
 
+  if (mode == NORMAL_ATTACK_ROUTINE && GROUP(ch))
+  {
+    int formation_attack = can_fire_ammo(ch, TRUE) ? ATTACK_TYPE_RANGED : ATTACK_TYPE_PRIMARY;
+    struct obj_data *formation_weapon = get_wielded(ch, formation_attack);
+    if (IS_WILDSHAPED(ch) || IS_MORPHED(ch))
+      formation_weapon = NULL;
+    if (!formation_allows_attack(ch, formation_attack, formation_weapon))
+    {
+      if (!IS_NPC(ch) && (phase == PHASE_1 || phase == 0))
+        send_to_char(ch, "You cannot use that attack from the %s row.\r\n",
+                     formation_row_name(get_formation_row(ch)));
+      return 0;
+    }
+  }
+
   /* -- Process ranged attacks, determine base number of attacks irregardless of
    * whether ch is in combat or not ------ */
   if (can_fire_ammo(ch, TRUE))
@@ -16262,7 +16304,8 @@ int perform_attacks(struct char_data *ch, int mode, int phase)
     /* Early Exits from ranged combat? */
 
     /* if we don't have point blank shot, unceremoniously dump out of function */
-    if (is_tanking(ch) && !IS_NPC(ch) && !HAS_FEAT(ch, FEAT_POINT_BLANK_SHOT))
+    if (is_tanking(ch) && !IS_NPC(ch) && !HAS_FEAT(ch, FEAT_POINT_BLANK_SHOT) &&
+        (!GROUP(ch) || get_formation_row(ch) != FORMATION_FRONT))
     {
       send_to_char(ch, "You are too close to use your ranged weapon.\r\n");
       stop_fighting(ch);
@@ -16315,7 +16358,7 @@ int perform_attacks(struct char_data *ch, int mode, int phase)
    * combat are included here as opposed to above calculations */
   if (can_fire_ammo(ch, TRUE) && FIRING(ch) && mode == NORMAL_ATTACK_ROUTINE)
   {
-    if (is_tanking(ch))
+    if (is_tanking(ch) && (!GROUP(ch) || get_formation_row(ch) != FORMATION_FRONT))
     {
       if (!IS_NPC(ch) && HAS_FEAT(ch, FEAT_IMPROVED_PRECISE_SHOT))
         penalty += 4;

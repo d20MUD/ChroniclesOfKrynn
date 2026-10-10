@@ -326,6 +326,7 @@ lib/text/oldnews
 lib/text/help/*
 !lib/text/help/README
 !lib/text/help/.gitkeep
+!lib/text/help/formation.hlp
 
 ####################
 # Unit Tests

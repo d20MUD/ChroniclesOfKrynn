@@ -12,6 +12,14 @@
 #ifndef _HANDLER_H_
 #define _HANDLER_H_
 
+int get_formation_row(struct char_data *ch);
+const char *formation_row_name(int row);
+int formation_ranged_penalty(struct char_data *ch);
+bool formation_allows_attack(struct char_data *ch, int attack_type, struct obj_data *weapon);
+bool formation_melee_skill_allowed(struct char_data *ch, struct char_data *victim, bool armed);
+bool formation_can_melee_target(struct char_data *ch, struct char_data *victim);
+struct char_data *formation_melee_target(struct char_data *ch, struct char_data *victim);
+
 void check_room_lighting(room_rnum room, struct char_data *ch, bool enter);
 
 /* handling the affected-structures */

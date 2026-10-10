@@ -485,6 +485,7 @@ cpp_extern const struct command_info cmd_info[] = {
     {"frenzy", "frenzy", POS_FIGHTING, do_frenzy, 1, 0, FALSE, ACTION_SWIFT, {0, 0}, can_frenzy},
     {"flightlist", "flightlist", POS_RESTING, do_flightlist, 1, 0, FALSE, ACTION_NONE, {0, 0}, NULL},
     {"follow", "fol", POS_RECLINING, do_follow, 0, 0, FALSE, ACTION_NONE, {0, 0}, NULL},
+    {"formation", "formation", POS_RESTING, do_formation, 0, 0, TRUE, ACTION_NONE, {0, 0}, NULL},
     {"forgeas", "forgeas", POS_RECLINING, do_forgeas, 0, 0, FALSE, ACTION_NONE, {0, 0}, NULL},
     {"forget", "forget", POS_RECLINING, do_consign_to_oblivion, 0, SCMD_FORGET, FALSE, ACTION_NONE, {0, 0}, NULL},
     {"foretell", "foretell", POS_RECLINING, do_foretell, 0, 0, FALSE, ACTION_NONE, {0, 0}, NULL},

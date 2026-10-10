@@ -1407,6 +1407,9 @@ void perform_rescue(struct char_data *ch, struct char_data *vict)
 
 void perform_charge(struct char_data *ch, struct char_data *vict)
 {
+  if (!formation_melee_skill_allowed(ch, vict, TRUE))
+    return;
+
   struct affected_type af[CHARGE_AFFECTS];
   extern struct index_data *mob_index;
   int (*name)(struct char_data *ch, void *me, int cmd, const char *argument);
@@ -1500,6 +1503,12 @@ bool perform_knockdown(struct char_data *ch, struct char_data *vict, int skill, 
   {
     return FALSE;
   }
+
+  if ((skill == SKILL_BASH || skill == SKILL_TRIP || skill == SKILL_BODYSLAM ||
+       skill == SKILL_SHIELD_CHARGE || skill == SKILL_SMITE_EVIL ||
+       skill == EVOLUTION_WING_BUFFET_EFFECT) &&
+      !formation_melee_skill_allowed(ch, vict, skill == SKILL_TRIP || skill == SKILL_SMITE_EVIL))
+    return FALSE;
 
   if (IS_NPC(vict) && MOB_FLAGGED(vict, MOB_GOLEM) && vict->master && !IS_NPC(vict->master) &&
       get_artificer_golem_safeguards_rank(vict->master) > 0)
@@ -1994,6 +2003,9 @@ bool perform_knockdown(struct char_data *ch, struct char_data *vict, int skill, 
  * equipment, also check for any enhancing feats. */
 bool perform_shieldpunch(struct char_data *ch, struct char_data *vict)
 {
+  if (!formation_melee_skill_allowed(ch, vict, FALSE))
+    return FALSE;
+
   extern struct index_data *obj_index;
   int (*name)(struct char_data *ch, void *me, int cmd, const char *argument);
   struct obj_data *shield = GET_EQ(ch, WEAR_SHIELD);
@@ -2132,6 +2144,9 @@ bool perform_shieldcharge(struct char_data *ch, struct char_data *vict)
  * equipment, also check for any enhancing feats. */
 bool perform_shieldslam(struct char_data *ch, struct char_data *vict)
 {
+  if (!formation_melee_skill_allowed(ch, vict, FALSE))
+    return FALSE;
+
   struct affected_type af;
   extern struct index_data *obj_index;
   int (*name)(struct char_data *ch, void *me, int cmd, const char *argument);
@@ -2209,6 +2224,9 @@ bool perform_shieldslam(struct char_data *ch, struct char_data *vict)
 /* engine for headbutt skill */
 void perform_headbutt(struct char_data *ch, struct char_data *vict)
 {
+  if (!formation_melee_skill_allowed(ch, vict, FALSE))
+    return;
+
   struct affected_type af;
 
   if (vict == ch)
@@ -2566,6 +2584,9 @@ void perform_layonhands(struct char_data *ch, struct char_data *vict)
 
 void perform_sap(struct char_data *ch, struct char_data *vict)
 {
+  if (!formation_melee_skill_allowed(ch, vict, TRUE))
+    return;
+
   int dam = 0, found = FALSE;
   int prob = -6;
   struct affected_type af;
@@ -2708,6 +2729,9 @@ void perform_sap(struct char_data *ch, struct char_data *vict)
 /* main engine for dirt-kick mechanic */
 bool perform_dirtkick(struct char_data *ch, struct char_data *vict)
 {
+  if (!formation_melee_skill_allowed(ch, vict, FALSE))
+    return FALSE;
+
   struct affected_type af;
   int dam = 0;
 
@@ -2831,6 +2855,9 @@ void perform_assist(struct char_data *ch, struct char_data *helpee)
 /* the primary engine for springleap */
 void perform_springleap(struct char_data *ch, struct char_data *vict)
 {
+  if (!formation_melee_skill_allowed(ch, vict, FALSE))
+    return;
+
   int dam = 0;
 
   if (vict == ch)
@@ -2929,6 +2956,9 @@ void perform_smite(struct char_data *ch, int smite_type)
 /* the primary engine for backstab */
 bool perform_backstab(struct char_data *ch, struct char_data *vict)
 {
+  if (!formation_melee_skill_allowed(ch, vict, TRUE))
+    return FALSE;
+
   int blow_landed = 0, prob = 0, successful = 0, has_piercing = 0, assassin_mod = 2;
   struct obj_data *wielded = GET_EQ(ch, WEAR_WIELD_1);
   bool make_aware = FALSE, marked_target = FALSE;
@@ -6074,6 +6104,8 @@ ACMD(do_minotaur_gore)
   }
 
   struct char_data *vict = FIGHTING(ch);
+  if (!formation_melee_skill_allowed(ch, vict, FALSE))
+    return;
 
   act("You rush forward to gore $N", true, ch, 0, vict, TO_CHAR);
   act("$n rushes forward to gore $N.", TRUE, ch, 0, vict, TO_VICT);
@@ -6115,6 +6147,8 @@ ACMD(do_bite_attack)
   }
 
   vict = FIGHTING(ch);
+  if (!formation_melee_skill_allowed(ch, vict, FALSE))
+    return;
 
   act("You snap at $N with your vicious jaws.", true, ch, 0, vict, TO_CHAR);
   act("$n snaps at $N with $s vicious jaws.", TRUE, ch, 0, vict, TO_VICT);
@@ -10896,6 +10930,9 @@ void perform_faerie_fire(struct char_data *ch, struct char_data *vict)
 /* dragonbite engine, just used for prisoner right now -zusuk */
 int perform_dragonbite(struct char_data *ch, struct char_data *vict)
 {
+  if (!formation_melee_skill_allowed(ch, vict, FALSE))
+    return FALSE;
+
   int discipline_bonus = 0, diceOne = 0, diceTwo = 0;
   bool got_em = FALSE;
 
@@ -10954,6 +10991,9 @@ int perform_dragonbite(struct char_data *ch, struct char_data *vict)
 /* kick engine */
 void perform_kick(struct char_data *ch, struct char_data *vict)
 {
+  if (!formation_melee_skill_allowed(ch, vict, FALSE))
+    return;
+
   int discipline_bonus = 0, diceOne = 0, diceTwo = 0;
 
   if (vict == ch)
@@ -12615,6 +12655,9 @@ ACMD(do_feint)
 /* disarm mechanic */
 int perform_disarm(struct char_data *ch, struct char_data *vict, int mod)
 {
+  if (!formation_melee_skill_allowed(ch, vict, TRUE))
+    return -1;
+
   int pos;
   struct obj_data *wielded = NULL;
 
@@ -12786,6 +12829,9 @@ ACMD(do_disarm)
 /* sunder mechanic - opposed attack rolls to break weapon/shield */
 int perform_sunder(struct char_data *ch, struct char_data *vict, int mod)
 {
+  if (!formation_melee_skill_allowed(ch, vict, TRUE))
+    return -1;
+
   int pos;
   struct obj_data *target_item = NULL;
   int attacker_roll = 0, defender_roll = 0;
@@ -15037,6 +15083,9 @@ ACMDU(do_vampiric_dominate)
 /* slam engine */
 void perform_slam(struct char_data *ch, struct char_data *vict)
 {
+  if (!formation_melee_skill_allowed(ch, vict, FALSE))
+    return;
+
   int discipline_bonus = 0, diceOne = 0, diceTwo = 0;
   struct affected_type af;
 

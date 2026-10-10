@@ -6458,6 +6458,11 @@ struct time_data
   int played;   /**< This is the total accumulated time played in secs */
 };
 
+#define FORMATION_FRONT 0
+#define FORMATION_MIDDLE 1
+#define FORMATION_BACK 2
+#define NUM_FORMATION_ROWS 3
+
 /* Group Data Struct */
 struct group_data
 {
@@ -7800,6 +7805,7 @@ struct char_data
   struct char_data *master;      /**< List of character being followed */
 
   struct group_data *group;        /**< Character's Group */
+  int formation_row;              /**< Tactical row while grouped; defaults to front. */
   struct trade_session_data *trade; /**< Active player trade session, if any */
   struct char_data *trade_invite_from; /**< Player who has requested a trade with this character */
   struct char_data *trade_invite_to;   /**< Player this character has requested a trade with */

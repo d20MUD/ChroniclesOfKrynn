@@ -7320,9 +7320,10 @@ static void print_group(struct char_data *ch)
       psp_clr = CBFRED(ch, C_NRM);
 
     send_to_char(
-        ch, "%s%-*s: %s [%s%4d\tn/%-4d]H [%s%4d\tn/%-4d]P [%s%4d\tn/%-4d]V [%ld TNL]%s\r\n",
+        ch, "%s%-*s: %s [%s] [%s%4d\tn/%-4d]H [%s%4d\tn/%-4d]P [%s%4d\tn/%-4d]V [%ld TNL]%s\r\n",
         GROUP_LEADER(GROUP(ch)) == k ? "\tG*\tn" : " ", count_color_chars(GET_NAME(k)) + 30,
-        GET_NAME(k), IN_ROOM(ch) == IN_ROOM(k) ? "\tYInRoom\tn" : "\tRAbsent\tn", hp_clr,
+        GET_NAME(k), IN_ROOM(ch) == IN_ROOM(k) ? "\tYInRoom\tn" : "\tRAbsent\tn",
+        formation_row_name(get_formation_row(k)), hp_clr,
         GET_HIT(k), GET_MAX_HIT(k), psp_clr, (GET_PSIONIC_LEVEL(k) <= 0) ? 0 : GET_PSP(k),
         (GET_PSIONIC_LEVEL(k) <= 0) ? 0 : GET_MAX_PSP(k), mv_clr, GET_MOVE(k), GET_MAX_MOVE(k),
         (long)MAX(0, level_exp(k, GET_LEVEL(k) + 1) - GET_EXP(k)), CCNRM(ch, C_NRM));
@@ -7361,6 +7362,7 @@ void update_msdp_group(struct char_data *ch)
                  "%c%s%c%d"
                  "%c%s%c%d"
                  "%c%s%c%d"
+                 "%c%s%c%s"
                  "%c",
                  (char)MSDP_VAL, (char)MSDP_TABLE_OPEN, (char)MSDP_VAR, "NAME", (char)MSDP_VAL,
                  GET_NAME(k), (char)MSDP_VAR, "LEVEL", (char)MSDP_VAL, GET_LEVEL(k), (char)MSDP_VAR,
@@ -7368,6 +7370,7 @@ void update_msdp_group(struct char_data *ch)
                  "HEALTH", (char)MSDP_VAL, GET_HIT(k), (char)MSDP_VAR, "HEALTH_MAX", (char)MSDP_VAL,
                  GET_MAX_HIT(k), (char)MSDP_VAR, "MOVEMENT", (char)MSDP_VAL, GET_MOVE(k),
                  (char)MSDP_VAR, "MOVEMENT_MAX", (char)MSDP_VAL, GET_MAX_MOVE(k),
+                 (char)MSDP_VAR, "FORMATION", (char)MSDP_VAL, formation_row_name(get_formation_row(k)),
                  (char)MSDP_TABLE_CLOSE);
         strlcat(msdp_buffer, buf, sizeof(msdp_buffer));
       }
@@ -7476,6 +7479,95 @@ static void display_group_list(struct char_data *ch)
                      "Currently no groups formed.\r\n");
 }
 
+/* Members choose their own position; leaders may also position their allies. */
+ACMD(do_formation)
+{
+  char row_arg[MAX_INPUT_LENGTH], member_arg[MAX_INPUT_LENGTH];
+  struct char_data *member, *target = ch;
+  struct iterator_data iterator;
+  int row;
+
+  if (!GROUP(ch))
+  {
+    send_to_char(ch, "You must be in a group to use a formation.\r\n");
+    return;
+  }
+  argument = one_argument(argument, row_arg, sizeof(row_arg));
+  skip_spaces_c(&argument);
+  if (!*row_arg || is_abbrev(row_arg, "list") || is_abbrev(row_arg, "help"))
+  {
+    send_to_char(ch, "Group formation:\r\n");
+    for (row = FORMATION_FRONT; row < NUM_FORMATION_ROWS; row++)
+    {
+      send_to_char(ch, "%s row:\r\n", formation_row_name(row));
+      for (member = merge_iterator(&iterator, GROUP(ch)->members); member;
+           member = next_in_list(&iterator))
+        if (get_formation_row(member) == row)
+          send_to_char(ch, "  %s%s\r\n", GET_NAME(member),
+                       IN_ROOM(member) == IN_ROOM(ch) ? "" : " (absent)");
+      remove_iterator(&iterator);
+    }
+    send_to_char(ch, "Usage: formation <front|middle|back> [member]\r\n"
+                     "You can also use group formation <row> [member].\r\n"
+                     "Front: melee/reach/ranged weapons. Middle: reach/ranged weapons. Back: ranged weapons.\r\n"
+                     "Front-row ranged attacks take -4 without Point Blank Shot and -4 without\r\n"
+                     "Precise Shot (or Improved Precise Shot); these penalties stack.\r\n"
+                     "NPC melee reaches the nearest occupied row; large NPCs reach two rows,\r\n"
+                     "and huge or larger NPCs reach all three. Spells keep their normal range.\r\n"
+                     "Only leaders can move other members. Moving in combat costs a move action.\r\n");
+    return;
+  }
+  for (row = FORMATION_FRONT; row < NUM_FORMATION_ROWS; row++)
+    if (is_abbrev(row_arg, formation_row_name(row)))
+      break;
+  if (row >= NUM_FORMATION_ROWS)
+  {
+    send_to_char(ch, "Choose the front, middle, or back row.\r\n");
+    return;
+  }
+  if (*argument)
+  {
+    strlcpy(member_arg, argument, sizeof(member_arg));
+    target = get_char_room_vis(ch, member_arg, NULL);
+    if (!target || GROUP(target) != GROUP(ch))
+    {
+      send_to_char(ch, "That group member is not here.\r\n");
+      return;
+    }
+    if (target != ch && GROUP_LEADER(GROUP(ch)) != ch)
+    {
+      send_to_char(ch, "Only the group leader can position other members.\r\n");
+      return;
+    }
+  }
+  if (get_formation_row(target) == row)
+  {
+    send_to_char(ch, "%s is already in the %s row.\r\n", GET_NAME(target), formation_row_name(row));
+    return;
+  }
+  if (GET_POS(target) <= POS_SLEEPING)
+  {
+    send_to_char(ch, "They must be conscious and awake to change rows.\r\n");
+    return;
+  }
+  if (FIGHTING(target) || is_tanking(target))
+  {
+    if (!is_action_available(target, atMOVE, FALSE))
+    {
+      send_to_char(ch, "Changing rows in combat requires an available move action.\r\n");
+      return;
+    }
+    USE_MOVE_ACTION(target);
+  }
+  target->formation_row = row;
+  send_to_group(NULL, GROUP(ch), "%s moves to the %s row.\r\n", GET_NAME(target),
+                formation_row_name(row));
+  for (member = merge_iterator(&iterator, GROUP(ch)->members); member;
+       member = next_in_list(&iterator))
+    update_msdp_group(member);
+  remove_iterator(&iterator);
+}
+
 // vatiken's group system 1.2, installed 08/08/12 by zusuk
 
 ACMDU(do_group)
@@ -7490,6 +7582,12 @@ ACMDU(do_group)
       print_group(ch);
     else
       send_to_char(ch, "You must specify a group option, or type HELP GROUP for more info.\r\n");
+    return;
+  }
+
+  if (is_abbrev(buf, "formation"))
+  {
+    do_formation(ch, argument, cmd, subcmd);
     return;
   }
 

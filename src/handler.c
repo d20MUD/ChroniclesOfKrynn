@@ -24,6 +24,7 @@
 #include "act.h"
 #include "class.h"
 #include "fight.h"
+#include "assign_wpn_armor.h"
 #include "quest.h"
 #include "mud_event.h"
 #include "wilderness.h"
@@ -3708,6 +3709,144 @@ int find_all_dots(char *arg)
     return (FIND_INDIV);
 }
 
+/* Tactical group formation. Room lists avoid disturbing shared group iterators. */
+int get_formation_row(struct char_data *ch)
+{
+  if (!ch || !GROUP(ch) || ch->formation_row < FORMATION_FRONT ||
+      ch->formation_row >= NUM_FORMATION_ROWS)
+    return FORMATION_FRONT;
+  return ch->formation_row;
+}
+
+const char *formation_row_name(int row)
+{
+  static const char *names[NUM_FORMATION_ROWS] = {"Front", "Middle", "Back"};
+  if (row < FORMATION_FRONT || row >= NUM_FORMATION_ROWS)
+    return names[FORMATION_FRONT];
+  return names[row];
+}
+
+bool formation_allows_attack(struct char_data *ch, int attack_type, struct obj_data *weapon)
+{
+  int row, weapon_type;
+  bool ranged, reach = FALSE;
+
+  if (!ch || !GROUP(ch))
+    return TRUE;
+  /* Spell-like attacks use their normal targeting rules from every row. */
+  if (attack_type == ATTACK_TYPE_PSIONICS || attack_type == ATTACK_TYPE_ELDRITCH_BLAST)
+    return TRUE;
+  row = get_formation_row(ch);
+  ranged = attack_type == ATTACK_TYPE_RANGED || attack_type == ATTACK_TYPE_BOMB_TOSS;
+  /* Natural attacks must not borrow reach from an equipped weapon. */
+  if (weapon && GET_OBJ_TYPE(weapon) == ITEM_WEAPON && attack_type != ATTACK_TYPE_UNARMED &&
+      attack_type < ATTACK_TYPE_PRIMARY_EVO_BITE)
+  {
+    weapon_type = GET_OBJ_VAL(weapon, 0);
+    if (weapon_type >= 0 && weapon_type < NUM_WEAPON_TYPES)
+      reach = IS_SET(weapon_list[weapon_type].weaponFlags, WEAPON_FLAG_REACH);
+  }
+  if (row == FORMATION_FRONT)
+    return TRUE;
+  if (row == FORMATION_MIDDLE)
+    return ranged || reach;
+  return ranged;
+}
+
+int formation_ranged_penalty(struct char_data *ch)
+{
+  int penalty = 0;
+  if (!ch || !GROUP(ch) || get_formation_row(ch) != FORMATION_FRONT)
+    return 0;
+  if (!HAS_FEAT(ch, FEAT_POINT_BLANK_SHOT))
+    penalty -= 4;
+  if (!HAS_FEAT(ch, FEAT_PRECISE_SHOT) && !HAS_FEAT(ch, FEAT_IMPROVED_PRECISE_SHOT))
+    penalty -= 4;
+  return penalty;
+}
+
+static int formation_exposed_row(struct char_data *victim)
+{
+  struct char_data *member;
+  int row = FORMATION_BACK;
+
+  if (!victim || !GROUP(victim) || IN_ROOM(victim) == NOWHERE)
+    return FORMATION_FRONT;
+  for (member = world[IN_ROOM(victim)].people; member; member = member->next_in_room)
+  {
+    if (GROUP(member) != GROUP(victim) || GET_POS(member) <= POS_SLEEPING || GET_HIT(member) <= 0)
+      continue;
+    row = MIN(row, get_formation_row(member));
+  }
+  return row;
+}
+
+bool formation_can_melee_target(struct char_data *ch, struct char_data *victim)
+{
+  int extra_rows = 0, size;
+
+  if (!ch || !victim)
+    return FALSE;
+  if (!IS_NPC(ch) || !GROUP(victim) || GROUP(ch) == GROUP(victim))
+    return TRUE;
+  if (IN_ROOM(ch) == NOWHERE || IN_ROOM(ch) != IN_ROOM(victim))
+    return FALSE;
+  size = GET_SIZE(ch);
+  if (size >= SIZE_HUGE)
+    extra_rows = 2;
+  else if (size >= SIZE_LARGE)
+    extra_rows = 1;
+  /* The default front row and huge NPCs need no scan of the party. */
+  if (get_formation_row(victim) <= extra_rows)
+    return TRUE;
+  /* Empty rows collapse; absent, sleeping and unconscious members do not screen allies. */
+  return get_formation_row(victim) <= formation_exposed_row(victim) + extra_rows;
+}
+
+struct char_data *formation_melee_target(struct char_data *ch, struct char_data *victim)
+{
+  struct char_data *member, *target = NULL;
+  int row = NUM_FORMATION_ROWS, last_row, size;
+
+  if (formation_can_melee_target(ch, victim))
+    return victim;
+  if (!ch || !victim || IN_ROOM(ch) == NOWHERE || IN_ROOM(ch) != IN_ROOM(victim))
+    return NULL;
+  size = GET_SIZE(ch);
+  last_row = formation_exposed_row(victim) + (size >= SIZE_HUGE ? 2 : size >= SIZE_LARGE ? 1 : 0);
+  for (member = world[IN_ROOM(ch)].people; member; member = member->next_in_room)
+  {
+    if (member == ch || GROUP(member) != GROUP(victim) || GET_POS(member) <= POS_SLEEPING ||
+        GET_HIT(member) <= 0 || !CAN_SEE(ch, member) || get_formation_row(member) > last_row)
+      continue;
+    if (get_formation_row(member) < row)
+    {
+      row = get_formation_row(member);
+      target = member;
+    }
+  }
+  return target;
+}
+
+bool formation_melee_skill_allowed(struct char_data *ch, struct char_data *victim, bool armed)
+{
+  struct obj_data *weapon = NULL;
+  if (!ch || !victim)
+    return FALSE;
+  if (armed && !IS_WILDSHAPED(ch) && !IS_MORPHED(ch))
+  {
+    weapon = GET_EQ(ch, WEAR_WIELD_1);
+    if (!weapon)
+      weapon = GET_EQ(ch, WEAR_WIELD_2H);
+  }
+  if (formation_allows_attack(ch, armed ? ATTACK_TYPE_PRIMARY : ATTACK_TYPE_UNARMED, weapon) &&
+      formation_can_melee_target(ch, victim))
+    return TRUE;
+  if (!IS_NPC(ch))
+    send_to_char(ch, "You cannot reach that target with this melee action from your formation.\r\n");
+  return FALSE;
+}
+
 /* Group Handlers */
 struct group_data *create_group(struct char_data *leader)
 {
@@ -3777,6 +3916,7 @@ void leave_group(struct char_data *ch)
 
   remove_from_list(ch, group->members);
   ch->group = NULL;
+  ch->formation_row = FORMATION_FRONT;
 
   /* Check both iSize and if merge_iterator returns something to avoid empty list warning */
   if (group->members->iSize)
@@ -3819,6 +3959,7 @@ void join_group(struct char_data *ch, struct group_data *group)
     group->leader = ch;
 
   ch->group = group;
+  ch->formation_row = FORMATION_FRONT;
 
   if (IS_SET(group->group_flags, GROUP_NPC) && !IS_NPC(ch))
     REMOVE_BIT(GROUP_FLAGS(group), GROUP_NPC);

@@ -990,6 +990,7 @@ ACMD_DECL(do_gain);
 ACMD_DECL(do_display);
 ACMD_DECL(do_shapechange);
 ACMD_DECL(do_group);
+ACMD_DECL(do_formation);
 ACMD_DECL(do_greport);
 ACMD_DECL(do_purify);
 ACMD_DECL(do_happyhour);
