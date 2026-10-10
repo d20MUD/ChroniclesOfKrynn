@@ -3572,7 +3572,7 @@ ACMDU(do_gen_cast)
 
   target_arg = strtok(NULL, "\0");
 
-  snprintf(cast_arg3, sizeof(cast_arg3), "%s", target_arg);
+  strlcpy(cast_arg3, target_arg ? target_arg : "", sizeof(cast_arg3));
 
   // log("DEBUG: target t = %s", target_arg);
   // log("DEBUG: Argument = %s", argument);
@@ -5047,7 +5047,7 @@ void mag_assign_spells(void)
   // negative energy ray - shared
   /* enchantment */
 
-  spello(SPELL_GIRD_ALLIES, "gird allies", 0, 0, 0, POS_FIGHTING, TAR_IGNORE, TRUE, MAG_MANUAL,
+  spello(SPELL_GIRD_ALLIES, "gird allies", 0, 0, 0, POS_FIGHTING, TAR_IGNORE, FALSE, MAG_MANUAL,
          "You feel less protected.", 4, 7, ABJURATION, FALSE);
 
   spello(SPELL_CHARM_ANIMAL, "charm animal", 0, 0, 0, POS_FIGHTING, TAR_CHAR_ROOM | TAR_NOT_SELF,

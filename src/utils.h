@@ -2957,7 +2957,9 @@ int count_teamwork_feats_available(struct char_data *ch);
 // Walkto functionality
 #define GET_WALKTO_LOC(ch) (ch->player_specials->walkto_location)
 
-// Buff self
+// Saved buff lists
+const char *buff_stat_name(int stat);
+int buff_stat_number(const char *name);
 #define GET_BUFF_IN_LIST(ch, list, i, j) ((ch)->player_specials->saved.buff_abilities[list][i][j])
 #define GET_BUFF(ch, i, j) GET_BUFF_IN_LIST(ch, 0, i, j)
 #define GET_BUFF_LIST(ch) ((ch)->player_specials->buff_list)

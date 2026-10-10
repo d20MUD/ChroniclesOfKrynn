@@ -3088,14 +3088,15 @@ void save_char(struct char_data *ch, int mode)
   // Save Buffs
   BUFFER_WRITE("Buff:\n");
   for (i = 0; i < MAX_BUFFS; i++)
-    BUFFER_WRITE("%d %d %d\n", i, GET_BUFF(ch, i, 0), GET_BUFF(ch, i, 1));
+    BUFFER_WRITE("%d %d %d %d\n", i, GET_BUFF(ch, i, 0), GET_BUFF(ch, i, 1),
+                 GET_BUFF(ch, i, 2));
   BUFFER_WRITE("-1 -1 -1\n");
   BUFFER_WRITE("BfLs:\n");
   for (j = 1; j < MAX_BUFF_LISTS; j++)
     for (i = 0; i < MAX_BUFFS; i++)
       if (GET_BUFF_IN_LIST(ch, j, i, 0))
-        BUFFER_WRITE("%d %d %d %d\n", j, i, GET_BUFF_IN_LIST(ch, j, i, 0),
-                     GET_BUFF_IN_LIST(ch, j, i, 1));
+        BUFFER_WRITE("%d %d %d %d %d\n", j, i, GET_BUFF_IN_LIST(ch, j, i, 0),
+                     GET_BUFF_IN_LIST(ch, j, i, 1), GET_BUFF_IN_LIST(ch, j, i, 2));
   BUFFER_WRITE("-1 -1 -1 -1\n");
 
   // Save Bags
@@ -5025,12 +5026,13 @@ static void load_favored_terrains(FILE *fl, struct char_data *ch)
 /* Legacy Buff records become list 1. Check the sentinel before indexing. */
 static void load_buffs(FILE *fl, struct char_data *ch)
 {
-  int slot, spell, augment;
+  int slot, spell, augment, stat;
   char line[MAX_INPUT_LENGTH + 1];
 
   while (get_line(fl, line))
   {
-    if (sscanf(line, "%d %d %d", &slot, &spell, &augment) != 3)
+    stat = 0;
+    if (sscanf(line, "%d %d %d %d", &slot, &spell, &augment, &stat) < 3)
       continue;
     if (slot == -1)
       break;
@@ -5038,17 +5040,19 @@ static void load_buffs(FILE *fl, struct char_data *ch)
       continue;
     GET_BUFF(ch, slot, 0) = spell;
     GET_BUFF(ch, slot, 1) = MAX(0, augment);
+    GET_BUFF(ch, slot, 2) = buff_stat_name(stat) ? stat : 0;
   }
 }
 
 static void load_buff_lists(FILE *fl, struct char_data *ch)
 {
-  int list, slot, spell, augment;
+  int list, slot, spell, augment, stat;
   char line[MAX_INPUT_LENGTH + 1];
 
   while (get_line(fl, line))
   {
-    if (sscanf(line, "%d %d %d %d", &list, &slot, &spell, &augment) != 4)
+    stat = 0;
+    if (sscanf(line, "%d %d %d %d %d", &list, &slot, &spell, &augment, &stat) < 4)
       continue;
     if (list == -1)
       break;
@@ -5057,6 +5061,7 @@ static void load_buff_lists(FILE *fl, struct char_data *ch)
       continue;
     GET_BUFF_IN_LIST(ch, list, slot, 0) = spell;
     GET_BUFF_IN_LIST(ch, list, slot, 1) = MAX(0, augment);
+    GET_BUFF_IN_LIST(ch, list, slot, 2) = buff_stat_name(stat) ? stat : 0;
   }
 }
 

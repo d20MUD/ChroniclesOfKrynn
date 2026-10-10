@@ -10391,19 +10391,22 @@ ACMDU(do_fiendishboon)
 }
 
 #define NOBUFF_MSG \
-  "buff add [1-10] <spell/power>    - Add to a list (default: 1).\r\n" \
+  "buff add [1-10] <spell/power> [ability] - Add to a list (default: 1).\r\n" \
   "buff remove [1-10] <spell/power> - Remove from a list.\r\n" \
   "buff list [1-10]                - Show a list.\r\n" \
   "buff lists                      - Show all ten lists.\r\n" \
   "buff perform [1-10] [target]     - Begin buffing yourself or a target.\r\n" \
   "buff target [target|self]        - Set or reset the default target.\r\n" \
-  "buff cancel                     - Stop buffing.\r\n"
+  "buff cancel                     - Stop buffing.\r\n" \
+  "Human Potential and Mass Human Potential require an ability score when added.\r\n" \
+  "Example: buff add 1 'human potential' strength\r\n"
 
 ACMD(do_buff)
 {
   char action[MAX_INPUT_LENGTH], first[MAX_INPUT_LENGTH], rest[MAX_INPUT_LENGTH];
   const char *text;
-  int list = 0, i, slot = -1, spellnum, kind;
+  int list = 0, i, slot = -1, spellnum, kind, stat = 0;
+  char *options;
   bool found = false;
   struct char_data *target;
 
@@ -10498,7 +10501,11 @@ ACMD(do_buff)
       if (!spellnum)
         continue;
       found = true;
-      send_to_char(ch, "-- %-25s %s\r\n", spell_info[spellnum].name,
+      send_to_char(ch, "-- %-25s%s%s%s %s\r\n", spell_info[spellnum].name,
+                   buff_stat_name(GET_BUFF_IN_LIST(ch, list, i, 2)) ? " (" : "",
+                   buff_stat_name(GET_BUFF_IN_LIST(ch, list, i, 2))
+                       ? buff_stat_name(GET_BUFF_IN_LIST(ch, list, i, 2)) : "",
+                   buff_stat_name(GET_BUFF_IN_LIST(ch, list, i, 2)) ? ")" : "",
                    is_spell_or_power(spellnum) == 1 && PRF_FLAGGED(ch, PRF_AUGMENT_BUFFS)
                        ? "*augmented*" : "");
     }
@@ -10571,7 +10578,41 @@ ACMD(do_buff)
     return;
   }
   strlcpy(rest, text, sizeof(rest));
-  spellnum = find_skill_num(rest);
+  /* Quotes delimit multiword names; unquoted names may have a trailing ability. */
+  {
+    size_t len = strlen(rest);
+    while (len && isspace((unsigned char)rest[len - 1]))
+      rest[--len] = '\0';
+  }
+  options = rest + strlen(rest);
+  if (*rest == '\'' || *rest == '"')
+  {
+    char *closing = strchr(rest + 1, *rest);
+    if (!closing)
+    {
+      send_to_char(ch, "Please close the quote around the spell name.\r\n");
+      return;
+    }
+    *closing = '\0';
+    spellnum = find_skill_num(rest + 1);
+    options = closing + 1;
+  }
+  else
+  {
+    spellnum = find_skill_num(rest);
+    if (!is_spell_or_power(spellnum))
+    {
+      char *last_word = strrchr(rest, ' ');
+      if (last_word)
+      {
+        *last_word = '\0';
+        spellnum = find_skill_num(rest);
+        options = last_word + 1;
+      }
+    }
+  }
+  while (isspace((unsigned char)*options))
+    options++;
   kind = is_spell_or_power(spellnum);
   if (!kind)
   {
@@ -10581,6 +10622,23 @@ ACMD(do_buff)
   if (spell_info[spellnum].violent || IS_SET(spell_info[spellnum].targets, TAR_NOT_SELF))
   {
     send_to_char(ch, "That is not a valid buffing spell.\r\n");
+    return;
+  }
+  if (spellnum == SPELL_HUMAN_POTENTIAL || spellnum == SPELL_MASS_HUMAN_POTENTIAL)
+  {
+    stat = buff_stat_number(options);
+    if ((*options || is_abbrev(action, "add")) && !stat)
+    {
+      send_to_char(ch, "Choose an ability score: strength, constitution, dexterity, "
+                       "intelligence, wisdom, or charisma.\r\n"
+                       "Example: buff add %d '%s' strength\r\n", list + 1,
+                   spell_info[spellnum].name);
+      return;
+    }
+  }
+  else if (*options)
+  {
+    send_to_char(ch, "That buff does not take an ability score.\r\n");
     return;
   }
   for (i = 0; i < MAX_BUFFS; i++)
@@ -10597,6 +10655,14 @@ ACMD(do_buff)
   {
     if (found)
     {
+      if (stat && GET_BUFF_IN_LIST(ch, list, i, 2) != stat)
+      {
+        GET_BUFF_IN_LIST(ch, list, i, 2) = stat;
+        send_to_char(ch, "Updated '%s' in buff list %d to %s.\r\n",
+                     spell_info[spellnum].name, list + 1, buff_stat_name(stat));
+        save_char(ch, 0);
+        return;
+      }
       send_to_char(ch, "That buff is already in list %d.\r\n", list + 1);
       return;
     }
@@ -10607,6 +10673,7 @@ ACMD(do_buff)
     }
     GET_BUFF_IN_LIST(ch, list, slot, 0) = spellnum;
     GET_BUFF_IN_LIST(ch, list, slot, 1) = 0;
+    GET_BUFF_IN_LIST(ch, list, slot, 2) = stat;
     send_to_char(ch, "Added '%s' to buff list %d.\r\n", spell_info[spellnum].name, list + 1);
   }
   else
@@ -10618,6 +10685,7 @@ ACMD(do_buff)
     }
     GET_BUFF_IN_LIST(ch, list, i, 0) = 0;
     GET_BUFF_IN_LIST(ch, list, i, 1) = 0;
+    GET_BUFF_IN_LIST(ch, list, i, 2) = 0;
     send_to_char(ch, "Removed '%s' from buff list %d.\r\n", spell_info[spellnum].name, list + 1);
   }
   save_char(ch, 0);

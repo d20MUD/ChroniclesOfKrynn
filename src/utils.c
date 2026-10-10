@@ -4770,6 +4770,32 @@ void char_from_furniture(struct char_data *ch)
   return;
 }
 
+/* Ability choices used by Human Potential buffs. Zero means unspecified. */
+const char *buff_stat_name(int stat)
+{
+  switch (stat)
+  {
+    case APPLY_STR: return "strength";
+    case APPLY_CON: return "constitution";
+    case APPLY_DEX: return "dexterity";
+    case APPLY_INT: return "intelligence";
+    case APPLY_WIS: return "wisdom";
+    case APPLY_CHA: return "charisma";
+    default: return NULL;
+  }
+}
+
+int buff_stat_number(const char *name)
+{
+  int stat;
+  if (!name || !*name)
+    return 0;
+  for (stat = APPLY_STR; stat <= APPLY_CHA; stat++)
+    if (is_abbrev(name, buff_stat_name(stat)))
+      return stat;
+  return 0;
+}
+
 void char_from_buff_targets(struct char_data *ch)
 {
   struct char_data *tch;

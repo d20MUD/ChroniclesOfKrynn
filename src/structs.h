@@ -7160,7 +7160,7 @@ struct player_special_data_saved
 
   int time_since_last_feeding; // how long since the vampire last fed on blood
 
-  int buff_abilities[MAX_BUFF_LISTS][MAX_BUFFS][2]; // Saved buff lists
+  int buff_abilities[MAX_BUFF_LISTS][MAX_BUFFS][3]; // Spell/power, augmentation, ability choice
 
   bool new_race_stats; // For use with racefix command.
 

@@ -3381,7 +3381,26 @@ void self_buffing(void)
         if (is_spell >= 2) // spell or warlock power
         {
           snprintf(spellname, sizeof(spellname), " '%s'", spell_info[spellnum].name);
-          snprintf(buf2, sizeof(buf2), "%s %s", spellname, buf1);
+          if (spellnum == SPELL_HUMAN_POTENTIAL || spellnum == SPELL_MASS_HUMAN_POTENTIAL)
+          {
+            const char *stat = buff_stat_name(
+                GET_BUFF_IN_LIST(ch, GET_BUFF_LIST(ch), GET_CURRENT_BUFF_SLOT(ch), 2));
+            if (!stat)
+            {
+              send_to_char(ch, "Skipping '%s': choose an ability with buff add first.\r\n",
+                           spell_info[spellnum].name);
+              GET_CURRENT_BUFF_SLOT(ch)++;
+              continue;
+            }
+            if (spellnum == SPELL_HUMAN_POTENTIAL)
+              snprintf(buf2, sizeof(buf2), "%s %s %s", spellname, buf1, stat);
+            else
+              snprintf(buf2, sizeof(buf2), "%s %s", spellname, stat);
+          }
+          else if (spellnum == SPELL_GIRD_ALLIES)
+            strlcpy(buf2, spellname, sizeof(buf2));
+          else
+            snprintf(buf2, sizeof(buf2), "%s %s", spellname, buf1);
           do_gen_cast(ch, (const char *)buf2, 0, SCMD_CAST_SPELL);
         }
         else
