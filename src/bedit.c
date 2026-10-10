@@ -180,13 +180,12 @@ ACMD(do_blist)
       strcpy(board_name_buf, "(none)");
     }
 
-    sprintf(buf, "%-5d %-30s %-12s %2d %2d %2d %-6d %-5d %-4d %s\r\n",
+    send_to_char(ch, "%-5d %-30s %-12s %2d %2d %2d %-6d %-5d %-4d %s\r\n",
             mysql_board_configs[i].board_id, board_name_buf,
             board_types[mysql_board_configs[i].board_type], mysql_board_configs[i].read_level,
             mysql_board_configs[i].write_level, mysql_board_configs[i].delete_level,
             mysql_board_configs[i].obj_vnum, mysql_board_configs[i].clan_id,
             mysql_board_configs[i].clan_rank, mysql_board_configs[i].active ? "Yes" : "No");
-    send_to_char(ch, "%s", buf);
   }
 }
 
@@ -273,7 +272,6 @@ void bedit_setup_existing(struct descriptor_data *d, int board_id)
 void bedit_disp_menu(struct descriptor_data *d)
 {
   struct mysql_board_config *board;
-  char buf[MAX_STRING_LENGTH];
   char board_name_buf[MAX_STRING_LENGTH];
 
   board = (struct mysql_board_config *)OLC_STORAGE(d);
@@ -290,7 +288,7 @@ void bedit_disp_menu(struct descriptor_data *d)
     strcpy(board_name_buf, "(none)");
   }
 
-  sprintf(buf,
+  send_to_char(d->character,
 #if defined(CLEAR_SCREEN)
           "[H[J"
 #endif
@@ -313,7 +311,6 @@ void bedit_disp_menu(struct descriptor_data *d)
           B_OBJ_VNUM(board), "\tn", "\tG", "\tn", "\tC", B_CLAN_ID(board), "\tn", "\tG", "\tn", "\tC",
           B_CLAN_RANK(board), "\tn", "\tG", "\tn", "\tC", B_ACTIVE(board) ? "Yes" : "No", "\tn", "\tG", "\tn");
 
-  send_to_char(d->character, "%s", buf);
   OLC_MODE(d) = BEDIT_MAIN_MENU;
 }
 

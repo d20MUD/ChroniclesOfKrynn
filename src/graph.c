@@ -171,7 +171,7 @@ ACMD(do_track)
 {
   char arg[MAX_INPUT_LENGTH] = {'\0'};
   char buf[MAX_INPUT_LENGTH] = {'\0'};
-  char dirchar[MAX_INPUT_LENGTH] = {'\0'};
+  char dirchar[16] = {'\0'};
   struct char_data *vict;
   int dir, track_dc = 0;
   int ch_in_wild = FALSE, vict_in_wild = FALSE, moves = 0;

@@ -10390,257 +10390,34 @@ ACMDU(do_fiendishboon)
   send_to_char(ch, "You have activated your '%s' fiendish boon.\r\n", fiendish_boons[i]);
 }
 
-#define NOBUFF_MSG                                                                                 \
-  "buff add (spell/power name)                - Add a spell or power to your buff list.\r\n"       \
-  "buff remove (spell/power name)             - Remove a spell or power from your buff list\r\n"   \
-  "buff list                                  - Will show you the spells and powers in your "      \
-  "list\r\n"                                                                                       \
-  "buff perform                               - Will begin buffing you with your buff list\r\n"    \
-  "buff cancel                                - Will can any buffing action in process.\r\n"
+#define NOBUFF_MSG \
+  "buff add [1-10] <spell/power>    - Add to a list (default: 1).\r\n" \
+  "buff remove [1-10] <spell/power> - Remove from a list.\r\n" \
+  "buff list [1-10]                - Show a list.\r\n" \
+  "buff lists                      - Show all ten lists.\r\n" \
+  "buff perform [1-10] [target]     - Begin buffing yourself or a target.\r\n" \
+  "buff target [target|self]        - Set or reset the default target.\r\n" \
+  "buff cancel                     - Stop buffing.\r\n"
 
 ACMD(do_buff)
 {
-  char arg1[200], arg2[200];
-  int spellnum = 0, i = 0;
-  int is_spell = true; // true if it's a spell, false if it's a psionic power
+  char action[MAX_INPUT_LENGTH], first[MAX_INPUT_LENGTH], rest[MAX_INPUT_LENGTH];
+  const char *text;
+  int list = 0, i, slot = -1, spellnum, kind;
   bool found = false;
   struct char_data *target;
 
-  half_chop((char *)argument, arg1, arg2);
-
-  if (!*arg1)
+  if (IS_NPC(ch))
+    return;
+  text = one_argument(argument, action, sizeof(action));
+  skip_spaces_c(&text);
+  if (!*action)
   {
-    send_to_char(ch, "Please choose one of the following options:\r\n%s", NOBUFF_MSG);
+    send_to_char(ch, "%s", NOBUFF_MSG);
     return;
   }
-
-  if (!*arg2 && !is_abbrev(arg1, "list") && !is_abbrev(arg1, "perform") &&
-      !is_abbrev(arg1, "cancel") && !is_abbrev(arg1, "target"))
+  if (is_abbrev(action, "cancel"))
   {
-    send_to_char(ch,
-                 "You did not specify a power or spell name.\r\n"
-                 "Please choose one of the following options:\r\n%s",
-                 NOBUFF_MSG);
-    return;
-  }
-  if (*arg2 && is_abbrev(arg1, "target"))
-  {
-    if (!*arg2)
-    {
-      GET_BUFF_TARGET(ch) = NULL;
-      send_to_char(ch, "You have reset your buff target to yourself.\r\n");
-      return;
-    }
-
-    if (is_abbrev(arg2, "self") || is_abbrev(arg2, "me") || is_abbrev(arg2, "reset") ||
-        is_abbrev(arg2, "myself"))
-    {
-      GET_BUFF_TARGET(ch) = NULL;
-      send_to_char(ch, "You have reset your buff target to yourself.\r\n");
-      return;
-    }
-
-    if (!(target = get_char_room_vis(ch, arg2, NULL)))
-    {
-      send_to_char(ch, "There's no one here by that description.\r\n");
-      return;
-    }
-
-    GET_BUFF_TARGET(ch) = target;
-    act("You have set your buff target to $N.\r\n", TRUE, ch, 0, target, TO_CHAR);
-    return;
-  }
-  else if (*arg2)
-  {
-    spellnum = find_skill_num(arg2);
-    is_spell = is_spell_or_power(spellnum);
-
-    // if (spellnum >= PSIONIC_POWER_START && spellnum <= PSIONIC_POWER_END)
-    // {
-    //   send_to_char(ch, "Buffing with psionics is not possible right now due to a serious, yet unresolved bug.\r\n");
-    //   return;
-    // }
-
-    if (!is_spell)
-    {
-      send_to_char(ch, "That is not a valid spell or psionic power.\r\n");
-      return;
-    }
-
-    // now that we know it's a spell or power, we'll reduce it by one so it acts as a boolean
-    is_spell -= 1;
-
-    if (spell_info[spellnum].violent || IS_SET(spell_info[spellnum].targets, TAR_NOT_SELF))
-    {
-      send_to_char(ch, "That is not a valid buffing spell.\r\n");
-      return;
-    }
-  }
-
-  // if (isdigit(*arg1))
-  // {
-
-  //   send_to_char(ch, "Buffing with psionics is not possible right now due to a serious, yet unresolved bug.\r\n");
-  //   return;
-
-  //   // Assign augment psp to specified psionic power.
-
-  //   if (!*arg2)
-  //   {
-  //     send_to_char(ch, "Please specify the psionic power buff you wish to assign augment psp to.\r\n");
-  //     return;
-  //   }
-
-  //   if (is_spell)
-  //   {
-  //     send_to_char(ch, "You can only assign augment psp to a psionic power.\r\n");
-  //     return;
-  //   }
-
-  //   aug = atoi(arg1);
-
-  //   if (aug < 0)
-  //   {
-  //     send_to_char(ch, "Please specify the amount of psp you wish to use to augment this psionnic buff.\r\n");
-  //     return;
-  //   }
-
-  //   for (i = 0; i < MAX_BUFFS; i++)
-  //   {
-  //     if (GET_BUFF(ch, i, 0) == spellnum)
-  //     {
-  //       found = true;
-  //       break;
-  //     }
-  //   }
-  //   if (!found)
-  //   {
-  //     send_to_char(ch, "You do not have any spells or powers in your buff list.\r\n");
-  //     return;
-  //   }
-  //   GET_BUFF(ch, i, 1) = aug;
-  //   send_to_char(ch, "You assign %d augment psp to '%s'.\r\n", aug, spell_info[spellnum].name);
-  // }
-  // else
-  if (is_abbrev(arg1, "add"))
-  {
-    // Add a spell/power to buff list.
-    for (i = 0; i < MAX_BUFFS; i++)
-    {
-      if (GET_BUFF(ch, i, 0) == spellnum)
-      {
-        send_to_char(ch, "You already have that %s in your buff list.\r\n",
-                     is_spell ? "spell" : "power");
-        return;
-      }
-      if (GET_BUFF(ch, i, 0) == 0)
-        break;
-    }
-    if (i >= MAX_BUFFS)
-    {
-      send_to_char(
-          ch,
-          "All of your buff slots are full.  Please remove some using the buff remove command.\r\n"
-          "You can view your list of buffs with buff list.\r\n");
-      return;
-    }
-    GET_BUFF(ch, i, 0) = spellnum;
-    send_to_char(ch, "You have added the %s '%s' to your buff list.\r\n",
-                 is_spell ? "spell" : "psionic power", spell_info[spellnum].name);
-  }
-  else if (is_abbrev(arg1, "remove"))
-  {
-    // Remove a spell/power from buff list.
-    for (i = 0; i < MAX_BUFFS; i++)
-    {
-      if (GET_BUFF(ch, i, 0) == spellnum)
-      {
-        break;
-      }
-    }
-    if (i >= MAX_BUFFS)
-    {
-      send_to_char(ch,
-                   "You do not seem to have the %s '%s' in your buff list.\r\n"
-                   "You can view your list of buffs with buff list.\r\n",
-                   is_spell ? "spell" : "psionic power", spell_info[spellnum].name);
-      return;
-    }
-    GET_BUFF(ch, i, 0) = 0;
-    GET_BUFF(ch, i, 1) = 0;
-    send_to_char(ch, "You have removed the %s '%s' from your buff list.\r\n",
-                 is_spell ? "spell" : "psionic power", spell_info[spellnum].name);
-  }
-  else if (is_abbrev(arg1, "list"))
-  {
-    // List spells and powers in your buff list
-    send_to_char(ch, "Spells and Powers in your buff list:\r\n");
-    for (i = 0; i < MAX_BUFFS; i++)
-    {
-      if (GET_BUFF(ch, i, 0) > 0)
-      {
-        found = true;
-        if (is_spell_or_power(GET_BUFF(ch, i, 0)) == 2)
-        {
-          send_to_char(ch, "-- %-25s\r\n", spell_info[GET_BUFF(ch, i, 0)].name);
-        }
-        else
-        {
-          // send_to_char(ch, "-- %-25s %d augment psp\r\n", spell_info[GET_BUFF(ch, i, 0)].name, GET_BUFF(ch, i, 1));
-          send_to_char(ch, "-- %-25s %s\r\n", spell_info[GET_BUFF(ch, i, 0)].name,
-                       PRF_FLAGGED(ch, PRF_AUGMENT_BUFFS) ? "*augmented*" : "");
-        }
-      }
-    }
-    if (!found)
-    {
-      send_to_char(ch, "You do not have any spells or powers in your buff list.\r\n");
-    }
-  }
-  else if (is_abbrev(arg1, "perform"))
-  {
-    // Begin buffing yourself with spells/powers in your list.
-
-    for (i = 0; i < MAX_BUFFS; i++)
-    {
-      if (GET_BUFF(ch, i, 0) > 0)
-      {
-        found = true;
-      }
-    }
-
-    if (!found)
-    {
-      send_to_char(ch, "You don't have any buffs in your buff list.\r\n");
-      return;
-    }
-
-    if (GET_POS(ch) < POS_FIGHTING)
-    {
-      send_to_char(ch, "You cannot buff yourself from that position.\r\n");
-      return;
-    }
-
-    IS_BUFFING(ch) = true;
-    GET_BUFF_TIMER(ch) = 1;
-    GET_CURRENT_BUFF_SLOT(ch) = 0;
-    if (GET_BUFF_TARGET(ch))
-    {
-      if (IN_ROOM(GET_BUFF_TARGET(ch)) != IN_ROOM(ch))
-      {
-        act("Your buff target ($N) is nowhere to be seen.\r\n", TRUE, ch, 0, GET_BUFF_TARGET(ch),
-            TO_CHAR);
-        return;
-      }
-      act("You begin buffing $N...", TRUE, ch, 0, GET_BUFF_TARGET(ch), TO_CHAR);
-      act("$N begins buffing You...", TRUE, ch, 0, GET_BUFF_TARGET(ch), TO_VICT);
-    }
-    else
-      send_to_char(ch, "You begin buffing yourself...\r\n");
-  }
-  else if (is_abbrev(arg1, "cancel"))
-  {
-    // Begin buffing yourself with spells/powers in your list.
     IS_BUFFING(ch) = false;
     GET_BUFF_TIMER(ch) = 0;
     GET_CURRENT_BUFF_SLOT(ch) = 0;
@@ -10648,12 +10425,202 @@ ACMD(do_buff)
     affect_from_char(ch, SPELL_MINOR_RAPID_BUFF);
     affect_from_char(ch, SPELL_RAPID_BUFF);
     affect_from_char(ch, SPELL_GREATER_RAPID_BUFF);
+    return;
+  }
+  if (is_abbrev(action, "target"))
+  {
+    if (IS_BUFFING(ch))
+    {
+      send_to_char(ch, "Use buff cancel before changing your buff target.\r\n");
+      return;
+    }
+    if (!*text || !str_cmp(text, "self") || !str_cmp(text, "me") ||
+        !str_cmp(text, "reset") || !str_cmp(text, "myself"))
+    {
+      GET_BUFF_TARGET(ch) = NULL;
+      send_to_char(ch, "You have reset your buff target to yourself.\r\n");
+      return;
+    }
+    strlcpy(first, text, sizeof(first));
+    if (!(target = get_char_room_vis(ch, first, NULL)))
+    {
+      send_to_char(ch, "There's no one here by that description.\r\n");
+      return;
+    }
+    GET_BUFF_TARGET(ch) = target == ch ? NULL : target;
+    act("You have set your buff target to $N.", TRUE, ch, 0, target, TO_CHAR);
+    return;
+  }
+  if (!str_cmp(action, "lists"))
+  {
+    for (list = 0; list < MAX_BUFF_LISTS; list++)
+    {
+      int count = 0;
+      for (i = 0; i < MAX_BUFFS; i++)
+        if (GET_BUFF_IN_LIST(ch, list, i, 0))
+          count++;
+      send_to_char(ch, "Buff list %2d: %d/%d buffs\r\n", list + 1, count, MAX_BUFFS);
+    }
+    return;
+  }
+
+  /* An optional list number precedes the spell name or perform target. */
+  one_argument(text, first, sizeof(first));
+  if (isdigit((unsigned char)*first) || *first == '-')
+  {
+    char *end;
+    long number = strtol(first, &end, 10);
+    /* 2.goblin is a target selector, rather than a list number. */
+    if (*end != '.' || !is_abbrev(action, "perform"))
+    {
+      if (*end || number < 1 || number > MAX_BUFF_LISTS)
+      {
+        send_to_char(ch, "Buff list numbers must be from 1 to %d.\r\n", MAX_BUFF_LISTS);
+        return;
+      }
+      list = (int)number - 1;
+      text = one_argument(text, first, sizeof(first));
+      skip_spaces_c(&text);
+    }
+  }
+
+  if (is_abbrev(action, "list"))
+  {
+    if (*text)
+    {
+      send_to_char(ch, "Usage: buff list [1-10]\r\n");
+      return;
+    }
+    send_to_char(ch, "Spells and powers in buff list %d:\r\n", list + 1);
+    for (i = 0; i < MAX_BUFFS; i++)
+    {
+      spellnum = GET_BUFF_IN_LIST(ch, list, i, 0);
+      if (!spellnum)
+        continue;
+      found = true;
+      send_to_char(ch, "-- %-25s %s\r\n", spell_info[spellnum].name,
+                   is_spell_or_power(spellnum) == 1 && PRF_FLAGGED(ch, PRF_AUGMENT_BUFFS)
+                       ? "*augmented*" : "");
+    }
+    if (!found)
+      send_to_char(ch, "This buff list is empty.\r\n");
+    return;
+  }
+  if (is_abbrev(action, "perform"))
+  {
+    if (IS_BUFFING(ch))
+    {
+      send_to_char(ch, "You are already buffing. Use buff cancel to stop first.\r\n");
+      return;
+    }
+    if (GET_POS(ch) < POS_FIGHTING)
+    {
+      send_to_char(ch, "You cannot buff from that position.\r\n");
+      return;
+    }
+    for (i = 0; i < MAX_BUFFS; i++)
+      if (GET_BUFF_IN_LIST(ch, list, i, 0))
+        found = true;
+    if (!found)
+    {
+      send_to_char(ch, "Buff list %d is empty.\r\n", list + 1);
+      return;
+    }
+    target = GET_BUFF_TARGET(ch) ? GET_BUFF_TARGET(ch) : ch;
+    if (*text)
+    {
+      strlcpy(rest, text, sizeof(rest));
+      if (!(target = get_char_room_vis(ch, rest, NULL)))
+      {
+        send_to_char(ch, "There's no one here by that description.\r\n");
+        return;
+      }
+    }
+    if (IN_ROOM(target) != IN_ROOM(ch))
+    {
+      send_to_char(ch, "Your buff target is no longer here.\r\n");
+      return;
+    }
+    GET_BUFF_TARGET(ch) = target == ch ? NULL : target;
+    GET_BUFF_LIST(ch) = list;
+    GET_CURRENT_BUFF_SLOT(ch) = 0;
+    GET_BUFF_TIMER(ch) = 1;
+    IS_BUFFING(ch) = true;
+    if (target == ch)
+      send_to_char(ch, "You begin buffing yourself with list %d...\r\n", list + 1);
+    else
+    {
+      act("You begin buffing $N...", TRUE, ch, 0, target, TO_CHAR);
+      act("$n begins buffing you...", TRUE, ch, 0, target, TO_VICT);
+    }
+    return;
+  }
+  if (!is_abbrev(action, "add") && !is_abbrev(action, "remove"))
+  {
+    send_to_char(ch, "%s", NOBUFF_MSG);
+    return;
+  }
+  if (IS_BUFFING(ch) && GET_BUFF_LIST(ch) == list)
+  {
+    send_to_char(ch, "Use buff cancel before editing the list you are performing.\r\n");
+    return;
+  }
+  if (!*text)
+  {
+    send_to_char(ch, "Please specify a spell or psionic power.\r\n");
+    return;
+  }
+  strlcpy(rest, text, sizeof(rest));
+  spellnum = find_skill_num(rest);
+  kind = is_spell_or_power(spellnum);
+  if (!kind)
+  {
+    send_to_char(ch, "That is not a valid spell or psionic power.\r\n");
+    return;
+  }
+  if (spell_info[spellnum].violent || IS_SET(spell_info[spellnum].targets, TAR_NOT_SELF))
+  {
+    send_to_char(ch, "That is not a valid buffing spell.\r\n");
+    return;
+  }
+  for (i = 0; i < MAX_BUFFS; i++)
+  {
+    if (GET_BUFF_IN_LIST(ch, list, i, 0) == spellnum)
+    {
+      found = true;
+      break;
+    }
+    if (slot == -1 && !GET_BUFF_IN_LIST(ch, list, i, 0))
+      slot = i;
+  }
+  if (is_abbrev(action, "add"))
+  {
+    if (found)
+    {
+      send_to_char(ch, "That buff is already in list %d.\r\n", list + 1);
+      return;
+    }
+    if (slot == -1)
+    {
+      send_to_char(ch, "Buff list %d is full. Remove a buff first.\r\n", list + 1);
+      return;
+    }
+    GET_BUFF_IN_LIST(ch, list, slot, 0) = spellnum;
+    GET_BUFF_IN_LIST(ch, list, slot, 1) = 0;
+    send_to_char(ch, "Added '%s' to buff list %d.\r\n", spell_info[spellnum].name, list + 1);
   }
   else
   {
-    send_to_char(ch, "Please choose one of the following options:\r\n%s", NOBUFF_MSG);
-    return;
+    if (!found)
+    {
+      send_to_char(ch, "That buff is not in list %d.\r\n", list + 1);
+      return;
+    }
+    GET_BUFF_IN_LIST(ch, list, i, 0) = 0;
+    GET_BUFF_IN_LIST(ch, list, i, 1) = 0;
+    send_to_char(ch, "Removed '%s' from buff list %d.\r\n", spell_info[spellnum].name, list + 1);
   }
+  save_char(ch, 0);
 }
 
 ACMDU(do_devote)
@@ -14116,7 +14083,8 @@ static void finalize_invention_creation(struct char_data *ch, const char *variab
             sizeof(spell_list) - strlen(spell_list) - 1);
   }
 
-  snprintf(inv->short_description, MAX_INVENTION_SHORTDESC, "a %s device", spell_list);
+  snprintf(inv->short_description, MAX_INVENTION_SHORTDESC, "a %.*s device",
+           MAX_INVENTION_SHORTDESC - (int)sizeof("a  device"), spell_list);
   char keyword_spell[50];
   strncpy(keyword_spell, spell_info[spell_nums[0]].name, sizeof(keyword_spell) - 1);
   keyword_spell[sizeof(keyword_spell) - 1] = '\0';
@@ -14476,7 +14444,8 @@ EVENTFUNC(event_device_creation)
   }
 
   /* Set invention properties */
-  snprintf(inv->short_description, MAX_INVENTION_SHORTDESC, "a %s device", spell_list);
+  snprintf(inv->short_description, MAX_INVENTION_SHORTDESC, "a %.*s device",
+           MAX_INVENTION_SHORTDESC - (int)sizeof("a  device"), spell_list);
 
   /* Limit spell name length for keywords to prevent truncation */
   char keyword_spell[50];

@@ -235,7 +235,7 @@ int save_quests(zone_rnum zone_num)
   char quest_desc[MAX_STRING_LENGTH] = {'\0'}, quest_info[MAX_STRING_LENGTH] = {'\0'};
   char quest_done[MAX_STRING_LENGTH] = {'\0'}, quest_quit[MAX_STRING_LENGTH] = {'\0'};
   char quest_kill_list[MAX_STRING_LENGTH] = {'\0'};
-  char buf[MAX_STRING_LENGTH] = {'\0'};
+  char buf[7 * MAX_STRING_LENGTH + 512] = {'\0'};
   int i, num_quests = 0;
 
 #if CIRCLE_UNSIGNED_INDEX

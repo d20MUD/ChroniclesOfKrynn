@@ -4777,7 +4777,16 @@ void char_from_buff_targets(struct char_data *ch)
   for (tch = character_list; tch; tch = tch->next)
   {
     if (!IS_NPC(tch) && GET_BUFF_TARGET(tch) == ch)
+    {
       GET_BUFF_TARGET(tch) = NULL;
+      if (IS_BUFFING(tch))
+      {
+        IS_BUFFING(tch) = false;
+        GET_BUFF_TIMER(tch) = 0;
+        GET_CURRENT_BUFF_SLOT(tch) = 0;
+        send_to_char(tch, "Your buff target is no longer available. Buffing stopped.\r\n");
+      }
+    }
   }
 }
 
@@ -10819,6 +10828,8 @@ void place_random_chest(room_rnum rrnum, int level, int search_dc, int pick_dc, 
   if (obj == NULL)
     return;
 
+  /* Keep the chest level distinct from its randomized loot grade. */
+  GET_OBJ_LEVEL(obj) = level;
   // determines the level of items dropped
   GET_OBJ_VAL(obj, 0) = get_random_chest_item_level(level);
   // determines the type of object dropped

@@ -5217,6 +5217,7 @@
 
 // maximum number of spells/powers to buff
 #define MAX_BUFFS 40
+#define MAX_BUFF_LISTS 10
 
 // number of award types.  do_award in act.wizard.c
 #define NUM_AWARD_TYPES 11
@@ -7159,9 +7160,7 @@ struct player_special_data_saved
 
   int time_since_last_feeding; // how long since the vampire last fed on blood
 
-  int buff_abilities
-      [MAX_BUFFS]
-      [2]; // This is used with the buff command to simplify the process of buffing by casters
+  int buff_abilities[MAX_BUFF_LISTS][MAX_BUFFS][2]; // Saved buff lists
 
   bool new_race_stats; // For use with racefix command.
 
@@ -7441,6 +7440,7 @@ struct player_special_data
   bool inq_master_tracker_alerted;      // whether Master Tracker has already alerted this room/zone
 
   // for the self buffing system
+  int buff_list; // List currently being performed (zero-based)
   int buff_slot;
   int buff_timer;
   bool is_buffing;

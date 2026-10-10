@@ -2729,7 +2729,7 @@ void load_paths()
 void insert_path(struct path_data *path)
 {
   /* path_data* path_table */
-  char buf[MAX_STRING_LENGTH] = {'\0'};
+  char buf[MAX_STRING_LENGTH + 1024] = {'\0'};
   int vtx = 0;
   char linestring[MAX_STRING_LENGTH] = {'\0'};
 

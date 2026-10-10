@@ -3262,14 +3262,47 @@ void check_auto_happy_hour(void)
   }
 }
 
+/* Resolve the exact selected character, including similarly named companions. */
+static bool buff_target_argument(struct char_data *ch, char *buffer, size_t size)
+{
+  struct char_data *target = GET_BUFF_TARGET(ch), *match;
+  char name[MAX_INPUT_LENGTH];
+  int ordinal, number;
+  size_t i;
+
+  if (!target || target == ch)
+  {
+    strlcpy(buffer, "self", size);
+    return true;
+  }
+  if (IN_ROOM(target) != IN_ROOM(ch))
+    return false;
+  strlcpy(name, GET_NAME(target), sizeof(name));
+  for (i = 0; name[i]; i++)
+    if (name[i] == ' ')
+      name[i] = '-';
+  for (ordinal = 1; ; ordinal++)
+  {
+    number = ordinal;
+    match = get_char_room_vis(ch, name, &number);
+    if (!match)
+      return false;
+    if (match == target)
+    {
+      snprintf(buffer, size, "%d.%s", ordinal, name);
+      return true;
+    }
+  }
+}
+
 void self_buffing(void)
 {
   struct char_data *ch = NULL;
   struct descriptor_data *d = NULL;
   int is_spell = false;
-  int spellnum = 0, i = 0;
+  int spellnum = 0;
   char spellname[200];
-  char buf1[MAX_STRING_LENGTH] = {'\0'};
+  char buf1[MAX_INPUT_LENGTH + 16] = {'\0'};
   char buf2[MAX_STRING_LENGTH] = {'\0'};
 
   for (d = descriptor_list; d; d = d->next)
@@ -3291,27 +3324,38 @@ void self_buffing(void)
       }
     }
 
-    while (GET_BUFF(ch, GET_CURRENT_BUFF_SLOT(ch), 0) == 0 &&
-           GET_CURRENT_BUFF_SLOT(ch) < (MAX_BUFFS + 1))
+    if (GET_BUFF_LIST(ch) < 0 || GET_BUFF_LIST(ch) >= MAX_BUFF_LISTS ||
+        GET_CURRENT_BUFF_SLOT(ch) < 0 || !buff_target_argument(ch, buf1, sizeof(buf1)))
+    {
+      send_to_char(ch, "Your buff target is no longer available. Buffing stopped.\r\n");
+      IS_BUFFING(ch) = false;
+      GET_BUFF_TIMER(ch) = 0;
+      GET_CURRENT_BUFF_SLOT(ch) = 0;
+      continue;
+    }
+
+    while (GET_CURRENT_BUFF_SLOT(ch) < MAX_BUFFS &&
+           GET_BUFF_IN_LIST(ch, GET_BUFF_LIST(ch), GET_CURRENT_BUFF_SLOT(ch), 0) == 0)
     {
       GET_CURRENT_BUFF_SLOT(ch)++;
     }
     if (GET_CURRENT_BUFF_SLOT(ch) >= MAX_BUFFS)
     {
-      send_to_char(ch, "You finish buffing yourself.\r\n");
+      send_to_char(ch, "You finish performing buff list %d.\r\n", GET_BUFF_LIST(ch) + 1);
       GET_CURRENT_BUFF_SLOT(ch) = 0;
       GET_BUFF_TIMER(ch) = 0;
       IS_BUFFING(ch) = false;
       affect_from_char(ch, SPELL_MINOR_RAPID_BUFF);
       affect_from_char(ch, SPELL_RAPID_BUFF);
       affect_from_char(ch, SPELL_GREATER_RAPID_BUFF);
+      continue;
     }
 
     if (GET_BUFF_TIMER(ch) > 0)
     {
       if (--GET_BUFF_TIMER(ch) == 0)
       {
-        spellnum = GET_BUFF(ch, GET_CURRENT_BUFF_SLOT(ch), 0);
+        spellnum = GET_BUFF_IN_LIST(ch, GET_BUFF_LIST(ch), GET_CURRENT_BUFF_SLOT(ch), 0);
         is_spell = is_spell_or_power(spellnum);
         send_to_char(ch, "You continue buffing... (buff cancel to stop)\r\n");
 
@@ -3329,26 +3373,16 @@ void self_buffing(void)
 #else
           GET_BUFF_TIMER(ch) = spell_info[spellnum].time + 1;
 #endif
-          if (has_perk(ch, PERK_CLERIC_BATTLE_BLESSING) && GET_BUFF_TARGET(ch) == ch)
+          if (has_perk(ch, PERK_CLERIC_BATTLE_BLESSING) &&
+              (!GET_BUFF_TARGET(ch) || GET_BUFF_TARGET(ch) == ch))
             GET_BUFF_TIMER(ch) -= 1;
         }
 
         if (is_spell >= 2) // spell or warlock power
         {
           snprintf(spellname, sizeof(spellname), " '%s'", spell_info[spellnum].name);
-          if (GET_BUFF_TARGET(ch) && IN_ROOM(GET_BUFF_TARGET(ch)) == IN_ROOM(ch))
-          {
-            snprintf(buf1, sizeof(buf1), "%s", GET_NAME(GET_BUFF_TARGET(ch)));
-            for (i = 0; i < strlen(buf1); i++)
-              if (buf1[i] == ' ')
-                buf1[i] = '-';
-            snprintf(buf2, sizeof(buf2), "%s %s", spellname, buf1);
-            do_gen_cast(ch, (const char *)buf2, 0, SCMD_CAST_SPELL);
-          }
-          else
-          {
-            do_gen_cast(ch, (const char *)spellname, 0, SCMD_CAST_SPELL);
-          }
+          snprintf(buf2, sizeof(buf2), "%s %s", spellname, buf1);
+          do_gen_cast(ch, (const char *)buf2, 0, SCMD_CAST_SPELL);
         }
         else
         {
@@ -3356,7 +3390,8 @@ void self_buffing(void)
           if (!IS_NPC(ch) && PRF_FLAGGED(ch, PRF_AUGMENT_BUFFS))
             augment = max_augment_psp_allowed(ch, spellnum);
           snprintf(spellname, sizeof(spellname), " %d '%s'", augment, spell_info[spellnum].name);
-          do_manifest(ch, (const char *)spellname, 0, SCMD_CAST_PSIONIC);
+          snprintf(buf2, sizeof(buf2), "%s %s", spellname, buf1);
+          do_manifest(ch, (const char *)buf2, 0, SCMD_CAST_PSIONIC);
         }
 
         GET_CURRENT_BUFF_SLOT(ch)++;

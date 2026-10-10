@@ -1354,7 +1354,7 @@ struct char_data *get_eidolon_in_room(struct char_data *ch)
 ACMD(do_eidolon)
 {
   char arg[MAX_INPUT_LENGTH] = {'\0'}, arg2[MAX_INPUT_LENGTH] = {'\0'},
-       buf[MAX_INPUT_LENGTH] = {'\0'};
+       buf[MAX_INPUT_LENGTH + 2] = {'\0'};
   struct char_data *eidolon = NULL;
   char *desc = NULL;
   int i = 0, count = 0;

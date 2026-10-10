@@ -8544,7 +8544,7 @@ ACMD(do_objlist)
   char buf3[8192];
   char buf4[8192];
   char buf5[8192];
-  char tmp_buf[32768];
+  char tmp_buf[4 * 8192 + 128];
   one_argument(argument, value, sizeof(value));
 
   if (*value && is_number(value))
@@ -10347,19 +10347,17 @@ ACMD(do_players)
 
     if (STATE(d) == CON_PLAYING)
     {
-      snprintf(buf, sizeof(buf), "%-15s %-15s %-3d %-15s %-7d %-7s %s\r\n", GET_NAME(d->character),
+      send_to_char(ch, "%-15s %-15s %-3d %-15s %-7d %-7s %s\r\n", GET_NAME(d->character),
                (d && d->account && d->account->name) ? d->account->name : "None",
                GET_LEVEL(d->character), buf3, GET_ROOM_VNUM(IN_ROOM(d->character)),
                race_list[GET_RACE(d->character)].abbrev, buf2);
-      send_to_char(ch, "%s", buf);
     }
 
     else
     {
-      snprintf(buf, sizeof(buf), "%-15s %-15s %-3d %-15s %-7s %-7s %s\r\n", GET_NAME(d->character),
+      send_to_char(ch, "%-15s %-15s %-3d %-15s %-7s %-7s %s\r\n", GET_NAME(d->character),
                "Offline", GET_LEVEL(d->character), buf3, "Offline",
                race_list[GET_RACE(d->character)].abbrev, buf2);
-      send_to_char(ch, "%s", buf);
     }
   }
 }

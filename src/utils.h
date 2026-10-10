@@ -2958,11 +2958,13 @@ int count_teamwork_feats_available(struct char_data *ch);
 #define GET_WALKTO_LOC(ch) (ch->player_specials->walkto_location)
 
 // Buff self
-#define GET_BUFF(ch, i, j) (ch->player_specials->saved.buff_abilities[i][j])
-#define GET_CURRENT_BUFF_SLOT(ch) (ch->player_specials->buff_slot)
-#define GET_BUFF_TIMER(ch) (ch->player_specials->buff_timer)
-#define IS_BUFFING(ch) (ch->player_specials->is_buffing)
-#define GET_BUFF_TARGET(ch) (ch->player_specials->buff_target)
+#define GET_BUFF_IN_LIST(ch, list, i, j) ((ch)->player_specials->saved.buff_abilities[list][i][j])
+#define GET_BUFF(ch, i, j) GET_BUFF_IN_LIST(ch, 0, i, j)
+#define GET_BUFF_LIST(ch) ((ch)->player_specials->buff_list)
+#define GET_CURRENT_BUFF_SLOT(ch) ((ch)->player_specials->buff_slot)
+#define GET_BUFF_TIMER(ch) ((ch)->player_specials->buff_timer)
+#define IS_BUFFING(ch) ((ch)->player_specials->is_buffing)
+#define GET_BUFF_TARGET(ch) ((ch)->player_specials->buff_target)
 
 // summoners
 int char_has_evolution(struct char_data *ch, int evo);

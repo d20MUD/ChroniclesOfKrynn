@@ -1676,7 +1676,7 @@ static int generate_help_entry(struct char_data *ch, int cmd_index, bool force_o
   struct command_info *cmd;
   char tag[MAX_INPUT_LENGTH];
   char keywords[MAX_INPUT_LENGTH];
-  char help_text[MAX_STRING_LENGTH * 2]; /* Doubled to prevent truncation */
+  char help_text[MAX_STRING_LENGTH * 2 + MAX_INPUT_LENGTH + 2048];
   char query[MAX_STRING_LENGTH];
   char *escaped_tag, *escaped_keywords, *escaped_help;
   MYSQL_RES *result;

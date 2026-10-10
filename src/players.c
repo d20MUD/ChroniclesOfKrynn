@@ -116,6 +116,7 @@ void save_char_pets(struct char_data *ch);
 static void load_mercies(FILE *fl, struct char_data *ch);
 static void load_cruelties(FILE *fl, struct char_data *ch);
 static void load_buffs(FILE *fl, struct char_data *ch);
+static void load_buff_lists(FILE *fl, struct char_data *ch);
 static void load_languages(FILE *fl, struct char_data *ch);
 static void load_craft_affects(FILE *fl, struct char_data *ch);
 static void load_craft_materials(FILE *fl, struct char_data *ch);
@@ -632,11 +633,10 @@ int load_char(const char *name, struct char_data *ch)
     CASTING_METAMAGIC(ch) = 0;
     CASTING_CLASS(ch) = 0;
     GET_KAPAK_SALIVA_HEALING_COOLDOWN(ch) = 0;
-    for (i = 0; i < MAX_BUFFS; i++)
-    {
-      GET_BUFF(ch, i, 0) = 0;
-      GET_BUFF(ch, i, 1) = 0;
-    }
+    memset(ch->player_specials->saved.buff_abilities, 0,
+           sizeof(ch->player_specials->saved.buff_abilities));
+    GET_BUFF_LIST(ch) = 0;
+    GET_BUFF_TARGET(ch) = NULL;
     GET_BUFF_TIMER(ch) = 0;
     GET_LAST_ROOM(ch) = 0;
     GET_CURRENT_BUFF_SLOT(ch) = 0;
@@ -874,6 +874,8 @@ int load_char(const char *name, struct char_data *ch)
           ch->player.time.birth = atol(line);
         else if (!strcmp(tag, "Buff"))
           load_buffs(fl, ch);
+        else if (!strcmp(tag, "BfLs"))
+          load_buff_lists(fl, ch);
         else if (!strcmp(tag, "BoS1"))
           GET_WARLOCK_BOOK_SPELL(ch, 0) = atoi(line);
         else if (!strcmp(tag, "BoS2"))
@@ -3088,6 +3090,13 @@ void save_char(struct char_data *ch, int mode)
   for (i = 0; i < MAX_BUFFS; i++)
     BUFFER_WRITE("%d %d %d\n", i, GET_BUFF(ch, i, 0), GET_BUFF(ch, i, 1));
   BUFFER_WRITE("-1 -1 -1\n");
+  BUFFER_WRITE("BfLs:\n");
+  for (j = 1; j < MAX_BUFF_LISTS; j++)
+    for (i = 0; i < MAX_BUFFS; i++)
+      if (GET_BUFF_IN_LIST(ch, j, i, 0))
+        BUFFER_WRITE("%d %d %d %d\n", j, i, GET_BUFF_IN_LIST(ch, j, i, 0),
+                     GET_BUFF_IN_LIST(ch, j, i, 1));
+  BUFFER_WRITE("-1 -1 -1 -1\n");
 
   // Save Bags
   if (GET_BAG_NAME(ch, 1))
@@ -5013,18 +5022,42 @@ static void load_favored_terrains(FILE *fl, struct char_data *ch)
 //   } while (num != -1);
 // }
 
+/* Legacy Buff records become list 1. Check the sentinel before indexing. */
 static void load_buffs(FILE *fl, struct char_data *ch)
 {
-  int num = 0, num2 = 0, num3 = 0;
+  int slot, spell, augment;
   char line[MAX_INPUT_LENGTH + 1];
 
-  do
+  while (get_line(fl, line))
   {
-    get_line(fl, line);
-    sscanf(line, "%d %d %d", &num, &num2, &num3);
-    GET_BUFF(ch, num, 0) = num2;
-    GET_BUFF(ch, num, 1) = num3;
-  } while (num != -1);
+    if (sscanf(line, "%d %d %d", &slot, &spell, &augment) != 3)
+      continue;
+    if (slot == -1)
+      break;
+    if (slot < 0 || slot >= MAX_BUFFS || (spell && !is_spell_or_power(spell)))
+      continue;
+    GET_BUFF(ch, slot, 0) = spell;
+    GET_BUFF(ch, slot, 1) = MAX(0, augment);
+  }
+}
+
+static void load_buff_lists(FILE *fl, struct char_data *ch)
+{
+  int list, slot, spell, augment;
+  char line[MAX_INPUT_LENGTH + 1];
+
+  while (get_line(fl, line))
+  {
+    if (sscanf(line, "%d %d %d %d", &list, &slot, &spell, &augment) != 4)
+      continue;
+    if (list == -1)
+      break;
+    if (list < 1 || list >= MAX_BUFF_LISTS || slot < 0 || slot >= MAX_BUFFS ||
+        (spell && !is_spell_or_power(spell)))
+      continue;
+    GET_BUFF_IN_LIST(ch, list, slot, 0) = spell;
+    GET_BUFF_IN_LIST(ch, list, slot, 1) = MAX(0, augment);
+  }
 }
 
 static void load_scrolls(FILE *fl, struct char_data *ch)
@@ -5192,8 +5225,7 @@ static void load_devices(FILE *fl, struct char_data *ch)
       /* No levels section in save; use default 0s and stash pre-read line for next loop/terminator */
       for (spell_idx = 0; spell_idx < MAX_INVENTION_SPELLS; spell_idx++)
         inv->spell_levels[spell_idx] = 0;
-      strncpy(pre_line, line, sizeof(pre_line) - 1);
-      pre_line[sizeof(pre_line) - 1] = '\0';
+      strlcpy(pre_line, line, sizeof(pre_line));
       has_pre_line = 1;
     }
   }
@@ -5670,7 +5702,7 @@ void save_char_pets(struct char_data *ch)
   char query[MAX_STRING_LENGTH] = {'\0'};
   char query2[MAX_STRING_LENGTH] = {'\0'};
   char query3[MAX_STRING_LENGTH] = {'\0'};
-  char finalQuery[MAX_STRING_LENGTH] = {'\0'};
+  char finalQuery[2 * MAX_STRING_LENGTH] = {'\0'};
   char chname[MAX_STRING_LENGTH] = {'\0'};
   char *end = NULL, *end2 = NULL;
 

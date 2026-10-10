@@ -1430,7 +1430,6 @@ static void do_auto_exits(struct char_data *ch)
 void look_at_room_number(struct char_data *ch, int ignore_brief, long room_number)
 {
   char buf[MAX_INPUT_LENGTH] = {'\0'};
-  char buf2[MAX_INPUT_LENGTH] = {'\0'};
 
   if (!ch->desc)
     return;
@@ -1484,9 +1483,8 @@ void look_at_room_number(struct char_data *ch, int ignore_brief, long room_numbe
   if (!IS_NPC(ch) && PRF_FLAGGED(ch, PRF_SHOWVNUMS))
   {
     sprintbitarray(ROOM_FLAGS(room_number), room_bits, RF_ARRAY_MAX, buf);
-    snprintf(buf2, sizeof(buf2), "\tc[%5d]\tn %s \tc[ %s] %s\tn", GET_ROOM_VNUM(room_number),
-             world[room_number].name, buf, sector_types[(world[room_number].sector_type)]);
-    send_to_char(ch, "%s", buf2);
+    send_to_char(ch, "\tc[%5d]\tn %s \tc[ %s] %s\tn", GET_ROOM_VNUM(room_number),
+                 world[room_number].name, buf, sector_types[world[room_number].sector_type]);
   }
   else
     send_to_char(ch, "%s", world[room_number].name);
@@ -9364,7 +9362,7 @@ bool get_zone_levels(zone_rnum znum, char *buf)
 ACMD(do_areas)
 {
   int i, hilev = -1, lolev = -1, zcount = 0, lev_set, len = 0, tmp_len = 0;
-  char arg[MAX_INPUT_LENGTH] = {'\0'}, *second, lev_str[MAX_INPUT_LENGTH] = {'\0'},
+  char arg[MAX_INPUT_LENGTH] = {'\0'}, *second, lev_str[64] = {'\0'},
        buf[MAX_STRING_LENGTH] = {'\0'};
   //  char zvn[MAX_INPUT_LENGTH] = {'\0'};
   bool show_zone = FALSE, overlap = FALSE, overlap_shown = FALSE;

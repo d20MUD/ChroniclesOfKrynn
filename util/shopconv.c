@@ -147,10 +147,10 @@ void do_string(FILE *shop_f, FILE *newshop_f, char *msg)
 
 static int boot_the_shops_conv(FILE *shop_f, FILE *newshop_f, char *filename)
 {
-  char *buf, buf2[150];
+  char *buf, buf2[MEDIUM_STRING + 64];
   int temp, count;
 
-  sprintf(buf2, "beginning of shop file %s", filename);
+  snprintf(buf2, sizeof(buf2), "beginning of shop file %s", filename);
   fprintf(newshop_f, "LuminariMUD %s Shop File~\n", VERSION3_TAG);
   for (;;)
   {
@@ -158,7 +158,7 @@ static int boot_the_shops_conv(FILE *shop_f, FILE *newshop_f, char *filename)
     if (*buf == '#')
     { /* New shop */
       sscanf(buf, "#%d\n", &temp);
-      sprintf(buf2, "shop #%d in shop file %s", temp, filename);
+      snprintf(buf2, sizeof(buf2), "shop #%d in shop file %s", temp, filename);
       fprintf(newshop_f, "#%d~\n", temp);
       free(buf); /* Plug memory leak! */
       printf("   #%d\n", temp);
@@ -212,7 +212,9 @@ static int boot_the_shops_conv(FILE *shop_f, FILE *newshop_f, char *filename)
 int main(int argc, char *argv[])
 {
   FILE *sfp, *nsfp;
-  char fn[MEDIUM_STRING] = {'\0'}, part[MEDIUM_STRING] = {'\0'};
+  char fn[MEDIUM_STRING] = {'\0'};
+  char part[MEDIUM_STRING + sizeof(".tmp")] = {'\0'};
+  char backup[MEDIUM_STRING + sizeof(".bak")] = {'\0'};
   int result, index;
 
   if (argc < 2)
@@ -232,17 +234,21 @@ int main(int argc, char *argv[])
 
   for (index = 1; index < argc; index++)
   {
-    sprintf(fn, "%s", argv[index]);
+    if (snprintf(fn, sizeof(fn), "%s", argv[index]) >= (int)sizeof(fn))
+    {
+      fprintf(stderr, "Error: Filename is too long: %s\n", argv[index]);
+      continue;
+    }
     printf("Processing: %s\n", fn);
 
     /* Create temporary backup */
-    sprintf(part, "mv %s %s.tmp", fn, fn);
-    if (system(part) != 0)
+    snprintf(part, sizeof(part), "%s.tmp", fn);
+    if (rename(fn, part) != 0)
     {
-      printf("Warning: Could not create temporary backup for %s\n", fn);
+      fprintf(stderr, "Error: Could not create temporary backup for %s\n", fn);
+      perror(fn);
+      continue;
     }
-
-    sprintf(part, "%s.tmp", fn);
     sfp = fopen(part, "r");
     if (sfp == NULL)
     {
@@ -266,22 +272,25 @@ int main(int argc, char *argv[])
     if (result)
     {
       /* Conversion failed - restore original */
-      sprintf(part, "mv %s.tmp %s", fn, fn);
-      if (system(part) != 0)
+      if (rename(part, fn) != 0)
       {
-        fprintf(stderr, "Warning: system command failed: %s\n", part);
+        perror("Error: Could not restore original shop file");
+        fprintf(stderr, "Original file remains at %s\n", part);
       }
-      printf("Conversion failed - original file restored\n");
+      else
+        printf("Conversion failed - original file restored\n");
     }
     else
     {
       /* Conversion succeeded - create backup */
-      sprintf(part, "mv %s.tmp %s.bak", fn, fn);
-      if (system(part) != 0)
+      snprintf(backup, sizeof(backup), "%s.bak", fn);
+      if (rename(part, backup) != 0)
       {
-        fprintf(stderr, "Warning: system command failed: %s\n", part);
+        perror("Warning: Could not rename the shop backup");
+        fprintf(stderr, "Original file remains at %s\n", part);
       }
-      printf("Conversion successful - backup saved as %s.bak\n", fn);
+      else
+        printf("Conversion successful - backup saved as %s\n", backup);
     }
     printf("\n");
   }

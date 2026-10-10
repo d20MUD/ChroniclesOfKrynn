@@ -2174,7 +2174,7 @@ static void makeuid_var(void *go, struct script_data *sc, trig_data *trig, int t
 {
   char junk[MAX_INPUT_LENGTH] = {'\0'}, varname[MAX_INPUT_LENGTH] = {'\0'};
   char arg[MAX_INPUT_LENGTH] = {'\0'}, name[MAX_INPUT_LENGTH] = {'\0'};
-  char uid[MAX_INPUT_LENGTH] = {'\0'};
+  char uid[MAX_INPUT_LENGTH + 1] = {'\0'};
 
   *uid = '\0';
   half_chop(cmd, junk, cmd);    /* makeuid */

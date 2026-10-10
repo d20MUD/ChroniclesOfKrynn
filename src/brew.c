@@ -358,7 +358,8 @@ EVENTFUNC(event_brewing)
         const char *article = (first_char == 'a' || first_char == 'e' || first_char == 'i' || 
                                first_char == 'o' || first_char == 'u') ? "an " : "a ";
         char temp_name[512] = {0};
-        snprintf(temp_name, sizeof(temp_name), "%s%s", article, name_buf);
+        snprintf(temp_name, sizeof(temp_name), "%s%.*s", article,
+                 (int)(sizeof(temp_name) - strlen(article) - 1), name_buf);
         snprintf(name_buf, sizeof(name_buf), "%s", temp_name);
         pot->name = strdup(name_buf);
         

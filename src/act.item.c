@@ -6535,6 +6535,10 @@ ACMD(do_loot)
   }
 
   int level = 0, max_grade = LOOTBOX_LEVEL_MUNDANE;
+  const int chest_level = GET_OBJ_LEVEL(obj);
+  const int source_level = MAX(1, chest_level);
+  struct obj_data *previous_inventory = ch->carrying;
+  struct obj_data *loot;
 
   level = LOOTBOX_LEVEL(obj);
 
@@ -6582,13 +6586,13 @@ ACMD(do_loot)
   switch (LOOTBOX_TYPE(obj))
   {
   case LOOTBOX_TYPE_WEAPON:
-    award_magic_weapon(ch, max_grade, level);
+    award_magic_weapon(ch, max_grade, source_level);
     chance = 12;
     recWeapon = true;
     recMagic = true;
     break;
   case LOOTBOX_TYPE_ARMOR:
-    award_magic_armor_suit(ch, max_grade, level);
+    award_magic_armor_suit(ch, max_grade, source_level);
     chance = 12;
     recArmor = true;
     recMagic = true;
@@ -6597,16 +6601,16 @@ ACMD(do_loot)
     switch (dice(1, 4))
     {
     case 1:
-      award_expendable_item(ch, max_grade, TYPE_SCROLL, level);
+      award_expendable_item(ch, max_grade, TYPE_SCROLL, source_level);
       break;
     case 2:
-      award_expendable_item(ch, max_grade, TYPE_POTION, level);
+      award_expendable_item(ch, max_grade, TYPE_POTION, source_level);
       break;
     case 3:
-      award_expendable_item(ch, max_grade, TYPE_WAND, level);
+      award_expendable_item(ch, max_grade, TYPE_WAND, source_level);
       break;
     case 4:
-      award_expendable_item(ch, max_grade, TYPE_STAFF, level);
+      award_expendable_item(ch, max_grade, TYPE_STAFF, source_level);
       break;
     }
     chance = 12;
@@ -6614,13 +6618,13 @@ ACMD(do_loot)
     recMagic = true;
     break;
   case LOOTBOX_TYPE_TRINKET:
-    award_misc_magic_item(ch, determine_rnd_misc_cat(), cp_convert_grade_enchantment(max_grade), level);
+    award_misc_magic_item(ch, determine_rnd_misc_cat(), cp_convert_grade_enchantment(max_grade), source_level);
     chance = 12;
     recTrinket = true;
     recMagic = true;
     break;
   case LOOTBOX_TYPE_CRYSTAL:
-    award_random_crystal(ch, max_grade, level);
+    award_random_crystal(ch, max_grade, source_level);
     chance = 12;
     recCrystal = true;
     recMagic = true;
@@ -6640,50 +6644,54 @@ ACMD(do_loot)
   {
     if (dice(1, chance) == 1 && !recCrystal)
     {
-      award_random_crystal(ch, max_grade, level);
+      award_random_crystal(ch, max_grade, source_level);
       recMagic = true;
     }
     if (dice(1, chance) == 1 && !recWeapon)
     {
-      award_magic_weapon(ch, max_grade, level);
+      award_magic_weapon(ch, max_grade, source_level);
       recMagic = true;
     }
     if (dice(1, chance) == 1 && !recConsumable)
     {
-      award_expendable_item(ch, max_grade, TYPE_SCROLL, level);
+      award_expendable_item(ch, max_grade, TYPE_SCROLL, source_level);
       recMagic = true;
     }
     if (dice(1, chance) == 1 && !recConsumable)
     {
-      award_expendable_item(ch, max_grade, TYPE_POTION, level);
+      award_expendable_item(ch, max_grade, TYPE_POTION, source_level);
       recMagic = true;
     }
     if (dice(1, chance) == 1 && !recConsumable)
     {
-      award_expendable_item(ch, max_grade, TYPE_WAND, level);
+      award_expendable_item(ch, max_grade, TYPE_WAND, source_level);
       recMagic = true;
     }
     if (dice(1, chance) == 1 && !recConsumable)
     {
-      award_expendable_item(ch, max_grade, TYPE_STAFF, level);
+      award_expendable_item(ch, max_grade, TYPE_STAFF, source_level);
       recMagic = true;
     }
     if (dice(1, chance) == 1 && !recConsumable)
     {
-      award_magic_ammo(ch, max_grade, level);
+      award_magic_ammo(ch, max_grade, source_level);
       recMagic = true;
     }
     if (dice(1, chance) == 1 && !recTrinket)
     {
-      award_misc_magic_item(ch, determine_rnd_misc_cat(), cp_convert_grade_enchantment(max_grade), level);
+      award_misc_magic_item(ch, determine_rnd_misc_cat(), cp_convert_grade_enchantment(max_grade), source_level);
       recMagic = true;
     }
     if (dice(1, chance) == 1 && !recArmor)
     {
-      award_magic_armor(ch, max_grade, -1, level);
+      award_magic_armor(ch, max_grade, -1, source_level);
       recMagic = true;
     }
   } while (!recMagic);
+
+  /* Only cap newly awarded loot; zero-level chests must also enforce their cap. */
+  for (loot = ch->carrying; loot && loot != previous_inventory; loot = loot->next_content)
+    GET_OBJ_LEVEL(loot) = MIN(GET_OBJ_LEVEL(loot), chest_level);
 
   if (GET_OBJ_VAL(obj, 2) == 1)
   {

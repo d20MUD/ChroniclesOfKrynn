@@ -4915,7 +4915,7 @@ static void append_msdp_quest_target(char *targets_json, size_t targets_size, in
                                      int target_id, const char *target_name)
 {
   char escaped_name[MAX_STRING_LENGTH] = {'\0'};
-  char entry[MAX_STRING_LENGTH] = {'\0'};
+  char entry[MAX_STRING_LENGTH + 64] = {'\0'};
 
   if (!targets_json || !first_target)
     return;
@@ -4948,7 +4948,7 @@ static void update_msdp_quest_info(struct descriptor_data *d, struct char_data *
     char quest_name_escaped[MAX_STRING_LENGTH] = {'\0'};
     char quest_type_escaped[MAX_STRING_LENGTH] = {'\0'};
     char targets_json[MAX_STRING_LENGTH] = {'\0'};
-    char quest_entry[MAX_STRING_LENGTH] = {'\0'};
+    char quest_entry[3 * MAX_STRING_LENGTH + 256] = {'\0'};
     int first_target = 1;
     const char *type_name = "Unknown";
 
@@ -5093,7 +5093,7 @@ void update_msdp_room(struct char_data *ch)
 
   int door;
 
-  char buf2[MAX_STRING_LENGTH] = {'\0'};
+  char buf2[3 * MAX_STRING_LENGTH + 512] = {'\0'};
   char room_exits[MAX_STRING_LENGTH] = {'\0'};
   char room_doors[MAX_STRING_LENGTH] = {'\0'};
 

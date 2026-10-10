@@ -335,7 +335,7 @@ int save_rooms(zone_rnum rzone)
   char filename[128];
   char buf[MAX_STRING_LENGTH] = {'\0'};
   char buf1[MAX_STRING_LENGTH] = {'\0'};
-  char buf2[MAX_STRING_LENGTH] = {'\0'};
+  char buf2[2 * MAX_STRING_LENGTH + 128] = {'\0'};
   bool occupied = FALSE;
 
 #if CIRCLE_UNSIGNED_INDEX

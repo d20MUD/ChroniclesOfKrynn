@@ -571,7 +571,7 @@ int write_mobile_record(mob_vnum mvnum, struct char_data *mob, FILE *fd)
 
   char ldesc[MAX_STRING_LENGTH] = {'\0'};
   char ddesc[MAX_STRING_LENGTH] = {'\0'};
-  char buf[MAX_STRING_LENGTH] = {'\0'};
+  char buf[4 * MAX_STRING_LENGTH + 64] = {'\0'};
 
   ldesc[MAX_STRING_LENGTH - 1] = '\0';
   ddesc[MAX_STRING_LENGTH - 1] = '\0';

@@ -5279,7 +5279,7 @@ ACMD(do_clanset)
  **************************************************************************/
 ACMD(do_clantalk)
 {
-  char buf[MAX_STRING_LENGTH] = {'\0'}, buf2[MAX_STRING_LENGTH] = {'\0'},
+  char buf[MAX_STRING_LENGTH] = {'\0'}, buf2[MAX_STRING_LENGTH + 256] = {'\0'},
        arg[MAX_INPUT_LENGTH] = {'\0'};
   const char *arg2;
   const char *msg = NULL;
