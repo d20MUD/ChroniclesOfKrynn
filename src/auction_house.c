@@ -201,7 +201,8 @@ void auction_house_command(struct char_data *ch, const char *argument)
   {
     send_to_char(
         ch,
-        "Auction house: list [all|mine|item type|wear slot] [keywords], view <ID>, sell <item> "
+        "Use ah <command> or auctionhouse <command>: list [all|mine|item type|wear slot] "
+        "[keywords], view <ID>, stats <ID>, sell <item> "
         "<price>, buy <ID>, cancel <ID>, recover <expired ID>, reprice <ID> <price>, collect.\r\n");
     return;
   }
@@ -419,19 +420,11 @@ void auction_house_command(struct char_data *ch, const char *argument)
 /* This spec can be attached to either a room or an auctioneer mobile in OLC. */
 SPECIAL(mysql_auction_house)
 {
-  char buffer[MAX_INPUT_LENGTH + 16];
   if (!cmd || IS_NPC(ch))
     return FALSE;
-  if (CMD_IS("auctionhouse"))
+  if (CMD_IS("ah") || CMD_IS("auctionhouse"))
   {
     auction_house_command(ch, argument);
-    return TRUE;
-  }
-  if (CMD_IS("list") || CMD_IS("sell") || CMD_IS("buy") || CMD_IS("view") || CMD_IS("stats") ||
-      CMD_IS("recover") || CMD_IS("cancel") || CMD_IS("reprice") || CMD_IS("collect"))
-  {
-    snprintf(buffer, sizeof(buffer), "%s %s", CMD_NAME, argument);
-    auction_house_command(ch, buffer);
     return TRUE;
   }
   return FALSE;

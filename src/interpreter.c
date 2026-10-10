@@ -118,6 +118,8 @@ ACMD_DECL(do_relock);
  * Cooldowns for used actions are in the last column, {X, Y} where X is the
  * cooldown for a standard action used and Y is the cooldown for the Move action used. */
 
+/* Keep command entries in their hand-maintained layout when formatting on save. */
+// clang-format off
 cpp_extern const struct command_info cmd_info[] = {
     {"RESERVED",
      "",
@@ -857,7 +859,6 @@ cpp_extern const struct command_info cmd_info[] = {
 
     /* {"command", "sort_as", minimum_position, *command_pointer, minimum_level, subcmd, ignore_wait, actions_required, {action_cooldowns}, *command_check_pointer},*/
     {"cast", "c", POS_SITTING, do_gen_cast, 1, SCMD_CAST_SPELL, FALSE, ACTION_MOVE, {0, 6}, NULL},
-    {"cancel", "cancel", POS_RESTING, do_auctionhouse, 0, 0, FALSE, ACTION_NONE, {0, 0}, NULL},
     {"carriage", "car", POS_RECLINING, do_carriage, 0, 0, TRUE, ACTION_NONE, {0, 0}, NULL},
     {"cataclysmsmite",
      "catsmite",
@@ -3520,7 +3521,6 @@ cpp_extern const struct command_info cmd_info[] = {
      NULL},
     {"read", "rea", POS_RECLINING, do_read_board, 0, 0, FALSE, ACTION_NONE, {0, 0}, NULL},
     // {"read", "rea", POS_RECLINING, do_look, 0, SCMD_READ, FALSE, ACTION_NONE, {0, 0}, NULL},
-    {"recover", "recover", POS_RESTING, do_auctionhouse, 0, 0, FALSE, ACTION_NONE, {0, 0}, NULL},
 
 
 #if defined(CAMPAIGN_DL) || defined(CAMPAIGN_FR)
@@ -3744,7 +3744,6 @@ cpp_extern const struct command_info cmd_info[] = {
      ACTION_SWIFT,
      {0, 0},
      can_renewedvigor},
-    {"reprice", "reprice", POS_RESTING, do_auctionhouse, 0, 0, FALSE, ACTION_NONE, {0, 0}, NULL},
     {"research",
      "research",
      POS_STANDING,
@@ -4244,7 +4243,6 @@ cpp_extern const struct command_info cmd_info[] = {
     {"spot", "spot", POS_STANDING, do_spot, 1, 0, FALSE, ACTION_NONE, {0, 0}, NULL},
     {"stand", "st", POS_RECLINING, do_stand, 0, 0, FALSE, ACTION_STANDARD, {6, 0}, NULL},
     {"stat", "stat", POS_DEAD, do_stat, LVL_IMMORT, 0, TRUE, ACTION_NONE, {0, 0}, NULL},
-    {"stats", "stats", POS_RESTING, do_auctionhouse, 0, 0, FALSE, ACTION_NONE, {0, 0}, NULL},
     {"steal", "ste", POS_STANDING, do_steal, 1, 0, FALSE, ACTION_NONE, {0, 0}, NULL},
     {"stonesendurance",
      "stonese",
@@ -4903,7 +4901,6 @@ cpp_extern const struct command_info cmd_info[] = {
      {0, 0},
      can_vanishingtechnique},
     {"version", "ver", POS_DEAD, do_gen_ps, 0, SCMD_VERSION, TRUE, ACTION_NONE, {0, 0}, NULL},
-    {"view", "view", POS_RESTING, do_auctionhouse, 0, 0, FALSE, ACTION_NONE, {0, 0}, NULL},
     {"visible", "vis", POS_RECLINING, do_visible, 1, 0, TRUE, ACTION_NONE, {0, 0}, NULL},
     {"vitalstrike",
      "vitalstrike",
@@ -5424,6 +5421,7 @@ cpp_extern const struct command_info cmd_info[] = {
     //{ "comtest", "comtest", POS_RESTING, do_gen_preparation, LVL_BUILDER, SCMD_COMPOSE, FALSE, ACTION_NONE, {0, 0}, NULL},
 
     {"\n", "zzzzzzz", 0, 0, 0, 0, FALSE, ACTION_NONE, {0, 0}, NULL}}; /* this must be last */
+// clang-format on
 
 /* Thanks to Melzaren for this change to allow DG Scripts to be attachable
  *to player's while still disallowing them to manually use the DG-Commands. */

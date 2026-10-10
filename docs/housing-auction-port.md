@@ -28,9 +28,9 @@ neighbourhood. Owners use stable character IDs; names are display labels.
 In **medit** or **redit**, assign the **MySQL Auction House** special procedure
 to the auctioneer mobile or auction room and save that world edit normally.
 There are no hardcoded Star Wars room or mobile VNUMs. Players use
-`auctionhouse <command>` at the configured location. The auctioneer also
-recognizes the traditional `list`, `view`, `stats`, `sell`, `buy`, `cancel`,
-`recover`, `reprice`, and `collect` commands.
+`ah <command>` or `auctionhouse <command>` at the configured location.
+All auction actions require this prefix, including `list`, `view`, `stats`,
+`sell`, `buy`, `cancel`, `recover`, `reprice`, and `collect`.
 
 Staff at `LVL_GRSTAFF` can use the auctionhouse command remotely.
 Existing fixed-room houses and their guest commands remain available.
