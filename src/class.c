@@ -8594,6 +8594,7 @@ void load_class_list(void)
   /* feat assignment */
   /*              class num      feat                      cfeat lvl stack */
   feat_assignment(CLASS_DRAGONRIDER, FEAT_DRAGON_BOND, Y, 1, N);
+  feat_assignment(CLASS_DRAGONRIDER, FEAT_DRAGON_FLIGHT, Y, 1, N);
   feat_assignment(CLASS_DRAGONRIDER, FEAT_DRAGOON_POINTS, Y, 1, N);
   feat_assignment(CLASS_DRAGONRIDER, FEAT_DRAGON_LINK, Y, 2, N);
   feat_assignment(CLASS_DRAGONRIDER, FEAT_ULTRAVISION, Y, 2, N);

@@ -1154,6 +1154,17 @@ SAVING_WILL here...  */
   if (HAS_FEAT(caster, FEAT_DIVINER) && SINFO.schoolOfMagic == DIVINATION)
     spell_level += 5;
 
+  /* Recheck mounted access when a delayed Dragon Flight cast completes. */
+  if (spellnum == SPELL_OVERLAND_FLIGHT && !IS_NPC(caster) &&
+      CASTING_CLASS(caster) == CLASS_DRAGONRIDER &&
+      (casttype == CAST_SPELL || casttype == CAST_INNATE) &&
+      !isDragonRiderMagic(caster, spellnum))
+  {
+    send_to_char(caster, "Dragon Flight requires riding your own dragon and an available "
+                         "dragoon point.\r\n");
+    return 0;
+  }
+
   if (isDragonRiderMagic(caster, spellnum))
   {
     if (!IS_NPC(caster))
@@ -4198,6 +4209,8 @@ return;
 
         if (isWarlockMagic(ch, spellnum))
           atwill_class = CLASS_WARLOCK;
+        else if (spellnum == SPELL_OVERLAND_FLIGHT && isDragonRiderMagic(ch, spellnum))
+          atwill_class = CLASS_DRAGONRIDER;
         else
           atwill_class = find_cantrip_class(ch, spellnum);
 
@@ -7117,6 +7130,12 @@ bool isDragonRiderMagic(struct char_data *ch, int spellnum)
 
   switch (spellnum)
   {
+  case SPELL_OVERLAND_FLIGHT:
+    if (!IS_NPC(ch) && CLASS_LEVEL(ch, CLASS_DRAGONRIDER) > 0 &&
+        HAS_REAL_FEAT(ch, FEAT_DRAGON_FLIGHT) && is_riding_dragon_mount(ch) &&
+        RIDING(ch)->master == ch)
+      is_valid_spell = true;
+    break;
   case SPELL_DARKNESS:
     if (HAS_REAL_FEAT(ch, FEAT_ADEPT_RIDER))
       is_valid_spell = true;

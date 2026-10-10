@@ -3470,10 +3470,11 @@ void assign_feats(void)
         "+4 to spell concentration checks made in combat or when grappled ");
 
   /* epic type spellcasting feats */
-  feato(FEAT_MUMMY_DUST, "mummy dust", TRUE, TRUE, FALSE, FEAT_TYPE_SPELLCASTING,
-        "gain access to epic spell - mummy dust",
-        "Once per game day, you can cast a spell that will conjure a powerful Mummy "
-        "Lord to assist you in combat. Note: You cannot summon a solar and mummy at the same time.");
+  feato(
+      FEAT_MUMMY_DUST, "mummy dust", TRUE, TRUE, FALSE, FEAT_TYPE_SPELLCASTING,
+      "gain access to epic spell - mummy dust",
+      "Once per game day, you can cast a spell that will conjure a powerful Mummy "
+      "Lord to assist you in combat. Note: You cannot summon a solar and mummy at the same time.");
   feat_prereq_ability(FEAT_MUMMY_DUST, ABILITY_SPELLCRAFT, 23);
   feat_prereq_spellcasting(FEAT_MUMMY_DUST, CASTING_TYPE_DIVINE, 3, 9);
 
@@ -4090,7 +4091,7 @@ void assign_feats(void)
         "Allows the ability to wild shape into a colossal animal, plant or elemental.");
   feat_prereq_feat(FEAT_COLOSSAL_WILD_SHAPE, FEAT_GARGANTUAN_WILD_SHAPE, 1);
 
-    /* Wild Feats (druid) */
+  /* Wild Feats (druid) */
   feato(FEAT_NATURAL_SPELL, "natural spell", TRUE, TRUE, FALSE, FEAT_TYPE_WILD,
         "allows casting of spells while wildshaped",
         "Upon selecting this feat, the character is able to cast spells while wildshaped.");
@@ -5150,9 +5151,14 @@ void assign_feats(void)
         "Rider gains dragoon points equal to dragon rider.",
         "Rider gains dragoon points equal to dragon rider. These points can be used to cast "
         "various spells gained by the "
-        "adept rider, skilled rider and master rider feats. Each of the granted spells will use "
+        "dragon flight, adept rider, skilled rider and master rider feats. Each granted spell uses "
         "one dragoon point when casting. Dragoon points can be "
         "viewed with the 'abilities' command.");
+  feato(FEAT_DRAGON_FLIGHT, "dragon flight", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "Allows casting overland flight while riding your dragon, using one dragoon point.",
+        "Automatically granted at Dragon Rider level 1. While riding your own dragon, use "
+        "cast 'overland flight' <destination> to travel, spending one dragoon point. "
+        "Use flightlist to see destinations.");
 
   /* Shadow Dancer (ShadowDancer) */
   /* feat-number | name | in game? | learnable? | stackable? | feat-type | short-descrip | long descrip */
@@ -5668,8 +5674,7 @@ void assign_feats(void)
         "gain one selected bonus 2nd-circle spell slot from a loremaster secret",
         "A loremaster secret grants one bonus 2nd-circle spell slot for the selected eligible "
         "spellcasting class.");
-  feato(FEAT_LOREMASTER_SECRET_HEALTH, "secret health", TRUE, FALSE, FALSE,
-        FEAT_TYPE_CLASS_ABILITY,
+  feato(FEAT_LOREMASTER_SECRET_HEALTH, "secret health", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
         "loremaster Toughness bonus feat granting at least 3 hit points",
         "Secret Health grants a Pathfinder-style Toughness bonus feat, increasing maximum hit "
         "points by the greater of 3 or character level.");
@@ -9478,8 +9483,8 @@ bool display_feat_info(struct char_data *ch, const char *featname)
     }
     if (IS_EPIC_FEAT(feat))
     {
-      snprintf(buf2, sizeof(buf2), "%s%s%s\tn", first ? "\tcPrerequisites : " : ", ", 
-                  GET_LEVEL(ch) >= 21 ? "\tn" : "\tr", "level 21+");
+      snprintf(buf2, sizeof(buf2), "%s%s%s\tn", first ? "\tcPrerequisites : " : ", ",
+               GET_LEVEL(ch) >= 21 ? "\tn" : "\tr", "level 21+");
       strlcat(buf, buf2, sizeof(buf));
     }
   }
@@ -9902,8 +9907,8 @@ bool valid_item_feat(int featnum)
   if (featnum < 1 || featnum >= FEAT_LAST_FEAT)
     return false;
 
-  if (feat_list[featnum].can_learn &&
-      feat_list[featnum].epic == FALSE && feat_list[featnum].in_game &&
+  if (feat_list[featnum].can_learn && feat_list[featnum].epic == FALSE &&
+      feat_list[featnum].in_game &&
       (feat_list[featnum].feat_type == FEAT_TYPE_COMBAT ||
        feat_list[featnum].feat_type == FEAT_TYPE_CRAFT ||
        feat_list[featnum].feat_type == FEAT_TYPE_GENERAL ||

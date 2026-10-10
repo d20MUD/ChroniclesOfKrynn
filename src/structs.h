@@ -3117,10 +3117,13 @@
 #define FEAT_LOREMASTER_MORE_NEWFOUND_ARCANA 1270
 #define FEAT_LOREMASTER_SECRET_HEALTH 1271
 
+/* Dragon Rider mounted travel ability. */
+#define FEAT_DRAGON_FLIGHT 1272
+
 /** reserved above feat# + 1**/
-#define FEAT_LAST_FEAT 1272
+#define FEAT_LAST_FEAT 1273
 /** FEAT_LAST_FEAT + 1 ***/
-#define NUM_FEATS 1273
+#define NUM_FEATS 1274
 /** absolute cap **/
 #define MAX_FEATS 1500
 /*****/

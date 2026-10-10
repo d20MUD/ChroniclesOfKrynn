@@ -2193,6 +2193,10 @@ int load_char(const char *name, struct char_data *ch)
         GET_CRAFT(ch).crafting_method = GET_CRAFT(ch).craft_duration = 0;
   }
 
+  /* Backfill the new automatic class ability for existing Dragon Riders. */
+  if (CLASS_LEVEL(ch, CLASS_DRAGONRIDER) > 0)
+    HAS_REAL_FEAT(ch, FEAT_DRAGON_FLIGHT) = 1;
+
   affect_total(ch);
 
   /* initialization for imms */
