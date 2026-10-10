@@ -11,6 +11,7 @@
 #include "conf.h"
 #include "sysdep.h"
 #include "structs.h"
+#include "housing.h"
 #include "utils.h"
 #include "comm.h"
 #include "handler.h"
@@ -237,6 +238,7 @@ static void House_restore_weight(struct obj_data *obj)
 /* Save all objects in a house */
 void House_crashsave(room_vnum vnum)
 {
+  if (housing_is_room(vnum)) return;
   int rnum;
   char buf[MAX_STRING_LENGTH] = {'\0'};
   FILE *fp;
@@ -708,6 +710,7 @@ void House_save_all(void)
   int i;
   room_rnum real_house;
 
+  housing_save_all();
   for (i = 0; i < num_of_houses; i++)
     if ((real_house = real_room(house_control[i].vnum)) != NOWHERE)
       if (ROOM_FLAGGED(real_house, ROOM_HOUSE_CRASH))
@@ -720,6 +723,8 @@ int House_can_enter(struct char_data *ch, room_vnum house)
   house_rnum i;
   int j;
   zone_vnum zvnum;
+
+  if (housing_is_room(house)) return housing_can_enter(ch, house);
 
   /* Not a house */
   if ((i = find_house(house)) == NOWHERE)
@@ -820,7 +825,13 @@ ACMD(do_hcontrol)
 {
   char arg1[MAX_INPUT_LENGTH] = {'\0'}, arg2[MAX_INPUT_LENGTH] = {'\0'};
 
+  if (housing_admin(ch, argument)) return;
   half_chop_c(argument, arg1, sizeof(arg1), arg2, sizeof(arg2));
+  if (!str_cmp(arg1, "legacy")) {
+    char legacy_args[MAX_INPUT_LENGTH];
+    strlcpy(legacy_args, arg2, sizeof(legacy_args));
+    half_chop_c(legacy_args, arg1, sizeof(arg1), arg2, sizeof(arg2));
+  }
 
   if (is_abbrev(arg1, "build"))
     hcontrol_build_house(ch, arg2);
@@ -841,6 +852,7 @@ ACMD(do_hcontrol)
 /* The house command, used by mortal house owners to assign guests */
 ACMD(do_house)
 {
+  if (housing_command(ch, argument)) return;
   char arg[MAX_INPUT_LENGTH] = {'\0'};
   house_rnum i;
   int j, id;

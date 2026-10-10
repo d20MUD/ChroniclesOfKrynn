@@ -12,6 +12,7 @@
 #include "sysdep.h"
 #include <time.h>
 #include "structs.h"
+#include "housing.h"
 #include "utils.h"
 #include "comm.h"
 #include "interpreter.h"
@@ -1929,6 +1930,7 @@ static void look_in_obj(struct char_data *ch, char *arg)
     send_to_char(ch, "There's nothing inside that!\r\n");
   else
   {
+    if (housing_contents(ch, obj)) return;
     if (GET_OBJ_TYPE(obj) == ITEM_CONTAINER || GET_OBJ_TYPE(obj) == ITEM_AMMO_POUCH)
     {
       if (OBJVAL_FLAGGED(obj, CONT_CLOSED) &&

@@ -11,6 +11,7 @@
 #include "conf.h"
 #include "sysdep.h"
 #include "structs.h"
+#include "housing.h"
 #include "talents.h"
 #include "utils.h"
 #include "db.h"
@@ -1080,6 +1081,8 @@ int load_char(const char *name, struct char_data *ch)
         break;
 
       case 'E':
+        if (!strcmp(tag, "ECrd")) { ch->player_specials->estate_credit_receipt = strtoull(line, NULL, 10); break; }
+        if (!strcmp(tag, "EDbt")) { ch->player_specials->estate_debit_receipt = strtoull(line, NULL, 10); break; }
         if (!strcmp(tag, "Exp "))
           GET_EXP(ch) = atoi(line);
         else if (!strcmp(tag, "Evnt"))
@@ -1181,6 +1184,8 @@ int load_char(const char *name, struct char_data *ch)
         break;
 
       case 'H':
+        if (!strcmp(tag, "Hous")) { ch->player_specials->housing_house_id = atol(line); break; }
+        if (!strcmp(tag, "Hrom")) { ch->player_specials->housing_room_id = atol(line); break; }
         if (!strcmp(tag, "Hit "))
           load_HMVS(ch, line, LOAD_HIT);
         else if (!strcmp(tag, "Hite"))
@@ -2485,6 +2490,9 @@ void save_char(struct char_data *ch, int mode)
     BUFFER_WRITE("NAr3: %d\n", NEW_ARCANA_SLOT(ch, 3));
   if (NECROMANCER_CAST_TYPE(ch))
     BUFFER_WRITE("NecC: %d\n", NECROMANCER_CAST_TYPE(ch));
+  housing_capture_location(ch);
+  BUFFER_WRITE("Hous: %ld\nHrom: %ld\nECrd: %llu\nEDbt: %llu\n", ch->player_specials->housing_house_id,
+               ch->player_specials->housing_room_id, ch->player_specials->estate_credit_receipt, ch->player_specials->estate_debit_receipt);
   BUFFER_WRITE("Id  : %ld\n", GET_IDNUM(ch));
   BUFFER_WRITE("Brth: %ld\n", (long)ch->player.time.birth);
   BUFFER_WRITE("Plyd: %d\n", ch->player.time.played);

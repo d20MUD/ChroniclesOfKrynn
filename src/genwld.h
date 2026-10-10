@@ -13,6 +13,8 @@
 #define _GENWLD_H_
 
 room_rnum add_room(struct room_data *);
+room_rnum add_runtime_room(struct room_data *);
+int delete_runtime_room(room_rnum);
 int delete_room(room_rnum);
 int save_rooms(zone_rnum);
 int copy_room(struct room_data *to, struct room_data *from);

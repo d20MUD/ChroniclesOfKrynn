@@ -8,6 +8,7 @@
 #include "conf.h"
 #include "sysdep.h"
 #include "structs.h"
+#include "housing.h"
 #include "utils.h"
 #include "db.h"
 #include "handler.h"
@@ -22,6 +23,8 @@
 #include "oasis.h"
 #include "spec_procs.h"
 #include "traps.h"
+
+static int runtime_room_mutation;
 
 static struct trap_data *copy_trap_list(struct trap_data *source)
 {
@@ -56,6 +59,7 @@ room_rnum add_room(struct room_data *room)
   int j, found = FALSE;
   room_rnum i;
 
+  if (!runtime_room_mutation && room && housing_is_room(room->number)) return NOWHERE;
   if (room == NULL)
     return NOWHERE;
 
@@ -68,7 +72,7 @@ room_rnum add_room(struct room_data *room)
     copy_room(&world[i], room);
     world[i].people = tch;
     world[i].contents = tobj;
-    add_to_save_list(zone_table[room->zone].number, SL_WLD);
+    if (!runtime_room_mutation) add_to_save_list(zone_table[room->zone].number, SL_WLD);
     log("GenOLC: add_room: Updated existing room #%d.", room->number);
     return i;
   }
@@ -158,7 +162,7 @@ room_rnum add_room(struct room_data *room)
         W_EXIT(i, j)->to_room += (W_EXIT(i, j)->to_room >= found);
   } while (i > 0);
 
-  add_to_save_list(zone_table[room->zone].number, SL_WLD);
+  if (!runtime_room_mutation) add_to_save_list(zone_table[room->zone].number, SL_WLD);
 
   /* Return what array entry we placed the new room in. */
   return found;
@@ -178,8 +182,9 @@ int delete_room(room_rnum rnum)
     return FALSE;
 
   room = &world[rnum];
+  if (!runtime_room_mutation && housing_is_room(room->number)) return FALSE;
 
-  add_to_save_list(zone_table[room->zone].number, SL_WLD);
+  if (!runtime_room_mutation) add_to_save_list(zone_table[room->zone].number, SL_WLD);
 
   /* This is something you might want to read about in the logs. */
   log("GenOLC: delete_room: Deleting room #%d (%s).", room->number, room->name);
@@ -370,6 +375,7 @@ int save_rooms(zone_rnum rzone)
       int cibIdx = -1, nextIdx = -1;
 
       room = (world + rnum);
+      if (housing_is_room(room->number)) continue;
 
       if (room->mover)
       {
@@ -766,4 +772,30 @@ void dump_moving(struct moving_room_data *mr, struct char_data *ch)
   {
     send_to_char(ch, "No 'moving' info found.\r\n");
   }
+}
+
+/* Dynamic estate rooms use the normal reference-reindexing machinery without
+ * making their host zone eligible for an OLC disk save. */
+room_rnum add_runtime_room(struct room_data *room)
+{
+  room_rnum result, i;
+  runtime_room_mutation = TRUE;
+  result = add_room(room);
+  /* realloc can move every room, even when appending without an index shift.
+   * Paused DG scripts must resume against the current room address. */
+  for (i = 0; i <= top_of_world; i++)
+    update_wait_events(&world[i], &world[i]);
+  runtime_room_mutation = FALSE;
+  return result;
+}
+int delete_runtime_room(room_rnum room)
+{
+  int result;
+  room_rnum i;
+  runtime_room_mutation = TRUE;
+  result = delete_room(room);
+  for (i = 0; i <= top_of_world; i++)
+    update_wait_events(&world[i], &world[i]);
+  runtime_room_mutation = FALSE;
+  return result;
 }

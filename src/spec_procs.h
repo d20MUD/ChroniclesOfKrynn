@@ -62,6 +62,8 @@ void weapons_spells(const char *to_ch, const char *to_vict, const char *to_room,
 /* Special functions */
 /** !!MAKE SURE TO ADD TO: spec_func_list!!!  **/
 
+SPECIAL_DECL(mysql_auction_house);
+
 /* a-c */
 SPECIAL_DECL(abyss_randomizer);
 SPECIAL_DECL(abyssal_vortex);

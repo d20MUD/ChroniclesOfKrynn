@@ -11,6 +11,7 @@
 #include "conf.h"
 #include "sysdep.h"
 #include "structs.h"
+#include "housing.h"
 #include "utils.h"
 #include "comm.h"
 #include "db.h"
@@ -2535,6 +2536,7 @@ void object_list_new_owner(struct obj_data *list, struct char_data *ch)
 /* Extract an object from the world */
 void extract_obj(struct obj_data *obj)
 {
+  housing_object_extracted(obj);
   struct descriptor_data *d = NULL;
 
   // before we extract it we need to ensure we've removed it from any characters

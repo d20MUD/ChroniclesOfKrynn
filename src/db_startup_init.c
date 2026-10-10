@@ -17,6 +17,7 @@
 #include "mysql.h"
 #include "db_init.h"
 #include "pubsub.h"
+#include "estate.h"
 
 /* ===== STARTUP INITIALIZATION FUNCTIONS ===== */
 
@@ -147,6 +148,9 @@ void initialize_missing_tables(void)
     init_housing_system_tables();
     log("Housing system tables initialized");
   }
+
+  /* New estate services are independent of the existing legacy house_data table. */
+  estate_init();
 
   /* Vessel system tables */
   if (!table_exists("ship_interiors"))

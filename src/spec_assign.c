@@ -1184,6 +1184,7 @@ static const struct spec_func_data spec_func_list[] = {
 
     {"Artisan Shop", artisan_shop, ""},  
     {"Bank", bank, ""},
+    {"MySQL Auction House", mysql_auction_house, "Persistent fixed-price auctioneer"},
     {"Bazaar", bazaar, ""},
     {"Bounty Missions", faction_mission, ""},
     {"Bulk Identify", eqstats, ""},

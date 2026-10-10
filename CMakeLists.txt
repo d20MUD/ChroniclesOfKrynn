@@ -551,6 +551,9 @@ set(SRC_C_FILES
     src/hlqedit.c
     src/hlquest.c
     src/house.c
+    src/housing.c
+    src/estate.c
+    src/auction_house.c
     src/hsedit.c
     src/hunts.c
     src/ibt.c

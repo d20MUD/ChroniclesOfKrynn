@@ -36,7 +36,7 @@
 #define CRYO_FACTOR 4
 
 #define LOC_INVENTORY 0
-#define MAX_BAG_ROWS 5
+#define MAX_BAG_ROWS 64 /* Match the estate object-tree depth limit. */
 
 /* local functions */
 static int Crash_save(struct obj_data *obj, struct char_data *ch, FILE *fp, int location);
@@ -74,6 +74,60 @@ void load_sheath_contents(struct char_data *ch, struct obj_data *sheath, long in
 obj_save_data *objsave_parse_objects_db_sheath(char *name, long int sheath_idnum, int sheath_slot,
                                                struct obj_data *sheath);
 
+
+/* Properties shared by all object record loaders, including estate transfers. */
+static int restore_persistent_object(struct obj_data *obj, const char *tag, const char *value)
+{
+  int index, a, b, c, d, e;
+  if (!strcmp(tag, "SpCl"))
+  {
+    struct obj_special_ability *node=obj->special_abilities,*next;
+    while(node) {next=node->next;free(node->command_word);free(node);node=next;}
+    obj->special_abilities=NULL;
+  }
+  else if (!strcmp(tag, "SpAb"))
+  {
+    struct obj_special_ability *node,**tail=&obj->special_abilities;
+    int values[7]={0};char word[128]={0};
+    if(sscanf(value,"%d %d %d %d %d %d %d %127s",&values[0],&values[1],&values[2],&values[3],&values[4],&values[5],&values[6],word)<7)return TRUE;
+    CREATE(node,struct obj_special_ability,1);
+    node->ability=values[0];node->level=values[1];node->activation_method=values[2];
+    node->value[0]=values[3];node->value[1]=values[4];node->value[2]=values[5];node->value[3]=values[6];
+    node->command_word=*word ? strdup(word) : NULL;
+    while(*tail)tail=&(*tail)->next;
+    *tail=node;
+  }
+  else if (!strcmp(tag, "Bind")) GET_OBJ_BOUND_ID(obj) = atoi(value);
+  else if (!strcmp(tag, "Prof")) GET_OBJ_PROF(obj) = atoi(value);
+  else if (!strcmp(tag, "Timr")) GET_OBJ_TIMER(obj) = atoi(value);
+  else if (!strcmp(tag, "Tink")) obj->tinker_bonus = atoi(value);
+  else if (!strcmp(tag, "Recv")) obj->mob_recepient = atoi(value);
+  else if (!strcmp(tag, "Drai")) obj->drainKilled = atoi(value) != 0;
+  else if (!strcmp(tag, "HasS")) obj->has_spells = atoi(value) != 0;
+  else if (!strcmp(tag, "EId ")) obj->estate_delivery_id = strtoull(value, NULL, 10);
+  else if (!strcmp(tag, "Pois"))
+    sscanf(value, "%d %d %d", &obj->weapon_poison.poison, &obj->weapon_poison.poison_level, &obj->weapon_poison.poison_hits);
+  else if (!strcmp(tag, "STmr"))
+  {
+    if (sscanf(value, "%d %d", &index, &a) == 2 && index >= 0 && index < SPEC_TIMER_MAX)
+      obj->obj_flags.spec_timer[index] = a;
+  }
+  else if (!strcmp(tag, "WSpl") || !strcmp(tag, "CSpl"))
+  {
+    if (sscanf(value, "%d %d %d %d %d %d", &index, &a, &b, &c, &d, &e) == 6 && index >= 0)
+    {
+      struct weapon_spells *spell = NULL;
+      if (*tag == 'W' && index < MAX_WEAPON_SPELLS) spell = &obj->wpn_spells[index];
+      if (*tag == 'C' && index < MAX_WEAPON_CHANNEL_SPELLS) spell = &obj->channel_spells[index];
+      if (spell) { spell->spellnum=a; spell->level=b; spell->percent=c; spell->inCombat=d; spell->uses_left=e; }
+    }
+  }
+  else return FALSE;
+  return TRUE;
+}
+
+static int estate_file_only = FALSE;
+int estate_write_record(struct obj_data *obj, FILE *fp);
 
 int objsave_save_obj_record(struct obj_data *obj, struct char_data *ch, FILE *fp, int locate)
 {
@@ -144,6 +198,25 @@ int objsave_save_obj_record_db(struct obj_data *obj, struct char_data *ch, room_
   strlcat(ins_buf, line_buf, sizeof(ins_buf));
 #endif
 
+  if (obj->estate_delivery_id) {
+    fprintf(fp, "EId : %llu\n", obj->estate_delivery_id);
+#ifdef OBJSAVE_DB
+    snprintf(line_buf, sizeof(line_buf), "EId : %llu\n", obj->estate_delivery_id);
+    strlcat(ins_buf, line_buf, sizeof(ins_buf));
+#endif
+  }
+  {
+    fprintf(fp, "Timr: %d\nTink: %d\nRecv: %d\nDrai: %d\nHasS: %d\nPois: %d %d %d\n",
+            GET_OBJ_TIMER(obj), obj->tinker_bonus, obj->mob_recepient, obj->drainKilled,
+            obj->has_spells, obj->weapon_poison.poison, obj->weapon_poison.poison_level, obj->weapon_poison.poison_hits);
+    for (i=0; i<SPEC_TIMER_MAX; i++) fprintf(fp, "STmr: %d %d\n", i, obj->obj_flags.spec_timer[i]);
+    for (i=0; i<MAX_WEAPON_SPELLS; i++)
+      fprintf(fp, "WSpl: %d %d %d %d %d %d\n", i, obj->wpn_spells[i].spellnum,
+              obj->wpn_spells[i].level, obj->wpn_spells[i].percent, obj->wpn_spells[i].inCombat, obj->wpn_spells[i].uses_left);
+    for (i=0; i<MAX_WEAPON_CHANNEL_SPELLS; i++)
+      fprintf(fp, "CSpl: %d %d %d %d %d %d\n", i, obj->channel_spells[i].spellnum,
+              obj->channel_spells[i].level, obj->channel_spells[i].percent, obj->channel_spells[i].inCombat, obj->channel_spells[i].uses_left);
+  }
   /* autoequip location? */
   if (locate)
     fprintf(fp, "Loc : %d\n", locate);
@@ -494,9 +567,9 @@ int objsave_save_obj_record_db(struct obj_data *obj, struct char_data *ch, room_
   }
 
   // weapon and armor special abilities
-  if (obj->special_abilities)
-  { /* Yes, save them too. */
-    specab = obj->special_abilities;
+  fprintf(fp, "SpCl: 1\n");
+  for (specab = obj->special_abilities; specab; specab = specab->next)
+  {
     fprintf(fp, "SpAb: %d %d %d %d %d %d %d %s\n", specab->ability, specab->level,
             specab->activation_method, specab->value[0], specab->value[1], specab->value[2],
             specab->value[3],
@@ -531,28 +604,52 @@ int objsave_save_obj_record_db(struct obj_data *obj, struct char_data *ch, room_
 #ifdef OBJSAVE_DB
   snprintf(line_buf, sizeof(line_buf), "');");
   strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  if (ch != NULL)
-  { /* GHETTTTTTTOOOOOOOOO */
-    if (mysql_query(conn, ins_buf))
-    {
-      log("SYSERR: Unable to REPLACE into player_save_objs: %s", mysql_error(conn));
-      extract_obj(temp);
-      return 1;
-    }
-  }
-  else
+  if (!estate_file_only)
   {
-    if (mysql_query(conn, ins_buf))
+    /* Quote a complete record once. Customized names and descriptions may
+     * contain apostrophes; interpolating individual fields into SQL loses
+     * those items on save. The file-only call never recurses into SQL. */
+    char *record = NULL, *quoted = NULL, *query = NULL, *owner_name = NULL;
+    size_t size = 0;
+    FILE *record_file = open_memstream(&record, &size);
+    int ok = FALSE;
+    if (record_file)
     {
-      log("SYSERR: Unable to INSERT into house_data: %s", mysql_error(conn));
+      estate_file_only = TRUE;
+      ok = objsave_save_obj_record_db(obj, NULL, NOWHERE, record_file, locate) && !ferror(record_file);
+      estate_file_only = FALSE;
+      if (fclose(record_file)) ok = FALSE;
+    }
+    if (ok)
+    {
+      quoted = malloc(size * 2 + 1);
+      if (quoted) mysql_real_escape_string(conn, quoted, record, size);
+      else ok = FALSE;
+    }
+    if (ok && ch)
+    {
+      owner_name = malloc(strlen(GET_NAME(ch)) * 2 + 1);
+      if (owner_name) mysql_real_escape_string(conn, owner_name, GET_NAME(ch), strlen(GET_NAME(ch)));
+      else ok = FALSE;
+    }
+    if (ok)
+    {
+      if (ch) ok = asprintf(&query, "INSERT INTO player_save_objs(name,serialized_obj) VALUES('%s','%s')", owner_name, quoted) >= 0;
+      else ok = asprintf(&query, "INSERT INTO house_data(vnum,serialized_obj) VALUES(%d,'%s')", house_vnum, quoted) >= 0;
+    }
+    if (ok) ok = mysql_query(conn, query) == 0;
+    free(record); free(quoted); free(query); free(owner_name);
+    if (!ok)
+    {
+      log("SYSERR: Unable to save object record: %s", mysql_error(conn));
       extract_obj(temp);
-      return 1;
+      return 0;
     }
   }
 
   int insert_id = mysql_insert_id(conn);
 
-  if (CAN_WEAR(obj, ITEM_WEAR_SHEATH))
+  if (!estate_file_only && CAN_WEAR(obj, ITEM_WEAR_SHEATH))
   {
     if (obj->sheath_primary)
     {
@@ -1963,7 +2060,8 @@ obj_save_data *objsave_parse_objects(FILE *fl)
       /* Reset the counter for spellbooks. */
       j = 0;
 
-      /* Continue processing the object properties - do NOT skip */
+      /* The header creates the object; properties begin on the following line. */
+      continue;
     }
 
     /* If "temp" is NULL, we are most likely progressing through
@@ -1982,6 +2080,7 @@ obj_save_data *objsave_parse_objects(FILE *fl)
 
     tag_argument(line, tag);
     num = atoi(line);
+    if (restore_persistent_object(temp, tag, line)) continue;
     /* we need an incrementor here */
 
     switch (*tag)
@@ -2029,6 +2128,7 @@ obj_save_data *objsave_parse_objects(FILE *fl)
         temp->description = strdup(line);
       break;
     case 'E':
+      if (!strcmp(tag, "EId ")) { temp->estate_delivery_id = strtoull(line, NULL, 10); break; }
       if (!strcmp(tag, "EDes"))
       {
         struct extra_descr_data *new_desc;
@@ -2038,7 +2138,8 @@ obj_save_data *objsave_parse_objects(FILE *fl)
         //     temp->ex_description &&         // with ex_desc == prototype
         //     (temp->ex_description ==
         //      obj_proto[real_object(temp->item_number)].ex_description))
-        temp->ex_description = NULL;
+        if (VALID_OBJ_RNUM(temp) && temp->ex_description == obj_proto[GET_OBJ_RNUM(temp)].ex_description)
+          temp->ex_description = NULL;
         CREATE(new_desc, struct extra_descr_data, 1);
         new_desc->keyword = fread_string(fl, error);
         new_desc->description = fread_string(fl, error);
@@ -2338,6 +2439,26 @@ obj_save_data *objsave_parse_objects_db(char *name, room_vnum house_vnum)
       obj_db_idnum = atoi(row[1]);
     }
 
+    /* New records share the file parser, preserving multiline descriptions
+     * and the complete property set. Keep old rows on their legacy path. */
+    if (strstr(serialized_obj, "\nSpCl:"))
+    {
+      FILE *record_file=fmemopen(serialized_obj,strlen(serialized_obj),"r");
+      obj_save_data *parsed=record_file ? objsave_parse_objects(record_file) : NULL;
+      if(record_file)fclose(record_file);
+      while(parsed)
+      {
+        obj_save_data *next=parsed->next;
+        parsed->db_idnum=obj_db_idnum;
+        parsed->next=NULL;
+        if(current)current->next=parsed;else head=parsed;
+        current=parsed;
+        parsed=next;
+      }
+      free(serialized_obj);
+      continue;
+    }
+
     /* Tokenize the serialized object data */
     lines = tokenize(serialized_obj, "\n");
     if (!lines)
@@ -2480,6 +2601,7 @@ obj_save_data *objsave_parse_objects_db(char *name, room_vnum house_vnum)
 
       tag_argument(*line, tag);
       num = atoi(*line);
+      if (restore_persistent_object(temp, tag, *line)) continue;
       /* we need an incrementor here */
 
       switch (*tag)
@@ -2530,6 +2652,7 @@ obj_save_data *objsave_parse_objects_db(char *name, room_vnum house_vnum)
           temp->description = strdup(*line);
         break;
       case 'E':
+        if (!strcmp(tag, "EId ")) { temp->estate_delivery_id = strtoull(*line, NULL, 10); break; }
         if (!strcmp(tag, "EDes"))
         {
           struct extra_descr_data *new_desc;
@@ -2539,7 +2662,8 @@ obj_save_data *objsave_parse_objects_db(char *name, room_vnum house_vnum)
           //     temp->ex_description &&         // with ex_desc == prototype //
           //     (temp->ex_description ==
           //      obj_proto[real_object(temp->item_number)].ex_description))
-          temp->ex_description = NULL;
+          if (VALID_OBJ_RNUM(temp) && temp->ex_description == obj_proto[GET_OBJ_RNUM(temp)].ex_description)
+            temp->ex_description = NULL;
           CREATE(new_desc, struct extra_descr_data, 1);
           /* DO NOT free(*line) - will be freed by free_tokens() */
           ++line;
@@ -3517,6 +3641,7 @@ obj_save_data *objsave_parse_objects_db_pet(char *name, long int pet_idnum)
 
       tag_argument(*line, tag);
       num = atoi(*line);
+      if (restore_persistent_object(temp, tag, *line)) continue;
       /* we need an incrementor here */
 
       switch (*tag)
@@ -3570,7 +3695,8 @@ obj_save_data *objsave_parse_objects_db_pet(char *name, long int pet_idnum)
           //     temp->ex_description &&         // with ex_desc == prototype
           //     (temp->ex_description ==
           //      obj_proto[real_object(temp->item_number)].ex_description))
-          temp->ex_description = NULL;
+          if (VALID_OBJ_RNUM(temp) && temp->ex_description == obj_proto[GET_OBJ_RNUM(temp)].ex_description)
+            temp->ex_description = NULL;
           CREATE(new_desc, struct extra_descr_data, 1);
           /* DO NOT free(*line) - will be freed by free_tokens() */
           ++line;
@@ -4224,6 +4350,7 @@ obj_save_data *objsave_parse_objects_db_sheath(char *name, long int sheath_idnum
 
       tag_argument(*line, tag);
       num = atoi(*line);
+      if (restore_persistent_object(temp, tag, *line)) continue;
       /* we need an incrementor here */
 
       switch (*tag)
@@ -4277,7 +4404,8 @@ obj_save_data *objsave_parse_objects_db_sheath(char *name, long int sheath_idnum
           //     temp->ex_description &&         // with ex_desc == prototype
           //     (temp->ex_description ==
           //      obj_proto[real_object(temp->item_number)].ex_description))
-          temp->ex_description = NULL;
+          if (VALID_OBJ_RNUM(temp) && temp->ex_description == obj_proto[GET_OBJ_RNUM(temp)].ex_description)
+            temp->ex_description = NULL;
           CREATE(new_desc, struct extra_descr_data, 1);
           /* DO NOT free(*line) - will be freed by free_tokens() */
           ++line;
@@ -4500,4 +4628,14 @@ void objs_from_sheath(struct char_data *ch, struct obj_data *sheath)
     obj_to_char(sheath->sheath_secondary, ch);
     sheath->sheath_secondary = NULL;
   }
+}
+
+/* Single record export for persistent estate storage. Called only on the game thread. */
+int estate_write_record(struct obj_data *obj, FILE *fp)
+{
+  int result;
+  estate_file_only = TRUE;
+  result = objsave_save_obj_record_db(obj, NULL, NOWHERE, fp, 0);
+  estate_file_only = FALSE;
+  return result && !ferror(fp);
 }

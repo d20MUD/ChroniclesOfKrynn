@@ -115,6 +115,9 @@ circle_SOURCES = \
 	src/hlqedit.c \
 	src/hlquest.c \
 	src/house.c \
+	src/housing.c \
+	src/estate.c \
+	src/auction_house.c \
 	src/hsedit.c \
 	src/hunts.c \
 	src/ibt.c \
@@ -284,6 +287,16 @@ src/constants.c: $(filter-out src/constants.c,$(circle_SOURCES))
 
 # Extra files to distribute
 EXTRA_DIST = \
+	src/housing.h \
+	src/estate.h \
+	src/auction_house.h \
+	docs/housing-auction-port.md \
+	sql/20261009_housing_auction.sql \
+	sql/20261009_housing_auction_help.sql \
+	tests/runtime_housing_rooms.c \
+	tests/estate_integration.c \
+	tests/estate_real_codec_adapter.c \
+	tests/run_estate_integration.py \
 	unittests/CuTest/make-tests.sh \
 	frmaps/faerunmap.jpg \
 	frmaps/legend.txt \

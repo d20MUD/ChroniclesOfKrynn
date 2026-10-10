@@ -11,6 +11,7 @@
 #include "conf.h"
 #include "sysdep.h"
 #include "structs.h"
+#include "housing.h"
 #include "utils.h"
 #include "comm.h"
 #include "screen.h"
@@ -3352,6 +3353,8 @@ static void perform_put(struct char_data *ch, struct obj_data *obj, struct obj_d
 {
   char buf[MEDIUM_STRING] = {'\0'};
 
+  if (housing_put(ch, obj, cont)) return;
+
   if (!drop_otrigger(obj, ch))
     return;
 
@@ -3758,6 +3761,8 @@ void get_from_container(struct char_data *ch, struct obj_data *cont, char *arg, 
 {
   struct obj_data *obj = NULL, *next_obj = NULL;
   int obj_dotmode = 0, found = 0;
+
+  if (housing_get(ch, cont, arg, howmany)) return;
 
   obj_dotmode = find_all_dots(arg);
 

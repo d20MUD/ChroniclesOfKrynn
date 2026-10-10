@@ -6239,6 +6239,7 @@ struct trap_data
 /** The Object structure. */
 struct obj_data
 {
+  unsigned long long estate_delivery_id;
   obj_rnum item_number; /**< The unique id of this object instance. */
   room_rnum in_room;    /**< What room is the object lying in, or -1? */
 
@@ -7369,6 +7370,8 @@ struct weird_science_level
  * of it labelled 'saved' is saved in the players file. */
 struct player_special_data
 {
+  long housing_house_id, housing_room_id;
+  unsigned long long estate_credit_receipt, estate_debit_receipt;
   struct player_special_data_saved saved; /**< Information to be saved. */
 
   char *poofin;               /**< Description displayed to room on arrival of a god. */

@@ -18,6 +18,7 @@
 #include "mysql.h"
 #include "db_init.h"
 #include "pubsub.h"
+#include "estate.h"
 
 /* Internal helpers */
 static void create_vessel_procedures(void);
@@ -1199,7 +1200,8 @@ void init_housing_system_tables(void)
     return;
   }
 
-  log("Info: Housing system tables initialized successfully");
+  if (!estate_init()) return;
+  log("Info: Housing and auction system tables initialized successfully");
 }
 
 /* ===== VESSEL SYSTEM TABLES ===== */
