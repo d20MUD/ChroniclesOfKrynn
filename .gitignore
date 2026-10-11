@@ -329,6 +329,7 @@ lib/text/help/*
 !lib/text/help/formation.hlp
 !lib/text/help/stats.hlp
 !lib/text/help/epicspells.hlp
+!lib/text/help/practiced_spellcaster.hlp
 
 ####################
 # Unit Tests

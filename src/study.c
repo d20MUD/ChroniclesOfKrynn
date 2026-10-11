@@ -271,6 +271,8 @@ void init_study(struct descriptor_data *d, int class)
       LEVELUP(ch)->skill_focus[i][j] = FALSE;
   for (i = 0; i < NUM_SFEATS; i++)
     LEVELUP(ch)->school_feats[i] = 0;
+  for (i = 0; i < NUM_CLASSES; i++)
+    LEVELUP(ch)->practiced_spellcaster_classes[i] = FALSE;
 
   LEVELUP(ch)->eidolon_base_form = GET_EIDOLON_BASE_FORM(ch);
   for (i = 1; i < NUM_EVOLUTIONS; i++)
@@ -378,6 +380,10 @@ void finalize_study(struct descriptor_data *d)
     GET_REAL_WIS(ch) += 1;
   else if (LEVELUP(ch)->boosts[5] > 0)
     GET_REAL_CHA(ch) += 1;
+
+  for (i = 0; i < NUM_CLASSES; i++)
+    if (LEVELUP(ch)->practiced_spellcaster_classes[i])
+      ch->char_specials.saved.practiced_spellcaster_classes[i] = TRUE;
 
   for (i = 0; i < NUM_FEATS; i++)
   {
@@ -922,6 +928,8 @@ static bool loremaster_applicable_knowledge_available(struct char_data *ch, int 
   if (feat_list[feat].feat_type == FEAT_TYPE_CLASS_ABILITY)
     return FALSE;
   if (feat_to_cfeat(feat) != -1 || feat_to_sfeat(feat) != -1 || feat_to_skfeat(feat) != -1)
+    return FALSE;
+  if (feat == FEAT_PRACTICED_SPELLCASTER) /* This path has no class-choice submenu. */
     return FALSE;
   if (!feat_is_available(ch, feat, 0, NULL))
     return FALSE;
@@ -3165,6 +3173,17 @@ static void sfeat_disp_menu(struct descriptor_data *d)
   OLC_MODE(d) = STUDY_SFEAT_MENU;
 }
 
+static void practiced_spellcaster_menu(struct descriptor_data *d)
+{
+  int class;
+  write_to_output(d, "\r\nChoose a class for Practiced Spellcaster:\r\n");
+  for (class = 0; class < NUM_CLASSES; class++)
+    if (practiced_spellcaster_choice_available(d->character, class))
+      write_to_output(d, "%2d) %s\r\n", class + 1, CLSLIST_NAME(class));
+  write_to_output(d, "Enter class number or name (Q to cancel): ");
+  OLC_MODE(d) = STUDY_PRACTICED_CLASS;
+}
+
 static void skfeat_disp_menu(struct descriptor_data *d)
 {
   int i = 0;
@@ -4247,6 +4266,11 @@ void study_parse(struct descriptor_data *d, char *arg)
     case 'Y':
       /* Check to see if this feat has a subfeat - If so, then display the
        * approptiate menus. */
+      if (LEVELUP(ch)->tempFeat == FEAT_PRACTICED_SPELLCASTER)
+      {
+        practiced_spellcaster_menu(d);
+        break;
+      }
       if (feat_to_cfeat(LEVELUP(ch)->tempFeat) != -1)
       {
         /* Combat feat - Need to choose weapon type. */
@@ -4272,6 +4296,28 @@ void study_parse(struct descriptor_data *d, char *arg)
       break;
     }
     break;
+  case STUDY_PRACTICED_CLASS:
+    if (*arg == 'q' || *arg == 'Q')
+    {
+      LEVELUP(ch)->tempFeat = -1;
+      gen_feat_disp_menu(d);
+      break;
+    }
+    number = isdigit((unsigned char)*arg) ? atoi(arg) - 1 : parse_class_long(arg);
+    if (!practiced_spellcaster_choice_available(ch, number))
+    {
+      write_to_output(d, "That class is unavailable or already chosen.\r\n");
+      practiced_spellcaster_menu(d);
+      break;
+    }
+    if (add_levelup_feat(d, FEAT_PRACTICED_SPELLCASTER))
+    {
+      LEVELUP(ch)->practiced_spellcaster_classes[number] = TRUE;
+      write_to_output(d, "Practiced Spellcaster (%s) chosen!\r\n", CLSLIST_NAME(number));
+    }
+    gen_feat_disp_menu(d);
+    break;
+
   /* Combat feats require the selection of a weapon type. */
   case STUDY_CFEAT_MENU:
     number = atoi(arg);

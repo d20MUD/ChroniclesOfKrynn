@@ -407,6 +407,8 @@ int load_char(const char *name, struct char_data *ch)
     }
     for (i = 0; i < NUM_FEATS; i++)
       SET_FEAT(ch, i, 0);
+    memset(ch->char_specials.saved.practiced_spellcaster_classes, 0,
+           sizeof(ch->char_specials.saved.practiced_spellcaster_classes));
     for (i = 0; i < (END_GENERAL_ABILITIES + 1); i++)
       for (j = 0; j < NUM_SKFEATS; j++)
         ch->player_specials->saved.skill_focus[i][j] = 0;
@@ -1458,6 +1460,11 @@ int load_char(const char *name, struct char_data *ch)
           load_perks(fl, ch);
         else if (!strcmp(tag, "PPts"))
           load_perk_points(fl, ch);
+        else if (!strcmp(tag, "PScC"))
+        {
+          if (sscanf(line, "%d", &i) == 1 && i >= 0 && i < NUM_CLASSES && is_caster_class(i))
+            ch->char_specials.saved.practiced_spellcaster_classes[i] = TRUE;
+        }
         else if (!strcmp(tag, "PStg"))
           ch->player_specials->saved.stage_info.current_stage = atoi(line);
         else if (!strcmp(tag, "PSXp"))
@@ -3419,6 +3426,11 @@ void save_char(struct char_data *ch, int mode)
   BUFFER_WRITE("0 0\n");
 
   /* Save perks */
+  if (HAS_REAL_FEAT(ch, FEAT_PRACTICED_SPELLCASTER))
+    for (i = 0; i < NUM_CLASSES; i++)
+      if (ch->char_specials.saved.practiced_spellcaster_classes[i])
+        BUFFER_WRITE("PScC: %d\n", i);
+
   BUFFER_WRITE("Perk:\n");
   {
     struct char_perk_data *perk;

@@ -3470,6 +3470,13 @@ void assign_feats(void)
         "+4 to spell concentration checks made in combat or when grappled ");
 
   /* epic type spellcasting feats */
+  feato(FEAT_PRACTICED_SPELLCASTER, "practiced spellcaster", TRUE, TRUE, TRUE,
+        FEAT_TYPE_SPELLCASTING,
+        "Gain up to four caster levels for a chosen spellcasting class, capped by Hit Dice.",
+        "Choose a spellcasting class you possess. Its caster level increases by up to four, "
+        "without exceeding your Hit Dice (total character level). This improves spell effects "
+        "and penetration, but grants no spell circles, slots, or spells known. You may take "
+        "this feat once for each different spellcasting class. Choose the class in study.");
   feato(
       FEAT_MUMMY_DUST, "mummy dust", TRUE, TRUE, FALSE, FEAT_TYPE_SPELLCASTING,
       "gain access to epic spell - mummy dust",
@@ -6552,6 +6559,16 @@ int feat_is_available(struct char_data *ch, int featnum, int iarg, char *sarg)
 {
   struct feat_prerequisite *prereq = NULL;
 
+  if (featnum == FEAT_PRACTICED_SPELLCASTER)
+  {
+    int class;
+    for (class = 0; class < NUM_CLASSES; class++)
+      if (practiced_spellcaster_choice_available(ch, class))
+        break;
+    if (class == NUM_CLASSES)
+      return FALSE;
+  }
+
   if (featnum > NUM_FEATS) /* even valid featnum? */
     return FALSE;
 
@@ -7744,6 +7761,22 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
         }
 
         /* begin non special formats */
+      }
+      else if (i == FEAT_PRACTICED_SPELLCASTER)
+      {
+        for (j = 0; j < NUM_CLASSES; j++)
+        {
+          if (!has_practiced_spellcaster_class(ch, j))
+            continue;
+          snprintf(buf3, sizeof(buf3), "%s (%s)", feat_list[i].name, CLSLIST_NAME(j));
+          if (mode == 1)
+            snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
+                     feat_list[i].short_description);
+          else
+            snprintf(buf, sizeof(buf), "%-40s%s", buf3, ++count % 2 ? " " : "\r\n");
+          strlcat(buf2, buf, sizeof(buf2));
+          none_shown = FALSE;
+        }
       }
       else if (i == FEAT_FAST_HEALING)
       {
@@ -9825,6 +9858,13 @@ static bool valid_feat_skill(int skill)
 int random_feat_specific(int feat)
 {
   int skill;
+  if (feat == FEAT_PRACTICED_SPELLCASTER)
+  {
+    do
+      skill = rand_number(0, NUM_CLASSES - 1);
+    while (!is_caster_class(skill));
+    return skill;
+  }
   if (feat == FEAT_FERAL_COMBAT_TRAINING)
     return rand_number(WEAPON_FAMILY_NATURAL_BITE, WEAPON_FAMILY_NATURAL_CLAW);
   if (feat_to_cfeat(feat) != -1)
@@ -9843,6 +9883,8 @@ int random_feat_specific(int feat)
 
 const char *feat_specific_name(int feat, int specific)
 {
+  if (feat == FEAT_PRACTICED_SPELLCASTER && is_caster_class(specific))
+    return CLSLIST_NAME(specific);
   if (feat_to_cfeat(feat) != -1 && specific >= 0 && specific < NUM_WEAPON_FAMILIES)
     return weapon_family[specific];
   if (feat_to_sfeat(feat) != -1 && specific > NOSCHOOL && specific < NUM_SCHOOLS)

@@ -534,6 +534,45 @@ int compute_arcane_level(struct char_data *ch)
   return arcane_level;
 }
 
+/* Unlike prestige advancement, this bonus never changes spell access or slots. */
+int practiced_spellcaster_level(struct char_data *ch, int class, int base_level)
+{
+  int progressed_level, room_for_bonus;
+  if (!ch || base_level <= 0 || ch->practiced_spellcaster_suppressed ||
+      !has_practiced_spellcaster_class(ch, class))
+    return base_level;
+  progressed_level = CLASS_LEVEL(ch, class) + BONUS_CASTER_LEVEL(ch, class);
+  if (class == CLASS_PALADIN || class == CLASS_BLACKGUARD || class == CLASS_RANGER)
+    progressed_level = MAX(0, progressed_level - 3);
+  room_for_bonus = GET_LEVEL(ch) - MAX(base_level, progressed_level);
+  return base_level + MIN(4, MAX(0, room_for_bonus));
+}
+
+int compute_caster_level(struct char_data *ch)
+{
+  int level;
+  if (!ch)
+    return 0;
+  if (IS_NPC(ch) || GET_LEVEL(ch) > 30)
+    level = GET_LEVEL(ch);
+  else
+    level = DIVINE_LEVEL(ch) + MAGIC_LEVEL(ch) + GET_WARLOCK_LEVEL(ch) + ALCHEMIST_LEVEL(ch) +
+            GET_ARTIFICER_LEVEL(ch) - compute_arcana_golem_level(ch);
+  return MIN(LVL_IMMORT - 1, practiced_spellcaster_level(ch, CASTING_CLASS(ch), level));
+}
+
+bool practiced_spellcaster_choice_available(struct char_data *ch, int class)
+{
+  if (!ch || IS_NPC(ch) || !is_caster_class(class))
+    return false;
+  if (CLASS_LEVEL(ch, class) <= 0 && (!LEVELUP(ch) || LEVELUP(ch)->class != class))
+    return false;
+  if (HAS_REAL_FEAT(ch, FEAT_PRACTICED_SPELLCASTER) &&
+      ch->char_specials.saved.practiced_spellcaster_classes[class])
+    return false;
+  return !LEVELUP(ch) || !LEVELUP(ch)->practiced_spellcaster_classes[class];
+}
+
 int compute_divine_level(struct char_data *ch)
 {
   int divine_level = 0;
@@ -604,6 +643,20 @@ static bool has_item_typed_feat(struct char_data *ch, int subfeat, int specific,
     }
   }
   return false;
+}
+
+static int practiced_spellcaster_item_feat(int feat)
+{
+  return feat == FEAT_PRACTICED_SPELLCASTER ? 0 : -1;
+}
+
+bool has_practiced_spellcaster_class(struct char_data *ch, int class)
+{
+  if (!ch || IS_NPC(ch) || !is_caster_class(class) || CLASS_LEVEL(ch, class) <= 0)
+    return false;
+  return (HAS_REAL_FEAT(ch, FEAT_PRACTICED_SPELLCASTER) &&
+          ch->char_specials.saved.practiced_spellcaster_classes[class]) ||
+         has_item_typed_feat(ch, 0, class, practiced_spellcaster_item_feat);
 }
 
 bool compute_has_school_feat(struct char_data *ch, int sfeat, int school)

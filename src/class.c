@@ -3342,6 +3342,8 @@ void init_start_char(struct char_data *ch)
     SET_ABILITY(ch, i, 0);
   for (i = 1; i < NUM_FEATS; i++)
     SET_FEAT(ch, i, 0);
+  memset(ch->char_specials.saved.practiced_spellcaster_classes, 0,
+         sizeof(ch->char_specials.saved.practiced_spellcaster_classes));
   for (i = 0; i < NUM_CFEATS; i++)
     for (j = 0; j < FT_ARRAY_MAX; j++)
       (ch)->char_specials.saved.combat_feats[(i)][j] = 0;

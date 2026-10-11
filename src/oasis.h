@@ -780,6 +780,7 @@ i added this trying to debug issues with qedit-copy -zusuk
 #define STUDY_NEWFOUND_CLASS 82
 #define STUDY_MORE_NEWFOUND_CLASS 83
 #define STUDY_APPLICABLE_KNOWLEDGE_FEAT 84
+#define STUDY_PRACTICED_CLASS 85
 
 
 #define NUM_BAG_SYSTEMS 2

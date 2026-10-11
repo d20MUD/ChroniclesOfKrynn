@@ -117,6 +117,7 @@ void draw_line(struct char_data *ch,int length,char left,char right) {}
 int compute_arcane_level(struct char_data *ch) { return CLASS_LEVEL(ch,CLASS_WIZARD); }
 int compute_divine_level(struct char_data *ch) { return 0; }
 int compute_arcana_golem_level(struct char_data *ch) { return 0; }
+int practiced_spellcaster_level(struct char_data *ch,int class,int base_level) { return base_level; }
 bool isEpicSpell(int spell) { return IS_EPIC_SPELL(spell); }
 bool is_spellnum_psionic(int spell) { return spell>=PSIONIC_POWER_START && spell<=PSIONIC_POWER_END; }
 void autoroll_mob(struct char_data *mob,bool realmode,bool summoned) {
@@ -125,7 +126,7 @@ void autoroll_mob(struct char_data *mob,bool realmode,bool summoned) {
 }
 '''
 for signature in ['int get_epic_spell_casts_max(', 'void normalize_epic_spell_casts(',
-                  'void regenerate_epic_spell_cast(']:
+                  'void regenerate_epic_spell_cast(', 'int compute_caster_level(']:
     code += function('utils.c', signature)
 
 # Compile the actual saving-throw damage branch, including epic half damage.

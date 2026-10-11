@@ -150,7 +150,7 @@ cmake -S . -B build/
 cmake --build build/ -j$(nproc)
 
 # Option 2: Traditional build with Autotools
-autoreconf -fvi  # Only if configure script missing
+autoreconf -fvi  # Regenerate for the installed Autoconf/Automake versions
 ./configure
 make
 
@@ -162,6 +162,17 @@ bin/circle
 ```
 
 ## Installation
+
+If `make` fails while rebuilding `Makefile.in` because a versioned tool such
+as `automake-1.16` is missing, regenerate the build files from the repository
+root. Existing configured builds can preserve their configure options with:
+
+```bash
+autoreconf -fi
+./config.status --recheck
+./config.status
+make
+```
 
 For detailed installation instructions including system requirements, dependencies, database setup, and configuration, please see the **[Setup and Build Guide](docs/guides/SETUP_AND_BUILD_GUIDE.md)**.
 

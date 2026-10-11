@@ -3119,11 +3119,12 @@
 
 /* Dragon Rider mounted travel ability. */
 #define FEAT_DRAGON_FLIGHT 1272
+#define FEAT_PRACTICED_SPELLCASTER 1273
 
 /** reserved above feat# + 1**/
-#define FEAT_LAST_FEAT 1273
+#define FEAT_LAST_FEAT 1274
 /** FEAT_LAST_FEAT + 1 ***/
-#define NUM_FEATS 1274
+#define NUM_FEATS 1275
 /** absolute cap **/
 #define MAX_FEATS 1500
 /*****/
@@ -6603,6 +6604,7 @@ struct char_special_data_saved
   int feats[NUM_FEATS]; /* Feats (value is the number of times each feat is taken) */
   int combat_feats[NUM_CFEATS][FT_ARRAY_MAX]; /* One bitvector array per CFEAT_ type  */
   int school_feats[NUM_SFEATS];               /* One bitvector array per CFEAT_ type  */
+  bool practiced_spellcaster_classes[NUM_CLASSES];
   int hp_regen;
   int mv_regen;
   int psp_regen;
@@ -7615,6 +7617,7 @@ struct level_data
   int feats[NUM_FEATS];
   int combat_feats[NUM_CFEATS][FT_ARRAY_MAX];
   int school_feats[NUM_SFEATS];
+  bool practiced_spellcaster_classes[NUM_CLASSES];
   int boosts[6];
   bool skill_focus[MAX_ABILITIES + 1][NUM_SKFEATS]; /* Data for FEAT_SKILL_FOCUS */
 
@@ -7811,6 +7814,7 @@ struct char_data
 
   struct group_data *group;        /**< Character's Group */
   int formation_row;              /**< Tactical row while grouped; defaults to front. */
+  bool practiced_spellcaster_suppressed; /* Consumable/item spell resolution context. */
   struct trade_session_data *trade; /**< Active player trade session, if any */
   struct char_data *trade_invite_from; /**< Player who has requested a trade with this character */
   struct char_data *trade_invite_to;   /**< Player this character has requested a trade with */

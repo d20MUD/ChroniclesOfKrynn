@@ -154,6 +154,10 @@ bool can_study_known_psionics(struct char_data *ch);
 int get_dragon_disciple_arcane_class(struct char_data *ch);
 int get_effective_draconic_bloodline_level(struct char_data *ch);
 int compute_bonus_caster_level(struct char_data *ch, int class);
+bool practiced_spellcaster_choice_available(struct char_data *ch, int class);
+bool has_practiced_spellcaster_class(struct char_data *ch, int class);
+int practiced_spellcaster_level(struct char_data *ch, int class, int base_level);
+int compute_caster_level(struct char_data *ch);
 int compute_arcane_level(struct char_data *ch);
 bool can_npc_command(struct char_data *ch);
 int compute_divine_level(struct char_data *ch);
@@ -991,13 +995,7 @@ void char_from_furniture(struct char_data *ch);
 #define ARCANE_LEVEL(ch) (compute_arcane_level(ch))
 #define MAGIC_LEVEL(ch) ARCANE_LEVEL(ch)
 #define ALCHEMIST_LEVEL(ch) (CLASS_LEVEL(ch, CLASS_ALCHEMIST))
-#define CASTER_LEVEL(ch)                                                                           \
-  (MIN(IS_NPC(ch) ? GET_LEVEL(ch)                                                                  \
-       : (GET_LEVEL(ch) > 30)                                                                      \
-           ? GET_LEVEL(ch)                                                                         \
-           : DIVINE_LEVEL(ch) + MAGIC_LEVEL(ch) + GET_WARLOCK_LEVEL(ch) + ALCHEMIST_LEVEL(ch) +    \
-                 GET_ARTIFICER_LEVEL(ch) - (compute_arcana_golem_level(ch)),                       \
-       LVL_IMMORT - 1))
+#define CASTER_LEVEL(ch) (compute_caster_level(ch))
 #define IS_SPELLCASTER(ch) (CASTER_LEVEL(ch) > 0)
 #define IS_MEM_BASED_CASTER(ch) ((CLASS_LEVEL(ch, CLASS_WIZARD) > 0))
 #define GET_SHIFTER_ABILITY_CAST_LEVEL(ch)                                                         \

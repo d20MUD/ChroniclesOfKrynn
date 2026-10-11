@@ -722,7 +722,28 @@ int find_ability_num(char *name)
  * works -- all come through this function eventually. This is also the entry
  * point for non-spoken or unrestricted spells. Spellnum 0 is legal but silently
  * ignored here, to make callers simpler. */
+static int resolve_call_magic(struct char_data *caster, struct char_data *cvict, struct obj_data *ovict,
+                              int spellnum, int metamagic, int level, int casttype);
+
 int call_magic(struct char_data *caster, struct char_data *cvict, struct obj_data *ovict,
+               int spellnum, int metamagic, int level, int casttype)
+{
+  bool previous;
+  long caster_id;
+  int result;
+  if (!caster)
+    return 0;
+  previous = caster->practiced_spellcaster_suppressed;
+  caster_id = GET_ID(caster);
+  caster->practiced_spellcaster_suppressed =
+      previous || (casttype != CAST_SPELL && casttype != CAST_INNATE);
+  result = resolve_call_magic(caster, cvict, ovict, spellnum, metamagic, level, casttype);
+  if (find_char(caster_id) == caster)
+    caster->practiced_spellcaster_suppressed = previous;
+  return result;
+}
+
+static int resolve_call_magic(struct char_data *caster, struct char_data *cvict, struct obj_data *ovict,
                int spellnum, int metamagic, int level, int casttype)
 {
   int savetype = 0, spell_level = 0;
@@ -3300,7 +3321,7 @@ will be using for casting this spell */
               return 0;
             }
             /* level to cast this particular spell as */
-            clevel = CLASS_LEVEL(ch, ch_class);
+            clevel = practiced_spellcaster_level(ch, ch_class, CLASS_LEVEL(ch, ch_class));
             CASTING_CLASS(ch) = ch_class;
           }
         }
@@ -4221,6 +4242,27 @@ return;
     }
   }
 
+  /* Epic spells skip preparation, so choose their casting class explicitly. */
+  if (!IS_NPC(ch) && isEpicSpell(spellnum) && class_num == CLASS_UNDEFINED)
+  {
+    int best_level = -1;
+    if (is_spellnum_psionic(spellnum))
+      class_num = CLASS_PSIONICIST;
+    else
+      for (i = 0; i < NUM_CLASSES; i++)
+      {
+        int candidate;
+        if (!is_caster_class(i) || CLASS_LEVEL(ch, i) <= 0)
+          continue;
+        candidate = practiced_spellcaster_level(ch, i, CLASS_LEVEL(ch, i) + BONUS_CASTER_LEVEL(ch, i));
+        if (candidate > best_level)
+        {
+          best_level = candidate;
+          class_num = i;
+        }
+      }
+  }
+
   if (!IS_NPC(ch))
   {
     if (subcmd != SCMD_CAST_SHADOW)
@@ -4262,7 +4304,8 @@ return;
     circle = compute_spells_circle(ch, GET_CASTING_CLASS(ch), spellnum, 0, 0);
   }
 
-  if (!canCastAtWill(ch, spellnum) && !is_domain_spell_of_ch(ch, spellnum))
+  if (!isEpicSpell(spellnum) && !canCastAtWill(ch, spellnum) &&
+      !is_domain_spell_of_ch(ch, spellnum))
   {
     switch (GET_CASTING_CLASS(ch))
     {
