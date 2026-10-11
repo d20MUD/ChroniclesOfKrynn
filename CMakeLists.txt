@@ -564,6 +564,7 @@ set(SRC_C_FILES
     src/limits.c
     src/lists.c
     src/magic.c
+    src/epic_magic.c
     src/mail.c
     src/medit.c
     src/metamagic_science.c

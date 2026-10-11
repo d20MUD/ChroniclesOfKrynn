@@ -14,6 +14,7 @@
 #include "sysdep.h"
 #include "structs.h"
 #include "utils.h"
+#include "epic_magic.h"
 #include "comm.h"
 #include "handler.h"
 #include "interpreter.h"
@@ -1825,7 +1826,8 @@ int compute_armor_class(struct char_data *attacker, struct char_data *ch, int is
   }
 
   /* value for normal mode */
-  return (MIN(CONFIG_PLAYER_AC_CAP, armorclass));
+  return MIN(CONFIG_PLAYER_AC_CAP, armorclass) -
+         (affected_by_spell(ch, AFFECT_EPIC_MUMMY_DREAD) ? 4 : 0);
 }
 
 // the whole update_pos system probably needs to be rethought -zusuk
@@ -5268,15 +5270,18 @@ int compute_damage_reduction_full(struct char_data *ch, int dam_type, bool displ
   }
 
 
-  if (display)
+  if (affected_by_spell(ch, AFFECT_EPIC_RUIN))
   {
-    send_to_char(ch, "\tC%-30s: %d\tn\r\n", "Final Damage Reduction:", damage_reduction);
+    damage_reduction = MAX(0, damage_reduction - 10);
+    if (display)
+      send_to_char(ch, "%-30s: -10\r\n", "Greater Ruin: fractured defenses");
   }
+  if (display)
+    send_to_char(ch, "\tC%-30s: %d\tn\r\n", "Final Damage Reduction:", damage_reduction);
 
   /* Clear Raging Defender flags after DR calculation */
   HIT_BY_CRITICAL(ch) = FALSE;
   HIT_BY_SNEAK_ATTACK(ch) = FALSE;
-
   return damage_reduction;
 }
 
@@ -6670,6 +6675,12 @@ int damage(struct char_data *ch, struct char_data *victim, int dam, int w_type, 
   }
 
   GET_HIT(victim) -= dam;
+  if (ch && IS_EPIC_SPELL(w_type))
+  {
+    send_to_char(ch, "%s deals %d damage to %s.\r\n", spell_info[w_type].name, dam,
+                 GET_NAME(victim));
+    epic_spell_damage_effects(ch, victim, w_type, MAX(1, CASTER_LEVEL(ch)), dam);
+  }
 
   if (dam > 0 && !IS_NPC(victim) && GROUP(victim) && is_spell_or_power(w_type) == 2)
   {
@@ -10245,7 +10256,9 @@ int handle_warding(struct char_data *ch, struct char_data *victim, int dam)
       GET_STONESKIN(victim) = 0;
       return dam;
     }
-    warding = MIN(MIN(EPIC_WARDING_ABSORB, GET_STONESKIN(victim)), dam);
+    warding = MIN(MIN(EPIC_WARDING_ABSORB +
+                         (epic_ward_surge_active(victim) ? 30 : 0),
+                     GET_STONESKIN(victim)), dam);
 
     GET_STONESKIN(victim) -= warding;
     dam -= warding;
@@ -10258,6 +10271,8 @@ int handle_warding(struct char_data *ch, struct char_data *victim, int dam)
     if (dam <= 0)
     {
       send_to_char(victim, "\tWYour ward absorbs the attack!\tn\r\n");
+      send_to_char(victim, "Epic Warding absorbed %d damage; %d absorption remains.\r\n",
+                   warding, GET_STONESKIN(victim));
       send_to_char(ch, "\tRYou have failed to penetrate the ward of %s!\tn\r\n", GET_NAME(victim));
       act("$n fails to penetrate the ward of $N!", FALSE, ch, 0, victim, TO_NOTVICT);
       return -1;
@@ -10412,6 +10427,8 @@ int apply_damage_reduction(struct char_data *ch, struct char_data *victim, struc
   else
   {
     int effective_dr = dr->amount;
+    if (affected_by_spell(victim, AFFECT_EPIC_RUIN))
+      effective_dr = MAX(0, effective_dr - 10);
 
     /* monk DR bypass from perks - applies to unarmed OR monk weapons */
     if (MONK_TYPE(ch) && (is_bare_handed(ch) || (wielded && is_monk_weapon(wielded))))
@@ -12203,6 +12220,12 @@ int compute_attack_bonus_full(struct char_data *ch,     /* Attacker */
 
   int maximum_bab = get_attack_bonus_cap(ch);
   calc_bab += maximum_bab - MAX_BAB;
+  if (affected_by_spell(ch, AFFECT_EPIC_MUMMY_DREAD))
+  {
+    calc_bab = MIN(maximum_bab, calc_bab) - 4;
+    if (display)
+      send_to_char(ch, "-4: %-50s\r\n", "Mummy dread");
+  }
 
   if (attack_type == ATTACK_TYPE_RANGED || attack_type == ATTACK_TYPE_BOMB_TOSS)
     formation_penalty = formation_ranged_penalty(ch);
@@ -17264,7 +17287,11 @@ EVENTFUNC(event_combat_round)
   /* action queue system */
   execute_next_action(ch);
   /* execute phase */
+  long combatant_id = GET_ID(ch);
   perform_violence(ch, phase);
+  /* Summon breath and other attacks can kill their caster through retaliation. */
+  if (find_char(combatant_id) != ch)
+    return 0;
 
   /* Alchemist: Unstable Mutagen backlash (10% chance per round while mutagen active)
    * Perfect Mutagen capstone grants immunity to this backlash. */
@@ -17394,6 +17421,8 @@ void perform_violence(struct char_data *ch, int phase)
 
   ch->char_specials.energy_retort_used = false;
   remove_fear_affects(ch, TRUE);
+  if (phase == 1 && !epic_summon_combat_turn(ch))
+    return;
 
   if (FIGHTING(ch) == NULL || IN_ROOM(ch) != IN_ROOM(FIGHTING(ch)))
   {

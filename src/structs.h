@@ -7194,8 +7194,10 @@ struct player_special_data_saved
   int spell_recall_cooldown;  // Versatile Caster perk: cooldown for restoring a spell slot
   int deathless_frenzy_timer; // Berserker Occult Slayer perk: 5 minute cooldown for Deathless Frenzy
   int cosmic_awareness_cooldown; // Cosmic Awareness psionic power: 10 minute cooldown
-  int epic_spell_casts;          // Shared epic spell cast pool (-1 means uninitialized)
+  int epic_spell_casts;          // Epic combat cast pool (-1 means uninitialized)
   int epic_spell_regen_timer;    // Ticks toward regenerating one epic spell cast
+  int epic_preparation_casts;    /* Separate epic protection/summoning pool. */
+  int epic_preparation_regen_timer;
 
   /* Domain Master perk bonus spell slot tracking */
   int bonus_domain_slots_used;  // Tracks used bonus domain spell slots

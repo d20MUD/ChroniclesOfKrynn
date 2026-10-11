@@ -13,6 +13,7 @@
 #include <time.h>
 #include "structs.h"
 #include "utils.h"
+#include "epic_magic.h"
 #include "spells.h"
 #include "comm.h"
 #include "db.h"
@@ -1913,6 +1914,7 @@ void update_player_misc(void)
     }
 
     regenerate_epic_spell_cast(ch);
+    regenerate_epic_preparation_cast(ch);
 
     if (GET_WARLOCK_BOOK_COOLDOWN(ch, 0) > 0)
     {

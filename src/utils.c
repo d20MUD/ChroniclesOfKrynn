@@ -14,6 +14,7 @@
 #include "sysdep.h"
 #include "structs.h"
 #include "utils.h"
+#include "epic_magic.h"
 #include "db.h"
 #include "comm.h"
 #include "modify.h"
@@ -10275,7 +10276,7 @@ void regenerate_epic_spell_cast(struct char_data *ch)
   {
     GET_EPIC_SPELL_CASTS(ch)++;
     GET_EPIC_SPELL_REGEN_TIMER(ch) -= EPIC_SPELL_CAST_REGEN_TICKS;
-    send_to_char(ch, "You recover an epic spell cast. Epic spell casts: %d/%d.\r\n",
+    send_to_char(ch, "You recover an epic combat cast. Epic combat casts: %d/%d.\r\n",
                  GET_EPIC_SPELL_CASTS(ch), max_casts);
   }
 
@@ -10304,6 +10305,8 @@ void clear_misc_cooldowns(struct char_data *ch)
   GET_COSMIC_AWARENESS_COOLDOWN(ch) = 0;
   GET_EPIC_SPELL_CASTS(ch) = get_epic_spell_casts_max(ch);
   GET_EPIC_SPELL_REGEN_TIMER(ch) = 0;
+  GET_EPIC_PREPARATION_CASTS(ch) = epic_preparation_casts_max(ch);
+  GET_EPIC_PREPARATION_REGEN_TIMER(ch) = 0;
 }
 
 bool can_mastermind_power(struct char_data *ch, int spellnum)

@@ -128,6 +128,7 @@ circle_SOURCES = \
 	src/limits.c \
 	src/lists.c \
 	src/magic.c \
+	src/epic_magic.c \
 	src/mail.c \
 	src/medit.c \
 	src/metamagic_science.c \
@@ -287,6 +288,7 @@ src/constants.c: $(filter-out src/constants.c,$(circle_SOURCES))
 
 # Extra files to distribute
 EXTRA_DIST = \
+	src/epic_magic.h \
 	src/housing.h \
 	src/estate.h \
 	src/auction_house.h \

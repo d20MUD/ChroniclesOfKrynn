@@ -14,6 +14,7 @@
 #include "structs.h"
 #include "housing.h"
 #include "utils.h"
+#include "epic_magic.h"
 #include "comm.h"
 #include "interpreter.h"
 #include "handler.h"
@@ -2369,7 +2370,7 @@ void perform_cooldowns(struct char_data *ch, struct char_data *k)
     epic_spell_casts_max = get_epic_spell_casts_max(k);
     if (epic_spell_casts_max > 0)
     {
-      send_to_char(ch, "Epic Spell Casts: %d/%d available.\r\n", GET_EPIC_SPELL_CASTS(k),
+      send_to_char(ch, "Epic Combat Casts: %d/%d available.\r\n", GET_EPIC_SPELL_CASTS(k),
                    epic_spell_casts_max);
       if (GET_EPIC_SPELL_CASTS(k) < epic_spell_casts_max)
       {
@@ -2377,10 +2378,16 @@ void perform_cooldowns(struct char_data *ch, struct char_data *k)
             MAX(1, EPIC_SPELL_CAST_REGEN_TICKS - GET_EPIC_SPELL_REGEN_TIMER(k)) * 6;
         epic_spell_minutes = epic_spell_seconds_left / 60;
         epic_spell_seconds = epic_spell_seconds_left % 60;
-        send_to_char(ch, "Next epic spell cast recovers in %d minute%s %d second%s.\r\n",
+        send_to_char(ch, "Next epic combat cast recovers in %d minute%s %d second%s.\r\n",
                      epic_spell_minutes, (epic_spell_minutes == 1) ? "" : "s",
                      epic_spell_seconds, (epic_spell_seconds == 1) ? "" : "s");
       }
+      normalize_epic_preparation_casts(k);
+      send_to_char(ch, "Epic Preparation Casts: %d/%d available.\r\n",
+                   GET_EPIC_PREPARATION_CASTS(k), epic_preparation_casts_max(k));
+      if (GET_EPIC_PREPARATION_CASTS(k) < epic_preparation_casts_max(k))
+        send_to_char(ch, "Next epic preparation cast recovers in %d seconds.\r\n",
+                     MAX(1, EPIC_SPELL_CAST_REGEN_TICKS - GET_EPIC_PREPARATION_REGEN_TIMER(k)) * 6);
     }
   }
 

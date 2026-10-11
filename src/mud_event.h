@@ -264,6 +264,8 @@ typedef enum
   eDEFENSIVE_STRIKE_COOLDOWN,    // paladin Sacred Defender perk: Defensive Strike 2-minute cooldown
   eBASTION_COOLDOWN,             // paladin Sacred Defender perk: Bastion of Defense 5-minute cooldown
   eTRUE_LORE,                    // loremaster True Lore daily use
+  eEPIC_HELLFIRE,                /* Lingering Hellball damage (runtime only). */
+  eEPIC_SUMMON_ACTION,           /* Epic ally special action cooldown. */
 } event_id;
 
 /* probably a smart place to mention to not forget to update:
@@ -326,6 +328,7 @@ EVENTFUNC(event_casting);
 EVENTFUNC(event_preparing);
 EVENTFUNC(event_crafting);
 EVENTFUNC(event_acid_arrow);
+EVENTFUNC(event_epic_hellfire);
 EVENTFUNC(event_concussive_onslaught);
 EVENTFUNC(event_power_leech);
 EVENTFUNC(event_implode);

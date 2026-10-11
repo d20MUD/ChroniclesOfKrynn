@@ -3473,46 +3473,53 @@ void assign_feats(void)
   feato(
       FEAT_MUMMY_DUST, "mummy dust", TRUE, TRUE, FALSE, FEAT_TYPE_SPELLCASTING,
       "gain access to epic spell - mummy dust",
-      "Once per game day, you can cast a spell that will conjure a powerful Mummy "
-      "Lord to assist you in combat. Note: You cannot summon a solar and mummy at the same time.");
+      "Spend an epic preparation cast to summon a scaling Mummy Lord. Every three combat "
+      "rounds it attempts a dreadful touch, imposing -4 attack and AC for three rounds. "
+      "Only one epic summon may be controlled at a time. See HELP EPICSPELLS.");
   feat_prereq_ability(FEAT_MUMMY_DUST, ABILITY_SPELLCRAFT, 23);
   feat_prereq_spellcasting(FEAT_MUMMY_DUST, CASTING_TYPE_DIVINE, 3, 9);
 
   feato(FEAT_SUMMON_SOLAR, "summon solar", TRUE, TRUE, FALSE, FEAT_TYPE_SPELLCASTING,
         "gain access to epic spell - summon solar",
-        "Once per game day, you can cast a spell that will conjure a powerful Solar "
-        "to assist you in combat. Note: You cannot summon a solar and mummy at the same time.");
+        "Spend an epic preparation cast to summon a scaling Solar. Every three combat rounds "
+        "it heals itself or its master for up to five times its level in hit points. "
+        "Only one epic summon may be controlled at a time. See HELP EPICSPELLS.");
   feat_prereq_ability(FEAT_SUMMON_SOLAR, ABILITY_SPELLCRAFT, 23);
   feat_prereq_spellcasting(FEAT_SUMMON_SOLAR, CASTING_TYPE_DIVINE, 3, 9);
 
   feato(FEAT_DRAGON_KNIGHT, "dragon knight", TRUE, TRUE, FALSE, FEAT_TYPE_SPELLCASTING,
         "gain access to epic spell - dragon knight",
-        "Once per game day, you can cast a spell that will conjure a small red dragon"
-        " to assist you in combat.");
+        "Spend an epic preparation cast to summon a scaling red dragon. Every three combat "
+        "rounds it breathes fire at engaged enemies, dealing four times its level in damage "
+        "with a Reflex save for half. Only one epic summon may be controlled at a time. "
+        "See HELP EPICSPELLS.");
   feat_prereq_ability(FEAT_DRAGON_KNIGHT, ABILITY_SPELLCRAFT, 25);
   feat_prereq_spellcasting(FEAT_DRAGON_KNIGHT, CASTING_TYPE_ARCANE, 3, 9);
   feato(FEAT_GREATER_RUIN, "greater ruin", TRUE, TRUE, FALSE, FEAT_TYPE_SPELLCASTING,
         "gain access to epic spell - greater ruin",
-        "Once per game day, you can cast a spell that will cause serious damage to "
-        "a selected target.");
+        "Spend an epic combat cast to inflict massive force damage. A surviving target's "
+        "damage reduction is weakened by up to 10 for three rounds. A Will save halves "
+        "damage. See HELP EPICSPELLS.");
   feat_prereq_ability(FEAT_GREATER_RUIN, ABILITY_SPELLCRAFT, 27);
   feat_prereq_spellcasting(FEAT_GREATER_RUIN, CASTING_TYPE_ARCANE, 3, 9);
   feato(FEAT_HELLBALL, "hellball", TRUE, TRUE, FALSE, FEAT_TYPE_SPELLCASTING,
         "gain access to epic spell - hellball",
-        "Once per game day, you can cast a spell that will cause serious damage to "
-        "all the targets in a room.");
+        "Spend an epic combat cast to blast enemies with energy, bypassing saves and spell "
+        "resistance. Surviving targets burn for twice your caster level in fire damage on "
+        "each of the next two rounds. Lingering fire does not stack. See HELP EPICSPELLS.");
   feat_prereq_ability(FEAT_HELLBALL, ABILITY_SPELLCRAFT, 29);
   feat_prereq_spellcasting(FEAT_HELLBALL, CASTING_TYPE_ARCANE, 3, 9);
   feato(FEAT_EPIC_MAGE_ARMOR, "epic mage armor", TRUE, TRUE, FALSE, FEAT_TYPE_SPELLCASTING,
         "gain access to epic spell - epic mage armor",
-        "Once per game day, you can cast a spell that will give a 10 AC bonus to "
-        "the caster and general damage reduction of 6.");
+        "Spend an epic preparation cast to grant a 20 armor bonus and a +3 dodge bonus to AC. "
+        "Normal bonus stacking and AC caps apply. See HELP EPICSPELLS.");
   feat_prereq_ability(FEAT_EPIC_MAGE_ARMOR, ABILITY_SPELLCRAFT, 31);
   feat_prereq_spellcasting(FEAT_EPIC_MAGE_ARMOR, CASTING_TYPE_ARCANE, 3, 9);
   feato(FEAT_EPIC_WARDING, "epic warding", TRUE, TRUE, FALSE, FEAT_TYPE_SPELLCASTING,
         "gain access to epic spell - epic warding",
-        "Once per game day, you can cast a spell that will absorb a massive amount "
-        "of damage.");
+        "Spend an epic preparation cast to absorb damage from a pool of 60 times caster "
+        "level, up to 75 per hit. For the first three rounds, an intact ward absorbs up to "
+        "105 per hit and protects concentration and prevents knockdowns. See HELP EPICSPELLS.");
   feat_prereq_ability(FEAT_EPIC_WARDING, ABILITY_SPELLCRAFT, 32);
   feat_prereq_spellcasting(FEAT_EPIC_WARDING, CASTING_TYPE_ARCANE, 3, 9);
   /* zusuk marker */

@@ -14,6 +14,7 @@
 #include "sysdep.h"
 #include "structs.h"
 #include "utils.h"
+#include "epic_magic.h"
 #include "comm.h"
 #include "interpreter.h"
 #include "handler.h"
@@ -1501,6 +1502,12 @@ bool perform_knockdown(struct char_data *ch, struct char_data *vict, int skill, 
   /* Safety check: prevent knockdown on dead or invalid targets */
   if (!vict || GET_POS(vict) <= POS_DEAD || DEAD(vict))
   {
+    return FALSE;
+  }
+  if (epic_ward_surge_active(vict))
+  {
+    if (display)
+      act("$N's surging epic ward prevents your knockdown!", FALSE, ch, NULL, vict, TO_CHAR);
     return FALSE;
   }
 

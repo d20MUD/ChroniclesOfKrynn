@@ -14,6 +14,7 @@
 #include "housing.h"
 #include "talents.h"
 #include "utils.h"
+#include "epic_magic.h"
 #include "db.h"
 #include "handler.h"
 #include "pfdefaults.h"
@@ -505,6 +506,8 @@ int load_char(const char *name, struct char_data *ch)
     GET_SPELL_RECALL_COOLDOWN(ch) = 0;
     GET_COSMIC_AWARENESS_COOLDOWN(ch) = 0;
     GET_EPIC_SPELL_CASTS(ch) = -1;
+    GET_EPIC_PREPARATION_CASTS(ch) = -1;
+    GET_EPIC_PREPARATION_REGEN_TIMER(ch) = 0;
     GET_EPIC_SPELL_REGEN_TIMER(ch) = 0;
     GET_BONUS_DOMAIN_SLOTS_USED(ch) = 0;
     GET_BONUS_DOMAIN_REGEN_TIMER(ch) = 0;
@@ -1099,6 +1102,10 @@ int load_char(const char *name, struct char_data *ch)
           GET_EPIC_SPELL_CASTS(ch) = atoi(line);
         else if (!strcmp(tag, "EpRg"))
           GET_EPIC_SPELL_REGEN_TIMER(ch) = atoi(line);
+        else if (!strcmp(tag, "EpPc"))
+          GET_EPIC_PREPARATION_CASTS(ch) = atoi(line);
+        else if (!strcmp(tag, "EpPr"))
+          GET_EPIC_PREPARATION_REGEN_TIMER(ch) = atoi(line);
         else if (!strcmp(tag, "EidB"))
           GET_EIDOLON_BASE_FORM(ch) = atoi(line);
         else if (!strcmp(tag, "EidC"))
@@ -2813,6 +2820,11 @@ void save_char(struct char_data *ch, int mode)
     if (GET_EPIC_SPELL_REGEN_TIMER(ch) != 0)
       BUFFER_WRITE("EpRg: %d\n", GET_EPIC_SPELL_REGEN_TIMER(ch));
   }
+  normalize_epic_preparation_casts(ch);
+  if (GET_EPIC_PREPARATION_CASTS(ch) != epic_preparation_casts_max(ch))
+    BUFFER_WRITE("EpPc: %d\n", GET_EPIC_PREPARATION_CASTS(ch));
+  if (GET_EPIC_PREPARATION_REGEN_TIMER(ch) != 0)
+    BUFFER_WRITE("EpPr: %d\n", GET_EPIC_PREPARATION_REGEN_TIMER(ch));
   if (GET_RETAINER_COOLDOWN(ch) != 0)
     BUFFER_WRITE("RetC: %d\n", GET_RETAINER_COOLDOWN(ch));
   if (GET_BONUS_DOMAIN_SLOTS_USED(ch) != 0)

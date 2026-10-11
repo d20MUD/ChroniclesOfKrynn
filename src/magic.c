@@ -12,6 +12,7 @@
 #include "sysdep.h"
 #include "structs.h"
 #include "utils.h"
+#include "epic_magic.h"
 #include "comm.h"
 #include "spells.h"
 #include "handler.h"
@@ -1804,7 +1805,8 @@ int mag_damage(int level, struct char_data *ch, struct char_data *victim, struct
     element = DAM_SOUND;
     size_dice = 6;
     num_dice = 4;
-    if (!savingthrow(ch, victim, SAVING_FORT, 0, casttype, level, NOSCHOOL))
+    if (!epic_ward_surge_active(victim) &&
+        !savingthrow(ch, victim, SAVING_FORT, 0, casttype, level, NOSCHOOL))
     {
       change_position(victim, POS_SITTING);
       act("You have been knocked down!", FALSE, victim, 0, ch, TO_CHAR);
@@ -1869,7 +1871,7 @@ int mag_damage(int level, struct char_data *ch, struct char_data *victim, struct
     num_dice = 40 + GET_AUGMENT_PSP(ch);
     size_dice = 10;
     bonus = 0;
-    save_negates = TRUE;
+    save_negates = FALSE;
     break;
 
   case PSIONIC_PSYCHOKINETIC_THRASHING: // Epic
@@ -1968,7 +1970,7 @@ int mag_damage(int level, struct char_data *ch, struct char_data *victim, struct
       if (!savingthrow(ch, victim, energy_type == DAM_COLD ? SAVING_FORT : SAVING_REFL, 0, casttype,
                        level, NOSCHOOL) &&
           !power_resistance(ch, victim, mag_resist_bonus) &&
-          ((GET_SIZE(victim) - GET_SIZE(ch)) <= 1))
+          ((GET_SIZE(victim) - GET_SIZE(ch)) <= 1) && !epic_ward_surge_active(victim))
       {
         /* Kinetic Crush: enhanced prone effect on failed save */
         if (has_kinetic_crush(ch) && !MOB_FLAGGED(victim, MOB_NOBASH))
@@ -2645,7 +2647,7 @@ int mag_damage(int level, struct char_data *ch, struct char_data *victim, struct
   case SPELL_GREATER_RUIN: // epic spell
     save = SAVING_WILL;
     mag_resist = TRUE;
-    element = DAM_PUNCTURE;
+    element = DAM_FORCE;
     num_dice = level + 6;
     size_dice = 12;
     bonus = level + 35;
@@ -2803,7 +2805,8 @@ int mag_damage(int level, struct char_data *ch, struct char_data *victim, struct
     size_dice = 4;
     bonus = 0;
     // 60% chance of knockdown, target can't be more than 2 size classes bigger
-    if (dice(1, 100) < 60 && (GET_SIZE(ch) + 2) >= GET_SIZE(victim))
+    if (!epic_ward_surge_active(victim) && dice(1, 100) < 60 &&
+        (GET_SIZE(ch) + 2) >= GET_SIZE(victim))
     {
       act("Your telekinetic wave knocks $N over!", FALSE, ch, 0, victim, TO_CHAR);
       act("The force of the telekinetic slam from $n knocks you over!\r\n", FALSE, ch, 0, victim,
@@ -3426,7 +3429,7 @@ int mag_damage(int level, struct char_data *ch, struct char_data *victim, struct
   }
 
   /* Check for Druid Elemental Mastery */
-  if (!IS_NPC(ch) && GET_CASTING_CLASS(ch) == CLASS_DRUID && GET_ELEMENTAL_MASTERY_ACTIVE(ch) &&
+  if (!IS_EPIC_SPELL(spellnum) && !IS_NPC(ch) && GET_CASTING_CLASS(ch) == CLASS_DRUID && GET_ELEMENTAL_MASTERY_ACTIVE(ch) &&
       (element == DAM_FIRE || element == DAM_COLD || element == DAM_ELECTRIC ||
        element == DAM_ACID))
   {
@@ -3602,7 +3605,7 @@ int mag_damage(int level, struct char_data *ch, struct char_data *victim, struct
     {
       if (is_spellnum_psionic(spellnum))
       {
-        int pr_bonus = mag_resist_bonus;
+        int pr_bonus = mag_resist_bonus + (IS_EPIC_SPELL(spellnum) ? 10 : 0);
 
         if (psionic_powers[spellnum].power_type == TELEPATHY)
           pr_bonus += get_psionic_piercing_will_bonus(ch);
@@ -3612,7 +3615,8 @@ int mag_damage(int level, struct char_data *ch, struct char_data *victim, struct
       }
       else
       {
-        if (mag_resistance(ch, victim, mag_resist_bonus))
+        /* The SR routine takes a victim resistance modifier, so subtract penetration. */
+        if (mag_resistance(ch, victim, mag_resist_bonus - (IS_EPIC_SPELL(spellnum) ? 10 : 0)))
           return 0;
       }
     }
@@ -3711,6 +3715,10 @@ int mag_damage(int level, struct char_data *ch, struct char_data *victim, struct
       dc_mod -= CLASS_LEVEL(victim, CLASS_KNIGHT_OF_SOLAMNIA);
   }
 
+  /* Savingthrow's modifier belongs to the victim: -4 raises the effective DC by four. */
+  if (IS_EPIC_SPELL(spellnum))
+    dc_mod -= 4;
+
   if (element == DAM_POISON && KNOWS_DISCOVERY(ch, ALC_DISC_CELESTIAL_POISONS))
     element = DAM_CELESTIAL_POISON;
 
@@ -3772,7 +3780,11 @@ int mag_damage(int level, struct char_data *ch, struct char_data *victim, struct
     // saving throw for half damage if applies
     if (savingthrow(ch, victim, save, race_bonus + dc_mod, casttype, level, spell_school))
     {
-      if (save_negates)
+      if (IS_EPIC_SPELL(spellnum))
+      {
+        dam /= 2;
+      }
+      else if (save_negates)
       {
         dam = 0;
       }
@@ -5453,7 +5465,8 @@ void mag_affects_full(int level, struct char_data *ch, struct char_data *victim,
                     dc_mod + (affected_by_aura_of_cowardice(victim) ? -4 : 0), casttype, level,
                     NOSCHOOL))
       return;
-    change_position(victim, POS_SITTING);
+    if (!epic_ward_surge_active(victim))
+      change_position(victim, POS_SITTING);
     af[0].duration = 600;
     af[0].location = APPLY_SAVING_WILL;
     af[0].modifier = -2;
@@ -8107,6 +8120,10 @@ void mag_affects_full(int level, struct char_data *ch, struct char_data *victim,
     af[0].modifier = 20;
     af[0].duration = 2400;
     af[0].bonus_type = BONUS_TYPE_ARMOR;
+    af[1].location = APPLY_AC_NEW;
+    af[1].modifier = 3;
+    af[1].duration = 2400;
+    af[1].bonus_type = BONUS_TYPE_DODGE;
 
     accum_duration = FALSE;
     to_vict = "You feel magic protecting you.";
@@ -8128,6 +8145,18 @@ void mag_affects_full(int level, struct char_data *ch, struct char_data *victim,
     to_room = "$n becomes surrounded by a powerful magical ward!";
     to_vict = "You become surrounded by a powerful magical ward!";
     GET_STONESKIN(victim) = level * 60;
+    {
+      struct affected_type surge;
+      new_affect(&surge);
+      surge.spell = AFFECT_EPIC_WARD_SURGE;
+      surge.location = APPLY_NONE;
+      surge.duration = 3;
+      affect_from_char(victim, AFFECT_EPIC_WARD_SURGE);
+      affect_to_char(victim, &surge);
+      send_to_char(victim, "Your ward surges for three rounds: stronger absorption, "
+                           "unbroken concentration, and knockdown protection.\r\n");
+      send_to_char(ch, "Epic Warding grants %d points of absorption.\r\n", level * 60);
+    }
     break;
 
   case SPELL_EXPEDITIOUS_RETREAT: // transmutation
@@ -10274,7 +10303,8 @@ void mag_affects_full(int level, struct char_data *ch, struct char_data *victim,
       success = 1;
     }
 
-    if (!savingthrow(ch, victim, SAVING_REFL, 0, casttype, level, ABJURATION) &&
+    if (!epic_ward_surge_active(victim) &&
+        !savingthrow(ch, victim, SAVING_REFL, 0, casttype, level, ABJURATION) &&
         !mag_resistance(ch, victim, 0))
     {
       change_position(victim, POS_SITTING);
@@ -12800,6 +12830,24 @@ void mag_summons(int level, struct char_data *ch, struct obj_data *obj, int spel
     case SPELL_BLADE_OF_DISASTER:
       GET_LEVEL(mob) = 20;
       autoroll_mob(mob, TRUE, TRUE);
+      break;
+
+    case SPELL_MUMMY_DUST:
+    case SPELL_SUMMON_SOLAR:
+    case SPELL_DRAGON_KNIGHT:
+      GET_LEVEL(mob) = MIN(35, MAX(30, level + 5));
+      autoroll_mob(mob, TRUE, TRUE);
+      /* Role flags and bonuses belong to this summon, regardless of prototype flags. */
+      REMOVE_BIT_AR(MOB_FLAGS(mob), MOB_MUMMY_DUST);
+      REMOVE_BIT_AR(MOB_FLAGS(mob), MOB_SUMMON_SOLAR);
+      REMOVE_BIT_AR(MOB_FLAGS(mob), MOB_DRAGON_KNIGHT);
+      SET_BIT_AR(MOB_FLAGS(mob), spellnum == SPELL_MUMMY_DUST ? MOB_MUMMY_DUST :
+                               spellnum == SPELL_SUMMON_SOLAR ? MOB_SUMMON_SOLAR : MOB_DRAGON_KNIGHT);
+      GET_REAL_HITROLL(mob) += MAX(1, level / 3);
+      GET_HITROLL(mob) += MAX(1, level / 3);
+      GET_REAL_DAMROLL(mob) += MAX(1, level / 3);
+      GET_DAMROLL(mob) += MAX(1, level / 3);
+      send_to_char(ch, "Your epic ally manifests at level %d.\r\n", GET_LEVEL(mob));
       break;
 
     case SPELL_SUMMON_NATURES_ALLY_8:

@@ -528,6 +528,8 @@ struct mud_event_list mud_event_index[] = {
     /* eTRUE_LORE */
     {"True Lore", event_daily_use_cooldown, EVENT_CHAR, "Your true lore is ready again.",
      "Your true lore is ready again.", FEAT_TRUE_LORE, 0},
+    {"Lingering Hellfire", event_epic_hellfire, EVENT_CHAR, NULL, NULL, FEAT_UNDEFINED, 0},
+    {"Epic Summon Action", event_countdown, EVENT_CHAR, NULL, NULL, FEAT_UNDEFINED, 0},
 };
 
 /* Expose registry count for validation */

@@ -1353,7 +1353,9 @@ void char_from_furniture(struct char_data *ch);
   (spellnum == SPELL_MUMMY_DUST || spellnum == SPELL_DRAGON_KNIGHT ||                              \
    spellnum == SPELL_SUMMON_SOLAR || spellnum == SPELL_GREATER_RUIN ||                             \
    spellnum == SPELL_HELLBALL || spellnum == SPELL_EPIC_MAGE_ARMOR ||                              \
-   spellnum == SPELL_EPIC_WARDING)
+   spellnum == SPELL_EPIC_WARDING || spellnum == PSIONIC_IMPALE_MIND ||                         \
+   spellnum == PSIONIC_RAZOR_STORM || spellnum == PSIONIC_PSYCHOKINETIC_THRASHING ||               \
+   spellnum == PSIONIC_EPIC_PSIONIC_WARD)
 
 /* domain macros */
 #define GET_1ST_DOMAIN(ch) CHECK_PLAYER_SPECIAL((ch), ((ch)->player_specials->saved.domain_1))
@@ -3056,7 +3058,9 @@ bool has_reach(struct char_data *ch);
 #define GET_COSMIC_AWARENESS_COOLDOWN(ch) (ch->player_specials->saved.cosmic_awareness_cooldown)
 #define GET_EPIC_SPELL_CASTS(ch) (ch->player_specials->saved.epic_spell_casts)
 #define GET_EPIC_SPELL_REGEN_TIMER(ch) (ch->player_specials->saved.epic_spell_regen_timer)
-#define EPIC_SPELL_CAST_REGEN_TICKS 30
+#define GET_EPIC_PREPARATION_CASTS(ch) ((ch)->player_specials->saved.epic_preparation_casts)
+#define GET_EPIC_PREPARATION_REGEN_TIMER(ch) ((ch)->player_specials->saved.epic_preparation_regen_timer)
+#define EPIC_SPELL_CAST_REGEN_TICKS 15
 #define EPIC_SPELL_CAST_MAX 10
 
 /* Bonus spell slot tracking for Domain Master perks */

@@ -12,6 +12,7 @@
 #include "sysdep.h"
 #include "structs.h"
 #include "utils.h"
+#include "epic_magic.h"
 #include "string.h"
 #include "comm.h"
 #include "spells.h"
@@ -3151,7 +3152,8 @@ ASPELL(eldritch_blast)
     }
 
     /* Repelling Blast: chance to knock down target */
-    if (get_warlock_repelling_blast_knockdown_chance(ch) > 0 && GET_POS(victim) > POS_SITTING &&
+    if (!epic_ward_surge_active(victim) &&
+        get_warlock_repelling_blast_knockdown_chance(ch) > 0 && GET_POS(victim) > POS_SITTING &&
         rand_number(1, 100) <= get_warlock_repelling_blast_knockdown_chance(ch))
     {
       change_position(victim, POS_SITTING);
@@ -3248,7 +3250,8 @@ ASPELL(eldritch_blast)
       }
 
       /* Repelling Blast: chance to knock down target */
-      if (get_warlock_repelling_blast_knockdown_chance(ch) > 0 && GET_POS(victim) > POS_SITTING &&
+      if (!epic_ward_surge_active(victim) &&
+          get_warlock_repelling_blast_knockdown_chance(ch) > 0 && GET_POS(victim) > POS_SITTING &&
           rand_number(1, 100) <= get_warlock_repelling_blast_knockdown_chance(ch))
       {
         change_position(victim, POS_SITTING);
@@ -3276,7 +3279,8 @@ ASPELL(eldritch_blast)
           mag_damage(effective_level, ch, tch, NULL, WARLOCK_ELDRITCH_CHAIN, 0, -1, CAST_INNATE);
           mag_affects(effective_level, ch, tch, NULL, WARLOCK_ELDRITCH_CHAIN, -1, CAST_INNATE, 0);
 
-          if (get_warlock_repelling_blast_knockdown_chance(ch) > 0 && GET_POS(tch) > POS_SITTING &&
+          if (!epic_ward_surge_active(tch) &&
+              get_warlock_repelling_blast_knockdown_chance(ch) > 0 && GET_POS(tch) > POS_SITTING &&
               rand_number(1, 100) <= get_warlock_repelling_blast_knockdown_chance(ch))
             change_position(tch, POS_SITTING);
 

@@ -11,6 +11,7 @@
 #include "sysdep.h"
 #include "structs.h"
 #include "utils.h"
+#include "epic_magic.h"
 #include "interpreter.h"
 #include "spells.h"
 #include "handler.h"
@@ -143,6 +144,8 @@ static int mag_pspcost(struct char_data *ch, int spellnum)
    FALSE = failure and spell should be aborted */
 bool concentration_check(struct char_data *ch, int spellnum)
 {
+  if (epic_ward_surge_active(ch))
+    return TRUE;
   /* concentration check */
   int spell_level = spell_info[spellnum].min_level[CASTING_CLASS(ch)];
   int concentration_dc = 0;
@@ -925,13 +928,6 @@ int call_magic(struct char_data *caster, struct char_data *cvict, struct obj_dat
       break;
     }
 
-  if (caster && !IS_NPC(caster) && IS_EPIC_SPELL(spellnum))
-  {
-    if (!can_cast_epic_spell(caster, TRUE))
-      return 0;
-    use_epic_spell_cast(caster);
-  }
-
   // increase epic spell skill
   switch (spellnum)
   {
@@ -1084,6 +1080,14 @@ SAVING_WILL here...  */
     savetype = SAVING_WILL;
     spell_level = level;
     break;
+  }
+
+  /* Commit before spell turning: the original caster pays even if reflected. */
+  if (IS_EPIC_SPELL(spellnum))
+  {
+    if (!epic_spell_preflight(caster, cvict, spellnum, metamagic, TRUE))
+      return 0;
+    spend_epic_spell_casts(caster, spellnum, metamagic);
   }
 
   /* spell turning */
@@ -2023,7 +2027,8 @@ void finishCasting(struct char_data *ch)
   }
 
   /* Consume metamagic reduction use if applicable */
-  if (!IS_NPC(ch) && (CASTING_METAMAGIC(ch) & ~CASTING_FREE_METAMAGIC(ch)) != 0)
+  if (!IS_NPC(ch) && !IS_EPIC_SPELL(CASTING_SPELLNUM(ch)) &&
+      (CASTING_METAMAGIC(ch) & ~CASTING_FREE_METAMAGIC(ch)) != 0)
   {
     use_metamagic_reduction(ch);
   }
@@ -2062,7 +2067,7 @@ void finishCasting(struct char_data *ch)
     const int spellnum = CASTING_SPELLNUM(ch);
 
     /* Master Alchemist: 10% chance to maximize extracts */
-    if (!IS_NPC(ch) && GET_CASTING_CLASS(ch) == CLASS_ALCHEMIST &&
+    if (!IS_EPIC_SPELL(spellnum) && !IS_NPC(ch) && GET_CASTING_CLASS(ch) == CLASS_ALCHEMIST &&
         has_alchemist_master_alchemist(ch) && !IS_SET(final_metamagic, METAMAGIC_MAXIMIZE) &&
         rand_number(1, 100) <= 10)
     {
@@ -2071,7 +2076,7 @@ void finishCasting(struct char_data *ch)
     }
 
     /* Concentrated Essence: 20% chance to empower extracts */
-    if (!IS_NPC(ch) && GET_CASTING_CLASS(ch) == CLASS_ALCHEMIST &&
+    if (!IS_EPIC_SPELL(spellnum) && !IS_NPC(ch) && GET_CASTING_CLASS(ch) == CLASS_ALCHEMIST &&
         has_alchemist_concentrated_essence(ch) && !IS_SET(final_metamagic, METAMAGIC_EMPOWER) &&
         can_spell_be_empowered(spellnum) && rand_number(1, 100) <= 20)
     {
@@ -2080,7 +2085,7 @@ void finishCasting(struct char_data *ch)
     }
 
     /* Persistent Extraction: 20% chance to extend extracts */
-    if (!IS_NPC(ch) && GET_CASTING_CLASS(ch) == CLASS_ALCHEMIST &&
+    if (!IS_EPIC_SPELL(spellnum) && !IS_NPC(ch) && GET_CASTING_CLASS(ch) == CLASS_ALCHEMIST &&
         has_alchemist_persistent_extraction(ch) && !IS_SET(final_metamagic, METAMAGIC_EXTEND) &&
         can_spell_be_extended(spellnum) && rand_number(1, 100) <= 20)
     {
@@ -2089,7 +2094,8 @@ void finishCasting(struct char_data *ch)
     }
 
     /* Summoner Empower Spell: 10% chance to empower spells */
-    if (!IS_NPC(ch) && GET_CASTING_CLASS(ch) == CLASS_SUMMONER && has_summoner_empower_spell(ch) &&
+    if (!IS_EPIC_SPELL(spellnum) && !IS_NPC(ch) && GET_CASTING_CLASS(ch) == CLASS_SUMMONER &&
+        has_summoner_empower_spell(ch) &&
         !IS_SET(final_metamagic, METAMAGIC_EMPOWER) && can_spell_be_empowered(spellnum) &&
         rand_number(1, 100) <= 10)
     {
@@ -2098,7 +2104,8 @@ void finishCasting(struct char_data *ch)
     }
 
     /* Summoner Extend Spell: 10% chance to extend spells */
-    if (!IS_NPC(ch) && GET_CASTING_CLASS(ch) == CLASS_SUMMONER && has_summoner_extend_spell(ch) &&
+    if (!IS_EPIC_SPELL(spellnum) && !IS_NPC(ch) && GET_CASTING_CLASS(ch) == CLASS_SUMMONER &&
+        has_summoner_extend_spell(ch) &&
         !IS_SET(final_metamagic, METAMAGIC_EXTEND) && can_spell_be_extended(spellnum) &&
         rand_number(1, 100) <= 10)
     {
@@ -2291,7 +2298,7 @@ void finishCasting(struct char_data *ch)
     }
 
     /* Alchemical Compatibility: auto-apply to alchemist party members */
-    if (!IS_NPC(ch) && GET_CASTING_CLASS(ch) == CLASS_ALCHEMIST &&
+    if (!IS_EPIC_SPELL(spellnum) && !IS_NPC(ch) && GET_CASTING_CLASS(ch) == CLASS_ALCHEMIST &&
         has_alchemist_alchemical_compatibility(ch) && CASTING_TCH(ch) && GROUP(ch) &&
         !SINFO.violent)
     {
@@ -2321,7 +2328,7 @@ void finishCasting(struct char_data *ch)
     }
 
     /* Resonant Extract: small chance to echo the extract onto grouped allies in the room */
-    if (!IS_NPC(ch) && GET_CASTING_CLASS(ch) == CLASS_ALCHEMIST &&
+    if (!IS_EPIC_SPELL(spellnum) && !IS_NPC(ch) && GET_CASTING_CLASS(ch) == CLASS_ALCHEMIST &&
         has_alchemist_resonant_extract(ch))
     {
       struct char_data *ally = NULL, *ally_next = NULL;
@@ -2348,7 +2355,7 @@ void finishCasting(struct char_data *ch)
     }
 
     /* Eternal Extract: 5% chance to make extract last exactly 1 hour */
-    if (!IS_NPC(ch) && GET_CASTING_CLASS(ch) == CLASS_ALCHEMIST &&
+    if (!IS_EPIC_SPELL(spellnum) && !IS_NPC(ch) && GET_CASTING_CLASS(ch) == CLASS_ALCHEMIST &&
         has_alchemist_eternal_extract(ch))
     {
       if (rand_number(1, 100) <= 5 && CASTING_TCH(ch))
@@ -2705,7 +2712,7 @@ static int cast_spell_with_type_and_slot(struct char_data *ch, struct char_data 
       return 0;
     }
   }
-  if (!IS_NPC(ch) && IS_EPIC_SPELL(spellnum) && !can_cast_epic_spell(ch, TRUE))
+  if (IS_EPIC_SPELL(spellnum) && !epic_spell_preflight(ch, tch, spellnum, metamagic, TRUE))
     return 0;
   // cosmic awareness cooldown (10 minutes = 100 ticks)
   if (spellnum == PSIONIC_COSMIC_AWARENESS && GET_COSMIC_AWARENESS_COOLDOWN(ch) > 0)
@@ -3313,6 +3320,18 @@ will be using for casting this spell */
     clevel = GET_LEVEL(ch);
     CASTING_CLASS(ch) = ch_class;
   }
+  else if (isEpicSpell(spellnum))
+  {
+    /* Epic spells have no prepared slot, but immediate/quickened casts still need a level. */
+    if (is_spellnum_psionic(spellnum))
+    {
+      CASTING_CLASS(ch) = CLASS_PSIONICIST;
+      clevel = GET_PSIONIC_LEVEL(ch);
+    }
+    else
+      clevel = CASTER_LEVEL(ch);
+    clevel = MAX(1, clevel);
+  }
 
   /* concentration check */
   if (!concentration_check(ch, spellnum))
@@ -3435,6 +3454,9 @@ static int get_applicable_free_metamagic(struct char_data *ch, int spellnum, int
   int free_metamagic = 0;
 
   if (!ch || IS_NPC(ch) || subcmd != SCMD_CAST_SPELL)
+    return 0;
+  /* Epic enhancements are paid from their own pool; leave pending ordinary perks intact. */
+  if (IS_EPIC_SPELL(spellnum))
     return 0;
 
   free_metamagic = PENDING_FREE_METAMAGIC(ch) & (METAMAGIC_MAXIMIZE | METAMAGIC_EMPOWER);
@@ -3758,10 +3780,10 @@ ACMDU(do_gen_cast)
     }
   }
 
-  if (HAS_FEAT(ch, FEAT_AUTOMATIC_SILENT_SPELL) &&
+  if (!IS_EPIC_SPELL(spellnum) && HAS_FEAT(ch, FEAT_AUTOMATIC_SILENT_SPELL) &&
       compute_spells_circle(ch, GET_CASTING_CLASS(ch), spellnum, metamagic, 0) <= 3)
     SET_BIT(metamagic, METAMAGIC_SILENT);
-  if (HAS_FEAT(ch, FEAT_AUTOMATIC_STILL_SPELL) &&
+  if (!IS_EPIC_SPELL(spellnum) && HAS_FEAT(ch, FEAT_AUTOMATIC_STILL_SPELL) &&
       compute_spells_circle(ch, GET_CASTING_CLASS(ch), spellnum, metamagic, 0) <= 3)
     SET_BIT(metamagic, METAMAGIC_STILL);
 
@@ -3936,10 +3958,10 @@ ACMDU(do_gen_cast)
     return;
   }
 
-  if (isEpicSpell(spellnum) && metamagic)
+  if (isEpicSpell(spellnum) && epic_spell_cast_cost(spellnum, metamagic) < 0)
   {
-    send_to_char(ch, "Are you trying to implode the universe?!  Sorry, no metamagic "
-                     "on epic spells currently!\r\n");
+    send_to_char(ch, "Epic spells allow Empower or Quicken, but not both. Empower requires "
+                     "a damaging epic spell. Each costs one extra epic cast.\r\n");
     return;
   }
 
@@ -4933,6 +4955,19 @@ void mag_assign_spells(void)
          NULL, 14, 1, NECROMANCY, FALSE);
   spello(SPELL_SUMMON_SOLAR, "summon solar", 0, 0, 0, POS_FIGHTING, TAR_IGNORE, FALSE, MAG_SUMMONS,
          NULL, 14, 1, CONJURATION, FALSE);
+
+  spello(AFFECT_EPIC_RUIN, "fractured defenses", 0, 0, 0, POS_DEAD, TAR_IGNORE, FALSE,
+         0, "Your fractured defenses recover.", 0, 0, NOSCHOOL, FALSE);
+  spello(AFFECT_EPIC_HELLFIRE, "lingering hellfire", 0, 0, 0, POS_DEAD, TAR_IGNORE, FALSE,
+         0, "The lingering hellfire dies away.", 0, 0, NOSCHOOL, FALSE);
+  spello(AFFECT_EPIC_WARD_SURGE, "epic ward surge", 0, 0, 0, POS_DEAD, TAR_IGNORE, FALSE,
+         0, "Your ward's defensive surge subsides.", 0, 0, NOSCHOOL, FALSE);
+  spello(AFFECT_EPIC_MUMMY_DREAD, "mummy dread", 0, 0, 0, POS_DEAD, TAR_IGNORE, FALSE,
+         0, "The mummy's dreadful weakness fades.", 0, 0, NOSCHOOL, FALSE);
+  CantCast(AFFECT_EPIC_RUIN);
+  CantCast(AFFECT_EPIC_HELLFIRE);
+  CantCast(AFFECT_EPIC_WARD_SURGE);
+  CantCast(AFFECT_EPIC_MUMMY_DREAD);
 
   // paladin
   /* = =  4th circle  = = */
