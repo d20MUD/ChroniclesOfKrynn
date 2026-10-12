@@ -485,8 +485,8 @@ void init_talents(void)
       "Each rank gives a 3% chance to gain 2 extra units when harvesting with the mining skill.",
       TRUE, TALENT_CAT_MINING);
   talento(TALENT_INSIGHTFUL_MINING, "insightful mining", 2, 5000, 5,
-          "+5% experience per rank on mining tasks",
-          "Each rank gives a 5% bonus to experience gained when performing mining tasks.", TRUE,
+          "+20% experience per rank on mining tasks",
+          "Each rank gives a 20% bonus to base experience gained when performing mining tasks (100% at five ranks).", TRUE,
           TALENT_CAT_MINING);
 
   /* Hunting talents (harvesting) */
@@ -509,8 +509,8 @@ void init_talents(void)
       "Each rank gives a 3% chance to gain 2 extra units when harvesting with the hunting skill.",
       TRUE, TALENT_CAT_HUNTING);
   talento(TALENT_INSIGHTFUL_HUNTING, "insightful hunting", 2, 5000, 5,
-          "+5% experience per rank on hunting tasks",
-          "Each rank gives a 5% bonus to experience gained when performing hunting tasks.", TRUE,
+          "+20% experience per rank on hunting tasks",
+          "Each rank gives a 20% bonus to base experience gained when performing hunting tasks (100% at five ranks).", TRUE,
           TALENT_CAT_HUNTING);
 
   /* Forestry talents (harvesting) */
@@ -534,8 +534,8 @@ void init_talents(void)
       "Each rank gives a 3% chance to gain 2 extra units when harvesting with the forestry skill.",
       TRUE, TALENT_CAT_FORESTRY);
   talento(TALENT_INSIGHTFUL_FORESTRY, "insightful forestry", 2, 5000, 5,
-          "+5% experience per rank on forestry tasks",
-          "Each rank gives a 5% bonus to experience gained when performing forestry tasks.", TRUE,
+          "+20% experience per rank on forestry tasks",
+          "Each rank gives a 20% bonus to base experience gained when performing forestry tasks (100% at five ranks).", TRUE,
           TALENT_CAT_FORESTRY);
 
   /* Gathering talents (harvesting) */
@@ -559,8 +559,8 @@ void init_talents(void)
       "Each rank gives a 3% chance to gain 2 extra units when harvesting with the gathering skill.",
       TRUE, TALENT_CAT_GATHERING);
   talento(TALENT_INSIGHTFUL_GATHERING, "insightful gathering", 2, 5000, 5,
-          "+5% experience per rank on gathering tasks",
-          "Each rank gives a 5% bonus to experience gained when performing gathering tasks.", TRUE,
+          "+20% experience per rank on gathering tasks",
+          "Each rank gives a 20% bonus to base experience gained when performing gathering tasks (100% at five ranks).", TRUE,
           TALENT_CAT_GATHERING);
 
   /* Butchering talents (harvesting) */
@@ -584,8 +584,8 @@ void init_talents(void)
       "Each rank gives a 3% chance to gain 2 extra units when butchering.",
       TRUE, TALENT_CAT_BUTCHERING);
   talento(TALENT_INSIGHTFUL_BUTCHERING, "insightful butchering", 2, 5000, 5,
-          "+5% experience per rank on butchering tasks",
-          "Each rank gives a 5% bonus to experience gained when performing butchering tasks.", TRUE,
+          "+20% experience per rank on butchering tasks",
+          "Each rank gives a 20% bonus to base experience gained when performing butchering tasks (100% at five ranks).", TRUE,
           TALENT_CAT_BUTCHERING);
 }
 

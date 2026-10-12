@@ -1513,6 +1513,29 @@ void look_at_room_number(struct char_data *ch, int ignore_brief, long room_numbe
 /* End of Kel's look_at_room_number function */
 
 /* Main function to display room information when a player looks around */
+/* Detect the presence of concealed magic without revealing the object itself.
+ * Treasure chests may hide behind a search DC rather than ITEM_HIDDEN. */
+static void show_hidden_magic_hint(struct char_data *ch)
+{
+  struct obj_data *obj;
+
+  if (!ch || !ch->desc || IN_ROOM(ch) == NOWHERE || !AFF_FLAGGED(ch, AFF_DETECT_MAGIC))
+    return;
+
+  for (obj = world[IN_ROOM(ch)].contents; obj; obj = obj->next_content)
+  {
+    bool hidden = OBJ_FLAGGED(obj, ITEM_HIDDEN);
+    bool chest = GET_OBJ_TYPE(obj) == ITEM_TREASURE_CHEST;
+    if (IS_TREASURE_CHEST_HIDDEN(obj))
+      hidden = TRUE;
+    if (hidden && (chest || OBJ_FLAGGED(obj, ITEM_MAGIC)))
+    {
+      send_to_char(ch, "\tCThere is something magical hidden here.\tn\r\n");
+      return;
+    }
+  }
+}
+
 void look_at_room(struct char_data *ch, int ignore_brief)
 {
   trig_data *t;
@@ -1533,6 +1556,8 @@ void look_at_room(struct char_data *ch, int ignore_brief)
 
   if (target_room == NOWHERE)
     return;
+
+  show_hidden_magic_hint(ch);
 
   if (ROOM_FLAGGED(target_room, ROOM_FOG) && GET_LEVEL(ch) < LVL_IMMORT)
   {

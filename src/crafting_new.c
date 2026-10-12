@@ -3840,8 +3840,20 @@ int get_insightful_talent_bonus(struct char_data *ch, int skill)
   if (talent == TALENT_NONE)
     return 0;
 
-  /* Each rank gives 5% bonus experience */
-  return get_talent_rank(ch, talent) * 5;
+  /* Harvesting tasks award small amounts of XP: make each investment meaningful.
+   * Five ranks double base harvesting XP; crafting retains its existing rate.
+   */
+  switch (skill)
+  {
+  case ABILITY_HARVEST_MINING:
+  case ABILITY_HARVEST_HUNTING:
+  case ABILITY_HARVEST_FORESTRY:
+  case ABILITY_HARVEST_GATHERING:
+  case ABILITY_HARVEST_BUTCHERING:
+    return get_talent_rank(ch, talent) * 20;
+  default:
+    return get_talent_rank(ch, talent) * 5;
+  }
 }
 
 /* Get the efficient talent bonus percentage for a given crafting/harvesting skill */
