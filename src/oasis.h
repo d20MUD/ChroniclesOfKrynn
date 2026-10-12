@@ -365,6 +365,8 @@ i added this trying to debug issues with qedit-copy -zusuk
 #define ZEDIT_REGIONS 31
 #define ZEDIT_CITIES 32
 #define ZEDIT_FACTION 33
+#define ZEDIT_CLIMATE 34
+#define ZEDIT_TERRAIN 35
 
 /* Submodes of MEDIT connectedness. */
 #define MEDIT_MAIN_MENU 0

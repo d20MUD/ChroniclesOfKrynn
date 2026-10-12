@@ -306,6 +306,22 @@
 #define ZONE_RESET_ACTIVE 1 /**< Zone is currently being reset */
 
 /* Zone info: Used in zone_data.zone_flags */
+/* Descriptive zone classifications, independent of room SECT_* values.
+ * These IDs are stored in zone files: append new choices rather than reordering.
+ */
+enum zone_climate_type {
+  ZONE_CLIMATE_UNSPECIFIED, ZONE_CLIMATE_POLAR, ZONE_CLIMATE_SUBARCTIC,
+  ZONE_CLIMATE_TEMPERATE, ZONE_CLIMATE_SUBTROPICAL, ZONE_CLIMATE_TROPICAL,
+  ZONE_CLIMATE_ARID, ZONE_CLIMATE_ALPINE, NUM_ZONE_CLIMATES
+};
+enum zone_terrain_type {
+  ZONE_TERRAIN_UNSPECIFIED, ZONE_TERRAIN_FOREST, ZONE_TERRAIN_PLAINS,
+  ZONE_TERRAIN_DESERT, ZONE_TERRAIN_HILLS, ZONE_TERRAIN_MOUNTAINS,
+  ZONE_TERRAIN_SWAMP, ZONE_TERRAIN_JUNGLE, ZONE_TERRAIN_TUNDRA,
+  ZONE_TERRAIN_COASTAL, ZONE_TERRAIN_OCEAN, ZONE_TERRAIN_UNDERGROUND,
+  ZONE_TERRAIN_URBAN, ZONE_TERRAIN_MIXED, NUM_ZONE_TERRAINS
+};
+
 #define ZONE_CLOSED 0   /**< Zone is closed - players cannot enter */
 #define ZONE_NOIMMORT 1 /**< Immortals (below LVL_GRSTAFF) cannot enter this zone */
 #define ZONE_QUEST 2    /**< This zone is a quest zone (not implemented) */
@@ -6634,6 +6650,7 @@ struct char_special_data_saved
   int psionic_energy_type; // this is the element that will be used when using psionic energy powers
 
   /* Golem crafting info - saved to pfile */
+  int golem_appearance;         /* Fixed cosmetic material; 0 retains prototype descriptions. */
   int golem_stored_type;        // Type of golem stored for recall (GOLEM_TYPE_*)
   int golem_stored_size;        // Size of golem stored for recall (GOLEM_SIZE_*)
   int golem_stored_hp;          // HP preserved for quick battlefield redeploys

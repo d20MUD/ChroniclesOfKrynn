@@ -707,6 +707,7 @@ int load_char(const char *name, struct char_data *ch)
     ch->player_specials->saved.channel_energy_type = 0;
 
     /* Initialize golem crafting info */
+    ch->char_specials.saved.golem_appearance = 0;
     ch->char_specials.saved.golem_stored_type = GOLEM_TYPE_NONE;
     ch->char_specials.saved.golem_stored_size = GOLEM_SIZE_SMALL;
     ch->char_specials.saved.golem_stored_hp = 0;
@@ -1168,6 +1169,8 @@ int load_char(const char *name, struct char_data *ch)
           GET_GOLD(ch) = atoi(line);
         if (!strcmp(tag, "GolT"))
           ch->char_specials.saved.golem_stored_type = atoi(line);
+        else if (!strcmp(tag, "GolA"))
+          ch->char_specials.saved.golem_appearance = atoi(line);
         else if (!strcmp(tag, "GolS"))
           ch->char_specials.saved.golem_stored_size = atoi(line);
         else if (!strcmp(tag, "GolH"))
@@ -2888,6 +2891,8 @@ void save_char(struct char_data *ch, int mode)
     BUFFER_WRITE("DRMd: %d\n", GET_DR_MOD(ch));
 
   /* Golem crafting info */
+  if (ch->char_specials.saved.golem_appearance > 0)
+    BUFFER_WRITE("GolA: %d\n", ch->char_specials.saved.golem_appearance);
   if (ch->char_specials.saved.golem_stored_type != GOLEM_TYPE_NONE)
   {
     BUFFER_WRITE("GolT: %d\n", ch->char_specials.saved.golem_stored_type);

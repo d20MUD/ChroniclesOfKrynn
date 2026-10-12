@@ -211,6 +211,8 @@ struct zone_data
   struct reset_com *cmd; /* command table for reset	          */
 
   int show_weather;
+  int climate; /* Overall zone climate; ZONE_CLIMATE_*, not weather state. */
+  int terrain; /* Dominant zone terrain; ZONE_TERRAIN_*, not room sector. */
 
   int region;
   int city;

@@ -42,11 +42,12 @@ Permanent class companions earn training XP instead of raising their
 creature level through XP. Their usual class-based level rules still apply.
 Combat companions must fight the rewarded enemy. Ridden mounts and nearby
 familiars can also earn training XP by supporting their owner.
-Player kills, charmed enemies, bought pets and one-XP rewards do not train
-pets. Temporary summons and short-lived eidolon reflections cannot train.
+Killing players, charmed enemies or bought pets does not train pets.
+One-XP rewards do not provide pet XP either. Temporary summons and short-lived eidolon reflections cannot train.
 
 Training ranks are capped at 10. Each rank costs 2,000 times the next rank
-in training XP and grants one skill point. Spend these with PETS TRAIN.
+in training XP and grants one skill point. Rank 1 costs 2,000 XP; rank 2
+costs another 4,000 XP. Spend these points with PETS TRAIN; no gold is needed.
 Each purchase costs one pet skill point, with at most five in each skill:
 
   health   +20 maximum hit points (does not heal current wounds)
@@ -71,3 +72,10 @@ INSERT IGNORE INTO help_keywords(help_tag, keyword) VALUES
 ('PETPROGRESSION', 'revive pet'), ('PETPROGRESSION', 'fallen pets'),
 ('PETPROGRESSION', 'pet training'), ('PETPROGRESSION', 'companion training'),
 ('PETPROGRESSION', 'pet skills'), ('PETPROGRESSION', 'discard pet');
+
+-- Make the feature discoverable from the existing command help, without replacing it.
+UPDATE help_entries
+SET entry = CONCAT(entry, CHAR(13), CHAR(10), CHAR(13), CHAR(10),
+  'For pet XP, companion training, stored gear, revival and discard, see help petprogression.',
+  CHAR(13), CHAR(10))
+WHERE tag = 'PETS' AND LOCATE('help petprogression', entry) = 0;

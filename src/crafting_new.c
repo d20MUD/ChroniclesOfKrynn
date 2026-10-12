@@ -6566,10 +6566,109 @@ void gain_craft_exp(struct char_data *ch, int exp, int abil, bool verbose)
     /* Award 1 crafting talent point per crafting/harvesting skill level up */
     gain_talent_point(ch, 1);
   }
-  send_to_char(ch, "You have %d experience points in the '%s' skill and need %d more for rank %d.\r\n", 
-    GET_CRAFT_SKILL_EXP(ch, abil), ability_names[abil], 
-    craft_skill_level_exp(ch, get_craft_skill_value(ch, abil) + 1) - GET_CRAFT_SKILL_EXP(ch, abil),
+  send_to_char(ch, "%c%s: XP %d | TNL %d (next rank: %d).\r\n",
+    toupper((unsigned char)ability_names[abil][0]), ability_names[abil] + 1,
+    GET_CRAFT_SKILL_EXP(ch, abil),
+    MAX(0, craft_skill_level_exp(ch, get_craft_skill_value(ch, abil) + 1) - GET_CRAFT_SKILL_EXP(ch, abil)),
     get_craft_skill_value(ch, abil) + 1);
+}
+
+#define MAX_REFINING_BATCHES 20
+
+static int available_refining_batches(struct char_data *ch, int recipe)
+{
+  int i, batches = MAX_REFINING_BATCHES;
+  for (i = 0; i < 3; i++)
+  {
+    int material = refining_recipes[recipe].materials[i][0];
+    int needed = refining_recipes[recipe].materials[i][1];
+    int available = 0;
+    if (!material || needed <= 0)
+      continue;
+    if (recipe == REFINE_RECIPE_DRAGONMETAL && i == 1)
+    {
+      int j;
+      /* A batch uses one eligible metal type, just as ordinary refining does. */
+      for (j = CRAFT_MAT_COPPER; j < NUM_CRAFT_MATS; j++)
+        if (craft_group_by_material(j) == CRAFT_GROUP_HARD_METALS && material_grade(j) >= 3)
+          available = MAX(available, MAX(0, GET_CRAFT_MAT(ch, j)) / needed);
+    }
+    else
+      available = MAX(0, GET_CRAFT_MAT(ch, material)) / needed;
+    batches = MIN(batches, available);
+  }
+  return batches;
+}
+
+static bool parse_refining_batch(struct char_data *ch, const char *arguments, bool smelting,
+                                 int *recipe, int *quantity)
+{
+  char material[MAX_INPUT_LENGTH], *last, *end;
+  int i, matched = 0;
+  bool all = FALSE;
+  long requested = 1;
+
+  while (isspace((unsigned char)*arguments)) arguments++;
+  snprintf(material, sizeof(material), "%s", arguments);
+  end = material + strlen(material);
+  while (end > material && isspace((unsigned char)end[-1])) *--end = '\0';
+  last = end;
+  while (last > material && !isspace((unsigned char)last[-1])) last--;
+  if (!str_cmp(last, "all") || isdigit((unsigned char)*last) || *last == '-' || *last == '+')
+  {
+    all = !str_cmp(last, "all");
+    if (!all)
+    {
+      char *number_end;
+      requested = strtol(last, &number_end, 10);
+      if (*number_end || requested < 1 || requested > MAX_REFINING_BATCHES)
+      {
+        send_to_char(ch, "Choose a batch quantity from 1 to %d, or 'all'.\r\n", MAX_REFINING_BATCHES);
+        return FALSE;
+      }
+    }
+    *last = '\0';
+    end = last;
+    while (end > material && isspace((unsigned char)end[-1])) *--end = '\0';
+  }
+  if (*material == '"' && end > material + 1 && end[-1] == '"')
+  {
+    end[-1] = '\0';
+    memmove(material, material + 1, strlen(material));
+  }
+  if (!*material)
+  {
+    send_to_char(ch, "Usage: refine %s <material> [1-%d|all].\r\n", smelting ? "smelt" : "batch", MAX_REFINING_BATCHES);
+    return FALSE;
+  }
+  for (i = 1; i < NUM_REFINING_RECIPES; i++)
+  {
+    if (smelting && refining_recipes[i].crafting_station_flag != ITEM_CRAFTING_SMELTER)
+      continue;
+    if (!str_cmp(material, crafting_materials[refining_recipes[i].result[0]]))
+    {
+      *recipe = i;
+      matched = 1;
+      break;
+    }
+    if (is_abbrev(material, crafting_materials[refining_recipes[i].result[0]]))
+    {
+      *recipe = i;
+      matched++;
+    }
+  }
+  if (matched != 1)
+  {
+    send_to_char(ch, "That is not a unique %s recipe. Specify its material name.\r\n", smelting ? "smelting" : "refining");
+    return FALSE;
+  }
+  *quantity = all ? available_refining_batches(ch, *recipe) : (int)requested;
+  if (*quantity < 1)
+  {
+    send_to_char(ch, "You do not have enough materials for even one batch.\r\n");
+    return FALSE;
+  }
+  return TRUE;
 }
 
 void show_refine_noargs(struct char_data *ch)
@@ -6579,7 +6678,9 @@ void show_refine_noargs(struct char_data *ch)
   send_to_char(ch, "To refine you need to add materials and have the appropriate refining "
                    "equipment in the same room as you.\r\n"
                    "You need to specify one of the following command parameters:\r\n"
-                   "- refine add (refine type) [quantity] - Add materials (optional quantity for batches)\r\n"
+                   "- refine add <material> [1-20|all] - Prepare a refining batch\r\n"
+                   "- refine batch <material> [1-20|all] - Prepare and start any refining recipe\r\n"
+                   "- refine smelt <material> [1-20|all] - Prepare and start smelting in one command\r\n"
                    "- refine remove - Cancel your refining project\r\n"
                    "- refine show - Display your current refining project\r\n"
                    "- refine begin - Start the refining process\r\n"
@@ -6604,12 +6705,16 @@ void show_refine_noargs(struct char_data *ch)
 
 void newcraft_refine(struct char_data *ch, const char *argument)
 {
-  char arg1[50], arg2[50], arg3[50], output[200];
+  char arg1[50], output[200];
+  const char *refine_arguments;
+  bool smelting, auto_start;
   int i = 0, recipe = 0, material = 0, batch_quantity = 1;
   struct obj_data *obj;
   bool fail = FALSE, station = FALSE;
 
-  three_arguments(argument, arg1, sizeof(arg1), arg2, sizeof(arg2), arg3, sizeof(arg3));
+  refine_arguments = one_argument(argument, arg1, sizeof(arg1));
+  smelting = strlen(arg1) >= 2 && is_abbrev(arg1, "smelt");
+  auto_start = smelting || (strlen(arg1) >= 2 && is_abbrev(arg1, "batch"));
 
   if (!*arg1)
   {
@@ -6617,11 +6722,11 @@ void newcraft_refine(struct char_data *ch, const char *argument)
     return;
   }
 
-  if (is_abbrev(arg1, "add"))
+  if (is_abbrev(arg1, "add") || auto_start)
   {
-    if (!*arg2)
+    if (GET_CRAFT(ch).craft_duration > 0)
     {
-      show_refine_noargs(ch);
+      send_to_char(ch, "Finish or cancel your current crafting task before starting another batch.\r\n");
       return;
     }
 
@@ -6634,37 +6739,8 @@ void newcraft_refine(struct char_data *ch, const char *argument)
       return;
     }
 
-    for (i = 1; i < NUM_REFINING_RECIPES; i++)
-    {
-      if (is_abbrev(arg2, crafting_materials[refining_recipes[i].result[0]]))
-      {
-        break;
-      }
-    }
-
-    if (i >= NUM_REFINING_RECIPES)
-    {
-      send_to_char(ch, "That is not a valid refining recipe.\r\n");
+    if (!parse_refining_batch(ch, refine_arguments, smelting, &recipe, &batch_quantity))
       return;
-    }
-
-    recipe = i;
-
-    /* Check if a quantity was specified */
-    if (*arg3)
-    {
-      batch_quantity = atoi(arg3);
-      if (batch_quantity < 1)
-      {
-        send_to_char(ch, "You must refine at least 1 batch.\r\n");
-        return;
-      }
-      if (batch_quantity > 20)
-      {
-        send_to_char(ch, "You cannot refine more than 20 batches at once.\r\n");
-        return;
-      }
-    }
 
     for (i = 0; i < 3; i++)
     {
@@ -6789,6 +6865,12 @@ void newcraft_refine(struct char_data *ch, const char *argument)
     GET_CRAFT(ch).refining_result[1] = refining_recipes[recipe].result[1] * batch_quantity;
     GET_CRAFT(ch).refining_batch_quantity = batch_quantity;
 
+    if (auto_start)
+    {
+      newcraft_refine(ch, "begin");
+      return;
+    }
+
     if (batch_quantity == 1)
     {
       send_to_char(ch, "You are ready to begin refining your %s. Type 'refine begin' to execute.\r\n",
@@ -6839,9 +6921,9 @@ void newcraft_refine(struct char_data *ch, const char *argument)
       {
         send_to_char(ch, "-- %d/%d %s unit%s allocated.\r\n",
                      GET_CRAFT(ch).refining_materials[i][1],
-                     refining_recipes[GET_CRAFT(ch).crafting_recipe].materials[i][1],
+                     refining_recipes[GET_CRAFT(ch).crafting_recipe].materials[i][1] * MAX(1, GET_CRAFT(ch).refining_batch_quantity),
                      crafting_materials[GET_CRAFT(ch).refining_materials[i][0]],
-                     GET_CRAFT(ch).refining_materials[i][1] > 1 ? "" : "s");
+                     GET_CRAFT(ch).refining_materials[i][1] > 1 ? "s" : "");
       }
     }
 
@@ -6916,21 +6998,33 @@ void newcraft_refine(struct char_data *ch, const char *argument)
     GET_CRAFT(ch).skill_type = refining_recipes[recipe].skill;
     GET_CRAFT(ch).dc = refining_recipes[recipe].dc;
 
-    // Check if the player is in a room with the required crafting station
-    int skill = GET_CRAFT(ch).skill_type;
-    if (!has_crafting_station_in_room(ch, skill))
+    /* Refining needs the recipe's station, including smelters for mining recipes. */
+    station = FALSE;
+    for (obj = world[IN_ROOM(ch)].contents; obj; obj = obj->next_content)
+      if (OBJ_FLAGGED(obj, refining_recipes[recipe].crafting_station_flag))
+      {
+        station = TRUE;
+        break;
+      }
+    if (!station)
     {
-      send_to_char(ch, "You need to be in a room with %s to refine this material.\r\n",
-                   get_crafting_station_name(skill));
+      send_to_char(ch, "You need a %.*s in the room to refine this material.\r\n", 9,
+                   extra_bits[refining_recipes[recipe].crafting_station_flag] + 9);
+      return;
+    }
+    if (GET_CRAFT(ch).craft_duration > 0)
+    {
+      send_to_char(ch, "You are already working on a crafting task.\r\n");
       return;
     }
 
     GET_CRAFT(ch).crafting_method = SCMD_NEWCRAFT_REFINE;
     GET_CRAFT(ch).craft_duration = 10 * GET_CRAFT(ch).refining_result[1];
-    send_to_char(ch, "You begin refining %d unit%s of %s.\r\n",
-                 GET_CRAFT(ch).refining_result[1],
-                 GET_CRAFT(ch).refining_result[1] > 1 ? "s" : "",
-                 crafting_materials[GET_CRAFT(ch).refining_result[0]]);
+    send_to_char(ch, "You begin refining %d batch%s of %s (%d units, %d seconds).\r\n",
+                 MAX(1, GET_CRAFT(ch).refining_batch_quantity),
+                 GET_CRAFT(ch).refining_batch_quantity > 1 ? "es" : "",
+                 crafting_materials[GET_CRAFT(ch).refining_result[0]],
+                 GET_CRAFT(ch).refining_result[1], GET_CRAFT(ch).craft_duration);
     act("$n starts refining.", FALSE, ch, 0, 0, TO_ROOM);
     return;
   }
@@ -6976,7 +7070,7 @@ bool is_refine_ready(struct char_data *ch, bool verbose)
 
   if ((refining_recipes[GET_CRAFT(ch).crafting_recipe].materials[0][1] != 0 &&
        (GET_CRAFT(ch).refining_materials[0][1] <
-        refining_recipes[GET_CRAFT(ch).crafting_recipe].materials[0][1])))
+        refining_recipes[GET_CRAFT(ch).crafting_recipe].materials[0][1] * MAX(1, GET_CRAFT(ch).refining_batch_quantity))))
   {
     if (verbose)
       send_to_char(ch, "You haven't added the primary refining ingredient.\r\n");
@@ -6985,7 +7079,7 @@ bool is_refine_ready(struct char_data *ch, bool verbose)
 
   if ((refining_recipes[GET_CRAFT(ch).crafting_recipe].materials[1][1] != 0 &&
        (GET_CRAFT(ch).refining_materials[1][1] <
-        refining_recipes[GET_CRAFT(ch).crafting_recipe].materials[1][1])))
+        refining_recipes[GET_CRAFT(ch).crafting_recipe].materials[1][1] * MAX(1, GET_CRAFT(ch).refining_batch_quantity))))
   {
     if (verbose)
       send_to_char(ch, "You haven't added the secondary refining ingredient.\r\n");
@@ -6994,7 +7088,7 @@ bool is_refine_ready(struct char_data *ch, bool verbose)
 
   if ((refining_recipes[GET_CRAFT(ch).crafting_recipe].materials[2][1] != 0 &&
        (GET_CRAFT(ch).refining_materials[2][1] <
-        refining_recipes[GET_CRAFT(ch).crafting_recipe].materials[2][1])))
+        refining_recipes[GET_CRAFT(ch).crafting_recipe].materials[2][1] * MAX(1, GET_CRAFT(ch).refining_batch_quantity))))
   {
     if (verbose)
       send_to_char(ch, "You haven't added the tertiary refining ingredient.\r\n");
@@ -11996,6 +12090,56 @@ bool has_golem_follower(struct char_data *ch)
   return false;
 }
 
+/* These IDs are saved in player files; append new appearances rather than reordering. */
+static const char *golem_appearance_materials[] = {
+  "default", "wood", "stone", "iron", "steel", "copper", "bronze", "silver", "gold",
+  "platinum", "mithril", "adamantite", "dragonmetal", "ash wood", "maple wood",
+  "mahogany wood", "valenwood", "ironwood", "bone", "dragonbone", "dragonscale",
+  "clay", "crystal", "obsidian"
+};
+#define NUM_GOLEM_APPEARANCES ((int)(sizeof(golem_appearance_materials) / sizeof(golem_appearance_materials[0])))
+
+static void apply_golem_appearance(struct char_data *golem, int appearance)
+{
+  const char *sizes[] = {"small", "medium", "large", "huge"};
+  char short_desc[160], long_desc[200];
+  const char *new_short, *new_long;
+  int size;
+  mob_rnum rnum;
+
+  if (!golem || appearance < 0 || appearance >= NUM_GOLEM_APPEARANCES)
+    return;
+  rnum = GET_MOB_RNUM(golem);
+  if (!IS_MOB(golem))
+    return;
+  if (appearance == 0)
+  {
+    new_short = mob_proto[rnum].player.short_descr;
+    new_long = mob_proto[rnum].player.long_descr;
+  }
+  else
+  {
+    size = get_golem_size_from_vnum(GET_MOB_VNUM(golem));
+    if (size >= 0 && size < 4)
+      snprintf(short_desc, sizeof(short_desc), "a %s %s golem", sizes[size], golem_appearance_materials[appearance]);
+    else
+      snprintf(short_desc, sizeof(short_desc), "%s %s golem",
+               strchr("aeiou", golem_appearance_materials[appearance][0]) ? "an" : "a",
+               golem_appearance_materials[appearance]);
+    snprintf(long_desc, sizeof(long_desc), "%s%s stands here.\r\n",
+             "A", short_desc + 1);
+    new_short = short_desc;
+    new_long = long_desc;
+  }
+  /* Mobile descriptions can still point directly at their prototype. */
+  if (golem->player.short_descr && golem->player.short_descr != mob_proto[rnum].player.short_descr)
+    free(golem->player.short_descr);
+  if (golem->player.long_descr && golem->player.long_descr != mob_proto[rnum].player.long_descr)
+    free(golem->player.long_descr);
+  golem->player.short_descr = strdup(new_short);
+  golem->player.long_descr = strdup(new_long);
+}
+
 struct char_data *get_active_golem_follower(struct char_data *ch)
 {
   struct follow_type *k;
@@ -12010,6 +12154,38 @@ struct char_data *get_active_golem_follower(struct char_data *ch)
   }
 
   return NULL;
+}
+
+static void set_golem_appearance(struct char_data *ch, const char *material)
+{
+  struct char_data *golem = get_active_golem_follower(ch);
+  int i;
+
+  if (!*material || !str_cmp(material, "list"))
+  {
+    send_to_char(ch, "Usage: craft golem appearance <material|default>\r\nAvailable appearances:");
+    for (i = 0; i < NUM_GOLEM_APPEARANCES; i++)
+      send_to_char(ch, "%s%s", i ? ", " : " ", golem_appearance_materials[i]);
+    send_to_char(ch, ".\r\nThis changes appearance only and costs no materials.\r\n");
+    return;
+  }
+  if (!golem && ch->char_specials.saved.golem_stored_type == GOLEM_TYPE_NONE)
+  {
+    send_to_char(ch, "You need an active or stored golem to change its appearance.\r\n");
+    return;
+  }
+  for (i = 0; i < NUM_GOLEM_APPEARANCES; i++)
+    if (!str_cmp(material, golem_appearance_materials[i]))
+    {
+      ch->char_specials.saved.golem_appearance = i;
+      if (golem)
+        apply_golem_appearance(golem, i);
+      save_char(ch, 0);
+      save_char_pets(ch);
+      send_to_char(ch, "Your golem's appearance is now %s.\r\n", golem_appearance_materials[i]);
+      return;
+    }
+  send_to_char(ch, "Unknown appearance. Use 'craft golem appearance list' for the fixed material choices.\r\n");
 }
 
 static void battlefield_retrieve_active_golem(struct char_data *ch, struct char_data *golem)
@@ -12196,6 +12372,7 @@ void craft_golem_complete(struct char_data *ch)
     act("$n successfully constructs a golem!", FALSE, ch, 0, 0, TO_ROOM);
     act("$N springs to life and begins following $n!", FALSE, ch, 0, golem, TO_ROOM);
 
+    apply_golem_appearance(golem, ch->char_specials.saved.golem_appearance);
     load_mtrigger(golem);
     add_follower(golem, ch);
 
@@ -12315,6 +12492,7 @@ void recall_golem(struct char_data *ch)
                golem_type_names[ch->char_specials.saved.golem_stored_type]);
   act("$N materializes before $n in a flash of arcane energy!", FALSE, ch, 0, golem, TO_ROOM);
   
+  apply_golem_appearance(golem, ch->char_specials.saved.golem_appearance);
   load_mtrigger(golem);
   add_follower(golem, ch);
 
@@ -12565,6 +12743,7 @@ void upgrade_golem(struct char_data *ch, struct char_data *golem, int new_size)
   SET_BIT_AR(MOB_FLAGS(golem), MOB_GOLEM);
   GET_REAL_RACE(golem) = RACE_TYPE_CONSTRUCT;
 
+  apply_golem_appearance(golem, ch->char_specials.saved.golem_appearance);
   load_mtrigger(golem);
   add_follower(golem, ch);
 
@@ -12792,6 +12971,8 @@ void transfer_golem(struct char_data *ch, struct char_data *golem, struct char_d
   if (!GROUP(golem) && GROUP(target) && GROUP_LEADER(GROUP(target)) == target)
     join_group(golem, GROUP(target));
 
+  target->char_specials.saved.golem_appearance = ch->char_specials.saved.golem_appearance;
+  ch->char_specials.saved.golem_appearance = 0;
   ch->char_specials.saved.golem_stored_type = GOLEM_TYPE_NONE;
   ch->char_specials.saved.golem_stored_size = GOLEM_SIZE_SMALL;
   ch->char_specials.saved.golem_stored_hp = 0;
@@ -13092,6 +13273,7 @@ void newcraft_golem(struct char_data *ch, const char *argument)
   {
     send_to_char(ch, "Golem crafting commands:\r\n");
     send_to_char(ch, "  craft golem type (wood|stone|iron) - Set golem type\r\n");
+    send_to_char(ch, "  craft golem appearance <material|default> - Set a cosmetic material (list shows choices)\r\n");
     send_to_char(ch, "  craft golem size (small|medium|large|huge) - Set golem size\r\n");
     send_to_char(ch, "  craft golem show - Display current golem project\r\n");
     send_to_char(ch, "  craft golem reset - Reset golem project\r\n");
@@ -13116,7 +13298,11 @@ void newcraft_golem(struct char_data *ch, const char *argument)
     return;
   }
 
-  if (is_abbrev(arg1, "type"))
+  if (is_abbrev(arg1, "appearance"))
+  {
+    set_golem_appearance(ch, arg2);
+  }
+  else if (is_abbrev(arg1, "type"))
   {
     set_golem_type(ch, arg2);
   }

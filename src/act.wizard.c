@@ -3543,6 +3543,8 @@ static size_t print_zone_to_buf(char *bufptr, size_t left, zone_rnum zone, int l
                     "       Zone stats:\r\n"
                     "       ---------------\r\n"
                     "         Flags:       %s\r\n"
+                    "         Climate:     %s\r\n"
+                    "         Zone Terrain: %s\r\n"
                     "         RealNum:     %2d\r\n"
                     "         Min Lev:     %2d\r\n"
                     "         Max Lev:     %2d\r\n"
@@ -3553,7 +3555,8 @@ static size_t print_zone_to_buf(char *bufptr, size_t left, zone_rnum zone, int l
                     "         Triggers:    %2d\r\n"
                     "         Quests:      %2d\r\n"
                     "         Avg MOB Lvl:  %2.3f\r\n",
-                    buf, zone, zone_table[zone].min_level, zone_table[zone].max_level, j, k, l, m,
+                    buf, zone_climate_name(zone_table[zone].climate), zone_terrain_name(zone_table[zone].terrain),
+                    zone, zone_table[zone].min_level, zone_table[zone].max_level, j, k, l, m,
                     n, o, avglvl);
 
     return tmp;

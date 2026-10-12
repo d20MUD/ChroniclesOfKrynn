@@ -32,6 +32,26 @@
 #define CHECK_TABLE_SIZE(tbl, exp_sz)                                                              \
   _Static_assert(sizeof((tbl)) / sizeof((tbl)[0]) == (exp_sz), #tbl " wrong number entries")
 
+const char *zone_climates[] = {
+    "Unspecified", "Polar", "Subarctic", "Temperate", "Subtropical", "Tropical", "Arid", "Alpine"
+};
+CHECK_TABLE_SIZE(zone_climates, NUM_ZONE_CLIMATES);
+const char *zone_terrains[] = {
+    "Unspecified", "Forest", "Plains", "Desert", "Hills", "Mountains", "Swamp", "Jungle",
+    "Tundra", "Coastal", "Ocean", "Underground", "Urban", "Mixed"
+};
+CHECK_TABLE_SIZE(zone_terrains, NUM_ZONE_TERRAINS);
+
+const char *zone_climate_name(int climate)
+{
+  return zone_climates[climate >= 0 && climate < NUM_ZONE_CLIMATES ? climate : ZONE_CLIMATE_UNSPECIFIED];
+}
+
+const char *zone_terrain_name(int terrain)
+{
+  return zone_terrains[terrain >= 0 && terrain < NUM_ZONE_TERRAINS ? terrain : ZONE_TERRAIN_UNSPECIFIED];
+}
+
 /** Current LuminariMUD version - CANONICAL SOURCE for display version string.
  * Version is also defined in:
  *   - src/structs.h (_LUMINARIMUD macro for code compatibility)

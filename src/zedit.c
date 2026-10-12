@@ -271,6 +271,8 @@ static void zedit_setup(struct descriptor_data *d, int room_num)
   zone->region = zone_table[OLC_ZNUM(d)].region;
   zone->faction = zone_table[OLC_ZNUM(d)].faction;
   zone->city = zone_table[OLC_ZNUM(d)].city;
+  zone->climate = zone_table[OLC_ZNUM(d)].climate;
+  zone->terrain = zone_table[OLC_ZNUM(d)].terrain;
   /* The remaining fields are used as a 'has been modified' flag */
   zone->number = 0; /* Header information has changed.	*/
   zone->age = 0;    /* The commands have changed.		*/
@@ -431,6 +433,8 @@ static void zedit_save_internally(struct descriptor_data *d)
     zone_table[OLC_ZNUM(d)].region = OLC_ZONE(d)->region;
     zone_table[OLC_ZNUM(d)].faction = OLC_ZONE(d)->faction;
     zone_table[OLC_ZNUM(d)].city = OLC_ZONE(d)->city;
+    zone_table[OLC_ZNUM(d)].climate = OLC_ZONE(d)->climate;
+    zone_table[OLC_ZNUM(d)].terrain = OLC_ZONE(d)->terrain;
     for (i = 0; i < ZN_ARRAY_MAX; i++)
       zone_table[OLC_ZNUM(d)].zone_flags[(i)] = OLC_ZONE(d)->zone_flags[(i)];
   }
@@ -499,6 +503,35 @@ bool zedit_get_levels(struct descriptor_data *d, char *buf)
 /* Menu functions */
 
 /* the main menu */
+static void zedit_disp_environment(struct descriptor_data *d, bool climate)
+{
+  int i, count = climate ? NUM_ZONE_CLIMATES : NUM_ZONE_TERRAINS;
+  for (i = 0; i < count; i++)
+    write_to_output(d, "%2d) %s\r\n", i, climate ? zone_climate_name(i) : zone_terrain_name(i));
+  write_to_output(d, "Choose the zone's overall %s (0-%d): ", climate ? "climate" : "terrain", count - 1);
+  OLC_MODE(d) = climate ? ZEDIT_CLIMATE : ZEDIT_TERRAIN;
+}
+
+static void zedit_set_environment(struct descriptor_data *d, const char *arg, bool climate)
+{
+  char *end;
+  long choice = strtol(arg, &end, 10);
+  int count = climate ? NUM_ZONE_CLIMATES : NUM_ZONE_TERRAINS;
+  bool has_number = end != arg;
+  while (isspace((unsigned char)*end)) end++;
+  if (!has_number || *end || choice < 0 || choice >= count)
+  {
+    write_to_output(d, "Invalid choice. Enter a number from 0 to %d: ", count - 1);
+    return;
+  }
+  if (climate)
+    OLC_ZONE(d)->climate = (int)choice;
+  else
+    OLC_ZONE(d)->terrain = (int)choice;
+  OLC_ZONE(d)->number = 1;
+  zedit_disp_menu(d);
+}
+
 static void zedit_disp_menu(struct descriptor_data *d)
 {
   int subcmd = 0, counter = 0, maxcount;
@@ -529,6 +562,8 @@ static void zedit_disp_menu(struct descriptor_data *d)
       "%s2%s) Region         : %s%s\r\n"
       "%s3%s) City           : %s%s\r\n"
       "%s4%s) Faction        : %s%s\r\n"
+      "%s5%s) Climate        : %s%s\r\n"
+      "%s6%s) Zone Terrain   : %s%s\r\n"
       "%sA%s) Re-Stat all zone mobiles (unimplemented)\r\n"
       "[Command list]\r\n",
 
@@ -543,7 +578,9 @@ static void zedit_disp_menu(struct descriptor_data *d)
           : "Never reset",
       grn, nrm, cyn, buf1, grn, nrm, levels_set ? cyn : yel, lev_string, grn, nrm, yel,
       regions[OLC_ZONE(d)->region], grn, nrm, yel, cities[OLC_ZONE(d)->city], grn, nrm, yel,
-      OLC_ZONE(d)->faction == 0 ? "None" : clan_list[OLC_ZONE(d)->faction - 1].clan_name, grn, nrm);
+      OLC_ZONE(d)->faction == 0 ? "None" : clan_list[OLC_ZONE(d)->faction - 1].clan_name,
+      grn, nrm, yel, zone_climate_name(OLC_ZONE(d)->climate),
+      grn, nrm, yel, zone_terrain_name(OLC_ZONE(d)->terrain), grn, nrm);
 
   /* Print the commands for this room into display buffer. */
   while (MYCMD.command != 'S')
@@ -1106,6 +1143,12 @@ void zedit_parse(struct descriptor_data *d, char *arg)
       /* Edit zone builders. */
       write_to_output(d, "Enter new builders list : ");
       OLC_MODE(d) = ZEDIT_ZONE_BUILDERS;
+      break;
+    case '5':
+      zedit_disp_environment(d, TRUE);
+      break;
+    case '6':
+      zedit_disp_environment(d, FALSE);
       break;
     case '2':
       // Zone Region
@@ -1858,6 +1901,13 @@ void zedit_parse(struct descriptor_data *d, char *arg)
       OLC_ZONE(d)->bot = LIMIT(atoi(arg), zone_table[OLC_ZNUM(d) - 1].top + 1, OLC_ZONE(d)->top);
     OLC_ZONE(d)->number = 1;
     zedit_disp_menu(d);
+    break;
+
+  case ZEDIT_CLIMATE:
+    zedit_set_environment(d, arg, TRUE);
+    break;
+  case ZEDIT_TERRAIN:
+    zedit_set_environment(d, arg, FALSE);
     break;
 
   case ZEDIT_REGIONS:

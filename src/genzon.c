@@ -258,6 +258,8 @@ zone_rnum create_new_zone(zone_vnum vzone_num, room_vnum bottom, room_vnum top, 
   zone->min_level = -1;
   zone->max_level = -1;
   zone->show_weather = 1;
+  zone->climate = ZONE_CLIMATE_UNSPECIFIED;
+  zone->terrain = ZONE_TERRAIN_UNSPECIFIED;
 
   for (i = 0; i < ZN_ARRAY_MAX; i++)
     zone->zone_flags[i] = 0;
@@ -430,8 +432,10 @@ int save_zone(zone_rnum zone_num)
   for (i = 0; i < ZN_ARRAY_MAX; i++)
     flag_tot += zone_table[zone_num].zone_flags[(i)];
 
-  /* If zone flags or levels aren't set, there is no reason to save them! */
-  if (flag_tot == 0 && zone_table[zone_num].min_level == -1 && zone_table[zone_num].max_level == -1)
+  /* Compact legacy headers are sufficient only without flags, levels or environment. */
+  if (flag_tot == 0 && zone_table[zone_num].min_level == -1 && zone_table[zone_num].max_level == -1 &&
+      zone_table[zone_num].climate == ZONE_CLIMATE_UNSPECIFIED &&
+      zone_table[zone_num].terrain == ZONE_TERRAIN_UNSPECIFIED)
   {
     // Print zone header to file.
     fprintf(zfile,
@@ -461,7 +465,7 @@ int save_zone(zone_rnum zone_num)
             "#%d\n"
             "%s~\n"
             "%s~\n"
-            "%d %d %d %d %s %s %s %s %d %d %d %d %d %d\n", /* New tbaMUD data line */
+            "%d %d %d %d %s %s %s %s %d %d %d %d %d %d %d %d\n", /* Extended zone header */
             zone_table[zone_num].number,
             (zone_table[zone_num].builders && *zone_table[zone_num].builders)
                 ? zone_table[zone_num].builders
@@ -473,7 +477,8 @@ int save_zone(zone_rnum zone_num)
             zone_table[zone_num].reset_mode, zbuf1, zbuf2, zbuf3, zbuf4,
             zone_table[zone_num].min_level, zone_table[zone_num].max_level,
             zone_table[zone_num].show_weather, zone_table[zone_num].region,
-            zone_table[zone_num].faction, zone_table[zone_num].city);
+            zone_table[zone_num].faction, zone_table[zone_num].city,
+            zone_table[zone_num].climate, zone_table[zone_num].terrain);
   }
 
   /* Handy Quick Reference Chart for Zone Values.

@@ -4202,6 +4202,20 @@ const char *parse_object(FILE *obj_f, int nr)
 #define Z zone_table[zone]
 
 /* load the zone table and command tables */
+/* Optional final header fields preserve compatibility with older zone files. */
+static void parse_zone_environment(struct zone_data *zone, const char *header)
+{
+  int climate = ZONE_CLIMATE_UNSPECIFIED, terrain = ZONE_TERRAIN_UNSPECIFIED;
+  zone->climate = ZONE_CLIMATE_UNSPECIFIED;
+  zone->terrain = ZONE_TERRAIN_UNSPECIFIED;
+  sscanf(header, "%*d %*d %*d %*d %*s %*s %*s %*s %*d %*d %*d %*d %*d %*d %d %d",
+         &climate, &terrain);
+  if (climate >= 0 && climate < NUM_ZONE_CLIMATES)
+    zone->climate = climate;
+  if (terrain >= 0 && terrain < NUM_ZONE_TERRAINS)
+    zone->terrain = terrain;
+}
+
 static void load_zones(FILE *fl, char *zonename)
 {
   static zone_rnum zone = 0;
@@ -4328,6 +4342,8 @@ static void load_zones(FILE *fl, char *zonename)
     Z.zone_flags[2] = asciiflag_conv(zbuf3);
     Z.zone_flags[3] = asciiflag_conv(zbuf4);
   }
+
+  parse_zone_environment(&Z, buf);
 
   if (Z.bot > Z.top)
   {

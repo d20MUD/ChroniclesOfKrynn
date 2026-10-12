@@ -22,13 +22,18 @@ struct player_special_data dummy_mob;
 void basic_mud_log(const char *fmt, ...) { assert(0); }
 const char *ability_names[NUM_ABILITIES + 1];
 static int rank, expected_talent;
+static char output[8192];
+int MAX(int a, int b) { return a > b ? a : b; }
 int get_talent_rank(struct char_data *ch, int talent) {
   assert(talent == expected_talent); return rank;
 }
 int get_craft_skill_value(struct char_data *ch, int skill) { return 5; }
 int craft_skill_level_exp(struct char_data *ch, int level) { return 21000; }
 void gain_talent_point(struct char_data *ch, int amount) { assert(0); }
-size_t send_to_char(struct char_data *ch, const char *fmt, ...) { return 0; }
+size_t send_to_char(struct char_data *ch, const char *fmt, ...) {
+  va_list ap; va_start(ap,fmt); int n=vsnprintf(output+strlen(output),sizeof(output)-strlen(output),fmt,ap);
+  va_end(ap); return n;
+}
 '''
 checks = r'''
 int main(void) {
@@ -37,15 +42,22 @@ int main(void) {
     ABILITY_HARVEST_FORESTRY, ABILITY_HARVEST_GATHERING, ABILITY_HARVEST_BUTCHERING};
   int talents[] = {TALENT_INSIGHTFUL_MINING, TALENT_INSIGHTFUL_HUNTING,
     TALENT_INSIGHTFUL_FORESTRY, TALENT_INSIGHTFUL_GATHERING, TALENT_INSIGHTFUL_BUTCHERING};
+  const char *names[] = {"mining", "hunting", "forestry", "gathering", "butchering"};
   int i;
   ch.player_specials = &ps;
   for (i = 0; i < 5; i++) {
+    ability_names[skills[i]] = names[i];
     expected_talent = talents[i];
     for (rank = 0; rank <= 5; rank++) {
       assert(get_insightful_talent_bonus(&ch, skills[i]) == rank * 20);
       ps.saved.ability_exp[skills[i]] = 0;
+      output[0] = 0;
       gain_craft_exp(&ch, 70, skills[i], FALSE);
       assert(ps.saved.ability_exp[skills[i]] == 70 + 14 * rank);
+      char expected[128];
+      snprintf(expected,sizeof(expected),"XP %d | TNL %d (next rank: 6).",70+14*rank,21000-(70+14*rank));
+      assert(strstr(output,expected));
+      assert(output[0]==toupper((unsigned char)names[i][0]));
     }
   }
   expected_talent = TALENT_INSIGHTFUL_MINING; rank = 1;
@@ -68,4 +80,4 @@ with tempfile.TemporaryDirectory(prefix='insightful-harvesting-') as tmp:
                     '-Wno-unused-parameter', '-I' + str(root / 'src'),
                     str(path), '-o', str(binary)], check=True)
     subprocess.run([str(binary)], check=True)
-print('Insightful harvesting: all five skills/ranks, XP awards, bonus stacking, and crafting rate passed.')
+print('Insightful harvesting: all five skills/ranks, XP awards, bonus stacking, crafting rate, and current XP/TNL feedback passed.')
