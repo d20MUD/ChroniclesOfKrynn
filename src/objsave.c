@@ -66,7 +66,7 @@ static int Crash_save_pet(struct obj_data *obj, struct char_data *ch, struct cha
                           long int pet_idnum, int location);
 int objsave_save_obj_record_db_pet(struct obj_data *obj, struct char_data *ch,
                                    struct char_data *owner, long int pet_idnum, int locate);
-void pet_load_objs(struct char_data *ch, struct char_data *owner, long int pet_idnum);
+bool pet_load_objs(struct char_data *ch, struct char_data *owner, long int pet_idnum);
 obj_save_data *objsave_parse_objects_db_pet(char *name, long int pet_idnum);
 int objsave_save_obj_record_db_sheath(struct obj_data *obj, struct char_data *ch,
                                       long int sheath_idnum, int sheath_slot);
@@ -1123,8 +1123,9 @@ static int Crash_save_pet(struct obj_data *obj, struct char_data *ch, struct cha
 
   if (obj)
   {
-    Crash_save_pet(obj->next_content, ch, owner, pet_idnum, location);
-    Crash_save_pet(obj->contains, ch, owner, pet_idnum, MIN(0, location) - 1);
+    if (!Crash_save_pet(obj->next_content, ch, owner, pet_idnum, location) ||
+        !Crash_save_pet(obj->contains, ch, owner, pet_idnum, MIN(0, location) - 1))
+      return FALSE;
 
     /* save a single object to file */
     result = objsave_save_obj_record_db_pet(obj, ch, owner, pet_idnum, location);
@@ -1226,7 +1227,7 @@ static void Crash_calculate_rent(struct obj_data *obj, int *cost)
   }
 }
 
-void pet_save_objs(struct char_data *ch, struct char_data *owner, long int pet_idnum)
+bool pet_save_objs(struct char_data *ch, struct char_data *owner, long int pet_idnum)
 {
   int j = 0;
 
@@ -1236,7 +1237,7 @@ void pet_save_objs(struct char_data *ch, struct char_data *owner, long int pet_i
       /* recursive write-to-file function (like bags) */
       if (!Crash_save_pet(GET_EQ(ch, j), ch, owner, pet_idnum, j + 1))
       {
-        return;
+        return FALSE;
       }
       /* makes sure containers have proper weight for carrying objects with weight value */
       // Crash_restore_weight(GET_EQ(ch, j));
@@ -1245,8 +1246,9 @@ void pet_save_objs(struct char_data *ch, struct char_data *owner, long int pet_i
   /* inventory: recursive write-to-file function (like bags) */
   if (!Crash_save_pet(ch->carrying, ch, owner, pet_idnum, 0))
   {
-    return;
+    return FALSE;
   }
+  return TRUE;
 }
 
 void Crash_crashsave(struct char_data *ch)
@@ -3423,10 +3425,24 @@ int objsave_save_obj_record_db_pet(struct obj_data *obj, struct char_data *ch,
 #undef TEST_OBJS
 #undef TEST_OBJN
 
-void pet_load_objs(struct char_data *ch, struct char_data *owner, long int pet_idnum)
+bool pet_load_objs(struct char_data *ch, struct char_data *owner, long int pet_idnum)
 {
   obj_save_data *loaded, *current;
-  int num_objs = 0, i = 0;
+  int num_objs = 0, i = 0, expected = 0, actual = 0;
+  char query[512], *escaped;
+  MYSQL_RES *result;
+  MYSQL_ROW row;
+
+  escaped = mysql_escape_string_alloc(conn, GET_NAME(owner));
+  if (!escaped)
+    return FALSE;
+  snprintf(query, sizeof(query), "SELECT COUNT(*) FROM pet_save_objs WHERE owner_name='%s' AND pet_idnum=%ld", escaped, pet_idnum);
+  free(escaped);
+  if (mysql_query(conn, query) || !(result = mysql_store_result(conn)))
+    return FALSE;
+  row = mysql_fetch_row(result);
+  expected = row ? atoi(row[0]) : 0;
+  mysql_free_result(result);
   struct obj_data *cont_row[MAX_BAG_ROWS];
 
   for (i = 0; i < MAX_BAG_ROWS; i++)
@@ -3434,10 +3450,21 @@ void pet_load_objs(struct char_data *ch, struct char_data *owner, long int pet_i
 
   loaded = objsave_parse_objects_db_pet(GET_NAME(owner), pet_idnum);
 
-  if (loaded == NULL)
+  for (current = loaded; current; current = current->next)
+    actual++;
+  if (actual != expected)
   {
-    return;
+    while (loaded)
+    {
+      current = loaded;
+      loaded = loaded->next;
+      extract_obj(current->obj);
+      free(current);
+    }
+    return FALSE;
   }
+  if (!loaded)
+    return TRUE;
 
   for (current = loaded; current != NULL; current = current->next)
   {
@@ -3451,6 +3478,7 @@ void pet_load_objs(struct char_data *ch, struct char_data *owner, long int pet_i
     loaded = loaded->next;
     free(current);
   }
+  return TRUE;
 }
 
 
@@ -3476,7 +3504,7 @@ obj_save_data *objsave_parse_objects_db_pet(char *name, long int pet_idnum)
            "FROM     pet_save_objs "
            "WHERE    owner_name = '%s' "
            "AND      pet_idnum = '%ld' "
-           "ORDER BY creation_date ASC;",
+           "ORDER BY id ASC;",
            name, pet_idnum);
 
   if (mysql_query(conn, buf))
@@ -3489,7 +3517,7 @@ obj_save_data *objsave_parse_objects_db_pet(char *name, long int pet_idnum)
   if (!(result = mysql_store_result(conn)))
   {
     log("SYSERR: Unable to SELECT from pet_save_objs: %s", mysql_error(conn));
-    exit(1);
+    return NULL;
   }
 
   head = NULL;

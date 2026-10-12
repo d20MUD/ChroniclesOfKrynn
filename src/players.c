@@ -14,6 +14,8 @@
 #include "housing.h"
 #include "talents.h"
 #include "utils.h"
+#include "mob_utils.h"
+#include "mudlim.h"
 #include "epic_magic.h"
 #include "db.h"
 #include "handler.h"
@@ -129,8 +131,8 @@ static void load_perk_toggles(FILE *fl, struct char_data *ch);
 
 // external functions
 void autoroll_mob(struct char_data *mob, bool realmode, bool summoned);
-void pet_save_objs(struct char_data *ch, struct char_data *owner, long int pet_idnum);
-void pet_load_objs(struct char_data *ch, struct char_data *owner, long int pet_idnum);
+bool pet_save_objs(struct char_data *ch, struct char_data *owner, long int pet_idnum);
+bool pet_load_objs(struct char_data *ch, struct char_data *owner, long int pet_idnum);
 
 /* New version to build player index for ASCII Player Files. Generate index
  * table for the player file. */
@@ -5725,10 +5727,10 @@ bool valid_pet_name(char *name)
   return true;
 }
 
-void save_char_pets(struct char_data *ch)
+static bool persist_char_pets(struct char_data *ch)
 {
   if (!ch || !ch->desc || IS_NPC(ch))
-    return;
+    return FALSE;
 
   struct follow_type *f = NULL;
   struct char_data *tch = NULL;
@@ -5745,28 +5747,43 @@ void save_char_pets(struct char_data *ch)
   if (!MYSQL_PING_CONN(conn))
   {
     log("SYSERR: %s: Database connection failed for player %s", __func__, GET_NAME(ch));
-    return;
+    return FALSE;
   }
+
+  if (mysql_query(conn, "START TRANSACTION"))
+    return FALSE;
 
   char del_buf[2048];
   /* Delete existing save data.  In the future may just flag these for deletion. */
-  snprintf(del_buf, sizeof(del_buf), "delete from pet_save_objs where owner_name = '%s';",
-           GET_NAME(ch));
+  char *escaped_owner = mysql_escape_string_alloc(conn, GET_NAME(ch));
+  if (!escaped_owner)
+  {
+    mysql_query(conn, "ROLLBACK");
+    return FALSE;
+  }
+  snprintf(del_buf, sizeof(del_buf), "DELETE o FROM pet_save_objs o JOIN pet_data p ON o.pet_idnum = p.pet_data_id WHERE o.owner_name = '%s' AND p.pet_dead = 0;",
+           escaped_owner);
+  free(escaped_owner);
   if (mysql_query(conn, del_buf))
   {
     /* Table might not exist, continue anyway */
-    log("Info: pet_save_objs table might not exist: %s", mysql_error(conn));
+    log("SYSERR: Failed to save pet objects: %s", mysql_error(conn));
+    mysql_query(conn, "ROLLBACK");
+    return FALSE;
   }
 
   end = stpcpy(query, "DELETE FROM pet_data WHERE owner_name=");
   *end++ = '\'';
   end += mysql_real_escape_string(conn, end, chname, strlen(chname));
   *end++ = '\'';
+  end = stpcpy(end, " AND pet_dead=0");
   *end++ = '\0';
 
   if (mysql_query(conn, query))
   {
     log("SYSERR: Unable to DELETE from pet_data: %s", mysql_error(conn));
+    mysql_query(conn, "ROLLBACK");
+    return FALSE;
   }
 
   for (f = ch->followers; f; f = f->next)
@@ -5778,11 +5795,11 @@ void save_char_pets(struct char_data *ch)
       continue;
     snprintf(query2, sizeof(query2),
              "INSERT INTO pet_data (pet_data_id, owner_name, pet_name, pet_sdesc, pet_ldesc, "
-             "pet_ddesc, vnum, level, hp, max_hp, str, con, dex, ac, wis, cha, purge_mob_timer) VALUES(NULL,");
+             "pet_ddesc, vnum, level, hp, max_hp, str, con, dex, ac, wis, cha, purge_mob_timer, purchased_pet, pet_experience, pet_hitroll, pet_damroll, pet_damnodice, pet_damsizedice, intel, pet_dead, pet_kind, pet_training_rank, pet_training_exp, pet_skill_health, pet_skill_attack, pet_skill_damage, pet_skill_armor, pet_skill_saves, pet_save_fort, pet_save_reflex, pet_save_will, pet_save_poison, pet_save_death, pet_gold) VALUES(NULL,");
 
     end2 = stpcpy(query2,
                   "INSERT INTO pet_data (pet_data_id, owner_name, pet_name, pet_sdesc, pet_ldesc, "
-                  "pet_ddesc, vnum, level, hp, max_hp, str, con, dex, ac, wis, cha, purge_mob_timer) VALUES(NULL,");
+                  "pet_ddesc, vnum, level, hp, max_hp, str, con, dex, ac, wis, cha, purge_mob_timer, purchased_pet, pet_experience, pet_hitroll, pet_damroll, pet_damnodice, pet_damsizedice, intel, pet_dead, pet_kind, pet_training_rank, pet_training_exp, pet_skill_health, pet_skill_attack, pet_skill_damage, pet_skill_armor, pet_skill_saves, pet_save_fort, pet_save_reflex, pet_save_will, pet_save_poison, pet_save_death, pet_gold) VALUES(NULL,");
     *end2++ = '\'';
     end2 += mysql_real_escape_string(conn, end2, GET_NAME(ch), strlen(GET_NAME(ch)));
     *end2++ = '\'';
@@ -5852,63 +5869,98 @@ void save_char_pets(struct char_data *ch)
         purge_timer = 0;  /* Ensure non-negative */
     }
 
-    snprintf(query3, sizeof(query3), "'%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%ld')",
+    snprintf(query3, sizeof(query3), "'%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%ld','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d')",
              GET_MOB_VNUM(tch), GET_LEVEL(tch), GET_HIT(tch), GET_REAL_MAX_HIT(tch),
              GET_REAL_STR(tch), GET_REAL_CON(tch), GET_REAL_DEX(tch), GET_REAL_AC(tch),
-             GET_REAL_WIS(tch), GET_REAL_CHA(tch), purge_timer);
+             GET_REAL_WIS(tch), GET_REAL_CHA(tch), purge_timer,
+             tch->mob_specials.purchased_pet, tch->mob_specials.pet_experience,
+             GET_REAL_HITROLL(tch), GET_REAL_DAMROLL(tch), tch->mob_specials.damnodice,
+             tch->mob_specials.damsizedice, GET_REAL_INT(tch),
+             is_persistent_pet(tch) && GET_POS(tch) == POS_DEAD,
+             companion_training_kind(tch), tch->mob_specials.pet_training_rank,
+             tch->mob_specials.pet_training_experience,
+             tch->mob_specials.pet_training_skills[0], tch->mob_specials.pet_training_skills[1],
+             tch->mob_specials.pet_training_skills[2], tch->mob_specials.pet_training_skills[3],
+             tch->mob_specials.pet_training_skills[4],
+             GET_REAL_SAVE(tch, SAVING_FORT), GET_REAL_SAVE(tch, SAVING_REFL),
+             GET_REAL_SAVE(tch, SAVING_WILL), GET_REAL_SAVE(tch, SAVING_POISON), GET_REAL_SAVE(tch, SAVING_DEATH), MAX(0, GET_GOLD(tch)));
     snprintf(finalQuery, sizeof(finalQuery), "%s%s", query2, query3);
     if (mysql_query(conn, finalQuery))
     {
       log("SYSERR: Unable to INSERT INTO pet_data: %s", mysql_error(conn));
       log("QUERY: %s", finalQuery);
-      return;
+      mysql_query(conn, "ROLLBACK");
+      return FALSE;
     }
     long int insert_id = 0;
     insert_id = mysql_insert_id(conn);
 
-    if (insert_id > 0)
+    if (insert_id > 0 && !pet_save_objs(tch, ch, insert_id))
     {
-      pet_save_objs(tch, ch, insert_id);
+      mysql_query(conn, "ROLLBACK");
+      return FALSE;
     }
   }
+  if (mysql_query(conn, "COMMIT"))
+  {
+    mysql_query(conn, "ROLLBACK");
+    return FALSE;
+  }
+  return TRUE;
 }
 
-void load_char_pets(struct char_data *ch)
+void save_char_pets(struct char_data *ch)
+{
+  persist_char_pets(ch);
+}
+
+bool archive_fallen_pet(struct char_data *pet)
+{
+  if (!is_persistent_pet(pet))
+    return FALSE;
+  GET_POS(pet) = POS_DEAD;
+  return persist_char_pets(pet->master);
+}
+
+static struct char_data *load_char_pets_filtered(struct char_data *ch, int revive_id)
 {
   MYSQL_RES *result;
   MYSQL_ROW row;
-  char query[200];
+  char query[1024];
   char buf[MAX_EXTRA_DESC];
   char desc1[MAX_STRING_LENGTH] = {'\0'};
   char desc2[MAX_STRING_LENGTH] = {'\0'};
   char desc3[MAX_STRING_LENGTH] = {'\0'};
   char desc4[MAX_STRING_LENGTH] = {'\0'};
   long int pet_idnum = 0;
-  struct char_data *mob = NULL;
+  struct char_data *mob = NULL, *revived = NULL;
 
   if (!ch)
-    return;
+    return NULL;
 
   if (IN_ROOM(ch) == NOWHERE)
-    return;
+    return NULL;
 
   /* Ensure database connection is active before load operations */
   if (!MYSQL_PING_CONN(conn))
   {
     log("SYSERR: %s: Database connection failed for player %s", __func__, GET_NAME(ch));
-    return;
+    return NULL;
   }
 
   char *escaped_name = mysql_escape_string_alloc(conn, GET_NAME(ch));
   if (!escaped_name)
   {
     log("SYSERR: Failed to escape player name in load_pet_data");
-    return;
+    return NULL;
   }
   snprintf(query, sizeof(query),
            "SELECT vnum, level, hp, max_hp, str, con, dex, ac, intel, wis, cha, pet_name, "
-           "pet_sdesc, pet_ldesc, pet_ddesc, pet_data_id, COALESCE(purge_mob_timer, 0) FROM pet_data WHERE owner_name='%s'",
-           escaped_name);
+           "pet_sdesc, pet_ldesc, pet_ddesc, pet_data_id, COALESCE(purge_mob_timer, 0), purchased_pet, pet_experience, pet_hitroll, pet_damroll, pet_damnodice, pet_damsizedice, pet_kind, pet_training_rank, pet_training_exp, pet_skill_health, pet_skill_attack, pet_skill_damage, pet_skill_armor, pet_skill_saves, pet_save_fort, pet_save_reflex, pet_save_will, pet_save_poison, pet_save_death, pet_gold FROM pet_data WHERE owner_name='%s' AND pet_dead=%d",
+           escaped_name, revive_id > 0 ? 1 : 0);
+  if (revive_id > 0)
+    snprintf(query + strlen(query), sizeof(query) - strlen(query),
+             " AND (purchased_pet=1 OR pet_kind>0) AND pet_data_id=%d", revive_id);
   free(escaped_name);
 
   if (mysql_query(conn, query))
@@ -5919,7 +5971,7 @@ void load_char_pets(struct char_data *ch)
   if (!(result = mysql_store_result(conn)))
   {
     log("SYSERR: Unable to SELECT from pet_data: %s", mysql_error(conn));
-    return;
+    return NULL;
   }
 
   while ((row = mysql_fetch_row(result)))
@@ -5927,6 +5979,19 @@ void load_char_pets(struct char_data *ch)
     mob = read_mobile(atoi(row[0]), VIRTUAL);
     if (!mob)
       continue;
+    if (revive_id > 0)
+    {
+      /* Claim this exact fallen record once; ordinary login never loads fallen pets. */
+      snprintf(query, sizeof(query),
+               "UPDATE pet_data SET pet_dead=0, hp=max_hp WHERE pet_data_id=%d AND pet_dead=1", revive_id);
+      if (mysql_query(conn, query) || mysql_affected_rows(conn) != 1)
+      {
+        char_to_room(mob, IN_ROOM(ch));
+        extract_char(mob);
+        continue;
+      }
+      revived = mob;
+    }
     if (isSummonMob(atoi(row[0])))
     {
       if (GET_LEVEL(mob) <= 10)
@@ -5970,6 +6035,29 @@ void load_char_pets(struct char_data *ch)
     GET_LEVEL(mob) = atoi(row[1]);
     autoroll_mob(mob, TRUE, TRUE);
     restore_crafted_golem_identity(mob);
+    mob->mob_specials.purchased_pet = atoi(row[17]) != 0;
+    mob->mob_specials.pet_experience = MAX(0, atoi(row[18]));
+    GET_GOLD(mob) = LIMIT(atoi(row[36]), 0, MAX_GOLD);
+    restore_companion_kind(mob, atoi(row[23]));
+    mob->mob_specials.pet_training_rank = LIMIT(atoi(row[24]), 0, PET_TRAINING_RANK_CAP);
+    mob->mob_specials.pet_training_experience = MAX(0, atoi(row[25]));
+    {
+      int skill;
+      for (skill = 0; skill < PET_TRAINING_SKILLS; skill++)
+        mob->mob_specials.pet_training_skills[skill] = LIMIT(atoi(row[26 + skill]), 0, PET_TRAINING_SKILL_CAP);
+      const int saves[] = {SAVING_FORT, SAVING_REFL, SAVING_WILL, SAVING_POISON, SAVING_DEATH};
+      for (skill = 0; skill < NUM_OF_SAVING_THROWS; skill++)
+        if (row[31 + skill])
+          GET_REAL_SAVE(mob, saves[skill]) = LIMIT(atoi(row[31 + skill]), -32768, 32767);
+    }
+    if (mob->mob_specials.purchased_pet || atoi(row[23]) > 0)
+    {
+      GET_EXP(mob) = 0;
+      GET_REAL_HITROLL(mob) = LIMIT(atoi(row[19]), -128, 127);
+      GET_REAL_DAMROLL(mob) = LIMIT(atoi(row[20]), -128, 127);
+      mob->mob_specials.damnodice = LIMIT(atoi(row[21]), 0, 127);
+      mob->mob_specials.damsizedice = LIMIT(atoi(row[22]), 0, 127);
+    }
     if (GET_MOB_VNUM(mob) == 10) // MOB_CLONE define from magic.c
     {
       mob->player.name = strdup(GET_NAME(ch));
@@ -6033,13 +6121,29 @@ void load_char_pets(struct char_data *ch)
     GET_REAL_INT(mob) = MIN(100, atoi(row[8]));
     GET_REAL_WIS(mob) = MIN(100, atoi(row[9]));
     GET_REAL_CHA(mob) = MIN(100, atoi(row[10]));
-    GET_REAL_AC(mob) = MIN(100, atoi(row[7]));
+    GET_REAL_AC(mob) = (mob->mob_specials.purchased_pet || companion_training_kind(mob)) ? LIMIT(atoi(row[7]), -32768, 32767) : MIN(100, atoi(row[7]));
     GET_REAL_MAX_HIT(mob) = atoi(row[3]);
-    GET_HIT(mob) = atoi(row[2]);
+    GET_HIT(mob) = revive_id > 0 ? GET_REAL_MAX_HIT(mob) : atoi(row[2]);
+    if (revive_id > 0)
+      GET_POS(mob) = POS_STANDING;
     affect_total(mob);
-    load_mtrigger(mob);
+    if (revive_id > 0)
+      GET_HIT(mob) = GET_MAX_HIT(mob);
+    if (!pet_load_objs(mob, ch, pet_idnum))
+    {
+      if (revive_id > 0)
+      {
+        snprintf(query, sizeof(query), "UPDATE pet_data SET pet_dead=1 WHERE pet_data_id=%d", revive_id);
+        mysql_query(conn, query);
+        revived = NULL;
+      }
+      extract_char(mob);
+      send_to_char(ch, "Your pet's gear could not be restored safely. Its saved record has been retained.\r\n");
+      continue;
+    }
+    if (revive_id <= 0)
+      load_mtrigger(mob);
     add_follower(mob, ch);
-    pet_load_objs(mob, ch, pet_idnum);
     if (!GROUP(mob) && GROUP(ch) && GROUP_LEADER(GROUP(ch)) == ch)
       join_group(mob, GROUP(ch));
     act("$N appears beside you.", true, ch, 0, mob, TO_CHAR);
@@ -6047,6 +6151,233 @@ void load_char_pets(struct char_data *ch)
   }
 
   mysql_free_result(result);
+  return revived;
+}
+
+void load_char_pets(struct char_data *ch)
+{
+  load_char_pets_filtered(ch, 0);
+}
+
+/* Fallen records are owned by the player and never loaded automatically. */
+void purchased_pet_revival(struct char_data *ch, const char *id_arg)
+{
+  MYSQL_RES *result;
+  MYSQL_ROW row;
+  char query[1024], *escaped, *end;
+  long id = 0;
+  int level, cost, vnum;
+
+  if (!ch || IS_NPC(ch) || !ch->desc)
+    return;
+  if (id_arg && *id_arg)
+  {
+    id = strtol(id_arg, &end, 10);
+    if (*end || id < 1 || id > INT_MAX)
+    {
+      send_to_char(ch, "Usage: pets revive <fallen pet ID>. Use 'pets fallen' to see IDs and costs.\r\n");
+      return;
+    }
+    if (FIGHTING(ch))
+    {
+      send_to_char(ch, "You cannot revive a pet during combat.\r\n");
+      return;
+    }
+  }
+  if (!MYSQL_PING_CONN(conn))
+  {
+    send_to_char(ch, "Pet revival is unavailable right now.\r\n");
+    return;
+  }
+  escaped = mysql_escape_string_alloc(conn, GET_NAME(ch));
+  if (!escaped)
+    return;
+  snprintf(query, sizeof(query),
+           "SELECT pet_data_id, pet_sdesc, level, vnum FROM pet_data "
+           "WHERE owner_name='%s' AND (purchased_pet=1 OR pet_kind>0) AND pet_dead=1", escaped);
+  free(escaped);
+  if (id > 0)
+    snprintf(query + strlen(query), sizeof(query) - strlen(query), " AND pet_data_id=%ld", id);
+  else
+    snprintf(query + strlen(query), sizeof(query) - strlen(query), " ORDER BY pet_data_id");
+  if (mysql_query(conn, query) || !(result = mysql_store_result(conn)))
+  {
+    send_to_char(ch, "Pet revival is unavailable right now.\r\n");
+    return;
+  }
+  if (!id)
+  {
+    send_to_char(ch, "Your fallen pets (revival costs 500 gold per level):\r\n");
+    while ((row = mysql_fetch_row(result)))
+    {
+      level = LIMIT(atoi(row[2]), 1, LVL_IMPL);
+      send_to_char(ch, "  ID %s: %s, level %d - %d gold\r\n", row[0], row[1], level, level * 500);
+    }
+    if (!mysql_num_rows(result))
+      send_to_char(ch, "  You have no fallen pets.\r\n");
+    send_to_char(ch, "Use 'pets revive <ID>' to restore a pet with its level and XP.\r\n");
+    mysql_free_result(result);
+    return;
+  }
+  row = mysql_fetch_row(result);
+  if (!row)
+  {
+    send_to_char(ch, "You have no fallen pet with that ID.\r\n");
+    mysql_free_result(result);
+    return;
+  }
+  level = LIMIT(atoi(row[2]), 1, LVL_IMPL);
+  cost = level * 500;
+  vnum = atoi(row[3]);
+  mysql_free_result(result);
+  if (!can_add_follower(ch, vnum))
+  {
+    send_to_char(ch, "You need space for another follower before reviving that pet.\r\n");
+    return;
+  }
+  if (GET_GOLD(ch) < cost)
+  {
+    send_to_char(ch, "Reviving that pet costs %d gold. You do not have enough gold.\r\n", cost);
+    return;
+  }
+
+  decrease_gold(ch, cost);
+  if (!load_char_pets_filtered(ch, (int)id))
+  {
+    increase_gold(ch, cost);
+    send_to_char(ch, "The pet could not be revived. Your gold has been returned.\r\n");
+    return;
+  }
+  save_char_pets(ch);
+  save_char(ch, 0);
+  send_to_char(ch, "Your pet has been revived at full health for %d gold, retaining its level and XP.\r\n", cost);
+}
+
+static void destroy_pet_holder(struct char_data *pet)
+{
+  int slot;
+  for (slot = 0; slot < NUM_WEARS; slot++)
+    if (GET_EQ(pet, slot))
+      extract_obj(unequip_char(pet, slot));
+  while (pet->carrying)
+    extract_obj(pet->carrying);
+  extract_char(pet);
+}
+
+void discard_fallen_pet(struct char_data *ch, const char *id_arg)
+{
+  MYSQL_RES *result;
+  MYSQL_ROW row;
+  char query[1024], *escaped, *end;
+  long id, weight = 0;
+  int slot, count = 0, vnum, gold;
+  struct char_data *holder;
+  struct obj_data *obj;
+
+  if (!ch || IS_NPC(ch) || !ch->desc)
+    return;
+  id = id_arg ? strtol(id_arg, &end, 10) : 0;
+  if (!id_arg || !*id_arg || *end || id < 1 || id > INT_MAX || FIGHTING(ch) || IN_ROOM(ch) == NOWHERE)
+  {
+    send_to_char(ch, "Use 'pets discard <ID> CONFIRM' outside combat to recover gear and permanently discard a fallen pet.\r\n");
+    return;
+  }
+  if (!MYSQL_PING_CONN(conn) || mysql_query(conn, "START TRANSACTION"))
+    return;
+  escaped = mysql_escape_string_alloc(conn, GET_NAME(ch));
+  if (!escaped)
+  {
+    mysql_query(conn, "ROLLBACK");
+    return;
+  }
+  snprintf(query, sizeof(query), "SELECT vnum, pet_gold FROM pet_data WHERE owner_name='%s' "
+           "AND pet_data_id=%ld AND pet_dead=1 AND (purchased_pet=1 OR pet_kind>0) FOR UPDATE", escaped, id);
+  free(escaped);
+  if (mysql_query(conn, query) || !(result = mysql_store_result(conn)))
+  {
+    mysql_query(conn, "ROLLBACK");
+    return;
+  }
+  row = mysql_fetch_row(result);
+  if (!row)
+  {
+    mysql_free_result(result);
+    mysql_query(conn, "ROLLBACK");
+    send_to_char(ch, "You have no fallen pet with that ID.\r\n");
+    return;
+  }
+  vnum = atoi(row[0]);
+  gold = LIMIT(atoi(row[1]), 0, MAX_GOLD);
+  mysql_free_result(result);
+  holder = read_mobile(vnum, VIRTUAL);
+  if (!holder)
+  {
+    mysql_query(conn, "ROLLBACK");
+    send_to_char(ch, "That pet cannot be restored for gear recovery right now.\r\n");
+    return;
+  }
+  char_to_room(holder, IN_ROOM(ch));
+  IS_CARRYING_N(holder) = IS_CARRYING_W(holder) = 0;
+  if (!pet_load_objs(holder, ch, id))
+  {
+    mysql_query(conn, "ROLLBACK");
+    destroy_pet_holder(holder);
+    send_to_char(ch, "The saved gear could not be restored safely. Your fallen pet was retained.\r\n");
+    return;
+  }
+  for (slot = 0; slot < NUM_WEARS; slot++)
+    if ((obj = GET_EQ(holder, slot)))
+    {
+      weight += GET_OBJ_WEIGHT(obj);
+      count++;
+    }
+  for (obj = holder->carrying; obj; obj = obj->next_content)
+  {
+    weight += GET_OBJ_WEIGHT(obj);
+    count++;
+  }
+  if (GET_GOLD(ch) > MAX_GOLD - gold)
+  {
+    mysql_query(conn, "ROLLBACK");
+    destroy_pet_holder(holder);
+    send_to_char(ch, "Bank enough gold to receive the pet's stored gold before discarding it.\r\n");
+    return;
+  }
+  if (IS_CARRYING_W(ch) + weight > CAN_CARRY_W(ch) || IS_CARRYING_N(ch) + count > CAN_CARRY_N(ch))
+  {
+    mysql_query(conn, "ROLLBACK");
+    destroy_pet_holder(holder);
+    send_to_char(ch, "Make enough inventory space to carry all of the pet's stored gear first.\r\n");
+    return;
+  }
+  snprintf(query, sizeof(query), "DELETE FROM pet_save_objs WHERE pet_idnum=%ld", id);
+  if (mysql_query(conn, query))
+  {
+    mysql_query(conn, "ROLLBACK");
+    destroy_pet_holder(holder);
+    return;
+  }
+  snprintf(query, sizeof(query), "DELETE FROM pet_data WHERE pet_data_id=%ld AND pet_dead=1", id);
+  if (mysql_query(conn, query) || mysql_affected_rows(conn) != 1 || mysql_query(conn, "COMMIT"))
+  {
+    mysql_query(conn, "ROLLBACK");
+    destroy_pet_holder(holder);
+    return;
+  }
+  for (slot = 0; slot < NUM_WEARS; slot++)
+    if (GET_EQ(holder, slot))
+      obj_to_char(unequip_char(holder, slot), ch);
+  while ((obj = holder->carrying))
+  {
+    obj_from_char(obj);
+    obj_to_char(obj, ch);
+  }
+  extract_char(holder);
+  if (gold > 0)
+    increase_gold(ch, gold);
+  save_char(ch, 0);
+  Crash_crashsave(ch);
+  send_to_char(ch, "You recover the pet's equipment and inventory. The fallen pet has been permanently discarded.\r\n");
 }
 
 void save_eidolon_descs(struct char_data *ch)

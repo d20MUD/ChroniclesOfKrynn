@@ -28,6 +28,215 @@
 /* External declarations */
 extern const char *dirs[];
 
+void save_char_pets(struct char_data *ch);
+
+/* XP is spent on advancement, rather than becoming a bounty for killing a pet. */
+int purchased_pet_level_cost(struct char_data *pet)
+{
+  return 2000 * (GET_LEVEL(pet) + 1);
+}
+
+void award_purchased_pet_exp(struct char_data *owner, struct char_data *victim, int reward)
+{
+  struct follow_type *f;
+  bool changed = FALSE;
+  int cap;
+
+  if (!owner || IS_NPC(owner) || !victim || !IS_NPC(victim) ||
+      AFF_FLAGGED(victim, AFF_CHARM) || victim->mob_specials.purchased_pet ||
+      reward <= 1 || IN_ROOM(owner) == NOWHERE || IN_ROOM(owner) != IN_ROOM(victim))
+    return;
+
+  cap = MIN(GET_LEVEL(owner), PURCHASED_PET_LEVEL_CAP);
+  for (f = owner->followers; f; f = f->next)
+  {
+    struct char_data *pet = f->follower;
+    int gain, cost, max_progress = 0, level;
+    if (!IS_PET(pet) || pet->master != owner || !pet->mob_specials.purchased_pet ||
+        IN_ROOM(pet) != IN_ROOM(owner) || GET_POS(pet) <= POS_STUNNED ||
+        FIGHTING(pet) != victim || GET_LEVEL(pet) < 1 || GET_LEVEL(pet) >= cap)
+      continue;
+
+    /* Bound the bank to the XP needed to reach the owner's level cap. */
+    for (level = GET_LEVEL(pet) + 1; level <= cap; level++)
+      max_progress += 2000 * level;
+    pet->mob_specials.pet_experience = MAX(0, MIN(max_progress, pet->mob_specials.pet_experience));
+    gain = MIN(reward, max_progress - pet->mob_specials.pet_experience);
+    pet->mob_specials.pet_experience += gain;
+    changed = TRUE;
+    send_to_char(owner, "%s gains %d pet experience points.\r\n", GET_NAME(pet), gain);
+
+    while (GET_LEVEL(pet) < cap &&
+           pet->mob_specials.pet_experience >= purchased_pet_level_cost(pet))
+    {
+      cost = purchased_pet_level_cost(pet);
+      int hit = GET_HIT(pet);
+      pet->mob_specials.pet_experience -= cost;
+      GET_LEVEL(pet)++;
+      GET_REAL_MAX_HIT(pet) += 10;
+      GET_REAL_AC(pet) = MIN(32767, GET_REAL_AC(pet) + 10);
+      if (GET_LEVEL(pet) % 2 == 0)
+      {
+        GET_REAL_HITROLL(pet) = MIN(127, GET_REAL_HITROLL(pet) + 1);
+        GET_REAL_DAMROLL(pet) = MIN(127, GET_REAL_DAMROLL(pet) + 1);
+      }
+      if (GET_LEVEL(pet) % 4 == 0)
+      {
+        GET_REAL_SAVE(pet, SAVING_FORT)++;
+        GET_REAL_SAVE(pet, SAVING_REFL)++;
+        GET_REAL_SAVE(pet, SAVING_WILL)++;
+        GET_REAL_SAVE(pet, SAVING_POISON)++;
+        GET_REAL_SAVE(pet, SAVING_DEATH)++;
+      }
+      affect_total(pet);
+      GET_HIT(pet) = hit; /* Growing does not heal wounds. */
+      send_to_char(owner, "\tG%s has grown to level %d!\tn\r\n", GET_NAME(pet), GET_LEVEL(pet));
+    }
+  }
+  if (changed)
+    save_char_pets(owner);
+}
+
+/* Temporary summons and eidolon reflections do not retain training. */
+int companion_training_kind(struct char_data *pet)
+{
+  if (!pet || !IS_NPC(pet) || pet->mob_specials.purchased_pet || char_has_mud_event(pet, ePURGEMOB))
+    return 0;
+  if (MOB_FLAGGED(pet, MOB_C_ANIMAL)) return 1;
+  if (MOB_FLAGGED(pet, MOB_C_FAMILIAR)) return 2;
+  if (MOB_FLAGGED(pet, MOB_C_MOUNT)) return 3;
+  if (MOB_FLAGGED(pet, MOB_EIDOLON)) return 4;
+  if (MOB_FLAGGED(pet, MOB_C_DRAGON)) return 5;
+  if (MOB_FLAGGED(pet, MOB_GOLEM)) return 6;
+  if (MOB_FLAGGED(pet, MOB_MERCENARY)) return 7;
+  if (MOB_FLAGGED(pet, MOB_MOUNTABLE)) return 8;
+  return 0;
+}
+
+void restore_companion_kind(struct char_data *pet, int kind)
+{
+  const int flags[] = {MOB_C_ANIMAL, MOB_C_FAMILIAR, MOB_C_MOUNT, MOB_EIDOLON,
+                       MOB_C_DRAGON, MOB_GOLEM, MOB_MERCENARY, MOB_MOUNTABLE};
+  if (kind >= 1 && kind <= 8)
+    SET_BIT_AR(MOB_FLAGS(pet), flags[kind - 1]);
+}
+
+bool is_persistent_pet(struct char_data *pet)
+{
+  return pet && IS_PET(pet) && !IS_NPC(pet->master) &&
+         !char_has_mud_event(pet, ePURGEMOB) &&
+         (pet->mob_specials.purchased_pet || companion_training_kind(pet) > 0);
+}
+
+static int companion_unspent_points(struct char_data *pet)
+{
+  int i, points = pet->mob_specials.pet_training_rank;
+  for (i = 0; i < PET_TRAINING_SKILLS; i++)
+    points -= pet->mob_specials.pet_training_skills[i];
+  return MAX(0, points);
+}
+
+void award_companion_training_exp(struct char_data *owner, struct char_data *victim, int reward)
+{
+  struct follow_type *f;
+  bool changed = FALSE;
+  if (!owner || IS_NPC(owner) || !victim || !IS_NPC(victim) ||
+      AFF_FLAGGED(victim, AFF_CHARM) || victim->mob_specials.purchased_pet || reward <= 1 ||
+      IN_ROOM(owner) == NOWHERE || IN_ROOM(owner) != IN_ROOM(victim))
+    return;
+  for (f = owner->followers; f; f = f->next)
+  {
+    struct char_data *pet = f->follower;
+    int rank, bank = 0, gain;
+    if (!is_persistent_pet(pet) || pet->master != owner || !companion_training_kind(pet) ||
+        IN_ROOM(pet) != IN_ROOM(owner) || GET_POS(pet) <= POS_STUNNED ||
+        (FIGHTING(pet) != victim && RIDDEN_BY(pet) != owner && !MOB_FLAGGED(pet, MOB_C_FAMILIAR)) ||
+        pet->mob_specials.pet_training_rank >= PET_TRAINING_RANK_CAP)
+      continue;
+    for (rank = pet->mob_specials.pet_training_rank + 1; rank <= PET_TRAINING_RANK_CAP; rank++)
+      bank += 2000 * rank;
+    pet->mob_specials.pet_training_experience = MAX(0, MIN(bank, pet->mob_specials.pet_training_experience));
+    gain = MIN(reward, bank - pet->mob_specials.pet_training_experience);
+    pet->mob_specials.pet_training_experience += gain;
+    changed = TRUE;
+    send_to_char(owner, "%s gains %d companion training XP.\r\n", GET_NAME(pet), gain);
+    while (pet->mob_specials.pet_training_rank < PET_TRAINING_RANK_CAP &&
+           pet->mob_specials.pet_training_experience >= 2000 * (pet->mob_specials.pet_training_rank + 1))
+    {
+      pet->mob_specials.pet_training_experience -= 2000 * (pet->mob_specials.pet_training_rank + 1);
+      pet->mob_specials.pet_training_rank++;
+      send_to_char(owner, "\tG%s reaches training rank %d and earns a skill point!\tn\r\n",
+                   GET_NAME(pet), pet->mob_specials.pet_training_rank);
+    }
+  }
+  if (changed)
+    save_char_pets(owner);
+}
+
+void show_companion_training(struct char_data *owner, struct char_data *pet)
+{
+  if (!companion_training_kind(pet))
+    return;
+  if (pet->mob_specials.pet_training_rank >= PET_TRAINING_RANK_CAP)
+    send_to_char(owner, "%s: training rank %d/%d (maximum), unspent points %d.\r\n",
+                 GET_NAME(pet), pet->mob_specials.pet_training_rank, PET_TRAINING_RANK_CAP,
+                 companion_unspent_points(pet));
+  else
+    send_to_char(owner, "%s: training rank %d/%d, XP %d/%d, unspent points %d.\r\n",
+                 GET_NAME(pet), pet->mob_specials.pet_training_rank, PET_TRAINING_RANK_CAP,
+                 pet->mob_specials.pet_training_experience, 2000 * (pet->mob_specials.pet_training_rank + 1),
+                 companion_unspent_points(pet));
+  send_to_char(owner, "  Skills (maximum 5 each): health %d, attack %d, damage %d, armor %d, saves %d.\r\n",
+               pet->mob_specials.pet_training_skills[0], pet->mob_specials.pet_training_skills[1],
+               pet->mob_specials.pet_training_skills[2], pet->mob_specials.pet_training_skills[3],
+               pet->mob_specials.pet_training_skills[4]);
+}
+
+void train_companion_skill(struct char_data *owner, struct char_data *pet, const char *skill)
+{
+  const char *names[] = {"health", "attack", "damage", "armor", "saves"};
+  int i, index = -1, hit;
+  if (!pet || !is_persistent_pet(pet) || pet->master != owner || !companion_training_kind(pet) ||
+      IN_ROOM(pet) != IN_ROOM(owner))
+  {
+    send_to_char(owner, "Train one of your permanent companions here.\r\n");
+    return;
+  }
+  if (FIGHTING(owner) || FIGHTING(pet))
+  {
+    send_to_char(owner, "Finish combat before training your companion.\r\n");
+    return;
+  }
+  for (i = 0; i < PET_TRAINING_SKILLS; i++)
+    if (!str_cmp(skill, names[i])) index = i;
+  if (index < 0)
+  {
+    send_to_char(owner, "Skills: health (+20 HP), attack (+1), damage (+1), armor (+1 AC), saves (+1 all).\r\n");
+    return;
+  }
+  if (pet->mob_specials.pet_training_skills[index] >= PET_TRAINING_SKILL_CAP || !companion_unspent_points(pet))
+  {
+    send_to_char(owner, "You need an unspent pet skill point and fewer than five purchases in that skill.\r\n");
+    return;
+  }
+  hit = GET_HIT(pet);
+  pet->mob_specials.pet_training_skills[index]++;
+  switch (index)
+  {
+  case 0: GET_REAL_MAX_HIT(pet) += 20; break;
+  case 1: GET_REAL_HITROLL(pet) = MIN(127, GET_REAL_HITROLL(pet) + 1); break;
+  case 2: GET_REAL_DAMROLL(pet) = MIN(127, GET_REAL_DAMROLL(pet) + 1); break;
+  case 3: GET_REAL_AC(pet) = MIN(32767, GET_REAL_AC(pet) + 10); break;
+  case 4:
+    for (i = 0; i < NUM_OF_SAVING_THROWS; i++) GET_REAL_SAVE(pet, i)++;
+    break;
+  }
+  affect_total(pet);
+  GET_HIT(pet) = hit;
+  save_char_pets(owner);
+  send_to_char(owner, "You spend one pet skill point to train %s in %s.\r\n", GET_NAME(pet), names[index]);
+}
+
 /*** UTILITY FUNCTIONS ***/
 
 /* function to return possible targets for mobile, used for

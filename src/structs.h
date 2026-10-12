@@ -7490,6 +7490,11 @@ struct player_special_data
 /** Special data used by NPCs, not PCs */
 struct mob_special_data
 {
+  bool purchased_pet;       /**< Bought companion eligible for independent progression. */
+  int pet_experience;        /**< Progress toward this pet's next level, separate from kill XP. */
+  int pet_training_rank;
+  int pet_training_experience;
+  int pet_training_skills[5]; /* Health, attack, damage, armor, saving throws. */
   memory_rec *memory;         /**< List of PCs to remember */
   byte attack_type;           /**< The primary attack type (bite, sting, hit, etc.) */
   byte default_pos;           /**< Default position (standing, sleeping, etc.) */

@@ -15,6 +15,7 @@
 #include "sysdep.h"
 #include "structs.h"
 #include "utils.h"
+#include "mob_utils.h"
 #include "epic_magic.h"
 #include "comm.h"
 #include "handler.h"
@@ -2691,6 +2692,21 @@ void raw_kill(struct char_data *ch, struct char_data *killer)
 {
   struct char_data *k, *temp;
   struct affected_type af = {0}; /* Zero-initialize to prevent stack garbage */
+  struct char_data *pet_owner = is_persistent_pet(ch) ? ch->master : NULL;
+
+  /* Archive purchased companions before their ownership and charm are removed. */
+  if (pet_owner && !IS_NPC(pet_owner))
+  {
+    if (!archive_fallen_pet(ch))
+    {
+      GET_HIT(ch) = MAX(1, GET_HIT(ch));
+      GET_POS(ch) = POS_STANDING;
+      if (FIGHTING(ch))
+        stop_fighting(ch);
+      send_to_char(pet_owner, "Your pet could not be stored safely; it has been kept alive with its gear.\r\n");
+      return;
+    }
+  }
 
   if (!IS_NPC(ch))
   {
@@ -2751,6 +2767,8 @@ void raw_kill(struct char_data *ch, struct char_data *killer)
   if (ch->followers || ch->master) // handle followers
     die_follower(ch);
   save_char_pets(ch);
+  if (pet_owner && !IS_NPC(pet_owner))
+    save_char_pets(pet_owner);
 
   /* group handling */
   if (GROUP(ch))
@@ -2760,6 +2778,21 @@ void raw_kill(struct char_data *ch, struct char_data *killer)
     /* we used to kick players out of groups here, but we changed that.. now only NPCs */
     if (IS_NPC(ch))
       leave_group(ch);
+  }
+
+  if (pet_owner && !IS_NPC(pet_owner))
+  {
+    send_to_char(pet_owner, "%s has fallen. Use 'pets fallen' to revive it or recover its gear.\r\n", GET_NAME(ch));
+    {
+      int slot;
+      for (slot = 0; slot < NUM_WEARS; slot++)
+        if (GET_EQ(ch, slot))
+          extract_obj(unequip_char(ch, slot));
+      while (ch->carrying)
+        extract_obj(ch->carrying);
+    }
+    extract_char(ch); /* Its equipment and inventory are safely stored; no corpse or loot. */
+    return;
   }
 
   /* ordinary commands work in scripts -welcor */
@@ -3109,6 +3142,8 @@ static void perform_group_gain(struct char_data *ch, int base, struct char_data 
   int share, hap_share;
 
   share = MIN(CONFIG_MAX_EXP_GAIN, MAX(1, base));
+  award_purchased_pet_exp(ch, victim, share);
+  award_companion_training_exp(ch, victim, share);
 
   if ((IS_HAPPYHOUR) && (IS_HAPPYEXP))
   {
@@ -3259,6 +3294,9 @@ static void solo_gain(struct char_data *ch, struct char_data *victim)
   /* avoid xp abuse in PvP */
   if (!IS_NPC(victim))
     exp = MIN(CONFIG_MAX_EXP_LOSS * 2 / 3, exp);
+
+  award_purchased_pet_exp(ch, victim, exp);
+  award_companion_training_exp(ch, victim, exp);
 
   /* happyhour bonus XP */
   if (IS_HAPPYHOUR && IS_HAPPYEXP)
@@ -5947,6 +5985,7 @@ int dam_killed_vict(struct char_data *ch, struct char_data *victim)
   struct char_data *tmp_char = NULL, *tch = NULL;
   struct obj_data *corpse_obj;
   room_rnum rnum = NOWHERE;
+  bool stored_pet_death = is_persistent_pet(victim);
 
   if (!ok_damage_shopkeeper(ch, victim) || MOB_FLAGGED(victim, MOB_NOKILL) ||
       !is_mission_mob(ch, victim))
@@ -6086,7 +6125,7 @@ int dam_killed_vict(struct char_data *ch, struct char_data *victim)
     }
   }
 
-  if (IS_NPC(victim))
+  if (IS_NPC(victim) && !stored_pet_death)
   { // determine gold before corpse created
     if ((IS_HAPPYHOUR) && (IS_HAPPYGOLD))
     {
@@ -6111,128 +6150,132 @@ int dam_killed_vict(struct char_data *ch, struct char_data *victim)
 
   /* todo: maybe make die() return a value to let us know if there really is a corpse */
 
-  /* we make everyone in the room with auto-collect search for ammo here before
-     any of the autolooting, etc */
-  for (tch = world[rnum].people; tch; tch = tch->next_in_room)
+  if (!stored_pet_death)
   {
-    if (!tch)
-      continue;
-
-    if (IS_NPC(tch))
+    /* we make everyone in the room with auto-collect search for ammo here before
+       any of the autolooting, etc */
+    for (tch = world[rnum].people; tch; tch = tch->next_in_room)
     {
-      if (tch->master && !IS_NPC(tch->master) && PRF_FLAGGED(tch->master, PRF_AUTOCOLLECT))
+      if (!tch)
+        continue;
+
+      if (IS_NPC(tch))
       {
-        perform_collect(tch->master, FALSE);
+        if (tch->master && !IS_NPC(tch->master) && PRF_FLAGGED(tch->master, PRF_AUTOCOLLECT))
+        {
+          perform_collect(tch->master, FALSE);
+          // attach_mud_event(new_mud_event(eCOLLECT_DELAY, ch, NULL), 1);
+        }
+        else
+        {
+          continue;
+        }
+      }
+
+      if (!IS_NPC(tch) && PRF_FLAGGED(tch, PRF_AUTOCOLLECT))
+      {
+        perform_collect(tch, FALSE);
         // attach_mud_event(new_mud_event(eCOLLECT_DELAY, ch, NULL), 1);
       }
-      else
+    }
+
+    // handle dead mob and PRF_
+
+    /* auto split / auto gold */
+    if (!IS_NPC(ch) && GROUP(ch) && (local_gold > 0) && PRF_FLAGGED(ch, PRF_AUTOSPLIT))
+    {
+      generic_find("corpse", FIND_OBJ_ROOM, ch, &tmp_char, &corpse_obj);
+      if (corpse_obj)
       {
-        continue;
+        do_get(ch, "all.coin corpse", 0, 0);
+        do_split(ch, local_buf, 0, 0);
       }
     }
-
-    if (!IS_NPC(tch) && PRF_FLAGGED(tch, PRF_AUTOCOLLECT))
+    else if (IS_NPC(ch) && GROUP(ch) && (local_gold > 0) && ch->master)
     {
-      perform_collect(tch, FALSE);
-      // attach_mud_event(new_mud_event(eCOLLECT_DELAY, ch, NULL), 1);
+      generic_find("corpse", FIND_OBJ_ROOM, ch->master, &tmp_char, &corpse_obj);
+      if (corpse_obj)
+      {
+        if (!IS_NPC(ch->master) && PRF_FLAGGED(ch->master, PRF_AUTOSPLIT))
+        {
+          do_get(ch->master, "all.coin corpse", 0, 0);
+          do_split(ch->master, local_buf, 0, 0);
+        }
+        else if (IS_NPC(ch->master) && ch->master->master &&
+                 (IN_ROOM(ch->master) == IN_ROOM(ch->master->master)) &&
+                 !IS_NPC(ch->master->master) && PRF_FLAGGED(ch->master->master, PRF_AUTOSPLIT))
+        {
+          do_get(ch->master->master, "all.coin corpse", 0, 0);
+          do_split(ch->master->master, local_buf, 0, 0);
+        }
+      }
     }
-  }
-
-  // handle dead mob and PRF_
-
-  /* auto split / auto gold */
-  if (!IS_NPC(ch) && GROUP(ch) && (local_gold > 0) && PRF_FLAGGED(ch, PRF_AUTOSPLIT))
-  {
-    generic_find("corpse", FIND_OBJ_ROOM, ch, &tmp_char, &corpse_obj);
-    if (corpse_obj)
+    else if (!IS_NPC(ch) && (ch != victim) && PRF_FLAGGED(ch, PRF_AUTOGOLD))
     {
       do_get(ch, "all.coin corpse", 0, 0);
-      do_split(ch, local_buf, 0, 0);
+      do_get(ch, "all.coin", 0, 0); // added for incorporeal - no corpse -zusuk
     }
-  }
-  else if (IS_NPC(ch) && GROUP(ch) && (local_gold > 0) && ch->master)
-  {
-    generic_find("corpse", FIND_OBJ_ROOM, ch->master, &tmp_char, &corpse_obj);
-    if (corpse_obj)
+    else if (IS_NPC(ch) && ch->master && (ch != victim) && (ch->master != victim))
     {
-      if (!IS_NPC(ch->master) && PRF_FLAGGED(ch->master, PRF_AUTOSPLIT))
+      if (!IS_NPC(ch->master) && PRF_FLAGGED(ch->master, PRF_AUTOGOLD))
       {
         do_get(ch->master, "all.coin corpse", 0, 0);
-        do_split(ch->master, local_buf, 0, 0);
+        do_get(ch->master, "all.coin", 0, 0); // added for incorporeal - no corpse -zusuk
       }
       else if (IS_NPC(ch->master) && ch->master->master &&
-               (IN_ROOM(ch->master) == IN_ROOM(ch->master->master)) &&
-               !IS_NPC(ch->master->master) && PRF_FLAGGED(ch->master->master, PRF_AUTOSPLIT))
+               (IN_ROOM(ch->master) == IN_ROOM(ch->master->master)) && !IS_NPC(ch->master->master) &&
+               PRF_FLAGGED(ch->master->master, PRF_AUTOGOLD))
       {
         do_get(ch->master->master, "all.coin corpse", 0, 0);
-        do_split(ch->master->master, local_buf, 0, 0);
+        do_get(ch->master->master, "all.coin", 0, 0); // added for incorporeal - no corpse -zusuk
       }
     }
-  }
-  else if (!IS_NPC(ch) && (ch != victim) && PRF_FLAGGED(ch, PRF_AUTOGOLD))
-  {
-    do_get(ch, "all.coin corpse", 0, 0);
-    do_get(ch, "all.coin", 0, 0); // added for incorporeal - no corpse -zusuk
-  }
-  else if (IS_NPC(ch) && ch->master && (ch != victim) && (ch->master != victim))
-  {
-    if (!IS_NPC(ch->master) && PRF_FLAGGED(ch->master, PRF_AUTOGOLD))
+
+    struct group_data *group = GROUP(ch);
+
+    /* autoloot */
+    if (group && IS_SET(GROUP_FLAGS(group), GROUP_LOOTZ))
     {
-      do_get(ch->master, "all.coin corpse", 0, 0);
-      do_get(ch->master, "all.coin", 0, 0); // added for incorporeal - no corpse -zusuk
+      /* only the leader will be looting */
+
+      if (GROUP_LEADER(group) == ch)
+        do_get(ch, "all corpse", 0, GET_SUBCMD_GLOOT);
     }
-    else if (IS_NPC(ch->master) && ch->master->master &&
-             (IN_ROOM(ch->master) == IN_ROOM(ch->master->master)) && !IS_NPC(ch->master->master) &&
-             PRF_FLAGGED(ch->master->master, PRF_AUTOGOLD))
+    else
     {
-      do_get(ch->master->master, "all.coin corpse", 0, 0);
-      do_get(ch->master->master, "all.coin", 0, 0); // added for incorporeal - no corpse -zusuk
+      if (!IS_NPC(ch) && (ch != victim) && PRF_FLAGGED(ch, PRF_AUTOLOOT))
+      {
+        do_get(ch, "all corpse", 0, 0);
+        // do_get(ch, "all.coin", 0, 0);  //added for incorporeal - no corpse
+      }
+      else if (IS_NPC(ch) && (ch != victim) && ch->master && (IN_ROOM(ch) == IN_ROOM(ch->master)))
+      {
+        if (!IS_NPC(ch->master) && PRF_FLAGGED(ch->master, PRF_AUTOLOOT))
+          do_get(ch->master, "all corpse", 0, 0);
+        else if (IS_NPC(ch->master) && ch->master->master &&
+                 (IN_ROOM(ch->master) == IN_ROOM(ch->master->master)) &&
+                 !IS_NPC(ch->master->master) && PRF_FLAGGED(ch->master->master, PRF_AUTOLOOT))
+          do_get(ch->master->master, "all corpse", 0, 0);
+      }
     }
-  }
 
-  struct group_data *group = GROUP(ch);
-
-  /* autoloot */
-  if (group && IS_SET(GROUP_FLAGS(group), GROUP_LOOTZ))
-  {
-    /* only the leader will be looting */
-
-    if (GROUP_LEADER(group) == ch)
-      do_get(ch, "all corpse", 0, GET_SUBCMD_GLOOT);
-  }
-  else
-  {
-    if (!IS_NPC(ch) && (ch != victim) && PRF_FLAGGED(ch, PRF_AUTOLOOT))
+    /* autosac */
+    if (IS_NPC(victim) && !IS_NPC(ch) && PRF_FLAGGED(ch, PRF_AUTOSAC))
     {
-      do_get(ch, "all corpse", 0, 0);
-      // do_get(ch, "all.coin", 0, 0);  //added for incorporeal - no corpse
+      do_sac(ch, "corpse", 0, 0);
     }
     else if (IS_NPC(ch) && (ch != victim) && ch->master && (IN_ROOM(ch) == IN_ROOM(ch->master)))
     {
-      if (!IS_NPC(ch->master) && PRF_FLAGGED(ch->master, PRF_AUTOLOOT))
-        do_get(ch->master, "all corpse", 0, 0);
+      if (!IS_NPC(ch->master) && PRF_FLAGGED(ch->master, PRF_AUTOSAC))
+        do_sac(ch->master, "corpse", 0, 0);
       else if (IS_NPC(ch->master) && ch->master->master &&
-               (IN_ROOM(ch->master) == IN_ROOM(ch->master->master)) &&
-               !IS_NPC(ch->master->master) && PRF_FLAGGED(ch->master->master, PRF_AUTOLOOT))
-        do_get(ch->master->master, "all corpse", 0, 0);
+               (IN_ROOM(ch->master) == IN_ROOM(ch->master->master)) && !IS_NPC(ch->master->master) &&
+               PRF_FLAGGED(ch->master->master, PRF_AUTOSAC))
+        do_sac(ch->master, "corpse", 0, 0);
     }
-  }
 
-  /* autosac */
-  if (IS_NPC(victim) && !IS_NPC(ch) && PRF_FLAGGED(ch, PRF_AUTOSAC))
-  {
-    do_sac(ch, "corpse", 0, 0);
-  }
-  else if (IS_NPC(ch) && (ch != victim) && ch->master && (IN_ROOM(ch) == IN_ROOM(ch->master)))
-  {
-    if (!IS_NPC(ch->master) && PRF_FLAGGED(ch->master, PRF_AUTOSAC))
-      do_sac(ch->master, "corpse", 0, 0);
-    else if (IS_NPC(ch->master) && ch->master->master &&
-             (IN_ROOM(ch->master) == IN_ROOM(ch->master->master)) && !IS_NPC(ch->master->master) &&
-             PRF_FLAGGED(ch->master->master, PRF_AUTOSAC))
-      do_sac(ch->master, "corpse", 0, 0);
-  }
 
+  }
 
   for (tch = world[IN_ROOM(ch)].people; tch; tch = tch->next_in_room)
   {

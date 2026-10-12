@@ -142,6 +142,27 @@ void init_core_player_tables(void)
                                 "wis INT NOT NULL, "
                                 "cha INT NOT NULL, "
                                 "purge_mob_timer INT NOT NULL DEFAULT 0, "
+                                "purchased_pet TINYINT NOT NULL DEFAULT 0, "
+                                "pet_dead INT NOT NULL DEFAULT 0, "
+                                "pet_gold INT NOT NULL DEFAULT 0, "
+                                "pet_kind INT NOT NULL DEFAULT 0, "
+                                "pet_training_rank INT NOT NULL DEFAULT 0, "
+                                "pet_training_exp INT NOT NULL DEFAULT 0, "
+                                "pet_skill_health INT NOT NULL DEFAULT 0, "
+                                "pet_skill_attack INT NOT NULL DEFAULT 0, "
+                                "pet_skill_damage INT NOT NULL DEFAULT 0, "
+                                "pet_skill_armor INT NOT NULL DEFAULT 0, "
+                                "pet_skill_saves INT NOT NULL DEFAULT 0, "
+                                "pet_save_fort INT DEFAULT NULL, "
+                                "pet_save_reflex INT DEFAULT NULL, "
+                                "pet_save_will INT DEFAULT NULL, "
+                                "pet_save_poison INT DEFAULT NULL, "
+                                "pet_save_death INT DEFAULT NULL, "
+                                "pet_experience INT NOT NULL DEFAULT 0, "
+                                "pet_hitroll INT NOT NULL DEFAULT 0, "
+                                "pet_damroll INT NOT NULL DEFAULT 0, "
+                                "pet_damnodice INT NOT NULL DEFAULT 0, "
+                                "pet_damsizedice INT NOT NULL DEFAULT 0, "
                                 "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
                                 "INDEX idx_pet_owner (owner_name)"
                                 ")";
@@ -170,6 +191,41 @@ void init_core_player_tables(void)
       }
     }
     mysql_free_result(result);
+  }
+
+  /* Upgrade existing companion saves without identifying summons as purchases. */
+  {
+    const char *columns[] = {"purchased_pet", "pet_experience", "pet_hitroll", "pet_damroll",
+                             "pet_damnodice", "pet_damsizedice", "pet_dead",
+                             "pet_kind", "pet_training_rank", "pet_training_exp", "pet_skill_health", "pet_skill_attack", "pet_skill_damage", "pet_skill_armor", "pet_skill_saves", "pet_save_fort", "pet_save_reflex", "pet_save_will", "pet_save_poison", "pet_save_death", "pet_gold"};
+    int i;
+    for (i = 0; i < 21; i++)
+    {
+      char query[256];
+      MYSQL_RES *result;
+      snprintf(query, sizeof(query), "SHOW COLUMNS FROM pet_data LIKE '%s'", columns[i]);
+      if (mysql_query_safe(conn, query))
+      {
+        log("SYSERR: Failed to check pet progression column: %s", mysql_error(conn));
+        return;
+      }
+      result = mysql_store_result(conn);
+      if (!result)
+        return;
+      if (!mysql_num_rows(result))
+      {
+        mysql_free_result(result);
+        snprintf(query, sizeof(query), "ALTER TABLE pet_data ADD COLUMN %s %s", columns[i],
+                 i >= 15 && i < 20 ? "INT DEFAULT NULL" : "INT NOT NULL DEFAULT 0");
+        if (mysql_query_safe(conn, query))
+        {
+          log("SYSERR: Failed to add pet progression column: %s", mysql_error(conn));
+          return;
+        }
+      }
+      else
+        mysql_free_result(result);
+    }
   }
 
   /* player_data - Core player character information */

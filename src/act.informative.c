@@ -14,6 +14,7 @@
 #include "structs.h"
 #include "housing.h"
 #include "utils.h"
+#include "mob_utils.h"
 #include "epic_magic.h"
 #include "comm.h"
 #include "interpreter.h"
@@ -10985,7 +10986,41 @@ ACMD(do_armorinfo)
 /* interface to see your npc army! */
 ACMD(do_pets)
 {
+  char pet_command[MAX_INPUT_LENGTH], id_arg[MAX_INPUT_LENGTH], option[MAX_INPUT_LENGTH];
+  char *rest;
+  rest = (char *)two_arguments(argument, pet_command, sizeof(pet_command), id_arg, sizeof(id_arg));
+  one_argument(rest, option, sizeof(option));
+  if (*pet_command)
+  {
+    if (is_abbrev(pet_command, "fallen"))
+      purchased_pet_revival(ch, NULL);
+    else if (is_abbrev(pet_command, "revive") && *id_arg)
+      purchased_pet_revival(ch, id_arg);
+    else if (is_abbrev(pet_command, "discard") && *id_arg && !str_cmp(option, "CONFIRM"))
+      discard_fallen_pet(ch, id_arg);
+    else if (is_abbrev(pet_command, "train") && *id_arg)
+      train_companion_skill(ch, get_char_room_vis(ch, id_arg, NULL), option);
+    else
+      send_to_char(ch, "Usage: pets | pets fallen | pets revive <ID> | pets discard <ID> CONFIRM | pets train <pet> <skill>\r\n");
+    return;
+  }
+
   check_npc_followers(ch, NPC_MODE_DISPLAY, 0);
+  send_to_char(ch, "Use 'pets fallen' to see stored pets, or 'pets train <pet> <skill>' to spend training points.\r\n");
+  if (!IS_NPC(ch))
+  {
+    struct follow_type *f;
+    for (f = ch->followers; f; f = f->next)
+    {
+      struct char_data *pet = f->follower;
+      if (IS_PET(pet))
+        show_companion_training(ch, pet);
+      if (IS_PET(pet) && pet->mob_specials.purchased_pet)
+        send_to_char(ch, "%s: level %d, pet XP %d/%d%s.\r\n", GET_NAME(pet), GET_LEVEL(pet),
+                     pet->mob_specials.pet_experience, purchased_pet_level_cost(pet),
+                     GET_LEVEL(pet) >= MIN(GET_LEVEL(ch), PURCHASED_PET_LEVEL_CAP) ? " (level cap reached)" : "");
+    }
+  }
 }
 
 /* brief display on left side of mobile indicating their toughness */

@@ -6527,6 +6527,8 @@ SPECIAL(pet_shops)
     decrease_gold(ch, PET_PRICE(pet));
 
     pet = read_mobile(GET_MOB_RNUM(pet), REAL);
+    pet->mob_specials.purchased_pet = TRUE;
+    pet->mob_specials.pet_experience = 0;
     GET_EXP(pet) = 0;
     SET_BIT_AR(AFF_FLAGS(pet), AFF_CHARM);
     if (GET_LEVEL(pet) <= 10)
@@ -6566,6 +6568,8 @@ SPECIAL(pet_shops)
           pet->mob_specials.damsizedice * CONFIG_SUMMON_LEVEL_21_30_HIT_DAM / 100;
     }
     GET_HIT(pet) = GET_MAX_HIT(pet);
+    GET_REAL_HITROLL(pet) = GET_HITROLL(pet);
+    GET_REAL_DAMROLL(pet) = GET_DAMROLL(pet);
 
     if (*pet_name)
     {
@@ -10666,6 +10670,10 @@ SPECIAL(bought_pet)
     char_to_room(pet, obj->carried_by->in_room);
     add_follower(pet, obj->carried_by);
     SET_BIT_AR(AFF_FLAGS(pet), AFF_CHARM);
+
+    pet->mob_specials.purchased_pet = TRUE;
+    pet->mob_specials.pet_experience = 0;
+    GET_EXP(pet) = 0;
 
     /* success message */
     send_to_char(obj->carried_by, "You have acquired a companion.\r\n");

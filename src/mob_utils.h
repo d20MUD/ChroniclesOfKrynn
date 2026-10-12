@@ -11,6 +11,23 @@
 #ifndef _MOB_UTILS_H_
 #define _MOB_UTILS_H_
 
+/* Bought pets gain levels up to their owner's level, with a mortal cap. */
+#define PURCHASED_PET_LEVEL_CAP 30
+#define PET_TRAINING_RANK_CAP 10
+#define PET_TRAINING_SKILL_CAP 5
+#define PET_TRAINING_SKILLS 5
+int companion_training_kind(struct char_data *pet);
+void restore_companion_kind(struct char_data *pet, int kind);
+bool is_persistent_pet(struct char_data *pet);
+void award_companion_training_exp(struct char_data *owner, struct char_data *victim, int reward);
+void train_companion_skill(struct char_data *owner, struct char_data *pet, const char *skill);
+void show_companion_training(struct char_data *owner, struct char_data *pet);
+void discard_fallen_pet(struct char_data *ch, const char *id_arg);
+int purchased_pet_level_cost(struct char_data *pet);
+void purchased_pet_revival(struct char_data *ch, const char *id_arg);
+bool archive_fallen_pet(struct char_data *pet);
+void award_purchased_pet_exp(struct char_data *owner, struct char_data *victim, int reward);
+
 /* Function prototypes for mob utility functions */
 
 /* find a target for ch to attack */
