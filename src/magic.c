@@ -9941,6 +9941,9 @@ void mag_affects_full(int level, struct char_data *ch, struct char_data *victim,
       send_to_char(ch, "A magical ward is already in effect on target.\r\n");
       return;
     }
+    /* Remove the old affect (and its DR) before creating the refreshed pool.
+     * The generic buff replacement below would otherwise remove the new DR too. */
+    affect_from_char(victim, SPELL_STONESKIN);
     af[0].location = APPLY_DR;
     af[0].modifier = 0;
     af[0].duration = 600;

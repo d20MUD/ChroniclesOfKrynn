@@ -2974,15 +2974,6 @@ static int cast_spell_with_type_and_slot(struct char_data *ch, struct char_data 
       return 0;
     }
 
-    /* i made this so you can spam iron skin theoretically -zusuk */
-    if (affected_by_spell(tch, SPELL_IRONSKIN) && GET_STONESKIN(tch) >= WARD_THRESHOLD)
-    {
-      send_to_char(ch,
-                   "The ironskin on %s is still holding strong (%d damage left, %d is the "
-                   "configured threshold)!\r\n",
-                   GET_NAME(tch), GET_STONESKIN(tch), WARD_THRESHOLD);
-      return 0;
-    }
     break;
   default:
     break;

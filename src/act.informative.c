@@ -3159,7 +3159,22 @@ void perform_affects(struct char_data *ch, struct char_data *k)
 
       buf2[0] = '\0';
 
-      if (aff->location == APPLY_DR)
+      if (aff->spell == SPELL_STONESKIN)
+      {
+        struct damage_reduction_type *dr;
+        int remaining = 0;
+
+        for (dr = GET_DR(k); dr; dr = dr->next)
+          if (dr->spell == SPELL_STONESKIN)
+            remaining = MAX(remaining, dr->max_damage);
+
+        snprintf(buf3, sizeof(buf3), "%d hit points remaining (see DR)", MAX(0, remaining));
+      }
+      else if (aff->spell == SPELL_IRONSKIN || aff->spell == SPELL_EPIC_WARDING)
+      {
+        snprintf(buf3, sizeof(buf3), "%d hit points remaining", MAX(0, GET_STONESKIN(k)));
+      }
+      else if (aff->location == APPLY_DR)
       { /* Handle DR a bit differently */
         snprintf(buf3, sizeof(buf3), "%s", "(see DR)");
       }
