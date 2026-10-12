@@ -15,6 +15,8 @@ stubs=r'''
 struct config_data config_info;
 struct weather_data weather_info;
 int MAX(int a,int b) { return a>b?a:b; }
+int MIN(int a,int b) { return a<b?a:b; }
+size_t send_to_char(struct char_data *ch,const char *fmt,...) { (void)ch; (void)fmt; return 0; }
 int compute_arcane_level(struct char_data *ch) {
   if(IS_NPC(ch)) return GET_LEVEL(ch);
   return CLASS_LEVEL(ch,CLASS_WIZARD)+CLASS_LEVEL(ch,CLASS_SORCERER);
@@ -28,7 +30,7 @@ while True:
     b=magic.index('\n  }',a)+4
     block=magic[a:b]
     pos=b
-    var='savethrow' if 'savethrow +=' in block else 'level'
+    var='challenge' if 'challenge +=' in block else 'level'
     blocks.append(f'int lunar_{len(blocks)}(struct char_data *ch) {{ int {var}=10;\n'+block+f'\nreturn {var}; }}\n')
 assert len(blocks)==8, 'Every lunar spell modifier must use the eligibility helper'
 checks=r'''

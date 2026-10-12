@@ -1480,61 +1480,61 @@ static void reset_time(void)
   switch (rand_number(1, 8))
   {
   case 1:
-    weather_info.moons.lunitari_phase = 2;
+    weather_info.moons.nuitari_phase = 2;
     break;
   case 2:
-    weather_info.moons.lunitari_phase = 1;
+    weather_info.moons.nuitari_phase = 1;
     break;
   case 3:
-    weather_info.moons.lunitari_phase = 8;
+    weather_info.moons.nuitari_phase = 8;
     break;
   case 4:
-    weather_info.moons.lunitari_phase = 7;
+    weather_info.moons.nuitari_phase = 7;
     break;
   case 5:
-    weather_info.moons.lunitari_phase = 6;
+    weather_info.moons.nuitari_phase = 6;
     break;
   case 6:
-    weather_info.moons.lunitari_phase = 5;
+    weather_info.moons.nuitari_phase = 5;
     break;
   case 7:
-    weather_info.moons.lunitari_phase = 4;
+    weather_info.moons.nuitari_phase = 4;
     break;
   case 8:
-    weather_info.moons.lunitari_phase = 3;
+    weather_info.moons.nuitari_phase = 3;
     break;
   default:
-    weather_info.moons.lunitari_phase = 1;
+    weather_info.moons.nuitari_phase = 1;
     break;
   }
   switch (rand_number(1, 8))
   {
   case 1:
-    weather_info.moons.nuitari_phase = 18;
+    weather_info.moons.lunitari_phase = 18;
     break;
   case 2:
-    weather_info.moons.nuitari_phase = 15;
+    weather_info.moons.lunitari_phase = 15;
     break;
   case 3:
-    weather_info.moons.nuitari_phase = 11;
+    weather_info.moons.lunitari_phase = 11;
     break;
   case 4:
-    weather_info.moons.nuitari_phase = 8;
+    weather_info.moons.lunitari_phase = 8;
     break;
   case 5:
-    weather_info.moons.nuitari_phase = 4;
+    weather_info.moons.lunitari_phase = 4;
     break;
   case 6:
-    weather_info.moons.nuitari_phase = 1;
+    weather_info.moons.lunitari_phase = 1;
     break;
   case 7:
-    weather_info.moons.nuitari_phase = 25;
+    weather_info.moons.lunitari_phase = 25;
     break;
   case 8:
-    weather_info.moons.nuitari_phase = 22;
+    weather_info.moons.lunitari_phase = 22;
     break;
   default:
-    weather_info.moons.nuitari_phase = 1;
+    weather_info.moons.lunitari_phase = 1;
     break;
   }
   calc_moon_bonus();

@@ -282,3 +282,94 @@ bool is_moon_phase_affected(struct char_data *ch)
 
   return is_arcane_caster(ch);
 }
+
+/* A daily chart box spans an arc of the orbit. Use 504 angular units (the
+ * common multiple of 36, 28 and 8) so overlap is exact integer arithmetic.
+ * Matching broad sanctions alone is not a conjunction. */
+int get_moon_conjunctions(void)
+{
+  int phases[3] = {weather_info.moons.solinari_phase,
+                   weather_info.moons.lunitari_phase,
+                   weather_info.moons.nuitari_phase};
+  const int periods[3] = {36, 28, 8};
+  int start[3], end[3], moon, mask = 0;
+
+  if (!CONFIG_ARCANE_MOON_PHASES)
+    return 0;
+  for (moon = 0; moon < 3; moon++)
+  {
+    if (phases[moon] < 1 || phases[moon] > periods[moon])
+      return 0;
+    start[moon] = (phases[moon] - 1) * (504 / periods[moon]);
+    end[moon] = phases[moon] * (504 / periods[moon]);
+  }
+  if (MAX(start[0], start[1]) < MIN(end[0], end[1]))
+    mask |= MOON_CONJUNCTION_SOL_LUN;
+  if (MAX(start[0], start[2]) < MIN(end[0], end[2]))
+    mask |= MOON_CONJUNCTION_SOL_NUIT;
+  if (MAX(start[1], start[2]) < MIN(end[1], end[2]))
+    mask |= MOON_CONJUNCTION_LUN_NUIT;
+  if (MAX(MAX(start[0], start[1]), start[2]) < MIN(MIN(end[0], end[1]), end[2]))
+    mask |= MOON_CONJUNCTION_ALL;
+  return mask;
+}
+
+/* Classic AD&D conjunction additions, stacked with the ordinary phase.
+ * A true triple conjunction replaces pair bonuses; pairs never add twice. */
+void apply_moon_conjunction_bonuses(void)
+{
+  int mask = get_moon_conjunctions();
+  struct moon_data *moons = &weather_info.moons;
+
+  if (mask & MOON_CONJUNCTION_ALL)
+  {
+    moons->solinari_st += 2; moons->lunitari_st += 2; moons->nuitari_st += 2;
+    moons->solinari_sp += 2; moons->lunitari_sp += 2; moons->nuitari_sp += 2;
+    moons->solinari_lv++; moons->lunitari_lv++; moons->nuitari_lv++;
+    return;
+  }
+  if (mask & (MOON_CONJUNCTION_SOL_LUN | MOON_CONJUNCTION_SOL_NUIT))
+    moons->solinari_st++;
+  if (mask & (MOON_CONJUNCTION_SOL_LUN | MOON_CONJUNCTION_LUN_NUIT))
+    moons->lunitari_st++;
+  if (mask & (MOON_CONJUNCTION_SOL_NUIT | MOON_CONJUNCTION_LUN_NUIT))
+    moons->nuitari_st++;
+  if (mask & MOON_CONJUNCTION_SOL_LUN)
+  {
+    moons->solinari_sp++; moons->solinari_lv++;
+  }
+  if (mask & (MOON_CONJUNCTION_SOL_LUN | MOON_CONJUNCTION_LUN_NUIT))
+  {
+    moons->lunitari_sp++; moons->lunitari_lv++;
+  }
+  if (mask & MOON_CONJUNCTION_LUN_NUIT)
+  {
+    moons->nuitari_sp++; moons->nuitari_lv++;
+  }
+}
+
+void show_moon_conjunctions(struct char_data *ch)
+{
+  int mask = get_moon_conjunctions();
+  if (!mask)
+    return;
+  if (mask & MOON_CONJUNCTION_ALL)
+  {
+    if (weather_info.moons.solinari_phase > 18 && weather_info.moons.solinari_phase <= 27)
+      send_to_char(ch, "The Night of the Eye: all three moons align at High Sanction!\r\n");
+    else
+      send_to_char(ch, "All three moons of magic are in conjunction.\r\n");
+  }
+  else
+  {
+    if (mask & MOON_CONJUNCTION_SOL_LUN)
+      send_to_char(ch, "Solinari and Lunitari are in conjunction.\r\n");
+    if (IS_EVIL(ch) || GET_LEVEL(ch) >= LVL_IMMORT)
+    {
+      if (mask & MOON_CONJUNCTION_SOL_NUIT)
+        send_to_char(ch, "Solinari and Nuitari are in conjunction.\r\n");
+      if (mask & MOON_CONJUNCTION_LUN_NUIT)
+        send_to_char(ch, "Lunitari and Nuitari are in conjunction.\r\n");
+    }
+  }
+}

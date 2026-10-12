@@ -608,11 +608,11 @@ int savingthrow_full(struct char_data *ch, struct char_data *vict, int type, int
   if (is_moon_phase_affected(ch))
   {
     if (IS_GOOD(ch))
-      savethrow += weather_info.moons.solinari_st;
+      challenge += weather_info.moons.solinari_st;
     else if (IS_NEUTRAL(ch))
-      savethrow += weather_info.moons.lunitari_st;
+      challenge += weather_info.moons.lunitari_st;
     else
-      savethrow += weather_info.moons.nuitari_st;
+      challenge += weather_info.moons.nuitari_st;
   }
 
   if (ch && type == SAVING_REFL && (get_speed(vict, false) - 10) > get_speed(ch, false))

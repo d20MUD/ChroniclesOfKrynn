@@ -11,6 +11,15 @@
 #ifndef MOON_BONUS_SPELLS_H
 #define MOON_BONUS_SPELLS_H
 
+#define MOON_CONJUNCTION_SOL_LUN 1
+#define MOON_CONJUNCTION_SOL_NUIT 2
+#define MOON_CONJUNCTION_LUN_NUIT 4
+#define MOON_CONJUNCTION_ALL 8
+
+int get_moon_conjunctions(void);
+void apply_moon_conjunction_bonuses(void);
+void show_moon_conjunctions(struct char_data *ch);
+
 /* Function declarations for moon bonus spell system */
 
 /**

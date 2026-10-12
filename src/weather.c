@@ -67,19 +67,19 @@ void calc_moon_bonus(void)
     weather_info.moons.solinari_lv = -1;
   }
 
-  if (weather_info.moons.lunitari_phase > 6)
+  if (weather_info.moons.lunitari_phase > 21)
   {
     weather_info.moons.lunitari_st = 0;
     weather_info.moons.lunitari_sp = 1;
     weather_info.moons.lunitari_lv = 0;
   }
-  else if (weather_info.moons.lunitari_phase > 4)
+  else if (weather_info.moons.lunitari_phase > 14)
   {
     weather_info.moons.lunitari_st = 1;
     weather_info.moons.lunitari_sp = 2;
     weather_info.moons.lunitari_lv = 1;
   }
-  else if (weather_info.moons.lunitari_phase > 2)
+  else if (weather_info.moons.lunitari_phase > 7)
   {
     weather_info.moons.lunitari_st = 0;
     weather_info.moons.lunitari_sp = 0;
@@ -92,7 +92,7 @@ void calc_moon_bonus(void)
     weather_info.moons.lunitari_lv = -1;
   }
 
-  if (weather_info.moons.nuitari_phase > 21)
+  if (weather_info.moons.nuitari_phase > 6)
   {
     weather_info.moons.nuitari_st = 0;
     weather_info.moons.nuitari_sp = 1;
@@ -116,6 +116,8 @@ void calc_moon_bonus(void)
     weather_info.moons.nuitari_sp = 0;
     weather_info.moons.nuitari_lv = -1;
   }
+
+  apply_moon_conjunction_bonuses();
 
   /* Update moon bonus spells for all online players when moon phase changes */
   for (ch = character_list; ch; ch = next_ch)

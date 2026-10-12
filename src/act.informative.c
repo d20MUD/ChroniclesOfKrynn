@@ -5055,7 +5055,7 @@ ACMD(do_score)
     else if (IS_GOOD(ch))
     {
       send_to_char(ch,
-                   "%s's position in the sky bestows %s%d to saving throws, %s%d to "
+                   "%s's position in the sky bestows %s%d to spell save DC, %s%d to "
                    "effective\r\ncaster level and +%d bonus spell slots.\r\n",
                    moon_names[0], weather_info.moons.solinari_st >= 0 ? "+" : "",
                    weather_info.moons.solinari_st, weather_info.moons.solinari_lv >= 0 ? "+" : "",
@@ -5064,21 +5064,23 @@ ACMD(do_score)
     else if (IS_NEUTRAL(ch))
     {
       send_to_char(ch,
-                   "%s's position in the sky bestows %s%d to saving throws, %s%d to "
+                   "%s's position in the sky bestows %s%d to spell save DC, %s%d to "
                    "effective\r\ncaster level and +%d bonus spell slots.\r\n",
-                   moon_names[0], weather_info.moons.lunitari_st >= 0 ? "+" : "",
+                   moon_names[1], weather_info.moons.lunitari_st >= 0 ? "+" : "",
                    weather_info.moons.lunitari_st, weather_info.moons.lunitari_lv >= 0 ? "+" : "",
                    weather_info.moons.lunitari_lv, MAX(0, weather_info.moons.lunitari_sp));
     }
     else
     {
       send_to_char(ch,
-                   "%s's position in the sky bestows %s%d to saving throws, %s%d to "
+                   "%s's position in the sky bestows %s%d to spell save DC, %s%d to "
                    "effective\r\ncaster level and +%d bonus spell slots.\r\n",
-                   moon_names[1], weather_info.moons.nuitari_st >= 0 ? "+" : "",
+                   moon_names[2], weather_info.moons.nuitari_st >= 0 ? "+" : "",
                    weather_info.moons.nuitari_st, weather_info.moons.nuitari_lv >= 0 ? "+" : "",
                    weather_info.moons.nuitari_lv, MAX(0, weather_info.moons.nuitari_sp));
     }
+    if (is_moon_phase_affected(ch))
+      show_moon_conjunctions(ch);
     draw_line(ch, line_length, '-', '-');
   }
 
@@ -11731,19 +11733,19 @@ void look_at_moons(struct char_data *ch)
   else
     send_to_char(ch, "No trace of the silvery light from %s is visible.\r\n", moon_names[0]);
 
-  if (weather_info.moons.lunitari_phase > 6)
+  if (weather_info.moons.lunitari_phase > 21)
     send_to_char(ch, "A crimson glow can be seen in the sky as %s begins to appear.\r\n",
                  moon_names[1]);
-  else if (weather_info.moons.lunitari_phase > 4)
+  else if (weather_info.moons.lunitari_phase > 14)
     send_to_char(ch, "%s casts a crimson glow throughout the sky.\r\n", moon_names[1]);
-  else if (weather_info.moons.lunitari_phase > 2)
+  else if (weather_info.moons.lunitari_phase > 7)
     send_to_char(ch, "The crimson glow weakens as %s slowly fades away.\r\n", moon_names[1]);
   else
     send_to_char(ch, "No trace of the crimson light from %s is visible.\r\n", moon_names[1]);
 
   if (IS_EVIL(ch) || GET_LEVEL(ch) >= LVL_IMMORT)
   {
-    if (weather_info.moons.nuitari_phase > 21)
+    if (weather_info.moons.nuitari_phase > 6)
       send_to_char(ch, "The night sky seems to grow darker as %s slowly appears.\r\n",
                    moon_names[2]);
     else if (weather_info.moons.nuitari_phase > 4)
@@ -11754,6 +11756,7 @@ void look_at_moons(struct char_data *ch)
     else
       send_to_char(ch, "No trace of the infinite darkness from %s is visible.\r\n", moon_names[2]);
   }
+  show_moon_conjunctions(ch);
 }
 
 /* GMCP Test Command - Tests if GMCP protocol is working */

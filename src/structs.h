@@ -8033,9 +8033,9 @@ struct moon_data
   int solinari_phase; /* Good Moon                  */
   int lunitari_phase; /* Neutral Moon               */
   int nuitari_phase;  /* Evil Moon                  */
-  int solinari_st;    /* Good Saving Throw Mod      */
-  int lunitari_st;    /* Neutral Saving Throw Mod   */
-  int nuitari_st;     /* Evil Saving Throw Mod      */
+  int solinari_st;    /* Good Spell Save DC Mod      */
+  int lunitari_st;    /* Neutral Spell Save DC Mod   */
+  int nuitari_st;     /* Evil Spell Save DC Mod      */
   int solinari_sp;    /* Good Spell Bonus           */
   int lunitari_sp;    /* Neutral Spell Bonus        */
   int nuitari_sp;     /* Evil Spell Bonus           */
