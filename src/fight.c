@@ -7249,7 +7249,6 @@ int damage(struct char_data *ch, struct char_data *victim, int dam, int w_type, 
  *   ATTACK_TYPE_RANGED        : Ranged attack.
  *   ATTACK_TYPE_UNARMED       : Unarmed attack.
  *   ATTACK_TYPE_TWOHAND       : Two-handed weapon attack.
- *   ATTACK_TYPE_BOMB_TOSS     : Alchemist - tossing bombs
  *   ATTACK_TYPE_PRIMARY_SNEAK : impromptu sneak attack, primary hand
  *   ATTACK_TYPE_OFFHAND_SNEAK : impromptu sneak attack, offhand */
 /* using w_type -1 as a display mode */
@@ -8126,8 +8125,7 @@ int compute_damage_bonus(struct char_data *ch, struct char_data *vict, struct ob
     dambonus += 2;
 
   /* power attack */
-  if (AFF_FLAGGED(ch, AFF_POWER_ATTACK) && attack_type != ATTACK_TYPE_RANGED &&
-      attack_type != ATTACK_TYPE_BOMB_TOSS)
+  if (AFF_FLAGGED(ch, AFF_POWER_ATTACK) && attack_type != ATTACK_TYPE_RANGED)
   {
     int pa_bonus = COMBAT_MODE_VALUE(ch);
 
@@ -8478,7 +8476,7 @@ int compute_damage_bonus(struct char_data *ch, struct char_data *vict, struct ob
   }
 
   /* Add perk weapon damage bonuses (Step 6) - only for melee/unarmed attacks */
-  if (!IS_NPC(ch) && attack_type != ATTACK_TYPE_RANGED && attack_type != ATTACK_TYPE_BOMB_TOSS)
+  if (!IS_NPC(ch) && attack_type != ATTACK_TYPE_RANGED)
   {
     int perk_bonus = get_perk_weapon_damage_bonus(ch, wielded);
     if (perk_bonus != 0)
@@ -9385,7 +9383,6 @@ int is_critical_hit(struct char_data *ch, struct obj_data *wielded, int diceroll
  *   ATTACK_TYPE_RANGED        : Ranged attack.
  *   ATTACK_TYPE_UNARMED       : Unarmed attack.
  *   ATTACK_TYPE_TWOHAND       : Two-handed weapon attack.
- *   ATTACK_TYPE_BOMB_TOSS     : Alchemist - tossing bombs
  *   ATTACK_TYPE_PRIMARY_SNEAK : impromptu sneak attack, primary hand
  *   ATTACK_TYPE_OFFHAND_SNEAK : impromptu sneak attack, offhand  */
 int compute_hit_damage(struct char_data *ch, struct char_data *victim, int w_type, int diceroll,
@@ -10866,7 +10863,6 @@ int weapon_special(struct obj_data *wpn, struct char_data *ch, char *hit_msg)
  *   ATTACK_TYPE_OFFHAND : Offhand attack.
  *   ATTACK_TYPE_RANGED  : Ranged attack
  *   ATTACK_TYPE_TWOHAND : Two-handed weapon attack.
- *   ATTACK_TYPE_BOMB_TOSS     : Alchemist - tossing bombs
  *   ATTACK_TYPE_PRIMARY_SNEAK : impromptu sneak attack, primary hand
  *   ATTACK_TYPE_OFFHAND_SNEAK : impromptu sneak attack, offhand  */
 struct obj_data *get_wielded(struct char_data *ch, /* Wielder */
@@ -10898,7 +10894,6 @@ struct obj_data *get_wielded(struct char_data *ch, /* Wielder */
     }
     break;
   case ATTACK_TYPE_UNARMED:
-  case ATTACK_TYPE_BOMB_TOSS:
     wielded = NULL;
     break;
   case ATTACK_TYPE_TWOHAND:
@@ -10942,7 +10937,6 @@ int compute_attack_bonus(struct char_data *ch,     /* Attacker */
  *   ATTACK_TYPE_RANGED  : Ranged attack.
  *   ATTACK_TYPE_UNARMED : Unarmed attack.
  *   ATTACK_TYPE_TWOHAND : Two-handed weapon attack.
- *   ATTACK_TYPE_BOMB_TOSS     : Alchemist - tossing bombs
  *   ATTACK_TYPE_PRIMARY_SNEAK : impromptu sneak attack, primary hand
  *   ATTACK_TYPE_OFFHAND_SNEAK : impromptu sneak attack, offhand  */
 int compute_attack_bonus_full(struct char_data *ch,     /* Attacker */
@@ -11060,23 +11054,32 @@ int compute_attack_bonus_full(struct char_data *ch,     /* Attacker */
     if (display)
       send_to_char(ch, "%2d: %-50s\r\n", HAS_FEAT(ch, FEAT_EPIC_ELDRITCH_MASTER) * 2,
                    "Eldritch Master");
-    // we'll add weapon focus ranged
-    if (HAS_COMBAT_FEAT(ch, feat_to_cfeat(FEAT_WEAPON_FOCUS), WEAPON_FAMILY_RANGED))
-      calc_bab += 1;
-    if (HAS_COMBAT_FEAT(ch, feat_to_cfeat(FEAT_SUPERIOR_WEAPON_FOCUS), WEAPON_FAMILY_RANGED))
-      calc_bab += 1;
-    if (HAS_COMBAT_FEAT(ch, feat_to_cfeat(FEAT_GREATER_WEAPON_FOCUS), WEAPON_FAMILY_RANGED))
-      calc_bab += 1;
     /* fall through is intentional here */
   case ATTACK_TYPE_RANGED:
     calc_bab += GET_DEX_BONUS(ch);
     if (display)
       send_to_char(ch, "%2d: %-50s\r\n", GET_DEX_BONUS(ch), "Ranged Dex");
-    break;
-  case ATTACK_TYPE_BOMB_TOSS:
-    calc_bab += GET_DEX_BONUS(ch);
-    if (display)
-      send_to_char(ch, "%2d: %-50s\r\n", GET_DEX_BONUS(ch), "Bomb Toss Dex");
+    /* Ranged focus applies to every ranged attack, including bombs, regardless
+     * of the weapon currently equipped. The generic focus checks below skip
+     * these attacks to avoid counting the same bonus twice. */
+    if (HAS_COMBAT_FEAT(ch, feat_to_cfeat(FEAT_WEAPON_FOCUS), WEAPON_FAMILY_RANGED))
+    {
+      calc_bab += 1;
+      if (display)
+        send_to_char(ch, " 1: %-50s\r\n", "Weapon Focus (Ranged)");
+    }
+    if (HAS_COMBAT_FEAT(ch, feat_to_cfeat(FEAT_SUPERIOR_WEAPON_FOCUS), WEAPON_FAMILY_RANGED))
+    {
+      calc_bab += 1;
+      if (display)
+        send_to_char(ch, " 1: %-50s\r\n", "Superior Weapon Focus (Ranged)");
+    }
+    if (HAS_COMBAT_FEAT(ch, feat_to_cfeat(FEAT_GREATER_WEAPON_FOCUS), WEAPON_FAMILY_RANGED))
+    {
+      calc_bab += 1;
+      if (display)
+        send_to_char(ch, " 1: %-50s\r\n", "Greater Weapon Focus (Ranged)");
+    }
     if (KNOWS_DISCOVERY(ch, ALC_DISC_PRECISE_BOMBS))
     {
       calc_bab += 2;
@@ -11091,6 +11094,12 @@ int compute_attack_bonus_full(struct char_data *ch,     /* Attacker */
         if (display)
           send_to_char(ch, "%2d: %-50s\r\n", perk_precise, "Bomb Craftsman Precision");
       }
+    }
+    {
+      int savant_bonus = get_bombardier_savant_attack_bonus(ch);
+      calc_bab += savant_bonus;
+      if (display && savant_bonus)
+        send_to_char(ch, "%2d: %-50s\r\n", savant_bonus, "Bombardier Savant");
     }
     break;
   case ATTACK_TYPE_UNARMED:
@@ -11612,7 +11621,8 @@ int compute_attack_bonus_full(struct char_data *ch,     /* Attacker */
       send_to_char(ch, " 1: %-50s\r\n", "Weapon Expert");
   }
 
-  if (HAS_FEAT(ch, FEAT_WEAPON_FOCUS))
+  if (attack_type != ATTACK_TYPE_RANGED && attack_type != ATTACK_TYPE_ELDRITCH_BLAST &&
+      HAS_FEAT(ch, FEAT_WEAPON_FOCUS))
   {
     if (wielded)
     {
@@ -11650,7 +11660,8 @@ int compute_attack_bonus_full(struct char_data *ch,     /* Attacker */
   }
 
   /* greater weapon focus */
-  if (HAS_FEAT(ch, FEAT_GREATER_WEAPON_FOCUS))
+  if (attack_type != ATTACK_TYPE_RANGED && attack_type != ATTACK_TYPE_ELDRITCH_BLAST &&
+      HAS_FEAT(ch, FEAT_GREATER_WEAPON_FOCUS))
   {
     if (wielded)
     {
@@ -12007,7 +12018,7 @@ int compute_attack_bonus_full(struct char_data *ch,     /* Attacker */
                  get_char_affect_modifier(ch, AFFECT_LEVEL_DRAIN, APPLY_SPECIAL), "Level Drain");
 
   /* Add perk weapon bonuses (Step 6) - only for melee/unarmed attacks */
-  if (!IS_NPC(ch) && attack_type != ATTACK_TYPE_RANGED && attack_type != ATTACK_TYPE_BOMB_TOSS)
+  if (!IS_NPC(ch) && attack_type != ATTACK_TYPE_RANGED)
   {
     int perk_bonus = get_perk_weapon_tohit_bonus(ch, wielded);
     if (perk_bonus != 0)
@@ -12129,8 +12140,7 @@ int compute_attack_bonus_full(struct char_data *ch,     /* Attacker */
   }
 
   /* Bard Swashbuckler: Supreme Style - +2 to-hit (Tier 4 Capstone) */
-  if (wielded && !IS_NPC(ch) && attack_type != ATTACK_TYPE_RANGED &&
-      attack_type != ATTACK_TYPE_BOMB_TOSS)
+  if (wielded && !IS_NPC(ch) && attack_type != ATTACK_TYPE_RANGED)
   {
     int supreme_style_bonus = get_bard_supreme_style_tohit_bonus(ch);
     if (supreme_style_bonus > 0)
@@ -12220,7 +12230,7 @@ int compute_attack_bonus_full(struct char_data *ch,     /* Attacker */
       send_to_char(ch, "-4: %-50s\r\n", "Mummy dread");
   }
 
-  if (attack_type == ATTACK_TYPE_RANGED || attack_type == ATTACK_TYPE_BOMB_TOSS)
+  if (attack_type == ATTACK_TYPE_RANGED)
     formation_penalty = formation_ranged_penalty(ch);
   if (display && formation_penalty)
     send_to_char(ch, "%2d: %-50s\r\n", formation_penalty, "Front-row ranged penalties");
@@ -12477,7 +12487,6 @@ int combat_maneuver_check(struct char_data *ch, struct char_data *vict, int comb
  *   ATTACK_TYPE_OFFHAND : Offhand attack.
  *   ATTACK_TYPE_RANGED  : Ranged attack.
  *   ATTACK_TYPE_UNARMED : Unarmed attack.
- *   ATTACK_TYPE_BOMB_TOSS     : Alchemist - tossing bombs
  *   ATTACK_TYPE_PRIMARY_SNEAK : impromptu sneak attack, primary hand
  *   ATTACK_TYPE_OFFHAND_SNEAK : impromptu sneak attack, offhand   */
 static int perform_attack_roll(struct char_data *ch,     /* Attacker */
@@ -12535,7 +12544,7 @@ static int perform_attack_roll(struct char_data *ch,     /* Attacker */
 
   /* Perfect Deflection: negate one incoming ranged/bomb attack and reflect force damage */
   if (victim && AFF_FLAGGED(victim, AFF_PERFECT_DEFLECTION_ACTIVE) &&
-      (attack_type == ATTACK_TYPE_RANGED || attack_type == ATTACK_TYPE_BOMB_TOSS))
+      attack_type == ATTACK_TYPE_RANGED)
   {
     /* consume the stance */
     REMOVE_BIT_AR(AFF_FLAGS(victim), AFF_PERFECT_DEFLECTION_ACTIVE);
@@ -12599,8 +12608,7 @@ int attack_roll(struct char_data *ch, struct char_data *victim, int attack_type,
 
 int bomb_attack_roll(struct char_data *ch, struct char_data *victim)
 {
-  return perform_attack_roll(ch, victim, ATTACK_TYPE_RANGED, TRUE, 1,
-                             get_bombardier_savant_attack_bonus(ch), TRUE);
+  return perform_attack_roll(ch, victim, ATTACK_TYPE_RANGED, TRUE, 1, 0, TRUE);
 }
 
 /*
@@ -12616,7 +12624,6 @@ int bomb_attack_roll(struct char_data *ch, struct char_data *victim)
  *   ATTACK_TYPE_OFFHAND : Offhand attack.
  *   ATTACK_TYPE_RANGED  : Ranged attack.
  *   ATTACK_TYPE_UNARMED : Unarmed attack.
- *   ATTACK_TYPE_BOMB_TOSS     : Alchemist - tossing bombs
  *   ATTACK_TYPE_PRIMARY_SNEAK : impromptu sneak attack, primary hand
  *   ATTACK_TYPE_OFFHAND_SNEAK : impromptu sneak attack, offhand   */
 int attack_roll_with_critical(struct char_data *ch,     /* Attacker */
@@ -14872,7 +14879,6 @@ int damage_shield_check(struct char_data *ch, struct char_data *victim, int atta
     #define ATTACK_TYPE_RANGED    2
     #define ATTACK_TYPE_UNARMED   3
     #define ATTACK_TYPE_TWOHAND   4 //doesn't really serve any purpose?
-    #define ATTACK_TYPE_BOMB_TOSS 5
     #define ATTACK_TYPE_PRIMARY_SNEAK   6  //impromptu sneak attack
     #define ATTACK_TYPE_OFFHAND_SNEAK   7  //impromptu sneak attack
    Attack queue will determine what kind of hit this is. */
@@ -14941,7 +14947,7 @@ int hit(struct char_data *ch, struct char_data *victim, int type, int dam_type, 
                    formation_row_name(get_formation_row(ch)));
     return HIT_MISS;
   }
-  if (attack_type != ATTACK_TYPE_RANGED && attack_type != ATTACK_TYPE_BOMB_TOSS &&
+  if (attack_type != ATTACK_TYPE_RANGED &&
       attack_type != ATTACK_TYPE_PSIONICS && attack_type != ATTACK_TYPE_ELDRITCH_BLAST &&
       IS_NPC(ch) && !formation_can_melee_target(ch, victim))
   {

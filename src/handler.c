@@ -3802,7 +3802,7 @@ bool formation_allows_attack(struct char_data *ch, int attack_type, struct obj_d
   if (attack_type == ATTACK_TYPE_PSIONICS || attack_type == ATTACK_TYPE_ELDRITCH_BLAST)
     return TRUE;
   row = get_formation_row(ch);
-  ranged = attack_type == ATTACK_TYPE_RANGED || attack_type == ATTACK_TYPE_BOMB_TOSS;
+  ranged = attack_type == ATTACK_TYPE_RANGED;
   /* Natural attacks must not borrow reach from an equipped weapon. */
   if (weapon && GET_OBJ_TYPE(weapon) == ITEM_WEAPON && attack_type != ATTACK_TYPE_UNARMED &&
       attack_type < ATTACK_TYPE_PRIMARY_EVO_BITE)

@@ -5627,7 +5627,7 @@
 #define ATTACK_TYPE_RANGED 2
 #define ATTACK_TYPE_UNARMED 3
 #define ATTACK_TYPE_TWOHAND 4 /* doesn't really serve any purpose */
-#define ATTACK_TYPE_BOMB_TOSS 5
+#define ATTACK_TYPE_BOMB_TOSS ATTACK_TYPE_RANGED /* Legacy name; bombs use ranged attacks. */
 #define ATTACK_TYPE_PRIMARY_SNEAK 6 // impromptu sneak attack
 #define ATTACK_TYPE_OFFHAND_SNEAK 7 // impromptu sneak attack
 #define ATTACK_TYPE_PSIONICS 8

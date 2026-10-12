@@ -4311,7 +4311,7 @@ ACMD(do_attacks)
   }
   else if (is_abbrev(arg, "bomb"))
   {
-    attack_type = ATTACK_TYPE_BOMB_TOSS;
+    attack_type = ATTACK_TYPE_RANGED;
   }
   else if (is_abbrev(arg, "psionic"))
   {
