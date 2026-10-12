@@ -107,6 +107,27 @@ struct command_info *complete_cmd_info;
 ACMD_DECL(do_reboot);
 ACMD_DECL(do_relock);
 
+/* Informational commands and conversation do not interrupt artificer work.
+ * Use resolved command names, so normal command abbreviations still work. */
+static const char *const device_work_commands[] = {
+    "news", "motd", "who", "whois", "whoami", "time", "weather",
+    "commands", "socials", "credits", "info", "history", "inventory",
+    "equipment", "affects", "cooldowns", "resistances", "damagereduction",
+    "stats", "abilities", "feats", "spells", "races", "classes", "tnl",
+    "gtell", "gsay", "ooc", "osay", "save",
+    "gossip", "gemote", "chat", "look", "score", "craftscore", "group",
+    "say", "'", "hp", "help", "class", "race", "spelllist", "reply",
+    "prefedit", "bug", "typo", "idea", "wearapplies", "wearlocations", "tell", NULL};
+
+static bool is_device_work_command(const char *command)
+{
+  int i;
+  for (i = 0; device_work_commands[i]; i++)
+    if (!strcmp(command, device_work_commands[i]))
+      return TRUE;
+  return FALSE;
+}
+
 /* This is the Master Command List. You can put new commands in, take commands
  * out, change the order they appear in, etc.  You can adjust the "priority"
  * of commands simply by changing the order they appear in the command list.
@@ -1656,8 +1677,17 @@ void command_interpreter(struct char_data *ch, char *argument)
                  crafting_methods[GET_CRAFT(ch).crafting_method]);
   }
 #endif
-  else if ((char_has_mud_event(ch, eCRAFTING) || char_has_mud_event(ch, eDEVICE_CREATION) ||
-            char_has_mud_event(ch, eDEVICE_REPAIR) || char_has_mud_event(ch, eBREWING)) &&
+  else if ((char_has_mud_event(ch, eDEVICE_CREATION) || char_has_mud_event(ch, eDEVICE_REPAIR)) &&
+           !is_device_work_command(complete_cmd_info[cmd].command))
+  {
+    int i;
+    send_to_char(ch, "You are too busy %s to do that!\r\n[Available commands: ",
+                 char_has_mud_event(ch, eDEVICE_CREATION) ? "devising your creation" : "repairing your device");
+    for (i = 0; device_work_commands[i]; i++)
+      send_to_char(ch, "%s%s", i ? "/" : "", device_work_commands[i]);
+    send_to_char(ch, "]\r\n");
+  }
+  else if ((char_has_mud_event(ch, eCRAFTING) || char_has_mud_event(ch, eBREWING)) &&
            !is_abbrev(complete_cmd_info[cmd].command, "gossip") &&
            !is_abbrev(complete_cmd_info[cmd].command, "gemote") &&
            !is_abbrev(complete_cmd_info[cmd].command, "chat") &&
@@ -1683,15 +1713,12 @@ void command_interpreter(struct char_data *ch, char *argument)
   {
     if (char_has_mud_event(ch, eCRAFTING))
       send_to_char(ch, "You are too busy crafting to do that! ");
-    else if (char_has_mud_event(ch, eDEVICE_CREATION))
-      send_to_char(ch, "You are too busy devising your creation to do that! ");
-    else if (char_has_mud_event(ch, eDEVICE_REPAIR))
-      send_to_char(ch, "You are too busy repairing your device to do that! ");
     else if (char_has_mud_event(ch, eBREWING))
       send_to_char(ch, "You are too busy brewing to do that! ");
     send_to_char(ch, "[Available commands: "
                      "gossip/chat/gemote/look/score/group/say/tell/reply/help/prefedit/bug/typo/"
                      "idea/class/race/spelllist]\r\n");
+
   }
   else if (GET_POS(ch) < complete_cmd_info[cmd].minimum_position)
     switch (GET_POS(ch))
