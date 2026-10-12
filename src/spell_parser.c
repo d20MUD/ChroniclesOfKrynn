@@ -213,8 +213,10 @@ bool concentration_check(struct char_data *ch, int spellnum)
     }
   }
 
-  if (FIGHTING(ch) && !skill_check(ch, ABILITY_CONCENTRATION, concentration_dc) &&
-      CASTING_CLASS(ch) != CLASS_ALCHEMIST && CASTING_CLASS(ch) != CLASS_SHADOW_DANCER)
+  /* Shadowcast uses limited-use abilities; do not roll Concentration for it.
+   * Check exempt casting classes first so skill_check is never invoked. */
+  if (CASTING_CLASS(ch) != CLASS_ALCHEMIST && CASTING_CLASS(ch) != CLASS_SHADOW_DANCER &&
+      FIGHTING(ch) && !skill_check(ch, ABILITY_CONCENTRATION, concentration_dc))
   {
     /* Witch of the Multiverse - auto-reroll failed concentration once per 10 minutes */
     if (!IS_NPC(ch) && has_warlock_witch_of_the_multiverse(ch) &&
