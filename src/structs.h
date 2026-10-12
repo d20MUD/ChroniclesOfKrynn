@@ -3120,11 +3120,12 @@
 /* Dragon Rider mounted travel ability. */
 #define FEAT_DRAGON_FLIGHT 1272
 #define FEAT_PRACTICED_SPELLCASTER 1273
+#define FEAT_FASTER_BOMB_PREPARATION 1274
 
 /** reserved above feat# + 1**/
-#define FEAT_LAST_FEAT 1274
+#define FEAT_LAST_FEAT 1275
 /** FEAT_LAST_FEAT + 1 ***/
-#define NUM_FEATS 1275
+#define NUM_FEATS 1276
 /** absolute cap **/
 #define MAX_FEATS 1500
 /*****/

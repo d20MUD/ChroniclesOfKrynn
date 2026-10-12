@@ -1279,7 +1279,9 @@ static void list_one_char(struct char_data *i, struct char_data *ch)
   }
   else if (!FIGHTING(i))
   {
-    if (!SITTING(i))
+    if (!SITTING(i) && GET_POS(i) == POS_STANDING && is_flying(i))
+      send_to_char(ch, " is flying here.");
+    else if (!SITTING(i))
       send_to_char(ch, "%s", positions[GET_POS(i)]);
     else
     {

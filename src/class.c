@@ -8998,6 +8998,7 @@ void load_class_list(void)
 
   /* starting feats and proficiencies */
   feat_assignment(CLASS_ALCHEMIST, FEAT_SIMPLE_WEAPON_PROFICIENCY, Y, 1, N);
+  feat_assignment(CLASS_ALCHEMIST, FEAT_FASTER_BOMB_PREPARATION, Y, NOASSIGN_FEAT, N);
   feat_assignment(CLASS_ALCHEMIST, FEAT_ARMOR_PROFICIENCY_LIGHT, Y, 1, N);
 
   /* feat assignment */

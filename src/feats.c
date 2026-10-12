@@ -3323,6 +3323,12 @@ void assign_feats(void)
         "Chance to decrease total memorization time and each memorization pulse to "
         "further reduce memorization time.");
 
+  feato(FEAT_FASTER_BOMB_PREPARATION, "faster bomb preparation", TRUE, TRUE, FALSE,
+        FEAT_TYPE_GENERAL, "halves bomb preparation cooldown",
+        "Reduces the action cooldown for making a bomb from six seconds to three seconds. "
+        "Works with the Fast Bombs discovery; does not change bomb throwing speed.");
+  feat_prereq_class_level(FEAT_FASTER_BOMB_PREPARATION, CLASS_ALCHEMIST, 1);
+
   feato(FEAT_SPELL_FOCUS, "spell focus", TRUE, TRUE, TRUE, FEAT_TYPE_SPELLCASTING,
         "wizard only, +2 to all spell dcs for all spells in school/domain",
         "+2 to all spell dcs for all spells in school/domain.  Transmutation improves polymorph "
@@ -6558,6 +6564,18 @@ static int count_available_natural_attacks(struct char_data *ch)
 int feat_is_available(struct char_data *ch, int featnum, int iarg, char *sarg)
 {
   struct feat_prerequisite *prereq = NULL;
+
+  if (CLASS_LEVEL(ch, CLASS_ALCHEMIST) > 0 &&
+      (featnum == FEAT_ARMORED_SPELLCASTING || featnum == FEAT_SPELL_PENETRATION ||
+       featnum == FEAT_ENHANCED_SPELL_DAMAGE))
+  {
+    int class;
+    for (class = 0; class < NUM_CLASSES; class++)
+      if (class != CLASS_ALCHEMIST && IS_SPELLCASTER_CLASS(class) && CLASS_LEVEL(ch, class) > 0)
+        break;
+    if (class == NUM_CLASSES)
+      return FALSE;
+  }
 
   if (featnum == FEAT_PRACTICED_SPELLCASTER)
   {

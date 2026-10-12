@@ -3102,7 +3102,7 @@ void die(struct char_data *ch, struct char_data *killer)
   raw_kill(ch, killer);
 }
 
-/* called for splitting xp in a group (engine) */
+/* Award each eligible group member their full XP reward. */
 static void perform_group_gain(struct char_data *ch, int base, struct char_data *victim)
 {
   int share, hap_share;
@@ -3119,11 +3119,11 @@ static void perform_group_gain(struct char_data *ch, int base, struct char_data 
   if (!ch->char_specials.post_combat_messages)
   {
     if (share > 1)
-      send_to_char(ch, "You receive your share of experience -- %d points.\r\n",
+      send_to_char(ch, "You receive %d experience points.\r\n",
                    gain_exp(ch, share, GAIN_EXP_MODE_GROUP));
     else
     {
-      send_to_char(ch, "You receive your share of experience -- one measly little point!\r\n");
+      send_to_char(ch, "You receive one measly little experience point!\r\n");
       gain_exp(ch, share, GAIN_EXP_MODE_GROUP);
     }
   }
@@ -3137,7 +3137,7 @@ static void perform_group_gain(struct char_data *ch, int base, struct char_data 
 #endif
 }
 
-/* called for splitting xp in a group (prelim) */
+/* Calculate the full reward for each eligible group member. */
 #if defined(CAMPAIGN_DL)
 #define BONUS_PER_MEMBER 10
 #else
@@ -3175,8 +3175,8 @@ static void group_gain(struct char_data *ch, struct char_data *victim)
   if (tot_members)
     party_level /= tot_members;
 
-  /* total XP received, round up to the nearest tot_members */
-  tot_gain = (GET_EXP(victim) / 3) + tot_members - 1;
+  /* Each member receives the kill reward without a party-size penalty. */
+  tot_gain = GET_EXP(victim) / 3;
 
   /* Calculate level-difference bonus */
   if (GET_LEVEL(victim) > party_level)
@@ -3191,14 +3191,7 @@ static void group_gain(struct char_data *ch, struct char_data *victim)
   if (!IS_NPC(victim))
     tot_gain = MIN(CONFIG_MAX_EXP_LOSS * 2 / 3, tot_gain);
 
-  /* base: split the xp between the individuals in the party */
-  // Divides based on number of players in the party.
-  // 1 = 100%, 2 = 90%, 3 = 80%, 4 = 70%, 5 = 60%, 6+ = 50% of normal exp gain.
-  // Charmies don't count against this.
-  if (tot_members >= 1)
-    base = tot_gain * (100 - MIN(50, (tot_members - 1) * 10)) / 100;
-  else
-    base = 0;
+  base = tot_members >= 1 ? tot_gain : 0;
 
   /* if mob isn't within X levels, don't give xp -zusuk */
 #if !defined(CAMPAIGN_DL)
@@ -12487,11 +12480,11 @@ int combat_maneuver_check(struct char_data *ch, struct char_data *vict, int comb
  *   ATTACK_TYPE_BOMB_TOSS     : Alchemist - tossing bombs
  *   ATTACK_TYPE_PRIMARY_SNEAK : impromptu sneak attack, primary hand
  *   ATTACK_TYPE_OFFHAND_SNEAK : impromptu sneak attack, offhand   */
-int attack_roll(struct char_data *ch,     /* Attacker */
+static int perform_attack_roll(struct char_data *ch,     /* Attacker */
                 struct char_data *victim, /* Defender */
                 int attack_type,          /* Type of attack */
                 int is_touch,             /* TRUE/FALSE this is a touch attack? */
-                int attack_number)        /* Attack number, determines penalty. */
+                int attack_number, int extra_bonus, bool show_roll)
 {
   //  struct obj_data *wielded = get_wielded(ch, attack_type);
 
@@ -12571,8 +12564,14 @@ int attack_roll(struct char_data *ch,     /* Attacker */
   if (GET_TOUCH_SPELL_QUEUED(ch) == SPELL_SHOCKING_GRASP && is_touch && is_wearing_metal(victim))
     attack_bonus += 3;
 
+  attack_bonus += extra_bonus;
   int diceroll = d20(ch);
   int result = ((attack_bonus + diceroll) - victim_ac);
+
+  if (show_roll)
+    send_to_char(ch, "Bomb attack roll: 1d20 = %d, %+d bonus = %d vs touch AC %d (%s).\r\n",
+                 diceroll, attack_bonus, diceroll + attack_bonus, victim_ac,
+                 result >= 0 ? "hit" : "miss");
 
   //  if (attack_type == ATTACK_TYPE_RANGED) {
   /* 1d20 + base attack bonus + Dexterity modifier + size modifier + range penalty */
@@ -12590,6 +12589,18 @@ int attack_roll(struct char_data *ch,     /* Attacker */
   }
 
   return result;
+}
+
+int attack_roll(struct char_data *ch, struct char_data *victim, int attack_type, int is_touch,
+                int attack_number)
+{
+  return perform_attack_roll(ch, victim, attack_type, is_touch, attack_number, 0, FALSE);
+}
+
+int bomb_attack_roll(struct char_data *ch, struct char_data *victim)
+{
+  return perform_attack_roll(ch, victim, ATTACK_TYPE_RANGED, TRUE, 1,
+                             get_bombardier_savant_attack_bonus(ch), TRUE);
 }
 
 /*

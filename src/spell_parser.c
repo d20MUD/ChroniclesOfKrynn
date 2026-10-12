@@ -370,10 +370,21 @@ static int get_cleric_spontaneous_replacement(struct char_data *ch, int spellnum
   return cleric_spontaneous_spell_for_circle(circle, energy_type);
 }
 
+static bool is_alchemist_extract(struct char_data *ch, int spellnum)
+{
+  return GET_CASTING_CLASS(ch) == CLASS_ALCHEMIST && !IS_EPIC_SPELL(spellnum);
+}
+
 /* displays substitute text for spells to represent 'magical phrases' */
 static void say_spell(struct char_data *ch, int spellnum, struct char_data *tch,
                       struct obj_data *tobj, bool start)
 {
+  if (is_alchemist_extract(ch, spellnum))
+  {
+    act(start ? "$n begins preparing an extract." : "$n imbibes an alchemical extract.",
+        FALSE, ch, 0, 0, TO_ROOM);
+    return;
+  }
   char lbuf[MEDIUM_STRING] = {'\0'}, buf[MEDIUM_STRING] = {'\0'}, buf1[MEDIUM_STRING] = {'\0'},
        buf2[MEDIUM_STRING] = {'\0'};           /* FIXME */
   char format_buf[MAX_STRING_LENGTH] = {'\0'}; /* Phase 4: For metamagic prefix */
@@ -2713,13 +2724,15 @@ static int cast_spell_with_type_and_slot(struct char_data *ch, struct char_data 
   if (tch && IN_ROOM(tch) > top_of_world)
     return 0;
 
-  if (ROOM_FLAGGED(IN_ROOM(ch), ROOM_SOUNDPROOF) && !is_spellnum_psionic(spellnum))
+  if (ROOM_FLAGGED(IN_ROOM(ch), ROOM_SOUNDPROOF) && !is_spellnum_psionic(spellnum) &&
+      !(casttype == CAST_SPELL && is_alchemist_extract(ch, spellnum)))
   {
     send_to_char(ch, "A mysterious force prevents you form even speaking a single word!\r\n");
     return 0;
   }
 
-  if (AFF_FLAGGED(ch, AFF_SILENCED) && !is_spellnum_psionic(spellnum))
+  if (AFF_FLAGGED(ch, AFF_SILENCED) && !is_spellnum_psionic(spellnum) &&
+      !(casttype == CAST_SPELL && is_alchemist_extract(ch, spellnum)))
   {
     if (HAS_FEAT(ch, FEAT_AUTOMATIC_SILENT_SPELL) &&
         compute_spells_circle(ch, GET_CASTING_CLASS(ch), spellnum, metamagic, 0) <= 3)
@@ -3836,20 +3849,6 @@ ACMDU(do_gen_cast)
     return;
   }
 
-  if (AFF_FLAGGED(ch, AFF_SILENCED) && !is_spellnum_psionic(spellnum))
-  {
-    if (HAS_FEAT(ch, FEAT_AUTOMATIC_SILENT_SPELL) &&
-        compute_spells_circle(ch, GET_CASTING_CLASS(ch), spellnum, metamagic, 0) <= 3)
-    {
-      // allow automatic silent spell to bypass silence
-    }
-    else if (!IS_SET(metamagic, METAMAGIC_SILENT))
-    {
-      send_to_char(ch, "You are unable to make a sound.\r\n");
-      act("$n tries to speak, but cannot seem to make a sound.", TRUE, ch, 0, 0, TO_ROOM);
-      return;
-    }
-  }
 
   if (IS_AFFECTED(ch, AFF_WILD_SHAPE) && !HAS_FEAT(ch, FEAT_NATURAL_SPELL))
   {
@@ -4280,6 +4279,23 @@ return;
     else
     {
       GET_CASTING_CLASS(ch) = CLASS_SHADOWDANCER;
+    }
+  }
+
+  /* Check verbal requirements after resolving the prepared casting class. */
+  if (AFF_FLAGGED(ch, AFF_SILENCED) && !is_spellnum_psionic(spellnum) &&
+      !is_alchemist_extract(ch, spellnum))
+  {
+    if (HAS_FEAT(ch, FEAT_AUTOMATIC_SILENT_SPELL) &&
+        compute_spells_circle(ch, GET_CASTING_CLASS(ch), spellnum, metamagic, 0) <= 3)
+    {
+      // allow automatic silent spell to bypass silence
+    }
+    else if (!IS_SET(metamagic, METAMAGIC_SILENT))
+    {
+      send_to_char(ch, "You are unable to make a sound.\r\n");
+      act("$n tries to speak, but cannot seem to make a sound.", TRUE, ch, 0, 0, TO_ROOM);
+      return;
     }
   }
 

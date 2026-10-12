@@ -684,10 +684,8 @@ ACMD(do_bombs)
     if (!target)
       target = FIGHTING(ch);
 
-    int bombardier_attack_bonus = get_bombardier_savant_attack_bonus(ch);
     int bomb_hit_result =
-        bomb_is_friendly(type) ? 1 : attack_roll(ch, target, ATTACK_TYPE_RANGED, TRUE, 1);
-    bomb_hit_result += bombardier_attack_bonus;
+        bomb_is_friendly(type) ? 1 : bomb_attack_roll(ch, target);
 
     if (bomb_is_friendly(type) || bomb_hit_result >= 0)
     {
@@ -769,16 +767,18 @@ ACMD(do_bombs)
 
     ch->player_specials->saved.bombs[bSlot] = type;
 
-    send_to_char(ch, "You've successfully created a %s bomb.\r\n", bomb_types[type]);
+    send_to_char(ch, "You've successfully created a %s bomb. Bombs prepared: %d/%d.\r\n",
+                 bomb_types[type], num_of_bombs_prepared(ch), num_of_bombs_preparable(ch));
 
     save_char(ch, 0);
 
-    if (KNOWS_DISCOVERY(ch, ALC_DISC_FAST_BOMBS))
-      USE_MOVE_ACTION(ch);
-    else
-      USE_STANDARD_ACTION(ch);
-
-    // we want to add a cooldown event here at some point
+    {
+      action_type preparation_action =
+          KNOWS_DISCOVERY(ch, ALC_DISC_FAST_BOMBS) && is_action_available(ch, atMOVE, FALSE)
+              ? atMOVE : atSTANDARD;
+      start_action_cooldown(ch, preparation_action,
+                            (HAS_FEAT(ch, FEAT_FASTER_BOMB_PREPARATION) ? 3 : 6) RL_SEC);
+    }
 
     return;
   }
@@ -1216,7 +1216,11 @@ void perform_bomb_direct_damage(struct char_data *ch, struct char_data *victim, 
   if (!active)
     return;
 
-  dam = dice(ndice, sdice) + damMod + get_alchemist_bomb_damage_bonus(ch);
+  int damage_roll = dice(ndice, sdice);
+  int damage_bonus = damMod + get_alchemist_bomb_damage_bonus(ch);
+  dam = damage_roll + damage_bonus;
+  send_to_char(ch, "Bomb damage roll: %dd%d = %d, %+d bonus = %d before additional effects.\r\n",
+               ndice, sdice, damage_roll, damage_bonus, dam);
 
   /* Master Alchemist perk: 10% chance to maximize bomb damage */
   if (has_alchemist_master_alchemist(ch) && rand_number(1, 100) <= 10)
