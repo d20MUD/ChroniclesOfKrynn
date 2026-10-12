@@ -2,6 +2,7 @@
 
 
 #include "conf.h"
+#include "account.h"
 #include "sysdep.h"
 #include <time.h>
 #include "structs.h"
@@ -8511,6 +8512,8 @@ void complete_supply_order(struct char_data *ch)
     happy_hour_artisan_bonus = (artisan_points * HAPPY_CRAFTING_EXP) / 100;
     artisan_points += happy_hour_artisan_bonus;
   }
+
+  gold_reward = apply_account_reward_bonus(ch, gold_reward, ACCOUNT_BONUS_GOLD);
 
   // Award rewards
   GET_GOLD(ch) += gold_reward;

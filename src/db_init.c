@@ -102,6 +102,10 @@ void init_core_player_tables(void)
       "password VARCHAR(64) NOT NULL, "
       "email VARCHAR(255), "
       "experience INT DEFAULT 0, "
+      "exp_bonus_pct TINYINT UNSIGNED NOT NULL DEFAULT 0, "
+      "treasure_bonus_pct TINYINT UNSIGNED NOT NULL DEFAULT 0, "
+      "gold_bonus_pct TINYINT UNSIGNED NOT NULL DEFAULT 0, "
+      "qp_bonus_pct TINYINT UNSIGNED NOT NULL DEFAULT 0, "
       "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
       "last_login TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
       "status ENUM('active', 'suspended', 'banned') DEFAULT 'active', "
@@ -115,6 +119,8 @@ void init_core_player_tables(void)
     log("SYSERR: Failed to create account_data table: %s", mysql_error(conn));
     return;
   }
+
+  ensure_account_reward_bonus_columns();
 
   /* pet_data - Saved companion information */
   const char *create_pet_data = "CREATE TABLE IF NOT EXISTS pet_data ("

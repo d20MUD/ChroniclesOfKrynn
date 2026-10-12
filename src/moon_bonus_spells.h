@@ -83,6 +83,9 @@ int get_used_moon_bonus_spells(struct char_data *ch);
  */
 bool is_arcane_caster(struct char_data *ch);
 
+/* Knights of the Thorn draw their magic independently of the moons. */
+bool is_moon_phase_affected(struct char_data *ch);
+
 /**
  * @brief Displays information about the moons to a character.
  *

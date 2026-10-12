@@ -7,6 +7,7 @@
 #include <math.h>
 
 #include "conf.h"
+#include "account.h"
 #include "sysdep.h"
 #include "structs.h"
 #include "utils.h"
@@ -1203,10 +1204,12 @@ void drop_hunt_mob_rewards(struct char_data *ch, struct char_data *hunt_mob)
       continue;
     if (is_player_grouped(tch, ch))
     {
-      GET_QUESTPOINTS(tch) += GET_LEVEL(hunt_mob) * 20;
-      GET_GOLD(tch) += GET_LEVEL(hunt_mob) * 500;
+      int quest_reward = apply_account_reward_bonus(tch, GET_LEVEL(hunt_mob) * 20, ACCOUNT_BONUS_QUESTPOINTS);
+      int gold_reward = apply_account_reward_bonus(tch, GET_LEVEL(hunt_mob) * 500, ACCOUNT_BONUS_GOLD);
+      GET_QUESTPOINTS(tch) += quest_reward;
+      GET_GOLD(tch) += gold_reward;
       send_to_char(tch, "You've been rewarded %d quest points, and %d gold!\r\n",
-                   GET_LEVEL(hunt_mob) * 20, GET_LEVEL(hunt_mob) * 500);
+                   quest_reward, gold_reward);
     }
   }
 }

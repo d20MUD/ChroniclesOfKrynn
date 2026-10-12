@@ -9,6 +9,8 @@
 \ / \ / \ / \ / \ / \ / \ / \ / \ / \ / \ / \ / \ / \ / \ / \ /*/
 
 #include "conf.h"
+#include <limits.h>
+#include "account.h"
 #include "sysdep.h"
 #include "structs.h"
 #include "utils.h"
@@ -796,10 +798,13 @@ void determine_treasure(struct char_data *ch, struct char_data *mob)
   /* okay now determine grade */
   grade = quick_grade_check(level);
 
-  if (dice(1, 100) <= MAX(TREASURE_PERCENT, HAPPY_TREASURE))
+  int treasure_chance = MIN(100, MAX(TREASURE_PERCENT, HAPPY_TREASURE) +
+                                get_account_reward_bonus(ch, ACCOUNT_BONUS_TREASURE));
+  if (dice(1, 100) <= treasure_chance)
   {
     if (dice(1, 3) == 1)
       award_magic_item(1, ch, grade, level); // we want magic item treasure drops to be better but less common
+    gold = MIN(INT_MAX, apply_account_reward_bonus(ch, gold, ACCOUNT_BONUS_GOLD));
     snprintf(buf, MEDIUM_STRING, "\tYYou have found %d coins hidden on $N's corpse!\tn", gold);
     act(buf, FALSE, ch, 0, mob, TO_CHAR);
     snprintf(buf, MEDIUM_STRING, "$n \tYhas found %d coins hidden on $N's corpse!\tn", gold);

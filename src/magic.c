@@ -43,6 +43,7 @@
 #include "wilderness.h"
 #include "perks.h"
 #include "crafting_new.h"
+#include "moon_bonus_spells.h"
 
 // external
 extern struct raff_node *raff_list;
@@ -604,7 +605,7 @@ int savingthrow_full(struct char_data *ch, struct char_data *vict, int type, int
     }
   }
 
-  if (ch && ARCANE_LEVEL(ch) > 0)
+  if (is_moon_phase_affected(ch))
   {
     if (IS_GOOD(ch))
       savethrow += weather_info.moons.solinari_st;
@@ -1617,7 +1618,7 @@ int mag_damage(int level, struct char_data *ch, struct char_data *victim, struct
   if (victim == NULL || ch == NULL)
     return (0);
 
-  if (ARCANE_LEVEL(ch) > 0)
+  if (is_moon_phase_affected(ch))
   {
     if (IS_GOOD(ch))
       level += weather_info.moons.solinari_lv;
@@ -4094,7 +4095,7 @@ void mag_affects_full(int level, struct char_data *ch, struct char_data *victim,
 
   level = MAX(1, level);
 
-  if (ARCANE_LEVEL(ch) > 0)
+  if (is_moon_phase_affected(ch))
   {
     if (IS_GOOD(ch))
       level += weather_info.moons.solinari_lv;
@@ -12101,7 +12102,7 @@ void mag_summons(int level, struct char_data *ch, struct obj_data *obj, int spel
   if (ch == NULL)
     return;
 
-  if (ARCANE_LEVEL(ch) > 0)
+  if (is_moon_phase_affected(ch))
   {
     if (IS_GOOD(ch))
       level += weather_info.moons.solinari_lv;
@@ -13481,7 +13482,7 @@ void mag_points(int level, struct char_data *ch, struct char_data *victim, struc
   if (victim == NULL)
     return;
 
-  if (ARCANE_LEVEL(ch) > 0)
+  if (is_moon_phase_affected(ch))
   {
     if (IS_GOOD(ch))
       level += weather_info.moons.solinari_lv;
@@ -13955,7 +13956,7 @@ void mag_unaffects(int level, struct char_data *ch, struct char_data *victim, st
   if (victim == NULL)
     return;
 
-  if (ARCANE_LEVEL(ch) > 0)
+  if (is_moon_phase_affected(ch))
   {
     if (IS_GOOD(ch))
       level += weather_info.moons.solinari_lv;
@@ -14302,7 +14303,7 @@ void mag_alter_objs(int level, struct char_data *ch, struct obj_data *obj, int s
   if (obj == NULL)
     return;
 
-  if (ARCANE_LEVEL(ch) > 0)
+  if (is_moon_phase_affected(ch))
   {
     if (IS_GOOD(ch))
       level += weather_info.moons.solinari_lv;
@@ -14407,7 +14408,7 @@ void mag_creations(int level, struct char_data *ch, struct char_data *vict, stru
   if (ch == NULL)
     return;
 
-  if (ARCANE_LEVEL(ch) > 0)
+  if (is_moon_phase_affected(ch))
   {
     if (IS_GOOD(ch))
       level += weather_info.moons.solinari_lv;

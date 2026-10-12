@@ -412,6 +412,44 @@ void ensure_questline_tables(void)
   }
 }
 
+/* Permanent account rewards are stored alongside the account XP balance. */
+void ensure_account_reward_bonus_columns(void)
+{
+  if (!mysql_available || !conn || !table_exists("account_data"))
+    return;
+  /* Upgrade existing accounts before any account is loaded. */
+  {
+    const char *columns[] = {"exp_bonus_pct", "treasure_bonus_pct", "gold_bonus_pct", "qp_bonus_pct"};
+    int bonus;
+    for (bonus = 0; bonus < NUM_ACCOUNT_REWARD_BONUSES; bonus++)
+    {
+      char query[256];
+      MYSQL_RES *result;
+      bool present;
+      snprintf(query, sizeof(query), "SHOW COLUMNS FROM account_data LIKE '%s'", columns[bonus]);
+      if (mysql_query_safe(conn, query))
+        return;
+      result = mysql_store_result_safe(conn);
+      if (!result)
+        return;
+      present = mysql_num_rows(result) > 0;
+      mysql_free_result(result);
+      if (!present)
+      {
+        snprintf(query, sizeof(query),
+                 "ALTER TABLE account_data ADD COLUMN %s TINYINT UNSIGNED NOT NULL DEFAULT 0",
+                 columns[bonus]);
+        if (mysql_query_safe(conn, query))
+        {
+          log("SYSERR: Unable to add account reward column %s: %s", columns[bonus], mysql_error(conn));
+          return;
+        }
+      }
+    }
+  }
+
+}
+
 /* Ensure account_data has the quit survey column used to gate prompting */
 void ensure_account_quit_survey_column(void)
 {

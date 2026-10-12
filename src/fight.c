@@ -11,6 +11,7 @@
 #define __FIGHT_C__
 
 #include "conf.h"
+#include "account.h"
 #include "sysdep.h"
 #include "structs.h"
 #include "utils.h"
@@ -6092,6 +6093,11 @@ int dam_killed_vict(struct char_data *ch, struct char_data *victim)
       happy_gold = (long)(GET_GOLD(victim) * (((float)(HAPPY_GOLD)) / (float)100));
       happy_gold = MAX(0, happy_gold);
       increase_gold(victim, happy_gold);
+    }
+    {
+      struct char_data *reward_owner = IS_NPC(ch) && ch->master ? ch->master : ch;
+      long rewarded_gold = apply_account_reward_bonus(reward_owner, GET_GOLD(victim), ACCOUNT_BONUS_GOLD);
+      increase_gold(victim, rewarded_gold - GET_GOLD(victim));
     }
     local_gold = GET_GOLD(victim);
     snprintf(local_buf, sizeof(local_buf), "%ld", (long)local_gold);

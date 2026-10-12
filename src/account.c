@@ -50,6 +50,7 @@
 */
 
 #include "conf.h"
+#include <limits.h>
 #include "sysdep.h"
 #include "structs.h"
 #include "mysql.h"
@@ -218,6 +219,140 @@ int has_unlocked_class(struct char_data *ch, int class)
   return FALSE;
 }
 
+
+static const char *account_bonus_names[NUM_ACCOUNT_REWARD_BONUSES] = {
+    "experience", "treasure", "gold", "questpoints"};
+static const char *account_bonus_columns[NUM_ACCOUNT_REWARD_BONUSES] = {
+    "exp_bonus_pct", "treasure_bonus_pct", "gold_bonus_pct", "qp_bonus_pct"};
+
+int get_account_reward_bonus(struct char_data *ch, int bonus)
+{
+  if (!ch || IS_NPC(ch) || !ch->desc || !ch->desc->account ||
+      bonus < 0 || bonus >= NUM_ACCOUNT_REWARD_BONUSES)
+    return 0;
+
+  return MAX(0, MIN(ACCOUNT_REWARD_BONUS_CAP, ch->desc->account->reward_bonus_pct[bonus]));
+}
+
+int apply_account_reward_bonus(struct char_data *ch, int amount, int bonus)
+{
+  long long total;
+  int percent = get_account_reward_bonus(ch, bonus);
+  if (amount <= 0 || percent == 0)
+    return amount;
+
+  total = (long long)amount + ((long long)amount * percent) / 100;
+  return total > INT_MAX ? INT_MAX : (int)total;
+}
+
+static void show_account_reward_bonuses(struct char_data *ch, struct account_data *account)
+{
+  int bonus;
+  send_to_char(ch, "Permanent account-wide reward bonuses (maximum +%d%% each):\r\n",
+               ACCOUNT_REWARD_BONUS_CAP);
+  for (bonus = 0; bonus < NUM_ACCOUNT_REWARD_BONUSES; bonus++)
+    send_to_char(ch, "  %-12s +%d%%\r\n", account_bonus_names[bonus],
+                 MAX(0, MIN(ACCOUNT_REWARD_BONUS_CAP, account->reward_bonus_pct[bonus])));
+  send_to_char(ch, "Each +1%% costs %d account XP. Buy with 'accexp bonus <type>'.\r\n",
+               ACCOUNT_REWARD_BONUS_COST);
+}
+
+static void purchase_account_reward_bonus(struct char_data *ch, const char *name)
+{
+  struct account_data *account;
+  struct descriptor_data *desc;
+  MYSQL_RES *result;
+  MYSQL_ROW row;
+  char query[512];
+  int bonus, i;
+
+  if (IS_NPC(ch) || !ch->desc || !ch->desc->account)
+  {
+    send_to_char(ch, "You need a connected account to buy reward bonuses.\r\n");
+    return;
+  }
+  account = ch->desc->account;
+  if (!*name || is_abbrev(name, "list"))
+  {
+    show_account_reward_bonuses(ch, account);
+    return;
+  }
+  if (!str_cmp(name, "xp") || !str_cmp(name, "exp"))
+    name = "experience";
+  else if (!str_cmp(name, "qp"))
+    name = "questpoints";
+  for (bonus = 0; bonus < NUM_ACCOUNT_REWARD_BONUSES; bonus++)
+    if (is_abbrev(name, account_bonus_names[bonus]))
+      break;
+  if (bonus == NUM_ACCOUNT_REWARD_BONUSES)
+  {
+    send_to_char(ch, "Choose experience, treasure, gold, or questpoints.\r\n");
+    return;
+  }
+  if (account->reward_bonus_pct[bonus] >= ACCOUNT_REWARD_BONUS_CAP)
+  {
+    send_to_char(ch, "Your account's %s bonus is already at the +%d%% maximum.\r\n",
+                 account_bonus_names[bonus], ACCOUNT_REWARD_BONUS_CAP);
+    return;
+  }
+  if (account->experience < ACCOUNT_REWARD_BONUS_COST)
+  {
+    send_to_char(ch, "You need %d account XP for +1%% %s (you have %d).\r\n",
+                 ACCOUNT_REWARD_BONUS_COST, account_bonus_names[bonus], account->experience);
+    return;
+  }
+  if (!mysql_available || !conn || !MYSQL_PING_CONN(conn))
+  {
+    send_to_char(ch, "The account shop is unavailable. No account XP was spent.\r\n");
+    return;
+  }
+
+  /* Deduction and upgrade are one guarded database update: no partial purchase. */
+  snprintf(query, sizeof(query),
+           "UPDATE account_data SET experience = experience - %d, %s = %s + 1 "
+           "WHERE id = %d AND experience >= %d AND %s < %d",
+           ACCOUNT_REWARD_BONUS_COST, account_bonus_columns[bonus], account_bonus_columns[bonus],
+           account->id, ACCOUNT_REWARD_BONUS_COST, account_bonus_columns[bonus], ACCOUNT_REWARD_BONUS_CAP);
+  if (mysql_query(conn, query))
+  {
+    log("SYSERR: Unable to purchase account reward bonus: %s", mysql_error(conn));
+    send_to_char(ch, "The purchase could not be saved. No account XP was spent.\r\n");
+    return;
+  }
+  if (mysql_affected_rows(conn) != 1)
+  {
+    send_to_char(ch, "The purchase was not made: insufficient account XP or the bonus is capped.\r\n");
+    return;
+  }
+
+  account->experience -= ACCOUNT_REWARD_BONUS_COST;
+  account->reward_bonus_pct[bonus]++;
+  /* Refresh from the database so cached descriptors reflect the committed balance. */
+  snprintf(query, sizeof(query),
+           "SELECT experience, exp_bonus_pct, treasure_bonus_pct, gold_bonus_pct, qp_bonus_pct "
+           "FROM account_data WHERE id = %d", account->id);
+  if (!mysql_query(conn, query) && (result = mysql_store_result(conn)) != NULL)
+  {
+    if ((row = mysql_fetch_row(result)) != NULL)
+    {
+      account->experience = atoi(row[0]);
+      for (i = 0; i < NUM_ACCOUNT_REWARD_BONUSES; i++)
+        account->reward_bonus_pct[i] = MAX(0, MIN(ACCOUNT_REWARD_BONUS_CAP, atoi(row[i + 1])));
+    }
+    mysql_free_result(result);
+  }
+  for (desc = descriptor_list; desc; desc = desc->next)
+    if (desc->account && desc->account->id == account->id)
+    {
+      desc->account->experience = account->experience;
+      memcpy(desc->account->reward_bonus_pct, account->reward_bonus_pct,
+             sizeof(account->reward_bonus_pct));
+    }
+  send_to_char(ch, "Purchased +1%% %s for %d account XP. Account bonus: +%d%%/%d%%; balance: %d.\r\n",
+               account_bonus_names[bonus], ACCOUNT_REWARD_BONUS_COST,
+               account->reward_bonus_pct[bonus], ACCOUNT_REWARD_BONUS_CAP, account->experience);
+}
+
 /* Fixed cost per alignment-change purchase via 'accexp align ...' */
 #define ALIGN_COST 2000
 
@@ -267,8 +402,15 @@ ACMD(do_accexp)
 
   if (!*arg)
   {
-    send_to_char(ch, "Usage: accexp [class | race | align] [<class-name to unlock> | "
-                     "<race-name to unlock> | <evil OR good>]\r\n");
+    send_to_char(ch, "Usage: accexp [class | race | align | bonus] <choice>\r\n");
+    if (!IS_NPC(ch) && ch->desc && ch->desc->account)
+      show_account_reward_bonuses(ch, ch->desc->account);
+    return;
+  }
+
+  if (is_abbrev(arg, "bonus"))
+  {
+    purchase_account_reward_bonus(ch, arg2);
     return;
   }
 
@@ -646,7 +788,8 @@ int load_account(char *name, struct account_data *account)
 
   /* Case-insensitive match on the escaped account name */
   snprintf(buf, sizeof(buf),
-           "SELECT id, name, password, experience, email, quit_survey_completed "
+           "SELECT id, name, password, experience, email, quit_survey_completed, "
+           "exp_bonus_pct, treasure_bonus_pct, gold_bonus_pct, qp_bonus_pct "
            "from account_data where lower(name) = lower('%s')",
            escaped_name);
 
@@ -675,6 +818,12 @@ int load_account(char *name, struct account_data *account)
   account->experience = atoi(row[3]);
   account->email = (row[4] ? strdup(row[4]) : NULL);
   account->quit_survey_completed = (row[5] ? atoi(row[5]) : 0);
+  {
+    int bonus;
+    for (bonus = 0; bonus < NUM_ACCOUNT_REWARD_BONUSES; bonus++)
+      account->reward_bonus_pct[bonus] = MAX(0, MIN(ACCOUNT_REWARD_BONUS_CAP,
+                                                  row[6 + bonus] ? atoi(row[6 + bonus]) : 0));
+  }
 
   mysql_free_result(result);
   load_account_characters(account);
@@ -995,15 +1144,22 @@ void save_account(struct account_data *account)
   }
 
   snprintf(buf, sizeof(buf),
-           "INSERT into account_data (id, name, password, experience, email, quit_survey_completed) "
-           "values (%d, '%s', '%s', %d, %s%s%s, %d)"
+           "INSERT into account_data (id, name, password, experience, email, quit_survey_completed, "
+           "exp_bonus_pct, treasure_bonus_pct, gold_bonus_pct, qp_bonus_pct) "
+           "values (%d, '%s', '%s', %d, %s%s%s, %d, %d, %d, %d, %d)"
            " on duplicate key update password = VALUES(password), "
            "                         experience = VALUES(experience), "
            "                         email = VALUES(email), "
-           "                         quit_survey_completed = VALUES(quit_survey_completed);",
+           "                         quit_survey_completed = VALUES(quit_survey_completed), "
+           "                         exp_bonus_pct = VALUES(exp_bonus_pct), "
+           "                         treasure_bonus_pct = VALUES(treasure_bonus_pct), "
+           "                         gold_bonus_pct = VALUES(gold_bonus_pct), "
+           "                         qp_bonus_pct = VALUES(qp_bonus_pct);",
            account->id, account->name, account->password, account->experience,
            (account->email ? "'" : ""), (account->email ? account->email : "NULL"),
-           (account->email ? "'" : ""), account->quit_survey_completed ? 1 : 0);
+           (account->email ? "'" : ""), account->quit_survey_completed ? 1 : 0,
+           account->reward_bonus_pct[0], account->reward_bonus_pct[1],
+           account->reward_bonus_pct[2], account->reward_bonus_pct[3]);
 
   if (mysql_query(conn, buf))
   {
@@ -1081,8 +1237,9 @@ void save_account(struct account_data *account)
       {
         /* Reload unlock arrays from DB to keep them in sync */
         load_account_unlocks(j->account);
-        if (IS_PLAYING(j))
-          GET_ACCEXP_DESC(j->character) = account->experience;
+        j->account->experience = account->experience;
+        memcpy(j->account->reward_bonus_pct, account->reward_bonus_pct,
+               sizeof(account->reward_bonus_pct));
       }
     }
   }
@@ -1336,8 +1493,10 @@ void perform_do_account(struct char_data *ch, struct char_data *vict)
   if (!found)
     send_to_char(ch, "  None.\r\n");
 
+  show_account_reward_bonuses(ch, acc);
+
   if (ch == vict)
-    send_to_char(ch, "You can unlock races and classes via the 'accexp' command.\r\n");
+    send_to_char(ch, "You can buy unlocks and account-wide bonuses via the 'accexp' command.\r\n");
 
   send_to_char(ch, "\tC");
   draw_line(ch, 80, '-', '-');

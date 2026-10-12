@@ -17,6 +17,7 @@
  */
 
 #include "conf.h"
+#include "account.h"
 #include "sysdep.h"
 #include "structs.h"
 #include "mysql.h"
@@ -2751,17 +2752,18 @@ SPECIAL(crafting_quest)
   {
     if (GET_AUTOCQUEST_VNUM(ch) && GET_AUTOCQUEST_MAKENUM(ch) <= 0)
     {
+      int quest_reward = apply_account_reward_bonus(ch, GET_AUTOCQUEST_QP(ch), ACCOUNT_BONUS_QUESTPOINTS);
+      int gold_reward = apply_account_reward_bonus(ch, GET_AUTOCQUEST_GOLD(ch), ACCOUNT_BONUS_GOLD);
+      int exp_reward = apply_account_reward_bonus(ch, GET_AUTOCQUEST_EXP(ch), ACCOUNT_BONUS_EXPERIENCE);
       send_to_char(ch,
-                   "You have completed your supply order contract"
-                   " for %s.\r\n"
+                   "You have completed your supply order contract for %s.\r\n"
                    "You receive %d reputation points.\r\n"
                    "%d gold has been given to you.\r\n"
                    "You receive %d experience points.\r\n",
-                   GET_AUTOCQUEST_DESC(ch), GET_AUTOCQUEST_QP(ch), GET_AUTOCQUEST_GOLD(ch),
-                   GET_AUTOCQUEST_EXP(ch));
-      GET_QUESTPOINTS(ch) += GET_AUTOCQUEST_QP(ch);
-      GET_GOLD(ch) += GET_AUTOCQUEST_GOLD(ch);
-      GET_EXP(ch) += GET_AUTOCQUEST_EXP(ch);
+                   GET_AUTOCQUEST_DESC(ch), quest_reward, gold_reward, exp_reward);
+      GET_QUESTPOINTS(ch) += quest_reward;
+      GET_GOLD(ch) += gold_reward;
+      GET_EXP(ch) += exp_reward;
 
       reset_acraft(ch);
     }

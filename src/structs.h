@@ -8388,6 +8388,8 @@ typedef enum
 
 /* Account data structure.  Account data is kept in the database,
  * but loaded into this structure while the player is in-game. */
+#define NUM_ACCOUNT_REWARD_BONUSES 4
+
 struct account_data
 {
   int id;
@@ -8396,6 +8398,7 @@ struct account_data
   sbyte bad_password_count;
   char *character_names[MAX_CHARS_PER_ACCOUNT];
   int experience;
+  int reward_bonus_pct[NUM_ACCOUNT_REWARD_BONUSES];
   //        ush_int gift_experience;
   //        sbyte level;
   //        int account_flags;

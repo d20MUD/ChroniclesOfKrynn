@@ -5050,7 +5050,9 @@ ACMD(do_score)
 
   if (is_arcane_caster(ch))
   {
-    if (IS_GOOD(ch))
+    if (!is_moon_phase_affected(ch))
+      send_to_char(ch, "As a Knight of the Thorn, your magic is unaffected by the moon phases.\r\n");
+    else if (IS_GOOD(ch))
     {
       send_to_char(ch,
                    "%s's position in the sky bestows %s%d to saving throws, %s%d to "

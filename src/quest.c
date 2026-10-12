@@ -10,6 +10,8 @@
 #define __QUEST_C__
 
 #include "conf.h"
+#include <limits.h>
+#include "account.h"
 #include "sysdep.h"
 #include "structs.h"
 #include "utils.h"
@@ -656,57 +658,31 @@ void complete_quest(struct char_data *ch, int index)
   /* Quest complete! */
 
   /* any quest point reward for this quest? */
+  happy_qp = QST_POINTS(rnum);
   if (IS_HAPPYHOUR && IS_HAPPYQP)
-  {
-    happy_qp = (int)(QST_POINTS(rnum) * (((float)(100 + HAPPY_QP)) / (float)100));
-    happy_qp = MAX(happy_qp, 0);
-    GET_QUESTPOINTS(ch) += happy_qp;
-    send_to_char(ch, "%s\r\nYou have been awarded %d \tCquest points\tn for your service.\r\n\r\n",
-                 QST_DONE(rnum), happy_qp);
-  }
-  else
-  { /* no happy hour bonus :( */
-    GET_QUESTPOINTS(ch) += QST_POINTS(rnum);
-    send_to_char(ch, "%s\r\nYou have been awarded %d \tCquest points\tn for your service.\r\n\r\n",
-                 QST_DONE(rnum), QST_POINTS(rnum));
-  }
+    happy_qp += (int)((float)happy_qp * ((float)HAPPY_QP / 100));
+  happy_qp = MIN(INT_MAX, apply_account_reward_bonus(ch, happy_qp, ACCOUNT_BONUS_QUESTPOINTS));
+  GET_QUESTPOINTS(ch) += happy_qp;
+  send_to_char(ch, "%s\r\nYou have been awarded %d \tCquest points\tn for your service.\r\n\r\n",
+               QST_DONE(rnum), happy_qp);
 
-  /* any gold reward in this quest? */
+  /* Quest gold receives the same permanent account bonus as kill gold. */
   if (QST_GOLD(rnum))
   {
-    if ((IS_HAPPYHOUR) && (IS_HAPPYGOLD))
-    {
-      happy_gold = (int)(QST_GOLD(rnum) * (((float)(100 + HAPPY_GOLD)) / (float)100));
-      happy_gold = MAX(happy_gold, 0);
-      increase_gold(ch, happy_gold);
-      send_to_char(ch, "You have been awarded %d \tYgold coins\tn for your service.\r\n\r\n",
-                   happy_gold);
-    }
-    else
-    {
-      increase_gold(ch, QST_GOLD(rnum));
-      send_to_char(ch, "You have been awarded %d \tYgold coins\tn for your service.\r\n\r\n",
-                   QST_GOLD(rnum));
-    }
+    happy_gold = QST_GOLD(rnum);
+    if (IS_HAPPYHOUR && IS_HAPPYGOLD)
+      happy_gold += (int)((float)happy_gold * ((float)HAPPY_GOLD / 100));
+    happy_gold = MIN(INT_MAX, apply_account_reward_bonus(ch, MAX(0, happy_gold), ACCOUNT_BONUS_GOLD));
+    increase_gold(ch, happy_gold);
+    send_to_char(ch, "You have been awarded %d \tYgold coins\tn for your service.\r\n\r\n", happy_gold);
   }
 
-  /* any xp points reward in this quest? */
+  /* Report the actual credited XP, including happyhour and account bonuses. */
   if (QST_EXP(rnum))
   {
-    if ((IS_HAPPYHOUR) && (IS_HAPPYEXP))
-    {
-      happy_exp = (int)(QST_EXP(rnum) * (((float)(100 + HAPPY_EXP)) / (float)100));
-      happy_exp = MAX(happy_exp, 0);
-      send_to_char(ch, "You have been awarded %d \tBexperience\tn for your service.\r\n\r\n",
-                   happy_exp);
-      gain_exp(ch, happy_exp, GAIN_EXP_MODE_QUEST);
-    }
-    else
-    {
-      send_to_char(ch, "You have been awarded %d \tBexperience\tn points for your service.\r\n\r\n",
-                   QST_EXP(rnum));
-      gain_exp(ch, QST_EXP(rnum), GAIN_EXP_MODE_QUEST);
-    }
+    happy_exp = gain_exp(ch, QST_EXP(rnum), GAIN_EXP_MODE_QUEST);
+    send_to_char(ch, "You have been awarded %d \tBexperience\tn points for your service.\r\n\r\n",
+                 happy_exp);
   }
 
   /* any object reward from this quest? */

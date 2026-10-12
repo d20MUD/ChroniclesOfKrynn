@@ -32,6 +32,9 @@ void init_moon_bonus_spells(struct char_data *ch)
   if (!ch || IS_NPC(ch))
     return;
 
+  if (!ch->player_specials)
+    return;
+
   /* Check if arcane moon phases are enabled in config */
   if (!CONFIG_ARCANE_MOON_PHASES)
   {
@@ -41,11 +44,8 @@ void init_moon_bonus_spells(struct char_data *ch)
     return;
   }
 
-  if (!ch->player_specials || !ch->player_specials)
-    return;
-
-  /* Only arcane casters get moon bonus spells */
-  if (!is_arcane_caster(ch))
+  /* Only eligible arcane casters get moon bonus spells */
+  if (!is_moon_phase_affected(ch))
   {
     ch->player_specials->saved.moon_bonus_spells = 0;
     ch->player_specials->saved.moon_bonus_spells_used = 0;
@@ -74,21 +74,24 @@ void update_moon_bonus_spells(struct char_data *ch)
   if (!ch || IS_NPC(ch))
     return;
 
+  if (!ch->player_specials)
+    return;
+
   /* Check if arcane moon phases are enabled in config */
   if (!CONFIG_ARCANE_MOON_PHASES)
   {
     ch->player_specials->saved.moon_bonus_spells = 0;
     ch->player_specials->saved.moon_bonus_spells_used = 0;
+    ch->player_specials->saved.moon_bonus_regen_timer = 0;
     return;
   }
 
-  if (!ch->player_specials || !ch->player_specials)
-    return;
-
-  /* Only arcane casters get moon bonus spells */
-  if (!is_arcane_caster(ch))
+  /* Only eligible arcane casters get moon bonus spells */
+  if (!is_moon_phase_affected(ch))
   {
     ch->player_specials->saved.moon_bonus_spells = 0;
+    ch->player_specials->saved.moon_bonus_spells_used = 0;
+    ch->player_specials->saved.moon_bonus_regen_timer = 0;
     return;
   }
 
@@ -124,10 +127,10 @@ int get_max_moon_bonus_spells(struct char_data *ch)
   if (!ch || IS_NPC(ch))
     return 0;
 
-  if (!ch->player_specials || !ch->player_specials)
+  if (!ch->player_specials)
     return 0;
 
-  if (!is_arcane_caster(ch))
+  if (!is_moon_phase_affected(ch))
     return 0;
 
   return ch->player_specials->saved.moon_bonus_spells;
@@ -144,7 +147,7 @@ int get_available_moon_bonus_spells(struct char_data *ch)
   if (!ch || IS_NPC(ch))
     return 0;
 
-  if (!ch->player_specials || !ch->player_specials)
+  if (!ch->player_specials || !is_moon_phase_affected(ch))
     return 0;
 
   max_spells = ch->player_specials->saved.moon_bonus_spells;
@@ -161,7 +164,7 @@ int get_used_moon_bonus_spells(struct char_data *ch)
   if (!ch || IS_NPC(ch))
     return 0;
 
-  if (!ch->player_specials || !ch->player_specials)
+  if (!ch->player_specials || !is_moon_phase_affected(ch))
     return 0;
 
   return ch->player_specials->saved.moon_bonus_spells_used;
@@ -186,7 +189,7 @@ bool use_moon_bonus_spell(struct char_data *ch)
   if (!ch || IS_NPC(ch))
     return FALSE;
 
-  if (!ch->player_specials || !ch->player_specials)
+  if (!ch->player_specials)
     return FALSE;
 
   if (!has_moon_bonus_spells(ch))
@@ -207,11 +210,14 @@ void regenerate_moon_bonus_spell(struct char_data *ch)
   if (!ch || IS_NPC(ch))
     return;
 
-  if (!ch->player_specials || !ch->player_specials)
+  if (!ch->player_specials)
     return;
 
-  if (!is_arcane_caster(ch))
+  if (!is_moon_phase_affected(ch))
+  {
+    update_moon_bonus_spells(ch);
     return;
+  }
 
   /* Check if we're at max already */
   if (ch->player_specials->saved.moon_bonus_spells_used <= 0)
@@ -239,8 +245,14 @@ void reset_moon_bonus_spells(struct char_data *ch)
   if (!ch || IS_NPC(ch))
     return;
 
-  if (!ch->player_specials || !ch->player_specials)
+  if (!ch->player_specials)
     return;
+
+  if (!is_moon_phase_affected(ch))
+  {
+    update_moon_bonus_spells(ch);
+    return;
+  }
 
   /* Reset usage and timer when leveling */
   ch->player_specials->saved.moon_bonus_spells_used = 0;
@@ -260,4 +272,13 @@ bool is_arcane_caster(struct char_data *ch)
     return TRUE;
 
   return FALSE;
+}
+
+/* Preserve arcane classification while excluding Thorn PCs from lunar effects. */
+bool is_moon_phase_affected(struct char_data *ch)
+{
+  if (!ch || (!IS_NPC(ch) && CLASS_LEVEL(ch, CLASS_KNIGHT_OF_THE_THORN) > 0))
+    return FALSE;
+
+  return is_arcane_caster(ch);
 }

@@ -1,6 +1,7 @@
 /* Faction Mission System Designed by Gicker aka Stephen Squires */
 
 #include "conf.h"
+#include "account.h"
 #include "sysdep.h"
 #include "structs.h"
 #include "utils.h"
@@ -879,11 +880,12 @@ void apply_mission_rewards(char_data *ch)
   send_to_char(ch, "You've received %ld %s faction standing.\r\n", GET_MISSION_STANDING(ch),
                faction_names_lwr[GET_MISSION_FACTION(ch)]);
 
-  GET_QUESTPOINTS(ch) += GET_MISSION_REP(ch);
-  send_to_char(ch, "You've received %ld quest points.\r\n", GET_MISSION_REP(ch));
-
-  GET_GOLD(ch) += GET_MISSION_CREDITS(ch);
-  send_to_char(ch, "You have received %ld gold coins.\r\n", GET_MISSION_CREDITS(ch));
+  int quest_reward = apply_account_reward_bonus(ch, GET_MISSION_REP(ch), ACCOUNT_BONUS_QUESTPOINTS);
+  int gold_reward = apply_account_reward_bonus(ch, GET_MISSION_CREDITS(ch), ACCOUNT_BONUS_GOLD);
+  GET_QUESTPOINTS(ch) += quest_reward;
+  send_to_char(ch, "You've received %d quest points.\r\n", quest_reward);
+  GET_GOLD(ch) += gold_reward;
+  send_to_char(ch, "You have received %d gold coins.\r\n", gold_reward);
 
   send_to_char(ch, "You have earned %d experience points for completing your mission.\r\n",
                gain_exp(ch, GET_MISSION_EXP(ch), GAIN_EXP_MODE_QUEST));

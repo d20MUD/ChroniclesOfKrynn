@@ -9,6 +9,7 @@
  **************************************************************************/
 
 #include "conf.h"
+#include <limits.h>
 #include "sysdep.h"
 #include <time.h>
 #include "structs.h"
@@ -1399,6 +1400,8 @@ int gain_exp(struct char_data *ch, int gain, int mode)
     if ((IS_HAPPYHOUR) && (IS_HAPPYEXP))
       gain += (int)((float)gain * ((float)HAPPY_EXP / (float)(100)));
 
+    gain = apply_account_reward_bonus(ch, gain, ACCOUNT_BONUS_EXPERIENCE);
+
     /* put an absolute cap on the max gain per kill */
     gain = MIN(CONFIG_MAX_EXP_GAIN, gain);
 
@@ -1462,6 +1465,9 @@ int gain_exp_regardless(struct char_data *ch, int gain, bool is_ress)
     if ((IS_HAPPYHOUR) && (IS_HAPPYEXP))
       gain += (int)((float)gain * ((float)HAPPY_EXP / (float)(100)));
   }
+
+  if (!is_ress && gain > 0)
+    gain = MIN(INT_MAX, apply_account_reward_bonus(ch, gain, ACCOUNT_BONUS_EXPERIENCE));
 
   GET_EXP(ch) += gain;
 
