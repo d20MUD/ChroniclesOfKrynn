@@ -11823,6 +11823,56 @@ static int count_artificer_support_devices(struct char_data *ch)
   return count;
 }
 
+/* Reorder complete records so charges, cooldowns and damage stay with the device. */
+static void move_artificer_device(struct char_data *ch, const char *from_arg,
+                                  const char *to_arg)
+{
+  char *end;
+  long from, to;
+  int i, count = ch->player_specials->saved.num_inventions;
+  struct player_invention moved;
+  struct player_invention *devices = ch->player_specials->saved.inventions;
+
+  from = strtol(from_arg, &end, 10);
+  if (!*from_arg || *end || from < 1 || from > count)
+  {
+    send_to_char(ch, "Usage: device move <current number> <new position> (1-%d).\r\n", count);
+    return;
+  }
+  to = strtol(to_arg, &end, 10);
+  if (!*to_arg || *end || to < 1 || to > count)
+  {
+    send_to_char(ch, "Usage: device move <current number> <new position> (1-%d).\r\n", count);
+    return;
+  }
+
+  /* Repair events retain an array index; do not change it while work is pending. */
+  if (char_has_mud_event(ch, eDEVICE_REPAIR) || char_has_mud_event(ch, eDEVICE_CREATION))
+  {
+    send_to_char(ch, "Finish or cancel your device work before reordering devices.\r\n");
+    return;
+  }
+  if (from == to)
+  {
+    send_to_char(ch, "That device is already in position %ld.\r\n", to);
+    return;
+  }
+
+  from--;
+  to--;
+  moved = devices[from];
+  if (from > to)
+    for (i = from; i > to; i--)
+      devices[i] = devices[i - 1];
+  else
+    for (i = from; i < to; i++)
+      devices[i] = devices[i + 1];
+  devices[to] = moved;
+  save_char(ch, 0);
+  send_to_char(ch, "Moved %s from device %ld to %ld. Use 'device list' to see the new order.\r\n",
+               moved.short_description, from + 1, to + 1);
+}
+
 ACMDU(do_device)
 {
   char arg1[MAX_INPUT_LENGTH] = {'\0'};
@@ -11881,6 +11931,12 @@ ACMDU(do_device)
 
   remaining_args = (char *)two_arguments(argument, arg1, sizeof(arg1), arg2, sizeof(arg2));
   one_argument(remaining_args, arg3, sizeof(arg3));
+
+  if (is_abbrev(arg1, "move"))
+  {
+    move_artificer_device(ch, arg2, arg3);
+    return;
+  }
 
   /* Count existing devices by spell level using player invention data */
   for (i = 0; i < ch->player_specials->saved.num_inventions; i++)
@@ -11942,6 +11998,7 @@ ACMDU(do_device)
     send_to_char(ch,
                  "  device recompile <device> <slot> <spell> - Field Recompiler swap (perk)\r\n");
     send_to_char(ch, "  device list                             - List your current devices\r\n");
+    send_to_char(ch, "  device move <number> <position>          - Move a device to a new list position\r\n");
     send_to_char(ch,
                  "  device info <device>                    - Get information about a device\r\n");
     send_to_char(ch, "  device rename <device> <new name>       - Change the name of a device\r\n");
