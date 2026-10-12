@@ -43,14 +43,10 @@
 
 
 #if defined(CAMPAIGN_DL)
-#define SPELLUP_SPELLS 53
 /* list of spells mobiles will use for spellups */
-int valid_spellup_spell[SPELLUP_SPELLS] = {SPELL_SHIELD_OF_FAITH, // 0
+int valid_spellup_spell[SPELLUP_SPELLS] = {SPELL_SHIELD_OF_FAITH,
                                            SPELL_BLESS,
-                                           SPELL_DETECT_ALIGN,
                                            SPELL_DETECT_INVIS,
-                                           SPELL_DETECT_MAGIC,
-                                           SPELL_DETECT_POISON,
                                            SPELL_PROT_FROM_EVIL,
                                            SPELL_SANCTUARY,
                                            SPELL_STRENGTH,
@@ -101,57 +97,54 @@ int valid_spellup_spell[SPELLUP_SPELLS] = {SPELL_SHIELD_OF_FAITH, // 0
 #else
 /* SPELLUP_SPELLS already defined in mob_spells.h */
 /* list of spells mobiles will use for spellups */
-int valid_spellup_spell[SPELLUP_SPELLS] = {SPELL_SHIELD_OF_FAITH, // 0
+int valid_spellup_spell[SPELLUP_SPELLS] = {SPELL_SHIELD_OF_FAITH,
                                            SPELL_BLESS,
-                                           SPELL_DETECT_ALIGN,
                                            SPELL_DETECT_INVIS,
-                                           SPELL_DETECT_MAGIC,
-                                           SPELL_DETECT_POISON, // 5
                                            SPELL_INVISIBLE,
                                            SPELL_PROT_FROM_EVIL,
                                            SPELL_SANCTUARY,
                                            SPELL_STRENGTH,
-                                           SPELL_SENSE_LIFE, // 10
+                                           SPELL_SENSE_LIFE,
                                            SPELL_INFRAVISION,
                                            SPELL_WATERWALK,
                                            SPELL_FLY,
                                            SPELL_BLUR,
-                                           SPELL_MIRROR_IMAGE, // 15
+                                           SPELL_MIRROR_IMAGE,
                                            SPELL_STONESKIN,
                                            SPELL_ENDURANCE,
                                            SPELL_PROT_FROM_GOOD,
                                            SPELL_ENDURE_ELEMENTS,
-                                           SPELL_EXPEDITIOUS_RETREAT, // 20
+                                           SPELL_EXPEDITIOUS_RETREAT,
                                            SPELL_IRON_GUTS,
                                            SPELL_MAGE_ARMOR,
                                            SPELL_SHIELD,
                                            SPELL_TRUE_STRIKE,
-                                           SPELL_FALSE_LIFE, // 25
+                                           SPELL_FALSE_LIFE,
                                            SPELL_GRACE,
                                            SPELL_RESIST_ENERGY,
                                            SPELL_WATER_BREATHE,
                                            SPELL_HEROISM,
-                                           SPELL_NON_DETECTION, // 30
+                                           SPELL_NON_DETECTION,
                                            SPELL_HASTE,
                                            SPELL_CUNNING,
                                            SPELL_WISDOM,
                                            SPELL_CHARISMA,
-                                           SPELL_FIRE_SHIELD, // 35
+                                           SPELL_FIRE_SHIELD,
                                            SPELL_COLD_SHIELD,
                                            SPELL_GREATER_INVIS,
                                            SPELL_MINOR_GLOBE,
                                            SPELL_GREATER_HEROISM,
-                                           SPELL_TRUE_SEEING, // 40
+                                           SPELL_TRUE_SEEING,
                                            SPELL_GLOBE_OF_INVULN,
                                            SPELL_GREATER_MIRROR_IMAGE,
                                            SPELL_DISPLACEMENT,
                                            SPELL_PROTECT_FROM_SPELLS,
-                                           SPELL_SPELL_MANTLE, // 45
+                                           SPELL_SPELL_MANTLE,
                                            SPELL_IRONSKIN,
                                            SPELL_MIND_BLANK,
                                            SPELL_SHADOW_SHIELD,
                                            SPELL_GREATER_SPELL_MANTLE,
-                                           SPELL_REGENERATION, // 50
+                                           SPELL_REGENERATION,
                                            SPELL_DEATH_SHIELD,
                                            SPELL_BARKSKIN,
                                            SPELL_SPELL_RESISTANCE,
@@ -397,6 +390,10 @@ bool mob_can_auto_buff_with_spell(int spellnum)
 {
   switch (spellnum)
   {
+  /* Utility detection does not help mobs in combat. */
+  case SPELL_DETECT_ALIGN:
+  case SPELL_DETECT_MAGIC:
+  case SPELL_DETECT_POISON:
   case SPELL_INVISIBLE:
   case SPELL_GREATER_INVIS:
   case SPELL_INVISIBILITY_SPHERE:
@@ -1080,7 +1077,7 @@ bool wizard_is_long_duration_buff(int spellnum)
 
   /* Detection/utility long durations */
   case SPELL_DETECT_INVIS:     /* 300 + level * 25 */
-  case SPELL_DETECT_MAGIC:     /* 300 + level * 25 */
+  case SPELL_TRUE_SEEING:      /* 20 + level */
   case SPELL_INVISIBLE:        /* 300 + level * 6 */
   case SPELL_NON_DETECTION:    /* 25 + level * 12 */
   case SPELL_SPELL_RESISTANCE: /* 50 + level */

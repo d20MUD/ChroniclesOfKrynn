@@ -19,9 +19,9 @@
 #define WIZARD_AOE_SPELLS 15  /* AoE damage/debuff spells for wizards/sorcerers */
 
 #if defined(CAMPAIGN_DL)
-#define SPELLUP_SPELLS 53
+#define SPELLUP_SPELLS 50
 #else
-#define SPELLUP_SPELLS 56
+#define SPELLUP_SPELLS 52
 #endif
 
 /* External spell data arrays */

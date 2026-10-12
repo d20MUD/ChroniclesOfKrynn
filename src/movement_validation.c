@@ -31,6 +31,43 @@
 
 #define ZONE_MINLVL(rnum) (zone_table[(rnum)].min_level)
 
+/* Use the actual body, so a cosmetic disguise cannot grant a swim speed. */
+static bool is_natural_swimmer(struct char_data *ch)
+{
+  int race;
+  int i;
+
+  if (!ch)
+    return FALSE;
+
+  if (IS_NPC(ch))
+    for (i = 0; i < 3; i++)
+      if (GET_SUBRACE(ch, i) == SUBRACE_AQUATIC)
+        return TRUE;
+
+  /* The stored base race is a char; extended race IDs can exceed 127. */
+  race = IS_WILDSHAPED(ch) ? GET_DISGUISE_RACE(ch) : (unsigned char)GET_REAL_RACE(ch);
+  switch (race)
+  {
+  case RACE_CROCODILE:
+  case RACE_GIANT_CROCODILE:
+  case RACE_DIRE_CROCODILE:
+  case RACE_POLAR_BEAR:
+  case RACE_SMALL_WATER_ELEMENTAL:
+  case RACE_MEDIUM_WATER_ELEMENTAL:
+  case RACE_LARGE_WATER_ELEMENTAL:
+  case RACE_WATER_ELEMENTAL:
+  case RACE_HUGE_WATER_ELEMENTAL:
+  case RACE_GARGANTUAN_WATER_ELEMENTAL:
+  case RACE_COLOSSAL_WATER_ELEMENTAL:
+  case RACE_BLACK_DRAGON:
+  case RACE_GREEN_DRAGON:
+    return TRUE;
+  default:
+    return FALSE;
+  }
+}
+
 int has_boat(struct char_data *ch, room_rnum going_to)
 {
   struct obj_data *obj;
@@ -65,6 +102,10 @@ int has_boat(struct char_data *ch, room_rnum going_to)
   if (SECT(going_to) == SECT_WATER_NOSWIM || SECT(going_to) == SECT_UD_WATER_NOSWIM ||
       SECT(going_to) == SECT_UD_NOSWIM)
     return 0;
+
+  /* Creatures with a natural swim speed do not need an Athletics check. */
+  if (is_natural_swimmer(ch))
+    return 1;
 
   /* we should do a swim check now */
   int swim_dc = 13 + ZONE_MINLVL(GET_ROOM_ZONE(going_to));
