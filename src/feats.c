@@ -7682,6 +7682,23 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
     /*  Print the feat, depending on the type of list. */
     if (feat_list[i].in_game && (list_type == LIST_FEATS_KNOWN && (HAS_FEAT(ch, i))))
     {
+      char display_name[MAX_INPUT_LENGTH];
+      char *letter;
+      bool word_start = TRUE;
+
+      strlcpy(display_name, feat_list[i].name, sizeof(display_name));
+      for (letter = display_name; *letter; letter++)
+      {
+        if (isspace((unsigned char)*letter) || *letter == '-')
+          word_start = TRUE;
+        else
+        {
+          if (word_start)
+            *letter = UPPER((unsigned char)*letter);
+          word_start = FALSE;
+        }
+      }
+
       /* target listing of known feats, the following is customization of output
          for certain feats [such as: weapon focus (longsword)]*/
 
@@ -7694,13 +7711,13 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
           {
             if (mode == 1)
             { /* description mode */
-              snprintf(buf3, sizeof(buf3), "%s (%s)", feat_list[i].name, spell_schools[j]);
+              snprintf(buf3, sizeof(buf3), "%s (%s)", display_name, spell_schools[j]);
               snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                        feat_list[i].short_description);
             }
             else
             {
-              snprintf(buf3, sizeof(buf3), "%s (%s)", feat_list[i].name, spell_schools[j]);
+              snprintf(buf3, sizeof(buf3), "%s (%s)", display_name, spell_schools[j]);
               count++;
               if (count % 2 == 0)
                 snprintf(buf, sizeof(buf), "%-40s\r\n", buf3);
@@ -7729,14 +7746,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
           {
             if (mode == 1)
             {
-              snprintf(buf3, sizeof(buf3), "%s (%s)", feat_list[i].name,
+              snprintf(buf3, sizeof(buf3), "%s (%s)", display_name,
                        j >= NUM_WEAPON_FAMILIES ? "respec required" : weapon_family[j]);
               snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                        feat_list[i].short_description);
             }
             else
             {
-              snprintf(buf3, sizeof(buf3), "%s (%s)", feat_list[i].name,
+              snprintf(buf3, sizeof(buf3), "%s (%s)", display_name,
                        j >= NUM_WEAPON_FAMILIES ? "respec required" : weapon_family[j]);
               count++;
               if (count % 2 == 0)
@@ -7759,13 +7776,13 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
           {
             if (mode == 1)
             {
-              snprintf(buf3, sizeof(buf3), "%s (%s)", feat_list[i].name, ability_names[j]);
+              snprintf(buf3, sizeof(buf3), "%s (%s)", display_name, ability_names[j]);
               snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                        feat_list[i].short_description);
             }
             else
             {
-              snprintf(buf3, sizeof(buf3), "%s (%s) ", feat_list[i].name, ability_names[j]);
+              snprintf(buf3, sizeof(buf3), "%s (%s) ", display_name, ability_names[j]);
               count++;
               if (count % 2 == 0)
                 snprintf(buf, sizeof(buf), "%-40s\r\n", buf3);
@@ -7786,7 +7803,7 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
         {
           if (!has_practiced_spellcaster_class(ch, j))
             continue;
-          snprintf(buf3, sizeof(buf3), "%s (%s)", feat_list[i].name, CLSLIST_NAME(j));
+          snprintf(buf3, sizeof(buf3), "%s (%s)", display_name, CLSLIST_NAME(j));
           if (mode == 1)
             snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                      feat_list[i].short_description);
@@ -7800,14 +7817,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d hp/5 sec)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d hp/5 sec)", display_name,
                    HAS_FEAT(ch, FEAT_FAST_HEALING) * 3);
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d hp/5 sec)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d hp/5 sec)", display_name,
                    HAS_FEAT(ch, FEAT_FAST_HEALING) * 3);
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -7818,14 +7835,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (%d/-)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (%d/-)", display_name,
                    3 * HAS_FEAT(ch, FEAT_DAMAGE_REDUCTION));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (%d/-)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (%d/-)", display_name,
                    3 * HAS_FEAT(ch, FEAT_DAMAGE_REDUCTION));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -7836,14 +7853,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d)", display_name,
                    HAS_FEAT(ch, FEAT_IMPROVED_FAMILIAR));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d)", display_name,
                    HAS_FEAT(ch, FEAT_IMPROVED_FAMILIAR));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -7854,14 +7871,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (%d/-)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (%d/-)", display_name,
                    HAS_FEAT(ch, FEAT_SHRUG_DAMAGE));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (%d/-)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (%d/-)", display_name,
                    HAS_FEAT(ch, FEAT_SHRUG_DAMAGE));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -7872,14 +7889,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d ac)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d ac)", display_name,
                    HAS_FEAT(ch, FEAT_ARMOR_SKIN));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d ac)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d ac)", display_name,
                    HAS_FEAT(ch, FEAT_ARMOR_SKIN));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -7898,13 +7915,13 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
         }
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (%s)", feat_list[i].name, cantrip_name);
+          snprintf(buf3, sizeof(buf3), "%s (%s)", display_name, cantrip_name);
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (%s)", feat_list[i].name, cantrip_name);
+          snprintf(buf3, sizeof(buf3), "%s (%s)", display_name, cantrip_name);
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
         strlcat(buf2, buf, sizeof(buf2));
@@ -7917,13 +7934,13 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
             (db >= 0 && db < NUM_DRACONIC_HERITAGE_TYPES) ? draconic_heritage_names[db] : "unknown";
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (%s dragon)", feat_list[i].name, dname);
+          snprintf(buf3, sizeof(buf3), "%s (%s dragon)", display_name, dname);
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (%s dragon)", feat_list[i].name, dname);
+          snprintf(buf3, sizeof(buf3), "%s (%s dragon)", display_name, dname);
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
         strlcat(buf2, buf, sizeof(buf2));
@@ -7936,7 +7953,7 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
           int subtype = GET_BLOODLINE_SUBTYPE(ch);
           const char *school_lwr =
               (subtype >= 0 && subtype < NUM_SCHOOLS) ? spell_schools_lower[subtype] : "unknown";
-          snprintf(buf3, sizeof(buf3), "%s (%s magic)", feat_list[i].name, school_lwr);
+          snprintf(buf3, sizeof(buf3), "%s (%s magic)", display_name, school_lwr);
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
@@ -7945,7 +7962,7 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
           int subtype = GET_BLOODLINE_SUBTYPE(ch);
           const char *school_lwr =
               (subtype >= 0 && subtype < NUM_SCHOOLS) ? spell_schools_lower[subtype] : "unknown";
-          snprintf(buf3, sizeof(buf3), "%s (%s magic)", feat_list[i].name, school_lwr);
+          snprintf(buf3, sizeof(buf3), "%s (%s magic)", display_name, school_lwr);
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
         strlcat(buf2, buf, sizeof(buf2));
@@ -7958,7 +7975,7 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
           int subtype = GET_BLOODLINE_SUBTYPE(ch);
           const char *school_lwr =
               (subtype >= 0 && subtype < NUM_SCHOOLS) ? spell_schools_lower[subtype] : "unknown";
-          snprintf(buf3, sizeof(buf3), "%s (%s magic)", feat_list[i].name, school_lwr);
+          snprintf(buf3, sizeof(buf3), "%s (%s magic)", display_name, school_lwr);
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
@@ -7967,7 +7984,7 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
           int subtype = GET_BLOODLINE_SUBTYPE(ch);
           const char *school_lwr =
               (subtype >= 0 && subtype < NUM_SCHOOLS) ? spell_schools_lower[subtype] : "unknown";
-          snprintf(buf3, sizeof(buf3), "%s (%s magic)", feat_list[i].name, school_lwr);
+          snprintf(buf3, sizeof(buf3), "%s (%s magic)", display_name, school_lwr);
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
         strlcat(buf2, buf, sizeof(buf2));
@@ -7981,7 +7998,7 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
           const char *dname = (dr >= 0 && dr < NUM_DRACONIC_HERITAGE_TYPES)
                                   ? draconic_heritage_names[dr]
                                   : "unknown";
-          snprintf(buf3, sizeof(buf3), "%s (%s dragon)", feat_list[i].name, dname);
+          snprintf(buf3, sizeof(buf3), "%s (%s dragon)", display_name, dname);
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
@@ -7991,7 +8008,7 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
           const char *dname = (dr >= 0 && dr < NUM_DRACONIC_HERITAGE_TYPES)
                                   ? draconic_heritage_names[dr]
                                   : "unknown";
-          snprintf(buf3, sizeof(buf3), "%s (%s dragon)", feat_list[i].name, dname);
+          snprintf(buf3, sizeof(buf3), "%s (%s dragon)", display_name, dname);
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
         strlcat(buf2, buf, sizeof(buf2));
@@ -8005,14 +8022,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
                                 : "Unknown";
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (%s, %dx/day)", feat_list[i].name, etype,
+          snprintf(buf3, sizeof(buf3), "%s (%s, %dx/day)", display_name, etype,
                    get_daily_uses(ch, i));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (%s, %dx/day)", feat_list[i].name, etype,
+          snprintf(buf3, sizeof(buf3), "%s (%s, %dx/day)", display_name, etype,
                    get_daily_uses(ch, i));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8026,13 +8043,13 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
             (db >= 0 && db < NUM_DRACONIC_HERITAGE_TYPES) ? DRCHRT_ENERGY_TYPE(db) : "Unknown";
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (%s damage)", feat_list[i].name, etype);
+          snprintf(buf3, sizeof(buf3), "%s (%s damage)", display_name, etype);
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (%s damage)", feat_list[i].name, etype);
+          snprintf(buf3, sizeof(buf3), "%s (%s damage)", display_name, etype);
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
         strlcat(buf2, buf, sizeof(buf2));
@@ -8045,14 +8062,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
             (db >= 0 && db < NUM_DRACONIC_HERITAGE_TYPES) ? DRCHRT_ENERGY_TYPE(db) : "Unknown";
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (%s, %dx/day)", feat_list[i].name, etype,
+          snprintf(buf3, sizeof(buf3), "%s (%s, %dx/day)", display_name, etype,
                    get_daily_uses(ch, i));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (%s, %dx/day)", feat_list[i].name, etype,
+          snprintf(buf3, sizeof(buf3), "%s (%s, %dx/day)", display_name, etype,
                    get_daily_uses(ch, i));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8063,13 +8080,13 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (%dx/day)", feat_list[i].name, get_daily_uses(ch, i));
+          snprintf(buf3, sizeof(buf3), "%s (%dx/day)", display_name, get_daily_uses(ch, i));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (%dx/day)", feat_list[i].name, get_daily_uses(ch, i));
+          snprintf(buf3, sizeof(buf3), "%s (%dx/day)", display_name, get_daily_uses(ch, i));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
         strlcat(buf2, buf, sizeof(buf2));
@@ -8079,13 +8096,13 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (%dx/day)", feat_list[i].name, get_daily_uses(ch, i));
+          snprintf(buf3, sizeof(buf3), "%s (%dx/day)", display_name, get_daily_uses(ch, i));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (%dx/day)", feat_list[i].name, get_daily_uses(ch, i));
+          snprintf(buf3, sizeof(buf3), "%s (%dx/day)", display_name, get_daily_uses(ch, i));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
         strlcat(buf2, buf, sizeof(buf2));
@@ -8095,13 +8112,13 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (%dx/day)", feat_list[i].name, get_daily_uses(ch, i));
+          snprintf(buf3, sizeof(buf3), "%s (%dx/day)", display_name, get_daily_uses(ch, i));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (%dx/day)", feat_list[i].name, get_daily_uses(ch, i));
+          snprintf(buf3, sizeof(buf3), "%s (%dx/day)", display_name, get_daily_uses(ch, i));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
         strlcat(buf2, buf, sizeof(buf2));
@@ -8115,14 +8132,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
                                 : "Unknown";
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (%s, %dx/day)", feat_list[i].name, etype,
+          snprintf(buf3, sizeof(buf3), "%s (%s, %dx/day)", display_name, etype,
                    get_daily_uses(ch, i));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (%s, %dx/day)", feat_list[i].name, etype,
+          snprintf(buf3, sizeof(buf3), "%s (%s, %dx/day)", display_name, etype,
                    get_daily_uses(ch, i));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8133,14 +8150,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (extra circle slots: %d/%d/%d)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (extra circle slots: %d/%d/%d)", display_name,
                    NEW_ARCANA_SLOT(ch, 0), NEW_ARCANA_SLOT(ch, 1), NEW_ARCANA_SLOT(ch, 2));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (extra circle slots: %d/%d/%d)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (extra circle slots: %d/%d/%d)", display_name,
                    NEW_ARCANA_SLOT(ch, 0), NEW_ARCANA_SLOT(ch, 1), NEW_ARCANA_SLOT(ch, 2));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8155,13 +8172,13 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
                                 : "Unknown";
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (%s damage)", feat_list[i].name, etype);
+          snprintf(buf3, sizeof(buf3), "%s (%s damage)", display_name, etype);
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (%s damage)", feat_list[i].name, etype);
+          snprintf(buf3, sizeof(buf3), "%s (%s damage)", display_name, etype);
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
         strlcat(buf2, buf, sizeof(buf2));
@@ -8176,13 +8193,13 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
                                 : "Unknown";
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (resist %s)", feat_list[i].name, etype);
+          snprintf(buf3, sizeof(buf3), "%s (resist %s)", display_name, etype);
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (resist %s)", feat_list[i].name, etype);
+          snprintf(buf3, sizeof(buf3), "%s (resist %s)", display_name, etype);
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
         strlcat(buf2, buf, sizeof(buf2));
@@ -8192,14 +8209,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d)", display_name,
                    2 * HAS_FEAT(ch, FEAT_IMPROVED_REACTION));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d)", display_name,
                    2 * HAS_FEAT(ch, FEAT_IMPROVED_REACTION));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8210,14 +8227,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d attack dice rolls)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d attack dice rolls)", display_name,
                    HAS_FEAT(ch, FEAT_NATURAL_ATTACK));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d attack dice rolls)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d attack dice rolls)", display_name,
                    HAS_FEAT(ch, FEAT_NATURAL_ATTACK));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8228,14 +8245,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d ac)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d ac)", display_name,
                    HAS_FEAT(ch, FEAT_AC_BONUS));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d ac)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d ac)", display_name,
                    HAS_FEAT(ch, FEAT_AC_BONUS));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8246,14 +8263,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d percent)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d percent)", display_name,
                    HAS_FEAT(ch, FEAT_UNSTOPPABLE_STRIKE) * 5);
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d percent)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d percent)", display_name,
                    HAS_FEAT(ch, FEAT_UNSTOPPABLE_STRIKE) * 5);
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8264,14 +8281,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d ranks)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d ranks)", display_name,
                    HAS_FEAT(ch, FEAT_ARMOR_TRAINING));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d ranks)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d ranks)", display_name,
                    HAS_FEAT(ch, FEAT_ARMOR_TRAINING));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8282,14 +8299,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d ranks)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d ranks)", display_name,
                    HAS_FEAT(ch, FEAT_WEAPON_TRAINING));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d ranks)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d ranks)", display_name,
                    HAS_FEAT(ch, FEAT_WEAPON_TRAINING));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8300,14 +8317,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (-%d threat)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (-%d threat)", display_name,
                    HAS_FEAT(ch, FEAT_CRITICAL_SPECIALIST));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (-%d threat)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (-%d threat)", display_name,
                    HAS_FEAT(ch, FEAT_CRITICAL_SPECIALIST));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8318,14 +8335,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (-%d fall dam)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (-%d fall dam)", display_name,
                    3 * HAS_FEAT(ch, FEAT_SLOW_FALL));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (-%d fall dam)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (-%d fall dam)", display_name,
                    3 * HAS_FEAT(ch, FEAT_SLOW_FALL));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8336,14 +8353,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d attack bonus)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d attack bonus)", display_name,
                    HAS_FEAT(ch, FEAT_EPIC_PROWESS));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d attack bonus)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d attack bonus)", display_name,
                    HAS_FEAT(ch, FEAT_EPIC_PROWESS));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8354,14 +8371,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d)", display_name,
                    HAS_FEAT(ch, FEAT_EPIC_WILDSHAPE));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d)", display_name,
                    HAS_FEAT(ch, FEAT_EPIC_WILDSHAPE));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8372,14 +8389,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d hp)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d hp)", display_name,
                    (HAS_FEAT(ch, FEAT_EPIC_TOUGHNESS) * 30));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d hp)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d hp)", display_name,
                    (HAS_FEAT(ch, FEAT_EPIC_TOUGHNESS) * 30));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8390,14 +8407,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (%d/-)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (%d/-)", display_name,
                    HAS_FEAT(ch, FEAT_ENERGY_RESISTANCE) * 3);
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (%d/-)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (%d/-)", display_name,
                    HAS_FEAT(ch, FEAT_ENERGY_RESISTANCE) * 3);
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8408,13 +8425,13 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (3x/day)", feat_list[i].name);
+          snprintf(buf3, sizeof(buf3), "%s (3x/day)", display_name);
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (3x/day)", feat_list[i].name);
+          snprintf(buf3, sizeof(buf3), "%s (3x/day)", display_name);
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
         strlcat(buf2, buf, sizeof(buf2));
@@ -8424,14 +8441,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (%d / day)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (%d / day)", display_name,
                    HAS_FEAT(ch, FEAT_SACRED_FLAMES));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (%d / day)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (%d / day)", display_name,
                    HAS_FEAT(ch, FEAT_SACRED_FLAMES));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8442,14 +8459,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (%dx/day)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (%dx/day)", display_name,
                    HAS_FEAT(ch, FEAT_DRAGON_MOUNT_BREATH));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (%dx/day)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (%dx/day)", display_name,
                    HAS_FEAT(ch, FEAT_DRAGON_MOUNT_BREATH));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8460,14 +8477,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d)", display_name,
                    HAS_FEAT(ch, FEAT_DRAGON_MOUNT_BOOST));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d)", display_name,
                    HAS_FEAT(ch, FEAT_DRAGON_MOUNT_BOOST));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8478,14 +8495,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (%dd8 dmg|%dx/day)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (%dd8 dmg|%dx/day)", display_name,
                    HAS_FEAT(ch, FEAT_BREATH_WEAPON), HAS_FEAT(ch, FEAT_BREATH_WEAPON));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (%dd8 dmg|%dx/day)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (%dd8 dmg|%dx/day)", display_name,
                    HAS_FEAT(ch, FEAT_BREATH_WEAPON), HAS_FEAT(ch, FEAT_BREATH_WEAPON));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8496,13 +8513,13 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (%d / day)", feat_list[i].name, HAS_FEAT(ch, FEAT_RAGE));
+          snprintf(buf3, sizeof(buf3), "%s (%d / day)", display_name, HAS_FEAT(ch, FEAT_RAGE));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (%d / day)", feat_list[i].name, HAS_FEAT(ch, FEAT_RAGE));
+          snprintf(buf3, sizeof(buf3), "%s (%d / day)", display_name, HAS_FEAT(ch, FEAT_RAGE));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
         strlcat(buf2, buf, sizeof(buf2));
@@ -8512,14 +8529,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (%d / day)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (%d / day)", display_name,
                    HAS_FEAT(ch, FEAT_DEFENSIVE_STANCE));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (%d / day)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (%d / day)", display_name,
                    HAS_FEAT(ch, FEAT_DEFENSIVE_STANCE));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8530,14 +8547,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d dam / die)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d dam / die)", display_name,
                    HAS_FEAT(ch, FEAT_ENHANCED_POWER_DAMAGE));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d dam / die)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d dam / die)", display_name,
                    HAS_FEAT(ch, FEAT_ENHANCED_POWER_DAMAGE));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8548,14 +8565,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d to dcs)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d to dcs)", display_name,
                    HAS_FEAT(ch, FEAT_EMPOWERED_PSIONICS));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d to dcs)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d to dcs)", display_name,
                    HAS_FEAT(ch, FEAT_EMPOWERED_PSIONICS));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8566,14 +8583,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d dam / die)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d dam / die)", display_name,
                    HAS_FEAT(ch, FEAT_ENHANCED_SPELL_DAMAGE));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d dam / die)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d dam / die)", display_name,
                    HAS_FEAT(ch, FEAT_ENHANCED_SPELL_DAMAGE));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8584,14 +8601,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d to dcs)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d to dcs)", display_name,
                    HAS_FEAT(ch, FEAT_EMPOWERED_MAGIC));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d to dcs)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d to dcs)", display_name,
                    HAS_FEAT(ch, FEAT_EMPOWERED_MAGIC));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8602,14 +8619,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d dam dice)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d dam dice)", display_name,
                    HAS_FEAT(ch, FEAT_ENHANCE_SPELL) * 5);
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d dam dice)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d dam dice)", display_name,
                    HAS_FEAT(ch, FEAT_ENHANCE_SPELL) * 5);
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8620,14 +8637,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d ac)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d ac)", display_name,
                    HAS_FEAT(ch, FEAT_NATURAL_ARMOR_INCREASE));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d ac)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d ac)", display_name,
                    HAS_FEAT(ch, FEAT_NATURAL_ARMOR_INCREASE));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8638,14 +8655,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d)", display_name,
                    HAS_FEAT(ch, FEAT_GREAT_STRENGTH));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d)", display_name,
                    HAS_FEAT(ch, FEAT_GREAT_STRENGTH));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8656,14 +8673,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d)", display_name,
                    HAS_FEAT(ch, FEAT_GREAT_DEXTERITY));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d)", display_name,
                    HAS_FEAT(ch, FEAT_GREAT_DEXTERITY));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8674,14 +8691,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d)", display_name,
                    HAS_FEAT(ch, FEAT_GREAT_CONSTITUTION));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d)", display_name,
                    HAS_FEAT(ch, FEAT_GREAT_CONSTITUTION));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8692,14 +8709,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d)", display_name,
                    HAS_FEAT(ch, FEAT_GREAT_INTELLIGENCE));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d)", display_name,
                    HAS_FEAT(ch, FEAT_GREAT_INTELLIGENCE));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8710,14 +8727,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d)", display_name,
                    HAS_FEAT(ch, FEAT_GREAT_WISDOM));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d)", display_name,
                    HAS_FEAT(ch, FEAT_GREAT_WISDOM));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8728,14 +8745,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d)", display_name,
                    HAS_FEAT(ch, FEAT_GREAT_CHARISMA));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d)", display_name,
                    HAS_FEAT(ch, FEAT_GREAT_CHARISMA));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8746,14 +8763,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d)", display_name,
                    HAS_FEAT(ch, FEAT_POISON_SAVE_BONUS));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d)", display_name,
                    HAS_FEAT(ch, FEAT_POISON_SAVE_BONUS));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8764,13 +8781,13 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (%dd6)", feat_list[i].name, HAS_FEAT(ch, FEAT_BOMBS));
+          snprintf(buf3, sizeof(buf3), "%s (%dd6)", display_name, HAS_FEAT(ch, FEAT_BOMBS));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (%dd6)", feat_list[i].name, HAS_FEAT(ch, FEAT_BOMBS));
+          snprintf(buf3, sizeof(buf3), "%s (%dd6)", display_name, HAS_FEAT(ch, FEAT_BOMBS));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
         strlcat(buf2, buf, sizeof(buf2));
@@ -8780,14 +8797,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (%dx/day)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (%dx/day)", display_name,
                    HAS_FEAT(ch, FEAT_JUDGEMENT));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (%dx/day)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (%dx/day)", display_name,
                    HAS_FEAT(ch, FEAT_JUDGEMENT));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8798,13 +8815,13 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (x%d)", feat_list[i].name, HAS_FEAT(ch, FEAT_TEAMWORK));
+          snprintf(buf3, sizeof(buf3), "%s (x%d)", display_name, HAS_FEAT(ch, FEAT_TEAMWORK));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (x%d)", feat_list[i].name, HAS_FEAT(ch, FEAT_TEAMWORK));
+          snprintf(buf3, sizeof(buf3), "%s (x%d)", display_name, HAS_FEAT(ch, FEAT_TEAMWORK));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
         strlcat(buf2, buf, sizeof(buf2));
@@ -8814,14 +8831,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (x%d)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (x%d)", display_name,
                    HAS_FEAT(ch, FEAT_ALCHEMICAL_DISCOVERY));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (x%d)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (x%d)", display_name,
                    HAS_FEAT(ch, FEAT_ALCHEMICAL_DISCOVERY));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8832,14 +8849,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%dd6)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%dd6)", display_name,
                    HAS_FEAT(ch, FEAT_SNEAK_ATTACK));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%dd6)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%dd6)", display_name,
                    HAS_FEAT(ch, FEAT_SNEAK_ATTACK));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8850,14 +8867,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (rank %d)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (rank %d)", display_name,
                    HAS_FEAT(ch, FEAT_HEART_OF_TRUTH));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (rank %d)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (rank %d)", display_name,
                    HAS_FEAT(ch, FEAT_HEART_OF_TRUTH));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8868,14 +8885,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d)", display_name,
                    HAS_FEAT(ch, FEAT_UNBREAKABLE_WILL) * 2);
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d)", display_name,
                    HAS_FEAT(ch, FEAT_UNBREAKABLE_WILL) * 2);
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8886,14 +8903,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d%% exp)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d%% exp)", display_name,
                    (HAS_FEAT(ch, FEAT_LEADERSHIP) + 1) * 5);
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d%% exp)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d%% exp)", display_name,
                    (HAS_FEAT(ch, FEAT_LEADERSHIP) + 1) * 5);
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8904,14 +8921,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d)", display_name,
                    HAS_FEAT(ch, FEAT_INSPIRE_COURAGE) + 1);
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d)", display_name,
                    HAS_FEAT(ch, FEAT_INSPIRE_COURAGE) + 1);
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8922,14 +8939,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (%dd6)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (%dd6)", display_name,
                    HAS_FEAT(ch, FEAT_ELDRITCH_BLAST));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (%dd6)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (%dd6)", display_name,
                    HAS_FEAT(ch, FEAT_ELDRITCH_BLAST));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8940,14 +8957,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (%d/-)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (%d/-)", display_name,
                    HAS_FEAT(ch, FEAT_WARLOCK_DR));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (%d/-)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (%d/-)", display_name,
                    HAS_FEAT(ch, FEAT_WARLOCK_DR));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8958,14 +8975,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (%dd6)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (%dd6)", display_name,
                    CLASS_LEVEL(ch, CLASS_BLACKGUARD) / 2);
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (%dd6)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (%dd6)", display_name,
                    CLASS_LEVEL(ch, CLASS_BLACKGUARD) / 2);
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8976,14 +8993,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (%d%%)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (%d%%)", display_name,
                    (HAS_FEAT(ch, FEAT_IGNORE_SPELL_FAILURE) * 20));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (%d%%)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (%d%%)", display_name,
                    (HAS_FEAT(ch, FEAT_IGNORE_SPELL_FAILURE) * 20));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -8994,14 +9011,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (%d/day)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (%d/day)", display_name,
                    2 + (HAS_FEAT(ch, FEAT_CHANNEL_SPELL)));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (%d/day)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (%d/day)", display_name,
                    2 + (HAS_FEAT(ch, FEAT_CHANNEL_SPELL)));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -9012,14 +9029,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d)", display_name,
                    HAS_FEAT(ch, FEAT_ANIMATE_DEAD));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d)", display_name,
                    HAS_FEAT(ch, FEAT_ANIMATE_DEAD));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -9030,14 +9047,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d)", display_name,
                    HAS_FEAT(ch, FEAT_ARMORED_SPELLCASTING));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d)", display_name,
                    HAS_FEAT(ch, FEAT_ARMORED_SPELLCASTING));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -9048,14 +9065,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d)", display_name,
                    HAS_FEAT(ch, FEAT_TRAP_SENSE));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d)", display_name,
                    HAS_FEAT(ch, FEAT_TRAP_SENSE));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -9066,14 +9083,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (%d%% miss)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (%d%% miss)", display_name,
                    HAS_FEAT(ch, FEAT_SELF_CONCEALMENT) * 10);
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (%d%% miss)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (%d%% miss)", display_name,
                    HAS_FEAT(ch, FEAT_SELF_CONCEALMENT) * 10);
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -9084,14 +9101,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (%d%% dam avoid)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (%d%% dam avoid)", display_name,
                    HAS_FEAT(ch, FEAT_EPIC_SHIELD_USER) * 10);
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (%d%% dam avoid)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (%d%% dam avoid)", display_name,
                    HAS_FEAT(ch, FEAT_EPIC_SHIELD_USER) * 10);
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -9102,14 +9119,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d)", display_name,
                    HAS_FEAT(ch, FEAT_ENHANCE_ARROW_MAGIC));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d)", display_name,
                    HAS_FEAT(ch, FEAT_ENHANCE_ARROW_MAGIC));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -9120,14 +9137,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (%dx / day)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (%dx / day)", display_name,
                    HAS_FEAT(ch, FEAT_IMPROMPTU_SNEAK_ATTACK));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (%dx / day)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (%dx / day)", display_name,
                    HAS_FEAT(ch, FEAT_IMPROMPTU_SNEAK_ATTACK));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -9139,13 +9156,13 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (%dx / day)", feat_list[i].name, get_daily_uses(ch, i));
+          snprintf(buf3, sizeof(buf3), "%s (%dx / day)", display_name, get_daily_uses(ch, i));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (%dx / day)", feat_list[i].name, get_daily_uses(ch, i));
+          snprintf(buf3, sizeof(buf3), "%s (%dx / day)", display_name, get_daily_uses(ch, i));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
         strlcat(buf2, buf, sizeof(buf2));
@@ -9155,14 +9172,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (%d%% less time)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (%d%% less time)", display_name,
                    HAS_FEAT(ch, FEAT_FAST_CRAFTER) * 10);
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (-%d seconds)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (-%d seconds)", display_name,
                    HAS_FEAT(ch, FEAT_FAST_CRAFTER) * 10);
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -9173,14 +9190,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d to checks)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d to checks)", display_name,
                    HAS_FEAT(ch, FEAT_PROFICIENT_CRAFTER));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d to checks)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d to checks)", display_name,
                    HAS_FEAT(ch, FEAT_PROFICIENT_CRAFTER));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -9191,14 +9208,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (+%d to checks)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (+%d to checks)", display_name,
                    HAS_FEAT(ch, FEAT_PROFICIENT_HARVESTER));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%-20s (+%d to checks)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%-20s (+%d to checks)", display_name,
                    HAS_FEAT(ch, FEAT_PROFICIENT_HARVESTER));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -9209,14 +9226,14 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s (%d)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%s (%d)", display_name,
                    HAS_FEAT(ch, FEAT_THEURGE_SPELLCASTING));
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf3, sizeof(buf3), "%-20s (%d)", feat_list[i].name,
+          snprintf(buf3, sizeof(buf3), "%-20s (%d)", display_name,
                    HAS_FEAT(ch, FEAT_THEURGE_SPELLCASTING));
           snprintf(buf, sizeof(buf), "%-40s ", buf3);
         }
@@ -9229,13 +9246,13 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
       {
         if (mode == 1)
         {
-          snprintf(buf3, sizeof(buf3), "%s", feat_list[i].name);
+          snprintf(buf3, sizeof(buf3), "%s", display_name);
           snprintf(buf, sizeof(buf), "\tW%-30s\tC:\tn %s\r\n", buf3,
                    feat_list[i].short_description);
         }
         else
         {
-          snprintf(buf, sizeof(buf), "%-40s ", feat_list[i].name);
+          snprintf(buf, sizeof(buf), "%-40s ", display_name);
         }
         strlcat(buf2, buf, sizeof(buf2)); /* The above, ^ should always be safe to do. */
         none_shown = FALSE;

@@ -25,6 +25,7 @@ struct descriptor_data *descriptor_list;
 static char output[64000];
 struct happyhour happy_data;
 static int treasure_roll, magic_items;
+static void award_random_crafting_treasure(struct char_data *ch,struct char_data *mob) {}
 #undef IS_STAFF_EVENT
 #define IS_STAFF_EVENT 0
 int dice(int number,int size) { return size==100 ? treasure_roll : size==3 ? 1 : 10; }

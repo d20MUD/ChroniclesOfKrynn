@@ -766,6 +766,75 @@ struct char_data *find_treasure_recipient(struct char_data *ch)
 
 /***  primary functions ***/
 
+#define TREASURE_MATERIAL_CHANCE 10
+#define TREASURE_MOTE_CHANCE 10
+#define TREASURE_HIGH_MATERIAL_LEVEL 30
+
+/* Resource quality depends on the defeated mob, never the recipient's level.
+ * The highest grades occupy only 10% and 2% of material rolls respectively. */
+static int random_treasure_material(int source_level)
+{
+  int roll, grade = 1, material, count = 0;
+  int candidates[NUM_CRAFT_MATS];
+
+  if (source_level < 1)
+    return CRAFT_MAT_NONE;
+  roll = rand_number(1, 100);
+  if (source_level >= TREASURE_HIGH_MATERIAL_LEVEL && roll <= 2)
+    grade = 6;
+  else if (source_level >= TREASURE_HIGH_MATERIAL_LEVEL && roll <= 12)
+    grade = 5;
+  else if (source_level >= 20 && roll <= 32)
+    grade = 4;
+  else if (source_level >= 10 && roll <= 62)
+    grade = 3;
+  else if (source_level >= 5 && roll <= 82)
+    grade = 2;
+
+  for (material = 1; material < NUM_CRAFT_MATS; material++)
+    if (material_grade(material) == grade)
+      candidates[count++] = material;
+
+  return count ? candidates[rand_number(0, count - 1)] : CRAFT_MAT_NONE;
+}
+
+/* Rare additions to a successful treasure roll, alongside ordinary loot. */
+static void award_random_crafting_treasure(struct char_data *ch, struct char_data *mob)
+{
+  int material, mote;
+  bool awarded = FALSE;
+  char buf[MEDIUM_STRING];
+
+  if (!ch || !mob || IS_NPC(ch) || !ch->player_specials || !IS_NPC(mob) || GET_LEVEL(mob) < 1)
+    return;
+
+  if (rand_number(1, 100) <= TREASURE_MATERIAL_CHANCE)
+  {
+    material = random_treasure_material(GET_LEVEL(mob));
+    if (material != CRAFT_MAT_NONE && GET_CRAFT_MAT(ch, material) < INT_MAX)
+    {
+      GET_CRAFT_MAT(ch, material)++;
+      snprintf(buf, sizeof(buf), "\tYYou find 1 unit of %s on $N's corpse!\tn",
+               crafting_materials[material]);
+      act(buf, FALSE, ch, NULL, mob, TO_CHAR);
+      awarded = TRUE;
+    }
+  }
+  if (rand_number(1, 100) <= TREASURE_MOTE_CHANCE)
+  {
+    mote = rand_number(1, NUM_CRAFT_MOTES - 1);
+    if (GET_CRAFT_MOTES(ch, mote) < INT_MAX)
+    {
+      GET_CRAFT_MOTES(ch, mote)++;
+      snprintf(buf, sizeof(buf), "\tYYou find 1 %s on $N's corpse!\tn", crafting_motes[mote]);
+      act(buf, FALSE, ch, NULL, mob, TO_CHAR);
+      awarded = TRUE;
+    }
+  }
+  if (awarded)
+    save_char(ch, 0);
+}
+
 /* this function determines whether the character will get treasure or not
  *   for example, called before make_corpse() when killing a mobile */
 void determine_treasure(struct char_data *ch, struct char_data *mob)
@@ -799,11 +868,13 @@ void determine_treasure(struct char_data *ch, struct char_data *mob)
   grade = quick_grade_check(level);
 
   int treasure_chance = MIN(100, MAX(TREASURE_PERCENT, HAPPY_TREASURE) +
-                                get_account_reward_bonus(ch, ACCOUNT_BONUS_TREASURE));
+                                     get_account_reward_bonus(ch, ACCOUNT_BONUS_TREASURE));
   if (dice(1, 100) <= treasure_chance)
   {
+    award_random_crafting_treasure(ch, mob);
     if (dice(1, 3) == 1)
-      award_magic_item(1, ch, grade, level); // we want magic item treasure drops to be better but less common
+      award_magic_item(1, ch, grade,
+                       level); // we want magic item treasure drops to be better but less common
     gold = MIN(INT_MAX, apply_account_reward_bonus(ch, gold, ACCOUNT_BONUS_GOLD));
     snprintf(buf, MEDIUM_STRING, "\tYYou have found %d coins hidden on $N's corpse!\tn", gold);
     act(buf, FALSE, ch, 0, mob, TO_CHAR);
@@ -876,7 +947,8 @@ void award_magic_item(int number, struct char_data *ch, int grade, int source_le
     }
     else if (roll <= 80) // 30%
     {
-      award_misc_magic_item(ch, determine_rnd_misc_cat(), cp_convert_grade_enchantment(grade), source_level);
+      award_misc_magic_item(ch, determine_rnd_misc_cat(), cp_convert_grade_enchantment(grade),
+                            source_level);
     }
     else // 20%
     {
@@ -938,7 +1010,8 @@ void award_magic_item(int number, struct char_data *ch, int grade, int source_le
     }
     else if (roll <= 80)
     { /* 56 - 80   25% */
-      award_misc_magic_item(ch, determine_rnd_misc_cat(), cp_convert_grade_enchantment(grade), source_level);
+      award_misc_magic_item(ch, determine_rnd_misc_cat(), cp_convert_grade_enchantment(grade),
+                            source_level);
     }
     else
     { /* 80 - 100  20% */
@@ -1006,7 +1079,8 @@ void award_magic_item(int number, struct char_data *ch, int grade, int source_le
     }
     else if (roll <= 80) /* 56-80: 25% misc items/trinkets */
     {
-      award_misc_magic_item(ch, determine_rnd_misc_cat(), cp_convert_grade_enchantment(grade), source_level);
+      award_misc_magic_item(ch, determine_rnd_misc_cat(), cp_convert_grade_enchantment(grade),
+                            source_level);
     }
     else /* 81-100: 20% armor */
     {
@@ -3548,8 +3622,8 @@ void give_misc_magic_item(struct char_data *ch, int category, int enchantment, b
              material_name[material], armor_name, AN(desc2), desc2);
     strlcat(desc, buf, sizeof(desc));
     obj->short_description = strdup(desc);
-    snprintf(desc, sizeof(desc), "%s %s %s %s bearing the crest of %s %s is lying here.",
-             AN(desc3), desc3, material_name[material], armor_name, AN(desc2), desc2);
+    snprintf(desc, sizeof(desc), "%s %s %s %s bearing the crest of %s %s is lying here.", AN(desc3),
+             desc3, material_name[material], armor_name, AN(desc2), desc2);
     obj->description = strdup(CAP(desc));
     break;
   case BELT_MOLD:
@@ -3896,8 +3970,8 @@ void award_misc_magic_item(struct char_data *ch, int category, int grade, int so
              material_name[material], armor_name, AN(desc2), desc2);
     strlcat(desc, buf, sizeof(desc));
     obj->short_description = strdup(desc);
-    snprintf(desc, sizeof(desc), "%s %s %s %s bearing the crest of %s %s is lying here.",
-             AN(desc3), desc3, material_name[material], armor_name, AN(desc2), desc2);
+    snprintf(desc, sizeof(desc), "%s %s %s %s bearing the crest of %s %s is lying here.", AN(desc3),
+             desc3, material_name[material], armor_name, AN(desc2), desc2);
     obj->description = strdup(CAP(desc));
     break;
   case BELT_MOLD:
