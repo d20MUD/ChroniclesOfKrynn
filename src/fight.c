@@ -7635,7 +7635,9 @@ int compute_damage_bonus(struct char_data *ch, struct char_data *vict, struct ob
       if (display_mode)
         send_to_char(ch, "%s from 2Hand Weapon: \tR%d\tn\r\n", strength, str_bonus * 3 / 2);
     }
-    else if (hands_available(ch) > 0)
+    else if (hands_available(ch) > 0 &&
+             !(wielded && GET_OBJ_TYPE(wielded) == ITEM_WEAPON &&
+               GET_WEAPON_TYPE(wielded) == WEAPON_TYPE_QUARTERSTAFF))
     {
       dambonus += str_bonus + 2; /* one handed weapon held in two hands because of empty off hand */
       if (display_mode)
@@ -12020,7 +12022,7 @@ int compute_attack_bonus_full(struct char_data *ch,     /* Attacker */
 
   // -2 penalty if wielding a large weapon in one hand
   // through the monkey grip and powerful build feats
-  if (wielded && wielded != GET_EQ(ch, WEAR_WIELD_2H) && GET_OBJ_SIZE(wielded) > GET_SIZE(ch) &&
+  if (wielded && wielded != GET_EQ(ch, WEAR_WIELD_2H) && wield_size_difference(ch, wielded) > 0 &&
       hands_needed_full(ch, wielded, FALSE) != 0)
   {
     calc_bab -= 2;

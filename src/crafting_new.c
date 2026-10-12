@@ -49,7 +49,7 @@
 #include "vnums.h"
 #include "crafting_recipes.h"
 
-#define GOLEM_RECALL_COOLDOWN 300  // 5 minutes in seconds
+#define GOLEM_RECALL_COOLDOWN 300 // 5 minutes in seconds
 #define GOLEM_BATTLEFIELD_RETRIEVAL_COOLDOWN 30
 #define GOLEM_SIEGE_FRAME_SLAM_COOLDOWN 30
 #define GOLEM_OMNI_FORGE_COMMANDER_COOLDOWN (60 * 60)
@@ -102,11 +102,12 @@ int materials_sort_info[NUM_CRAFT_MATS];
   "craft catalysts (0-5|add #|remove [#])\r\n"                                                     \
   "craft leveladjust (level adjustment)\r\n"                                                       \
   "craft score\r\n"                                                                                \
-  "craft specialize (skill name) - Choose up to 2 skills for +5 bonus and 2x exp\r\n"             \
+  "craft specialize (skill name) - Choose up to 2 skills for +5 bonus and 2x exp\r\n"              \
   "craft show\r\n"                                                                                 \
   "craft check\r\n"                                                                                \
   "craft reset (no "                                                                               \
-  "argument|motes|materials|enhancement|instrument|bonuses|descriptions|refine|resize|catalysts)\r\n" \
+  "argument|motes|materials|enhancement|instrument|bonuses|descriptions|refine|resize|catalysts)"  \
+  "\r\n"                                                                                           \
   "craft start\r\n"                                                                                \
   "\r\n"                                                                                           \
   "Other commands:\r\n"                                                                            \
@@ -296,8 +297,7 @@ static void show_craft_tutorial(struct char_data *ch)
 
     if (header_level > 0)
     {
-      append_tutorial_output(&out, &out_size, &out_len,
-                             (header_level <= 2) ? "\tY" : "\tC");
+      append_tutorial_output(&out, &out_size, &out_len, (header_level <= 2) ? "\tY" : "\tC");
       append_tutorial_output(&out, &out_size, &out_len, cleaned);
       append_tutorial_output(&out, &out_size, &out_len, "\tn\r\n");
       continue;
@@ -343,15 +343,15 @@ static void show_craft_tutorial(struct char_data *ch)
    "-- misc        rings, necklaces, earrings, cloaks, belts, etc.\r\n")
 #define NEWCRAFT_CREATE_BONUSES_NOARG                                                              \
   "You need to specify all of the bonus information:\r\n"                                          \
-  "Usage: craft bonuses (slot) (bonus location) (bonus type) (modifier) [specific]\r\n"               \
+  "Usage: craft bonuses (slot) (bonus location) (bonus type) (modifier) [specific]\r\n"            \
   "-- slot needs to be 1-6 as an item can only have 6 bonuses total\r\n"                           \
   "-- bonus location is what the bonus affects. Eg. strength, hit-points, reflex-save, etc. Type " \
   "'applies' for a list.\r\n"                                                                      \
   "-- bonus type is either enhancement or universal. See HELP CRAFTING for more info\r\n"          \
   "-- modifier is how much the bonus will affect that associated stat\r\n"                         \
-  "-- specific is only required for skill and spell slot bonus locations\r\n"                   \
-  "-- grant-feat crafting is not supported\r\n"                                                  \
-  "Eg. craft bonuses 1 armor-class universal 1\r\n"                                               \
+  "-- specific is only required for skill and spell slot bonus locations\r\n"                      \
+  "-- grant-feat crafting is not supported\r\n"                                                    \
+  "Eg. craft bonuses 1 armor-class universal 1\r\n"                                                \
   "\r\n"                                                                                           \
   "To reset a bonus slot type: craft bonus [slot] reset\r\n"
 
@@ -450,15 +450,18 @@ int canonical_craft_material(int material)
 int climate_material_variety(int material, int climate, int terrain)
 {
   static const int timber[NUM_ZONE_CLIMATES][3][4] = {
-    {{CRAFT_MAT_ASH_WOOD}, {CRAFT_MAT_MAPLE_WOOD}, {CRAFT_MAT_MAHAGONY_WOOD}},
-    {{CRAFT_MAT_DRIFTWOOD, CRAFT_MAT_DWARF_WILLOW}, {CRAFT_MAT_BIRCH}, {CRAFT_MAT_LARCH}},
-    {{CRAFT_MAT_SPRUCE, CRAFT_MAT_PINE}, {CRAFT_MAT_BIRCH}, {CRAFT_MAT_LARCH}},
-    {{CRAFT_MAT_ASH_WOOD, CRAFT_MAT_BEECH, CRAFT_MAT_WILLOW}, {CRAFT_MAT_MAPLE_WOOD}, {CRAFT_MAT_OAK}},
-    {{CRAFT_MAT_PINE, CRAFT_MAT_WILLOW}, {CRAFT_MAT_CYPRESS, CRAFT_MAT_CEDAR}, {CRAFT_MAT_LIVE_OAK}},
-    {{CRAFT_MAT_BAMBOO}, {CRAFT_MAT_TEAK}, {CRAFT_MAT_MAHAGONY_WOOD, CRAFT_MAT_EBONY}},
-    {{CRAFT_MAT_TAMARISK}, {CRAFT_MAT_ACACIA}, {CRAFT_MAT_MESQUITE}},
-    {{CRAFT_MAT_FIR, CRAFT_MAT_PINE}, {CRAFT_MAT_BIRCH, CRAFT_MAT_CEDAR}, {CRAFT_MAT_LARCH}}
-  };
+      {{CRAFT_MAT_ASH_WOOD}, {CRAFT_MAT_MAPLE_WOOD}, {CRAFT_MAT_MAHAGONY_WOOD}},
+      {{CRAFT_MAT_DRIFTWOOD, CRAFT_MAT_DWARF_WILLOW}, {CRAFT_MAT_BIRCH}, {CRAFT_MAT_LARCH}},
+      {{CRAFT_MAT_SPRUCE, CRAFT_MAT_PINE}, {CRAFT_MAT_BIRCH}, {CRAFT_MAT_LARCH}},
+      {{CRAFT_MAT_ASH_WOOD, CRAFT_MAT_BEECH, CRAFT_MAT_WILLOW},
+       {CRAFT_MAT_MAPLE_WOOD},
+       {CRAFT_MAT_OAK}},
+      {{CRAFT_MAT_PINE, CRAFT_MAT_WILLOW},
+       {CRAFT_MAT_CYPRESS, CRAFT_MAT_CEDAR},
+       {CRAFT_MAT_LIVE_OAK}},
+      {{CRAFT_MAT_BAMBOO}, {CRAFT_MAT_TEAK}, {CRAFT_MAT_MAHAGONY_WOOD, CRAFT_MAT_EBONY}},
+      {{CRAFT_MAT_TAMARISK}, {CRAFT_MAT_ACACIA}, {CRAFT_MAT_MESQUITE}},
+      {{CRAFT_MAT_FIR, CRAFT_MAT_PINE}, {CRAFT_MAT_BIRCH, CRAFT_MAT_CEDAR}, {CRAFT_MAT_LARCH}}};
   int grade, count = 0;
   if (material <= CRAFT_MAT_NONE || material >= NUM_CRAFT_MATS)
     return CRAFT_MAT_NONE;
@@ -497,15 +500,14 @@ const char *harvest_node_name(room_rnum room)
 {
   static char description[MAX_STRING_LENGTH];
   static const char *game[NUM_ZONE_CLIMATES][4] = {
-    {NULL, NULL, NULL, NULL},
-    {"arctic hare", "seal", "reindeer", "polar bear"},
-    {"hare", "fox", "elk", "moose"},
-    {"rabbit", "fox", "deer", "boar"},
-    {"rabbit", "wild goat", "deer", "boar"},
-    {"jungle fowl", "monkey", "antelope", "wild pig"},
-    {"desert hare", "desert fox", "gazelle", "wild goat"},
-    {"marmot", "mountain sheep", "mountain goat", "ibex"}
-  };
+      {NULL, NULL, NULL, NULL},
+      {"arctic hare", "seal", "reindeer", "polar bear"},
+      {"hare", "fox", "elk", "moose"},
+      {"rabbit", "fox", "deer", "boar"},
+      {"rabbit", "wild goat", "deer", "boar"},
+      {"jungle fowl", "monkey", "antelope", "wild pig"},
+      {"desert hare", "desert fox", "gazelle", "wild goat"},
+      {"marmot", "mountain sheep", "mountain goat", "ibex"}};
   const char *prefix = NULL;
   int material, climate, grade;
   if (room == NOWHERE || room > top_of_world)
@@ -518,11 +520,13 @@ const char *harvest_node_name(room_rnum room)
     return crafting_material_nodes[material];
   grade = material_grade(material);
   if (material >= CRAFT_MAT_LOW_GRADE_HIDE && material <= CRAFT_MAT_PRISTINE_GRADE_HIDE)
-    snprintf(description, sizeof(description), "the tracks of %s (%s)",
-             game[climate][grade - 1], crafting_materials[material]);
+    snprintf(description, sizeof(description), "the tracks of %s (%s)", game[climate][grade - 1],
+             crafting_materials[material]);
   else if (climate == ZONE_CLIMATE_POLAR && craft_group_by_material(material) == CRAFT_GROUP_WOOD &&
-           grade >= 1 && grade <= 3 && material != CRAFT_MAT_DWARF_WILLOW && material != CRAFT_MAT_DRIFTWOOD)
-    snprintf(description, sizeof(description), "a cache of %s driftwood", crafting_material_descriptions[material]);
+           grade >= 1 && grade <= 3 && material != CRAFT_MAT_DWARF_WILLOW &&
+           material != CRAFT_MAT_DRIFTWOOD)
+    snprintf(description, sizeof(description), "a cache of %s driftwood",
+             crafting_material_descriptions[material]);
   else
   {
     if (harvesting_skill_by_material(material) == ABILITY_HARVEST_MINING)
@@ -540,7 +544,8 @@ const char *harvest_node_name(room_rnum room)
       return crafting_material_nodes[material];
     snprintf(description, sizeof(description), "%s %s", prefix,
              !strncmp(crafting_material_nodes[material], "a ", 2)
-                 ? crafting_material_nodes[material] + 2 : crafting_material_nodes[material]);
+                 ? crafting_material_nodes[material] + 2
+                 : crafting_material_nodes[material]);
   }
   return description;
 }
@@ -552,10 +557,18 @@ const char *harvest_activity_name(room_rnum room)
   if (room != NOWHERE && room <= top_of_world)
     switch (harvesting_skill_by_material(world[room].harvest_material))
     {
-    case ABILITY_HARVEST_MINING: verb = "mining"; break;
-    case ABILITY_HARVEST_FORESTRY: verb = "logging"; break;
-    case ABILITY_HARVEST_HUNTING: verb = "hunting"; break;
-    case ABILITY_HARVEST_GATHERING: verb = "gathering"; break;
+    case ABILITY_HARVEST_MINING:
+      verb = "mining";
+      break;
+    case ABILITY_HARVEST_FORESTRY:
+      verb = "logging";
+      break;
+    case ABILITY_HARVEST_HUNTING:
+      verb = "hunting";
+      break;
+    case ABILITY_HARVEST_GATHERING:
+      verb = "gathering";
+      break;
     }
   snprintf(activity, sizeof(activity), "%s %s", verb, harvest_node_name(room));
   return activity;
@@ -1194,7 +1207,8 @@ static bool can_butcher_corpse(struct obj_data *corpse)
 
   /* Check if the corpse race type is butcherable */
   int race_type = GET_OBJ_VAL(corpse, 1);
-  if (race_type == RACE_TYPE_DRAGON || race_type == RACE_TYPE_ANIMAL || race_type == RACE_TYPE_MAGICAL_BEAST)
+  if (race_type == RACE_TYPE_DRAGON || race_type == RACE_TYPE_ANIMAL ||
+      race_type == RACE_TYPE_MAGICAL_BEAST)
     return true;
 
   return false;
@@ -1205,11 +1219,11 @@ static int get_corpse_level(struct obj_data *corpse)
 {
   /* Level is stored in val[6] */
   int level = GET_OBJ_VAL(corpse, 6);
-  
+
   /* Sanity check - if level is 0 or invalid, return a default */
   if (level <= 0)
     return 10;
-  
+
   return level;
 }
 
@@ -1237,10 +1251,10 @@ static int determine_butcher_material(struct obj_data *corpse)
 {
   int race_type = get_corpse_race_type(corpse);
   int level = get_corpse_level(corpse);
-  
+
   if (race_type == RACE_TYPE_DRAGON)
   {
-    switch(dice(1, 3))
+    switch (dice(1, 3))
     {
     case 1:
       return CRAFT_MAT_DRAGONBLOOD;
@@ -1255,7 +1269,7 @@ static int determine_butcher_material(struct obj_data *corpse)
     /* Return hide based on level */
     return get_hide_quality_by_level(level);
   }
-  
+
   return CRAFT_MAT_NONE;
 }
 
@@ -1286,8 +1300,7 @@ void survey_complete(struct char_data *ch)
                    crafting_materials[world[IN_ROOM(ch)].harvest_material]);
       send_to_char(ch, "Players will see:\r\n");
     }
-    send_to_char(ch, "You find %s here.\r\n",
-                 harvest_node_name(IN_ROOM(ch)));
+    send_to_char(ch, "You find %s here.\r\n", harvest_node_name(IN_ROOM(ch)));
   }
   else
   {
@@ -1299,23 +1312,23 @@ void survey_complete(struct char_data *ch)
   talent_bonus = get_talent_rank(ch, TALENT_SURVEYOR);
   skill_bonus = get_craft_skill_value(ch, ABILITY_HARVEST_SURVEYING);
   GET_SURVEY_ROOMS(ch) = roll + talent_bonus + skill_bonus;
-  
+
   char talent_bonus_text[128];
   char skill_bonus_text[128];
-  
+
   if (talent_bonus > 0)
     snprintf(talent_bonus_text, sizeof(talent_bonus_text), " + surveyor talent [%d]", talent_bonus);
   else
     talent_bonus_text[0] = '\0';
-  
+
   if (skill_bonus > 0)
     snprintf(skill_bonus_text, sizeof(skill_bonus_text), " + skill bonus [%d]", skill_bonus);
   else
     skill_bonus_text[0] = '\0';
-  
-  send_to_char(ch, "Roll [%d]%s%s = %d rooms surveyed.\r\n",
-               roll, talent_bonus_text, skill_bonus_text, GET_SURVEY_ROOMS(ch));
-  
+
+  send_to_char(ch, "Roll [%d]%s%s = %d rooms surveyed.\r\n", roll, talent_bonus_text,
+               skill_bonus_text, GET_SURVEY_ROOMS(ch));
+
   /* Check for survey exp cooldown */
   time_t now = time(NULL);
   if (GET_SURVEY_EXP_COOLDOWN(ch) > now)
@@ -1323,8 +1336,10 @@ void survey_complete(struct char_data *ch)
     int seconds_left = GET_SURVEY_EXP_COOLDOWN(ch) - now;
     int minutes_left = seconds_left / 60;
     seconds_left = seconds_left % 60;
-    send_to_char(ch, "\tYSurvey exp cooldown active - you can gain exp again in %d minute%s %d second%s.\tn\r\n",
-                 minutes_left, (minutes_left == 1) ? "" : "s", seconds_left, (seconds_left == 1) ? "" : "s");
+    send_to_char(
+        ch,
+        "\tYSurvey exp cooldown active - you can gain exp again in %d minute%s %d second%s.\tn\r\n",
+        minutes_left, (minutes_left == 1) ? "" : "s", seconds_left, (seconds_left == 1) ? "" : "s");
   }
   else
   {
@@ -1332,7 +1347,7 @@ void survey_complete(struct char_data *ch)
     GET_SURVEY_EXP_COOLDOWN(ch) = now + (2 * 60);
     gain_craft_exp(ch, (10 + GET_SURVEY_ROOMS(ch)) * 2, ABILITY_HARVEST_SURVEYING, TRUE);
   }
-  
+
   act("$n finishes surveying.", FALSE, ch, 0, 0, TO_ROOM);
 }
 
@@ -2059,8 +2074,7 @@ void set_crafting_catalysts(struct char_data *ch, const char *argument)
 
   if (!*arg1)
   {
-    send_to_char(ch, "Usage: craft catalysts <0-%d|add #|remove [#]>.\r\n",
-                 CRAFT_CATALYST_MAX);
+    send_to_char(ch, "Usage: craft catalysts <0-%d|add #|remove [#]>.\r\n", CRAFT_CATALYST_MAX);
     send_to_char(ch, "You have %d catalyst%s stored and %d allocated to this project.\r\n",
                  GET_CRAFT_MAT(ch, CRAFT_MAT_CATALYST),
                  GET_CRAFT_MAT(ch, CRAFT_MAT_CATALYST) == 1 ? "" : "s",
@@ -2110,8 +2124,7 @@ void set_crafting_catalysts(struct char_data *ch, const char *argument)
   {
     if (!is_number(arg1))
     {
-      send_to_char(ch, "Usage: craft catalysts <0-%d|add #|remove [#]>.\r\n",
-                   CRAFT_CATALYST_MAX);
+      send_to_char(ch, "Usage: craft catalysts <0-%d|add #|remove [#]>.\r\n", CRAFT_CATALYST_MAX);
       return;
     }
     target = atoi(arg1);
@@ -2140,8 +2153,8 @@ void set_crafting_catalysts(struct char_data *ch, const char *argument)
   {
     if (GET_CRAFT_MAT(ch, CRAFT_MAT_CATALYST) < delta)
     {
-      send_to_char(ch, "You need %d more catalyst%s, but only have %d stored.\r\n",
-                   delta, delta == 1 ? "" : "s", GET_CRAFT_MAT(ch, CRAFT_MAT_CATALYST));
+      send_to_char(ch, "You need %d more catalyst%s, but only have %d stored.\r\n", delta,
+                   delta == 1 ? "" : "s", GET_CRAFT_MAT(ch, CRAFT_MAT_CATALYST));
       return;
     }
     GET_CRAFT_MAT(ch, CRAFT_MAT_CATALYST) -= delta;
@@ -2153,8 +2166,7 @@ void set_crafting_catalysts(struct char_data *ch, const char *argument)
 
   GET_CRAFT(ch).catalysts_used = target;
   send_to_char(ch, "You have %d catalyst%s allocated for a %d%% critical chance.\r\n",
-               GET_CRAFT(ch).catalysts_used,
-               GET_CRAFT(ch).catalysts_used == 1 ? "" : "s",
+               GET_CRAFT(ch).catalysts_used, GET_CRAFT(ch).catalysts_used == 1 ? "" : "s",
                GET_CRAFT(ch).catalysts_used);
 }
 
@@ -3059,8 +3071,7 @@ void show_current_craft(struct char_data *ch)
   send_to_char(ch, "\r\n");
   send_to_char(ch, "\tc   CATALYSTS:\tn\r\n");
   send_to_char(ch, "-- %d catalyst%s allocated (%d%% critical chance). You have %d stored.\r\n",
-               GET_CRAFT(ch).catalysts_used,
-               GET_CRAFT(ch).catalysts_used == 1 ? "" : "s",
+               GET_CRAFT(ch).catalysts_used, GET_CRAFT(ch).catalysts_used == 1 ? "" : "s",
                MIN(GET_CRAFT(ch).catalysts_used, CRAFT_CATALYST_MAX),
                GET_CRAFT_MAT(ch, CRAFT_MAT_CATALYST));
 
@@ -3246,8 +3257,7 @@ void reset_current_craft(struct char_data *ch, char *arg2, bool verbose, bool re
         GET_CRAFT_MAT(ch, CRAFT_MAT_CATALYST) += GET_CRAFT(ch).catalysts_used;
         if (verbose)
         {
-          send_to_char(ch, "You have recovered %d catalyst%s.\r\n",
-                       GET_CRAFT(ch).catalysts_used,
+          send_to_char(ch, "You have recovered %d catalyst%s.\r\n", GET_CRAFT(ch).catalysts_used,
                        GET_CRAFT(ch).catalysts_used == 1 ? "" : "s");
         }
       }
@@ -4129,9 +4139,9 @@ bool create_craft_skill_check(struct char_data *ch, struct obj_data *obj, int sk
 
   roll = d20(ch);
   skill_mod = get_craft_skill_value(ch, skill);
-  
+
   /* Check if specialized for message display */
-  if (GET_CRAFT(ch).craft_specialization[0] == skill || 
+  if (GET_CRAFT(ch).craft_specialization[0] == skill ||
       GET_CRAFT(ch).craft_specialization[1] == skill)
   {
     specialization_bonus = 5;
@@ -4166,7 +4176,7 @@ bool create_craft_skill_check(struct char_data *ch, struct obj_data *obj, int sk
       elbow_grease_bonus = 4;
     else
       elbow_grease_bonus = 2;
-    
+
     skill_mod += elbow_grease_bonus;
   }
 
@@ -4203,12 +4213,14 @@ bool create_craft_skill_check(struct char_data *ch, struct obj_data *obj, int sk
   {
     char bonus_text[256];
     char *ptr = bonus_text;
-    
+
     if (specialization_bonus > 0)
-      ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + specialization [%d]", specialization_bonus);
+      ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + specialization [%d]",
+                      specialization_bonus);
     if (proficiency_bonus > 0)
-      ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + proficiency [%d]", proficiency_bonus);
-    
+      ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + proficiency [%d]",
+                      proficiency_bonus);
+
     if (HAS_FEAT(ch, FEAT_CRAFT_WONDEROUS_ITEM) &&
         GET_CRAFT(ch).crafting_item_type == CRAFT_TYPE_MISC)
     {
@@ -4218,17 +4230,18 @@ bool create_craft_skill_check(struct char_data *ch, struct obj_data *obj, int sk
              (GET_CRAFT(ch).crafting_item_type == CRAFT_TYPE_WEAPON ||
               GET_CRAFT(ch).crafting_item_type == CRAFT_TYPE_ARMOR))
     {
-      ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + Craft Magical Arms and Armor [5]");
+      ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text),
+                      " + Craft Magical Arms and Armor [5]");
     }
-    
+
     if (elbow_grease_bonus > 0)
-      ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + elbow grease [%d]", elbow_grease_bonus);
+      ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + elbow grease [%d]",
+                      elbow_grease_bonus);
 
     send_to_char(ch,
                  "You rolled %d + base skill %d%s = total of %d vs. dc %d. The %s "
                  "attempt failed, but you may try again.\r\n",
-                 roll, base_skill, bonus_text,
-                 roll + skill_mod, dc, method);
+                 roll, base_skill, bonus_text, roll + skill_mod, dc, method);
     gain_craft_exp(ch, exp, skill, TRUE);
     return FALSE;
   }
@@ -4236,12 +4249,14 @@ bool create_craft_skill_check(struct char_data *ch, struct obj_data *obj, int sk
   {
     char bonus_text[256];
     char *ptr = bonus_text;
-    
+
     if (specialization_bonus > 0)
-      ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + specialization [%d]", specialization_bonus);
+      ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + specialization [%d]",
+                      specialization_bonus);
     if (proficiency_bonus > 0)
-      ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + proficiency [%d]", proficiency_bonus);
-    
+      ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + proficiency [%d]",
+                      proficiency_bonus);
+
     if (HAS_FEAT(ch, FEAT_CRAFT_WONDEROUS_ITEM) &&
         GET_CRAFT(ch).crafting_item_type == CRAFT_TYPE_MISC)
     {
@@ -4251,17 +4266,18 @@ bool create_craft_skill_check(struct char_data *ch, struct obj_data *obj, int sk
              (GET_CRAFT(ch).crafting_item_type == CRAFT_TYPE_WEAPON ||
               GET_CRAFT(ch).crafting_item_type == CRAFT_TYPE_ARMOR))
     {
-      ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + Craft Magical Arms and Armor [5]");
+      ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text),
+                      " + Craft Magical Arms and Armor [5]");
     }
-    
+
     if (elbow_grease_bonus > 0)
-      ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + elbow grease [%d]", elbow_grease_bonus);
+      ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + elbow grease [%d]",
+                      elbow_grease_bonus);
 
     send_to_char(ch,
                  "You rolled %d + base skill %d%s = total of %d vs. dc %d. The %s "
                  "attempt succeeded!\r\n",
-                 roll, base_skill, bonus_text,
-                 roll + skill_mod, dc, method);
+                 roll, base_skill, bonus_text, roll + skill_mod, dc, method);
     return TRUE;
   }
   return FALSE;
@@ -4271,28 +4287,50 @@ int obj_material_to_craft_material(int material)
 {
   switch (material)
   {
-  case MATERIAL_BAMBOO: return CRAFT_MAT_BAMBOO;
-  case MATERIAL_PINE: return CRAFT_MAT_PINE;
-  case MATERIAL_TAMARISK: return CRAFT_MAT_TAMARISK;
-  case MATERIAL_SPRUCE: return CRAFT_MAT_SPRUCE;
-  case MATERIAL_FIR: return CRAFT_MAT_FIR;
-  case MATERIAL_WILLOW: return CRAFT_MAT_WILLOW;
-  case MATERIAL_BEECH: return CRAFT_MAT_BEECH;
-  case MATERIAL_TEAK: return CRAFT_MAT_TEAK;
-  case MATERIAL_BIRCH: return CRAFT_MAT_BIRCH;
-  case MATERIAL_ACACIA: return CRAFT_MAT_ACACIA;
-  case MATERIAL_CYPRESS: return CRAFT_MAT_CYPRESS;
-  case MATERIAL_CEDAR: return CRAFT_MAT_CEDAR;
-  case MATERIAL_OAK: return CRAFT_MAT_OAK;
-  case MATERIAL_LARCH: return CRAFT_MAT_LARCH;
-  case MATERIAL_MESQUITE: return CRAFT_MAT_MESQUITE;
-  case MATERIAL_EBONY: return CRAFT_MAT_EBONY;
-  case MATERIAL_LIVE_OAK: return CRAFT_MAT_LIVE_OAK;
-  case MATERIAL_DRIFTWOOD: return CRAFT_MAT_DRIFTWOOD;
-  case MATERIAL_DWARF_WILLOW: return CRAFT_MAT_DWARF_WILLOW;
-  case MATERIAL_JUTE: return CRAFT_MAT_JUTE;
-  case MATERIAL_AGAVE: return CRAFT_MAT_AGAVE;
-  default: break;
+  case MATERIAL_BAMBOO:
+    return CRAFT_MAT_BAMBOO;
+  case MATERIAL_PINE:
+    return CRAFT_MAT_PINE;
+  case MATERIAL_TAMARISK:
+    return CRAFT_MAT_TAMARISK;
+  case MATERIAL_SPRUCE:
+    return CRAFT_MAT_SPRUCE;
+  case MATERIAL_FIR:
+    return CRAFT_MAT_FIR;
+  case MATERIAL_WILLOW:
+    return CRAFT_MAT_WILLOW;
+  case MATERIAL_BEECH:
+    return CRAFT_MAT_BEECH;
+  case MATERIAL_TEAK:
+    return CRAFT_MAT_TEAK;
+  case MATERIAL_BIRCH:
+    return CRAFT_MAT_BIRCH;
+  case MATERIAL_ACACIA:
+    return CRAFT_MAT_ACACIA;
+  case MATERIAL_CYPRESS:
+    return CRAFT_MAT_CYPRESS;
+  case MATERIAL_CEDAR:
+    return CRAFT_MAT_CEDAR;
+  case MATERIAL_OAK:
+    return CRAFT_MAT_OAK;
+  case MATERIAL_LARCH:
+    return CRAFT_MAT_LARCH;
+  case MATERIAL_MESQUITE:
+    return CRAFT_MAT_MESQUITE;
+  case MATERIAL_EBONY:
+    return CRAFT_MAT_EBONY;
+  case MATERIAL_LIVE_OAK:
+    return CRAFT_MAT_LIVE_OAK;
+  case MATERIAL_DRIFTWOOD:
+    return CRAFT_MAT_DRIFTWOOD;
+  case MATERIAL_DWARF_WILLOW:
+    return CRAFT_MAT_DWARF_WILLOW;
+  case MATERIAL_JUTE:
+    return CRAFT_MAT_JUTE;
+  case MATERIAL_AGAVE:
+    return CRAFT_MAT_AGAVE;
+  default:
+    break;
   }
 
   switch (material)
@@ -4374,28 +4412,50 @@ int craft_material_to_obj_material(int craftmat)
   /* Distinct object IDs preserve varieties through bundles and finished items. */
   switch (craftmat)
   {
-  case CRAFT_MAT_BAMBOO: return MATERIAL_BAMBOO;
-  case CRAFT_MAT_PINE: return MATERIAL_PINE;
-  case CRAFT_MAT_TAMARISK: return MATERIAL_TAMARISK;
-  case CRAFT_MAT_SPRUCE: return MATERIAL_SPRUCE;
-  case CRAFT_MAT_FIR: return MATERIAL_FIR;
-  case CRAFT_MAT_WILLOW: return MATERIAL_WILLOW;
-  case CRAFT_MAT_BEECH: return MATERIAL_BEECH;
-  case CRAFT_MAT_TEAK: return MATERIAL_TEAK;
-  case CRAFT_MAT_BIRCH: return MATERIAL_BIRCH;
-  case CRAFT_MAT_ACACIA: return MATERIAL_ACACIA;
-  case CRAFT_MAT_CYPRESS: return MATERIAL_CYPRESS;
-  case CRAFT_MAT_CEDAR: return MATERIAL_CEDAR;
-  case CRAFT_MAT_OAK: return MATERIAL_OAK;
-  case CRAFT_MAT_LARCH: return MATERIAL_LARCH;
-  case CRAFT_MAT_MESQUITE: return MATERIAL_MESQUITE;
-  case CRAFT_MAT_EBONY: return MATERIAL_EBONY;
-  case CRAFT_MAT_LIVE_OAK: return MATERIAL_LIVE_OAK;
-  case CRAFT_MAT_DRIFTWOOD: return MATERIAL_DRIFTWOOD;
-  case CRAFT_MAT_DWARF_WILLOW: return MATERIAL_DWARF_WILLOW;
-  case CRAFT_MAT_JUTE: return MATERIAL_JUTE;
-  case CRAFT_MAT_AGAVE: return MATERIAL_AGAVE;
-  default: break;
+  case CRAFT_MAT_BAMBOO:
+    return MATERIAL_BAMBOO;
+  case CRAFT_MAT_PINE:
+    return MATERIAL_PINE;
+  case CRAFT_MAT_TAMARISK:
+    return MATERIAL_TAMARISK;
+  case CRAFT_MAT_SPRUCE:
+    return MATERIAL_SPRUCE;
+  case CRAFT_MAT_FIR:
+    return MATERIAL_FIR;
+  case CRAFT_MAT_WILLOW:
+    return MATERIAL_WILLOW;
+  case CRAFT_MAT_BEECH:
+    return MATERIAL_BEECH;
+  case CRAFT_MAT_TEAK:
+    return MATERIAL_TEAK;
+  case CRAFT_MAT_BIRCH:
+    return MATERIAL_BIRCH;
+  case CRAFT_MAT_ACACIA:
+    return MATERIAL_ACACIA;
+  case CRAFT_MAT_CYPRESS:
+    return MATERIAL_CYPRESS;
+  case CRAFT_MAT_CEDAR:
+    return MATERIAL_CEDAR;
+  case CRAFT_MAT_OAK:
+    return MATERIAL_OAK;
+  case CRAFT_MAT_LARCH:
+    return MATERIAL_LARCH;
+  case CRAFT_MAT_MESQUITE:
+    return MATERIAL_MESQUITE;
+  case CRAFT_MAT_EBONY:
+    return MATERIAL_EBONY;
+  case CRAFT_MAT_LIVE_OAK:
+    return MATERIAL_LIVE_OAK;
+  case CRAFT_MAT_DRIFTWOOD:
+    return MATERIAL_DRIFTWOOD;
+  case CRAFT_MAT_DWARF_WILLOW:
+    return MATERIAL_DWARF_WILLOW;
+  case CRAFT_MAT_JUTE:
+    return MATERIAL_JUTE;
+  case CRAFT_MAT_AGAVE:
+    return MATERIAL_AGAVE;
+  default:
+    break;
   }
 
   switch (craftmat)
@@ -4950,12 +5010,10 @@ static bool craft_has_pending_noncreate_project(struct char_data *ch)
   if (!ch)
     return FALSE;
 
-  if (GET_CRAFT(ch).crafting_method != 0 &&
-      GET_CRAFT(ch).crafting_method != SCMD_NEWCRAFT_CREATE)
+  if (GET_CRAFT(ch).crafting_method != 0 && GET_CRAFT(ch).crafting_method != SCMD_NEWCRAFT_CREATE)
     return TRUE;
 
-  if (GET_CRAFT(ch).refining_result[0] != CRAFT_MAT_NONE ||
-      GET_CRAFT(ch).refining_result[1] > 0)
+  if (GET_CRAFT(ch).refining_result[0] != CRAFT_MAT_NONE || GET_CRAFT(ch).refining_result[1] > 0)
     return TRUE;
 
   if (GET_CRAFT(ch).new_size != 0)
@@ -5146,8 +5204,7 @@ void process_craft_critical_success(struct char_data *ch, struct obj_data *obj)
   }
 
   if (*resonance_buf)
-    send_to_char(ch, "\tY**CATALYST CRITICAL!**\tn The craft resonates: %s.\r\n",
-                 resonance_buf);
+    send_to_char(ch, "\tY**CATALYST CRITICAL!**\tn The craft resonates: %s.\r\n", resonance_buf);
 }
 
 void craft_create_complete(struct char_data *ch)
@@ -5458,13 +5515,13 @@ void process_crafting_materials(struct char_data *ch, int group, int mat_type, i
 }
 
 const int craft_skills_alphabetic[END_HARVEST_ABILITIES - START_CRAFT_ABILITIES + 1] = {
-    ABILITY_CRAFT_ALCHEMY,        ABILITY_CRAFT_ARMORSMITHING, ABILITY_CRAFT_BOWMAKING,
-    ABILITY_HARVEST_BUTCHERING,
-    ABILITY_CRAFT_COOKING,        ABILITY_CRAFT_FISHING,       ABILITY_HARVEST_FORESTRY,
-    ABILITY_HARVEST_GATHERING,    ABILITY_HARVEST_HUNTING,     ABILITY_CRAFT_JEWELCRAFTING,
-    ABILITY_CRAFT_LEATHERWORKING, ABILITY_CRAFT_METALWORKING,  ABILITY_HARVEST_MINING,
-    ABILITY_CRAFT_POISONMAKING,   ABILITY_HARVEST_SURVEYING,   ABILITY_CRAFT_TAILORING,
-    ABILITY_CRAFT_TRAPMAKING,     ABILITY_CRAFT_WEAPONSMITHING, ABILITY_CRAFT_WOODWORKING};
+    ABILITY_CRAFT_ALCHEMY,       ABILITY_CRAFT_ARMORSMITHING,  ABILITY_CRAFT_BOWMAKING,
+    ABILITY_HARVEST_BUTCHERING,  ABILITY_CRAFT_COOKING,        ABILITY_CRAFT_FISHING,
+    ABILITY_HARVEST_FORESTRY,    ABILITY_HARVEST_GATHERING,    ABILITY_HARVEST_HUNTING,
+    ABILITY_CRAFT_JEWELCRAFTING, ABILITY_CRAFT_LEATHERWORKING, ABILITY_CRAFT_METALWORKING,
+    ABILITY_HARVEST_MINING,      ABILITY_CRAFT_POISONMAKING,   ABILITY_HARVEST_SURVEYING,
+    ABILITY_CRAFT_TAILORING,     ABILITY_CRAFT_TRAPMAKING,     ABILITY_CRAFT_WEAPONSMITHING,
+    ABILITY_CRAFT_WOODWORKING};
 
 void show_craft_score(struct char_data *ch, const char *arg2)
 {
@@ -5514,17 +5571,23 @@ void show_craft_score(struct char_data *ch, const char *arg2)
 
   if (HAS_FEAT(ch, FEAT_CRAFT_MAGICAL_ARMS_AND_ARMOR) || HAS_FEAT(ch, FEAT_CRAFT_WONDEROUS_ITEM))
   {
-    bool has_both = (HAS_FEAT(ch, FEAT_CRAFT_MAGICAL_ARMS_AND_ARMOR) && HAS_FEAT(ch, FEAT_CRAFT_WONDEROUS_ITEM));
+    bool has_both = (HAS_FEAT(ch, FEAT_CRAFT_MAGICAL_ARMS_AND_ARMOR) &&
+                     HAS_FEAT(ch, FEAT_CRAFT_WONDEROUS_ITEM));
     if (HAS_FEAT(ch, FEAT_CRAFT_MAGICAL_ARMS_AND_ARMOR))
     {
-      send_to_char(ch, "Craft Magical Arms and Armor -> +5 when crafting weapons, armor and shields.\r\n");
+      send_to_char(
+          ch, "Craft Magical Arms and Armor -> +5 when crafting weapons, armor and shields.\r\n");
     }
     if (HAS_FEAT(ch, FEAT_CRAFT_WONDEROUS_ITEM))
     {
-      send_to_char(ch, "Craft Wonderous Item         -> +5 when crafting misc items, such as rings, bracers, etc.\r\n");
+      send_to_char(ch, "Craft Wonderous Item         -> +5 when crafting misc items, such as "
+                       "rings, bracers, etc.\r\n");
     }
-    send_to_char(ch, "%s bonus%s %s listed here because they are tied to the type of item being crafted,\r\n"
-                     "not to a specific crafting skill.\r\n", has_both ? "These" : "This", has_both ? "s" : "", has_both ? "are" : "is");
+    send_to_char(
+        ch,
+        "%s bonus%s %s listed here because they are tied to the type of item being crafted,\r\n"
+        "not to a specific crafting skill.\r\n",
+        has_both ? "These" : "This", has_both ? "s" : "", has_both ? "are" : "is");
     send_to_char(ch, "\tc");
     draw_line(ch, 90, '-', '-');
     send_to_char(ch, "\tn");
@@ -5541,11 +5604,12 @@ void show_craft_score(struct char_data *ch, const char *arg2)
   draw_line(ch, 90, '-', '-');
   send_to_char(ch, "\tn");
   send_to_char(ch, "\tYCrafting Specializations:\tn\r\n");
-  
+
   if (GET_CRAFT(ch).craft_specialization[0] == -1 && GET_CRAFT(ch).craft_specialization[1] == -1)
   {
     send_to_char(ch, "  You have not yet chosen your specializations.\r\n");
-    send_to_char(ch, "  Use 'craft specialize <skill>' to choose up to 2 crafting/harvesting skills.\r\n");
+    send_to_char(
+        ch, "  Use 'craft specialize <skill>' to choose up to 2 crafting/harvesting skills.\r\n");
     send_to_char(ch, "  Specialized skills gain +5 to skill checks and double experience.\r\n");
   }
   else
@@ -5553,20 +5617,20 @@ void show_craft_score(struct char_data *ch, const char *arg2)
     int spec_count = 0;
     if (GET_CRAFT(ch).craft_specialization[0] >= 0)
     {
-      send_to_char(ch, "  \tC1.\tn %s (+5 skill, 2x exp)\r\n", 
+      send_to_char(ch, "  \tC1.\tn %s (+5 skill, 2x exp)\r\n",
                    ability_names[GET_CRAFT(ch).craft_specialization[0]]);
       spec_count++;
     }
     if (GET_CRAFT(ch).craft_specialization[1] >= 0)
     {
-      send_to_char(ch, "  \tC2.\tn %s (+5 skill, 2x exp)\r\n", 
+      send_to_char(ch, "  \tC2.\tn %s (+5 skill, 2x exp)\r\n",
                    ability_names[GET_CRAFT(ch).craft_specialization[1]]);
       spec_count++;
     }
     if (spec_count < 2)
     {
-      send_to_char(ch, "  You have %d specialization slot%s remaining.\r\n", 
-                   2 - spec_count, (2 - spec_count == 1) ? "" : "s");
+      send_to_char(ch, "  You have %d specialization slot%s remaining.\r\n", 2 - spec_count,
+                   (2 - spec_count == 1) ? "" : "s");
       send_to_char(ch, "  Use 'craft specialize <skill>' to choose another skill.\r\n");
     }
   }
@@ -5644,7 +5708,8 @@ void set_craft_specialization(struct char_data *ch, const char *arg)
     send_to_char(ch, "Syntax: craft specialize <skill name>\r\n");
     send_to_char(ch, "You can specialize in up to 2 crafting or harvesting skills.\r\n");
     send_to_char(ch, "Specialized skills receive +5 to skill checks and double experience.\r\n");
-    send_to_char(ch, "Use 'craft score' to see available skills and your current specializations.\r\n");
+    send_to_char(ch,
+                 "Use 'craft score' to see available skills and your current specializations.\r\n");
     return;
   }
 
@@ -5677,7 +5742,7 @@ void set_craft_specialization(struct char_data *ch, const char *arg)
   }
 
   /* Check if already specialized in this skill */
-  if (GET_CRAFT(ch).craft_specialization[0] == skill_num || 
+  if (GET_CRAFT(ch).craft_specialization[0] == skill_num ||
       GET_CRAFT(ch).craft_specialization[1] == skill_num)
   {
     send_to_char(ch, "You are already specialized in %s.\r\n", ability_names[skill_num]);
@@ -5689,7 +5754,7 @@ void set_craft_specialization(struct char_data *ch, const char *arg)
   {
     GET_CRAFT(ch).craft_specialization[0] = skill_num;
     send_to_char(ch, "\tGYou have specialized in %s!\tn\r\n", ability_names[skill_num]);
-    send_to_char(ch, "You now receive +5 to %s skill checks and double experience.\r\n", 
+    send_to_char(ch, "You now receive +5 to %s skill checks and double experience.\r\n",
                  ability_names[skill_num]);
     if (GET_CRAFT(ch).craft_specialization[1] == -1)
     {
@@ -5700,7 +5765,7 @@ void set_craft_specialization(struct char_data *ch, const char *arg)
   {
     GET_CRAFT(ch).craft_specialization[1] = skill_num;
     send_to_char(ch, "\tGYou have specialized in %s!\tn\r\n", ability_names[skill_num]);
-    send_to_char(ch, "You now receive +5 to %s skill checks and double experience.\r\n", 
+    send_to_char(ch, "You now receive +5 to %s skill checks and double experience.\r\n",
                  ability_names[skill_num]);
     send_to_char(ch, "\tYYou have used both specialization slots.\tn\r\n");
   }
@@ -5927,14 +5992,14 @@ void craft_refine_complete(struct char_data *ch)
                  crafting_materials[GET_CRAFT(ch).refining_result[0]]);
     num++;
     exp = (REFINE_BASE_EXP + dc) * num;
-    
+
     /* Apply happy hour bonus */
     if (HAPPY_CRAFTING_EXP > 0)
     {
       happy_hour_bonus = (exp * HAPPY_CRAFTING_EXP) / 100;
       send_to_char(ch, "\tY*HAPPY HOUR*\tn You gain %d bonus experience!\r\n", happy_hour_bonus);
     }
-    
+
     gain_craft_exp(ch, exp + happy_hour_bonus, skill_type, TRUE);
   }
   else if ((roll + skill) < dc)
@@ -5942,19 +6007,20 @@ void craft_refine_complete(struct char_data *ch)
     /* Check for specialization */
     int base_skill = GET_ABILITY(ch, skill_type);
     int spec_bonus = 0;
-    bool is_specialized = (GET_CRAFT(ch).craft_specialization[0] == skill_type || 
-                          GET_CRAFT(ch).craft_specialization[1] == skill_type);
+    bool is_specialized = (GET_CRAFT(ch).craft_specialization[0] == skill_type ||
+                           GET_CRAFT(ch).craft_specialization[1] == skill_type);
     if (is_specialized)
       spec_bonus = 5;
-    
+
     char bonus_text[128] = "";
     if (spec_bonus > 0)
       snprintf(bonus_text, sizeof(bonus_text), " + specialization [%d]", spec_bonus);
-    
-    send_to_char(ch,
-                 "You rolled %d + base skill %d%s for a total of %d < dc of %d. You failed your refining "
-                 "attempt but may try again.\r\n",
-                 roll, base_skill, bonus_text, roll + skill, dc);
+
+    send_to_char(
+        ch,
+        "You rolled %d + base skill %d%s for a total of %d < dc of %d. You failed your refining "
+        "attempt but may try again.\r\n",
+        roll, base_skill, bonus_text, roll + skill, dc);
     return;
   }
   else
@@ -5962,41 +6028,40 @@ void craft_refine_complete(struct char_data *ch)
     /* Check for specialization */
     int base_skill = GET_ABILITY(ch, skill_type);
     int spec_bonus = 0;
-    bool is_specialized = (GET_CRAFT(ch).craft_specialization[0] == skill_type || 
-                          GET_CRAFT(ch).craft_specialization[1] == skill_type);
+    bool is_specialized = (GET_CRAFT(ch).craft_specialization[0] == skill_type ||
+                           GET_CRAFT(ch).craft_specialization[1] == skill_type);
     if (is_specialized)
       spec_bonus = 5;
-    
+
     char bonus_text[128] = "";
     if (spec_bonus > 0)
       snprintf(bonus_text, sizeof(bonus_text), " + specialization [%d]", spec_bonus);
-    
-    send_to_char(ch, "You rolled %d + base skill %d%s for a total of %d >= dc of %d. You succeed!\r\n",
+
+    send_to_char(ch,
+                 "You rolled %d + base skill %d%s for a total of %d >= dc of %d. You succeed!\r\n",
                  roll, base_skill, bonus_text, roll + skill, dc);
     exp = (REFINE_BASE_EXP + dc) * num;
-    
+
     /* Apply happy hour bonus */
     if (HAPPY_CRAFTING_EXP > 0)
     {
       happy_hour_bonus = (exp * HAPPY_CRAFTING_EXP) / 100;
       send_to_char(ch, "\tY*HAPPY HOUR*\tn You gain %d bonus experience!\r\n", happy_hour_bonus);
     }
-    
+
     gain_craft_exp(ch, exp + happy_hour_bonus, skill_type, TRUE);
   }
 
   GET_CRAFT_MAT(ch, GET_CRAFT(ch).refining_result[0]) += num;
   if (batch_quantity == 1)
   {
-    send_to_char(ch, "You refine %d unit%s of %s.\r\n", num,
-                 num > 1 ? "s" : "",
+    send_to_char(ch, "You refine %d unit%s of %s.\r\n", num, num > 1 ? "s" : "",
                  crafting_materials[GET_CRAFT(ch).refining_result[0]]);
   }
   else
   {
     send_to_char(ch, "You complete the refining of %d batches, producing %d unit%s of %s.\r\n",
-                 batch_quantity, num,
-                 num > 1 ? "s" : "",
+                 batch_quantity, num, num > 1 ? "s" : "",
                  crafting_materials[GET_CRAFT(ch).refining_result[0]]);
   }
   reset_current_craft(ch, NULL, FALSE, FALSE);
@@ -6035,8 +6100,8 @@ void harvest_complete(struct char_data *ch)
   /* Check for specialization */
   int base_skill = GET_ABILITY(ch, skill);
   int spec_bonus = 0;
-  bool is_specialized = (GET_CRAFT(ch).craft_specialization[0] == skill || 
-                        GET_CRAFT(ch).craft_specialization[1] == skill);
+  bool is_specialized = (GET_CRAFT(ch).craft_specialization[0] == skill ||
+                         GET_CRAFT(ch).craft_specialization[1] == skill);
   if (is_specialized)
     spec_bonus = 5;
 
@@ -6046,8 +6111,7 @@ void harvest_complete(struct char_data *ch)
 
   if ((20 + skill_roll + prof_bonus) < dc)
   {
-    send_to_char(ch, "You don't have the skill to harvest %s.\r\n",
-                 harvest_node_name(IN_ROOM(ch)));
+    send_to_char(ch, "You don't have the skill to harvest %s.\r\n", harvest_node_name(IN_ROOM(ch)));
     return;
   }
 
@@ -6065,8 +6129,7 @@ void harvest_complete(struct char_data *ch)
 
     if (world[IN_ROOM(ch)].harvest_material_amount <= 0)
     {
-      send_to_char(ch, "%s has been depleted.\r\n",
-                   harvest_node_name(IN_ROOM(ch)));
+      send_to_char(ch, "%s has been depleted.\r\n", harvest_node_name(IN_ROOM(ch)));
       world[IN_ROOM(ch)].harvest_material = CRAFT_MAT_NONE;
       world[IN_ROOM(ch)].harvest_material_amount = 0;
     }
@@ -6078,17 +6141,20 @@ void harvest_complete(struct char_data *ch)
   {
     char bonus_text[256];
     char *ptr = bonus_text;
-    
+
     if (spec_bonus > 0)
-      ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + specialization [%d]", spec_bonus);
+      ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + specialization [%d]",
+                      spec_bonus);
     if (prof_bonus > 0)
-      ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + proficiency [%d]", prof_bonus);
-    
-    send_to_char(ch,
-                 "Roll [%d] + Base Skill [%d]%s = Total [%d] vs. DC [%d]. Failure. You have failed to "
-                 "harvest %s.\r\n",
-                 roll, base_skill, bonus_text, roll + skill_roll + prof_bonus, dc,
-                 crafting_materials[world[IN_ROOM(ch)].harvest_material]);
+      ptr +=
+          snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + proficiency [%d]", prof_bonus);
+
+    send_to_char(
+        ch,
+        "Roll [%d] + Base Skill [%d]%s = Total [%d] vs. DC [%d]. Failure. You have failed to "
+        "harvest %s.\r\n",
+        roll, base_skill, bonus_text, roll + skill_roll + prof_bonus, dc,
+        crafting_materials[world[IN_ROOM(ch)].harvest_material]);
     GET_CRAFT(ch).craft_duration = 0;
     GET_CRAFT(ch).crafting_method = 0;
     gain_craft_exp(ch, HARVEST_BASE_EXP / 2, skill, TRUE);
@@ -6098,7 +6164,7 @@ void harvest_complete(struct char_data *ch)
   {
     int happy_hour_mat_bonus = 0;
     int mote_chance = 0;
-    
+
     amount = HARVEST_BASE_AMOUNT;
     amount = MIN(amount, world[IN_ROOM(ch)].harvest_material_amount);
 
@@ -6117,19 +6183,22 @@ void harvest_complete(struct char_data *ch)
     {
       char bonus_text[256];
       char *ptr = bonus_text;
-      
+
       if (spec_bonus > 0)
-        ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + specialization [%d]", spec_bonus);
+        ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + specialization [%d]",
+                        spec_bonus);
       if (prof_bonus > 0)
-        ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + proficiency [%d]", prof_bonus);
-      
-      send_to_char(ch,
-                   "Roll [%d] + Base Skill [%d]%s = Total [%d] vs. DC [%d]. Success!\r\nYou have harvested "
-                   "%d %s from %s.\r\n",
-                   roll, base_skill, bonus_text, roll + skill_roll + prof_bonus, dc, amount,
-                   crafting_materials[world[IN_ROOM(ch)].harvest_material],
-                   harvest_node_name(IN_ROOM(ch)));
-      gain_craft_exp(ch, HARVEST_BASE_EXP + ((HARVEST_BASE_EXP / 2) * harvest_level / 2), skill, TRUE);
+        ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + proficiency [%d]",
+                        prof_bonus);
+
+      send_to_char(
+          ch,
+          "Roll [%d] + Base Skill [%d]%s = Total [%d] vs. DC [%d]. Success!\r\nYou have harvested "
+          "%d %s from %s.\r\n",
+          roll, base_skill, bonus_text, roll + skill_roll + prof_bonus, dc, amount,
+          crafting_materials[world[IN_ROOM(ch)].harvest_material], harvest_node_name(IN_ROOM(ch)));
+      gain_craft_exp(ch, HARVEST_BASE_EXP + ((HARVEST_BASE_EXP / 2) * harvest_level / 2), skill,
+                     TRUE);
     }
 
     /* Check for efficient talent - chance to gain 2 extra units */
@@ -6138,7 +6207,8 @@ void harvest_complete(struct char_data *ch)
     if (efficient_chance > 0 && rand_number(1, 100) <= efficient_chance)
     {
       efficient_bonus = 2;
-      send_to_char(ch, "\tC*EFFICIENT*\tn You gain 2 extra units from your efficient harvesting!\r\n");
+      send_to_char(ch,
+                   "\tC*EFFICIENT*\tn You gain 2 extra units from your efficient harvesting!\r\n");
     }
 
     world[IN_ROOM(ch)].harvest_material_amount -= amount;
@@ -6146,16 +6216,17 @@ void harvest_complete(struct char_data *ch)
     /* Apply happy hour bonus for materials harvested */
     if (HAPPY_HARVESTING_MATERIALS > 0)
     {
-      happy_hour_mat_bonus = MAX(1, ((amount + bonus + efficient_bonus) * HAPPY_HARVESTING_MATERIALS) / 100);
+      happy_hour_mat_bonus =
+          MAX(1, ((amount + bonus + efficient_bonus) * HAPPY_HARVESTING_MATERIALS) / 100);
       send_to_char(ch, "\tY*HAPPY HOUR*\tn You gain %d bonus materials!\r\n", happy_hour_mat_bonus);
     }
 
-    GET_CRAFT_MAT(ch, world[IN_ROOM(ch)].harvest_material) += amount + bonus + efficient_bonus + happy_hour_mat_bonus;
+    GET_CRAFT_MAT(ch, world[IN_ROOM(ch)].harvest_material) +=
+        amount + bonus + efficient_bonus + happy_hour_mat_bonus;
 
     if (world[IN_ROOM(ch)].harvest_material_amount <= 0)
     {
-      send_to_char(ch, "%s has been depleted.\r\n",
-                   harvest_node_name(IN_ROOM(ch)));
+      send_to_char(ch, "%s has been depleted.\r\n", harvest_node_name(IN_ROOM(ch)));
       world[IN_ROOM(ch)].harvest_material = CRAFT_MAT_NONE;
       world[IN_ROOM(ch)].harvest_material_amount = 0;
     }
@@ -6166,19 +6237,19 @@ void harvest_complete(struct char_data *ch)
     {
       mote_chance += HAPPY_HARVESTING_MOTES_CHANCE;
     }
-    
+
     if ((dice(1, 100) <= mote_chance) || motes_found)
     {
       num_motes =
           dice(MAX(1, material_grade(world[IN_ROOM(ch)].harvest_material)), HARVEST_MOTE_DICE_SIZE);
       num_motes = num_motes * HARVEST_MOTE_MULTIPLIER / 100;
-      
+
       /* Apply happy hour bonus for motes obtained */
       if (HAPPY_HARVESTING_MOTES_OBTAINED > 0)
       {
         num_motes = num_motes + ((num_motes * HAPPY_HARVESTING_MOTES_OBTAINED) / 100);
       }
-      
+
       mote_type = dice(1, NUM_CRAFT_MOTES - 1);
       bonus_motes = 0;
       synergy_talent = TALENT_NONE;
@@ -6299,9 +6370,8 @@ void newcraft_harvest(struct char_data *ch, const char *argument)
   GET_CRAFT(ch).crafting_method = SCMD_NEWCRAFT_HARVEST;
   GET_CRAFT(ch).craft_duration = seconds;
 
-  send_to_char(ch, "You begin %s. Survey rooms remaining: %d\r\n", 
-               harvest_activity_name(IN_ROOM(ch)),
-               GET_SURVEY_ROOMS(ch));
+  send_to_char(ch, "You begin %s. Survey rooms remaining: %d\r\n",
+               harvest_activity_name(IN_ROOM(ch)), GET_SURVEY_ROOMS(ch));
   act("$n starts harvesting.", FALSE, ch, 0, 0, TO_ROOM);
 }
 
@@ -6311,30 +6381,30 @@ void newcraft_butcher(struct char_data *ch, const char *argument)
   struct obj_data *corpse = NULL;
   int material = CRAFT_MAT_NONE;
   int race_type = 0;
-  
+
   /* Parse the argument to find target corpse */
   one_argument(argument, arg, sizeof(arg));
-  
+
   if (!*arg)
   {
     send_to_char(ch, "Butcher what corpse?\r\n");
     return;
   }
-  
+
   /* Find the corpse in the room */
   if (!(corpse = get_obj_in_list_vis(ch, arg, NULL, world[IN_ROOM(ch)].contents)))
   {
     send_to_char(ch, "You don't see that here.\r\n");
     return;
   }
-  
+
   /* Check if it's actually a corpse */
   if (!IS_CORPSE(corpse))
   {
     send_to_char(ch, "That's not a corpse!\r\n");
     return;
   }
-  
+
   /* Check if it can be butchered */
   if (!can_butcher_corpse(corpse))
   {
@@ -6351,7 +6421,7 @@ void newcraft_butcher(struct char_data *ch, const char *argument)
     }
     return;
   }
-  
+
   /* Check if player is already busy */
   if (GET_CRAFT(ch).craft_duration > 0)
   {
@@ -6359,35 +6429,35 @@ void newcraft_butcher(struct char_data *ch, const char *argument)
                      "'cancel craft'.\r\n");
     return;
   }
-  
+
   /* Determine what material we'll get from this corpse */
   material = determine_butcher_material(corpse);
-  
+
   if (material == CRAFT_MAT_NONE)
   {
     send_to_char(ch, "You can't figure out how to butcher this corpse.\r\n");
     return;
   }
-  
+
   /* Require skinning knife for butchering */
   if (!GET_EQ(ch, WEAR_CRAFT_KNIFE))
   {
     send_to_char(ch, "You need a skinning knife equipped to butcher corpses.\r\n");
     return;
   }
-  
+
   /* Set up the butchering process */
   GET_CRAFT(ch).butcher_material = material;
-  
+
   /* Store the corpse description for progress display */
   if (GET_CRAFT(ch).butcher_corpse_desc)
     free(GET_CRAFT(ch).butcher_corpse_desc);
   GET_CRAFT(ch).butcher_corpse_desc = strdup(corpse->short_description);
-  
+
   /* Start the butchering process */
   int seconds = HARVEST_BASE_TIME;
   int harvest_skill = harvesting_skill_by_material(material);
-  
+
   if (GET_LEVEL(ch) >= LVL_IMMORT)
     seconds = 1;
   else if (harvest_skill > 0)
@@ -6397,10 +6467,10 @@ void newcraft_butcher(struct char_data *ch, const char *argument)
     if (seconds < 1)
       seconds = 1;
   }
-  
+
   GET_CRAFT(ch).crafting_method = SCMD_NEWCRAFT_BUTCHER;
   GET_CRAFT(ch).craft_duration = seconds;
-  
+
   race_type = get_corpse_race_type(corpse);
   if (race_type == RACE_TYPE_DRAGON)
     send_to_char(ch, "You begin carefully butchering the dragon corpse...\r\n");
@@ -6408,7 +6478,7 @@ void newcraft_butcher(struct char_data *ch, const char *argument)
     send_to_char(ch, "You begin skinning the magical beast for its hide...\r\n");
   else
     send_to_char(ch, "You begin skinning the corpse...\r\n");
-  
+
   act("$n starts butchering a corpse.", FALSE, ch, 0, 0, TO_ROOM);
 }
 
@@ -6422,7 +6492,7 @@ void butcher_complete(struct char_data *ch)
   int corpse_level = 0;
   int corpse_race_type = 0;
   int material = GET_CRAFT(ch).butcher_material;
-  
+
   /* Check for skinning knife bonus */
   skinning_knife = GET_EQ(ch, WEAR_CRAFT_KNIFE);
   if (skinning_knife && GET_OBJ_TYPE(skinning_knife) == ITEM_CRAFTING_TOOL)
@@ -6456,14 +6526,14 @@ void butcher_complete(struct char_data *ch)
   roll = d20(ch);
   skill_roll = get_craft_skill_value(ch, skill);
   prof_bonus = get_proficient_talent_bonus(ch, skill);
-  
+
   /* Total skill bonus includes proficiency and tool bonus */
   int total_bonus = prof_bonus + tool_bonus;
 
   int base_skill = GET_ABILITY(ch, skill);
   int spec_bonus = 0;
-  bool is_specialized = (GET_CRAFT(ch).craft_specialization[0] == skill || 
-                        GET_CRAFT(ch).craft_specialization[1] == skill);
+  bool is_specialized = (GET_CRAFT(ch).craft_specialization[0] == skill ||
+                         GET_CRAFT(ch).craft_specialization[1] == skill);
   if (is_specialized)
     spec_bonus = 5;
 
@@ -6472,14 +6542,16 @@ void butcher_complete(struct char_data *ch)
 
   if ((20 + skill_roll + total_bonus) < dc)
   {
-    send_to_char(ch, "Your skill is too low to butcher this corpse. You will only succeed on a natural 20.\r\n");
+    send_to_char(
+        ch,
+        "Your skill is too low to butcher this corpse. You will only succeed on a natural 20.\r\n");
   }
 
   /* Critical failure */
   if (roll == 1)
   {
     send_to_char(ch, "\tM[CRITICAL FAILURE]\tn You rolled a natural 1! You have completely ruined "
-                 "the corpse!\r\n");
+                     "the corpse!\r\n");
     SET_BIT_AR(GET_OBJ_EXTRA(butcher_corpse), ITEM_BUTCHERED);
     GET_CRAFT(ch).craft_duration = 0;
     GET_CRAFT(ch).crafting_method = 0;
@@ -6497,18 +6569,21 @@ void butcher_complete(struct char_data *ch)
   {
     char bonus_text[512];
     char *ptr = bonus_text;
-    
+
     if (spec_bonus > 0)
-      ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + specialization [%d]", spec_bonus);
+      ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + specialization [%d]",
+                      spec_bonus);
     if (prof_bonus > 0)
-      ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + proficiency [%d]", prof_bonus);
+      ptr +=
+          snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + proficiency [%d]", prof_bonus);
     if (tool_bonus > 0)
       ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + tool [%d]", tool_bonus);
-    
-    send_to_char(ch,
-                 "Roll [%d] + Base Skill [%d]%s = Total [%d] vs. DC [%d]. Failure. You have failed to "
-                 "butcher the corpse.\r\n",
-                 roll, base_skill, bonus_text, roll + skill_roll + total_bonus, dc);
+
+    send_to_char(
+        ch,
+        "Roll [%d] + Base Skill [%d]%s = Total [%d] vs. DC [%d]. Failure. You have failed to "
+        "butcher the corpse.\r\n",
+        roll, base_skill, bonus_text, roll + skill_roll + total_bonus, dc);
     GET_CRAFT(ch).craft_duration = 0;
     GET_CRAFT(ch).crafting_method = 0;
     GET_CRAFT(ch).butcher_material = CRAFT_MAT_NONE;
@@ -6525,15 +6600,16 @@ void butcher_complete(struct char_data *ch)
   int material_amount = 1 + (roll == 20 ? 1 : 0); /* Crit gives bonus material */
   int efficient_bonus = 0;
   int expertise_bonus = 0;
-  
+
   /* Check for efficient talent - chance to gain 2 extra units */
   int efficient_chance = get_efficient_talent_bonus(ch, skill);
   if (efficient_chance > 0 && rand_number(1, 100) <= efficient_chance)
   {
     efficient_bonus = 2;
-    send_to_char(ch, "\tC*EFFICIENT*\tn You gain 2 extra units from your efficient butchering!\r\n");
+    send_to_char(ch,
+                 "\tC*EFFICIENT*\tn You gain 2 extra units from your efficient butchering!\r\n");
   }
-  
+
   /* Check for expertise talent - on critical success, chance for extra materials */
   int expertise_rank = 0;
   if (roll == 20)
@@ -6545,34 +6621,39 @@ void butcher_complete(struct char_data *ch)
       send_to_char(ch, "\tC*EXPERTISE*\tn You gain an extra material from your expertise!\r\n");
     }
   }
-  
+
   if (roll == 20)
   {
-    send_to_char(ch, "\tM[CRITICAL SUCCESS!]\tn You rolled a natural 20! You've harvested %d units of %s!\r\n",
-                 material_amount + expertise_bonus, crafting_materials[material]);
+    send_to_char(
+        ch,
+        "\tM[CRITICAL SUCCESS!]\tn You rolled a natural 20! You've harvested %d units of %s!\r\n",
+        material_amount + expertise_bonus, crafting_materials[material]);
     gain_craft_exp(ch, HARVEST_BASE_EXP + (HARVEST_BASE_EXP * corpse_level / 10), skill, TRUE);
   }
   else
   {
     char bonus_text[512];
     char *ptr = bonus_text;
-    
+
     if (spec_bonus > 0)
-      ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + specialization [%d]", spec_bonus);
+      ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + specialization [%d]",
+                      spec_bonus);
     if (prof_bonus > 0)
-      ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + proficiency [%d]", prof_bonus);
+      ptr +=
+          snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + proficiency [%d]", prof_bonus);
     if (tool_bonus > 0)
       ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + tool [%d]", tool_bonus);
-    
-    send_to_char(ch, "Roll [%d] + Base Skill [%d]%s = Total [%d] vs. DC [%d]. Success!\r\n",
-                 roll, base_skill, bonus_text, roll + skill_roll + total_bonus, dc);
+
+    send_to_char(ch, "Roll [%d] + Base Skill [%d]%s = Total [%d] vs. DC [%d]. Success!\r\n", roll,
+                 base_skill, bonus_text, roll + skill_roll + total_bonus, dc);
     send_to_char(ch, "You have harvested %d %s from the corpse.\r\n",
                  material_amount + efficient_bonus, crafting_materials[material]);
-    gain_craft_exp(ch, HARVEST_BASE_EXP + ((HARVEST_BASE_EXP / 2) * corpse_level / 10), skill, TRUE);
+    gain_craft_exp(ch, HARVEST_BASE_EXP + ((HARVEST_BASE_EXP / 2) * corpse_level / 10), skill,
+                   TRUE);
   }
-  
+
   GET_CRAFT_MAT(ch, material) += material_amount + efficient_bonus + expertise_bonus;
-  
+
   if (is_dragon)
   {
     act("$n carefully harvests materials from the dragon corpse.", TRUE, ch, 0, 0, TO_ROOM);
@@ -6589,7 +6670,7 @@ void butcher_complete(struct char_data *ch)
   GET_CRAFT(ch).craft_duration = 0;
   GET_CRAFT(ch).crafting_method = 0;
   GET_CRAFT(ch).butcher_material = CRAFT_MAT_NONE;
-  
+
   /* Free the corpse description */
   if (GET_CRAFT(ch).butcher_corpse_desc)
   {
@@ -6648,7 +6729,7 @@ void show_harvesting_tool_needed(struct char_data *ch)
     send_to_char(ch, "You need a wood axe equipped to harvest %s.\r\n",
                  harvest_node_name(IN_ROOM(ch)));
     break;
-    default:
+  default:
     send_to_char(ch, "There was an error determining the required harvesting tool. Please inform "
                      "staff.\r\n");
     break;
@@ -6713,7 +6794,7 @@ void gain_craft_exp(struct char_data *ch, int exp, int abil, bool verbose)
   }
 
   /* Check for specialization bonus (2x experience) */
-  if (GET_CRAFT(ch).craft_specialization[0] == abil || 
+  if (GET_CRAFT(ch).craft_specialization[0] == abil ||
       GET_CRAFT(ch).craft_specialization[1] == abil)
   {
     specialization_bonus = exp; /* Double the base exp */
@@ -6753,9 +6834,8 @@ void gain_craft_exp(struct char_data *ch, int exp, int abil, bool verbose)
   {
     if (specialization_bonus > 0 || bonus_exp > 0 || happy_hour_bonus > 0)
     {
-      send_to_char(ch,
-                   "You've gained %d experience points in the '%s' skill",
-                   total_exp, ability_names[abil]);
+      send_to_char(ch, "You've gained %d experience points in the '%s' skill", total_exp,
+                   ability_names[abil]);
       if (specialization_bonus > 0)
         send_to_char(ch, " (+%d specialization bonus)", specialization_bonus);
       if (bonus_exp > 0)
@@ -6781,10 +6861,11 @@ void gain_craft_exp(struct char_data *ch, int exp, int abil, bool verbose)
     gain_talent_point(ch, 1);
   }
   send_to_char(ch, "%c%s: XP %d | TNL %d (next rank: %d).\r\n",
-    toupper((unsigned char)ability_names[abil][0]), ability_names[abil] + 1,
-    GET_CRAFT_SKILL_EXP(ch, abil),
-    MAX(0, craft_skill_level_exp(ch, get_craft_skill_value(ch, abil) + 1) - GET_CRAFT_SKILL_EXP(ch, abil)),
-    get_craft_skill_value(ch, abil) + 1);
+               toupper((unsigned char)ability_names[abil][0]), ability_names[abil] + 1,
+               GET_CRAFT_SKILL_EXP(ch, abil),
+               MAX(0, craft_skill_level_exp(ch, get_craft_skill_value(ch, abil) + 1) -
+                          GET_CRAFT_SKILL_EXP(ch, abil)),
+               get_craft_skill_value(ch, abil) + 1);
 }
 
 #define MAX_REFINING_BATCHES 20
@@ -6822,12 +6903,15 @@ static bool parse_refining_batch(struct char_data *ch, const char *arguments, bo
   bool all = FALSE;
   long requested = 1;
 
-  while (isspace((unsigned char)*arguments)) arguments++;
+  while (isspace((unsigned char)*arguments))
+    arguments++;
   snprintf(material, sizeof(material), "%s", arguments);
   end = material + strlen(material);
-  while (end > material && isspace((unsigned char)end[-1])) *--end = '\0';
+  while (end > material && isspace((unsigned char)end[-1]))
+    *--end = '\0';
   last = end;
-  while (last > material && !isspace((unsigned char)last[-1])) last--;
+  while (last > material && !isspace((unsigned char)last[-1]))
+    last--;
   if (!str_cmp(last, "all") || isdigit((unsigned char)*last) || *last == '-' || *last == '+')
   {
     all = !str_cmp(last, "all");
@@ -6837,13 +6921,15 @@ static bool parse_refining_batch(struct char_data *ch, const char *arguments, bo
       requested = strtol(last, &number_end, 10);
       if (*number_end || requested < 1 || requested > MAX_REFINING_BATCHES)
       {
-        send_to_char(ch, "Choose a batch quantity from 1 to %d, or 'all'.\r\n", MAX_REFINING_BATCHES);
+        send_to_char(ch, "Choose a batch quantity from 1 to %d, or 'all'.\r\n",
+                     MAX_REFINING_BATCHES);
         return FALSE;
       }
     }
     *last = '\0';
     end = last;
-    while (end > material && isspace((unsigned char)end[-1])) *--end = '\0';
+    while (end > material && isspace((unsigned char)end[-1]))
+      *--end = '\0';
   }
   if (*material == '"' && end > material + 1 && end[-1] == '"')
   {
@@ -6852,7 +6938,8 @@ static bool parse_refining_batch(struct char_data *ch, const char *arguments, bo
   }
   if (!*material)
   {
-    send_to_char(ch, "Usage: refine %s <material> [1-%d|all].\r\n", smelting ? "smelt" : "batch", MAX_REFINING_BATCHES);
+    send_to_char(ch, "Usage: refine %s <material> [1-%d|all].\r\n", smelting ? "smelt" : "batch",
+                 MAX_REFINING_BATCHES);
     return FALSE;
   }
   for (i = 1; i < NUM_REFINING_RECIPES; i++)
@@ -6873,7 +6960,8 @@ static bool parse_refining_batch(struct char_data *ch, const char *arguments, bo
   }
   if (matched != 1)
   {
-    send_to_char(ch, "That is not a unique %s recipe. Specify its material name.\r\n", smelting ? "smelting" : "refining");
+    send_to_char(ch, "That is not a unique %s recipe. Specify its material name.\r\n",
+                 smelting ? "smelting" : "refining");
     return FALSE;
   }
   *quantity = all ? available_refining_batches(ch, *recipe) : (int)requested;
@@ -6889,16 +6977,17 @@ void show_refine_noargs(struct char_data *ch)
 {
   int i, j;
 
-  send_to_char(ch, "To refine you need to add materials and have the appropriate refining "
-                   "equipment in the same room as you.\r\n"
-                   "You need to specify one of the following command parameters:\r\n"
-                   "- refine add <material> [1-20|all] - Prepare a refining batch\r\n"
-                   "- refine batch <material> [1-20|all] - Prepare and start any refining recipe\r\n"
-                   "- refine smelt <material> [1-20|all] - Prepare and start smelting in one command\r\n"
-                   "- refine remove - Cancel your refining project\r\n"
-                   "- refine show - Display your current refining project\r\n"
-                   "- refine begin - Start the refining process\r\n"
-                   "Here are the available refining recipes:\r\n");
+  send_to_char(
+      ch, "To refine you need to add materials and have the appropriate refining "
+          "equipment in the same room as you.\r\n"
+          "You need to specify one of the following command parameters:\r\n"
+          "- refine add <material> [1-20|all] - Prepare a refining batch\r\n"
+          "- refine batch <material> [1-20|all] - Prepare and start any refining recipe\r\n"
+          "- refine smelt <material> [1-20|all] - Prepare and start smelting in one command\r\n"
+          "- refine remove - Cancel your refining project\r\n"
+          "- refine show - Display your current refining project\r\n"
+          "- refine begin - Start the refining process\r\n"
+          "Here are the available refining recipes:\r\n");
   for (i = 1; i < NUM_REFINING_RECIPES; i++)
   {
     send_to_char(ch, "-- %20s (x%d): ", crafting_materials[refining_recipes[i].result[0]],
@@ -6940,7 +7029,8 @@ void newcraft_refine(struct char_data *ch, const char *argument)
   {
     if (GET_CRAFT(ch).craft_duration > 0)
     {
-      send_to_char(ch, "Finish or cancel your current crafting task before starting another batch.\r\n");
+      send_to_char(
+          ch, "Finish or cancel your current crafting task before starting another batch.\r\n");
       return;
     }
 
@@ -6980,12 +7070,12 @@ void newcraft_refine(struct char_data *ch, const char *argument)
 
           if (!has_hard_metal_grade2)
           {
-            send_to_char(
-                ch,
-                "You need %d units of a grade 3 or higher hard metal to make %d batches of %d units each (%d total units) of %s.\r\n",
-                materials_needed, batch_quantity, refining_recipes[recipe].result[1],
-                refining_recipes[recipe].result[1] * batch_quantity,
-                crafting_materials[refining_recipes[recipe].result[0]]);
+            send_to_char(ch,
+                         "You need %d units of a grade 3 or higher hard metal to make %d batches "
+                         "of %d units each (%d total units) of %s.\r\n",
+                         materials_needed, batch_quantity, refining_recipes[recipe].result[1],
+                         refining_recipes[recipe].result[1] * batch_quantity,
+                         crafting_materials[refining_recipes[recipe].result[0]]);
             fail = TRUE;
           }
         }
@@ -6994,7 +7084,9 @@ void newcraft_refine(struct char_data *ch, const char *argument)
           int materials_needed = refining_recipes[recipe].materials[i][1] * batch_quantity;
           if (GET_CRAFT_MAT(ch, material) < materials_needed)
           {
-            send_to_char(ch, "You need %d units of %s to make %d batches of %d units each (%d total units) of %s.\r\n",
+            send_to_char(ch,
+                         "You need %d units of %s to make %d batches of %d units each (%d total "
+                         "units) of %s.\r\n",
                          materials_needed,
                          crafting_materials[refining_recipes[recipe].materials[i][0]],
                          batch_quantity, refining_recipes[recipe].result[1],
@@ -7051,9 +7143,10 @@ void newcraft_refine(struct char_data *ch, const char *argument)
               GET_CRAFT(ch).refining_materials[i][0] = material;
               GET_CRAFT(ch).refining_materials[i][1] = materials_to_deduct;
               send_to_char(ch,
-                           "You allocate %d units of %s to your refining of %d batches (%d total units) of %s.\r\n",
-                           materials_to_deduct, crafting_materials[material],
-                           batch_quantity, refining_recipes[recipe].result[1] * batch_quantity,
+                           "You allocate %d units of %s to your refining of %d batches (%d total "
+                           "units) of %s.\r\n",
+                           materials_to_deduct, crafting_materials[material], batch_quantity,
+                           refining_recipes[recipe].result[1] * batch_quantity,
                            crafting_materials[refining_recipes[recipe].result[0]]);
               break;
             }
@@ -7064,10 +7157,12 @@ void newcraft_refine(struct char_data *ch, const char *argument)
           GET_CRAFT_MAT(ch, material) -= materials_to_deduct;
           GET_CRAFT(ch).refining_materials[i][0] = material;
           GET_CRAFT(ch).refining_materials[i][1] = materials_to_deduct;
-          send_to_char(ch, "You allocate %d units of %s to your refining of %d batches (%d total units) of %s.\r\n",
+          send_to_char(ch,
+                       "You allocate %d units of %s to your refining of %d batches (%d total "
+                       "units) of %s.\r\n",
                        materials_to_deduct,
-                       crafting_materials[refining_recipes[recipe].materials[i][0]],
-                       batch_quantity, refining_recipes[recipe].result[1] * batch_quantity,
+                       crafting_materials[refining_recipes[recipe].materials[i][0]], batch_quantity,
+                       refining_recipes[recipe].result[1] * batch_quantity,
                        crafting_materials[refining_recipes[recipe].result[0]]);
         }
       }
@@ -7087,12 +7182,15 @@ void newcraft_refine(struct char_data *ch, const char *argument)
 
     if (batch_quantity == 1)
     {
-      send_to_char(ch, "You are ready to begin refining your %s. Type 'refine begin' to execute.\r\n",
+      send_to_char(ch,
+                   "You are ready to begin refining your %s. Type 'refine begin' to execute.\r\n",
                    crafting_materials[refining_recipes[recipe].result[0]]);
     }
     else
     {
-      send_to_char(ch, "You are ready to begin refining %d batches of %s (%d total units). Type 'refine begin' to execute.\r\n",
+      send_to_char(ch,
+                   "You are ready to begin refining %d batches of %s (%d total units). Type "
+                   "'refine begin' to execute.\r\n",
                    batch_quantity, crafting_materials[refining_recipes[recipe].result[0]],
                    refining_recipes[recipe].result[1] * batch_quantity);
     }
@@ -7135,7 +7233,8 @@ void newcraft_refine(struct char_data *ch, const char *argument)
       {
         send_to_char(ch, "-- %d/%d %s unit%s allocated.\r\n",
                      GET_CRAFT(ch).refining_materials[i][1],
-                     refining_recipes[GET_CRAFT(ch).crafting_recipe].materials[i][1] * MAX(1, GET_CRAFT(ch).refining_batch_quantity),
+                     refining_recipes[GET_CRAFT(ch).crafting_recipe].materials[i][1] *
+                         MAX(1, GET_CRAFT(ch).refining_batch_quantity),
                      crafting_materials[GET_CRAFT(ch).refining_materials[i][0]],
                      GET_CRAFT(ch).refining_materials[i][1] > 1 ? "s" : "");
       }
@@ -7155,8 +7254,7 @@ void newcraft_refine(struct char_data *ch, const char *argument)
     {
       int per_batch = GET_CRAFT(ch).refining_result[1] / GET_CRAFT(ch).refining_batch_quantity;
       send_to_char(ch, "-- %d batches x %d units = %d total unit%s of %s.\r\n",
-                   GET_CRAFT(ch).refining_batch_quantity,
-                   per_batch,
+                   GET_CRAFT(ch).refining_batch_quantity, per_batch,
                    GET_CRAFT(ch).refining_result[1],
                    GET_CRAFT(ch).refining_result[1] > 1 ? "s" : "",
                    crafting_materials[GET_CRAFT(ch).refining_result[0]]);
@@ -7255,7 +7353,7 @@ int get_craft_skill_value(struct char_data *ch, int skill_num)
   int specialization_bonus = 0;
 
   /* Check if this skill is specialized (+5 bonus) */
-  if (GET_CRAFT(ch).craft_specialization[0] == skill_num || 
+  if (GET_CRAFT(ch).craft_specialization[0] == skill_num ||
       GET_CRAFT(ch).craft_specialization[1] == skill_num)
   {
     specialization_bonus = 5;
@@ -7284,7 +7382,8 @@ bool is_refine_ready(struct char_data *ch, bool verbose)
 
   if ((refining_recipes[GET_CRAFT(ch).crafting_recipe].materials[0][1] != 0 &&
        (GET_CRAFT(ch).refining_materials[0][1] <
-        refining_recipes[GET_CRAFT(ch).crafting_recipe].materials[0][1] * MAX(1, GET_CRAFT(ch).refining_batch_quantity))))
+        refining_recipes[GET_CRAFT(ch).crafting_recipe].materials[0][1] *
+            MAX(1, GET_CRAFT(ch).refining_batch_quantity))))
   {
     if (verbose)
       send_to_char(ch, "You haven't added the primary refining ingredient.\r\n");
@@ -7293,7 +7392,8 @@ bool is_refine_ready(struct char_data *ch, bool verbose)
 
   if ((refining_recipes[GET_CRAFT(ch).crafting_recipe].materials[1][1] != 0 &&
        (GET_CRAFT(ch).refining_materials[1][1] <
-        refining_recipes[GET_CRAFT(ch).crafting_recipe].materials[1][1] * MAX(1, GET_CRAFT(ch).refining_batch_quantity))))
+        refining_recipes[GET_CRAFT(ch).crafting_recipe].materials[1][1] *
+            MAX(1, GET_CRAFT(ch).refining_batch_quantity))))
   {
     if (verbose)
       send_to_char(ch, "You haven't added the secondary refining ingredient.\r\n");
@@ -7302,7 +7402,8 @@ bool is_refine_ready(struct char_data *ch, bool verbose)
 
   if ((refining_recipes[GET_CRAFT(ch).crafting_recipe].materials[2][1] != 0 &&
        (GET_CRAFT(ch).refining_materials[2][1] <
-        refining_recipes[GET_CRAFT(ch).crafting_recipe].materials[2][1] * MAX(1, GET_CRAFT(ch).refining_batch_quantity))))
+        refining_recipes[GET_CRAFT(ch).crafting_recipe].materials[2][1] *
+            MAX(1, GET_CRAFT(ch).refining_batch_quantity))))
   {
     if (verbose)
       send_to_char(ch, "You haven't added the tertiary refining ingredient.\r\n");
@@ -7585,8 +7686,7 @@ void craft_update(void)
             }
             else
             {
-              snprintf(buf, sizeof(buf), "%s",
-                       harvest_activity_name(IN_ROOM(ch)));
+              snprintf(buf, sizeof(buf), "%s", harvest_activity_name(IN_ROOM(ch)));
               CAP(buf);
               send_to_char(ch, "%s. ", buf);
               for (i = 0; i < GET_CRAFT(ch).craft_duration; i++)
@@ -7615,8 +7715,10 @@ void craft_update(void)
         case SCMD_NEWCRAFT_SUPPLYORDER:
           craft_supplyorder_complete(ch);
           break;
-        default: 
-          mudlog(NRM, LVL_STAFF, TRUE, "Error in craft_update complete: invalid crafting method %d for %s", GET_CRAFT(ch).crafting_method, GET_NAME(ch));
+        default:
+          mudlog(NRM, LVL_STAFF, TRUE,
+                 "Error in craft_update complete: invalid crafting method %d for %s",
+                 GET_CRAFT(ch).crafting_method, GET_NAME(ch));
           break;
         }
       }
@@ -7686,8 +7788,7 @@ void craft_update(void)
             {
               if (GET_CRAFT(ch).butcher_corpse_desc)
               {
-                send_to_char(ch, "Butchering %s. ",
-                             GET_CRAFT(ch).butcher_corpse_desc);
+                send_to_char(ch, "Butchering %s. ", GET_CRAFT(ch).butcher_corpse_desc);
               }
               else
               {
@@ -7708,8 +7809,7 @@ void craft_update(void)
             }
             else if (GET_CRAFT(ch).craft_duration % 2 == 0)
             {
-              snprintf(buf, sizeof(buf), "%s",
-                       harvest_activity_name(IN_ROOM(ch)));
+              snprintf(buf, sizeof(buf), "%s", harvest_activity_name(IN_ROOM(ch)));
               CAP(buf);
               send_to_char(ch, "%s. ", buf);
               for (i = 0; i < GET_CRAFT(ch).craft_duration; i++)
@@ -7720,18 +7820,21 @@ void craft_update(void)
           case SCMD_NEWCRAFT_SUPPLYORDER:
             if (GET_CRAFT(ch).craft_duration % 5 == 0)
             {
-              int current_item = GET_CRAFT(ch).supply_num_required - num_supply_order_requisitions_to_go(ch) + 1;
+              int current_item =
+                  GET_CRAFT(ch).supply_num_required - num_supply_order_requisitions_to_go(ch) + 1;
               int total_items = GET_CRAFT(ch).supply_num_required;
-              
-              send_to_char(ch, "Supply order for %s %d of %d. ", get_supply_order_item_desc(ch), current_item, total_items);
+
+              send_to_char(ch, "Supply order for %s %d of %d. ", get_supply_order_item_desc(ch),
+                           current_item, total_items);
               for (i = 0; i < GET_CRAFT(ch).craft_duration; i++)
                 send_to_char(ch, "*");
               send_to_char(ch, "\r\n");
             }
             break;
           default:
-              mudlog(NRM, LVL_STAFF, TRUE, "Error in craft_update: invalid crafting method %d for %s", GET_CRAFT(ch).crafting_method, GET_NAME(ch));
-              break;
+            mudlog(NRM, LVL_STAFF, TRUE, "Error in craft_update: invalid crafting method %d for %s",
+                   GET_CRAFT(ch).crafting_method, GET_NAME(ch));
+            break;
           }
         }
       }
@@ -7753,16 +7856,17 @@ ACMD(do_setmaterial)
     if (subcmd == SCMD_SETMATERIALS)
     {
       send_to_char(ch, "You need to specify whose materials to change, the material type, and how "
-                     "many to set to.\r\n"
-                     "Eg. setmaterial gicker alchemical-silver 10.\r\n"
-                     "This will set gicker's alchemical silver material count to 10.\r\n"); 
+                       "many to set to.\r\n"
+                       "Eg. setmaterial gicker alchemical-silver 10.\r\n"
+                       "This will set gicker's alchemical silver material count to 10.\r\n");
     }
     else
     {
-      send_to_char(ch, "You need to specify whose materials to change, the material type, and how "
-                     "many to give/reduce.\r\n"
-                     "Eg. setmaterial gicker alchemical-silver 10.\r\n"
-                     "This will give gicker additional alchemical silver material count of 10.\r\n"); 
+      send_to_char(ch,
+                   "You need to specify whose materials to change, the material type, and how "
+                   "many to give/reduce.\r\n"
+                   "Eg. setmaterial gicker alchemical-silver 10.\r\n"
+                   "This will give gicker additional alchemical silver material count of 10.\r\n");
     }
   }
 
@@ -7834,16 +7938,22 @@ ACMD(do_setmaterial)
       {
         if (subcmd == SCMD_SETMATERIALS)
         {
-          snprintf(buf, sizeof(buf), "$n has set your %s units to %d.", crafting_motes[type], GET_CRAFT_MOTES(tch, type));
+          snprintf(buf, sizeof(buf), "$n has set your %s units to %d.", crafting_motes[type],
+                   GET_CRAFT_MOTES(tch, type));
           act(buf, FALSE, ch, 0, tch, TO_VICT);
-          snprintf(buf, sizeof(buf), "You have set $N's %s units to %d.", crafting_motes[type], GET_CRAFT_MOTES(tch, type));
+          snprintf(buf, sizeof(buf), "You have set $N's %s units to %d.", crafting_motes[type],
+                   GET_CRAFT_MOTES(tch, type));
           act(buf, FALSE, ch, 0, tch, TO_CHAR);
         }
         else
         {
-          snprintf(buf, sizeof(buf), "$n has given you %d %s units making your new total on-hand %d.", amount, crafting_motes[type], GET_CRAFT_MOTES(tch, type));
+          snprintf(buf, sizeof(buf),
+                   "$n has given you %d %s units making your new total on-hand %d.", amount,
+                   crafting_motes[type], GET_CRAFT_MOTES(tch, type));
           act(buf, FALSE, ch, 0, tch, TO_VICT);
-          snprintf(buf, sizeof(buf), "You have given $N %d %s units making their new total on-hand %d.", amount, crafting_motes[type], GET_CRAFT_MOTES(tch, type));
+          snprintf(buf, sizeof(buf),
+                   "You have given $N %d %s units making their new total on-hand %d.", amount,
+                   crafting_motes[type], GET_CRAFT_MOTES(tch, type));
           act(buf, FALSE, ch, 0, tch, TO_CHAR);
         }
       }
@@ -7860,36 +7970,53 @@ ACMD(do_setmaterial)
   else
   {
     if (subcmd == SCMD_SETMATERIALS)
-        GET_CRAFT_MAT(tch, type) = amount;
-      else
-        GET_CRAFT_MAT(tch, type) += amount;
+      GET_CRAFT_MAT(tch, type) = amount;
+    else
+      GET_CRAFT_MAT(tch, type) += amount;
 
-      if (GET_CRAFT_MAT(tch, type) < 0)
+    if (GET_CRAFT_MAT(tch, type) < 0)
+    {
+      snprintf(buf, sizeof(buf), "$n has set your %s units to 0.", crafting_materials[type]);
+      act(buf, FALSE, ch, 0, tch, TO_VICT);
+      snprintf(buf, sizeof(buf), "You have set $N's %s units to 0.", crafting_materials[type]);
+      act(buf, FALSE, ch, 0, tch, TO_CHAR);
+      GET_CRAFT_MAT(tch, type) = 0;
+    }
+    else
+    {
+      if (subcmd == SCMD_SETMATERIALS)
       {
-        snprintf(buf, sizeof(buf), "$n has set your %s units to 0.", crafting_materials[type]);
+        snprintf(buf, sizeof(buf), "$n has set your %s units to %d.", crafting_materials[type],
+                 GET_CRAFT_MAT(tch, type));
         act(buf, FALSE, ch, 0, tch, TO_VICT);
-        snprintf(buf, sizeof(buf), "You have set $N's %s units to 0.", crafting_materials[type]);
+        snprintf(buf, sizeof(buf), "You have set $N's %s units to %d.", crafting_materials[type],
+                 GET_CRAFT_MAT(tch, type));
         act(buf, FALSE, ch, 0, tch, TO_CHAR);
-        GET_CRAFT_MAT(tch, type) = 0;
       }
       else
       {
-        if (subcmd == SCMD_SETMATERIALS)
-        {
-          snprintf(buf, sizeof(buf), "$n has set your %s units to %d.", crafting_materials[type], GET_CRAFT_MAT(tch, type));
-          act(buf, FALSE, ch, 0, tch, TO_VICT);
-          snprintf(buf, sizeof(buf), "You have set $N's %s units to %d.", crafting_materials[type], GET_CRAFT_MAT(tch, type));
-          act(buf, FALSE, ch, 0, tch, TO_CHAR);
-        }
-        else
-        {
-          snprintf(buf, sizeof(buf), "$n has given you %d %s units making your new total on-hand %d.", amount, crafting_materials[type], GET_CRAFT_MAT(tch, type));
-          act(buf, FALSE, ch, 0, tch, TO_VICT);
-          snprintf(buf, sizeof(buf), "You have given $N %d %s units making their new total on-hand %d.", amount, crafting_materials[type], GET_CRAFT_MAT(tch, type));
-          act(buf, FALSE, ch, 0, tch, TO_CHAR);
-        }
+        snprintf(buf, sizeof(buf), "$n has given you %d %s units making your new total on-hand %d.",
+                 amount, crafting_materials[type], GET_CRAFT_MAT(tch, type));
+        act(buf, FALSE, ch, 0, tch, TO_VICT);
+        snprintf(buf, sizeof(buf),
+                 "You have given $N %d %s units making their new total on-hand %d.", amount,
+                 crafting_materials[type], GET_CRAFT_MAT(tch, type));
+        act(buf, FALSE, ch, 0, tch, TO_CHAR);
       }
+    }
   }
+}
+
+static void show_material_balance(struct char_data *ch, int material)
+{
+  char label[MAX_INPUT_LENGTH];
+  int grade = material_grade(material);
+
+  if (grade > 0)
+    snprintf(label, sizeof(label), "%s [%d]", crafting_materials[material], grade);
+  else
+    snprintf(label, sizeof(label), "%s", crafting_materials[material]);
+  send_to_char(ch, "%5d %-22s ", GET_CRAFT_MAT(ch, material), label);
 }
 
 ACMD(do_list_craft_materials)
@@ -8081,7 +8208,7 @@ ACMD(do_list_craft_materials)
     mat = materials_sort_info[i];
     if (craft_group_by_material(mat) != CRAFT_GROUP_HARD_METALS)
       continue;
-    send_to_char(ch, "%5d %-20s ", GET_CRAFT_MAT(ch, mat), crafting_materials[mat]);
+    show_material_balance(ch, mat);
     if ((count % 3) == 2)
       send_to_char(ch, "\r\n");
     count++;
@@ -8100,7 +8227,7 @@ ACMD(do_list_craft_materials)
     mat = materials_sort_info[i];
     if (craft_group_by_material(mat) != CRAFT_GROUP_SOFT_METALS)
       continue;
-    send_to_char(ch, "%5d %-20s ", GET_CRAFT_MAT(ch, mat), crafting_materials[mat]);
+    show_material_balance(ch, mat);
     if ((count % 3) == 2)
       send_to_char(ch, "\r\n");
     count++;
@@ -8120,7 +8247,7 @@ ACMD(do_list_craft_materials)
     mat = materials_sort_info[i];
     if (craft_group_by_material(mat) != CRAFT_GROUP_HIDES)
       continue;
-    send_to_char(ch, "%5d %-20s ", GET_CRAFT_MAT(ch, mat), crafting_materials[mat]);
+    show_material_balance(ch, mat);
     if ((count % 3) == 2)
       send_to_char(ch, "\r\n");
     count++;
@@ -8140,7 +8267,7 @@ ACMD(do_list_craft_materials)
     mat = materials_sort_info[i];
     if (craft_group_by_material(mat) != CRAFT_GROUP_WOOD)
       continue;
-    send_to_char(ch, "%5d %-20s ", GET_CRAFT_MAT(ch, mat), crafting_materials[mat]);
+    show_material_balance(ch, mat);
     if ((count % 3) == 2)
       send_to_char(ch, "\r\n");
     count++;
@@ -8159,7 +8286,7 @@ ACMD(do_list_craft_materials)
     mat = materials_sort_info[i];
     if (craft_group_by_material(mat) != CRAFT_GROUP_CLOTH)
       continue;
-    send_to_char(ch, "%5d %-20s ", GET_CRAFT_MAT(ch, mat), crafting_materials[mat]);
+    show_material_balance(ch, mat);
     if ((count % 3) == 2)
       send_to_char(ch, "\r\n");
     count++;
@@ -8179,7 +8306,7 @@ ACMD(do_list_craft_materials)
     mat = materials_sort_info[i];
     if (craft_group_by_material(mat) != CRAFT_GROUP_STONE)
       continue;
-    send_to_char(ch, "%5d %-20s ", GET_CRAFT_MAT(ch, mat), crafting_materials[mat]);
+    show_material_balance(ch, mat);
     if ((count % 3) == 2)
       send_to_char(ch, "\r\n");
     count++;
@@ -8199,7 +8326,7 @@ ACMD(do_list_craft_materials)
     mat = materials_sort_info[i];
     if (craft_group_by_material(mat) != CRAFT_GROUP_REFINING)
       continue;
-    send_to_char(ch, "%5d %-20s ", GET_CRAFT_MAT(ch, mat), crafting_materials[mat]);
+    show_material_balance(ch, mat);
     if ((count % 3) == 2)
       send_to_char(ch, "\r\n");
     count++;
@@ -8641,8 +8768,7 @@ void craft_supplyorder_complete(struct char_data *ch)
 
   {
     const char *desc = get_supply_order_item_desc(ch);
-    send_to_char(ch, "You've completed part of your supply order for %s%s.",
-                 desc,
+    send_to_char(ch, "You've completed part of your supply order for %s%s.", desc,
                  (desc[strlen(desc) - 1] == 's' ? "" : "s"));
   }
 
@@ -8654,7 +8780,9 @@ void craft_supplyorder_complete(struct char_data *ch)
   }
   else
   {
-    send_to_char(ch, "\r\n\tGSupply order complete!\tn Visit a supply order NPC to collect your reward.\r\n");
+    send_to_char(
+        ch,
+        "\r\n\tGSupply order complete!\tn Visit a supply order NPC to collect your reward.\r\n");
     /* All items complete, stop crafting */
     GET_CRAFT(ch).craft_duration = 0;
   }
@@ -8838,45 +8966,52 @@ void complete_supply_order(struct char_data *ch)
   // Award rewards
   GET_GOLD(ch) += gold_reward;
   recipe = get_current_craft_project_recipe(ch);
-  skill = recipe_skill_to_actual_crafting_skill(crafting_recipes[recipe].variant_skill[GET_CRAFT(ch).craft_variant]);
+  skill = recipe_skill_to_actual_crafting_skill(
+      crafting_recipes[recipe].variant_skill[GET_CRAFT(ch).craft_variant]);
   gain_craft_exp(ch, bonus_exp, skill, TRUE);
   GET_ARTISAN_EXP(ch) += artisan_points;
 
   send_to_char(ch, "Congratulations! You have completed your supply order.\r\n");
   if (happy_hour_artisan_bonus > 0)
   {
-    send_to_char(
-        ch, "You receive %d gold coins, %d bonus experience points, and \tC%d artisan points\tn (\tY+%d happy hour bonus\tn)!\r\n",
-        gold_reward, bonus_exp, artisan_points - happy_hour_artisan_bonus, happy_hour_artisan_bonus);
+    send_to_char(ch,
+                 "You receive %d gold coins, %d bonus experience points, and \tC%d artisan "
+                 "points\tn (\tY+%d happy hour bonus\tn)!\r\n",
+                 gold_reward, bonus_exp, artisan_points - happy_hour_artisan_bonus,
+                 happy_hour_artisan_bonus);
   }
   else
   {
     send_to_char(
-        ch, "You receive %d gold coins, %d bonus experience points, and \tC%d artisan points\tn!\r\n",
+        ch,
+        "You receive %d gold coins, %d bonus experience points, and \tC%d artisan points\tn!\r\n",
         gold_reward, bonus_exp, artisan_points);
   }
   send_to_char(ch, "You now have \tC%d total artisan points\tn.\r\n", GET_ARTISAN_EXP(ch));
 
   /* Start the cooldown window if it hasn't been started yet */
   time_t now = time(NULL);
-  
-  if (GET_CRAFT(ch).supply_cooldown_start_time == 0 || 
+
+  if (GET_CRAFT(ch).supply_cooldown_start_time == 0 ||
       (now - GET_CRAFT(ch).supply_cooldown_start_time >= 7200))
   {
     /* Start a new cooldown window or restart if expired */
     GET_CRAFT(ch).supply_cooldown_start_time = now;
     GET_CRAFT(ch).supply_orders_completed_count = 1;
-    send_to_char(ch, "\tY[Cooldown Started]\tn You can now complete up to 3 supply orders before the cooldown limit is reached.\r\n");
+    send_to_char(ch, "\tY[Cooldown Started]\tn You can now complete up to 3 supply orders before "
+                     "the cooldown limit is reached.\r\n");
   }
   else
   {
     /* Cooldown window is active, increment counter */
     GET_CRAFT(ch).supply_orders_completed_count++;
     int remaining = 3 - GET_CRAFT(ch).supply_orders_completed_count;
-    
+
     if (remaining > 0)
     {
-      send_to_char(ch, "\tY[Cooldown Active]\tn You can complete %d more supply order%s before hitting the limit.\r\n",
+      send_to_char(ch,
+                   "\tY[Cooldown Active]\tn You can complete %d more supply order%s before hitting "
+                   "the limit.\r\n",
                    remaining, (remaining > 1 ? "s" : ""));
     }
     else if (remaining == 0)
@@ -8884,10 +9019,11 @@ void complete_supply_order(struct char_data *ch)
       time_t cooldown_remaining = 7200 - (now - GET_CRAFT(ch).supply_cooldown_start_time);
       int hours = cooldown_remaining / 3600;
       int minutes = (cooldown_remaining % 3600) / 60;
-      
-      send_to_char(ch, "\tR[Cooldown Limit Reached]\tn You have completed 3 supply orders. Your supply orders will refresh in approximately %d hour%s and %d minute%s.\r\n",
-                   hours, (hours != 1 ? "s" : ""),
-                   minutes, (minutes != 1 ? "s" : ""));
+
+      send_to_char(ch,
+                   "\tR[Cooldown Limit Reached]\tn You have completed 3 supply orders. Your supply "
+                   "orders will refresh in approximately %d hour%s and %d minute%s.\r\n",
+                   hours, (hours != 1 ? "s" : ""), minutes, (minutes != 1 ? "s" : ""));
     }
   }
 
@@ -8903,7 +9039,7 @@ void complete_supply_order(struct char_data *ch)
   GET_CRAFT(ch).skill_type = 0;
   GET_CRAFT(ch).craft_duration = 0;
   GET_NSUPPLY_NUM_MADE(ch) = 0;
-  
+
   /* Clear materials (already consumed during crafting) */
   for (i = 0; i < NUM_CRAFT_GROUPS; i++)
   {
@@ -9364,8 +9500,8 @@ void newcraft_disenchant(struct char_data *ch, const char *argument)
   fragments = disenchant_fragment_yield(obj);
   GET_CRAFT_MAT(ch, CRAFT_MAT_CATALYST_FRAGMENT) += fragments;
 
-  send_to_char(ch, "You disenchant %s and recover %d catalyst fragment%s.\r\n",
-               GET_OBJ_SHORT(obj), fragments, fragments == 1 ? "" : "s");
+  send_to_char(ch, "You disenchant %s and recover %d catalyst fragment%s.\r\n", GET_OBJ_SHORT(obj),
+               fragments, fragments == 1 ? "" : "s");
   act("$n disenchants $p, drawing out faint catalyst fragments.", FALSE, ch, obj, 0, TO_ROOM);
 
   obj_from_char(obj);
@@ -9710,8 +9846,9 @@ void set_supply_order_materials(struct char_data *ch, char *arg, char *arg2)
 
     if ((recipe = get_current_craft_project_recipe(ch)) <= CRAFT_RECIPE_NONE)
     {
-      send_to_char(ch,
-                   "You need to set the supply order item type, specific type and variant type first.\r\n");
+      send_to_char(
+          ch,
+          "You need to set the supply order item type, specific type and variant type first.\r\n");
       return;
     }
 
@@ -9741,7 +9878,8 @@ void set_supply_order_materials(struct char_data *ch, char *arg, char *arg2)
 
         lowest_material = find_lowest_grade_material_in_group(ch, required_group);
 
-        if (lowest_material == CRAFT_MAT_NONE || GET_CRAFT_MAT(ch, lowest_material) < required_amount)
+        if (lowest_material == CRAFT_MAT_NONE ||
+            GET_CRAFT_MAT(ch, lowest_material) < required_amount)
         {
           send_to_char(ch, "You don't have enough materials to fill all slots. Missing %s.\r\n",
                        crafting_material_groups[required_group]);
@@ -9851,7 +9989,7 @@ int select_random_craft_recipe(void)
 
   choice = dice(1, NUM_CRAFTING_RECIPES - 1);
 
-  while ((type != crafting_recipes[choice].object_type || 
+  while ((type != crafting_recipes[choice].object_type ||
           crafting_recipes[choice].object_type == ITEM_INSTRUMENT) &&
          attempts < 100)
   {
@@ -10021,7 +10159,7 @@ void request_new_supply_order(struct char_data *ch)
   int recipe = 0;
   int variant = 0;
   time_t now = time(NULL);
-  
+
   if (!has_quartermaster_in_room(ch))
   {
     send_to_char(ch, "You must be in a room with a quartermaster to request a supply order.\r\n");
@@ -10032,7 +10170,7 @@ void request_new_supply_order(struct char_data *ch)
   if (GET_CRAFT(ch).supply_cooldown_start_time > 0)
   {
     time_t time_elapsed = now - GET_CRAFT(ch).supply_cooldown_start_time;
-    
+
     if (time_elapsed >= 7200) /* 2 hours have passed, reset cooldown */
     {
       GET_CRAFT(ch).supply_cooldown_start_time = 0;
@@ -10044,16 +10182,19 @@ void request_new_supply_order(struct char_data *ch)
       int cooldown_remaining = 7200 - time_elapsed;
       int hours = cooldown_remaining / 3600;
       int minutes = (cooldown_remaining % 3600) / 60;
-      
+
       send_to_char(ch, "You have already completed 3 supply orders. The cooldown is active.\r\n");
-      send_to_char(ch, "Your supply orders will refresh in approximately %d hours and %d minutes.\r\n", hours, minutes);
+      send_to_char(ch,
+                   "Your supply orders will refresh in approximately %d hours and %d minutes.\r\n",
+                   hours, minutes);
       return;
     }
   }
 
   if (GET_CRAFT(ch).crafting_method == SCMD_NEWCRAFT_SUPPLYORDER)
   {
-    send_to_char(ch, "You are already working on a supply order. Type supplyorder show to see the details or supplyorder reset to start over.\r\n");
+    send_to_char(ch, "You are already working on a supply order. Type supplyorder show to see the "
+                     "details or supplyorder reset to start over.\r\n");
     return;
   }
 
@@ -10066,7 +10207,8 @@ void request_new_supply_order(struct char_data *ch)
   if (GET_CRAFT(ch).crafting_item_type > CRAFT_TYPE_NONE || GET_CRAFT(ch).crafting_specific > 0 ||
       GET_CRAFT(ch).craft_variant != -1)
   {
-    send_to_char(ch, "You already have a supply order going. Type supplyorder show to see the details or supplyorder reset to start over.\r\n");
+    send_to_char(ch, "You already have a supply order going. Type supplyorder show to see the "
+                     "details or supplyorder reset to start over.\r\n");
     return;
   }
 
@@ -10096,7 +10238,7 @@ void request_new_supply_order(struct char_data *ch)
     GET_CRAFT(ch).supply_num_required = quantity;
     GET_NSUPPLY_NUM_MADE(ch) = 0;
     GET_CRAFT(ch).skill_type = crafting_recipes[recipe].variant_skill[variant];
-    
+
     send_to_char(ch, "You've requested a new supply order to make %d %ss.\r\n", quantity,
                  crafting_recipes[recipe].variant_descriptions[variant]);
     send_to_char(ch, "Complete this order to earn \tCartisan points\tn!\r\n");
@@ -10149,9 +10291,11 @@ void start_supply_order(struct char_data *ch)
     }
 
     GET_CRAFT(ch).craft_duration = NSUPPLY_ORDER_DURATION;
-    send_to_char(ch, "You begin working on your supply order for %s %s.\r\n", 
-      AN(crafting_recipes[GET_CRAFT(ch).crafting_recipe].variant_descriptions[GET_CRAFT(ch).craft_variant]),
-      crafting_recipes[GET_CRAFT(ch).crafting_recipe].variant_descriptions[GET_CRAFT(ch).craft_variant]);
+    send_to_char(ch, "You begin working on your supply order for %s %s.\r\n",
+                 AN(crafting_recipes[GET_CRAFT(ch).crafting_recipe]
+                        .variant_descriptions[GET_CRAFT(ch).craft_variant]),
+                 crafting_recipes[GET_CRAFT(ch).crafting_recipe]
+                     .variant_descriptions[GET_CRAFT(ch).craft_variant]);
   }
 }
 
@@ -10287,7 +10431,8 @@ void reset_supply_order(struct char_data *ch)
   /* Refund any materials that were added for the current item */
   if (remove_supply_order_materials(ch))
   {
-    send_to_char(ch, "Materials have been refunded. You can add materials and continue with your supply order.\r\n");
+    send_to_char(ch, "Materials have been refunded. You can add materials and continue with your "
+                     "supply order.\r\n");
   }
   else
   {
@@ -10322,7 +10467,7 @@ void abandon_supply_order(struct char_data *ch)
   GET_CRAFT(ch).craft_duration = 0;
   GET_CRAFT(ch).crafting_recipe = CRAFT_RECIPE_NONE;
   GET_NSUPPLY_NUM_MADE(ch) = 0;
-  
+
   /* Materials already refunded above */
   for (i = 0; i < NUM_CRAFT_GROUPS; i++)
   {
@@ -10598,8 +10743,7 @@ void do_motes(struct char_data *ch, const char *argument, int cmd, int subcmd)
     impl_do_motes_(ch, arg_buf, cmd, subcmd);
   }
 }
-static void impl_do_motes_(struct char_data *ch, char *argument,
-                           int cmd __attribute__((unused)),
+static void impl_do_motes_(struct char_data *ch, char *argument, int cmd __attribute__((unused)),
                            int subcmd __attribute__((unused)))
 {
   int i;
@@ -10801,9 +10945,11 @@ void refresh_supply_slots(struct char_data *ch)
   for (i = 0; i < 5; i++)
   {
     // Skip slots that already have active contracts, or are on cooldown, or are currently being worked on
-    if (GET_CRAFT(ch).supply_slot_active[i] || 
-        (GET_CRAFT(ch).supply_slot_cooldowns[i] > 0 && now < GET_CRAFT(ch).supply_slot_cooldowns[i]) ||
-        (GET_CRAFT(ch).supply_active_slot == i && GET_CRAFT(ch).crafting_method == SCMD_NEWCRAFT_SUPPLYORDER))
+    if (GET_CRAFT(ch).supply_slot_active[i] ||
+        (GET_CRAFT(ch).supply_slot_cooldowns[i] > 0 &&
+         now < GET_CRAFT(ch).supply_slot_cooldowns[i]) ||
+        (GET_CRAFT(ch).supply_active_slot == i &&
+         GET_CRAFT(ch).crafting_method == SCMD_NEWCRAFT_SUPPLYORDER))
     {
       continue;
     }
@@ -11292,13 +11438,13 @@ void update_supply_slots_for_all_players(void)
       if (GET_CRAFT(ch).supply_cooldown_start_time > 0)
       {
         time_t elapsed = now - GET_CRAFT(ch).supply_cooldown_start_time;
-        
+
         if (elapsed >= 7200)
         {
           /* Cooldown window has expired */
           send_to_char(ch, "\tgYour supply order cooldown window has expired!\tn\r\n");
           send_to_char(ch, "\tYYou can now request new supply orders.\tn\r\n");
-          
+
           /* Reset cooldown */
           GET_CRAFT(ch).supply_cooldown_start_time = 0;
           GET_CRAFT(ch).supply_orders_completed_count = 0;
@@ -11317,13 +11463,13 @@ void update_supply_slots_for_all_players(void)
     if (GET_CRAFT(ch).supply_cooldown_start_time > 0)
     {
       time_t elapsed = now - GET_CRAFT(ch).supply_cooldown_start_time;
-      
+
       if (elapsed >= 7200)
       {
         /* Cooldown window has expired */
         send_to_char(ch, "\tgYour supply order cooldown window has expired!\tn\r\n");
         send_to_char(ch, "\tYYou can now request new supply orders.\tn\r\n");
-        
+
         /* Reset cooldown */
         GET_CRAFT(ch).supply_cooldown_start_time = 0;
         GET_CRAFT(ch).supply_orders_completed_count = 0;
@@ -11553,12 +11699,13 @@ void show_supply_order_cooldowns(struct char_data *ch)
 
   if (GET_CRAFT(ch).supply_cooldown_start_time == 0)
   {
-    send_to_char(ch, "  \tgNo cooldown active - you can start a new supply order immediately.\tn\r\n");
+    send_to_char(ch,
+                 "  \tgNo cooldown active - you can start a new supply order immediately.\tn\r\n");
   }
   else
   {
     time_t elapsed = now - GET_CRAFT(ch).supply_cooldown_start_time;
-    
+
     if (elapsed >= 7200)
     {
       /* Cooldown has expired */
@@ -11570,11 +11717,12 @@ void show_supply_order_cooldowns(struct char_data *ch)
       int remaining_seconds = 7200 - elapsed;
       int hours = remaining_seconds / 3600;
       int minutes = (remaining_seconds % 3600) / 60;
-      
+
       send_to_char(ch, "  \tyActive Cooldown Window\tn\r\n");
-      send_to_char(ch, "  Supply orders completed: %d/3\r\n", GET_CRAFT(ch).supply_orders_completed_count);
+      send_to_char(ch, "  Supply orders completed: %d/3\r\n",
+                   GET_CRAFT(ch).supply_orders_completed_count);
       send_to_char(ch, "  Time remaining: %d hours, %d minutes\r\n", hours, minutes);
-      
+
       if (GET_CRAFT(ch).supply_orders_completed_count < 3)
       {
         int remaining_orders = 3 - GET_CRAFT(ch).supply_orders_completed_count;
@@ -11800,12 +11948,12 @@ int get_golem_material_requirements(int golem_type, int golem_size, int *materia
   {
   case GOLEM_TYPE_WOOD:
     primary_material = CRAFT_MAT_ASH_WOOD;
-    base_material_amount = 50;     // Small wood golem needs 50 units of wood
+    base_material_amount = 50;      // Small wood golem needs 50 units of wood
     secondary_material_amount = 10; // and 10 units of metal
     break;
   case GOLEM_TYPE_STONE:
     primary_material = CRAFT_MAT_STONE;
-    base_material_amount = 50;     // Small stone golem needs 50 units of stone
+    base_material_amount = 50;      // Small stone golem needs 50 units of stone
     secondary_material_amount = 10; // and 10 units of metal
     break;
   case GOLEM_TYPE_IRON:
@@ -12037,11 +12185,12 @@ void show_current_golem_craft(struct char_data *ch)
 
 bool has_golem_constructed(struct char_data *ch)
 {
-    if (ch->char_specials.saved.golem_stored_type > 0 || ch->char_specials.saved.golem_stored_size > 0)
-    {
-        return true;
-    }
-    return false;
+  if (ch->char_specials.saved.golem_stored_type > 0 ||
+      ch->char_specials.saved.golem_stored_size > 0)
+  {
+    return true;
+  }
+  return false;
 }
 
 void reset_current_golem_craft(struct char_data *ch)
@@ -12068,7 +12217,8 @@ bool begin_golem_craft(struct char_data *ch)
 
   if (has_golem_constructed(ch))
   {
-    send_to_char(ch, "You cannot create a new golem while you have an existing golem construct. Shutdown your current golem before starting a new one.\r\n");
+    send_to_char(ch, "You cannot create a new golem while you have an existing golem construct. "
+                     "Shutdown your current golem before starting a new one.\r\n");
     return false;
   }
 
@@ -12306,12 +12456,12 @@ bool has_golem_follower(struct char_data *ch)
 
 /* These IDs are saved in player files; append new appearances rather than reordering. */
 static const char *golem_appearance_materials[] = {
-  "default", "wood", "stone", "iron", "steel", "copper", "bronze", "silver", "gold",
-  "platinum", "mithril", "adamantite", "dragonmetal", "ash wood", "maple wood",
-  "mahogany wood", "valenwood", "ironwood", "bone", "dragonbone", "dragonscale",
-  "clay", "crystal", "obsidian"
-};
-#define NUM_GOLEM_APPEARANCES ((int)(sizeof(golem_appearance_materials) / sizeof(golem_appearance_materials[0])))
+    "default",     "wood",       "stone",       "iron",          "steel",     "copper",
+    "bronze",      "silver",     "gold",        "platinum",      "mithril",   "adamantite",
+    "dragonmetal", "ash wood",   "maple wood",  "mahogany wood", "valenwood", "ironwood",
+    "bone",        "dragonbone", "dragonscale", "clay",          "crystal",   "obsidian"};
+#define NUM_GOLEM_APPEARANCES                                                                      \
+  ((int)(sizeof(golem_appearance_materials) / sizeof(golem_appearance_materials[0])))
 
 static void apply_golem_appearance(struct char_data *golem, int appearance)
 {
@@ -12335,13 +12485,13 @@ static void apply_golem_appearance(struct char_data *golem, int appearance)
   {
     size = get_golem_size_from_vnum(GET_MOB_VNUM(golem));
     if (size >= 0 && size < 4)
-      snprintf(short_desc, sizeof(short_desc), "a %s %s golem", sizes[size], golem_appearance_materials[appearance]);
+      snprintf(short_desc, sizeof(short_desc), "a %s %s golem", sizes[size],
+               golem_appearance_materials[appearance]);
     else
       snprintf(short_desc, sizeof(short_desc), "%s %s golem",
                strchr("aeiou", golem_appearance_materials[appearance][0]) ? "an" : "a",
                golem_appearance_materials[appearance]);
-    snprintf(long_desc, sizeof(long_desc), "%s%s stands here.\r\n",
-             "A", short_desc + 1);
+    snprintf(long_desc, sizeof(long_desc), "%s%s stands here.\r\n", "A", short_desc + 1);
     new_short = short_desc;
     new_long = long_desc;
   }
@@ -12399,7 +12549,9 @@ static void set_golem_appearance(struct char_data *ch, const char *material)
       send_to_char(ch, "Your golem's appearance is now %s.\r\n", golem_appearance_materials[i]);
       return;
     }
-  send_to_char(ch, "Unknown appearance. Use 'craft golem appearance list' for the fixed material choices.\r\n");
+  send_to_char(
+      ch,
+      "Unknown appearance. Use 'craft golem appearance list' for the fixed material choices.\r\n");
 }
 
 static void battlefield_retrieve_active_golem(struct char_data *ch, struct char_data *golem)
@@ -12420,8 +12572,8 @@ static void battlefield_retrieve_active_golem(struct char_data *ch, struct char_
   ch->char_specials.saved.golem_recall_cooldown = time(NULL) + GOLEM_BATTLEFIELD_RETRIEVAL_COOLDOWN;
 
   send_to_char(ch, "You collapse your golem into a compact battlefield retrieval matrix.\r\n");
-  act("$n gestures sharply and $s golem folds into a compact lattice of arcane components.",
-      FALSE, ch, 0, 0, TO_ROOM);
+  act("$n gestures sharply and $s golem folds into a compact lattice of arcane components.", FALSE,
+      ch, 0, 0, TO_ROOM);
 
   extract_char(golem);
 }
@@ -12508,10 +12660,12 @@ void craft_golem_complete(struct char_data *ch)
     if (ch->char_specials.saved.golem_stored_type != GOLEM_TYPE_NONE &&
         ch->char_specials.saved.golem_stored_type != GET_CRAFT(ch).golem_type)
     {
-      send_to_char(ch, "\tRYou already have a %s golem stored!\tn You must shutdown your stored golem "
-                       "before creating a different type.\r\n",
-                   ch->char_specials.saved.golem_stored_type == GOLEM_TYPE_WOOD ? "wood" :
-                   ch->char_specials.saved.golem_stored_type == GOLEM_TYPE_STONE ? "stone" : "iron");
+      send_to_char(ch,
+                   "\tRYou already have a %s golem stored!\tn You must shutdown your stored golem "
+                   "before creating a different type.\r\n",
+                   ch->char_specials.saved.golem_stored_type == GOLEM_TYPE_WOOD    ? "wood"
+                   : ch->char_specials.saved.golem_stored_type == GOLEM_TYPE_STONE ? "stone"
+                                                                                   : "iron");
       reset_current_golem_craft(ch);
       return;
     }
@@ -12582,7 +12736,8 @@ void craft_golem_complete(struct char_data *ch)
     send_to_char(ch, "\tGSuccess!\tn You have successfully constructed a %s %s golem!\r\n",
                  golem_size_names[GET_CRAFT(ch).golem_size],
                  golem_type_names[GET_CRAFT(ch).golem_type]);
-    send_to_char(ch, "Your golem can be recalled for free if it is destroyed (5 minute cooldown).\r\n");
+    send_to_char(ch,
+                 "Your golem can be recalled for free if it is destroyed (5 minute cooldown).\r\n");
     act("$n successfully constructs a golem!", FALSE, ch, 0, 0, TO_ROOM);
     act("$N springs to life and begins following $n!", FALSE, ch, 0, golem, TO_ROOM);
 
@@ -12595,7 +12750,7 @@ void craft_golem_complete(struct char_data *ch)
     // Auto-join group if creator is leading a group
     if (!GROUP(golem) && GROUP(ch) && GROUP_LEADER(GROUP(ch)) == ch)
       join_group(golem, GROUP(ch));
-    
+
     // Store golem info for recall
     ch->char_specials.saved.golem_stored_type = GET_CRAFT(ch).golem_type;
     ch->char_specials.saved.golem_stored_size = GET_CRAFT(ch).golem_size;
@@ -12603,13 +12758,15 @@ void craft_golem_complete(struct char_data *ch)
   }
   else
   {
-    send_to_char(ch, "\tRFailed!\tn The construction fails, and some of the materials are wasted.\r\n");
+    send_to_char(ch,
+                 "\tRFailed!\tn The construction fails, and some of the materials are wasted.\r\n");
 
     // Consume materials even on failure for realism
     for (i = 0; i < num_mats; i++)
     {
       if (material_types[i] > 0)
-        GET_CRAFT_MAT(ch, material_types[i]) -= MAX(1, material_amounts[i] / 10); // Lose 10% on fail
+        GET_CRAFT_MAT(ch, material_types[i]) -=
+            MAX(1, material_amounts[i] / 10); // Lose 10% on fail
     }
 
     for (i = 0; i < num_motes; i++)
@@ -12626,7 +12783,7 @@ void craft_golem_complete(struct char_data *ch)
 bool can_recall_golem(struct char_data *ch)
 {
   time_t now = time(NULL);
-  
+
   // Check cooldown
   if (ch->char_specials.saved.golem_recall_cooldown > now)
   {
@@ -12634,11 +12791,11 @@ bool can_recall_golem(struct char_data *ch)
     int minutes_left = seconds_left / 60;
     seconds_left = seconds_left % 60;
     send_to_char(ch, "Your golem cannot be recalled yet. Cooldown: %d minute%s %d second%s.\r\n",
-                 minutes_left, (minutes_left == 1) ? "" : "s",
-                 seconds_left, (seconds_left == 1) ? "" : "s");
+                 minutes_left, (minutes_left == 1) ? "" : "s", seconds_left,
+                 (seconds_left == 1) ? "" : "s");
     return false;
   }
-  
+
   return true;
 }
 
@@ -12649,63 +12806,64 @@ void recall_golem(struct char_data *ch)
   struct char_data *golem = NULL;
   const char *golem_type_names[] = {"", "wood", "stone", "iron"};
   const char *golem_size_names[] = {"small", "medium", "large", "huge"};
-  
+
   // Check if they have a stored golem type
   if (ch->char_specials.saved.golem_stored_type == GOLEM_TYPE_NONE)
   {
     send_to_char(ch, "You don't have a golem to recall.\r\n");
     return;
   }
-  
+
   // Check if they already have a golem
   if (has_golem_follower(ch))
   {
     send_to_char(ch, "You already have an active golem.\r\n");
     return;
   }
-  
+
   // Check cooldown
   if (!can_recall_golem(ch))
     return;
-  
+
   // Get the golem VNUM
-  golem_vnum = get_golem_vnum(ch->char_specials.saved.golem_stored_type, ch->char_specials.saved.golem_stored_size);
-  
+  golem_vnum = get_golem_vnum(ch->char_specials.saved.golem_stored_type,
+                              ch->char_specials.saved.golem_stored_size);
+
   if (golem_vnum == NOBODY)
   {
     send_to_char(ch, "\tRError:\tn Invalid stored golem type!\r\n");
     return;
   }
-  
+
   // Check if we can add this follower
   if (!can_add_follower(ch, golem_vnum))
   {
     send_to_char(ch, "\tRYou cannot control another follower right now!\tn\r\n");
     return;
   }
-  
+
   // Create the golem
   golem = read_mobile(golem_vnum, VIRTUAL);
-  
+
   if (!golem)
   {
     send_to_char(ch, "\tRError:\tn Failed to recall golem! Contact an administrator.\r\n");
     return;
   }
-  
+
   char_to_room(golem, IN_ROOM(ch));
-  
+
   IS_CARRYING_W(golem) = 0;
   IS_CARRYING_N(golem) = 0;
   SET_BIT_AR(AFF_FLAGS(golem), AFF_CHARM);
   SET_BIT_AR(MOB_FLAGS(golem), MOB_GOLEM);
   GET_REAL_RACE(golem) = RACE_TYPE_CONSTRUCT;
-  
+
   send_to_char(ch, "\tGSuccess!\tn You recall your %s %s golem!\r\n",
                golem_size_names[ch->char_specials.saved.golem_stored_size],
                golem_type_names[ch->char_specials.saved.golem_stored_type]);
   act("$N materializes before $n in a flash of arcane energy!", FALSE, ch, 0, golem, TO_ROOM);
-  
+
   apply_golem_appearance(golem, ch->char_specials.saved.golem_appearance);
   load_mtrigger(golem);
   add_follower(golem, ch);
@@ -12716,11 +12874,11 @@ void recall_golem(struct char_data *ch)
   {
     GET_HIT(golem) = MIN(GET_MAX_HIT(golem), MAX(1, ch->char_specials.saved.golem_stored_hp));
   }
-  
+
   // Auto-join group if creator is leading a group
   if (!GROUP(golem) && GROUP(ch) && GROUP_LEADER(GROUP(ch)) == ch)
     join_group(golem, GROUP(ch));
-  
+
   // Set cooldown
   ch->char_specials.saved.golem_recall_cooldown =
       time(NULL) + (ch->char_specials.saved.golem_stored_hp > 0
@@ -12739,37 +12897,38 @@ void shutdown_golem(struct char_data *ch, struct char_data *golem)
   int mote_types[NUM_CRAFT_MOTES] = {0}, mote_amounts[NUM_CRAFT_MOTES] = {0};
   int num_mats = 0, num_motes = 0;
   int i = 0;
-  
+
   if (!golem || !IS_NPC(golem) || !MOB_FLAGGED(golem, MOB_GOLEM))
   {
     send_to_char(ch, "That's not a golem.\r\n");
     return;
   }
-  
+
   if (golem->master != ch)
   {
     send_to_char(ch, "That golem doesn't belong to you.\r\n");
     return;
   }
-  
+
   golem_vnum = GET_MOB_VNUM(golem);
   golem_type = get_golem_type_from_vnum(golem_vnum);
   golem_size = get_golem_size_from_vnum(golem_vnum);
-  
+
   if (golem_type < 0 || golem_size < 0)
   {
     send_to_char(ch, "That golem is invalid!\r\n");
     return;
   }
-  
+
   // Get materials and motes used to craft this golem
-  num_mats = get_golem_material_requirements(golem_type, golem_size, material_types, material_amounts);
+  num_mats =
+      get_golem_material_requirements(golem_type, golem_size, material_types, material_amounts);
   num_motes = get_golem_mote_requirements(golem_type, golem_size, mote_types, mote_amounts);
-  
-  send_to_char(ch, "You shut down your %s %s golem.\r\n",
-               golem_size_names[golem_size], golem_type_names[golem_type]);
+
+  send_to_char(ch, "You shut down your %s %s golem.\r\n", golem_size_names[golem_size],
+               golem_type_names[golem_type]);
   act("$n's golem powers down and vanishes in a shimmer of magic.", FALSE, ch, 0, 0, TO_ROOM);
-  
+
   // Recover half of the materials used
   send_to_char(ch, "\tGYou recover the following materials:\tn\r\n");
   for (i = 0; i < num_mats; i++)
@@ -12790,7 +12949,7 @@ void shutdown_golem(struct char_data *ch, struct char_data *golem)
       send_to_char(ch, "  %d units of material\r\n", recovered_amount);
     }
   }
-  
+
   // Recover half of the motes used
   send_to_char(ch, "\tGYou recover the following motes:\tn\r\n");
   for (i = 0; i < num_motes; i++)
@@ -12802,13 +12961,13 @@ void shutdown_golem(struct char_data *ch, struct char_data *golem)
       send_to_char(ch, "  %d motes\r\n", recovered_amount);
     }
   }
-  
+
   // Clear stored golem so they can build a new type
   ch->char_specials.saved.golem_stored_type = GOLEM_TYPE_NONE;
   ch->char_specials.saved.golem_stored_size = GOLEM_SIZE_SMALL;
   ch->char_specials.saved.golem_stored_hp = 0;
   ch->char_specials.saved.golem_recall_cooldown = 0;
-  
+
   extract_char(golem);
 }
 
@@ -12825,47 +12984,51 @@ void upgrade_golem(struct char_data *ch, struct char_data *golem, int new_size)
   int i = 0;
   const char *golem_type_names[] = {"", "wood", "stone", "iron"};
   const char *golem_size_names[] = {"small", "medium", "large", "huge"};
-  
+
   if (!golem || !IS_NPC(golem) || !MOB_FLAGGED(golem, MOB_GOLEM))
   {
     send_to_char(ch, "That's not a golem.\r\n");
     return;
   }
-  
+
   if (golem->master != ch)
   {
     send_to_char(ch, "That golem doesn't belong to you.\r\n");
     return;
   }
-  
+
   golem_vnum = GET_MOB_VNUM(golem);
   golem_type = get_golem_type_from_vnum(golem_vnum);
   current_size = get_golem_size_from_vnum(golem_vnum);
-  
+
   if (golem_type < 0 || current_size < 0)
   {
     send_to_char(ch, "That golem is invalid!\r\n");
     return;
   }
-  
+
   if (new_size <= current_size)
   {
     send_to_char(ch, "The new size must be larger than the current size.\r\n");
     return;
   }
-  
+
   if (new_size >= NUM_GOLEM_SIZES)
   {
     send_to_char(ch, "That size is too large.\r\n");
     return;
   }
-  
+
   /* Get materials and motes for current and new size */
-  num_mats_current = get_golem_material_requirements(golem_type, current_size, material_types_current, material_amounts_current);
-  num_mats_new = get_golem_material_requirements(golem_type, new_size, material_types_new, material_amounts_new);
-  num_motes_current = get_golem_mote_requirements(golem_type, current_size, mote_types_current, mote_amounts_current);
-  num_motes_new = get_golem_mote_requirements(golem_type, new_size, mote_types_new, mote_amounts_new);
-  
+  num_mats_current = get_golem_material_requirements(
+      golem_type, current_size, material_types_current, material_amounts_current);
+  num_mats_new = get_golem_material_requirements(golem_type, new_size, material_types_new,
+                                                 material_amounts_new);
+  num_motes_current = get_golem_mote_requirements(golem_type, current_size, mote_types_current,
+                                                  mote_amounts_current);
+  num_motes_new =
+      get_golem_mote_requirements(golem_type, new_size, mote_types_new, mote_amounts_new);
+
   /* Calculate difference (what's needed for upgrade) */
   for (i = 0; i < num_mats_new; i++)
   {
@@ -12883,7 +13046,7 @@ void upgrade_golem(struct char_data *ch, struct char_data *golem, int new_size)
       }
     }
   }
-  
+
   for (i = 0; i < num_motes_new; i++)
   {
     if (mote_types_new[i] > 0 && mote_amounts_new[i] > 0)
@@ -12900,7 +13063,7 @@ void upgrade_golem(struct char_data *ch, struct char_data *golem, int new_size)
       }
     }
   }
-  
+
   /* Consume the difference in materials */
   for (i = 0; i < num_mats_new; i++)
   {
@@ -12911,7 +13074,7 @@ void upgrade_golem(struct char_data *ch, struct char_data *golem, int new_size)
         GET_CRAFT_MAT(ch, material_types_new[i]) -= diff;
     }
   }
-  
+
   /* Consume the difference in motes */
   for (i = 0; i < num_motes_new; i++)
   {
@@ -12922,15 +13085,15 @@ void upgrade_golem(struct char_data *ch, struct char_data *golem, int new_size)
         GET_CRAFT_MOTES(ch, mote_types_new[i]) -= diff;
     }
   }
-  
+
   send_to_char(ch, "\tGSuccess!\tn You upgrade your %s %s golem to %s size!\r\n",
                golem_type_names[golem_type], golem_size_names[current_size],
                golem_size_names[new_size]);
-  act("$N begins to glow brightly as $n enhances the golem's form, growing larger!", 
-      FALSE, ch, 0, golem, TO_ROOM);
+  act("$N begins to glow brightly as $n enhances the golem's form, growing larger!", FALSE, ch, 0,
+      golem, TO_ROOM);
 
   struct follow_type *k;
-  
+
   // Find the golem follower
   for (k = ch->followers; k; k = k->next)
   {
@@ -12944,13 +13107,13 @@ void upgrade_golem(struct char_data *ch, struct char_data *golem, int new_size)
   // Clear stored golem so they can build a new type
   ch->char_specials.saved.golem_stored_type = golem_type;
   ch->char_specials.saved.golem_stored_size = new_size;
-  
+
   extract_char(golem);
-  
+
   golem_vnum = get_golem_vnum(golem_type, new_size);
   golem = read_mobile(golem_vnum, VIRTUAL);
   char_to_room(golem, IN_ROOM(ch));
-  
+
   IS_CARRYING_W(golem) = 0;
   IS_CARRYING_N(golem) = 0;
   SET_BIT_AR(AFF_FLAGS(golem), AFF_CHARM);
@@ -12965,7 +13128,7 @@ void upgrade_golem(struct char_data *ch, struct char_data *golem, int new_size)
 
   if (!GROUP(golem) && GROUP(ch) && GROUP_LEADER(GROUP(ch)) == ch)
     join_group(golem, GROUP(ch));
-  
+
   /* Update the stored golem size */
   ch->char_specials.saved.golem_stored_size = new_size;
   ch->char_specials.saved.golem_stored_hp = 0;
@@ -13199,10 +13362,10 @@ void transfer_golem(struct char_data *ch, struct char_data *golem, struct char_d
 
   sync_artificer_construct_command_bonuses(golem);
 
-  send_to_char(ch, "You transfer your %s %s golem to %s.\r\n",
-               golem_size_names[golem_size], golem_type_names[golem_type], GET_NAME(target));
-  send_to_char(target, "%s transfers a %s %s golem to you.\r\n",
-               GET_NAME(ch), golem_size_names[golem_size], golem_type_names[golem_type]);
+  send_to_char(ch, "You transfer your %s %s golem to %s.\r\n", golem_size_names[golem_size],
+               golem_type_names[golem_type], GET_NAME(target));
+  send_to_char(target, "%s transfers a %s %s golem to you.\r\n", GET_NAME(ch),
+               golem_size_names[golem_size], golem_type_names[golem_type]);
   act("$n transfers a golem to $N.", TRUE, ch, 0, target, TO_NOTVICT);
 
   save_char_pets(ch);
@@ -13344,10 +13507,11 @@ void start_golem_transfer(struct char_data *ch, struct char_data *golem, struct 
                "Transfer request created. Confirmation code: %d\r\n"
                "Type 'craft golem confirm %d' to confirm your transfer.\r\n",
                req->code, req->code);
-  send_to_char(target,
-               "%s wants to transfer a %s %s golem to you.\r\n"
-               "Ask them for the confirmation code and type 'craft golem confirm <code>' to accept.\r\n",
-               GET_NAME(ch), golem_size_names[golem_size], golem_type_names[golem_type]);
+  send_to_char(
+      target,
+      "%s wants to transfer a %s %s golem to you.\r\n"
+      "Ask them for the confirmation code and type 'craft golem confirm <code>' to accept.\r\n",
+      GET_NAME(ch), golem_size_names[golem_size], golem_type_names[golem_type]);
 }
 
 void confirm_golem_transfer(struct char_data *ch, const char *code_arg)
@@ -13431,7 +13595,8 @@ void confirm_golem_transfer(struct char_data *ch, const char *code_arg)
     return;
   }
 
-  if (has_golem_follower(target) || target->char_specials.saved.golem_stored_type != GOLEM_TYPE_NONE)
+  if (has_golem_follower(target) ||
+      target->char_specials.saved.golem_stored_type != GOLEM_TYPE_NONE)
   {
     send_to_char(ch, "The recipient already has a golem. Transfer canceled.\r\n");
     clear_golem_transfer_request(req);
@@ -13487,15 +13652,18 @@ void newcraft_golem(struct char_data *ch, const char *argument)
   {
     send_to_char(ch, "Golem crafting commands:\r\n");
     send_to_char(ch, "  craft golem type (wood|stone|iron) - Set golem type\r\n");
-    send_to_char(ch, "  craft golem appearance <material|default> - Set a cosmetic material (list shows choices)\r\n");
+    send_to_char(ch, "  craft golem appearance <material|default> - Set a cosmetic material (list "
+                     "shows choices)\r\n");
     send_to_char(ch, "  craft golem size (small|medium|large|huge) - Set golem size\r\n");
     send_to_char(ch, "  craft golem show - Display current golem project\r\n");
     send_to_char(ch, "  craft golem reset - Reset golem project\r\n");
     send_to_char(ch, "  craft golem start - Begin construction\r\n");
-    send_to_char(ch, "  craft golem recall - Recall your stored golem; with Battlefield Retrieval this also stows an active one\r\n");
+    send_to_char(ch, "  craft golem recall - Recall your stored golem; with Battlefield Retrieval "
+                     "this also stows an active one\r\n");
     send_to_char(ch, "  craft golem deploy - Alias for recall when redeploying a stored golem\r\n");
     send_to_char(ch, "  craft golem shutdown - Shutdown your golem to build a new type\r\n");
-    send_to_char(ch, "  craft golem upgrade (small|medium|large|huge) - Upgrade golem to larger size\r\n");
+    send_to_char(
+        ch, "  craft golem upgrade (small|medium|large|huge) - Upgrade golem to larger size\r\n");
     if (get_artificer_tactical_directives_rank(ch) > 0)
     {
       send_to_char(ch, "  craft golem guard - Toggle the guard directive (+AC stance)\r\n");
@@ -13503,10 +13671,13 @@ void newcraft_golem(struct char_data *ch, const char *argument)
       send_to_char(ch, "  craft golem stance - Show the current directive\r\n");
     }
     if (has_artificer_arcana_siege_frame(ch))
-      send_to_char(ch, "  craft golem slam <target> <direction> - Use your siege-frame knockback slam\r\n");
+      send_to_char(
+          ch, "  craft golem slam <target> <direction> - Use your siege-frame knockback slam\r\n");
     if (has_artificer_omni_forge_commander(ch))
-      send_to_char(ch, "  craft golem refit <defense|offense|support> - Refit your active construct out of combat\r\n");
-    send_to_char(ch, "  craft golem transfer <golem> <player> - Transfer your golem to another player\r\n");
+      send_to_char(ch, "  craft golem refit <defense|offense|support> - Refit your active "
+                       "construct out of combat\r\n");
+    send_to_char(
+        ch, "  craft golem transfer <golem> <player> - Transfer your golem to another player\r\n");
     send_to_char(ch, "  craft golem confirm <code> - Confirm a pending golem transfer\r\n");
     send_to_char(ch, "  craft golem cancel - Cancel a pending golem transfer\r\n");
     return;
@@ -13555,26 +13726,27 @@ void newcraft_golem(struct char_data *ch, const char *argument)
   else if (is_abbrev(arg1, "shutdown"))
   {
     struct char_data *golem = get_active_golem_follower(ch);
-    
+
     if (!golem)
     {
-      send_to_char(ch, "You don't have an active golem to shutdown. Try using 'craft golem recall' first, then try shutdown again.\r\n");
+      send_to_char(ch, "You don't have an active golem to shutdown. Try using 'craft golem recall' "
+                       "first, then try shutdown again.\r\n");
       return;
     }
-    
+
     shutdown_golem(ch, golem);
   }
   else if (is_abbrev(arg1, "upgrade"))
   {
     struct char_data *golem = NULL;
     int new_size = -1;
-    
+
     if (!*arg2)
     {
       send_to_char(ch, "Upgrade to which size? (small|medium|large|huge)\r\n");
       return;
     }
-    
+
     if (is_abbrev(arg2, "small"))
       new_size = GOLEM_SIZE_SMALL;
     else if (is_abbrev(arg2, "medium"))
@@ -13588,16 +13760,16 @@ void newcraft_golem(struct char_data *ch, const char *argument)
       send_to_char(ch, "Unknown size. Use: small, medium, large, or huge\r\n");
       return;
     }
-    
+
     /* Find the golem follower */
     golem = get_active_golem_follower(ch);
-    
+
     if (!golem)
     {
       send_to_char(ch, "You don't have an active golem to upgrade.\r\n");
       return;
     }
-    
+
     upgrade_golem(ch, golem, new_size);
   }
   else if (is_abbrev(arg1, "stance") || is_abbrev(arg1, "directive"))
@@ -13702,8 +13874,8 @@ void newcraft_golem(struct char_data *ch, const char *argument)
       return;
     }
 
-    free_command = ch->player_specials->saved.omni_forge_free_command &&
-                   (FIGHTING(ch) || FIGHTING(golem));
+    free_command =
+        ch->player_specials->saved.omni_forge_free_command && (FIGHTING(ch) || FIGHTING(golem));
     if (!free_command && ch->player_specials->saved.siege_frame_slam_cooldown > time(0))
     {
       int seconds_left = (int)(ch->player_specials->saved.siege_frame_slam_cooldown - time(0));
@@ -13801,12 +13973,14 @@ void newcraft_golem(struct char_data *ch, const char *argument)
     ch->player_specials->saved.omni_forge_free_command = TRUE;
     sync_artificer_construct_command_bonuses(golem);
 
-    send_to_char(ch,
-                 "You refit your golem into %s mode. The next eligible command in combat will be free.\r\n",
-                 new_directive == GOLEM_DIRECTIVE_GUARD ? "defense" :
-                 new_directive == GOLEM_DIRECTIVE_PRESSURE ? "offense" : "support");
-    act("$n rapidly reconfigures $s golem with a flurry of omni-forge adjustments.", FALSE, ch,
-        0, 0, TO_ROOM);
+    send_to_char(
+        ch,
+        "You refit your golem into %s mode. The next eligible command in combat will be free.\r\n",
+        new_directive == GOLEM_DIRECTIVE_GUARD      ? "defense"
+        : new_directive == GOLEM_DIRECTIVE_PRESSURE ? "offense"
+                                                    : "support");
+    act("$n rapidly reconfigures $s golem with a flurry of omni-forge adjustments.", FALSE, ch, 0,
+        0, TO_ROOM);
   }
   else if (is_abbrev(arg1, "transfer"))
   {
@@ -14483,7 +14657,7 @@ static void impl_do_reforge_new_(struct char_data *ch, char *argument,
 int get_material_cost(int material_id)
 {
   int grade = material_grade(material_id);
-  
+
   switch (grade)
   {
   case 1:
@@ -14521,19 +14695,19 @@ void show_artisan_shop(struct char_data *ch)
 {
   int i, j, grade, cost, mat_group;
   char type_color[10];
-  
+
   send_to_char(ch, "\tCArtisan Shop - Materials & Motes\tn\r\n");
   send_to_char(ch, "Your Artisan Points: \tC%d\tn\r\n\r\n", GET_ARTISAN_EXP(ch));
-  
+
   send_to_char(ch, "\tW=== MATERIALS ===\tn\r\n");
   send_to_char(ch, "Format: artisan buy <quantity> <name>\r\n\r\n");
-  
+
   /* Sort materials by grade, then display alphabetically within each grade */
   for (grade = 1; grade <= 6; grade++)
   {
     int materials_in_grade[NUM_CRAFT_MATS];
     int count = 0;
-    
+
     /* Collect all materials of this grade */
     for (i = 1; i < NUM_CRAFT_MATS; i++)
     {
@@ -14542,7 +14716,7 @@ void show_artisan_shop(struct char_data *ch)
         materials_in_grade[count++] = i;
       }
     }
-    
+
     /* Sort collected materials alphabetically */
     for (i = 0; i < count - 1; i++)
     {
@@ -14557,18 +14731,18 @@ void show_artisan_shop(struct char_data *ch)
         }
       }
     }
-    
+
     /* Display materials in this grade */
     if (count > 0)
     {
       send_to_char(ch, "\t\tGrade %d Materials\tn\r\n", grade);
-      
+
       for (i = 0; i < count; i++)
       {
         int mat_id = materials_in_grade[i];
         mat_group = craft_group_by_material(mat_id);
         cost = get_material_cost(mat_id);
-        
+
         /* Color code by material type */
         switch (mat_group)
         {
@@ -14594,14 +14768,14 @@ void show_artisan_shop(struct char_data *ch)
           snprintf(type_color, sizeof(type_color), "\tw"); /* White default */
           break;
         }
-        
-        send_to_char(ch, "  %s%-28s\tn %3d AP each\r\n", 
-                     type_color, crafting_materials[mat_id], cost);
+
+        send_to_char(ch, "  %s%-28s\tn %3d AP each\r\n", type_color, crafting_materials[mat_id],
+                     cost);
       }
       send_to_char(ch, "\r\n");
     }
   }
-  
+
   send_to_char(ch, "\tW=== MOTES ===\tn\r\n");
   send_to_char(ch, "All Mote Types: %d AP each\r\n", get_mote_cost());
   send_to_char(ch, "Format: artisan buy <quantity> <mote name>\r\n\r\n");
@@ -14614,13 +14788,13 @@ void show_artisan_shop(struct char_data *ch)
 int get_material_by_name(const char *name)
 {
   int i;
-  
+
   for (i = 1; i < NUM_CRAFT_MATS; i++)
   {
     if (is_abbrev(name, crafting_materials[i]))
       return i;
   }
-  
+
   return CRAFT_MAT_NONE;
 }
 
@@ -14645,8 +14819,8 @@ int get_mote_type_by_name(const char *name)
     return CRAFTING_MOTE_LIGHTNING;
   if (is_abbrev(name, "water"))
     return CRAFTING_MOTE_WATER;
-  
-  return CRAFTING_MOTE_NONE;  /* Invalid mote type */
+
+  return CRAFTING_MOTE_NONE; /* Invalid mote type */
 }
 
 /**
@@ -14657,17 +14831,18 @@ void handle_artisan_buy(struct char_data *ch, const char *argument)
   char arg1[100], arg2[200], item_name[200], buf[500];
   int material_id, quantity, cost, total_cost, mote_type;
   size_t len;
-  
+
   if (!*argument)
   {
     show_artisan_shop(ch);
     return;
   }
-  
+
   /* Parse: quantity and item name */
-  half_chop_c(argument, arg1, sizeof(arg1), buf, sizeof(buf)); // chopping off first argument because we don't need it.
+  half_chop_c(argument, arg1, sizeof(arg1), buf,
+              sizeof(buf)); // chopping off first argument because we don't need it.
   half_chop_c(buf, arg1, sizeof(arg1), arg2, sizeof(arg2));
-  
+
   if (!*arg1 || !*arg2)
   {
     send_to_char(ch, "Usage: artisan buy <quantity> <material or mote name>\r\n");
@@ -14677,7 +14852,7 @@ void handle_artisan_buy(struct char_data *ch, const char *argument)
     send_to_char(ch, "  artisan buy 5 fire mote\r\n");
     return;
   }
-  
+
   quantity = atoi(arg1);
   if (quantity <= 0)
   {
@@ -14686,17 +14861,17 @@ void handle_artisan_buy(struct char_data *ch, const char *argument)
   }
   else if (quantity > 1000)
     quantity = 1000;
-  
+
   /* Copy arg2 to item_name for modification */
   snprintf(item_name, sizeof(item_name), "%s", arg2);
-  
+
   /* Check if item_name ends with " mote" and strip it if present */
   len = strlen(item_name);
   if (len > 5 && !strcasecmp(item_name + len - 5, " mote"))
   {
-    item_name[len - 5] = '\0';  /* Strip " mote" from end */
+    item_name[len - 5] = '\0'; /* Strip " mote" from end */
   }
-  
+
   /* Try to match as a mote type (by name or number) */
   if (is_number(item_name))
   {
@@ -14707,33 +14882,35 @@ void handle_artisan_buy(struct char_data *ch, const char *argument)
   {
     mote_type = get_mote_type_by_name(item_name);
   }
-  
+
   if (mote_type >= 1 && mote_type <= 8)
   {
     /* It's a mote purchase */
     cost = get_mote_cost();
     total_cost = cost * quantity;
-    
+
     if (GET_ARTISAN_EXP(ch) < total_cost)
     {
-      send_to_char(ch, "You don't have enough artisan points. You need %d AP but only have %d AP.\r\n",
+      send_to_char(ch,
+                   "You don't have enough artisan points. You need %d AP but only have %d AP.\r\n",
                    total_cost, GET_ARTISAN_EXP(ch));
       return;
     }
-    
+
     /* Purchase motes */
     GET_ARTISAN_EXP(ch) -= total_cost;
     GET_CRAFT_MOTES(ch, mote_type) += quantity;
-    
+
     send_to_char(ch, "\tYSale Complete!\tn\r\n");
-    send_to_char(ch, "You purchased %d %s(s) for %d AP.\r\n", quantity, crafting_motes[mote_type], total_cost);
+    send_to_char(ch, "You purchased %d %s(s) for %d AP.\r\n", quantity, crafting_motes[mote_type],
+                 total_cost);
     send_to_char(ch, "You now have %d artisan points.\r\n", GET_ARTISAN_EXP(ch));
-    
+
     /* Save character */
     save_char(ch, 0);
     return;
   }
-  
+
   /* Not a mote, try as a material - use original arg2 in case the material name has "mote" in it */
   material_id = get_material_by_name(arg2);
   if (material_id == CRAFT_MAT_NONE)
@@ -14741,32 +14918,33 @@ void handle_artisan_buy(struct char_data *ch, const char *argument)
     send_to_char(ch, "That item is not available. Type 'artisan shop' to see available items.\r\n");
     return;
   }
-  
+
   cost = get_material_cost(material_id);
   if (cost == 0)
   {
     send_to_char(ch, "That material cannot be purchased.\r\n");
     return;
   }
-  
+
   total_cost = cost * quantity;
-  
+
   if (GET_ARTISAN_EXP(ch) < total_cost)
   {
-    send_to_char(ch, "You don't have enough artisan points. You need %d AP but only have %d AP.\r\n",
+    send_to_char(ch,
+                 "You don't have enough artisan points. You need %d AP but only have %d AP.\r\n",
                  total_cost, GET_ARTISAN_EXP(ch));
     return;
   }
-  
+
   /* Purchase materials */
   GET_ARTISAN_EXP(ch) -= total_cost;
   GET_CRAFT_MAT(ch, material_id) += quantity;
-  
+
   send_to_char(ch, "\tYSale Complete!\tn\r\n");
-  send_to_char(ch, "You purchased %d %s for %d AP.\r\n",
-               quantity, crafting_materials[material_id], total_cost);
+  send_to_char(ch, "You purchased %d %s for %d AP.\r\n", quantity, crafting_materials[material_id],
+               total_cost);
   send_to_char(ch, "You now have %d artisan points.\r\n", GET_ARTISAN_EXP(ch));
-  
+
   /* Save character */
   save_char(ch, 0);
 }
@@ -14785,7 +14963,8 @@ void notify_supply_order_cooldown_on_login(struct char_data *ch)
   /* Check for slot cooldowns */
   for (slot = 0; slot < 5; slot++)
   {
-    if (GET_CRAFT(ch).supply_slot_cooldowns[slot] > 0 && now < GET_CRAFT(ch).supply_slot_cooldowns[slot])
+    if (GET_CRAFT(ch).supply_slot_cooldowns[slot] > 0 &&
+        now < GET_CRAFT(ch).supply_slot_cooldowns[slot])
     {
       any_cooldowns = 1;
       break;
@@ -14807,7 +14986,8 @@ void notify_supply_order_cooldown_on_login(struct char_data *ch)
     {
       int refresh_hours = (GET_CRAFT(ch).supply_slots_next_refresh - now) / 3600;
       int refresh_minutes = ((GET_CRAFT(ch).supply_slots_next_refresh - now) % 3600) / 60;
-      send_to_char(ch, "  Contract slots refresh in: %d hours, %d minutes\r\n", refresh_hours, refresh_minutes);
+      send_to_char(ch, "  Contract slots refresh in: %d hours, %d minutes\r\n", refresh_hours,
+                   refresh_minutes);
     }
 
     if (any_cooldowns)
@@ -14820,10 +15000,9 @@ void notify_supply_order_cooldown_on_login(struct char_data *ch)
         {
           int cooldown_hours = (GET_CRAFT(ch).supply_slot_cooldowns[slot] - now) / 3600;
           int cooldown_minutes = ((GET_CRAFT(ch).supply_slot_cooldowns[slot] - now) % 3600) / 60;
-          send_to_char(ch, "    Slot %d: %d hour%s, %d minute%s\r\n", 
-                       slot + 1, 
-                       cooldown_hours, (cooldown_hours != 1 ? "s" : ""),
-                       cooldown_minutes, (cooldown_minutes != 1 ? "s" : ""));
+          send_to_char(ch, "    Slot %d: %d hour%s, %d minute%s\r\n", slot + 1, cooldown_hours,
+                       (cooldown_hours != 1 ? "s" : ""), cooldown_minutes,
+                       (cooldown_minutes != 1 ? "s" : ""));
         }
       }
     }
@@ -14840,37 +15019,37 @@ void notify_supply_order_cooldown_on_login(struct char_data *ch)
 SPECIAL(artisan_shop)
 {
   char arg[200];
-  
+
   if (!CMD_IS("artisanshop"))
     return 0;
-  
+
   if (FIGHTING(ch))
   {
     send_to_char(ch, "You're too busy fighting!\r\n");
     return 1;
   }
-  
+
   one_argument(argument, arg, sizeof(arg));
-  
+
   if (!*arg)
   {
     show_artisan_shop(ch);
     return 1;
   }
-  
+
   if (is_abbrev(arg, "shop"))
   {
     show_artisan_shop(ch);
     return 1;
   }
-  
+
   if (is_abbrev(arg, "buy"))
   {
     skip_spaces(&argument);
     handle_artisan_buy(ch, argument);
     return 1;
   }
-  
+
   send_to_char(ch, "Usage:\r\n");
   send_to_char(ch, "  artisan shop                     - View materials and motes for sale\r\n");
   send_to_char(ch, "  artisan buy <qty> <name>        - Purchase any material or mote by name\r\n");
@@ -14889,9 +15068,11 @@ static int exchange_material_by_name(char *name)
 {
   int i, match = CRAFT_MAT_NONE;
   char *end;
-  while (isspace((unsigned char)*name)) name++;
+  while (isspace((unsigned char)*name))
+    name++;
   end = name + strlen(name);
-  while (end > name && isspace((unsigned char)end[-1])) *--end = '\0';
+  while (end > name && isspace((unsigned char)end[-1]))
+    *--end = '\0';
   if (end > name + 1 && *name == '"' && end[-1] == '"')
   {
     name++;
@@ -14929,9 +15110,11 @@ void exchange_material_varieties(struct char_data *ch, const char *argument)
   }
   snprintf(input, sizeof(input), "%s", argument);
   p = input;
-  while (isspace((unsigned char)*p)) p++;
+  while (isspace((unsigned char)*p))
+    p++;
   source = p + strlen(p);
-  while (source > p && isspace((unsigned char)source[-1])) *--source = '\0';
+  while (source > p && isspace((unsigned char)source[-1]))
+    *--source = '\0';
   if (!*p || !str_cmp(p, "list"))
   {
     send_to_char(ch, "Material varieties exchange 1:1 within the same family and grade.\r\n"
@@ -14945,13 +15128,15 @@ void exchange_material_varieties(struct char_data *ch, const char *argument)
     return;
   }
   quantity = strtol(p, &quantity_end, 10);
-  if (quantity_end == p || !isspace((unsigned char)*quantity_end) || quantity <= 0 || quantity > INT_MAX)
+  if (quantity_end == p || !isspace((unsigned char)*quantity_end) || quantity <= 0 ||
+      quantity > INT_MAX)
   {
     send_to_char(ch, "Usage: exchange <positive quantity> <material> for <material>\r\n");
     return;
   }
   source = quantity_end;
-  while (isspace((unsigned char)*source)) source++;
+  while (isspace((unsigned char)*source))
+    source++;
   for (p = source; *p; p++)
     if (!strncasecmp(p, " for ", 5))
     {
@@ -14969,12 +15154,14 @@ void exchange_material_varieties(struct char_data *ch, const char *argument)
       canonical_craft_material(from) != canonical_craft_material(to) ||
       material_grade(from) != material_grade(to))
   {
-    send_to_char(ch, "Choose different varieties in the same material family and grade. Use 'exchange list'.\r\n");
+    send_to_char(ch, "Choose different varieties in the same material family and grade. Use "
+                     "'exchange list'.\r\n");
     return;
   }
   if (GET_CRAFT_MAT(ch, from) < quantity)
   {
-    send_to_char(ch, "You only have %d units of %s.\r\n", GET_CRAFT_MAT(ch, from), crafting_materials[from]);
+    send_to_char(ch, "You only have %d units of %s.\r\n", GET_CRAFT_MAT(ch, from),
+                 crafting_materials[from]);
     return;
   }
   if (GET_CRAFT_MAT(ch, to) > INT_MAX - quantity)
@@ -14985,17 +15172,38 @@ void exchange_material_varieties(struct char_data *ch, const char *argument)
   GET_CRAFT_MAT(ch, from) -= (int)quantity;
   GET_CRAFT_MAT(ch, to) += (int)quantity;
   save_char(ch, 0);
-  send_to_char(ch, "You exchange %ld units of %s for %ld units of %s.\r\n",
-               quantity, crafting_materials[from], quantity, crafting_materials[to]);
+  send_to_char(ch, "You exchange %ld units of %s for %ld units of %s.\r\n", quantity,
+               crafting_materials[from], quantity, crafting_materials[to]);
 }
 
 SPECIAL(materials_exchanger)
 {
-  struct char_data *exchanger = (struct char_data *)me;
+  struct char_data *mob;
+  struct obj_data *obj;
+  bool available = FALSE;
+  int slot;
   if (!cmd || !CMD_IS("exchange") || IS_NPC(ch))
     return 0;
-  if (!exchanger || !IS_NPC(exchanger) || !AWAKE(exchanger) || FIGHTING(exchanger) ||
-      !CAN_SEE(ch, exchanger))
+  if (IN_ROOM(ch) == NOWHERE || IN_ROOM(ch) > top_of_world || !me)
+    return 0;
+  /* Identify the owner before accessing it: OLC supports rooms, mobs and
+   * objects, and their special procedures all share a void * argument.
+   */
+  if (me == &world[IN_ROOM(ch)])
+    available = TRUE;
+  for (mob = world[IN_ROOM(ch)].people; mob && !available; mob = mob->next_in_room)
+    if (me == mob && IS_NPC(mob) && AWAKE(mob) && !FIGHTING(mob) && CAN_SEE(ch, mob))
+      available = TRUE;
+  for (obj = world[IN_ROOM(ch)].contents; obj && !available; obj = obj->next_content)
+    if (me == obj && CAN_SEE_OBJ(ch, obj))
+      available = TRUE;
+  for (obj = ch->carrying; obj && !available; obj = obj->next_content)
+    if (me == obj && CAN_SEE_OBJ(ch, obj))
+      available = TRUE;
+  for (slot = 0; slot < NUM_WEARS && !available; slot++)
+    if (GET_EQ(ch, slot) && me == GET_EQ(ch, slot) && CAN_SEE_OBJ(ch, GET_EQ(ch, slot)))
+      available = TRUE;
+  if (!available)
     return 0;
   exchange_material_varieties(ch, argument);
   return 1;

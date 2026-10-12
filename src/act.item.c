@@ -5431,6 +5431,15 @@ int hands_needed(struct char_data *ch, struct obj_data *obj)
    held and wielded items will take two hands based on their size.  */
 //  should only return 1 or 2, -1 if problematic
 
+int wield_size_difference(struct char_data *ch, struct obj_data *obj)
+{
+  int size = GET_OBJ_SIZE(obj) - GET_SIZE(ch);
+  /* A quarterstaff's physical length does not force a two-handed grip. */
+  if (GET_OBJ_TYPE(obj) == ITEM_WEAPON && GET_WEAPON_TYPE(obj) == WEAPON_TYPE_QUARTERSTAFF)
+    size--;
+  return size;
+}
+
 int hands_needed_full(struct char_data *ch, struct obj_data *obj, int use_feats)
 {
   /* example:  huge sword,   medium human, size =  2
@@ -5438,7 +5447,7 @@ int hands_needed_full(struct char_data *ch, struct obj_data *obj, int use_feats)
    *           medium sword, medium human, size =  0
    *           small sword,  medium human, size = -1
    *           tiny dagger,  medium human, size = -2 */
-  int size = GET_OBJ_SIZE(obj) - GET_SIZE(ch);
+  int size = wield_size_difference(ch, obj);
 
   // if this is turned on it will use any feats that reduce or otherwise
   // affect what size weapons can be wielded.  We have this option so
@@ -5583,6 +5592,9 @@ void perform_wear(struct char_data *ch, struct obj_data *obj, int where)
     send_to_char(ch, "There is no way this item will fit you!\r\n");
     return;
   }
+
+  if (where == WEAR_WIELD_2H || where == WEAR_HOLD_2H)
+    handsNeeded = 2;
 
   if (OBJ_FLAGGED(obj, ITEM_MOLD))
   {
@@ -5987,7 +5999,7 @@ ACMD(do_wear)
 /* the actual engine for wielding an object
    returns TRUE for success, FALSE for failure
    the not_silent variable indicates if this function is vocal or not */
-bool perform_wield(struct char_data *ch, struct obj_data *obj, bool not_silent)
+static bool perform_wield_at(struct char_data *ch, struct obj_data *obj, bool not_silent, int where)
 {
   int level_allowed = GET_LEVEL(ch) + MAX(0, compute_ability(ch, ABILITY_USE_MAGIC_DEVICE) / 5);
 
@@ -6021,17 +6033,24 @@ bool perform_wield(struct char_data *ch, struct obj_data *obj, bool not_silent)
   }
   else
   {
-    perform_wear(ch, obj, WEAR_WIELD_1);
+    perform_wear(ch, obj, where);
     return TRUE;
   }
 
   return FALSE;
 }
 
+bool perform_wield(struct char_data *ch, struct obj_data *obj, bool not_silent)
+{
+  return perform_wield_at(ch, obj, not_silent, WEAR_WIELD_1);
+}
+
 /* entry point for the 'wield' command */
 ACMD(do_wield)
 {
   char arg[MAX_INPUT_LENGTH] = {'\0'};
+  char grip[MAX_INPUT_LENGTH] = {'\0'};
+  char extra[MAX_INPUT_LENGTH] = {'\0'};
   struct obj_data *obj = NULL;
 
   if (IS_WILDSHAPED(ch) || IS_MORPHED(ch))
@@ -6040,7 +6059,9 @@ ACMD(do_wield)
     return;
   }
 
-  one_argument(argument, arg, sizeof(arg));
+  argument = one_argument(argument, arg, sizeof(arg));
+  argument = one_argument(argument, grip, sizeof(grip));
+  one_argument(argument, extra, sizeof(extra));
 
   if (!*arg)
     send_to_char(ch, "Wield what?\r\n");
@@ -6059,7 +6080,29 @@ ACMD(do_wield)
   }
   else
   {
-    perform_wield(ch, obj, TRUE);
+    if (*grip)
+    {
+      int where;
+      if (*extra || (str_cmp(grip, "onehand") && str_cmp(grip, "twohand")))
+      {
+        send_to_char(ch, "Usage: wield <quarterstaff> [onehand|twohand]\r\n");
+        return;
+      }
+      if (GET_OBJ_TYPE(obj) != ITEM_WEAPON || GET_WEAPON_TYPE(obj) != WEAPON_TYPE_QUARTERSTAFF)
+      {
+        send_to_char(ch, "Grip selection is available for quarterstaffs.\r\n");
+        return;
+      }
+      if (!str_cmp(grip, "onehand") && hands_needed(ch, obj) != 1)
+      {
+        send_to_char(ch, "That quarterstaff is too large for you to wield in one hand.\r\n");
+        return;
+      }
+      where = !str_cmp(grip, "twohand") ? WEAR_WIELD_2H : WEAR_WIELD_1;
+      perform_wield_at(ch, obj, TRUE, where);
+    }
+    else
+      perform_wield(ch, obj, TRUE);
   }
 }
 

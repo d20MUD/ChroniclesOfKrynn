@@ -45,8 +45,10 @@ New varieties are available through harvesting, the artisan shop and exchange.
 
 ## Materials exchanger
 
-Assign **Materials Exchanger** to an NPC using the mobile editor's special
-procedure menu. It is saved under that name and available through
+Assign **Materials Exchanger** through `Z) Spec Procedure` in `redit`, `medit`
+or `oedit`. It supports room exchange services, NPC exchangers and exchange
+objects on the ground, carried or equipped. Objects must be visible to the
+player. It is saved under that name and available through
 `find_spec_func_by_name("Materials Exchanger")` for coded assignments. No NPC
 vnum or live world placement is hardcoded by this change.
 
@@ -69,8 +71,8 @@ Different families, different grades, identical source/target materials,
 insufficient stock, invalid quantities and destination overflow are rejected.
 Materials with different properties are not interchangeable solely because
 they share a grade: mithril cannot be exchanged for adamantite, for example.
-The player and exchanger must be out of combat, and the exchanger must be awake
-and visible to the player.
+The player must be out of combat. NPC exchangers must also be out of combat,
+awake and visible to the player.
 
 ## Deployment and verification
 

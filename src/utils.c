@@ -12977,6 +12977,9 @@ bool is_weapon_wielded_two_handed(struct obj_data *obj, struct char_data *ch)
   if (GET_OBJ_TYPE(obj) != ITEM_WEAPON)
     return false;
 
+  if (GET_WEAPON_TYPE(obj) == WEAPON_TYPE_QUARTERSTAFF)
+    return GET_EQ(ch, WEAR_WIELD_2H) == obj;
+
   wsize = GET_OBJ_SIZE(obj);
   csize = GET_SIZE(ch);
 

@@ -28,7 +28,7 @@ Climate changes mining descriptions, not which metal or stone is mined.
 
 MATERIALS EXCHANGER
 
-At an NPC offering material exchange:
+At a room, NPC or visible object offering material exchange:
   exchange list
   exchange 10 maple for birch
   exchange 5 live oak wood for mahogany wood
@@ -41,8 +41,8 @@ Full names or unique abbreviations work; multi-word names may be quoted.
 
 Equivalent timber varieties in grades 1-3 and grade-1 fibers qualify.
 Unrelated materials cannot be exchanged just because their grades match.
-You cannot exchange while you or the NPC are fighting. The exchanger
-must be awake and visible. Use exchange list to see available varieties
+You cannot exchange while fighting. An NPC exchanger must also be out
+of combat, awake and visible. Use exchange list to see available varieties
 and how many you own.
 
 See also: MATERIALS, HARVEST, SURVEY, ARTISANSHOP.

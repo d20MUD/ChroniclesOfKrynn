@@ -2309,6 +2309,7 @@ struct obj_data *unequip_char(struct char_data *ch, int pos)
 {
   int j;
   struct obj_data *obj;
+  bool was_two_handed;
 
   if ((pos < 0 || pos >= NUM_WEARS) || GET_EQ(ch, pos) == NULL)
   {
@@ -2317,6 +2318,7 @@ struct obj_data *unequip_char(struct char_data *ch, int pos)
   }
 
   obj = GET_EQ(ch, pos);
+  was_two_handed = is_weapon_wielded_two_handed(obj, ch);
   obj->worn_by = NULL;
   obj->worn_on = -1;
 
@@ -2351,8 +2353,8 @@ struct obj_data *unequip_char(struct char_data *ch, int pos)
                                                               obj->affected[j].bonus_type, pos, -1))
     {
       affect_modify_ar(ch, obj->affected[j].location,
-                       is_weapon_wielded_two_handed(obj, ch) ? obj->affected[j].modifier * 2
-                                                             : obj->affected[j].modifier,
+                       was_two_handed ? obj->affected[j].modifier * 2
+                                      : obj->affected[j].modifier,
                        GET_OBJ_AFFECT(obj), FALSE);
       aff_apply_modify(
           ch, obj->affected[j].location,

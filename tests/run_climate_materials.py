@@ -59,6 +59,8 @@ void PERF_prof_sect_exit(struct PERF_prof_sect *ptr) {}
 #define CMD_IS(name) (!strcmp(command,name))
 #undef CAN_SEE
 #define CAN_SEE(ch,mob) visible
+#undef CAN_SEE_OBJ
+#define CAN_SEE_OBJ(ch,obj) visible
 int MAX(int a,int b) { return a>b?a:b; }
 int MIN(int a,int b) { return a<b?a:b; }
 int dice(int count,int sides) { return 1 + (die % sides); }
@@ -172,12 +174,22 @@ int main(void) {
   assert(GET_CRAFT_MAT((&ch),CRAFT_MAT_MAPLE_WOOD)==20 && saves==3);
   FIGHTING(&ch)=&mob; exchange(&ch,"1 maple for cedar"); assert(saves==3); FIGHTING(&ch)=NULL;
   exchange(&ch,"list"); assert(strstr(output,"birch wood") && strstr(output,"Grade 2") && saves==3);
-  SET_BIT_AR(MOB_FLAGS(&mob),MOB_ISNPC); GET_POS(&mob)=POS_STANDING;
+  SET_BIT_AR(MOB_FLAGS(&mob),MOB_ISNPC); GET_POS(&mob)=POS_STANDING; room.people=&mob;
   assert(materials_exchanger(&ch,&mob,1,"1 maple for cedar")==1 && saves==4);
   command="look"; assert(!materials_exchanger(&ch,&mob,1,"")); command="exchange";
   assert(!materials_exchanger(&ch,&mob,0,""));
   visible=0; assert(!materials_exchanger(&ch,&mob,1,"")); visible=1;
   GET_POS(&mob)=POS_SLEEPING; assert(!materials_exchanger(&ch,&mob,1,""));
+  assert(materials_exchanger(&ch,&room,1,"1 maple for cedar")==1 && saves==5);
+  struct obj_data exchanger_object={0}, unrelated={0};
+  room.contents=&exchanger_object;
+  assert(materials_exchanger(&ch,&exchanger_object,1,"1 maple for cedar")==1 && saves==6);
+  room.contents=NULL; ch.carrying=&exchanger_object;
+  assert(materials_exchanger(&ch,&exchanger_object,1,"1 maple for cedar")==1 && saves==7);
+  ch.carrying=NULL; GET_EQ(&ch,0)=&exchanger_object;
+  assert(materials_exchanger(&ch,&exchanger_object,1,"1 maple for cedar")==1 && saves==8);
+  visible=0; assert(!materials_exchanger(&ch,&exchanger_object,1,"")); visible=1;
+  assert(!materials_exchanger(&ch,&unrelated,1,""));
   return 0;
 }
 '''
