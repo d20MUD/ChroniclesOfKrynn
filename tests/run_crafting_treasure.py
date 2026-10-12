@@ -12,7 +12,7 @@ def function(source, signature):
     a=source.index(signature+'\n{'); return source[a:source.index('\n}',a)+2]
 a=treasure.index('#define TREASURE_MATERIAL_CHANCE')
 b=treasure.index('/* this function determines whether',a)
-code=treasure[a:b]+function(craft,'int material_grade(int material)')+function(treasure,'void determine_treasure(struct char_data *ch, struct char_data *mob)')
+code=treasure[a:b]+function(craft,'int canonical_craft_material(int material)')+function(craft,'int material_grade(int material)')+function(treasure,'void determine_treasure(struct char_data *ch, struct char_data *mob)')
 headers='\n'.join('#include "'+name+'"' for name in
                   ['conf.h','sysdep.h','structs.h','utils.h','comm.h','db.h','constants.h','treasure.h','crafting_new.h','account.h'])
 stubs=r'''
@@ -27,7 +27,9 @@ static int numbers[8], used, length, saves, messages, treasure_roll=100, magic_i
 int MIN(int a,int b) { return a<b?a:b; }
 int MAX(int a,int b) { return a>b?a:b; }
 int rand_number(int low,int high) {
-  assert(used<length); int result=numbers[used++]; assert(result>=low && result<=high); return result;
+  assert(used<length); int result=numbers[used++];
+  if(result<low || result>high) fprintf(stderr,"Random draw %d/%d: %d outside %d..%d\n",used,length,result,low,high);
+  assert(result>=low && result<=high); return result;
 }
 static void sequence(int a,int b,int c,int d,int e,int count) {
   numbers[0]=a; numbers[1]=b; numbers[2]=c; numbers[3]=d; numbers[4]=e; used=0; length=count;
@@ -67,7 +69,7 @@ int main(void) {
       assert(levels[level]>=30 || grade<5);
       /* Every eligible material in a selected grade can actually be returned. */
       int index=0;
-      for(int candidate=1;candidate<NUM_CRAFT_MATS;candidate++) if(material_grade(candidate)==grade) {
+      for(int candidate=1;candidate<NUM_CRAFT_MATS;candidate++) if(canonical_craft_material(candidate)==candidate && material_grade(candidate)==grade) {
         sequence(roll,index++,0,0,0,2);
         assert(random_treasure_material(levels[level])==candidate);
       }
@@ -78,7 +80,7 @@ int main(void) {
   GET_LEVEL(&mob)=30;
   sequence(21,11,0,0,0,2); award_random_crafting_treasure(&ch,&mob);
   assert(!saves && !messages && used==2);
-  sequence(20,2,0,10,1,5); award_random_crafting_treasure(&ch,&mob);
+  sequence(10,2,0,10,1,5); award_random_crafting_treasure(&ch,&mob);
   assert(GET_CRAFT_MAT((&ch),CRAFT_MAT_DRAGONMETAL)==1 && GET_CRAFT_MOTES((&ch),1)==1);
   assert(saves==1 && messages==2 && used==5);
   GET_LEVEL(&mob)=29;
@@ -98,7 +100,7 @@ int main(void) {
   /* No resources can drop without first passing the ordinary treasure roll. */
   memset(&special,0,sizeof(special)); saves=messages=0;
   determine_treasure(&ch,&mob); assert(!used && !saves);
-  treasure_roll=5; sequence(20,2,0,10,8,5);
+  treasure_roll=5; sequence(10,2,0,10,8,5);
   determine_treasure(&ch,&mob);
   assert(GET_CRAFT_MAT((&ch),CRAFT_MAT_DRAGONMETAL)==1 && GET_CRAFT_MOTES((&ch),8)==1 && saves==1);
   assert(GET_GOLD(&ch)>0 && magic_items==0 && used==5);

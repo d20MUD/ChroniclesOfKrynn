@@ -5006,14 +5006,19 @@ static void load_craft_mats_onhand(FILE *fl, struct char_data *ch)
 
   int i = 0;
 
-  do
+  /* Old files end after the original 40 materials. New IDs append without
+   * shifting those balances; consume unknown future IDs without overrunning.
+   */
+  while (get_line(fl, line))
   {
-    get_line(fl, line);
-    sscanf(line, "%d", &num);
-    if (num != -1)
-      GET_CRAFT_MAT(ch, i) = num;
+    if (sscanf(line, "%d", &num) != 1)
+      continue;
+    if (num == -1)
+      break;
+    if (i < NUM_CRAFT_MATS)
+      GET_CRAFT_MAT(ch, i) = MAX(0, num);
     i++;
-  } while (num != -1);
+  }
 }
 
 static void load_favored_enemy(FILE *fl, struct char_data *ch)

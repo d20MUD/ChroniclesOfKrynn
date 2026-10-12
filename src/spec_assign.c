@@ -1200,6 +1200,7 @@ static const struct spec_func_data spec_func_list[] = {
     {"Hunts Master", huntsmaster, ""},
     {"Identify Mob", identify_mob, ""},
     {"Janitor", janitor, ""},
+    {"Materials Exchanger", materials_exchanger, "Trade equivalent material varieties 1:1"},
     {"New Supply Orders", new_supply_orders, ""},
     {"Pet Object", bought_pet, ""},
     {"Pet Shop", pet_shops, ""},

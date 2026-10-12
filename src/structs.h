@@ -4947,9 +4947,32 @@ enum zone_terrain_type {
 #define MATERIAL_DRAGONBLOOD 59
 
 /** Total number of item mats.*/
-#define NUM_MATERIALS 60
+/* Regional material IDs are append-only. */
+#define MATERIAL_BAMBOO 60
+#define MATERIAL_PINE 61
+#define MATERIAL_TAMARISK 62
+#define MATERIAL_SPRUCE 63
+#define MATERIAL_FIR 64
+#define MATERIAL_WILLOW 65
+#define MATERIAL_BEECH 66
+#define MATERIAL_TEAK 67
+#define MATERIAL_BIRCH 68
+#define MATERIAL_ACACIA 69
+#define MATERIAL_CYPRESS 70
+#define MATERIAL_CEDAR 71
+#define MATERIAL_OAK 72
+#define MATERIAL_LARCH 73
+#define MATERIAL_MESQUITE 74
+#define MATERIAL_EBONY 75
+#define MATERIAL_LIVE_OAK 76
+#define MATERIAL_DRIFTWOOD 77
+#define MATERIAL_DWARF_WILLOW 78
+#define MATERIAL_JUTE 79
+#define MATERIAL_AGAVE 80
 
-#define NUM_CRAFT_MATS 40
+#define NUM_MATERIALS 81
+
+#define NUM_CRAFT_MATS 61
 #define NUM_CRAFT_MOTES 9
 
 #define NUM_CRAFT_GROUPS 9

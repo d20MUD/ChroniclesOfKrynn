@@ -63,6 +63,7 @@ void weapons_spells(const char *to_ch, const char *to_vict, const char *to_room,
 /** !!MAKE SURE TO ADD TO: spec_func_list!!!  **/
 
 SPECIAL_DECL(mysql_auction_house);
+SPECIAL_DECL(materials_exchanger);
 
 /* a-c */
 SPECIAL_DECL(abyss_randomizer);

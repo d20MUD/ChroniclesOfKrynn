@@ -409,6 +409,158 @@ int reject_contract_by_id(struct char_data *ch, int contract_id);
 void update_supply_slots_for_all_players(void);
 
 
+/* Regional varieties share all crafting mechanics with their original grade. */
+int canonical_craft_material(int material)
+{
+  switch (material)
+  {
+  case CRAFT_MAT_BAMBOO:
+  case CRAFT_MAT_PINE:
+  case CRAFT_MAT_TAMARISK:
+  case CRAFT_MAT_SPRUCE:
+  case CRAFT_MAT_FIR:
+  case CRAFT_MAT_WILLOW:
+  case CRAFT_MAT_BEECH:
+  case CRAFT_MAT_DRIFTWOOD:
+  case CRAFT_MAT_DWARF_WILLOW:
+    return CRAFT_MAT_ASH_WOOD;
+  case CRAFT_MAT_TEAK:
+  case CRAFT_MAT_BIRCH:
+  case CRAFT_MAT_ACACIA:
+  case CRAFT_MAT_CYPRESS:
+  case CRAFT_MAT_CEDAR:
+    return CRAFT_MAT_MAPLE_WOOD;
+  case CRAFT_MAT_OAK:
+  case CRAFT_MAT_LARCH:
+  case CRAFT_MAT_MESQUITE:
+  case CRAFT_MAT_EBONY:
+  case CRAFT_MAT_LIVE_OAK:
+    return CRAFT_MAT_MAHAGONY_WOOD;
+  case CRAFT_MAT_JUTE:
+  case CRAFT_MAT_AGAVE:
+    return CRAFT_MAT_HEMP;
+  default:
+    return material;
+  }
+}
+
+/* Climate chooses a species within a grade, never a higher-quality material.
+ * Room sectors still choose the resource group; zone terrain narrows timber.
+ */
+int climate_material_variety(int material, int climate, int terrain)
+{
+  static const int timber[NUM_ZONE_CLIMATES][3][4] = {
+    {{CRAFT_MAT_ASH_WOOD}, {CRAFT_MAT_MAPLE_WOOD}, {CRAFT_MAT_MAHAGONY_WOOD}},
+    {{CRAFT_MAT_DRIFTWOOD, CRAFT_MAT_DWARF_WILLOW}, {CRAFT_MAT_BIRCH}, {CRAFT_MAT_LARCH}},
+    {{CRAFT_MAT_SPRUCE, CRAFT_MAT_PINE}, {CRAFT_MAT_BIRCH}, {CRAFT_MAT_LARCH}},
+    {{CRAFT_MAT_ASH_WOOD, CRAFT_MAT_BEECH, CRAFT_MAT_WILLOW}, {CRAFT_MAT_MAPLE_WOOD}, {CRAFT_MAT_OAK}},
+    {{CRAFT_MAT_PINE, CRAFT_MAT_WILLOW}, {CRAFT_MAT_CYPRESS, CRAFT_MAT_CEDAR}, {CRAFT_MAT_LIVE_OAK}},
+    {{CRAFT_MAT_BAMBOO}, {CRAFT_MAT_TEAK}, {CRAFT_MAT_MAHAGONY_WOOD, CRAFT_MAT_EBONY}},
+    {{CRAFT_MAT_TAMARISK}, {CRAFT_MAT_ACACIA}, {CRAFT_MAT_MESQUITE}},
+    {{CRAFT_MAT_FIR, CRAFT_MAT_PINE}, {CRAFT_MAT_BIRCH, CRAFT_MAT_CEDAR}, {CRAFT_MAT_LARCH}}
+  };
+  int grade, count = 0;
+  if (material <= CRAFT_MAT_NONE || material >= NUM_CRAFT_MATS)
+    return CRAFT_MAT_NONE;
+  if (craft_group_by_material(material) == CRAFT_GROUP_WOOD && material != CRAFT_MAT_DRAGONBONE)
+  {
+    if (terrain == ZONE_TERRAIN_UNDERGROUND || terrain == ZONE_TERRAIN_OCEAN ||
+        terrain == ZONE_TERRAIN_URBAN)
+      return CRAFT_MAT_NONE;
+    if (climate <= ZONE_CLIMATE_UNSPECIFIED || climate >= NUM_ZONE_CLIMATES)
+      return material;
+    grade = material_grade(material);
+    if (grade < 1 || grade > 3)
+      return material; /* Valenwood and ironwood retain their existing rare grades. */
+    if (terrain == ZONE_TERRAIN_SWAMP)
+    {
+      if (grade == 1 && climate == ZONE_CLIMATE_TEMPERATE)
+        return CRAFT_MAT_WILLOW;
+      if (grade == 2 && (climate == ZONE_CLIMATE_SUBTROPICAL || climate == ZONE_CLIMATE_TROPICAL))
+        return CRAFT_MAT_CYPRESS;
+    }
+    while (count < 4 && timber[climate][grade - 1][count] != CRAFT_MAT_NONE)
+      count++;
+    return timber[climate][grade - 1][dice(1, count) - 1];
+  }
+  if (canonical_craft_material(material) == CRAFT_MAT_HEMP)
+  {
+    if (climate == ZONE_CLIMATE_TROPICAL)
+      return CRAFT_MAT_JUTE;
+    if (climate == ZONE_CLIMATE_ARID)
+      return CRAFT_MAT_AGAVE;
+  }
+  return material;
+}
+
+const char *harvest_node_name(room_rnum room)
+{
+  static char description[MAX_STRING_LENGTH];
+  static const char *game[NUM_ZONE_CLIMATES][4] = {
+    {NULL, NULL, NULL, NULL},
+    {"arctic hare", "seal", "reindeer", "polar bear"},
+    {"hare", "fox", "elk", "moose"},
+    {"rabbit", "fox", "deer", "boar"},
+    {"rabbit", "wild goat", "deer", "boar"},
+    {"jungle fowl", "monkey", "antelope", "wild pig"},
+    {"desert hare", "desert fox", "gazelle", "wild goat"},
+    {"marmot", "mountain sheep", "mountain goat", "ibex"}
+  };
+  const char *prefix = NULL;
+  int material, climate, grade;
+  if (room == NOWHERE || room > top_of_world)
+    return "an unknown resource";
+  material = world[room].harvest_material;
+  if (material <= CRAFT_MAT_NONE || material >= NUM_CRAFT_MATS)
+    return "an unknown resource";
+  climate = zone_table[world[room].zone].climate;
+  if (climate <= ZONE_CLIMATE_UNSPECIFIED || climate >= NUM_ZONE_CLIMATES)
+    return crafting_material_nodes[material];
+  grade = material_grade(material);
+  if (material >= CRAFT_MAT_LOW_GRADE_HIDE && material <= CRAFT_MAT_PRISTINE_GRADE_HIDE)
+    snprintf(description, sizeof(description), "the tracks of %s (%s)",
+             game[climate][grade - 1], crafting_materials[material]);
+  else if (climate == ZONE_CLIMATE_POLAR && craft_group_by_material(material) == CRAFT_GROUP_WOOD &&
+           grade >= 1 && grade <= 3 && material != CRAFT_MAT_DWARF_WILLOW && material != CRAFT_MAT_DRIFTWOOD)
+    snprintf(description, sizeof(description), "a cache of %s driftwood", crafting_material_descriptions[material]);
+  else
+  {
+    if (harvesting_skill_by_material(material) == ABILITY_HARVEST_MINING)
+    {
+      if (climate == ZONE_CLIMATE_POLAR || climate == ZONE_CLIMATE_SUBARCTIC)
+        prefix = "an ice-rimed";
+      else if (climate == ZONE_CLIMATE_ARID)
+        prefix = "a sand-scoured";
+      else if (climate == ZONE_CLIMATE_TROPICAL)
+        prefix = "a vine-covered";
+      else if (climate == ZONE_CLIMATE_ALPINE)
+        prefix = "a scree-fringed";
+    }
+    if (!prefix)
+      return crafting_material_nodes[material];
+    snprintf(description, sizeof(description), "%s %s", prefix,
+             !strncmp(crafting_material_nodes[material], "a ", 2)
+                 ? crafting_material_nodes[material] + 2 : crafting_material_nodes[material]);
+  }
+  return description;
+}
+
+const char *harvest_activity_name(room_rnum room)
+{
+  static char activity[MAX_STRING_LENGTH];
+  const char *verb = "harvesting";
+  if (room != NOWHERE && room <= top_of_world)
+    switch (harvesting_skill_by_material(world[room].harvest_material))
+    {
+    case ABILITY_HARVEST_MINING: verb = "mining"; break;
+    case ABILITY_HARVEST_FORESTRY: verb = "logging"; break;
+    case ABILITY_HARVEST_HUNTING: verb = "hunting"; break;
+    case ABILITY_HARVEST_GATHERING: verb = "gathering"; break;
+    }
+  snprintf(activity, sizeof(activity), "%s %s", verb, harvest_node_name(room));
+  return activity;
+}
+
 void assign_harvest_materials_to_word(void)
 {
   ssize_t cnt = 0;
@@ -467,7 +619,8 @@ int determine_harvest_material_for_room(room_rnum room)
 
   int material = determine_material_type_by_group_and_grade(group, grade);
 
-  return material;
+  return climate_material_variety(material, zone_table[world[room].zone].climate,
+                                  zone_table[world[room].zone].terrain);
 }
 
 int determine_material_type_by_group_and_grade(int group, int grade)
@@ -555,6 +708,8 @@ int determine_material_type_by_group_and_grade(int group, int grade)
 
 int craft_material_level_adjustment(int material)
 {
+  material = canonical_craft_material(material);
+
   switch (material)
   {
   case CRAFT_MAT_TIN:
@@ -611,6 +766,8 @@ int craft_material_level_adjustment(int material)
 
 int harvesting_skill_by_material(int material)
 {
+  material = canonical_craft_material(material);
+
   switch (material)
   {
   case CRAFT_MAT_TIN:
@@ -904,6 +1061,8 @@ void wipe_room_harvest_materials(room_rnum room)
 
 int material_grade(int material)
 {
+  material = canonical_craft_material(material);
+
   switch (material)
   {
   case CRAFT_MAT_COPPER:
@@ -956,6 +1115,8 @@ int material_grade(int material)
 
 int craft_group_by_material(int material)
 {
+  material = canonical_craft_material(material);
+
   switch (material)
   {
   case CRAFT_MAT_TIN:
@@ -1126,7 +1287,7 @@ void survey_complete(struct char_data *ch)
       send_to_char(ch, "Players will see:\r\n");
     }
     send_to_char(ch, "You find %s here.\r\n",
-                 crafting_material_nodes[world[IN_ROOM(ch)].harvest_material]);
+                 harvest_node_name(IN_ROOM(ch)));
   }
   else
   {
@@ -4110,6 +4271,32 @@ int obj_material_to_craft_material(int material)
 {
   switch (material)
   {
+  case MATERIAL_BAMBOO: return CRAFT_MAT_BAMBOO;
+  case MATERIAL_PINE: return CRAFT_MAT_PINE;
+  case MATERIAL_TAMARISK: return CRAFT_MAT_TAMARISK;
+  case MATERIAL_SPRUCE: return CRAFT_MAT_SPRUCE;
+  case MATERIAL_FIR: return CRAFT_MAT_FIR;
+  case MATERIAL_WILLOW: return CRAFT_MAT_WILLOW;
+  case MATERIAL_BEECH: return CRAFT_MAT_BEECH;
+  case MATERIAL_TEAK: return CRAFT_MAT_TEAK;
+  case MATERIAL_BIRCH: return CRAFT_MAT_BIRCH;
+  case MATERIAL_ACACIA: return CRAFT_MAT_ACACIA;
+  case MATERIAL_CYPRESS: return CRAFT_MAT_CYPRESS;
+  case MATERIAL_CEDAR: return CRAFT_MAT_CEDAR;
+  case MATERIAL_OAK: return CRAFT_MAT_OAK;
+  case MATERIAL_LARCH: return CRAFT_MAT_LARCH;
+  case MATERIAL_MESQUITE: return CRAFT_MAT_MESQUITE;
+  case MATERIAL_EBONY: return CRAFT_MAT_EBONY;
+  case MATERIAL_LIVE_OAK: return CRAFT_MAT_LIVE_OAK;
+  case MATERIAL_DRIFTWOOD: return CRAFT_MAT_DRIFTWOOD;
+  case MATERIAL_DWARF_WILLOW: return CRAFT_MAT_DWARF_WILLOW;
+  case MATERIAL_JUTE: return CRAFT_MAT_JUTE;
+  case MATERIAL_AGAVE: return CRAFT_MAT_AGAVE;
+  default: break;
+  }
+
+  switch (material)
+  {
   case MATERIAL_COPPER:
     return CRAFT_MAT_COPPER;
   case MATERIAL_TIN:
@@ -4184,6 +4371,33 @@ int obj_material_to_craft_material(int material)
 }
 int craft_material_to_obj_material(int craftmat)
 {
+  /* Distinct object IDs preserve varieties through bundles and finished items. */
+  switch (craftmat)
+  {
+  case CRAFT_MAT_BAMBOO: return MATERIAL_BAMBOO;
+  case CRAFT_MAT_PINE: return MATERIAL_PINE;
+  case CRAFT_MAT_TAMARISK: return MATERIAL_TAMARISK;
+  case CRAFT_MAT_SPRUCE: return MATERIAL_SPRUCE;
+  case CRAFT_MAT_FIR: return MATERIAL_FIR;
+  case CRAFT_MAT_WILLOW: return MATERIAL_WILLOW;
+  case CRAFT_MAT_BEECH: return MATERIAL_BEECH;
+  case CRAFT_MAT_TEAK: return MATERIAL_TEAK;
+  case CRAFT_MAT_BIRCH: return MATERIAL_BIRCH;
+  case CRAFT_MAT_ACACIA: return MATERIAL_ACACIA;
+  case CRAFT_MAT_CYPRESS: return MATERIAL_CYPRESS;
+  case CRAFT_MAT_CEDAR: return MATERIAL_CEDAR;
+  case CRAFT_MAT_OAK: return MATERIAL_OAK;
+  case CRAFT_MAT_LARCH: return MATERIAL_LARCH;
+  case CRAFT_MAT_MESQUITE: return MATERIAL_MESQUITE;
+  case CRAFT_MAT_EBONY: return MATERIAL_EBONY;
+  case CRAFT_MAT_LIVE_OAK: return MATERIAL_LIVE_OAK;
+  case CRAFT_MAT_DRIFTWOOD: return MATERIAL_DRIFTWOOD;
+  case CRAFT_MAT_DWARF_WILLOW: return MATERIAL_DWARF_WILLOW;
+  case CRAFT_MAT_JUTE: return MATERIAL_JUTE;
+  case CRAFT_MAT_AGAVE: return MATERIAL_AGAVE;
+  default: break;
+  }
+
   switch (craftmat)
   {
   case CRAFT_MAT_COPPER:
@@ -5833,7 +6047,7 @@ void harvest_complete(struct char_data *ch)
   if ((20 + skill_roll + prof_bonus) < dc)
   {
     send_to_char(ch, "You don't have the skill to harvest %s.\r\n",
-                 crafting_material_nodes[world[IN_ROOM(ch)].harvest_material]);
+                 harvest_node_name(IN_ROOM(ch)));
     return;
   }
 
@@ -5852,7 +6066,7 @@ void harvest_complete(struct char_data *ch)
     if (world[IN_ROOM(ch)].harvest_material_amount <= 0)
     {
       send_to_char(ch, "%s has been depleted.\r\n",
-                   crafting_material_nodes[world[IN_ROOM(ch)].harvest_material]);
+                   harvest_node_name(IN_ROOM(ch)));
       world[IN_ROOM(ch)].harvest_material = CRAFT_MAT_NONE;
       world[IN_ROOM(ch)].harvest_material_amount = 0;
     }
@@ -5914,7 +6128,7 @@ void harvest_complete(struct char_data *ch)
                    "%d %s from %s.\r\n",
                    roll, base_skill, bonus_text, roll + skill_roll + prof_bonus, dc, amount,
                    crafting_materials[world[IN_ROOM(ch)].harvest_material],
-                   crafting_material_nodes[world[IN_ROOM(ch)].harvest_material]);
+                   harvest_node_name(IN_ROOM(ch)));
       gain_craft_exp(ch, HARVEST_BASE_EXP + ((HARVEST_BASE_EXP / 2) * harvest_level / 2), skill, TRUE);
     }
 
@@ -5941,7 +6155,7 @@ void harvest_complete(struct char_data *ch)
     if (world[IN_ROOM(ch)].harvest_material_amount <= 0)
     {
       send_to_char(ch, "%s has been depleted.\r\n",
-                   crafting_material_nodes[world[IN_ROOM(ch)].harvest_material]);
+                   harvest_node_name(IN_ROOM(ch)));
       world[IN_ROOM(ch)].harvest_material = CRAFT_MAT_NONE;
       world[IN_ROOM(ch)].harvest_material_amount = 0;
     }
@@ -6086,7 +6300,7 @@ void newcraft_harvest(struct char_data *ch, const char *argument)
   GET_CRAFT(ch).craft_duration = seconds;
 
   send_to_char(ch, "You begin %s. Survey rooms remaining: %d\r\n", 
-               harvesting_messages[world[IN_ROOM(ch)].harvest_material],
+               harvest_activity_name(IN_ROOM(ch)),
                GET_SURVEY_ROOMS(ch));
   act("$n starts harvesting.", FALSE, ch, 0, 0, TO_ROOM);
 }
@@ -6404,7 +6618,7 @@ void show_harvesting_tool_needed(struct char_data *ch)
   if (mat_type == CRAFT_MAT_COAL)
   {
     send_to_char(ch, "You need a pickaxe equipped to harvest %s.\r\n",
-                 crafting_material_nodes[mat_type]);
+                 harvest_node_name(IN_ROOM(ch)));
     return;
   }
 
@@ -6418,21 +6632,21 @@ void show_harvesting_tool_needed(struct char_data *ch)
   {
   case CRAFT_GROUP_CLOTH:
     send_to_char(ch, "You need a harvesting sickle equipped to harvest %s.\r\n",
-                 crafting_material_nodes[mat_type]);
+                 harvest_node_name(IN_ROOM(ch)));
     break;
   case CRAFT_GROUP_HARD_METALS:
   case CRAFT_GROUP_SOFT_METALS:
   case CRAFT_GROUP_STONE:
     send_to_char(ch, "You need a pickaxe equipped to harvest %s.\r\n",
-                 crafting_material_nodes[mat_type]);
+                 harvest_node_name(IN_ROOM(ch)));
     break;
   case CRAFT_GROUP_HIDES:
     send_to_char(ch, "You need a skinning knife equipped to harvest %s.\r\n",
-                 crafting_material_nodes[mat_type]);
+                 harvest_node_name(IN_ROOM(ch)));
     break;
   case CRAFT_GROUP_WOOD:
     send_to_char(ch, "You need a wood axe equipped to harvest %s.\r\n",
-                 crafting_material_nodes[mat_type]);
+                 harvest_node_name(IN_ROOM(ch)));
     break;
     default:
     send_to_char(ch, "There was an error determining the required harvesting tool. Please inform "
@@ -7363,7 +7577,7 @@ void craft_update(void)
         case SCMD_NEWCRAFT_HARVEST:
           if (GET_CRAFT(ch).craft_duration && !PRF_FLAGGED(ch, PRF_NO_CRAFT_PROGRESS))
           {
-            if (crafting_material_nodes[world[IN_ROOM(ch)].harvest_material_amount] <= 0)
+            if (world[IN_ROOM(ch)].harvest_material_amount <= 0)
             {
               send_to_char(ch, "The resource is depleted.\r\n");
               GET_CRAFT(ch).crafting_method = 0;
@@ -7372,7 +7586,7 @@ void craft_update(void)
             else
             {
               snprintf(buf, sizeof(buf), "%s",
-                       harvesting_messages[world[IN_ROOM(ch)].harvest_material]);
+                       harvest_activity_name(IN_ROOM(ch)));
               CAP(buf);
               send_to_char(ch, "%s. ", buf);
               for (i = 0; i < GET_CRAFT(ch).craft_duration; i++)
@@ -7486,7 +7700,7 @@ void craft_update(void)
             }
             break;
           case SCMD_NEWCRAFT_HARVEST:
-            if (crafting_material_nodes[world[IN_ROOM(ch)].harvest_material_amount] <= 0)
+            if (world[IN_ROOM(ch)].harvest_material_amount <= 0)
             {
               send_to_char(ch, "The resource is depleted.\r\n");
               GET_CRAFT(ch).crafting_method = 0;
@@ -7495,7 +7709,7 @@ void craft_update(void)
             else if (GET_CRAFT(ch).craft_duration % 2 == 0)
             {
               snprintf(buf, sizeof(buf), "%s",
-                       harvesting_messages[world[IN_ROOM(ch)].harvest_material]);
+                       harvest_activity_name(IN_ROOM(ch)));
               CAP(buf);
               send_to_char(ch, "%s. ", buf);
               for (i = 0; i < GET_CRAFT(ch).craft_duration; i++)
@@ -13812,6 +14026,11 @@ bool can_repair_golem(struct char_data *ch, struct char_data *golem, int *materi
 
 int material_type_to_crafting_skill(int material)
 {
+  if (material >= MATERIAL_BAMBOO && material <= MATERIAL_DWARF_WILLOW)
+    return ABILITY_CRAFT_WOODWORKING;
+  if (material == MATERIAL_JUTE || material == MATERIAL_AGAVE)
+    return ABILITY_CRAFT_TAILORING;
+
   switch (material)
   {
   case MATERIAL_COTTON:
@@ -14655,5 +14874,129 @@ SPECIAL(artisan_shop)
   send_to_char(ch, "Usage:\r\n");
   send_to_char(ch, "  artisan shop                     - View materials and motes for sale\r\n");
   send_to_char(ch, "  artisan buy <qty> <name>        - Purchase any material or mote by name\r\n");
+  return 1;
+}
+
+/* Only equivalent varieties qualify, not arbitrary materials sharing a grade. */
+static bool exchangeable_material(int material)
+{
+  int base = canonical_craft_material(material);
+  return base == CRAFT_MAT_ASH_WOOD || base == CRAFT_MAT_MAPLE_WOOD ||
+         base == CRAFT_MAT_MAHAGONY_WOOD || base == CRAFT_MAT_HEMP;
+}
+
+static int exchange_material_by_name(char *name)
+{
+  int i, match = CRAFT_MAT_NONE;
+  char *end;
+  while (isspace((unsigned char)*name)) name++;
+  end = name + strlen(name);
+  while (end > name && isspace((unsigned char)end[-1])) *--end = '\0';
+  if (end > name + 1 && *name == '"' && end[-1] == '"')
+  {
+    name++;
+    *--end = '\0';
+  }
+  if (!*name)
+    return CRAFT_MAT_NONE;
+  /* Accept the old spelling as well as the corrected display name. */
+  if (!str_cmp(name, "mahagony") || !str_cmp(name, "mahagony wood"))
+    return CRAFT_MAT_MAHAGONY_WOOD;
+  for (i = 1; i < NUM_CRAFT_MATS; i++)
+    if (!str_cmp(name, crafting_materials[i]))
+      return i;
+  for (i = 1; i < NUM_CRAFT_MATS; i++)
+    if (is_abbrev(name, crafting_materials[i]))
+    {
+      if (match != CRAFT_MAT_NONE)
+        return CRAFT_MAT_NONE; /* Ambiguous abbreviations never choose silently. */
+      match = i;
+    }
+  return match;
+}
+
+void exchange_material_varieties(struct char_data *ch, const char *argument)
+{
+  char input[MAX_INPUT_LENGTH], *quantity_end, *source, *target = NULL, *p;
+  long quantity;
+  int from, to, i;
+  if (!ch || IS_NPC(ch) || !ch->player_specials)
+    return;
+  if (FIGHTING(ch))
+  {
+    send_to_char(ch, "You cannot exchange materials while fighting.\r\n");
+    return;
+  }
+  snprintf(input, sizeof(input), "%s", argument);
+  p = input;
+  while (isspace((unsigned char)*p)) p++;
+  source = p + strlen(p);
+  while (source > p && isspace((unsigned char)source[-1])) *--source = '\0';
+  if (!*p || !str_cmp(p, "list"))
+  {
+    send_to_char(ch, "Material varieties exchange 1:1 within the same family and grade.\r\n"
+                     "Usage: exchange <quantity> <material> for <material>\r\n"
+                     "Example: exchange 10 maple for birch\r\n\r\n");
+    for (i = 1; i < NUM_CRAFT_MATS; i++)
+      if (exchangeable_material(i))
+        send_to_char(ch, "Grade %d %-6s %-20s (owned: %d)\r\n", material_grade(i),
+                     craft_group_by_material(i) == CRAFT_GROUP_WOOD ? "Timber" : "Fiber",
+                     crafting_materials[i], GET_CRAFT_MAT(ch, i));
+    return;
+  }
+  quantity = strtol(p, &quantity_end, 10);
+  if (quantity_end == p || !isspace((unsigned char)*quantity_end) || quantity <= 0 || quantity > INT_MAX)
+  {
+    send_to_char(ch, "Usage: exchange <positive quantity> <material> for <material>\r\n");
+    return;
+  }
+  source = quantity_end;
+  while (isspace((unsigned char)*source)) source++;
+  for (p = source; *p; p++)
+    if (!strncasecmp(p, " for ", 5))
+    {
+      *p = '\0';
+      target = p + 5;
+      break;
+    }
+  if (!target || (from = exchange_material_by_name(source)) == CRAFT_MAT_NONE ||
+      (to = exchange_material_by_name(target)) == CRAFT_MAT_NONE)
+  {
+    send_to_char(ch, "Specify two unambiguous material names: exchange 10 maple for birch.\r\n");
+    return;
+  }
+  if (from == to || !exchangeable_material(from) || !exchangeable_material(to) ||
+      canonical_craft_material(from) != canonical_craft_material(to) ||
+      material_grade(from) != material_grade(to))
+  {
+    send_to_char(ch, "Choose different varieties in the same material family and grade. Use 'exchange list'.\r\n");
+    return;
+  }
+  if (GET_CRAFT_MAT(ch, from) < quantity)
+  {
+    send_to_char(ch, "You only have %d units of %s.\r\n", GET_CRAFT_MAT(ch, from), crafting_materials[from]);
+    return;
+  }
+  if (GET_CRAFT_MAT(ch, to) > INT_MAX - quantity)
+  {
+    send_to_char(ch, "You cannot hold that many units of %s.\r\n", crafting_materials[to]);
+    return;
+  }
+  GET_CRAFT_MAT(ch, from) -= (int)quantity;
+  GET_CRAFT_MAT(ch, to) += (int)quantity;
+  save_char(ch, 0);
+  send_to_char(ch, "You exchange %ld units of %s for %ld units of %s.\r\n",
+               quantity, crafting_materials[from], quantity, crafting_materials[to]);
+}
+
+SPECIAL(materials_exchanger)
+{
+  struct char_data *exchanger = (struct char_data *)me;
+  if (!cmd || !CMD_IS("exchange") || IS_NPC(ch))
+    return 0;
+  if (!exchanger || !IS_NPC(exchanger) || !AWAKE(exchanger) || FIGHTING(exchanger) ||
+      !CAN_SEE(ch, exchanger))
+    return 0;
+  exchange_material_varieties(ch, argument);
   return 1;
 }

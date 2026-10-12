@@ -792,7 +792,8 @@ static int random_treasure_material(int source_level)
     grade = 2;
 
   for (material = 1; material < NUM_CRAFT_MATS; material++)
-    if (material_grade(material) == grade)
+    /* Adding regional varieties must not skew loot toward timber and fiber. */
+    if (canonical_craft_material(material) == material && material_grade(material) == grade)
       candidates[count++] = material;
 
   return count ? candidates[rand_number(0, count - 1)] : CRAFT_MAT_NONE;

@@ -1739,7 +1739,7 @@ void look_at_room(struct char_data *ch, int ignore_brief)
     if (world[IN_ROOM(ch)].harvest_material != 0 && world[IN_ROOM(ch)].harvest_material_amount > 0)
     {
       send_to_char(ch, "\r\n\tyYour surveying has uncovered %s.\r\n\tn",
-                   crafting_material_nodes[world[IN_ROOM(ch)].harvest_material]);
+                   harvest_node_name(IN_ROOM(ch)));
     }
   }
 

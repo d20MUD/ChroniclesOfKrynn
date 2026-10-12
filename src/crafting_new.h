@@ -48,7 +48,30 @@
 #define CRAFT_MAT_CATALYST 38
 #define CRAFT_MAT_CATALYST_FRAGMENT 39
 
-#define NUM_CRAFT_MATS 40
+/* Append-only IDs: existing pfiles and material bundles retain their meaning. */
+#define CRAFT_MAT_BAMBOO 40
+#define CRAFT_MAT_PINE 41
+#define CRAFT_MAT_TAMARISK 42
+#define CRAFT_MAT_SPRUCE 43
+#define CRAFT_MAT_FIR 44
+#define CRAFT_MAT_WILLOW 45
+#define CRAFT_MAT_BEECH 46
+#define CRAFT_MAT_TEAK 47
+#define CRAFT_MAT_BIRCH 48
+#define CRAFT_MAT_ACACIA 49
+#define CRAFT_MAT_CYPRESS 50
+#define CRAFT_MAT_CEDAR 51
+#define CRAFT_MAT_OAK 52
+#define CRAFT_MAT_LARCH 53
+#define CRAFT_MAT_MESQUITE 54
+#define CRAFT_MAT_EBONY 55
+#define CRAFT_MAT_LIVE_OAK 56
+#define CRAFT_MAT_DRIFTWOOD 57
+#define CRAFT_MAT_DWARF_WILLOW 58
+#define CRAFT_MAT_JUTE 59
+#define CRAFT_MAT_AGAVE 60
+
+#define NUM_CRAFT_MATS 61
 // also set in structs.h
 
 #define CRAFT_CATALYST_MAX 5
@@ -385,6 +408,12 @@ ACMD_DECL(do_motes);
 ACMD_DECL(do_craft_score_new);
 ACMD_DECL(do_reforge_new);
 SPECIAL_DECL(artisan_shop);
+SPECIAL_DECL(materials_exchanger);
+int canonical_craft_material(int material);
+int climate_material_variety(int material, int climate, int terrain);
+const char *harvest_node_name(room_rnum room);
+const char *harvest_activity_name(room_rnum room);
+void exchange_material_varieties(struct char_data *ch, const char *argument);
 
 extern int materials_sort_info[NUM_CRAFT_MATS];
 

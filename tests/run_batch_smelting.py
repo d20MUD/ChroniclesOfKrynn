@@ -16,7 +16,7 @@ def function(text,name):
 start=source.index('#define MAX_REFINING_BATCHES')
 end=source.index('void show_refine_noargs',start)
 code=source[start:end]+''.join(function(source,n) for n in
-    ['newcraft_refine','is_refine_ready','craft_refine_complete','material_grade','craft_group_by_material'])
+    ['newcraft_refine','is_refine_ready','craft_refine_complete','canonical_craft_material','material_grade','craft_group_by_material'])
 code+=''.join(function(recipes,n) for n in ['refine_recipe','initialize_refining_recipes','populate_refining_recipes'])
 constants=(root/'src/constants.c').read_text()
 a=constants.index('const char *crafting_materials[] ='); b=constants.index('CHECK_TABLE_SIZE',a)
