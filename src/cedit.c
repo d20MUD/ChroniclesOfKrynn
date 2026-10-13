@@ -1175,7 +1175,7 @@ int save_config(IDXTYPE nowhere)
           "happy_hour_harvesting_exp_bonus = %d\n\n",
           CONFIG_HAPPY_HOUR_HARVESTING_EXP);
   fprintf(fl,
-          "* Percent increase in materials harvested during automated happy hour.\n"
+          "* Percent increase in harvested, butchered and refined material yields during automated happy hour.\n"
           "happy_hour_harvesting_materials_bonus = %d\n\n",
           CONFIG_HAPPY_HOUR_HARVESTING_MATERIALS);
   fprintf(fl,
@@ -1387,11 +1387,11 @@ static void cedit_disp_happy_hour_options(struct descriptor_data *d)
                   "%s3%s) Percent Amount of Additional EXP            : %s%d\r\n"
                   "%s4%s) Percent Amount of Additional Gold           : %s%d\r\n"
                   "%s5%s) Increase Percent Chance of Random Treasure  : %s%d\r\n"
-                  "%s6%s) Percent Increase for Crafting EXP           : %s%d\r\n"
-                  "%s7%s) Percent Increase for Harvesting EXP         : %s%d\r\n"
-                  "%s8%s) Percent Increase for Materials Harvested    : %s%d\r\n"
-                  "%s9%s) Percent Increase for Mote Drop Chance       : %s%d\r\n"
-                  "%sA%s) Percent Increase for Motes Obtained         : %s%d\r\n"
+                  "%s6%s) Crafting Skill EXP Bonus (%%)                : %s%d\r\n"
+                  "%s7%s) Gathering / Butchering Skill EXP Bonus (%%)  : %s%d\r\n"
+                  "%s8%s) Harvest / Butcher / Refine Yield Bonus (%%)  : %s%d\r\n"
+                  "%s9%s) Mote Discovery Chance Bonus (points)        : %s%d\r\n"
+                  "%sA%s) Mote Yield Bonus (%%)                        : %s%d\r\n"
                   "%sQ%s) Exit To The Main Menu\r\n"
                   "Enter your choice : ",
 
@@ -1972,28 +1972,28 @@ void cedit_parse(struct descriptor_data *d, char *arg)
       return;
     case '6':
       write_to_output(
-          d, "Enter the percent increase of crafting exp gained during an automated happy hour. : ");
+          d, "Enter the percent increase of crafting skill XP gained during an automated happy hour. : ");
       OLC_MODE(d) = CEDIT_HAPPY_HOUR_CRAFTING_EXP;
       return;
     case '7':
       write_to_output(
-          d, "Enter the percent increase of harvesting exp gained during an automated happy hour. : ");
+          d, "Enter the percent increase of gathering, surveying and butchering skill XP gained during an automated happy hour. : ");
       OLC_MODE(d) = CEDIT_HAPPY_HOUR_HARVESTING_EXP;
       return;
     case '8':
       write_to_output(
-          d, "Enter the percent increase of materials harvested during an automated happy hour. : ");
+          d, "Enter the percent increase of harvesting, butchering and refining material yields during an automated happy hour. : ");
       OLC_MODE(d) = CEDIT_HAPPY_HOUR_HARVESTING_MATERIALS;
       return;
     case '9':
       write_to_output(
-          d, "Enter the percent increase for mote drop chance during an automated happy hour. : ");
+          d, "Enter the percentage-point increase for mote discovery chance during an automated happy hour. : ");
       OLC_MODE(d) = CEDIT_HAPPY_HOUR_HARVESTING_MOTES_CHANCE;
       return;
     case 'a':
     case 'A':
       write_to_output(
-          d, "Enter the percent increase of motes obtained during an automated happy hour. : ");
+          d, "Enter the percent increase of mote yields, including synergy bonuses during an automated happy hour. : ");
       OLC_MODE(d) = CEDIT_HAPPY_HOUR_HARVESTING_MOTES_OBTAINED;
       return;
     case 'q':
@@ -3236,7 +3236,7 @@ void cedit_parse(struct descriptor_data *d, char *arg)
     if (!*arg)
     {
       write_to_output(d, "That is an invalid choice!\r\n"
-                         "Enter the percent increase of crafting exp gained during an automated happy hour. : ");
+                         "Enter the percent increase of crafting skill XP gained during an automated happy hour. : ");
     }
     else
     {
@@ -3249,7 +3249,7 @@ void cedit_parse(struct descriptor_data *d, char *arg)
     if (!*arg)
     {
       write_to_output(d, "That is an invalid choice!\r\n"
-                         "Enter the percent increase of harvesting exp gained during an automated happy hour. : ");
+                         "Enter the percent increase of gathering, surveying and butchering skill XP gained during an automated happy hour. : ");
     }
     else
     {
@@ -3262,7 +3262,7 @@ void cedit_parse(struct descriptor_data *d, char *arg)
     if (!*arg)
     {
       write_to_output(d, "That is an invalid choice!\r\n"
-                         "Enter the percent increase of materials harvested during an automated happy hour. : ");
+                         "Enter the percent increase of harvesting, butchering and refining material yields during an automated happy hour. : ");
     }
     else
     {
@@ -3275,7 +3275,7 @@ void cedit_parse(struct descriptor_data *d, char *arg)
     if (!*arg)
     {
       write_to_output(d, "That is an invalid choice!\r\n"
-                         "Enter the percent increase for mote drop chance during an automated happy hour. : ");
+                         "Enter the percentage-point increase for mote discovery chance during an automated happy hour. : ");
     }
     else
     {
@@ -3288,7 +3288,7 @@ void cedit_parse(struct descriptor_data *d, char *arg)
     if (!*arg)
     {
       write_to_output(d, "That is an invalid choice!\r\n"
-                         "Enter the percent increase of motes obtained during an automated happy hour. : ");
+                         "Enter the percent increase of mote yields, including synergy bonuses during an automated happy hour. : ");
     }
     else
     {

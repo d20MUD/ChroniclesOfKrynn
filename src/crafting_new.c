@@ -5950,9 +5950,31 @@ void newcraft_survey(struct char_data *ch, const char *argument)
   act("$n starts surveying.", FALSE, ch, 0, 0, TO_ROOM);
 }
 
+/* Whole-unit yield bonuses mirror the existing harvesting minimum of one. */
+static int happy_hour_quantity_bonus(int quantity, int percentage)
+{
+  long long bonus;
+  if (quantity <= 0 || percentage <= 0)
+    return 0;
+  bonus = (long long)quantity * percentage / 100;
+  if (bonus < 1)
+    bonus = 1;
+  if (bonus > INT_MAX - quantity)
+    bonus = INT_MAX - quantity;
+  return (int)bonus;
+}
+
+static int apply_happy_hour_yield(struct char_data *ch, int quantity, int percentage, const char *resource)
+{
+  int bonus = happy_hour_quantity_bonus(quantity, percentage);
+  if (bonus > 0)
+    send_to_char(ch, "\tY*HAPPY HOUR*\tn You gain %d bonus %s!\r\n", bonus, resource);
+  return quantity + bonus;
+}
+
 void craft_refine_complete(struct char_data *ch)
 {
-  int roll, dc, skill, skill_type, num = 0, exp = 0, happy_hour_bonus = 0, batch_quantity = 1;
+  int roll, dc, skill, skill_type, num = 0, exp = 0, batch_quantity = 1;
 
   if (GET_CRAFT(ch).refining_result[0] == 0 || GET_CRAFT(ch).refining_result[1] == 0)
   {
@@ -5993,14 +6015,7 @@ void craft_refine_complete(struct char_data *ch)
     num++;
     exp = (REFINE_BASE_EXP + dc) * num;
 
-    /* Apply happy hour bonus */
-    if (HAPPY_CRAFTING_EXP > 0)
-    {
-      happy_hour_bonus = (exp * HAPPY_CRAFTING_EXP) / 100;
-      send_to_char(ch, "\tY*HAPPY HOUR*\tn You gain %d bonus experience!\r\n", happy_hour_bonus);
-    }
-
-    gain_craft_exp(ch, exp + happy_hour_bonus, skill_type, TRUE);
+    gain_craft_exp(ch, exp, skill_type, TRUE);
   }
   else if ((roll + skill) < dc)
   {
@@ -6042,16 +6057,10 @@ void craft_refine_complete(struct char_data *ch)
                  roll, base_skill, bonus_text, roll + skill, dc);
     exp = (REFINE_BASE_EXP + dc) * num;
 
-    /* Apply happy hour bonus */
-    if (HAPPY_CRAFTING_EXP > 0)
-    {
-      happy_hour_bonus = (exp * HAPPY_CRAFTING_EXP) / 100;
-      send_to_char(ch, "\tY*HAPPY HOUR*\tn You gain %d bonus experience!\r\n", happy_hour_bonus);
-    }
-
-    gain_craft_exp(ch, exp + happy_hour_bonus, skill_type, TRUE);
+    gain_craft_exp(ch, exp, skill_type, TRUE);
   }
 
+  num = apply_happy_hour_yield(ch, num, HAPPY_HARVESTING_MATERIALS, "materials");
   GET_CRAFT_MAT(ch, GET_CRAFT(ch).refining_result[0]) += num;
   if (batch_quantity == 1)
   {
@@ -6216,13 +6225,16 @@ void harvest_complete(struct char_data *ch)
     /* Apply happy hour bonus for materials harvested */
     if (HAPPY_HARVESTING_MATERIALS > 0)
     {
-      happy_hour_mat_bonus =
-          MAX(1, ((amount + bonus + efficient_bonus) * HAPPY_HARVESTING_MATERIALS) / 100);
+      happy_hour_mat_bonus = happy_hour_quantity_bonus(amount + bonus + efficient_bonus,
+                                                     HAPPY_HARVESTING_MATERIALS);
       send_to_char(ch, "\tY*HAPPY HOUR*\tn You gain %d bonus materials!\r\n", happy_hour_mat_bonus);
     }
 
     GET_CRAFT_MAT(ch, world[IN_ROOM(ch)].harvest_material) +=
         amount + bonus + efficient_bonus + happy_hour_mat_bonus;
+    send_to_char(ch, "You receive %d units of %s in total.\r\n",
+                 amount + bonus + efficient_bonus + happy_hour_mat_bonus,
+                 crafting_materials[world[IN_ROOM(ch)].harvest_material]);
 
     if (world[IN_ROOM(ch)].harvest_material_amount <= 0)
     {
@@ -6241,14 +6253,8 @@ void harvest_complete(struct char_data *ch)
     if ((dice(1, 100) <= mote_chance) || motes_found)
     {
       num_motes =
-          dice(MAX(1, material_grade(world[IN_ROOM(ch)].harvest_material)), HARVEST_MOTE_DICE_SIZE);
+          dice(MAX(1, harvest_level / 5), HARVEST_MOTE_DICE_SIZE);
       num_motes = num_motes * HARVEST_MOTE_MULTIPLIER / 100;
-
-      /* Apply happy hour bonus for motes obtained */
-      if (HAPPY_HARVESTING_MOTES_OBTAINED > 0)
-      {
-        num_motes = num_motes + ((num_motes * HAPPY_HARVESTING_MOTES_OBTAINED) / 100);
-      }
 
       mote_type = dice(1, NUM_CRAFT_MOTES - 1);
       bonus_motes = 0;
@@ -6298,6 +6304,10 @@ void harvest_complete(struct char_data *ch)
       {
         send_to_char(ch, "\tY*HAPPY HOUR*\tn ");
       }
+
+      num_motes = apply_happy_hour_yield(ch, num_motes + bonus_motes,
+                                         HAPPY_HARVESTING_MOTES_OBTAINED, "motes");
+      bonus_motes = 0;
 
       send_to_char(ch, "\tYYou have extracted a small cache of %d %ss!.\r\n",
                    num_motes + bonus_motes, crafting_motes[mote_type]);
@@ -6652,7 +6662,10 @@ void butcher_complete(struct char_data *ch)
                    TRUE);
   }
 
-  GET_CRAFT_MAT(ch, material) += material_amount + efficient_bonus + expertise_bonus;
+  material_amount = apply_happy_hour_yield(ch, material_amount + efficient_bonus + expertise_bonus,
+                                          HAPPY_HARVESTING_MATERIALS, "materials");
+  GET_CRAFT_MAT(ch, material) += material_amount;
+  send_to_char(ch, "You receive %d units of %s in total.\r\n", material_amount, crafting_materials[material]);
 
   if (is_dragon)
   {
@@ -6819,7 +6832,7 @@ void gain_craft_exp(struct char_data *ch, int exp, int abil, bool verbose)
       total_exp += happy_hour_bonus;
     }
   }
-  else if (abil >= ABILITY_HARVEST_MINING && abil <= ABILITY_HARVEST_SURVEYING)
+  else if (abil >= ABILITY_HARVEST_MINING && abil <= ABILITY_HARVEST_BUTCHERING)
   {
     /* Harvesting skills */
     if (HAPPY_HARVESTING_EXP > 0)

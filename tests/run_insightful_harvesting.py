@@ -25,7 +25,8 @@ static int rank, expected_talent;
 static char output[8192];
 int MAX(int a, int b) { return a > b ? a : b; }
 int get_talent_rank(struct char_data *ch, int talent) {
-  assert(talent == expected_talent); return rank;
+  if (expected_talent) assert(talent == expected_talent);
+  return rank;
 }
 int get_craft_skill_value(struct char_data *ch, int skill) { return 5; }
 int craft_skill_level_exp(struct char_data *ch, int level) { return 21000; }
@@ -69,6 +70,16 @@ int main(void) {
   expected_talent = TALENT_INSIGHTFUL_WOODWORKING; rank = 5;
   assert(get_insightful_talent_bonus(&ch, ABILITY_CRAFT_WOODWORKING) == 25);
   assert(get_insightful_talent_bonus(&ch, -1) == 0);
+  expected_talent=0; rank=0;
+  memset(&ps,0,sizeof(ps)); happy_data.crafting_exp_rate=25; happy_data.harvesting_exp_rate=50;
+  for(int skill=ABILITY_CRAFT_WOODWORKING;skill<=ABILITY_CRAFT_COOKING;skill++) {
+    ability_names[skill]="crafting"; gain_craft_exp(&ch,100,skill,FALSE);
+    assert(GET_CRAFT_SKILL_EXP((&ch),skill)==125);
+  }
+  for(int skill=ABILITY_HARVEST_MINING;skill<=ABILITY_HARVEST_BUTCHERING;skill++) {
+    ability_names[skill]="harvesting"; gain_craft_exp(&ch,100,skill,FALSE);
+    assert(GET_CRAFT_SKILL_EXP((&ch),skill)==150);
+  }
   return 0;
 }
 '''

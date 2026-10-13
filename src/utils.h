@@ -2549,6 +2549,7 @@ bool can_blood_drain_target(struct char_data *ch, struct char_data *vict);
 #define IS_HAPPYGOLD (happy_data.gold_rate > 0)
 #define IS_HAPPYTREASURE (happy_data.treasure_rate > 0)
 
+void clear_happy_hour_bonuses(void);
 #define HAPPY_EXP happy_data.exp_rate
 #define HAPPY_GOLD happy_data.gold_rate
 #define HAPPY_QP happy_data.qp_rate

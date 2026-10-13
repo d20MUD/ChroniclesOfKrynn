@@ -9309,6 +9309,8 @@ ACMD(do_happyhour)
     }
 
     HAPPY_TIME = num;
+    if (!num)
+      clear_happy_hour_bonuses();
     send_to_char(ch, "Happy Hour Time set to %d ticks (%d hours %d mins and %d secs)\r\n",
                  HAPPY_TIME, (HAPPY_TIME * SECS_PER_MUD_HOUR) / 3600,
                  ((HAPPY_TIME * SECS_PER_MUD_HOUR) % 3600) / 60,

@@ -2603,6 +2603,11 @@ void check_thirty_seconds(void)
 }
 
 /* Update PCs, NPCs, and objects */
+void clear_happy_hour_bonuses(void)
+{
+  memset(&happy_data, 0, sizeof(happy_data));
+}
+
 void point_update(void)
 {
   struct char_data *i = NULL, *next_char = NULL;
@@ -2617,10 +2622,7 @@ void point_update(void)
   /* Last tick - set everything back to zero */
   else if (HAPPY_TIME == 1)
   {
-    HAPPY_QP = 0;
-    HAPPY_EXP = 0;
-    HAPPY_GOLD = 0;
-    HAPPY_TIME = 0;
+    clear_happy_hour_bonuses();
     game_info("Happy hour has ended!");
     set_db_happy_hour(2);
   }
