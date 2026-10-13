@@ -169,17 +169,11 @@ void string_add(struct descriptor_data *d, char *str)
 {
   int action;
 
-  /* Determine if this is the terminal string, and truncate if so. Changed to
-   * only accept '\t' at the beginning of line. - JE */
-
   delete_doubledollar(str);
   smash_tilde(str);
 
-  /* Determine if this is the terminal string, and truncate if so. Changed to
-   * only accept '\t' if it's by itself. - fnord */
-  if ((action = (*str == '\t' && !str[1])))
-    *str = '\0';
-  else if ((action = improved_editor_execute(d, str)) == STRINGADD_ACTION)
+  /* Only editor commands save; @ and tabs can start ordinary/color text. */
+  if ((action = improved_editor_execute(d, str)) == STRINGADD_ACTION)
     return;
 
   if (action != STRINGADD_OK)

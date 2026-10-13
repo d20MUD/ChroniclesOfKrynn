@@ -19,7 +19,7 @@ void send_editor_help(struct descriptor_data *d)
   if (using_improved_editor)
     write_to_output(d, "Instructions: /s to save, /h for more options.\r\n");
   else
-    write_to_output(d, "Instructions: Type @ on a line by itself to end.\r\n");
+    write_to_output(d, "Instructions: /s to save.\r\n");
 }
 
 #if CONFIG_IMPROVED_EDITOR
@@ -27,9 +27,6 @@ void send_editor_help(struct descriptor_data *d)
 int improved_editor_execute(struct descriptor_data *d, char *str)
 {
   char actions[MAX_INPUT_LENGTH] = {'\0'};
-
-  if (*str && str[0] == '@')
-    return STRINGADD_SAVE;
 
   if (*str != '/')
     return STRINGADD_OK;
@@ -89,7 +86,6 @@ int improved_editor_execute(struct descriptor_data *d, char *str)
     parse_edit_action(PARSE_REPLACE, actions, d);
     break;
   case 's':
-  case '@':
     return STRINGADD_SAVE;
   case 't':
     parse_edit_action(PARSE_TOGGLE, actions, d);
@@ -129,8 +125,7 @@ void parse_edit_action(int command, char *string, struct descriptor_data *d)
            "/ra 'a' 'b'-  replace all occurances of text <a> within buffer with text <b>\r\n"
            "              usage: /r[a] 'pattern' 'replacement'\r\n"
            "/t         -  toggles '@' and tabs\r\n"
-           "/s         -  saves text\r\n"
-           "@          -  also saves text\r\n");
+           "/s         -  saves text\r\n");
     break;
   case PARSE_TOGGLE:
     if (!*d->str)
