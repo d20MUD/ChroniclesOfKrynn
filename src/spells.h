@@ -613,9 +613,10 @@
 #define SPELL_BANE 532
 #define SPELL_DISGUISE_SELF 533
 #define SPELL_ALTER_SELF 534
+#define SPELL_LITANY_OF_DAMNATION 535
 
 /** Total Number of defined spells  */
-#define NUM_SPELLS 535
+#define NUM_SPELLS 536
 #define LAST_SPELL_DEFINE NUM_SPELLS + 1
 
 #define MAX_SPELL_AFFECTS 6 /* change if more needed */

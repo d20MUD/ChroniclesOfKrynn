@@ -5663,12 +5663,18 @@ int damage_handling(struct char_data *ch, struct char_data *victim, int dam, int
       dam *= 0.75;
     }
 
-    else if (!is_spell && victim && IS_EVIL(victim) &&
-             group_member_affected_by_spell(ch, SPELL_LITANY_OF_RIGHTEOUSNESS) &&
-             has_aura_of_good(ch))
+    else if (!is_spell && victim &&
+             ((IS_EVIL(victim) &&
+               group_member_affected_by_spell(ch, SPELL_LITANY_OF_RIGHTEOUSNESS) &&
+               has_aura_of_good(ch)) ||
+              (IS_GOOD(victim) &&
+               group_member_affected_by_spell(ch, SPELL_LITANY_OF_DAMNATION) &&
+               has_aura_of_evil(ch))))
     {
       dam *= 2;
-      if (has_aura_of_evil(victim) && !affected_by_spell(victim, SPELL_EFFECT_DAZZLED))
+      if (((IS_EVIL(victim) && has_aura_of_evil(victim)) ||
+           (IS_GOOD(victim) && has_aura_of_good(victim))) &&
+          !affected_by_spell(victim, SPELL_EFFECT_DAZZLED))
       {
         struct affected_type af = {0};
         new_affect(&af);

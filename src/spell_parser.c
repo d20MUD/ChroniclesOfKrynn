@@ -6341,6 +6341,10 @@ void mag_assign_spells(void)
          TAR_CHAR_ROOM | TAR_SELF_ONLY, FALSE, MAG_AFFECTS, "The litany of righteousness expires.", 4, 8, EVOCATION,
          FALSE);
 
+  spello(SPELL_LITANY_OF_DAMNATION, "litany of damnation", 30, 15, 1, POS_FIGHTING,
+         TAR_CHAR_ROOM | TAR_SELF_ONLY, FALSE, MAG_AFFECTS, "The litany of damnation expires.", 4, 8,
+         EVOCATION, FALSE);
+
   spello(ABILITY_AFFECT_BANE_WEAPON, "bane weapon", 0, 0, 0, POS_FIGHTING, TAR_IGNORE, FALSE,
          MAG_AFFECTS, "You weapons are no longer enchanted with the bane effect.", 1, 1, NOSCHOOL,
          FALSE);

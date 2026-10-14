@@ -6776,7 +6776,8 @@ void mag_affects_full(int level, struct char_data *ch, struct char_data *victim,
     break;
 
   case SPELL_LITANY_OF_DEFENSE:
-    if (affected_by_spell(ch, SPELL_LITANY_OF_RIGHTEOUSNESS))
+    if (affected_by_spell(victim, SPELL_LITANY_OF_RIGHTEOUSNESS) ||
+        affected_by_spell(victim, SPELL_LITANY_OF_DAMNATION))
     {
       send_to_char(ch, "This spell cannot be cast when you are already under the effect of a "
                        "'litany' type spell.\r\n");
@@ -6791,7 +6792,11 @@ void mag_affects_full(int level, struct char_data *ch, struct char_data *victim,
     break;
 
   case SPELL_LITANY_OF_RIGHTEOUSNESS:
-    if (affected_by_spell(ch, SPELL_LITANY_OF_DEFENSE))
+  case SPELL_LITANY_OF_DAMNATION:
+    if (affected_by_spell(victim, SPELL_LITANY_OF_DEFENSE) ||
+        affected_by_spell(victim, spellnum == SPELL_LITANY_OF_RIGHTEOUSNESS
+                                      ? SPELL_LITANY_OF_DAMNATION
+                                      : SPELL_LITANY_OF_RIGHTEOUSNESS))
     {
       send_to_char(ch, "This spell cannot be cast when you are already under the effect of a "
                        "'litany' type spell.\r\n");
@@ -6801,8 +6806,16 @@ void mag_affects_full(int level, struct char_data *ch, struct char_data *victim,
     af[0].modifier = 0;
     af[0].duration = 3;
     af[0].bonus_type = BONUS_TYPE_MORALE;
-    to_vict = "You create an aura of righteousness around you and your allies.";
-    to_room = "$n creates an aura of righteousness around $m and $s allies.";
+    if (spellnum == SPELL_LITANY_OF_DAMNATION)
+    {
+      to_vict = "You create an aura of damnation around you and your allies.";
+      to_room = "$n creates an aura of damnation around $m and $s allies.";
+    }
+    else
+    {
+      to_vict = "You create an aura of righteousness around you and your allies.";
+      to_room = "$n creates an aura of righteousness around $m and $s allies.";
+    }
     break;
 
   case SPELL_VEIL_OF_POSITIVE_ENERGY:
@@ -15450,6 +15463,7 @@ bool can_spell_be_empowered(int spellnum)
   case SPELL_FIRE_OF_ENTANGLEMENT:
   case SPELL_LITANY_OF_DEFENSE:
   case SPELL_LITANY_OF_RIGHTEOUSNESS:
+  case SPELL_LITANY_OF_DAMNATION:
   case SPELL_RIGHTEOUS_VIGOR:
   case SPELL_BLINDING_RAY:
   case SPELL_HOLY_JAVELIN:
