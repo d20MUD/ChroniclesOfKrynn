@@ -406,11 +406,11 @@ static void show_trade(struct char_data *ch)
     return;
   }
 
-  send_to_char(ch, "\tCTrade with %s\tn\r\n", GET_NAME(partner));
+  send_to_char(ch, "\tCTrade with %s\tn\r\n", PERS(partner, ch));
   trade_show_offer(ch, "Your offer", &ch->trade->offers[slot], ch);
   trade_show_offer(ch, "Their offer", &ch->trade->offers[1 - slot], partner);
   send_to_char(ch, "Accepted: you [%s], %s [%s]\r\n",
-               ch->trade->offers[slot].accepted ? "yes" : "no", GET_NAME(partner),
+               ch->trade->offers[slot].accepted ? "yes" : "no", PERS(partner, ch),
                ch->trade->offers[1 - slot].accepted ? "yes" : "no");
 }
 
@@ -428,14 +428,14 @@ static void show_trade_invites(struct char_data *ch)
 
   if (ch->trade_invite_from)
   {
-    send_to_char(ch, "%s has requested a trade with you.\r\n", GET_NAME(ch->trade_invite_from));
+    send_to_char(ch, "%s has requested a trade with you.\r\n", PERS(ch->trade_invite_from, ch));
     send_to_char(ch, "Use 'trade accept' to open the trade, or 'trade cancel' to decline.\r\n");
     shown = true;
   }
 
   if (ch->trade_invite_to)
   {
-    send_to_char(ch, "You have requested a trade with %s.\r\n", GET_NAME(ch->trade_invite_to));
+    send_to_char(ch, "You have requested a trade with %s.\r\n", PERS(ch->trade_invite_to, ch));
     send_to_char(ch, "Use 'trade cancel' to withdraw the request.\r\n");
     shown = true;
   }
@@ -831,8 +831,8 @@ static void open_trade_session(struct char_data *ch, struct char_data *vict)
   ch->trade = trade;
   vict->trade = trade;
 
-  send_to_char(ch, "You open a trade with %s.\r\n", GET_NAME(vict));
-  send_to_char(vict, "%s opens a trade with you.\r\n", GET_NAME(ch));
+  send_to_char(ch, "You open a trade with %s.\r\n", PERS(vict, ch));
+  send_to_char(vict, "%s opens a trade with you.\r\n", PERS(ch, vict));
   show_trade(ch);
   show_trade(vict);
 }
@@ -968,7 +968,7 @@ static void start_trade(struct char_data *ch, char *target_name)
 
   if (PRF_FLAGGED(vict, PRF_REJECT_TRADES))
   {
-    send_to_char(ch, "%s is not accepting trade requests.\r\n", GET_NAME(vict));
+    send_to_char(ch, "%s is not accepting trade requests.\r\n", PERS(vict, ch));
     return;
   }
 
@@ -980,15 +980,15 @@ static void start_trade(struct char_data *ch, char *target_name)
 
   if (trade_invites_pending(vict))
   {
-    send_to_char(ch, "%s already has a pending trade request.\r\n", GET_NAME(vict));
+    send_to_char(ch, "%s already has a pending trade request.\r\n", PERS(vict, ch));
     return;
   }
 
   ch->trade_invite_to = vict;
   vict->trade_invite_from = ch;
 
-  send_to_char(ch, "You request a trade with %s.\r\n", GET_NAME(vict));
-  send_to_char(vict, "%s requests a trade with you.\r\n", GET_NAME(ch));
+  send_to_char(ch, "You request a trade with %s.\r\n", PERS(vict, ch));
+  send_to_char(vict, "%s requests a trade with you.\r\n", PERS(ch, vict));
   send_to_char(vict, "Use 'trade accept' to open the trade, or 'trade cancel' to decline.\r\n");
 }
 
@@ -2102,7 +2102,7 @@ void display_item_object_values(struct char_data *ch, struct obj_data *item, int
       if (mode == ITEM_STAT_MODE_G_LORE)
         send_to_group(NULL, GROUP(ch), "%s ", GET_NAME(tempch));
       else
-        send_to_char(ch, "%s ", GET_NAME(tempch));
+        send_to_char(ch, "%s ", PERS(tempch, ch));
     }
 
     if (mode == ITEM_STAT_MODE_G_LORE)
@@ -2472,7 +2472,7 @@ void display_item_object_values(struct char_data *ch, struct obj_data *item, int
       if (mode == ITEM_STAT_MODE_G_LORE)
         send_to_group(NULL, GROUP(ch), "When bought, makes follower: %s\r\n", GET_NAME(pet));
       else
-        send_to_char(ch, "When bought, makes follower: %s\r\n", GET_NAME(pet));
+        send_to_char(ch, "When bought, makes follower: %s\r\n", PERS(pet, ch));
 
       extract_char(pet);
     }

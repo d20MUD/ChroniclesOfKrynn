@@ -81,7 +81,7 @@ void display_leave_messages(struct char_data *ch, int dir, int riding, int ridde
           else
           {
             /* rider detected ! */
-            snprintf(buf2, sizeof(buf2), "$n rides %s %s.", GET_NAME(RIDING(ch)), dirs[dir]);
+            snprintf(buf2, sizeof(buf2), "$n rides %s %s.", PERS(RIDING(ch), tch), dirs[dir]);
             act(buf2, TRUE, ch, 0, tch, TO_VICT);
           }
         }
@@ -111,7 +111,7 @@ void display_leave_messages(struct char_data *ch, int dir, int riding, int ridde
           if (can_hear_sneaking(tch, RIDING(ch)))
           {
             /* mount detected! */
-            snprintf(buf2, sizeof(buf2), "$n rides %s %s.", GET_NAME(RIDING(ch)), dirs[dir]);
+            snprintf(buf2, sizeof(buf2), "$n rides %s %s.", PERS(RIDING(ch), tch), dirs[dir]);
             act(buf2, TRUE, ch, 0, tch, TO_VICT);
           } /* if we pass this check, the rider/mount are both sneaking */
         }
@@ -142,16 +142,16 @@ void display_leave_messages(struct char_data *ch, int dir, int riding, int ridde
           else
           {
             /* mount failed, player failed */
-            snprintf(buf2, sizeof(buf2), "$n rides %s %s.", GET_NAME(RIDING(ch)), dirs[dir]);
+            snprintf(buf2, sizeof(buf2), "$n rides %s %s.", PERS(RIDING(ch), tch), dirs[dir]);
             act(buf2, TRUE, ch, 0, tch, TO_VICT);
           }
         }
       }
     }
     /* message to self */
-    send_to_char(ch, "You ride %s %s.\r\n", GET_NAME(RIDING(ch)), dirs[dir]);
+    send_to_char(ch, "You ride %s %s.\r\n", PERS(RIDING(ch), ch), dirs[dir]);
     /* message to mount */
-    send_to_char(RIDING(ch), "You carry %s %s.\r\n", GET_NAME(ch), dirs[dir]);
+    send_to_char(RIDING(ch), "You carry %s %s.\r\n", PERS(ch, RIDING(ch)), dirs[dir]);
   } /* end: mounted char */
 
   /* scenario: char is mount */
@@ -182,7 +182,7 @@ void display_leave_messages(struct char_data *ch, int dir, int riding, int ridde
           else
           {
             /* rider detected ! */
-            snprintf(buf2, sizeof(buf2), "$n rides %s %s.", GET_NAME(ch), dirs[dir]);
+            snprintf(buf2, sizeof(buf2), "$n rides %s %s.", PERS(ch, tch), dirs[dir]);
             act(buf2, TRUE, RIDDEN_BY(ch), 0, tch, TO_VICT);
           }
         }
@@ -225,7 +225,7 @@ void display_leave_messages(struct char_data *ch, int dir, int riding, int ridde
           {
             /* mount failed, rider failed */
             /* 3.23.18 Ornir Bugfix. */
-            snprintf(buf2, sizeof(buf2), "$n rides %s %s.", GET_NAME(ch), dirs[dir]);
+            snprintf(buf2, sizeof(buf2), "$n rides %s %s.", PERS(ch, tch), dirs[dir]);
             act(buf2, TRUE, RIDDEN_BY(ch), 0, tch, TO_VICT);
           }
         }
@@ -247,16 +247,16 @@ void display_leave_messages(struct char_data *ch, int dir, int riding, int ridde
           if (can_hear_sneaking(tch, ch))
           {
             /* mount detected! */
-            snprintf(buf2, sizeof(buf2), "$n rides %s %s.", GET_NAME(ch), dirs[dir]);
+            snprintf(buf2, sizeof(buf2), "$n rides %s %s.", PERS(ch, tch), dirs[dir]);
             act(buf2, TRUE, ch, 0, tch, TO_VICT);
           } /* if we pass this check, the rider/mount are both sneaking */
         }
       }
     }
     /* message to self */
-    send_to_char(ch, "You carry %s %s.\r\n", GET_NAME(RIDDEN_BY(ch)), dirs[dir]);
+    send_to_char(ch, "You carry %s %s.\r\n", PERS(RIDDEN_BY(ch), ch), dirs[dir]);
     /* message to rider */
-    send_to_char(RIDDEN_BY(ch), "You are carried %s by %s.\r\n", dirs[dir], GET_NAME(ch));
+    send_to_char(RIDDEN_BY(ch), "You are carried %s by %s.\r\n", dirs[dir], PERS(ch, RIDDEN_BY(ch)));
   } /* end char is mounted */
 
   /* ch is on foot */
@@ -392,7 +392,7 @@ void display_enter_messages(struct char_data *ch, int dir, int riding, int ridde
                  (dir == UP     ? "below"
                   : dir == DOWN ? "above"
                                 : dirs[rev_dir[dir]]),
-                 GET_NAME(RIDING(ch)));
+                 PERS(RIDING(ch), tch));
         act(buf2, TRUE, ch, 0, tch, TO_VICT);
       }
     }
@@ -431,7 +431,7 @@ void display_enter_messages(struct char_data *ch, int dir, int riding, int ridde
                  (dir == UP     ? "below"
                   : dir == DOWN ? "above"
                                 : dirs[rev_dir[dir]]),
-                 GET_NAME(RIDDEN_BY(ch)));
+                 PERS(RIDDEN_BY(ch), tch));
         act(buf2, TRUE, RIDDEN_BY(ch), 0, tch, TO_VICT);
       }
     }

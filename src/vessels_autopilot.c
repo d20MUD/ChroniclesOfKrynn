@@ -3038,7 +3038,7 @@ int is_valid_pilot_npc(struct char_data *ch, struct char_data *npc, struct greyh
   /* Must be in the helm/bridge room */
   if (IN_ROOM(npc) != real_room(ship->bridge_room))
   {
-    send_to_char(ch, "%s must be in the helm room to be assigned as pilot.\r\n", GET_NAME(npc));
+    send_to_char(ch, "%s must be in the helm room to be assigned as pilot.\r\n", PERS(npc, ch));
     return FALSE;
   }
 
@@ -3193,7 +3193,7 @@ ACMD(do_assignpilot)
   /* Assign pilot */
   ship->autopilot->pilot_mob_vnum = GET_MOB_VNUM(npc);
 
-  send_to_char(ch, "You assign %s as the vessel's pilot.\r\n", GET_NAME(npc));
+  send_to_char(ch, "You assign %s as the vessel's pilot.\r\n", PERS(npc, ch));
   send_to_ship(ship, "%s has been assigned as the vessel's pilot.\r\n", GET_NAME(npc));
 
   /* If a route is already set, auto-engage autopilot */
@@ -3201,7 +3201,7 @@ ACMD(do_assignpilot)
       ship->autopilot->state == AUTOPILOT_OFF)
   {
     autopilot_start(ship, ship->autopilot->current_route);
-    send_to_char(ch, "%s takes the helm and engages autopilot.\r\n", GET_NAME(npc));
+    send_to_char(ch, "%s takes the helm and engages autopilot.\r\n", PERS(npc, ch));
     send_to_ship(ship, "The vessel's autopilot has been engaged.\r\n");
   }
 }

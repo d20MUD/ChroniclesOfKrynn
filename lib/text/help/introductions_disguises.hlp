@@ -1,0 +1,93 @@
+INTRODUCE INTRO INTRODUCTIONS
+
+Usage: introduce <person>
+       introduce list
+       introduce forget <name>
+
+Until someone introduces themselves to you, you see their short description
+instead of their name. Introducing yourself teaches the recipient your name;
+you still need their introduction to learn theirs. NPCs and immortals are exempt.
+Target strangers using words from their visible description, such as human.
+Introductions are remembered when you reconnect. You cannot introduce yourself
+while wearing a disguise.
+
+See also: DISGUISE
+#0
+DISGUISE DISGUISES
+
+Usage: disguise <race> | <age> | <gender> | <feature:adjective> | <feature:adjective>
+       disguise <race>
+       disguise descriptors [feature]
+       disguise remove
+
+Example: disguise human | adolescent | female | hair:43 | eyes:2
+
+Type disguise alone to see eligible races. You may appear as a humanoid of your
+own size. Ages: adult, adolescent, middle-aged, old-aged, venerable.
+Genders: neutral, male, female. Select up to two feature:adjective pairs using
+the same choices as your normal short description. Use disguise descriptors to
+list feature types, and disguise descriptors hair to list hair adjectives.
+For example, hair:43 selects short silver hair; eyes:2 selects green eyes.
+Numeric feature IDs also work (6:43 means hair:43). Use none to omit a feature.
+A race alone uses your actual age, gender, and natural descriptor selections.
+
+Applying a disguise uses your Disguise ability once. Each person who first sees
+that disguise gets one opposing Perception check; ties see through it. Looking
+again or reconnecting does not grant another check. Remove and reapply a disguise
+to create a new instance. Applying and removing each use a standard action.
+
+A fooled observer sees your disguised description, even if they know your name.
+Someone who sees through it sees your known name or real short description,
+followed by a separate line describing the disguise. This never teaches a name.
+True sight automatically sees through disguises without a perception roll.
+
+Disguises change appearance only, granting no racial traits or attribute changes.
+Remove a disguise before using wildshape or shapechange or introducing yourself.
+
+See also: INTRODUCE
+#0
+DISGUISESELF DISGUISE_SELF
+
+Usage: cast 'disguise self'
+       disguise dismiss disguise self
+
+For ten minutes per caster level you receive +10 to your Disguise skill.
+This spell does not change your visible appearance or active race by itself.
+Apply a disguise normally to use the skill bonus in its application roll.
+
+See also: DISGUISE, ALTERSELF
+#0
+ALTERSELF ALTER_SELF
+
+Usage: cast 'alter self' <player-selectable race>
+       disguise dismiss alter self
+
+Your active race changes to the selected race for one minute per caster level.
+You may choose any player-selectable race, including locked races. A Small form
+grants +2 Dexterity; a Medium or larger form grants +2 Strength. Both use the
+racial bonus type. Tiny or smaller forms grant neither attribute bonus.
+
+Ordinary observers see the changed race, which Perception cannot see through.
+True sight shows your original form and separately describes your altered form. Other disguise details, such as descriptors,
+age, and gender, can still be seen through under the normal disguise rules.
+The spell does not reset an existing disguise's perception checks.
+
+Disguise Self and Alter Self can coexist. Expiration, dispelling, or dismissal
+restores your original active race and removes the attribute bonus.
+
+See also: DISGUISESELF, DISGUISE
+#0
+TRUEFORM TRUEFORMS TRUESIGHT
+
+True sight shows a person's original form, including through disguises, Alter
+Self, wildshape, polymorph, and other shapechanges. It also shows a separate line
+describing the current altered form, so you know how the person appears to others.
+Any mundane disguise is described separately as well.
+
+Knowing the true form does not teach an unknown person's name. The introduction
+rules still apply. True sight changes what you perceive, leaving the person's
+actual transformed race, size, and abilities unchanged.
+
+See also: INTRODUCE, DISGUISE, ALTERSELF
+#0
+$

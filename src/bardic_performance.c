@@ -329,7 +329,7 @@ int can_perform(struct char_data *ch, int performance_num, bool need_check, bool
       {
         if (!silent)
           send_to_char(ch, "Your bardic performance conflicts with %s and is abrupted!\r\n",
-                       GET_NAME(vict));
+                       PERS(vict, ch));
         return 0;
       }
     }
@@ -500,7 +500,7 @@ int performance_effects(struct char_data *ch, struct char_data *tch, int spellnu
   if (DEBUG_MODE)
   {
     send_to_char(ch, "performance_effects(): tch: %s, SNum: %d, Effect %d, AoE %d.\r\n",
-                 GET_NAME(tch), spellnum, effectiveness, aoe);
+                 PERS(tch, ch), spellnum, effectiveness, aoe);
   }
 
   if (!IS_NPC(ch))

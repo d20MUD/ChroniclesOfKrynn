@@ -578,7 +578,7 @@ ACMDU(do_skillset)
   }
   else if (spell_info[skill].min_level[(pc)] > pl)
   {
-    send_to_char(ch, "%s is a level %d %s.\r\n", GET_NAME(vict), pl, CLSLIST_NAME(pc));
+    send_to_char(ch, "%s is a level %d %s.\r\n", PERS(vict, ch), pl, CLSLIST_NAME(pc));
     send_to_char(ch, "The minimum level for %s is %d for %ss.\r\n", spell_info[skill].name,
                  spell_info[skill].min_level[(pc)], CLSLIST_NAME(pc));
   }
@@ -588,7 +588,7 @@ ACMDU(do_skillset)
   SET_SKILL(vict, skill, value);
   mudlog(BRF, LVL_IMMORT, TRUE, "%s changed %s's %s to %d.", GET_NAME(ch), GET_NAME(vict),
          spell_info[skill].name, value);
-  send_to_char(ch, "You change %s's %s to %d.\r\n", GET_NAME(vict), spell_info[skill].name, value);
+  send_to_char(ch, "You change %s's %s to %d.\r\n", PERS(vict, ch), spell_info[skill].name, value);
 }
 
 /* Modification of character abilities. */
@@ -683,7 +683,7 @@ ACMDU(do_abilityset)
   SET_ABILITY(vict, skill, value);
   mudlog(BRF, LVL_IMMORT, TRUE, "%s changed %s's %s to %d.", GET_NAME(ch), GET_NAME(vict),
          ability_names[skill], value);
-  send_to_char(ch, "You change %s's %s to %d.\r\n", GET_NAME(vict), ability_names[skill], value);
+  send_to_char(ch, "You change %s's %s to %d.\r\n", PERS(vict, ch), ability_names[skill], value);
 }
 
 /* Modification of character feats */
@@ -778,7 +778,7 @@ ACMDU(do_featset)
 
   mudlog(BRF, LVL_IMMORT, TRUE, "%s changed %s's %s to %d.", GET_NAME(ch), GET_NAME(vict),
          feat_list[feat_num].name, HAS_FEAT(ch, feat_num));
-  send_to_char(ch, "You change %s's %s to %d.\r\n", GET_NAME(vict), feat_list[feat_num].name,
+  send_to_char(ch, "You change %s's %s to %d.\r\n", PERS(vict, ch), feat_list[feat_num].name,
                HAS_FEAT(ch, feat_num));
 }
 
@@ -1101,7 +1101,7 @@ void new_mail_string_cleanup(struct descriptor_data *d, int action)
             nch = tch->next;
             if (!strcmp(GET_NAME(tch), row[0]))
               send_to_char(tch, "\r\nYou have received a new mail from %s with a subject: %s.\r\n",
-                           GET_NAME(ch), ch->player_specials->new_mail_subject);
+                           PERS(ch, tch), ch->player_specials->new_mail_subject);
           }
         }
       }
@@ -1173,7 +1173,7 @@ void new_mail_string_cleanup(struct descriptor_data *d, int action)
         if (!strcmp(GET_NAME(tch), ch->player_specials->new_mail_receiver) ||
             !strcmp("All", ch->player_specials->new_mail_receiver))
           send_to_char(tch, "\r\nYou have received a new mail from %s with a subject: %s.\r\n",
-                       GET_NAME(ch), ch->player_specials->new_mail_subject);
+                       PERS(ch, tch), ch->player_specials->new_mail_subject);
       }
 
     } // end !found

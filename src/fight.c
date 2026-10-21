@@ -758,7 +758,7 @@ bool has_dex_bonus_to_ac(struct char_data *attacker, struct char_data *ch)
       {
         send_to_char(ch, "has_dex_bonus_to_ac() - %s not awake  ", GET_NAME(ch));
         if (attacker)
-          send_to_char(attacker, "has_dex_bonus_to_ac() - %s not awake  ", GET_NAME(ch));
+          send_to_char(attacker, "has_dex_bonus_to_ac() - %s not awake  ", PERS(ch, attacker));
       }
     }
     return FALSE;
@@ -772,7 +772,7 @@ bool has_dex_bonus_to_ac(struct char_data *attacker, struct char_data *ch)
       {
         send_to_char(ch, "has_dex_bonus_to_ac() - %s pinned  ", GET_NAME(ch));
         if (attacker)
-          send_to_char(attacker, "has_dex_bonus_to_ac() - %s pinned  ", GET_NAME(ch));
+          send_to_char(attacker, "has_dex_bonus_to_ac() - %s pinned  ", PERS(ch, attacker));
       }
     }
     return FALSE;
@@ -789,7 +789,7 @@ bool has_dex_bonus_to_ac(struct char_data *attacker, struct char_data *ch)
         {
           send_to_char(ch, "has_dex_bonus_to_ac() - %s unable to see attacker  ", GET_NAME(ch));
           send_to_char(attacker, "has_dex_bonus_to_ac() - %s unable to see attacker  ",
-                       GET_NAME(ch));
+                       PERS(ch, attacker));
         }
       }
       return FALSE;
@@ -806,7 +806,7 @@ bool has_dex_bonus_to_ac(struct char_data *attacker, struct char_data *ch)
       {
         send_to_char(ch, "has_dex_bonus_to_ac() - %s flat-footed  ", GET_NAME(ch));
         if (attacker)
-          send_to_char(attacker, "has_dex_bonus_to_ac() - %s flat-footed  ", GET_NAME(ch));
+          send_to_char(attacker, "has_dex_bonus_to_ac() - %s flat-footed  ", PERS(ch, attacker));
       }
     }
     return FALSE;
@@ -821,7 +821,7 @@ bool has_dex_bonus_to_ac(struct char_data *attacker, struct char_data *ch)
       {
         send_to_char(ch, "has_dex_bonus_to_ac() - %s stunned  ", GET_NAME(ch));
         if (attacker)
-          send_to_char(attacker, "has_dex_bonus_to_ac() - %s stunned  ", GET_NAME(ch));
+          send_to_char(attacker, "has_dex_bonus_to_ac() - %s stunned  ", PERS(ch, attacker));
       }
     }
     return FALSE;
@@ -836,7 +836,7 @@ bool has_dex_bonus_to_ac(struct char_data *attacker, struct char_data *ch)
       {
         send_to_char(ch, "has_dex_bonus_to_ac() - %s paralyzed  ", GET_NAME(ch));
         if (attacker)
-          send_to_char(attacker, "has_dex_bonus_to_ac() - %s paralyzed  ", GET_NAME(ch));
+          send_to_char(attacker, "has_dex_bonus_to_ac() - %s paralyzed  ", PERS(ch, attacker));
       }
     }
     return FALSE;
@@ -851,7 +851,7 @@ bool has_dex_bonus_to_ac(struct char_data *attacker, struct char_data *ch)
       {
         send_to_char(ch, "has_dex_bonus_to_ac() - %s feinted  ", GET_NAME(ch));
         if (attacker)
-          send_to_char(attacker, "has_dex_bonus_to_ac() - %s feinted  ", GET_NAME(ch));
+          send_to_char(attacker, "has_dex_bonus_to_ac() - %s feinted  ", PERS(ch, attacker));
       }
     }
     return FALSE;
@@ -863,7 +863,7 @@ bool has_dex_bonus_to_ac(struct char_data *attacker, struct char_data *ch)
     {
       send_to_char(ch, "has_dex_bonus_to_ac() - %s -retained- dex bonus  ", GET_NAME(ch));
       if (attacker)
-        send_to_char(attacker, "has_dex_bonus_to_ac() - %s -retained- dex bonus  ", GET_NAME(ch));
+        send_to_char(attacker, "has_dex_bonus_to_ac() - %s -retained- dex bonus  ", PERS(ch, attacker));
     }
   }
   return TRUE; /* ok, made it through, we DO have our dex bonus still */
@@ -2773,7 +2773,7 @@ void raw_kill(struct char_data *ch, struct char_data *killer)
   /* group handling */
   if (GROUP(ch))
   {
-    send_to_group(ch, GROUP(ch), "%s has died.\r\n", GET_NAME(ch));
+    send_identity_to_group(ch, GROUP(ch), ch, "$n has died.\r\n");
 
     /* we used to kick players out of groups here, but we changed that.. now only NPCs */
     if (IS_NPC(ch))
@@ -2782,7 +2782,7 @@ void raw_kill(struct char_data *ch, struct char_data *killer)
 
   if (pet_owner && !IS_NPC(pet_owner))
   {
-    send_to_char(pet_owner, "%s has fallen. Use 'pets fallen' to revive it or recover its gear.\r\n", GET_NAME(ch));
+    send_to_char(pet_owner, "%s has fallen. Use 'pets fallen' to revive it or recover its gear.\r\n", PERS(ch, pet_owner));
     {
       int slot;
       for (slot = 0; slot < NUM_WEARS; slot++)
@@ -3611,11 +3611,11 @@ int skill_message(int dam, struct char_data *ch, struct char_data *vict, int att
     send_to_char(
         ch,
         "Debug - We are in skill_message(), dam %d, ch %s, vict %s, attacktype %d, dualing %d\r\n",
-        dam, GET_NAME(ch), GET_NAME(vict), attacktype, dualing);
+        dam, GET_NAME(ch), PERS(vict, ch), attacktype, dualing);
     send_to_char(
         vict,
         "Debug - We are in skill_message(), dam %d, ch %s, vict %s, attacktype %d, dualing %d\r\n",
-        dam, GET_NAME(ch), GET_NAME(vict), attacktype, dualing);
+        dam, PERS(ch, vict), GET_NAME(vict), attacktype, dualing);
   }
 
   /* attacker weapon */
@@ -3771,11 +3771,11 @@ int skill_message(int dam, struct char_data *ch, struct char_data *vict, int att
           send_to_char(ch,
                        "Debug - We are in skill_message() - ZERO DAMAGE, dam %d, ch %s, vict %s, "
                        "attacktype %d, dualing %d\r\n",
-                       dam, GET_NAME(ch), GET_NAME(vict), attacktype, dualing);
+                       dam, GET_NAME(ch), PERS(vict, ch), attacktype, dualing);
           send_to_char(vict,
                        "Debug - We are in skill_message() - ZERO DAMAGE, dam %d, ch %s, vict %s, "
                        "attacktype %d, dualing %d\r\n",
-                       dam, GET_NAME(ch), GET_NAME(vict), attacktype, dualing);
+                       dam, PERS(ch, vict), GET_NAME(vict), attacktype, dualing);
         }
 
         /* do we have armor that can stop a blow? */
@@ -5510,7 +5510,7 @@ int damage_handling(struct char_data *ch, struct char_data *victim, int dam, int
       else
       {
         send_to_char(ch, "\tRYou fail to cause %s any harm as he leaps away!\tn\r\n",
-                     GET_NAME(victim));
+                     PERS(victim, ch));
       }
 
       act("$n fails to harm $N as $S leaps away!", ACT_CONDENSE_VALUE, ch, 0, victim, TO_NOTVICT);
@@ -5535,7 +5535,7 @@ int damage_handling(struct char_data *ch, struct char_data *victim, int dam, int
       {
         send_to_char(ch,
                      "\tRYou fail to cause %s any harm as the defensive stance holds firms!\tn\r\n",
-                     GET_NAME(victim));
+                     PERS(victim, ch));
       }
 
       act("$n fails to harm $N as the defensive stance holds firm!", ACT_CONDENSE_VALUE, ch, 0,
@@ -5562,7 +5562,7 @@ int damage_handling(struct char_data *ch, struct char_data *victim, int dam, int
       }
       else
       {
-        send_to_char(ch, "\tR%s\tR blocks the attack with %s\tR!\tn\r\n", GET_NAME(victim),
+        send_to_char(ch, "\tR%s\tR blocks the attack with %s\tR!\tn\r\n", PERS(victim, ch),
                      GET_OBJ_SHORT(GET_EQ(victim, WEAR_SHIELD)));
       }
 
@@ -5599,7 +5599,7 @@ int damage_handling(struct char_data *ch, struct char_data *victim, int dam, int
             send_to_char(ch,
                          "\tRYou have struck an illusionary "
                          "image of %s!\tn\r\n",
-                         GET_NAME(victim));
+                         PERS(victim, ch));
           }
 
           act("$n struck an illusionary image of $N!", ACT_CONDENSE_VALUE, ch, 0, victim,
@@ -5723,7 +5723,7 @@ int damage_handling(struct char_data *ch, struct char_data *victim, int dam, int
       else
       {
         send_to_char(ch, "\tRYou fail to cause %s any harm! (energy absorb: %d)\tn\r\n",
-                     GET_NAME(victim), damage_reduction);
+                     PERS(victim, ch), damage_reduction);
       }
 
       act("$n fails to do any harm to $N!", ACT_CONDENSE_VALUE, ch, 0, victim, TO_NOTVICT);
@@ -5780,7 +5780,7 @@ int damage_handling(struct char_data *ch, struct char_data *victim, int dam, int
       else
       {
         send_to_char(ch, "\tRYou fail to cause %s any harm! (dam-type reduction: %d)\tn\r\n",
-                     GET_NAME(victim), (int)damtype_reduction);
+                     PERS(victim, ch), (int)damtype_reduction);
       }
 
       act("$n fails to do any harm to $N!", ACT_CONDENSE_VALUE, ch, 0, victim, TO_NOTVICT);
@@ -5928,7 +5928,7 @@ int damage_handling(struct char_data *ch, struct char_data *victim, int dam, int
         else
         {
           send_to_char(ch, "\tRYou fail to cause %s any harm! (damaged reduction: %d)\tn\r\n",
-                       GET_NAME(victim), damage_reduction);
+                       PERS(victim, ch), damage_reduction);
         }
 
         act("$n fails to do any harm to $N!", ACT_CONDENSE_VALUE, ch, 0, victim, TO_NOTVICT);
@@ -6646,10 +6646,10 @@ int damage(struct char_data *ch, struct char_data *victim, int dam, int w_type, 
       {
         /* Paladin takes the damage instead */
         send_to_char(k, "\tWYou invoke Divine Sacrifice, taking the damage meant for %s!\tn\r\n",
-                     GET_NAME(victim));
+                     PERS(victim, k));
         send_to_char(victim,
                      "\tW%s invokes Divine Sacrifice, taking the damage meant for you!\tn\r\n",
-                     GET_NAME(k));
+                     PERS(k, victim));
         act("\tW$n glows with divine light, taking the damage meant for $N!\tn", FALSE, k, 0,
             victim, TO_NOTVICT);
 
@@ -6726,7 +6726,7 @@ int damage(struct char_data *ch, struct char_data *victim, int dam, int w_type, 
   if (ch && IS_EPIC_SPELL(w_type))
   {
     send_to_char(ch, "%s deals %d damage to %s.\r\n", spell_info[w_type].name, dam,
-                 GET_NAME(victim));
+                 PERS(victim, ch));
     epic_spell_damage_effects(ch, victim, w_type, MAX(1, CASTER_LEVEL(ch)), dam);
   }
 
@@ -6770,7 +6770,7 @@ int damage(struct char_data *ch, struct char_data *victim, int dam, int w_type, 
                    GET_NAME(victim), shield);
       send_to_char(
           victim, "%s's Aegis Protocol cushions the spell impact with %d temporary hit points.\r\n",
-          GET_NAME(best_artificer), shield);
+          PERS(best_artificer, victim), shield);
     }
   }
 
@@ -6858,7 +6858,7 @@ int damage(struct char_data *ch, struct char_data *victim, int dam, int w_type, 
           send_to_char(
               ch,
               "%s refuses to fall as a soulbound infusion detonates into a defensive surge!\r\n",
-              GET_NAME(victim));
+              PERS(victim, ch));
         }
         act("$n staggers but refuses to fall as a bound invention burns away in a flash of "
             "protective energy.",
@@ -6980,7 +6980,7 @@ int damage(struct char_data *ch, struct char_data *victim, int dam, int w_type, 
 
           send_to_char(
               k, "\tRYour fury ignites as %s falls! You gain +4 to hit and +8 to damage!\tn\r\n",
-              GET_NAME(victim));
+              PERS(victim, k));
           act("\tR$n's eyes blaze with righteous fury!\tn", FALSE, k, 0, 0, TO_ROOM);
         }
       }
@@ -7071,7 +7071,7 @@ int damage(struct char_data *ch, struct char_data *victim, int dam, int w_type, 
   {
     send_to_char(victim,
                  "In damage() function, Position: %d, HP: %d, DAM: %d, Attacker %s, You: %s\r\n",
-                 GET_POS(victim), GET_HIT(victim), dam, GET_NAME(ch), GET_NAME(victim));
+                 GET_POS(victim), GET_HIT(victim), dam, PERS(ch, victim), GET_NAME(victim));
     int weapon_type = w_type - TOP_ATTACK_TYPES;
     if (weapon_type < 0 || weapon_type >= NUM_ATTACK_TYPES)
     {
@@ -10251,7 +10251,7 @@ int handle_warding(struct char_data *ch, struct char_data *victim, int dam)
     {
       send_to_char(victim, "\tWYour skin of stone absorbs the attack!\tn\r\n");
       send_to_char(ch, "\tRYou have failed to penetrate the stony skin of %s!\tn\r\n",
-                   GET_NAME(victim));
+                   PERS(victim, ch));
       act("$n fails to penetrate the stony skin of $N!", FALSE, ch, 0, victim, TO_NOTVICT);
       return -1;
     }
@@ -10284,7 +10284,7 @@ int handle_warding(struct char_data *ch, struct char_data *victim, int dam)
     {
       send_to_char(victim, "\tWYour ironskin absorbs the attack!\tn\r\n");
       send_to_char(ch, "\tRYou have failed to penetrate the ironskin of %s!\tn\r\n",
-                   GET_NAME(victim));
+                   PERS(victim, ch));
       act("$n fails to penetrate the ironskin of $N!", FALSE, ch, 0, victim, TO_NOTVICT);
       return -1;
     }
@@ -10320,7 +10320,7 @@ int handle_warding(struct char_data *ch, struct char_data *victim, int dam)
       send_to_char(victim, "\tWYour ward absorbs the attack!\tn\r\n");
       send_to_char(victim, "Epic Warding absorbed %d damage; %d absorption remains.\r\n",
                    warding, GET_STONESKIN(victim));
-      send_to_char(ch, "\tRYou have failed to penetrate the ward of %s!\tn\r\n", GET_NAME(victim));
+      send_to_char(ch, "\tRYou have failed to penetrate the ward of %s!\tn\r\n", PERS(victim, ch));
       act("$n fails to penetrate the ward of $N!", FALSE, ch, 0, victim, TO_NOTVICT);
       return -1;
     }
@@ -14475,7 +14475,7 @@ int handle_successful_attack(struct char_data *ch, struct char_data *victim,
       if (AFF_FLAGGED(ch, AFF_CHARGING))
       {
         send_to_char(ch, "You \tYcharge\tn: ");
-        send_to_char(victim, "%s \tYcharges\tn toward you: ", GET_NAME(ch));
+        send_to_char(victim, "%s \tYcharges\tn toward you: ", PERS(ch, victim));
         act("$n \tYcharges\tn toward $N!", FALSE, ch, NULL, victim, TO_NOTVICT);
       }
 
@@ -15360,14 +15360,14 @@ int hit(struct char_data *ch, struct char_data *victim, int type, int dam_type, 
     if (!(total_defense_attempt = skill_check(victim, ABILITY_TOTAL_DEFENSE, total_defense_DC)))
     {
       send_to_char(victim, "You failed to \tcdefend\tn yourself from the attack from %s!  ",
-                   GET_NAME(ch));
+                   PERS(ch, victim));
     }
     else if ((total_defense_attempt + (2 * HAS_FEAT(ch, FEAT_RIPOSTE))) >= 10)
     {
       /* We can riposte, as the 'skill check' was 10 or more higher than the DC. */
-      send_to_char(victim, "You deftly \tcriposte the attack\tn from %s!\r\n", GET_NAME(ch));
+      send_to_char(victim, "You deftly \tcriposte the attack\tn from %s!\r\n", PERS(ch, victim));
       send_to_char(ch, "%s \tCdefends\tn from your attack and counterattacks!\r\n",
-                   GET_NAME(victim));
+                   PERS(victim, ch));
       act("$N \tDdefends\tn from an attack from $n!", FALSE, ch, 0, victim, TO_NOTVICT);
 
       /* fire any parry specs we might have */
@@ -15388,8 +15388,8 @@ int hit(struct char_data *ch, struct char_data *victim, int type, int dam_type, 
     }
     else
     {
-      send_to_char(victim, "You \tcdefend\tn yourself from the attack from %s!\r\n", GET_NAME(ch));
-      send_to_char(ch, "%s \tCdefends\tn from your attack!\r\n", GET_NAME(victim));
+      send_to_char(victim, "You \tcdefend\tn yourself from the attack from %s!\r\n", PERS(ch, victim));
+      send_to_char(ch, "%s \tCdefends\tn from your attack!\r\n", PERS(victim, ch));
       act("$N \tDdefends\tn from an attack from $n!", FALSE, ch, 0, victim, TO_NOTVICT);
       TOTAL_DEFENSE(victim)
       --;
@@ -15430,9 +15430,9 @@ int hit(struct char_data *ch, struct char_data *victim, int type, int dam_type, 
     if (mounted_block_dc <= mounted_block_bonus)
     {
       send_to_char(victim, "You \tcmaneuver %s to block\tn the attack from %s!\r\n",
-                   GET_NAME(RIDING(victim)), GET_NAME(ch));
-      send_to_char(ch, "%s \tCmaneuvers %s to block\tn your attack!\r\n", GET_NAME(victim),
-                   GET_NAME(RIDING(victim)));
+                   PERS(RIDING(victim), victim), PERS(ch, victim));
+      send_to_char(ch, "%s \tCmaneuvers %s to block\tn your attack!\r\n", PERS(victim, ch),
+                   PERS(RIDING(victim), ch));
       act("$N \tDmaneuvers $S mount to block\tn an attack from $n!", FALSE, ch, 0, victim,
           TO_NOTVICT);
       MOUNTED_BLOCKS_LEFT(victim)

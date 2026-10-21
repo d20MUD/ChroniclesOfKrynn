@@ -7007,6 +7007,26 @@ struct player_invention
   bool broken;             /* Device is broken and cannot be used */
 };
 
+/* Cosmetic disguises never change racial mechanics or true character traits. */
+struct disguise_appearance
+{
+  unsigned long long instance;
+  int race, age, sex, roll;
+  int descriptor1, adjective1, descriptor2, adjective2;
+};
+
+/* One remembered result for the most recently observed disguise of each PC. */
+struct disguise_observation
+{
+  long subject;
+  unsigned long long instance;
+  int detected; /* -1: observed only with true sight; 0: failed; 1: succeeded */
+  unsigned long long true_form_signature; /* transient notice state; never saved */
+  bool true_sight_noticed; /* transient */
+  bool notice_pending; /* transient: emitted after the triggering act line */
+  struct disguise_observation *next;
+};
+
 struct player_special_data_saved
 {
   int color_256; /* Protocol preference: 0 automatic, 1 on, -1 explicitly off. */
@@ -7268,6 +7288,11 @@ struct player_special_data_saved
 
   room_vnum last_room;
 
+  unsigned long long disguise_generation;
+  struct disguise_appearance disguise;
+  int alter_self_race;
+  bool alter_self_active;
+  struct disguise_observation *disguise_observations;
   char *intro_list[MAX_INTROS]; // Stores names of characters known
 
   struct crafting_data_info craft_data; // New crafting system info
@@ -7422,6 +7447,7 @@ struct weird_science_level
  * of it labelled 'saved' is saved in the players file. */
 struct player_special_data
 {
+  char appearance_cast_args[MAX_INPUT_LENGTH]; /* Per-caster choices survive delayed casting. */
   long housing_house_id, housing_room_id;
   unsigned long long estate_credit_receipt, estate_debit_receipt;
   struct player_special_data_saved saved; /**< Information to be saved. */

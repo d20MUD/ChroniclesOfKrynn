@@ -606,6 +606,12 @@ int load_char(const char *name, struct char_data *ch)
     GET_CRAFT(ch).craft_specialization[0] = -1;
     GET_CRAFT(ch).craft_specialization[1] = -1;
 
+    free_disguise_observations(ch);
+    memset(&COSMETIC_DISGUISE(ch), 0, sizeof(COSMETIC_DISGUISE(ch)));
+    ch->player_specials->saved.alter_self_active = FALSE;
+    ALTER_SELF_RACE(ch) = 0;
+    ch->player_specials->saved.disguise_generation = 0;
+
     /* Initialize introduction list */
     for (i = 0; i < MAX_INTROS; i++)
       ch->player_specials->saved.intro_list[i] = NULL;
@@ -767,7 +773,16 @@ int load_char(const char *name, struct char_data *ch)
       switch (*tag)
       {
       case 'A':
-        if (!strcmp(tag, "Ablt"))
+        if (!strcmp(tag, "AlRc"))
+        {
+          int race;
+          if (sscanf(line, "%d", &race) == 1 && race >= 0 && race < NUM_EXTENDED_RACES && race_list[race].is_pc)
+          {
+            ALTER_SELF_RACE(ch) = race;
+            ch->player_specials->saved.alter_self_active = TRUE;
+          }
+        }
+        else if (!strcmp(tag, "Ablt"))
           load_abilities(fl, ch);
         if (!strcmp(tag, "AbXP"))
           load_ability_exp(fl, ch);
@@ -1040,6 +1055,25 @@ int load_char(const char *name, struct char_data *ch)
           load_dr(fl, ch);
         else if (!strcmp(tag, "Desc"))
           ch->player.description = fread_string(fl, buf2);
+        else if (!strcmp(tag, "DgGn"))
+        {
+          unsigned long long generation = 0;
+          if (sscanf(line, "%llu", &generation) == 1 &&
+              generation > ch->player_specials->saved.disguise_generation)
+            ch->player_specials->saved.disguise_generation = generation;
+        }
+        else if (!strcmp(tag, "DgA2"))
+          load_cosmetic_disguise(ch, line);
+        else if (!strcmp(tag, "DgAp"))
+        {
+          /* Previous free-text disguises must be reapplied with shared descriptor IDs. */
+          unsigned long long old_instance = 0;
+          if (sscanf(line, "%llu", &old_instance) == 1 &&
+              old_instance > ch->player_specials->saved.disguise_generation)
+            ch->player_specials->saved.disguise_generation = old_instance;
+        }
+        else if (!strcmp(tag, "DgOb"))
+          load_disguise_observation(ch, line);
         else if (!strcmp(tag, "DvCD"))
           ch->player_specials->saved.device_creation_cooldown = (time_t)atol(line);
         else if (!strcmp(tag, "Dvis"))
@@ -2216,6 +2250,12 @@ int load_char(const char *name, struct char_data *ch)
   if (CLASS_LEVEL(ch, CLASS_DRAGONRIDER) > 0)
     HAS_REAL_FEAT(ch, FEAT_DRAGON_FLIGHT) = 1;
 
+  reconcile_alter_self(ch);
+
+  /* Legacy nonmagical race-only disguises must be reapplied using the new command.
+   * Wildshape and other magical forms keep their existing mechanics. */
+  if (GET_DISGUISE_RACE(ch) && !AFF_FLAGGED(ch, AFF_WILD_SHAPE) && !IS_MORPHED(ch))
+    GET_DISGUISE_RACE(ch) = 0;
   affect_total(ch);
 
   /* initialization for imms */
@@ -2975,6 +3015,24 @@ void save_char(struct char_data *ch, int mode)
     for (i = 0; i < GET_NUM_QUESTS(ch); i++)
       BUFFER_WRITE("%d\n", ch->player_specials->saved.completed_quests[i]);
     BUFFER_WRITE("%d\n", NOTHING);
+  }
+
+  if (ch->player_specials->saved.disguise_generation)
+    BUFFER_WRITE("DgGn: %llu\n", ch->player_specials->saved.disguise_generation);
+  if (COSMETIC_DISGUISE(ch).instance)
+  {
+    struct disguise_appearance *appearance = &COSMETIC_DISGUISE(ch);
+    BUFFER_WRITE("DgA2: %llu %d %d %d %d %d %d %d %d\n", appearance->instance, appearance->race,
+                 appearance->age, appearance->sex, appearance->roll, appearance->descriptor1,
+                 appearance->adjective1, appearance->descriptor2, appearance->adjective2);
+  }
+  if (IS_ALTER_SELF(ch))
+    BUFFER_WRITE("AlRc: %d\n", ALTER_SELF_RACE(ch));
+  {
+    struct disguise_observation *entry;
+    for (entry = ch->player_specials->saved.disguise_observations; entry; entry = entry->next)
+      if (entry->instance)
+        BUFFER_WRITE("DgOb: %ld %llu %d\n", entry->subject, entry->instance, entry->detected);
   }
 
   /* Save introduction list */
@@ -5481,15 +5539,15 @@ static void load_introductions(FILE *fl, struct char_data *ch)
   i = 0;
 
   /* Read first line to detect format */
-  get_line(fl, line);
+  if (!get_line(fl, line) || !strcmp(line, "~"))
+    return;
 
   /* Check if this is old numeric format by testing first line */
   if (sscanf(line, "%ld", &test_num) == 1 && strlen(line) < 10)
   {
     /* Keep reading and discarding old format data */
-    while (1)
+    while (get_line(fl, line))
     {
-      get_line(fl, line);
       /* Stop when we hit NOTHING (-1) or a non-numeric line */
       if (sscanf(line, "%ld", &test_num) != 1 || test_num == -1 || test_num == NOTHING)
         break;
@@ -5505,14 +5563,13 @@ static void load_introductions(FILE *fl, struct char_data *ch)
     i++;
   }
 
-  /* Continue reading new format data */
-  while (i < MAX_INTROS)
+  /* Consume the terminator even when all introduction slots are occupied. */
+  while (get_line(fl, line))
   {
-    get_line(fl, line);
     if (strcmp(line, "~") == 0)
       break;
 
-    if (*line)
+    if (*line && i < MAX_INTROS)
     {
       ch->player_specials->saved.intro_list[i] = strdup(line);
       i++;

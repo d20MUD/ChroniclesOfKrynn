@@ -1699,7 +1699,7 @@ ACMD(do_clanaward)
 
   send_to_char(l, "%sCLAN: You have been awarded %s%ld%s clan points!%s\r\n", CCMAG(l, C_NRM),
                CBYEL(l, C_NRM), num_cp, CCMAG(l, C_NRM), CCNRM(l, C_NRM));
-  send_to_char(ch, "%s has been awarded %s%ld%s clan points!\r\n", GET_NAME(l), QBYEL, num_cp,
+  send_to_char(ch, "%s has been awarded %s%ld%s clan points!\r\n", PERS(l, ch), QBYEL, num_cp,
                QNRM);
   send_to_char(ch,
                "%s%s%s Double Dollars has been taken from the "
@@ -1955,7 +1955,7 @@ ACMD(do_clancreate)
   /* Member (Rank 5): Claim zones      */
   new_clan.privilege[CP_CLAIM] = RANK_LEADERONLY;
 
-  send_to_char(ch, "Adding clan '%s' (Leader: %s) at VNUM %d\r\n", c_n, GET_NAME(l), v);
+  send_to_char(ch, "Adding clan '%s' (Leader: %s) at VNUM %d\r\n", c_n, PERS(l, ch), v);
   if (add_clan(&new_clan))
   {
     send_to_char(ch, "Clan added successfully.\r\n");
@@ -2036,7 +2036,7 @@ ACMD(do_clandemote)
             send_to_char(ch,
                          "Sorry, %s seems to have invalid clan data."
                          " Aborting!\r\n",
-                         GET_NAME(vict));
+                         PERS(vict, ch));
             return;
           }
         }
@@ -2052,7 +2052,7 @@ ACMD(do_clandemote)
             send_to_char(ch,
                          "Sorry, %s seems to have invalid clan data."
                          " Aborting!\r\n",
-                         GET_NAME(vict));
+                         PERS(vict, ch));
             return;
           }
         }
@@ -2065,14 +2065,14 @@ ACMD(do_clandemote)
         }
         if (GET_CLANRANK(vict) >= clan_list[c_n].ranks)
         {
-          send_to_char(ch, "%s is already at the lowest rank!\r\n", GET_NAME(vict));
+          send_to_char(ch, "%s is already at the lowest rank!\r\n", PERS(vict, ch));
           return;
         }
         GET_CLANRANK(vict) = GET_CLANRANK(vict) + 1;
         save_char(vict, 0);
         send_to_char(vict, "You have been demoted to %s within your clan!\r\n",
                      clan_list[c_n].rank_name[(GET_CLANRANK(vict) - 1)]);
-        send_to_char(ch, "%s has been demoted to %s!\r\n", GET_NAME(vict),
+        send_to_char(ch, "%s has been demoted to %s!\r\n", PERS(vict, ch),
                      clan_list[c_n].rank_name[(GET_CLANRANK(vict) - 1)]);
 
         /* Log the demotion */
@@ -2104,7 +2104,7 @@ ACMD(do_clandemote)
             send_to_char(ch,
                          "Sorry, %s seems to have invalid clan data. "
                          "Aborting!\r\n",
-                         GET_NAME(vict));
+                         PERS(vict, ch));
             return;
           }
         }
@@ -2120,7 +2120,7 @@ ACMD(do_clandemote)
             send_to_char(ch,
                          "Sorry, %s seems to have invalid clan data. "
                          "Aborting!\r\n",
-                         GET_NAME(vict));
+                         PERS(vict, ch));
             return;
           }
         }
@@ -2134,7 +2134,7 @@ ACMD(do_clandemote)
         }
         if (GET_CLANRANK(vict) >= clan_list[c_n].ranks)
         {
-          send_to_char(ch, "%s is already at the lowest rank!\r\n", GET_NAME(vict));
+          send_to_char(ch, "%s is already at the lowest rank!\r\n", PERS(vict, ch));
           free_char(vict);
           return;
         }
@@ -2142,7 +2142,7 @@ ACMD(do_clandemote)
         GET_PFILEPOS(vict) = p_pos;
         save_char(vict, 0);
 
-        send_to_char(ch, "%s has been demoted to %s!\r\n", GET_NAME(vict),
+        send_to_char(ch, "%s has been demoted to %s!\r\n", PERS(vict, ch),
                      clan_list[c_n].rank_name[(GET_CLANRANK(vict) - 1)]);
         send_to_char(ch, "Saved to file.\r\n");
         free_char(vict);
@@ -2574,19 +2574,19 @@ ACMD(do_clanenrol)
 
   if ((c_n = real_clan(GET_CLAN(v))) == NO_CLAN)
   {
-    send_to_char(ch, "%s has not yet applied to join any clan.\r\n", GET_NAME(v));
+    send_to_char(ch, "%s has not yet applied to join any clan.\r\n", PERS(v, ch));
     return;
   }
 
   if (!immcom && (c_n != real_clan(GET_CLAN(ch))))
   {
-    send_to_char(ch, "%s has not applied to join YOUR clan.\r\n", GET_NAME(v));
+    send_to_char(ch, "%s has not applied to join YOUR clan.\r\n", PERS(v, ch));
     return;
   }
 
   if (GET_CLANRANK(v) != NO_CLANRANK)
   {
-    send_to_char(ch, "%s is already enrolled.\r\n", GET_NAME(v));
+    send_to_char(ch, "%s is already enrolled.\r\n", PERS(v, ch));
     return;
   }
 
@@ -2616,7 +2616,7 @@ ACMD(do_clanenrol)
   mark_clan_modified(c_n);
   save_single_clan(c_n);
 
-  send_to_char(ch, "%s is now a member of %s%s.\r\n", GET_NAME(v), clan_list[(c_n)].clan_name,
+  send_to_char(ch, "%s is now a member of %s%s.\r\n", PERS(v, ch), clan_list[(c_n)].clan_name,
                QNRM);
   send_to_char(v, "You have been enrolled into %s%s.\r\n", clan_list[(c_n)].clan_name,
                CCNRM(v, C_NRM));
@@ -2746,7 +2746,7 @@ ACMD(do_clanexpel) /* Expel a member */
 
     send_to_char(v, "You have been expelled from %s%s!\r\n", clan_list[(c_n)].clan_name,
                  CCNRM(v, C_NRM));
-    send_to_char(ch, "You have expelled %s from %s%s!\r\n", GET_NAME(v), clan_list[(c_n)].clan_name,
+    send_to_char(ch, "You have expelled %s from %s%s!\r\n", PERS(v, ch), clan_list[(c_n)].clan_name,
                  CCNRM(v, C_NRM));
     log("(CLAN) %s has expelled %s from %s!\r\n", GET_NAME(ch), GET_NAME(v),
         clan_list[(c_n)].clan_name);
@@ -2781,7 +2781,7 @@ ACMD(do_clanexpel) /* Expel a member */
 
     send_to_char(v, "You have been expelled from %s%s!\r\n", clan_list[(c_n)].clan_name,
                  CCNRM(v, C_NRM));
-    send_to_char(ch, "You have expelled %s from %s%s!\r\n", GET_NAME(v), clan_list[(c_n)].clan_name,
+    send_to_char(ch, "You have expelled %s from %s%s!\r\n", PERS(v, ch), clan_list[(c_n)].clan_name,
                  CCNRM(v, C_NRM));
     send_to_char(ch, "Saved to file.\r\n");
     log("(CLAN) %s has expelled %s from %s!\r\n", GET_NAME(ch), GET_NAME(v),
@@ -3218,7 +3218,7 @@ ACMD(do_clanowner)
   mark_clan_modified(c_n);
   save_single_clan(c_n);
 
-  send_to_char(ch, "Ownership changed to %s.\r\n", GET_NAME(new_l));
+  send_to_char(ch, "Ownership changed to %s.\r\n", PERS(new_l, ch));
   send_to_char(new_l, "You have been promoted to Clan Leader!\r\n");
   send_to_char(new_l, "'%s' is now YOUR clan!\r\n", clan_list[c_n].clan_name);
 }
@@ -3282,7 +3282,7 @@ ACMD(do_clanpromote)
             send_to_char(ch,
                          "Sorry, %s seems to have invalid clan data."
                          " Aborting!\r\n",
-                         GET_NAME(vict));
+                         PERS(vict, ch));
             return;
           }
         }
@@ -3298,19 +3298,19 @@ ACMD(do_clanpromote)
             send_to_char(ch,
                          "Sorry, %s seems to have invalid clan data."
                          " Aborting!\r\n",
-                         GET_NAME(vict));
+                         PERS(vict, ch));
             return;
           }
         }
 
         if (!immcom && GET_CLANRANK(vict) <= GET_CLANRANK(ch))
         {
-          send_to_char(ch, "You cannot promote %s above your own rank!\r\n", GET_NAME(vict));
+          send_to_char(ch, "You cannot promote %s above your own rank!\r\n", PERS(vict, ch));
           return;
         }
         if (GET_CLANRANK(vict) <= 1)
         {
-          send_to_char(ch, "%s is already at the highest rank!\r\n", GET_NAME(vict));
+          send_to_char(ch, "%s is already at the highest rank!\r\n", PERS(vict, ch));
           return;
         }
         GET_CLANRANK(vict) = rk_num;
@@ -3319,7 +3319,7 @@ ACMD(do_clanpromote)
                      "You have been promoted to %s within your"
                      " clan!\r\n",
                      clan_list[c_n].rank_name[(GET_CLANRANK(vict) - 1)]);
-        send_to_char(ch, "%s has been promoted to %s!\r\n", GET_NAME(vict),
+        send_to_char(ch, "%s has been promoted to %s!\r\n", PERS(vict, ch),
                      clan_list[c_n].rank_name[(GET_CLANRANK(vict) - 1)]);
 
         /* Log the promotion */
@@ -3351,7 +3351,7 @@ ACMD(do_clanpromote)
             send_to_char(ch,
                          "Sorry, %s seems to have invalid clan data. "
                          "Aborting!\r\n",
-                         GET_NAME(vict));
+                         PERS(vict, ch));
             return;
           }
         }
@@ -3367,20 +3367,20 @@ ACMD(do_clanpromote)
             send_to_char(ch,
                          "Sorry, %s seems to have invalid clan data. "
                          "Aborting!\r\n",
-                         GET_NAME(vict));
+                         PERS(vict, ch));
             return;
           }
         }
 
         if (!immcom && GET_CLANRANK(vict) <= GET_CLANRANK(ch))
         {
-          send_to_char(ch, "You cannot promote %s above your own rank!\r\n", GET_NAME(vict));
+          send_to_char(ch, "You cannot promote %s above your own rank!\r\n", PERS(vict, ch));
           free_char(vict);
           return;
         }
         if (GET_CLANRANK(vict) <= 1)
         {
-          send_to_char(ch, "%s is already at the highest rank!\r\n", GET_NAME(vict));
+          send_to_char(ch, "%s is already at the highest rank!\r\n", PERS(vict, ch));
           free_char(vict);
           return;
         }
@@ -3388,7 +3388,7 @@ ACMD(do_clanpromote)
         GET_PFILEPOS(vict) = p_pos;
         save_char(vict, 0);
 
-        send_to_char(ch, "%s has been promoted to %s!\r\n", GET_NAME(vict),
+        send_to_char(ch, "%s has been promoted to %s!\r\n", PERS(vict, ch),
                      clan_list[c_n].rank_name[(GET_CLANRANK(vict) - 1)]);
         send_to_char(ch, "Saved to file.\r\n");
         free_char(vict);
@@ -3496,13 +3496,13 @@ ACMD(do_clanwhere)
                        "              Zone%s\r\n",
                        QCYN, QNRM);
         if (GET_IDNUM(vict) == clan_list[c].leader)
-          send_to_char(ch, "%-15s  %sClan Leader!%s  %-25s%s  %-20s%s\r\n", GET_NAME(vict), QBWHT,
+          send_to_char(ch, "%-15s  %sClan Leader!%s  %-25s%s  %-20s%s\r\n", PERS(vict, ch), QBWHT,
                        QNRM, world[r].name, QNRM, zone_table[z].name, QNRM);
         else if (c_r == NO_CLANRANK)
-          send_to_char(ch, "%-15s  %s(Applicant) %s  %-25s%s  %-20s%s\r\n", GET_NAME(vict), QBRED,
+          send_to_char(ch, "%-15s  %s(Applicant) %s  %-25s%s  %-20s%s\r\n", PERS(vict, ch), QBRED,
                        QNRM, world[r].name, QNRM, zone_table[z].name, QNRM);
         else
-          send_to_char(ch, "%-15s  %-12s%s  %-25s%s  %-20s%s\r\n", GET_NAME(vict),
+          send_to_char(ch, "%-15s  %-12s%s  %-25s%s  %-20s%s\r\n", PERS(vict, ch),
                        clan_list[c].rank_name[(c_r - 1)], QNRM, world[r].name, QNRM,
                        zone_table[z].name, QNRM);
       }

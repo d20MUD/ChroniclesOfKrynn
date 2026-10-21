@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026 development roundup
+
+- [June 7–October 14, 2026: gameplay changes, fixes, and commit history](CHANGELOG-2026-06-07-to-2026-10-14.md)
+- [Website news draft: new paths, lasting companions, and a place to call home](news/2026-10-16-krynn-update.md)
+
 # [Unreleased] - October 10, 2025
 
 ### Minimal World Bootstrap & Database Hardening

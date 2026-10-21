@@ -1093,7 +1093,7 @@ ACMDU(do_temote)
     return;
   }
 
-  snprintf(out, sizeof(out), "\tC(%s)\tn %s", GET_NAME(ch), CAP(to_room));
+  snprintf(out, sizeof(out), "\tC($n)\tn %s", CAP(to_room));
   act(out, FALSE, ch, 0, vict, TO_CHAR);
   act(out, FALSE, ch, 0, vict, TO_NOTVICT);
 }

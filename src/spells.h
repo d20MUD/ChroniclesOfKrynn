@@ -1809,6 +1809,7 @@ ASPELL(tenacious_plague);
 ASPELL(wall_of_perilous_flame);
 ASPELL(devour_magic);
 ASPELL(spell_hurl_through_hell);
+int find_alter_self_race(const char *argument);
 ASPELL(spell_alter_self);
 
 /* basic magic calling functions */

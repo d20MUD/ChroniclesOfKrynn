@@ -1255,13 +1255,13 @@ ACMD(do_talento)
   {
     if (!*arg3)
     {
-      send_to_char(ch, "%s currently has %d talent point%s.\r\n", GET_NAME(vict),
+      send_to_char(ch, "%s currently has %d talent point%s.\r\n", PERS(vict, ch),
                    GET_TALENT_POINTS(vict), GET_TALENT_POINTS(vict) == 1 ? "" : "s");
       return;
     }
     value = atoi(arg3);
     GET_TALENT_POINTS(vict) = MAX(0, value);
-    send_to_char(ch, "%s now has %d talent point%s.\r\n", GET_NAME(vict), GET_TALENT_POINTS(vict),
+    send_to_char(ch, "%s now has %d talent point%s.\r\n", PERS(vict, ch), GET_TALENT_POINTS(vict),
                  GET_TALENT_POINTS(vict) == 1 ? "" : "s");
     send_to_char(vict, "Your talent points have been set to %d by an immortal.\r\n",
                  GET_TALENT_POINTS(vict));
@@ -1281,7 +1281,7 @@ ACMD(do_talento)
   {
     int rank = get_talent_rank(vict, talent_num);
     int maxr = talent_max_ranks(talent_num);
-    send_to_char(ch, "%s's talent '%s': Rank %d/%d\r\n", GET_NAME(vict),
+    send_to_char(ch, "%s's talent '%s': Rank %d/%d\r\n", PERS(vict, ch),
                  talent_list[talent_num].name, rank, maxr);
     return;
   }
@@ -1296,7 +1296,7 @@ ACMD(do_talento)
   if (talent_num > 0 && talent_num < TALENT_MAX)
     vict->player_specials->saved.talent_ranks[talent_num] = (ubyte)value;
 
-  send_to_char(ch, "%s's talent '%s' set to rank %d.\r\n", GET_NAME(vict),
+  send_to_char(ch, "%s's talent '%s' set to rank %d.\r\n", PERS(vict, ch),
                talent_list[talent_num].name, value);
   send_to_char(vict, "Your talent '%s' has been set to rank %d by an immortal.\r\n",
                talent_list[talent_num].name, value);

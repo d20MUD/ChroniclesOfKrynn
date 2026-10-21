@@ -43,6 +43,18 @@ void HandleStateGenericDescsDescriptors2(struct descriptor_data *d, char *arg);
 void HandleStateGenericDescsAdjectives1(struct descriptor_data *d, char *arg);
 void HandleStateGenericDescsDescriptors1(struct descriptor_data *d, char *arg);
 void HandleStateGenericsDescsIntro(struct descriptor_data *d, char *arg);
+/* The same feature IDs and adjective tables serve natural and disguised appearances. */
+bool parse_disguise_appearance(struct char_data *ch, const char *argument,
+                               struct disguise_appearance *appearance);
+bool valid_short_desc_feature(int feature, int adjective);
+bool parse_short_desc_feature(const char *choice, int *feature, int *adjective);
+void short_desc_descriptors_menu(struct char_data *ch);
+void short_desc_adjectives_menu(struct char_data *ch, int feature);
+int count_adjective_types(int feature);
+char *current_true_desc(struct char_data *ch);
+char *current_altered_desc(struct char_data *ch);
+bool has_altered_form(struct char_data *ch);
+int perceived_race(struct char_data *subject, struct char_data *observer);
 char *current_short_desc(struct char_data *ch);
 char *current_disguise_desc(struct char_data *ch);
 char *current_wildshape_desc(struct char_data *ch);

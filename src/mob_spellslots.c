@@ -432,11 +432,11 @@ void show_mob_spell_slots(struct char_data *ch, struct char_data *mob)
   if (MOB_FLAGGED(mob, MOB_UNLIMITED_SPELL_SLOTS))
   {
     send_to_char(ch, "%s has unlimited spell slots (spell slot system disabled).\r\n",
-                 GET_NAME(mob));
+                 PERS(mob, ch));
     return;
   }
 
-  send_to_char(ch, "\tCSpell Slots for %s:\tn\r\n", GET_NAME(mob));
+  send_to_char(ch, "\tCSpell Slots for %s:\tn\r\n", PERS(mob, ch));
   send_to_char(ch, "Circle   Current / Maximum\r\n");
   send_to_char(ch, "------   -----------------\r\n");
 

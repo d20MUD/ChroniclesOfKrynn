@@ -43,7 +43,7 @@ int script_players = YES;
 
 /* Should the MUD use an introduction system where players see short descriptions
  * instead of names until they introduce themselves? */
-int use_introduction_system = NO;
+int use_introduction_system = YES;
 
 /* Is the perk system enabled? If set to NO, players won't have perk stages between
  * levels, the perk command will do nothing, and perk-related functionality is disabled. */

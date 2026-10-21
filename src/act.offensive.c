@@ -487,7 +487,7 @@ void perform_icerabbit(struct char_data *ch, struct char_data *vict)
   if (same_room)
   {
     send_to_char(ch, "\tWYou summon a swarm of ice rabbits that leap toward %s!\tn\r\n",
-                 GET_NAME(vict));
+                 PERS(vict, ch));
     act("\tW$n summons a swarm of spectral ice rabbits that leap toward you!\tn", FALSE, ch, 0,
         vict, TO_VICT);
     act("\tW$n summons a swarm of spectral ice rabbits that leap toward $N!\tn", FALSE, ch, 0, vict,
@@ -1347,8 +1347,8 @@ void perform_rescue(struct char_data *ch, struct char_data *vict)
     tmp_ch = FIGHTING(vict);
     if (FIGHTING(tmp_ch) == ch)
     {
-      send_to_char(ch, "You have already rescued %s from %s.\r\n", GET_NAME(vict),
-                   GET_NAME(FIGHTING(ch)));
+      send_to_char(ch, "You have already rescued %s from %s.\r\n", PERS(vict, ch),
+                   PERS(FIGHTING(ch), ch));
       return;
     }
   }
@@ -1533,7 +1533,7 @@ bool perform_knockdown(struct char_data *ch, struct char_data *vict, int skill, 
     {
       if (display)
         send_to_char(ch, "%s's golem safeguards keep the construct anchored in place.\r\n",
-                     GET_NAME(vict->master));
+                     PERS(vict->master, ch));
       return FALSE;
     }
   }
@@ -1645,10 +1645,10 @@ bool perform_knockdown(struct char_data *ch, struct char_data *vict, int skill, 
       send_to_char(
           ch,
           "You failed to knock over %s due to stability boots!  Incoming counter attack!!! ...\r\n",
-          GET_NAME(vict));
+          PERS(vict, ch));
       send_to_char(
           vict, "You stand your ground against %s, and with a snarl attempt a counterattack!\r\n",
-          GET_NAME(ch));
+          PERS(ch, vict));
       act("$N via stability boots a knockdown attack from $n is resisted...  $N follows up with a "
           "counterattack!",
           FALSE, ch, 0, vict, TO_NOTVICT);
@@ -2351,7 +2351,7 @@ void apply_paladin_mercies(struct char_data *ch, struct char_data *vict)
       if ((af->location == APPLY_STR || af->location == APPLY_CON) && af->modifier < 0)
       {
         send_to_char(vict, "Affect '%s' has been healed!\r\n", spell_info[af->spell].name);
-        send_to_char(ch, "%s's Affect '%s' has been healed!\r\n", GET_NAME(vict),
+        send_to_char(ch, "%s's Affect '%s' has been healed!\r\n", PERS(vict, ch),
                      spell_info[af->spell].name);
         affect_from_char(vict, af->spell);
       }
@@ -2388,7 +2388,7 @@ void apply_paladin_mercies(struct char_data *ch, struct char_data *vict)
     af2.duration = CLASS_LEVEL(ch, CLASS_PALADIN) / 2;
     if (ch != vict)
     {
-      send_to_char(ch, "%s gains fast healing of 3 hp/round for %d rounds.\r\n", GET_NAME(vict),
+      send_to_char(ch, "%s gains fast healing of 3 hp/round for %d rounds.\r\n", PERS(vict, ch),
                    af2.duration);
       send_to_char(vict, "You gain fast healing of 3 hp/round for %d rounds.\r\n", af2.duration);
     }
@@ -2444,7 +2444,7 @@ void apply_paladin_mercies(struct char_data *ch, struct char_data *vict)
       {
         found = true;
         send_to_char(vict, "Affect '%s' has been healed!\r\n", spell_info[af->spell].name);
-        send_to_char(ch, "%s's Affect '%s' has been healed!\r\n", GET_NAME(vict),
+        send_to_char(ch, "%s's Affect '%s' has been healed!\r\n", PERS(vict, ch),
                      spell_info[af->spell].name);
         affect_from_char(vict, af->spell);
       }
@@ -2499,7 +2499,7 @@ void perform_layonhands(struct char_data *ch, struct char_data *vict)
   }
   else
   {
-    send_to_char(ch, "You heal %s! [%d]\r\n", GET_NAME(vict), heal_amount);
+    send_to_char(ch, "You heal %s! [%d]\r\n", PERS(vict, ch), heal_amount);
     act("You are \tWhealed\tn by $N!", FALSE, vict, 0, ch, TO_CHAR);
     act("$n \tWheals\tn $N!", FALSE, ch, 0, vict, TO_NOTVICT);
   }
@@ -2532,7 +2532,7 @@ void perform_layonhands(struct char_data *ch, struct char_data *vict)
         send_to_char(vict, "\tWYour affliction '%s' has been cleansed!\tn\r\n",
                      spell_info[af->spell].name);
         if (ch != vict)
-          send_to_char(ch, "\tWYou cleanse %s's affliction '%s'!\tn\r\n", GET_NAME(vict),
+          send_to_char(ch, "\tWYou cleanse %s's affliction '%s'!\tn\r\n", PERS(vict, ch),
                        spell_info[af->spell].name);
         affect_from_char(vict, af->spell);
         removed = TRUE;
@@ -4412,7 +4412,7 @@ ACMD(do_warcry)
 
         if (tch != ch)
         {
-          send_to_char(tch, "You feel empowered by %s's \tGwar cry\tn!\r\n", GET_NAME(ch));
+          send_to_char(tch, "You feel empowered by %s's \tGwar cry\tn!\r\n", PERS(ch, tch));
         }
       }
     }
@@ -6191,8 +6191,8 @@ static int frightful_callback(struct char_data *ch, struct char_data *tch, void 
   if (is_immune_fear(ch, tch, TRUE))
     return 0;
 
-  send_to_char(ch, "You roar at %s.\r\n", GET_NAME(tch));
-  send_to_char(tch, "A mighty roar from %s is directed at you!\r\n", GET_NAME(ch));
+  send_to_char(ch, "You roar at %s.\r\n", PERS(tch, ch));
+  send_to_char(tch, "A mighty roar from %s is directed at you!\r\n", PERS(ch, tch));
   act("$n roars at $N!", FALSE, ch, 0, tch, TO_NOTVICT);
 
   /* Check the save. */
@@ -8144,9 +8144,9 @@ static int tailsweep_callback(struct char_data *ch, struct char_data *tch, void 
   /* stability boots */
   if (is_wearing(tch, 132133) && rand_number(0, 1))
   {
-    send_to_char(ch, "You failed to knock over %s due to stability boots!\r\n", GET_NAME(tch));
+    send_to_char(ch, "You failed to knock over %s due to stability boots!\r\n", PERS(tch, ch));
     send_to_char(tch, "Via your stability boots, you hop over a tailsweep from %s.\r\n",
-                 GET_NAME(ch));
+                 PERS(ch, tch));
     act("$N via stability boots dodges a tailsweep from $n.", FALSE, ch, 0, tch, TO_NOTVICT);
     return 0;
   }
@@ -8156,8 +8156,8 @@ static int tailsweep_callback(struct char_data *ch, struct char_data *tch, void 
 
   if (percent > prob)
   {
-    send_to_char(ch, "You failed to knock over %s.\r\n", GET_NAME(tch));
-    send_to_char(tch, "You were able to dodge a tailsweep from %s.\r\n", GET_NAME(ch));
+    send_to_char(ch, "You failed to knock over %s.\r\n", PERS(tch, ch));
+    send_to_char(tch, "You were able to dodge a tailsweep from %s.\r\n", PERS(ch, tch));
     act("$N dodges a tailsweep from $n.", FALSE, ch, 0, tch, TO_NOTVICT);
     return 0;
   }
@@ -8165,8 +8165,8 @@ static int tailsweep_callback(struct char_data *ch, struct char_data *tch, void 
   {
     change_position(tch, POS_SITTING);
 
-    send_to_char(ch, "You knock over %s.\r\n", GET_NAME(tch));
-    send_to_char(tch, "You were knocked down by a tailsweep from %s.\r\n", GET_NAME(ch));
+    send_to_char(ch, "You knock over %s.\r\n", PERS(tch, ch));
+    send_to_char(tch, "You were knocked down by a tailsweep from %s.\r\n", PERS(ch, tch));
     act("$N is knocked down by a tailsweep from $n.", FALSE, ch, 0, tch, TO_NOTVICT);
 
     /* fire-shield, etc check */
@@ -13871,7 +13871,7 @@ ACMD(do_mark)
   {
     if (GET_MARK(ch))
       send_to_char(ch, "You are marking %s. Usage: mark <target|clear>\r\n",
-                   GET_NAME(GET_MARK(ch)));
+                   PERS(GET_MARK(ch), ch));
     else
       send_to_char(ch, "Usage: mark <target|clear>\r\n");
     return;
@@ -16768,7 +16768,7 @@ void perform_clenchofnorthwind(struct char_data *ch, struct char_data *vict)
     return;
 
   send_to_char(ch, "\tCYou focus your ki and strike %s with the Clench of the North Wind!\tn\r\n",
-               GET_NAME(vict));
+               PERS(vict, ch));
   act("\tC$n strikes you with a freezing cold attack!\tn", FALSE, ch, 0, vict, TO_VICT);
   act("\tC$n strikes $N with a blast of freezing cold!\tn", FALSE, ch, 0, vict, TO_NOTVICT);
 
@@ -16900,7 +16900,7 @@ ACMD(do_masscurewounds)
         if (tch == ch)
           send_to_char(tch, "You are healed for %d hit points.\r\n", healing);
         else
-          send_to_char(tch, "%s heals you for %d hit points.\r\n", GET_NAME(ch), healing);
+          send_to_char(tch, "%s heals you for %d hit points.\r\n", PERS(ch, tch), healing);
       }
     }
   }

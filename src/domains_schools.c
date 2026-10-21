@@ -24,20 +24,19 @@
 struct domain_info domain_list[NUM_DOMAINS];
 struct school_info school_list[NUM_SCHOOLS];
 
-const int restricted_school_reference[NUM_SCHOOLS + 1] = {
-    /*universalist*/ NOSCHOOL,
+const int restricted_school_reference[NUM_SCHOOLS + 1] = {/*universalist*/ NOSCHOOL,
 
-    /*abjuration*/ DIVINATION,
-    /*conjuration*/ TRANSMUTATION,
-    /*Divination*/ ABJURATION,
-    /*Enchantment*/ ILLUSION,
-    /*Evocation*/ NECROMANCY,
-    /*Illusion*/ ENCHANTMENT,
-    /*Necromancy*/ EVOCATION,
-    /*Transmutation*/ CONJURATION,
+                                                          /*abjuration*/ DIVINATION,
+                                                          /*conjuration*/ TRANSMUTATION,
+                                                          /*Divination*/ ABJURATION,
+                                                          /*Enchantment*/ ILLUSION,
+                                                          /*Evocation*/ NECROMANCY,
+                                                          /*Illusion*/ ENCHANTMENT,
+                                                          /*Necromancy*/ EVOCATION,
+                                                          /*Transmutation*/ CONJURATION,
 
-    /* just in case we need a terminator */
-    -1};
+                                                          /* just in case we need a terminator */
+                                                          -1};
 
 /* schools of magic names */
 const char *const school_names[NUM_SCHOOLS + 1] = {"Universalist (No Specialty)", // 0
@@ -488,7 +487,7 @@ void assign_domains(void)
   /* 1st circle */ /* 2nd circle */
   add_domain_spells(DOMAIN_EVIL, SPELL_PROT_FROM_GOOD, SPELL_CIRCLE_A_GOOD,
                     /* 3rd circle */ /* 4th circle */ /* 5th circle */
-                    SPELL_RESERVED_DBC, SPELL_RESERVED_DBC, SPELL_SYMBOL_OF_PAIN,
+                    SPELL_LITANY_OF_DAMNATION, SPELL_RESERVED_DBC, SPELL_SYMBOL_OF_PAIN,
                     /* 6th circle */ /* 7th circle */ /* 8th circle */
                     SPELL_RESERVED_DBC, SPELL_EYEBITE, SPELL_RESERVED_DBC,
                     /* 9th circle */
@@ -560,7 +559,7 @@ void assign_domains(void)
   add_domain_powers(DOMAIN_TRICKERY, DOMAIN_POWER_DECEPTION, DOMAIN_POWER_COPYCAT,
                     DOMAIN_POWER_MASS_INVIS, DOMAIN_POWER_UNDEFINED, DOMAIN_POWER_UNDEFINED);
   /* 1st circle */ /* 2nd circle */
-  add_domain_spells(DOMAIN_TRICKERY, SPELL_RESERVED_DBC, SPELL_DETECT_INVIS,
+  add_domain_spells(DOMAIN_TRICKERY, SPELL_DISGUISE_SELF, SPELL_DETECT_INVIS,
                     /* 3rd circle */ /* 4th circle */ /* 5th circle */
                     SPELL_INVISIBLE, SPELL_RESERVED_DBC, SPELL_INVISIBILITY_SPHERE,
                     /* 6th circle */ /* 7th circle */ /* 8th circle */

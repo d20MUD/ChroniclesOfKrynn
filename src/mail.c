@@ -409,5 +409,5 @@ void notify_if_playing(struct char_data *from, int recipient_id)
   for (d = descriptor_list; d; d = d->next)
     if ((IS_PLAYING(d)) && (GET_IDNUM(d->character) == recipient_id) &&
         (has_mail(GET_IDNUM(d->character))))
-      send_to_char(d->character, "You have new mudmail from %s.\r\n", GET_NAME(from));
+      send_to_char(d->character, "You have new mudmail from %s.\r\n", PERS(from, d->character));
 }

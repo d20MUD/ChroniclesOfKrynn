@@ -32,6 +32,8 @@
 #include "act.h"
 #include "spec_procs.h"
 #include "class.h"
+#include "char_descs.h"
+#include "roleplay.h"
 #include "fight.h"
 #include "mail.h" /* for has_mail() */
 #include "shop.h"
@@ -2945,7 +2947,7 @@ ACMD(do_golemrepair)
 
   send_to_char(ch,
                "You begin carefully repairing %s. You rolled %d + %d Arcana = %d vs. DC %d.\r\n",
-               GET_NAME(golem), roll, skill, roll + skill, dc);
+               PERS(golem, ch), roll, skill, roll + skill, dc);
 
   if (roll + skill < dc)
   {
@@ -2968,7 +2970,7 @@ ACMD(do_golemrepair)
   heal_amount = missing_hp; /* Full repair on successful check */
 
   send_to_char(ch, "\tGSuccess!\tn You begin repairing %s, restoring \tc%d\tn hit points.\r\n",
-               GET_NAME(golem), heal_amount);
+               PERS(golem, ch), heal_amount);
   send_to_char(ch, "\tGMaterials used: %d units of %s\tn\r\n", material_needed,
                crafting_materials[material_type]);
   act("$n begins carefully repairing $N's structure.", FALSE, ch, 0, golem, TO_ROOM);
@@ -3363,7 +3365,7 @@ ACMDU(do_gain)
     return;
 
   /* limitations, have to be in 'normal' form to advance */
-  if (GET_DISGUISE_RACE(ch) || IS_MORPHED(ch))
+  if (GET_DISGUISE_RACE(ch) || IS_MORPHED(ch) || HAS_DISGUISE(ch) || IS_ALTER_SELF(ch))
   {
     send_to_char(ch, "You have to remove disguises, wildshape and/or polymorph "
                      "before advancing.\r\n");
@@ -4725,7 +4727,7 @@ bool wildshape_engine(struct char_data *ch, const char *argument, int mode)
     return FALSE;
   }
 
-  if (GET_DISGUISE_RACE(ch))
+  if (GET_DISGUISE_RACE(ch) || HAS_DISGUISE(ch) || IS_ALTER_SELF(ch))
   {
     send_to_char(ch, "You must remove your disguise before using wildshape.\r\n");
     return FALSE;
@@ -4754,8 +4756,6 @@ bool wildshape_engine(struct char_data *ch, const char *argument, int mode)
 
   snprintf(buf, sizeof(buf), "You change shape into a %s.", race_list[i].name);
   act(buf, true, ch, 0, 0, TO_CHAR);
-  snprintf(buf, sizeof(buf), "$n changes shape into a %s.", race_list[i].name);
-  act(buf, true, ch, 0, 0, TO_ROOM);
 
   send_to_char(ch, "Type 'wildshape return' to shift back to your normal form.\r\n");
 
@@ -4823,6 +4823,9 @@ bool wildshape_engine(struct char_data *ch, const char *argument, int mode)
   affect_total(ch);
   save_char(ch, 0);
   Crash_crashsave(ch);
+
+  snprintf(buf, sizeof(buf), "$n changes shape into a %s.", race_list[i].name);
+  act(buf, true, ch, 0, 0, TO_ROOM);
 
   return TRUE;
 }
@@ -4924,6 +4927,11 @@ void perform_shapechange(struct char_data *ch, char *arg, int mode)
 {
   int form = -1;
 
+  if (HAS_DISGUISE(ch) || IS_ALTER_SELF(ch))
+  {
+    send_to_char(ch, "Remove your disguise or alter self before changing form.\r\n");
+    return;
+  }
   if (!*arg)
   {
     if (!IS_MORPHED(ch))
@@ -5168,104 +5176,123 @@ int display_eligible_disguise_races(struct char_data *ch, const char *argument, 
     return i;
 }
 
+/* Applying a disguise is the only place its skill roll and identity are created. */
 ACMD(do_disguise)
 {
-  int i = 0;
-  char buf[200];
+  struct disguise_appearance appearance;
 
+  if (IS_NPC(ch))
+    return;
   skip_spaces_c(&argument);
-
+  if (!strn_cmp(argument, "dismiss", 7) && (!argument[7] || isspace((unsigned char)argument[7])))
+  {
+    int spell = 0;
+    const char *name = argument + 7;
+    skip_spaces_c(&name);
+    if (!str_cmp(name, "alter self"))
+      spell = SPELL_ALTER_SELF;
+    else if (!str_cmp(name, "disguise self"))
+      spell = SPELL_DISGUISE_SELF;
+    if (!spell)
+    {
+      send_to_char(ch, "Usage: disguise dismiss <alter self|disguise self>\r\n");
+      return;
+    }
+    if (!affected_by_spell(ch, spell))
+    {
+      send_to_char(ch, "That spell is not affecting you.\r\n");
+      return;
+    }
+    affect_from_char(ch, spell);
+    save_char(ch, 0);
+    send_to_char(ch, "You dismiss %s.\r\n", name);
+    USE_STANDARD_ACTION(ch);
+    return;
+  }
+  if (!strn_cmp(argument, "descriptors", 11) && (!argument[11] || isspace((unsigned char)argument[11])))
+  {
+    int feature, adjective;
+    char selection[64];
+    argument += 11;
+    skip_spaces_c(&argument);
+    if (!*argument)
+      short_desc_descriptors_menu(ch);
+    else
+    {
+      snprintf(selection, sizeof(selection), "%s:1", argument);
+      if (parse_short_desc_feature(selection, &feature, &adjective))
+        short_desc_adjectives_menu(ch, feature);
+      else
+        send_to_char(ch, "Choose eyes, nose, ears, face, scar, hair, build, complexion, fur, skin, horns, or scales.\r\n");
+    }
+    return;
+  }
+  if (!str_cmp(argument, "remove"))
+  {
+    if (!HAS_DISGUISE(ch))
+    {
+      send_to_char(ch, "You are not wearing a disguise.\r\n");
+      return;
+    }
+    act("$n removes $s disguise.", TRUE, ch, 0, 0, TO_ROOM);
+    memset(&COSMETIC_DISGUISE(ch), 0, sizeof(COSMETIC_DISGUISE(ch)));
+    save_char(ch, 0);
+    send_to_char(ch, "You remove your disguise.\r\n");
+    USE_STANDARD_ACTION(ch);
+    return;
+  }
+  if (!*argument)
+  {
+    send_to_char(ch, "Usage: disguise <race> | <age> | <gender> | <feature:adjective> | <feature:adjective>\r\n"
+                     "       disguise descriptors [feature]\r\n"
+                     "       disguise remove\r\n"
+                     "       disguise dismiss <alter self|disguise self>\r\n"
+                     "Example: disguise human | adult | female | hair:43 | eyes:2\r\n"
+                     "Ages: adult, adolescent, middle-aged, old-aged, venerable.\r\n"
+                     "Genders: neutral, male, female. Choose up to two descriptor/adjective pairs.\r\n"
+                     "Use none to omit a feature. Omitting both selections uses your real descriptors. Eligible races:\r\n");
+    display_eligible_disguise_races(ch, "", FALSE);
+    return;
+  }
   if (!GET_ABILITY(ch, ABILITY_DISGUISE))
   {
     send_to_char(ch, "You do not have the ability to disguise!\r\n");
     return;
   }
-
-  if (IS_WILDSHAPED(ch))
+  if (IS_WILDSHAPED(ch) || IS_MORPHED(ch) || GET_DISGUISE_RACE(ch))
   {
-    send_to_char(ch, "You cannot disguise while wild shaped.\r\n");
+    send_to_char(ch, "Return to your normal form before applying a disguise.\r\n");
     return;
   }
-
-  if (!*argument)
+  if (HAS_DISGUISE(ch))
   {
-    send_to_char(
-        ch,
-        "Please select a race to disguise or type 'disguise remove' to remove your disguise.\r\n");
-    display_eligible_disguise_races(ch, argument, FALSE);
+    send_to_char(ch, "Remove your current disguise before applying another.\r\n");
     return;
   }
-
-  if (strlen(argument) > 100)
-  {
-    send_to_char(ch, "The race name argument cannot be any longer than 100 characters.\r\n");
+  if (!parse_disguise_appearance(ch, argument, &appearance))
     return;
-  }
-
-  if (!strcmp(argument, "remove"))
-  {
-    if (!GET_DISGUISE_RACE(ch))
-    {
-      send_to_char(ch, "You are not currently disguised.\r\n");
-      return;
-    }
-
-    GET_DISGUISE_RACE(ch) = 0;
-    affect_total(ch);
-    save_char(ch, 0);
-    Crash_crashsave(ch);
-
-    snprintf(buf, sizeof(buf), "You remove your disguise and now again appear like a: %s.",
-             race_list[GET_RACE(ch)].type);
-    act(buf, true, ch, 0, 0, TO_CHAR);
-    snprintf(buf, sizeof(buf), "$n removes $s disguise, revealing $s race: %s.",
-             race_list[GET_RACE(ch)].type);
-    act(buf, true, ch, 0, 0, TO_ROOM);
-
-    USE_STANDARD_ACTION(ch);
-
-    return;
-  }
-
-  /*attempting to apply a disguise*/
-
-  if (AFF_FLAGGED(ch, AFF_WILD_SHAPE))
-  {
-    send_to_char(ch, "You must 'wildshape return' to return to your normal shape before trying to "
-                     "assume a disguise.\r\n");
-    return;
-  }
-  if (GET_DISGUISE_RACE(ch))
-  {
-    send_to_char(
-        ch, "You must 'disguise remove' to your normal race before assuming a new disguise.\r\n");
-    return;
-  }
-
-  /* try to match argument to the list */
-  i = display_eligible_disguise_races(ch, argument, TRUE);
-
-  if (i == 0)
-  { /* failed to find the race */
-    send_to_char(ch, "Please select a race to disguise to or type 'disguise remove'.\r\n");
-    display_eligible_disguise_races(ch, argument, FALSE);
-    return;
-  }
-
-  /* we're in the clear, set the disguise race! */
-  GET_DISGUISE_RACE(ch) = i;
-  affect_total(ch);
+  appearance.roll = d20(ch) + compute_ability(ch, ABILITY_DISGUISE);
+  appearance.instance = ++ch->player_specials->saved.disguise_generation;
+  /* Show the application using the old appearance, before observers can roll. */
+  act("$n puts on a disguise.", TRUE, ch, 0, 0, TO_ROOM);
+  COSMETIC_DISGUISE(ch) = appearance;
   save_char(ch, 0);
-  Crash_crashsave(ch);
-
-  snprintf(buf, sizeof(buf), "You disguises into a %s.", race_list[GET_DISGUISE_RACE(ch)].name);
-  act(buf, true, ch, 0, 0, TO_CHAR);
-  snprintf(buf, sizeof(buf), "$n disguises into a %s.", race_list[GET_DISGUISE_RACE(ch)].name);
-  act(buf, true, ch, 0, 0, TO_ROOM);
-
+  {
+    char *desc = current_disguise_desc(ch);
+    send_to_char(ch, "You disguise yourself as %s.\r\n", desc);
+    free(desc);
+  }
+  /* Everyone present gets their single check as soon as they see the result. */
+  {
+    struct char_data *observer;
+    for (observer = world[IN_ROOM(ch)].people; observer; observer = observer->next_in_room)
+      if (observer != ch && CAN_SEE(observer, ch) && AWAKE(observer))
+      {
+        disguise_detected(observer, ch);
+        show_disguise_notice(ch, observer);
+      }
+  }
   USE_STANDARD_ACTION(ch);
-
-  return;
 }
 
 ACMD(do_masterofelements)
@@ -5780,7 +5807,7 @@ ACMD(do_lore)
   /* If the target is the player's charmed creature, skip skill check */
   if (tch && IS_NPC(tch) && AFF_FLAGGED(tch, AFF_CHARM) && tch->master == ch)
   {
-    send_to_char(ch, "As your loyal companion, you know everything about %s.\r\n", GET_NAME(tch));
+    send_to_char(ch, "As your loyal companion, you know everything about %s.\r\n", PERS(tch, ch));
     lore_id_vict(ch, tch);
     return;
   }
@@ -5952,7 +5979,7 @@ ACMD(do_truelore)
 
   if (target && tch)
   {
-    send_to_char(ch, "Hidden truths about %s flood your mind.\r\n", GET_NAME(tch));
+    send_to_char(ch, "Hidden truths about %s flood your mind.\r\n", PERS(tch, ch));
     lore_id_vict(ch, tch);
     return;
   }
@@ -7321,8 +7348,8 @@ static void print_group(struct char_data *ch)
 
     send_to_char(
         ch, "%s%-*s: %s [%s] [%s%4d\tn/%-4d]H [%s%4d\tn/%-4d]P [%s%4d\tn/%-4d]V [%ld TNL]%s\r\n",
-        GROUP_LEADER(GROUP(ch)) == k ? "\tG*\tn" : " ", count_color_chars(GET_NAME(k)) + 30,
-        GET_NAME(k), IN_ROOM(ch) == IN_ROOM(k) ? "\tYInRoom\tn" : "\tRAbsent\tn",
+        GROUP_LEADER(GROUP(ch)) == k ? "\tG*\tn" : " ", count_color_chars(PERS(k, ch)) + 30,
+        PERS(k, ch), IN_ROOM(ch) == IN_ROOM(k) ? "\tYInRoom\tn" : "\tRAbsent\tn",
         formation_row_name(get_formation_row(k)), hp_clr,
         GET_HIT(k), GET_MAX_HIT(k), psp_clr, (GET_PSIONIC_LEVEL(k) <= 0) ? 0 : GET_PSP(k),
         (GET_PSIONIC_LEVEL(k) <= 0) ? 0 : GET_MAX_PSP(k), mv_clr, GET_MOVE(k), GET_MAX_MOVE(k),
@@ -7352,7 +7379,7 @@ void update_msdp_group(struct char_data *ch)
       while ((k = (struct char_data *)simple_list(ch->group->members)) != NULL)
       {
         char buf[4000]; // Buffer for building the group table for MSDP
-        // send_to_char(ch, "DEBUG: group member: %s", GET_NAME(k));
+        // send_to_char(ch, "DEBUG: group member: %s", PERS(k, ch));
         snprintf(buf, sizeof(buf),
                  "%c%c"
                  "%c%s%c%s"
@@ -7365,7 +7392,7 @@ void update_msdp_group(struct char_data *ch)
                  "%c%s%c%s"
                  "%c",
                  (char)MSDP_VAL, (char)MSDP_TABLE_OPEN, (char)MSDP_VAR, "NAME", (char)MSDP_VAL,
-                 GET_NAME(k), (char)MSDP_VAR, "LEVEL", (char)MSDP_VAL, GET_LEVEL(k), (char)MSDP_VAR,
+                 PERS(k, ch), (char)MSDP_VAR, "LEVEL", (char)MSDP_VAL, GET_LEVEL(k), (char)MSDP_VAR,
                  "IS_LEADER", (char)MSDP_VAL, (GROUP_LEADER(GROUP(k)) == k ? 1 : 0), (char)MSDP_VAR,
                  "HEALTH", (char)MSDP_VAL, GET_HIT(k), (char)MSDP_VAR, "HEALTH_MAX", (char)MSDP_VAL,
                  GET_MAX_HIT(k), (char)MSDP_VAR, "MOVEMENT", (char)MSDP_VAL, GET_MOVE(k),
@@ -7459,7 +7486,7 @@ static void display_group_list(struct char_data *ch)
       if (GROUP_LEADER(group) && !IS_SET(GROUP_FLAGS(group), GROUP_ANON))
         send_to_char(ch, "%-2d) %s%-12s     %-2d        %-3s    %s%s\r\n", ++count,
                      IS_SET(GROUP_FLAGS(group), GROUP_OPEN) ? CCGRN(ch, C_NRM) : CCRED(ch, C_NRM),
-                     GET_NAME(GROUP_LEADER(group)), group->members->iSize,
+                     PERS(GROUP_LEADER(group), ch), group->members->iSize,
                      IS_SET(GROUP_FLAGS(group), GROUP_OPEN) ? "\tWYes\tn" : "\tRNo \tn",
                      zone_table[world[IN_ROOM(GROUP_LEADER(group))].zone].name, CCNRM(ch, C_NRM));
       else
@@ -7503,7 +7530,7 @@ ACMD(do_formation)
       for (member = merge_iterator(&iterator, GROUP(ch)->members); member;
            member = next_in_list(&iterator))
         if (get_formation_row(member) == row)
-          send_to_char(ch, "  %s%s\r\n", GET_NAME(member),
+          send_to_char(ch, "  %s%s\r\n", PERS(member, ch),
                        IN_ROOM(member) == IN_ROOM(ch) ? "" : " (absent)");
       remove_iterator(&iterator);
     }
@@ -7542,7 +7569,7 @@ ACMD(do_formation)
   }
   if (get_formation_row(target) == row)
   {
-    send_to_char(ch, "%s is already in the %s row.\r\n", GET_NAME(target), formation_row_name(row));
+    send_to_char(ch, "%s is already in the %s row.\r\n", PERS(target, ch), formation_row_name(row));
     return;
   }
   if (GET_POS(target) <= POS_SLEEPING)
@@ -7560,7 +7587,7 @@ ACMD(do_formation)
     USE_MOVE_ACTION(target);
   }
   target->formation_row = row;
-  send_to_group(NULL, GROUP(ch), "%s moves to the %s row.\r\n", GET_NAME(target),
+  send_identity_to_group(NULL, GROUP(ch), target, "$n moves to the %s row.\r\n",
                 formation_row_name(row));
   for (member = merge_iterator(&iterator, GROUP(ch)->members); member;
        member = next_in_list(&iterator))
@@ -7673,7 +7700,7 @@ ACMDU(do_group)
       send_to_char(ch, "They are not a member of your group!\r\n");
       return;
     }
-    send_to_char(ch, "You have kicked %s out of the group.\r\n", GET_NAME(vict));
+    send_to_char(ch, "You have kicked %s out of the group.\r\n", PERS(vict, ch));
     send_to_char(vict, "You have been kicked out of the group.\r\n");
     leave_group(vict);
   }
@@ -7712,10 +7739,10 @@ ACMDU(do_group)
     GROUP_LEADER(GROUP(ch)) = vict;
 
     /* send some messages and we're done */
-    send_to_char(ch, "You have appointed %s as the new leader of the group.\r\n", GET_NAME(vict));
+    send_to_char(ch, "You have appointed %s as the new leader of the group.\r\n", PERS(vict, ch));
     send_to_char(vict, "You have been promoted to group leader.\r\n");
-    send_to_group(NULL, GROUP(ch), "%s has assumed leadership of the group.\r\n",
-                  GET_NAME(GROUP_LEADER(GROUP(ch))));
+    send_identity_to_group(NULL, GROUP(ch), GROUP_LEADER(GROUP(ch)),
+                           "$n has assumed leadership of the group.\r\n");
   }
 
   /* member can leave group */
@@ -7864,13 +7891,13 @@ ACMD(do_greport)
     else
       psp_clr = CBFRED(ch, C_NRM);
 
-    send_to_group(NULL, group, "%s \tnreports: %s%d/%d\tnH, %s%d/%d\tnP, %s%d/%d\tnV\r\n",
-                  GET_NAME(ch), hp_clr, GET_HIT(ch), GET_MAX_HIT(ch), psp_clr, GET_PSP(ch),
+    send_identity_to_group(NULL, group, ch, "$n \tnreports: %s%d/%d\tnH, %s%d/%d\tnP, %s%d/%d\tnV\r\n",
+                  hp_clr, GET_HIT(ch), GET_MAX_HIT(ch), psp_clr, GET_PSP(ch),
                   GET_MAX_PSP(ch), mv_clr, GET_MOVE(ch), GET_MAX_MOVE(ch));
   }
   else
   {
-    send_to_group(NULL, group, "%s \tnreports: %s%d/%d\tnH, %s%d/%d\tnV\r\n", GET_NAME(ch), hp_clr,
+    send_identity_to_group(NULL, group, ch, "$n \tnreports: %s%d/%d\tnH, %s%d/%d\tnV\r\n", hp_clr,
                   GET_HIT(ch), GET_MAX_HIT(ch), mv_clr, GET_MOVE(ch), GET_MAX_MOVE(ch));
   }
 }
@@ -7878,11 +7905,12 @@ ACMD(do_greport)
 /* this use to be group report, switched it to general */
 ACMD(do_report)
 {
-  /* generalized output due to send_to_room */
-  // send_to_room(IN_ROOM(ch), "%s status: %d/%dH, %d/%dM, %d/%dV\r\n",
-  send_to_room(IN_ROOM(ch), "%s status: %d/%dH, %d/%dV, %d/%dP, %ld XP TNL\r\n", GET_NAME(ch),
-               GET_HIT(ch), GET_MAX_HIT(ch), GET_MOVE(ch), GET_MAX_MOVE(ch), GET_PSP(ch),
-               GET_MAX_PSP(ch), (long)MAX(0, level_exp(ch, GET_LEVEL(ch) + 1) - GET_EXP(ch)));
+  char message[MAX_STRING_LENGTH];
+  snprintf(message, sizeof(message), "$n status: %d/%dH, %d/%dV, %d/%dP, %ld XP TNL",
+           GET_HIT(ch), GET_MAX_HIT(ch), GET_MOVE(ch), GET_MAX_MOVE(ch), GET_PSP(ch),
+           GET_MAX_PSP(ch), (long)MAX(0, level_exp(ch, GET_LEVEL(ch) + 1) - GET_EXP(ch)));
+  act(message, FALSE, ch, NULL, NULL, TO_ROOM);
+  act(message, FALSE, ch, NULL, NULL, TO_CHAR);
 }
 
 ACMD(do_split)
@@ -7939,13 +7967,13 @@ ACMD(do_split)
     ch->char_specials.post_combat_gold = share;
 
     /* Abusing signed/unsigned to make sizeof work. */
-    len = snprintf(buf, sizeof(buf), "%s splits %d coins; you receive %d.\r\n", GET_NAME(ch),
+    len = snprintf(buf, sizeof(buf), "$n splits %d coins; you receive %d.\r\n",
                    amount, share);
     if (rest && len < sizeof(buf))
     {
       snprintf(buf + len, sizeof(buf) - len,
-               "%d coin%s %s not splitable, so %s keeps the money.\r\n", rest,
-               (rest == 1) ? "" : "s", (rest == 1) ? "was" : "were", GET_NAME(ch));
+               "%d coin%s %s not splitable, so $n keeps the money.\r\n", rest,
+               (rest == 1) ? "" : "s", (rest == 1) ? "was" : "were");
     }
 
     /* Beginner's Note: Reset simple_list iterator before use to prevent
@@ -7961,7 +7989,7 @@ ACMD(do_split)
         increase_gold(k, share);
         k->char_specials.post_combat_gold = share;
         if (!k->char_specials.post_combat_messages)
-          send_to_char(k, "%s", buf);
+          perform_act(buf, ch, NULL, NULL, k, FALSE);
       }
     }
     if (!ch->char_specials.post_combat_messages)
@@ -10280,9 +10308,9 @@ ACMD(do_dice)
           rolls, result);
   send_to_char(ch, "%s", Gbuf1);
 
-  sprintf(Gbuf1, "A %d sided dice is rolled by %s %d times, the total result is: \tB%d\tn\r\n",
-          size, GET_NAME(ch), rolls, result);
-  send_to_room(ch->in_room, "%s", Gbuf1);
+  snprintf(Gbuf1, sizeof(Gbuf1), "A %d sided dice is rolled by $n %d times, the total result is: \tB%d\tn",
+           size, rolls, result);
+  act(Gbuf1, FALSE, ch, NULL, NULL, TO_ROOM);
 
   return;
 }
@@ -11689,11 +11717,11 @@ ACMDU(do_flashinsight)
     send_to_char(
         ch,
         "You lock in a crisis response for %s (+%d to the next death or poison-style save).\r\n",
-        vict == ch ? "yourself" : GET_NAME(vict), bonus);
+        vict == ch ? "yourself" : PERS(vict, ch), bonus);
     send_to_char(vict,
                  "%s calibrates a crisis response for you (+%d to your next death or poison-style "
                  "save).\r\n",
-                 GET_NAME(ch), bonus);
+                 PERS(ch, vict), bonus);
     act("$n makes a razor-fast adjustment, priming $N for a lethal or toxic threat.", TRUE, ch, 0,
         vict, TO_NOTVICT);
   }
@@ -11701,11 +11729,11 @@ ACMDU(do_flashinsight)
   {
     send_to_char(
         ch, "You deliver a flash of tactical insight to %s (+%d to next save or skill check).\r\n",
-        GET_NAME(vict), bonus);
+        PERS(vict, ch), bonus);
     send_to_char(
         vict,
         "%s grants you a flash of insight (+%d to your next saving throw or skill check).\r\n",
-        GET_NAME(ch), bonus);
+        PERS(ch, vict), bonus);
     act("$n gestures sharply, sharing a burst of battlefield insight with $N.", TRUE, ch, 0, vict,
         TO_NOTVICT);
   }
@@ -13527,7 +13555,7 @@ ACMDU(do_device)
     }
     else
     {
-      send_to_char(ch, "You activate %s at %s.\r\n", inv->short_description, GET_NAME(target));
+      send_to_char(ch, "You activate %s at %s.\r\n", inv->short_description, PERS(target, ch));
       act("$n activates $s invention at $N.", TRUE, ch, 0, target, TO_NOTVICT);
       act("$n activates $s invention at you.", TRUE, ch, 0, target, TO_VICT);
     }
@@ -13626,10 +13654,10 @@ ACMDU(do_device)
             call_magic(ch, splash_target, NULL, spell_num, 0, effective_artificer_level,
                        CAST_DEVICE);
             send_to_char(ch, "Resonant imbuement echoes %s onto %s.\r\n",
-                         spell_info[spell_num].name, GET_NAME(splash_target));
+                         spell_info[spell_num].name, PERS(splash_target, ch));
             send_to_char(splash_target,
                          "%s's resonant imbuement causes %s to spill over onto you.\r\n",
-                         GET_NAME(ch), spell_info[spell_num].name);
+                         PERS(ch, splash_target), spell_info[spell_num].name);
           }
         }
       }

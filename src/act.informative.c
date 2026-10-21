@@ -14,6 +14,7 @@
 #include "structs.h"
 #include "housing.h"
 #include "utils.h"
+#include "char_descs.h"
 #include "mob_utils.h"
 #include "epic_magic.h"
 #include "comm.h"
@@ -170,6 +171,11 @@ void lore_id_vict(struct char_data *ch, struct char_data *tch)
   bool has_subrace = false;
   char subraces[MEDIUM_STRING] = {'\0'};
 
+  if (HAS_DISGUISE(tch) && !disguise_detected(ch, tch))
+  {
+    send_to_char(ch, "%s\r\n", PERS(tch, ch));
+    return;
+  }
   if (IS_NPC(tch))
   {
     if (HAS_FEAT(ch, FEAT_BG_SAGE))
@@ -202,12 +208,12 @@ void lore_id_vict(struct char_data *ch, struct char_data *tch)
       len += count;
   }
 
-  send_to_char(ch, "Name: %s\r\n", GET_NAME(tch));
+  send_to_char(ch, "Name: %s\r\n", PERS(tch, ch));
   if (!IS_NPC(tch))
-    send_to_char(ch, "%s is %d years, %d months, %d days and %d hours old.\r\n", GET_NAME(tch),
+    send_to_char(ch, "%s is %d years, %d months, %d days and %d hours old.\r\n", PERS(tch, ch),
                  age(tch)->year, age(tch)->month, age(tch)->day, age(tch)->hours);
   send_to_char(ch, "Race: %s%s.\r\n",
-               !IS_NPC(tch) ? CAP(race_list[GET_RACE(tch)].name) : race_family_types[GET_RACE(tch)],
+               !IS_NPC(tch) ? CAP(race_list[perceived_race(tch, ch)].name) : race_family_types[GET_RACE(tch)],
                has_subrace ? subraces : "");
   if (!AFF_FLAGGED(tch, AFF_HIDE_ALIGNMENT))
     send_to_char(ch, "Alignment: %s.\r\n", get_align_by_num(GET_ALIGNMENT(tch)));
@@ -418,6 +424,9 @@ void lore_id_vict(struct char_data *ch, struct char_data *tch)
       }
     }
   }
+  if (has_true_sight(ch))
+    show_disguise_notice(tch, ch);
+
 }
 
 /* special affect that allows you to sense 'aggro' enemies */
@@ -837,7 +846,11 @@ static void diag_char_to_char(struct char_data *i, struct char_data *ch)
 
   /* time to display! */
   /* show disguise race info */
-  if (is_disguised)
+  if (HAS_DISGUISE(i) || (has_true_sight(ch) && has_altered_form(i)))
+  {
+    send_to_char(ch, "%s %s\r\n", CAP(pers), diagnosis[ar_index].text);
+  }
+  else if (is_disguised)
   {
     send_to_char(ch, "%s \tn[%s %s\tn] %s\r\n", race_list[is_disguised].type,
                  size_names[GET_SIZE(i)], RACE_ABBR(i), diagnosis[ar_index].text);
@@ -902,9 +915,18 @@ static void look_at_char(struct char_data *i, struct char_data *ch)
   if (GET_DISGUISE_RACE(i))
     is_disguised = GET_DISGUISE_RACE(i);
 
-  if (is_disguised)
+  if (has_true_sight(ch) && has_altered_form(i))
   {
-    ; /*todo, put in descriptions!*/
+    if (i->player.description)
+      send_to_char(ch, "%s", i->player.description);
+  }
+  else if (HAS_DISGUISE(i) && !disguise_detected(ch, i))
+  {
+    send_to_char(ch, "%s\r\n", PERS(i, ch));
+  }
+  else if (is_disguised)
+  {
+    send_to_char(ch, "%s\r\n", PERS(i, ch));
   }
   else if (i->player.description)
     send_to_char(ch, "%s", i->player.description);
@@ -915,6 +937,7 @@ static void look_at_char(struct char_data *i, struct char_data *ch)
     return;
 
   diag_char_to_char(i, ch);
+  show_disguise_notice(i, ch);
 
   // mounted
   if (RIDING(i) && RIDING(i)->in_room == i->in_room)
@@ -1213,13 +1236,21 @@ static void list_one_char(struct char_data *i, struct char_data *ch)
 
     /* pc: name/title if not disguise, otherwise disguise info */
   }
+  else if (has_true_sight(ch) && (has_altered_form(i) || HAS_DISGUISE(i)))
+  {
+    send_to_char(ch, "\tn[%s] %s", race_list[GET_REAL_RACE(i)].abbrev_color, PERS(i, ch));
+  }
+  else if (HAS_DISGUISE(i))
+  {
+    send_to_char(ch, "%s", PERS(i, ch));
+  }
   else
   {
     if (!GET_DISGUISE_RACE(i))
     {
       /* If intro system is off and no title is set, show name */
       if (!CONFIG_USE_INTRO_SYSTEM && !*GET_TITLE(i))
-        send_to_char(ch, "\tn[%s] %s", RACE_ABBR(i), GET_NAME(i));
+        send_to_char(ch, "\tn[%s] %s", RACE_ABBR(i), PERS(i, ch));
       else
         send_to_char(ch, "\tn[%s] %s", RACE_ABBR(i), show_pers(i, ch));
     }
@@ -1333,6 +1364,7 @@ static void list_one_char(struct char_data *i, struct char_data *ch)
   }
   /* CARRIER RETURN! */
   send_to_char(ch, "\r\n");
+  show_disguise_notice(i, ch);
 
   if (!IS_NPC(i) && PRF_FLAGGED(i, PRF_NON_ROLEPLAYER))
     act("...$e is a non-roleplayer.", FALSE, i, 0, ch, TO_VICT);
@@ -2041,7 +2073,7 @@ static void perform_mortal_where(struct char_data *ch, char *arg)
         continue;
       if (world[IN_ROOM(ch)].zone != world[IN_ROOM(i)].zone)
         continue;
-      send_to_char(ch, "\tB[\tc%-20s%s\tB]\tW - %s%s\tn\r\n", GET_NAME(i), QNRM,
+      send_to_char(ch, "\tB[\tc%-20s%s\tB]\tW - %s%s\tn\r\n", PERS(i, ch), QNRM,
                    world[IN_ROOM(i)].name, QNRM);
     }
   }
@@ -2055,7 +2087,7 @@ static void perform_mortal_where(struct char_data *ch, char *arg)
         continue;
       if (!isname(arg, i->player.name))
         continue;
-      send_to_char(ch, "\tB[\tc%-25s%s\tB]\tW - %s%s\tn\r\n", GET_NAME(i), QNRM,
+      send_to_char(ch, "\tB[\tc%-25s%s\tB]\tW - %s%s\tn\r\n", PERS(i, ch), QNRM,
                    world[IN_ROOM(i)].name, QNRM);
       return;
     }
@@ -2113,11 +2145,11 @@ static void perform_immort_where(struct char_data *ch, char *arg)
         if (i && CAN_SEE(ch, i) && (IN_ROOM(i) != NOWHERE))
         {
           if (d->original)
-            send_to_char(ch, "%-8s%s - [%5d] %s%s (in %s%s)\r\n", GET_NAME(i), QNRM,
+            send_to_char(ch, "%-8s%s - [%5d] %s%s (in %s%s)\r\n", PERS(i, ch), QNRM,
                          GET_ROOM_VNUM(IN_ROOM(d->character)), world[IN_ROOM(d->character)].name,
-                         QNRM, GET_NAME(d->character), QNRM);
+                         QNRM, PERS(d->character, ch), QNRM);
           else
-            send_to_char(ch, "%-8s%s %s[%s%5d%s]%s %-*s%s %s%s\r\n", GET_NAME(i), QNRM, QCYN, QYEL,
+            send_to_char(ch, "%-8s%s %s[%s%5d%s]%s %-*s%s %s%s\r\n", PERS(i, ch), QNRM, QCYN, QYEL,
                          GET_ROOM_VNUM(IN_ROOM(i)), QCYN, QNRM,
                          30 + count_color_chars(world[IN_ROOM(i)].name), world[IN_ROOM(i)].name,
                          QNRM, zone_table[(world[IN_ROOM(i)].zone)].name, QNRM);
@@ -2130,7 +2162,7 @@ static void perform_immort_where(struct char_data *ch, char *arg)
       if (CAN_SEE(ch, i) && IN_ROOM(i) != NOWHERE && isname(arg, i->player.name))
       {
         found = 1;
-        send_to_char(ch, "M%3d. %-25s%s - [%5d] %-25s%s", ++num, GET_NAME(i), QNRM,
+        send_to_char(ch, "M%3d. %-25s%s - [%5d] %-25s%s", ++num, PERS(i, ch), QNRM,
                      GET_ROOM_VNUM(IN_ROOM(i)), world[IN_ROOM(i)].name, QNRM);
         if (SCRIPT(i) && TRIGGERS(SCRIPT(i)))
         {
@@ -3087,16 +3119,8 @@ void perform_affects(struct char_data *ch, struct char_data *k)
     }
     else
     {
-      /* For PCs, show name if introduced, otherwise show short description */
-      if (has_intro(ch, k))
-      {
-        send_to_char(ch, "\tY%s\tn\r\n", GET_NAME(k));
-      }
-      else
-      {
-        char *short_desc = which_desc(ch, k);
-        send_to_char(ch, "\tY%s\tn\r\n", short_desc);
-      }
+      send_to_char(ch, "\tY%s\tn\r\n", PERS(k, ch));
+      show_disguise_notice(k, ch);
     }
   }
 
@@ -3441,10 +3465,11 @@ void list_scanned_chars(struct char_data *list, struct char_data *ch, int distan
 
     if (!CAN_SEE(ch, i))
       continue;
+    observe_disguise(ch, i);
     if (!*buf)
-      snprintf(buf, sizeof(buf), "You see %s", GET_NAME(i));
+      snprintf(buf, sizeof(buf), "You see %s", PERS(i, ch));
     else
-      strlcat(buf, GET_NAME(i), sizeof(buf));
+      strlcat(buf, PERS(i, ch), sizeof(buf));
     if (--count > 1)
       strlcat(buf, ", ", sizeof(buf));
     else if (count == 1)
@@ -3456,6 +3481,9 @@ void list_scanned_chars(struct char_data *list, struct char_data *ch, int distan
     }
   }
   send_to_char(ch, "%s", buf);
+  for (i = list; i; i = i->next_in_room)
+    if (CAN_SEE(ch, i))
+      show_disguise_notice(i, ch);
 }
 
 /*****  End Utility Functions *****/
@@ -7753,8 +7781,8 @@ ACMD(do_who)
 
     if (CAN_SEE(ch, tch) && IS_PLAYING(d))
     {
-      if (*name_search && str_cmp(GET_NAME(tch), name_search) &&
-          !strstr(GET_TITLE(tch), name_search))
+      if (*name_search && (!identity_known(ch, tch) || (str_cmp(GET_NAME(tch), name_search) &&
+          !strstr(GET_TITLE(tch), name_search))))
         continue;
       if (!CAN_SEE(ch, tch) || GET_LEVEL(tch) < low || GET_LEVEL(tch) > high)
         continue;
@@ -7768,7 +7796,7 @@ ACMD(do_who)
         continue;
       if (showclass && !(showclass & (1 << GET_CLASS(tch))))
         continue;
-      if (showrace && !(showrace & (1 << GET_RACE(tch))))
+      if (showrace && !(showrace & (1 << perceived_race(tch, ch))))
         continue;
       if (showgroup && !GROUP(tch))
         continue;
@@ -7844,8 +7872,8 @@ ACMD(do_who)
         continue;
       if (!IS_PLAYING(d))
         continue;
-      if (*name_search && str_cmp(GET_NAME(tch), name_search) &&
-          !strstr(GET_TITLE(tch), name_search))
+      if (*name_search && (!identity_known(ch, tch) || (str_cmp(GET_NAME(tch), name_search) &&
+          !strstr(GET_TITLE(tch), name_search))))
         continue;
       if (!CAN_SEE(ch, tch) || GET_LEVEL(tch) < low || GET_LEVEL(tch) > high)
         continue;
@@ -7859,12 +7887,25 @@ ACMD(do_who)
         continue;
       if (showclass && !(showclass & (1 << GET_CLASS(tch))))
         continue;
-      if (showrace && !(showrace & (1 << GET_RACE(tch))))
+      if (showrace && !(showrace & (1 << perceived_race(tch, ch))))
         continue;
       if (showgroup && !GROUP(tch))
         continue;
       if (showleader && (!GROUP(tch) || GROUP_LEADER(GROUP(tch)) != tch))
         continue;
+      /* Unknown identities must not leak through titles, real race, or clan metadata. */
+      if (!identity_known(ch, tch) ||
+          (has_true_sight(ch) && (has_altered_form(tch) || HAS_DISGUISE(tch))))
+      {
+        send_to_char(ch, "%s\r\n", PERS(tch, ch));
+        if (has_true_sight(ch))
+          show_disguise_notice(tch, ch);
+        if (short_list)
+          num_can_see++;
+        else
+          mortals++;
+        continue;
+      }
 #if defined(CAMPAIGN_DL)
       if (TRUE)
       {
@@ -7907,7 +7948,7 @@ ACMD(do_who)
         else
         {
           send_to_char(ch, "\tW[ \tC%2d %-4.4s %-20.20s \tW]\tn %s", GET_LEVEL(tch),
-                       race_list[GET_REAL_RACE(tch)].abbrev,
+                       race_list[perceived_race(tch, ch)].abbrev,
                        ((c_n = real_clan(GET_CLAN(tch))) != NO_CLAN && GET_CLANRANK(tch) > 0)
                            ? CLAN_NAME(c_n)
                            : "Adventurer",
@@ -7927,8 +7968,8 @@ ACMD(do_who)
       if (short_list)
       {
         /* changed this to force showing char real race */
-        send_to_char(ch, "[%2d %8s] %-12.12s%s%s", GET_LEVEL(tch), RACE_ABBR_REAL(tch),
-                     GET_NAME(tch), CCNRM(ch, C_SPR), ((!(++num_can_see % 4)) ? "\r\n" : ""));
+        send_to_char(ch, "[%2d %8s] %-12.12s%s%s", GET_LEVEL(tch), race_list[perceived_race(tch, ch)].abbrev,
+                     PERS(tch, ch), CCNRM(ch, C_SPR), ((!(++num_can_see % 4)) ? "\r\n" : ""));
       }
       else
       {
@@ -7942,7 +7983,7 @@ ACMD(do_who)
         {
           mortals++;
           /* changed this to force showing char real race */
-          send_to_char(ch, "[%2d %4s ", GET_LEVEL(tch), RACE_ABBR_REAL(tch));
+          send_to_char(ch, "[%2d %4s ", GET_LEVEL(tch), race_list[perceived_race(tch, ch)].abbrev);
         }
 
         if (GET_LEVEL(tch) < LVL_IMMORT)
@@ -7969,7 +8010,7 @@ ACMD(do_who)
         }
 
 #if defined(CAMPAIGN_DL)
-        send_to_char(ch, " %s%s%s%s", GET_NAME(tch), (*GET_TITLE(tch) ? " " : ""), GET_TITLE(tch),
+        send_to_char(ch, " %s%s%s%s", PERS(tch, ch), (*GET_TITLE(tch) ? " " : ""), GET_TITLE(tch),
                      CCNRM(ch, C_SPR));
 #else
         send_to_char(ch, " %s%s", (*GET_TITLE(tch) ? GET_TITLE(tch) : GET_NAME(tch)),
@@ -9271,6 +9312,14 @@ ACMD(do_whois)
     }
   }
 
+  if (!identity_known(ch, victim))
+  {
+    send_to_char(ch, "You do not know anyone by that name.\r\n");
+    if (got_from_file)
+      free_char(victim);
+    return;
+  }
+
   if (IS_IN_CLAN(victim))
   {
     c_n = real_clan(GET_CLAN(victim));
@@ -9290,7 +9339,7 @@ ACMD(do_whois)
 
   /* We either have our victim from file or he's playing or function has returned. */
   sprinttype(GET_SEX(victim), genders, buf, sizeof(buf));
-  send_to_char(ch, "Name: %s %s\r\nSex: %s\r\n", GET_NAME(victim),
+  send_to_char(ch, "Name: %s %s\r\nSex: %s\r\n", PERS(victim, ch),
                (victim->player.title ? victim->player.title : ""), buf);
 
   /* Show immortals account information */
@@ -9318,10 +9367,16 @@ ACMD(do_whois)
   }
   send_to_char(ch, "\r\n");
 
-  if (IS_MORPHED(victim))
+  if (has_true_sight(ch))
+  {
+    send_to_char(ch, "Race : %s\r\n", race_list[GET_REAL_RACE(victim)].type_color);
+    if (!got_from_file)
+      show_disguise_notice(victim, ch);
+  }
+  else if (IS_MORPHED(victim))
     send_to_char(ch, "Race : %s\r\n", race_family_types[IS_MORPHED(victim)]);
   else if (GET_DISGUISE_RACE(victim))
-    send_to_char(ch, "Race : %s\r\n", race_list[GET_DISGUISE_RACE(ch)].name);
+    send_to_char(ch, "Race : %s\r\n", race_list[GET_DISGUISE_RACE(victim)].name);
   else
     send_to_char(ch, "Race : %s\r\n", race_list[GET_RACE(victim)].type_color);
 
@@ -9346,7 +9401,7 @@ ACMD(do_whois)
 
       if (!IS_NPC(ch) && PRF_FLAGGED(victim, PRF_AFK))
         send_to_char(ch, "%s%s is afk right now, so %s may not respond to communication.%s\r\n",
-                     CBGRN(ch, C_NRM), GET_NAME(victim),
+                     CBGRN(ch, C_NRM), PERS(victim, ch),
                      GET_SEX(victim) == SEX_NEUTRAL ? "it"
                                                     : (GET_SEX(victim) == SEX_MALE ? "he" : "she"),
                      CCNRM(ch, C_NRM));
@@ -11016,7 +11071,7 @@ ACMD(do_pets)
       if (IS_PET(pet))
         show_companion_training(ch, pet);
       if (IS_PET(pet) && pet->mob_specials.purchased_pet)
-        send_to_char(ch, "%s: level %d, pet XP %d/%d%s.\r\n", GET_NAME(pet), GET_LEVEL(pet),
+        send_to_char(ch, "%s: level %d, pet XP %d/%d%s.\r\n", PERS(pet, ch), GET_LEVEL(pet),
                      pet->mob_specials.pet_experience, purchased_pet_level_cost(pet),
                      GET_LEVEL(pet) >= MIN(GET_LEVEL(ch), PURCHASED_PET_LEVEL_CAP) ? " (level cap reached)" : "");
     }

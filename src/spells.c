@@ -41,6 +41,8 @@
 #include "feats.h"
 #include "routing.h"
 #include "race.h"
+#include "char_descs.h"
+#include "spec_procs.h"
 
 /************************************************************/
 /*  Functions, Events, etc needed to perform manual spells  */
@@ -1343,7 +1345,7 @@ ASPELL(spell_banish)
         {
           /* great, attempt to banish */
           act("$n banishes $N!", FALSE, ch, 0, k->follower, TO_ROOM);
-          send_to_char(ch, "You banish %s!\r\n", GET_NAME(k->follower));
+          send_to_char(ch, "You banish %s!\r\n", PERS(k->follower, ch));
           extract_char(k->follower);
 
           /* 50% chance to keep on banishing away */
@@ -1657,7 +1659,7 @@ ASPELL(spell_dismissal)
         {
           /* great, attempt to dismiss and exit, just one victim */
           act("$n dismisses $N!", FALSE, ch, 0, k->follower, TO_ROOM);
-          send_to_char(ch, "You dismiss %s!\r\n", GET_NAME(k->follower));
+          send_to_char(ch, "You dismiss %s!\r\n", PERS(k->follower, ch));
           extract_char(k->follower);
           return;
         }
@@ -1844,7 +1846,7 @@ ASPELL(spell_implode)
     return;
   }
 
-  send_to_char(ch, "You cause %s to implode!\r\n", GET_NAME(victim));
+  send_to_char(ch, "You cause %s to implode!\r\n", PERS(victim, ch));
   act("$n causes $N to implode!", FALSE, ch, 0, victim, TO_NOTVICT);
   act("$n causes you to implode!", FALSE, ch, 0, victim, TO_VICT);
 
@@ -1894,7 +1896,7 @@ ASPELL(spell_locate_creature)
     if (is_abbrev(vname, iname) && CAN_SEE(ch, i) && IN_ROOM(i) != NOWHERE)
     {
       found = 1;
-      send_to_char(ch, "%3d. %-25s%s - %-25s%s", ++num, GET_NAME(i), QNRM, world[IN_ROOM(i)].name,
+      send_to_char(ch, "%3d. %-25s%s - %-25s%s", ++num, PERS(i, ch), QNRM, world[IN_ROOM(i)].name,
                    QNRM);
       send_to_char(ch, "%s\r\n", QNRM);
     }
@@ -2168,140 +2170,96 @@ ASPELL(spell_geniekind)
   }
 }
 
-static int find_alter_self_race(const char *arg)
+/* Alter Self accepts every race currently selectable by players, including race 0. */
+int find_alter_self_race(const char *argument)
 {
-  int i;
-
-  if (!arg || !*arg)
+  char choice[MAX_INPUT_LENGTH];
+  int race, length;
+  if (!argument)
     return RACE_UNDEFINED;
-
-  for (i = DL_RACE_START; i <= DL_RACE_END; i++)
-  {
-    if (!*race_list[i].name)
-      continue;
-
-    if (!race_list[i].is_pc)
-      continue;
-
-    if (is_abbrev(arg, race_list[i].name) || is_abbrev(arg, race_list[i].type))
-      return i;
-  }
-
+  skip_spaces_c(&argument);
+  snprintf(choice, sizeof(choice), "%s", argument);
+  length = strlen(choice);
+  while (length > 0 && isspace((unsigned char)choice[length - 1]))
+    choice[--length] = '\0';
+  if (!*choice)
+    return RACE_UNDEFINED;
+  for (race = 0; race < NUM_EXTENDED_RACES; race++)
+    if (race_list[race].is_pc && race_list[race].name &&
+        (!str_cmp(choice, race_list[race].name) ||
+         (race_list[race].type && !str_cmp(choice, race_list[race].type))))
+      return race;
+  for (race = 0; race < NUM_EXTENDED_RACES; race++)
+    if (race_list[race].is_pc && race_list[race].name &&
+        (is_abbrev(choice, race_list[race].name) ||
+         (race_list[race].type && is_abbrev(choice, race_list[race].type))))
+      return race;
   return RACE_UNDEFINED;
-}
-
-static bool race_grants_vision_feat(int race, int feat)
-{
-  struct race_feat_assign *entry;
-
-  if (race <= RACE_UNDEFINED || race >= NUM_RACES)
-    return FALSE;
-
-  for (entry = race_list[race].featassign_list; entry != NULL; entry = entry->next)
-  {
-    if (entry->feat_num == feat)
-      return TRUE;
-  }
-
-  return FALSE;
 }
 
 ASPELL(spell_alter_self)
 {
   struct affected_type af;
-  int target_race;
-  int duration;
-
+  const char *choices;
+  int race, duration;
+  char message[MAX_INPUT_LENGTH];
   if (IS_NPC(ch))
+    return;
+  if (IS_WILDSHAPED(ch) || IS_MORPHED(ch) || affected_by_spell(ch, SPELL_POLYMORPH))
   {
-    send_to_char(ch, "Only players may alter their form.\r\n");
+    send_to_char(ch, "Return to your normal form before using alter self.\r\n");
     return;
   }
-
-  if (IS_LICH(ch) || IS_VAMPIRE(ch))
+  choices = *ch->player_specials->appearance_cast_args ? ch->player_specials->appearance_cast_args : cast_arg2;
+  race = find_alter_self_race(choices);
+  if (race == RACE_UNDEFINED)
   {
-    send_to_char(ch, "Your undead nature resists this transformation.\r\n");
+    send_to_char(ch, "Usage: cast 'alter self' <player-selectable race>\r\n");
+    ch->player_specials->appearance_cast_args[0] = '\0';
     return;
   }
-
-  if (affected_by_spell(ch, SPELL_POLYMORPH))
-  {
-    send_to_char(ch, "You cannot alter yourself while polymorphed.\r\n");
-    return;
-  }
-
-  target_race = find_alter_self_race(cast_arg2);
-
-  if (target_race == RACE_UNDEFINED || !race_list[target_race].is_pc)
-  {
-    send_to_char(ch, "Alter self into which playable race?\r\n");
-    return;
-  }
-
-  if (target_race < DL_RACE_START || target_race > DL_RACE_END)
-  {
-    send_to_char(ch, "You can only alter yourself into that race.\r\n");
-    return;
-  }
-
-  if (target_race == RACE_LICH || target_race == RACE_VAMPIRE)
-  {
-    send_to_char(ch, "You cannot assume that form.\r\n");
-    return;
-  }
-
-  duration = MAX(1, level * 10);
-
-  if (affected_by_spell(ch, SPELL_DISGUISE_SELF))
-    affect_from_char(ch, SPELL_DISGUISE_SELF);
-
+  duration = MAX(1, level) * 10; /* One minute per level, in six-second rounds. */
+  if (IS_SET(CASTING_METAMAGIC(ch), METAMAGIC_EXTEND))
+    duration *= 2;
+  duration = MIN(32000, duration);
   if (affected_by_spell(ch, SPELL_ALTER_SELF))
     affect_from_char(ch, SPELL_ALTER_SELF);
-
-  GET_DISGUISE_RACE(ch) = target_race;
-
+  ALTER_SELF_RACE(ch) = race;
+  ch->player_specials->saved.alter_self_active = TRUE;
   new_affect(&af);
   af.spell = SPELL_ALTER_SELF;
   af.duration = duration;
-  af.location = APPLY_SKILL;
-  af.specific = ABILITY_DISGUISE;
-  af.modifier = 10;
-  af.bonus_type = BONUS_TYPE_COMPETENCE;
-  SET_BIT_AR(af.bitvector, AFF_MIND_BLANK);
-  affect_to_char(ch, &af);
-
-  new_affect(&af);
-  af.spell = SPELL_ALTER_SELF;
-  af.duration = duration;
-  af.location = (race_list[target_race].size <= SIZE_SMALL) ? APPLY_DEX : APPLY_STR;
-  af.modifier = 2;
-  af.bonus_type = BONUS_TYPE_ENHANCEMENT;
-  affect_to_char(ch, &af);
-
-  if (race_grants_vision_feat(target_race, FEAT_INFRAVISION))
+  af.bonus_type = BONUS_TYPE_RACIAL;
+  if (race_list[race].size == SIZE_SMALL)
   {
-    new_affect(&af);
-    af.spell = SPELL_ALTER_SELF;
-    af.duration = duration;
-    af.location = APPLY_NONE;
-    af.modifier = 0;
-    SET_BIT_AR(af.bitvector, AFF_INFRAVISION);
-    affect_to_char(ch, &af);
+    af.location = APPLY_DEX;
+    af.modifier = 2;
   }
-
-  if (race_grants_vision_feat(target_race, FEAT_ULTRAVISION))
+  else if (race_list[race].size >= SIZE_MEDIUM)
   {
-    new_affect(&af);
-    af.spell = SPELL_ALTER_SELF;
-    af.duration = duration;
-    af.location = APPLY_NONE;
-    af.modifier = 0;
-    SET_BIT_AR(af.bitvector, AFF_ULTRAVISION);
-    affect_to_char(ch, &af);
+    af.location = APPLY_STR;
+    af.modifier = 2;
   }
+  /* Tiny or smaller player races still receive a duration marker, without a bonus. */
+  affect_to_char(ch, &af);
+  affect_total(ch);
+  save_char(ch, 0);
+  send_to_char(ch, "Your active race changes to %s.\r\n", race_list[race].name);
+  snprintf(message, sizeof(message), "$n's race visibly changes to %s.", race_list[race].name);
+  act(message, TRUE, ch, NULL, NULL, TO_ROOM);
+  ch->player_specials->appearance_cast_args[0] = '\0';
+}
 
-  send_to_char(ch, "Your features shift into a new form.\r\n");
-  act("$n's features shift and reform into a different visage.", TRUE, ch, 0, 0, TO_ROOM);
+void reconcile_alter_self(struct char_data *ch)
+{
+  if (IS_NPC(ch))
+    return;
+  if (IS_ALTER_SELF(ch) && (ALTER_SELF_RACE(ch) < 0 || ALTER_SELF_RACE(ch) >= NUM_EXTENDED_RACES ||
+      !race_list[ALTER_SELF_RACE(ch)].is_pc || !affected_by_spell(ch, SPELL_ALTER_SELF)))
+    ch->player_specials->saved.alter_self_active = FALSE;
+  /* Legacy effects without a saved active race must be reapplied. */
+  if (!IS_ALTER_SELF(ch) && affected_by_spell(ch, SPELL_ALTER_SELF))
+    affect_from_char(ch, SPELL_ALTER_SELF);
 }
 
 ASPELL(spell_polymorph)
@@ -3372,10 +3330,10 @@ ASPELL(spell_summon)
                    "%s just tried to summon you to: %s.\r\n"
                    "%s failed because you have summon protection on.\r\n"
                    "Type NOSUMMON to allow other players to summon you.\r\n",
-                   GET_NAME(ch), world[IN_ROOM(ch)].name,
+                   PERS(ch, victim), world[IN_ROOM(ch)].name,
                    (ch->player.sex == SEX_MALE) ? "He" : "She");
 
-      send_to_char(ch, "You failed because %s has summon protection on.\r\n", GET_NAME(victim));
+      send_to_char(ch, "You failed because %s has summon protection on.\r\n", PERS(victim, ch));
       mudlog(BRF, LVL_IMMORT, TRUE, "%s failed summoning %s to %s.", GET_NAME(ch), GET_NAME(victim),
              world[IN_ROOM(ch)].name);
       return;

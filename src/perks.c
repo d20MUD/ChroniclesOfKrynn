@@ -4373,7 +4373,7 @@ void apply_despair_harvest(struct char_data *ch, struct char_data *vict)
   /* Award temp hp (game's temp hp system handles stacking/caps) */
   GET_HIT(ch) = MIN(GET_MAX_HIT(ch) + 50, GET_HIT(ch) + temp_hp);
 
-  send_to_char(ch, "\tDYou harvest the despair of %s, gaining vitality!\tn\r\n", GET_NAME(vict));
+  send_to_char(ch, "\tDYou harvest the despair of %s, gaining vitality!\tn\r\n", PERS(vict, ch));
 }
 
 /**
@@ -15309,7 +15309,7 @@ void apply_hive_commander_mark(struct char_data *ch, struct char_data *vict)
   affect_to_char(vict, &af);
 
   send_to_char(vict, "You feel marked by the Hive Commander's psychic link!\r\n");
-  send_to_char(ch, "%s is now marked by your psychic link!\r\n", GET_NAME(vict));
+  send_to_char(ch, "%s is now marked by your psychic link!\r\n", PERS(vict, ch));
 
   /* Grant +2 to-hit to caster */
   new_affect(&af);

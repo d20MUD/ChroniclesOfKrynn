@@ -1790,7 +1790,7 @@ static void list_detailed_shop(struct char_data *ch, int shop_nr)
   if (SHOP_KEEPER(shop_nr) != NOBODY)
   {
     send_to_char(ch, "%s (#%d), Special Function: %s\r\n",
-                 GET_NAME(&mob_proto[SHOP_KEEPER(shop_nr)]), mob_index[SHOP_KEEPER(shop_nr)].vnum,
+                 PERS(&mob_proto[SHOP_KEEPER(shop_nr)], ch), mob_index[SHOP_KEEPER(shop_nr)].vnum,
                  YESNO(SHOP_FUNC(shop_nr)));
 
     if ((k = get_char_num(SHOP_KEEPER(shop_nr))))

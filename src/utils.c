@@ -1074,7 +1074,15 @@ int compute_current_size(struct char_data *ch)
     return size;
   int racenum = GET_DISGUISE_RACE(ch);
 
-  if (AFF_FLAGGED(ch, AFF_WILD_SHAPE) && racenum)
+  if (IS_ALTER_SELF(ch))
+  {
+    size = race_list[ALTER_SELF_RACE(ch)].size;
+    if (affected_by_spell(ch, SPELL_ENLARGE_PERSON))
+      size++;
+    if (affected_by_spell(ch, SPELL_SHRINK_PERSON))
+      size--;
+  }
+  else if (AFF_FLAGGED(ch, AFF_WILD_SHAPE) && racenum)
   { // wildshaped
     size = race_list[racenum].size;
     if (affected_by_spell(ch, SPELL_ENLARGE_PERSON))
@@ -6559,7 +6567,7 @@ sbyte is_immune_death_magic(struct char_data *ch, struct char_data *victim, sbyt
   {
     if (display)
     {
-      send_to_char(ch, "%s appears to be immune to death magic!\r\n", GET_NAME(victim));
+      send_to_char(ch, "%s appears to be immune to death magic!\r\n", PERS(victim, ch));
       send_to_char(victim, "You are protected from death magic by your death ward!\r\n");
     }
     return TRUE;
@@ -6568,7 +6576,7 @@ sbyte is_immune_death_magic(struct char_data *ch, struct char_data *victim, sbyt
   {
     if (display)
     {
-      send_to_char(ch, "%s appears to be immune to death magic!\r\n", GET_NAME(victim));
+      send_to_char(ch, "%s appears to be immune to death magic!\r\n", PERS(victim, ch));
       send_to_char(victim, "You are protected from death magic by your undead essence!\r\n");
     }
     return TRUE;
@@ -6585,7 +6593,7 @@ sbyte is_immune_fear(struct char_data *ch, struct char_data *victim, sbyte displ
   {
     if (display)
     {
-      send_to_char(ch, "%s appears to be fearless!\r\n", GET_NAME(victim));
+      send_to_char(ch, "%s appears to be fearless!\r\n", PERS(victim, ch));
       send_to_char(victim, "Your Alpha Bond protects you from fear!\r\n");
     }
     return TRUE;
@@ -6605,7 +6613,7 @@ sbyte is_immune_fear(struct char_data *ch, struct char_data *victim, sbyte displ
   {
     if (display)
     {
-      send_to_char(ch, "%s appears to be fearless!\r\n", GET_NAME(victim));
+      send_to_char(ch, "%s appears to be fearless!\r\n", PERS(victim, ch));
       send_to_char(victim, "Your stalwart resolve protects you!\r\n");
     }
     return TRUE;
@@ -6620,7 +6628,7 @@ sbyte is_immune_fear(struct char_data *ch, struct char_data *victim, sbyte displ
   {
     if (display)
     {
-      send_to_char(ch, "%s appears to be fearless!\r\n", GET_NAME(victim));
+      send_to_char(ch, "%s appears to be fearless!\r\n", PERS(victim, ch));
       send_to_char(victim, "Your litany of defense protects you!\r\n");
     }
     return TRUE;
@@ -6630,7 +6638,7 @@ sbyte is_immune_fear(struct char_data *ch, struct char_data *victim, sbyte displ
   {
     if (display)
     {
-      send_to_char(ch, "%s appears to be fearless!\r\n", GET_NAME(victim));
+      send_to_char(ch, "%s appears to be fearless!\r\n", PERS(victim, ch));
       send_to_char(victim, "Your divine courage protects you!\r\n");
     }
     return TRUE;
@@ -6640,7 +6648,7 @@ sbyte is_immune_fear(struct char_data *ch, struct char_data *victim, sbyte displ
   {
     if (display)
     {
-      send_to_char(ch, "%s appears to be fearless!\r\n", GET_NAME(victim));
+      send_to_char(ch, "%s appears to be fearless!\r\n", PERS(victim, ch));
       send_to_char(victim, "Your fearless rage protects you!\r\n");
     }
     return TRUE;
@@ -6650,7 +6658,7 @@ sbyte is_immune_fear(struct char_data *ch, struct char_data *victim, sbyte displ
   {
     if (display)
     {
-      send_to_char(ch, "%s appears to be fearless!\r\n", GET_NAME(victim));
+      send_to_char(ch, "%s appears to be fearless!\r\n", PERS(victim, ch));
       send_to_char(victim, "Your fearless defense protects you!\r\n");
     }
     return TRUE;
@@ -6689,9 +6697,9 @@ sbyte is_immune_mind_affecting(struct char_data *ch, struct char_data *victim, s
     {
       send_to_char(ch,
                    "%s is protected by Planar Unity and is immune to mind-affecting effects!\r\n",
-                   GET_NAME(victim));
+                   PERS(victim, ch));
       send_to_char(victim, "Planar Unity shields you from %s's mind-affecting magic!\r\n",
-                   GET_NAME(ch));
+                   PERS(ch, victim));
     }
     return TRUE;
   }
@@ -6704,11 +6712,11 @@ sbyte is_immune_mind_affecting(struct char_data *ch, struct char_data *victim, s
     {
       send_to_char(ch,
                    "%s is a Primal Beast and immune to mind affecting spells and abilities!\r\n",
-                   GET_NAME(victim));
+                   PERS(victim, ch));
       send_to_char(victim,
                    "You are a Primal Beast and thus are immune to %s's mind-affecting spells and "
                    "abilities!\r\n",
-                   GET_NAME(ch));
+                   PERS(ch, victim));
     }
     return TRUE;
   }
@@ -6719,11 +6727,11 @@ sbyte is_immune_mind_affecting(struct char_data *ch, struct char_data *victim, s
     if (display)
     {
       send_to_char(ch, "%s is undead and thus immune to mind affecting spells and abilities!\r\n",
-                   GET_NAME(victim));
+                   PERS(victim, ch));
       send_to_char(
           victim,
           "You are undead and thus are immune to %s's mind-affecting spells and abilities!\r\n",
-          GET_NAME(ch));
+          PERS(ch, victim));
     }
     return TRUE;
   }
@@ -6734,11 +6742,11 @@ sbyte is_immune_mind_affecting(struct char_data *ch, struct char_data *victim, s
     {
       send_to_char(ch,
                    "%s is a construct and thus immune to mind affecting spells and abilities!\r\n",
-                   GET_NAME(victim));
+                   PERS(victim, ch));
       send_to_char(victim,
                    "You are a construct and thus are immune to %s's mind-affecting spells and "
                    "abilities!\r\n",
-                   GET_NAME(ch));
+                   PERS(ch, victim));
     }
     return TRUE;
   }
@@ -6750,9 +6758,9 @@ sbyte is_immune_mind_affecting(struct char_data *ch, struct char_data *victim, s
     {
       send_to_char(ch,
                    "%s is a golem construct and immune to mind affecting spells and abilities!\r\n",
-                   GET_NAME(victim));
+                   PERS(victim, ch));
       send_to_char(victim, "Your golem nature shrugs off %s's mind-affecting magic.\r\n",
-                   GET_NAME(ch));
+                   PERS(ch, victim));
     }
     return TRUE;
   }
@@ -6764,11 +6772,11 @@ sbyte is_immune_mind_affecting(struct char_data *ch, struct char_data *victim, s
       send_to_char(
           ch,
           "%s is of racial type 'ooze' and thus immune to mind affecting spells and abilities!\r\n",
-          GET_NAME(victim));
+          PERS(victim, ch));
       send_to_char(victim,
                    "You are of racial type 'ooze' and thus are immune to %s's mind-affecting "
                    "spells and abilities!\r\n",
-                   GET_NAME(ch));
+                   PERS(ch, victim));
     }
     return TRUE;
   }
@@ -6777,8 +6785,8 @@ sbyte is_immune_mind_affecting(struct char_data *ch, struct char_data *victim, s
   {
     if (display)
     {
-      send_to_char(ch, "Mind blank protects %s!\r\n", GET_NAME(victim));
-      send_to_char(victim, "Mind blank protects you from %s!\r\n", GET_NAME(ch));
+      send_to_char(ch, "Mind blank protects %s!\r\n", PERS(victim, ch));
+      send_to_char(victim, "Mind blank protects you from %s!\r\n", PERS(ch, victim));
     }
     return TRUE;
   }
@@ -6792,8 +6800,8 @@ sbyte is_immune_mind_affecting(struct char_data *ch, struct char_data *victim, s
     {
       if (display)
       {
-        send_to_char(ch, "Thought shield protects %s!\r\n", GET_NAME(victim));
-        send_to_char(victim, "Thought shield protects you from %s!\r\n", GET_NAME(ch));
+        send_to_char(ch, "Thought shield protects %s!\r\n", PERS(victim, ch));
+        send_to_char(victim, "Thought shield protects you from %s!\r\n", PERS(ch, victim));
       }
       return TRUE;
     }
@@ -6811,8 +6819,8 @@ sbyte is_immune_charm(struct char_data *ch, struct char_data *victim, sbyte disp
     if (display)
     {
       send_to_char(ch, "%s is protected by Planar Unity and is immune to charm effects!\r\n",
-                   GET_NAME(victim));
-      send_to_char(victim, "Planar Unity shields you from %s's charm magic!\r\n", GET_NAME(ch));
+                   PERS(victim, ch));
+      send_to_char(victim, "Planar Unity shields you from %s's charm magic!\r\n", PERS(ch, victim));
     }
     return TRUE;
   }
@@ -6821,8 +6829,8 @@ sbyte is_immune_charm(struct char_data *ch, struct char_data *victim, sbyte disp
   {
     if (display)
     {
-      send_to_char(ch, "Mind blank protects %s!\r\n", GET_NAME(victim));
-      send_to_char(victim, "Mind blank protects you from %s!\r\n", GET_NAME(ch));
+      send_to_char(ch, "Mind blank protects %s!\r\n", PERS(victim, ch));
+      send_to_char(victim, "Mind blank protects you from %s!\r\n", PERS(ch, victim));
     }
     return TRUE;
   }
@@ -6831,8 +6839,8 @@ sbyte is_immune_charm(struct char_data *ch, struct char_data *victim, sbyte disp
   {
     if (display)
     {
-      send_to_char(ch, "Holy Aura protects %s!\r\n", GET_NAME(victim));
-      send_to_char(victim, "Holy Aura protects you from %s!\r\n", GET_NAME(ch));
+      send_to_char(ch, "Holy Aura protects %s!\r\n", PERS(victim, ch));
+      send_to_char(victim, "Holy Aura protects you from %s!\r\n", PERS(ch, victim));
     }
     return TRUE;
   }
@@ -6841,8 +6849,8 @@ sbyte is_immune_charm(struct char_data *ch, struct char_data *victim, sbyte disp
   {
     if (display)
     {
-      send_to_char(ch, "Knighthood's Flower protects %s!\r\n", GET_NAME(victim));
-      send_to_char(victim, "Knighthood's Flower protects you from %s!\r\n", GET_NAME(ch));
+      send_to_char(ch, "Knighthood's Flower protects %s!\r\n", PERS(victim, ch));
+      send_to_char(victim, "Knighthood's Flower protects you from %s!\r\n", PERS(ch, victim));
     }
     return TRUE;
   }
@@ -9242,7 +9250,7 @@ void remove_any_spell_with_aff_flag(struct char_data *ch, struct char_data *vict
       if (display)
       {
         send_to_char(vict, "Affect '%s' has been healed!\r\n", spell_info[spell].name);
-        send_to_char(ch, "%s's Affect '%s' has been healed!\r\n", GET_NAME(vict),
+        send_to_char(ch, "%s's Affect '%s' has been healed!\r\n", PERS(vict, ch),
                      spell_info[spell].name);
       }
       affect_from_char(vict, af->spell);
@@ -12722,23 +12730,7 @@ bool in_intro_list(struct char_data *ch, struct char_data *target)
 // checks to see if ch knows target's real name
 bool has_intro(struct char_data *ch, struct char_data *target)
 {
-  if (!ch || !target)
-    return FALSE;
-
-  if (CONFIG_USE_INTRO_SYSTEM == FALSE)
-    return TRUE;
-
-  if (ch == target)
-    return TRUE;
-
-  if (GET_LEVEL(ch) >= LVL_IMMORT || GET_LEVEL(target) >= LVL_IMMORT)
-    return TRUE;
-
-  /* Use the new introduction system's knows_character function */
-  if (knows_character(ch, target))
-    return TRUE;
-
-  return FALSE;
+  return identity_known(ch, target);
 }
 
 char *which_desc(struct char_data *ch, struct char_data *target)
@@ -12747,16 +12739,19 @@ char *which_desc(struct char_data *ch, struct char_data *target)
     return strdup("error");
 
   if (IS_NPC(target))
-    return GET_SHORT(target);
+    return strdup(GET_SHORT(target));
 
-  if (IS_MORPHED(target))
-    return current_morphed_desc(target);
+  if (has_true_sight(ch))
+    return current_true_desc(target);
+
+  if (HAS_DISGUISE(target) && !disguise_detected(ch, target))
+    return current_disguise_desc(target);
 
   if (IS_WILDSHAPED(target))
     return current_wildshape_desc(target);
 
-  if (GET_DISGUISE_RACE(target))
-    return current_disguise_desc(target);
+  if (IS_MORPHED(target))
+    return current_morphed_desc(target);
 
   return current_short_desc(target);
 }

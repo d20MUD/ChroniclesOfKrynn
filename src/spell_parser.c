@@ -20,6 +20,7 @@
 #include "dg_scripts.h"
 #include "fight.h" /* for hit() */
 #include "constants.h"
+#include "char_descs.h"
 #include "mud_event.h"
 #include "spec_procs.h"
 #include "class.h"
@@ -743,16 +744,23 @@ int call_magic(struct char_data *caster, struct char_data *cvict, struct obj_dat
 {
   bool previous;
   long caster_id;
-  int result;
+  int result, previous_metamagic;
   if (!caster)
     return 0;
+  previous_metamagic = CASTING_METAMAGIC(caster);
+  if (spellnum == SPELL_ALTER_SELF)
+    CASTING_METAMAGIC(caster) = metamagic;
   previous = caster->practiced_spellcaster_suppressed;
   caster_id = GET_ID(caster);
   caster->practiced_spellcaster_suppressed =
       previous || (casttype != CAST_SPELL && casttype != CAST_INNATE);
   result = resolve_call_magic(caster, cvict, ovict, spellnum, metamagic, level, casttype);
   if (find_char(caster_id) == caster)
+  {
     caster->practiced_spellcaster_suppressed = previous;
+    if (spellnum == SPELL_ALTER_SELF)
+      CASTING_METAMAGIC(caster) = previous_metamagic;
+  }
   return result;
 }
 
@@ -1817,6 +1825,8 @@ void mag_objectmagic(struct char_data *ch, struct obj_data *obj, char *argument)
 void resetCastingData(struct char_data *ch)
 {
   IS_CASTING(ch) = FALSE;
+  if (!IS_NPC(ch))
+    ch->player_specials->appearance_cast_args[0] = '\0';
   CASTING_TIME(ch) = 0;
   CASTING_TIME_MAX(ch) = 0;
   CASTING_SPELLNUM(ch) = 0;
@@ -2283,7 +2293,7 @@ void finishCasting(struct char_data *ch)
         {
           send_to_char(ch,
                        "\tC[Your extract wards %s with safeguarding infusion! +%d to saves]\tn\r\n",
-                       GET_NAME(CASTING_TCH(ch)), infusion_bonus);
+                       PERS(CASTING_TCH(ch), ch), infusion_bonus);
           send_to_char(
               CASTING_TCH(ch),
               "\tC[The infused extract leaves a safeguarding ward around you! +%d to saves]\tn\r\n",
@@ -3647,6 +3657,20 @@ ACMDU(do_gen_cast)
     return;
   }
 
+  if (spellnum == SPELL_ALTER_SELF)
+  {
+    if (find_alter_self_race(cast_arg3) == RACE_UNDEFINED)
+    {
+      send_to_char(ch, "Usage: cast 'alter self' <player-selectable race>\r\n");
+      return;
+    }
+    if (IS_WILDSHAPED(ch) || IS_MORPHED(ch) || affected_by_spell(ch, SPELL_POLYMORPH))
+    {
+      send_to_char(ch, "Return to your normal form before changing your magical appearance.\r\n");
+      return;
+    }
+  }
+
   if (spell_info[spellnum].cant_cast)
   {
     send_to_char(ch, "You cannot %s this through normal means.\r\n", do_cast_types[subcmd][0]);
@@ -4436,6 +4460,8 @@ return;
 
   if (IS_SET(SINFO.targets, TAR_IGNORE))
   {
+    if (spellnum == SPELL_ALTER_SELF)
+      tch = ch; /* Personal spells, including alchemist extracts. */
     target = TRUE;
   }
   else if (target_arg != NULL && *target_arg)
@@ -4649,8 +4675,20 @@ return;
     }
   }
 
+  if (spellnum == SPELL_ALTER_SELF)
+  {
+    if (IS_CASTING(ch))
+    {
+      send_to_char(ch, "Finish your current spell first.\r\n");
+      return;
+    }
+    snprintf(ch->player_specials->appearance_cast_args,
+             sizeof(ch->player_specials->appearance_cast_args), "%s", cast_arg3);
+  }
   cast_spell_with_type_and_slot(ch, tch, tobj, spellnum, metamagic, CAST_SPELL, slot_class,
                                 slot_spellnum, slot_metamagic);
+  if (!IS_CASTING(ch))
+    ch->player_specials->appearance_cast_args[0] = '\0';
 }
 
 /* assignment */

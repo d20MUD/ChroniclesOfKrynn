@@ -2054,7 +2054,7 @@ static char *make_prompt(struct descriptor_data *d)
         /* tank name */
         if (len < sizeof(prompt))
           count = sprintf(prompt + strlen(prompt), "\tCT:\tn %s",
-                          (CAN_SEE(d->character, tank)) ? GET_NAME(tank) : "someone");
+                          PERS(tank, d->character));
         if (count >= 0)
           len += count;
 
@@ -2092,7 +2092,7 @@ static char *make_prompt(struct descriptor_data *d)
         count =
             sprintf(prompt + strlen(prompt), " (%s)> <\tRE:\tn %s",
                     tank ? position_types[GET_POS(tank)] : " ",
-                    (CAN_SEE(d->character, char_fighting) ? GET_NAME(char_fighting) : "someone"));
+                    PERS(char_fighting, d->character));
       if (count >= 0)
         len += count;
 
@@ -3838,6 +3838,32 @@ void send_to_group(struct char_data *ch, struct group_data *group, const char *m
   }
 }
 
+/* Group messages involving an identity need per-recipient act expansion. */
+void send_identity_to_group(struct char_data *excluded, struct group_data *group,
+                            struct char_data *actor, const char *format, ...)
+{
+  struct char_data *recipient;
+  struct iterator_data iterator;
+  va_list args;
+  char message[MAX_STRING_LENGTH];
+  if (!group || !actor || !format)
+    return;
+  va_start(args, format);
+  vsnprintf(message, sizeof(message), format, args);
+  va_end(args);
+  for (recipient = merge_iterator(&iterator, group->members); recipient;
+       recipient = next_in_list(&iterator))
+    if (recipient != excluded && !IS_NPC(recipient) && recipient->desc &&
+        STATE(recipient->desc) == CON_PLAYING)
+    {
+      write_to_output(recipient->desc, "%s[Group]%s ", CCGRN(recipient, C_NRM), CCNRM(recipient, C_NRM));
+      perform_act(message, actor, NULL, NULL, recipient, FALSE);
+      /* These formats already contain their terminating newline. */
+      show_pending_disguise_notice(actor, recipient);
+    }
+  remove_iterator(&iterator);
+}
+
 /* Thx to Jamie Nelson of 4D for this contribution */
 void send_to_range(room_vnum start, room_vnum finish, const char *messg, ...)
 {
@@ -3904,24 +3930,24 @@ void perform_act(const char *orig, struct char_data *ch, struct obj_data *obj, v
         dg_victim = (struct char_data *)vict_obj;
         break;
       case 'm':
-        i = HMHR(ch);
+        i = visible_sex(ch, to) == SEX_MALE ? "him" : visible_sex(ch, to) == SEX_FEMALE ? "her" : "it";
         break;
       case 'M':
-        CHECK_NULL(vict_obj, HMHR((const struct char_data *)vict_obj));
+        CHECK_NULL(vict_obj, visible_sex((struct char_data *)vict_obj, to) == SEX_MALE ? "him" : visible_sex((struct char_data *)vict_obj, to) == SEX_FEMALE ? "her" : "it");
         dg_victim = (struct char_data *)vict_obj;
         break;
       case 's':
-        i = HSHR(ch);
+        i = visible_sex(ch, to) == SEX_MALE ? "his" : visible_sex(ch, to) == SEX_FEMALE ? "her" : "its";
         break;
       case 'S':
-        CHECK_NULL(vict_obj, HSHR((const struct char_data *)vict_obj));
+        CHECK_NULL(vict_obj, visible_sex((struct char_data *)vict_obj, to) == SEX_MALE ? "his" : visible_sex((struct char_data *)vict_obj, to) == SEX_FEMALE ? "her" : "its");
         dg_victim = (struct char_data *)vict_obj;
         break;
       case 'e':
-        i = HSSH(ch);
+        i = visible_sex(ch, to) == SEX_MALE ? "he" : visible_sex(ch, to) == SEX_FEMALE ? "she" : "it";
         break;
       case 'E':
-        CHECK_NULL(vict_obj, HSSH((const struct char_data *)vict_obj));
+        CHECK_NULL(vict_obj, visible_sex((struct char_data *)vict_obj, to) == SEX_MALE ? "he" : visible_sex((struct char_data *)vict_obj, to) == SEX_FEMALE ? "she" : "it");
         dg_victim = (struct char_data *)vict_obj;
         break;
       case 'o':
@@ -4011,7 +4037,15 @@ void perform_act(const char *orig, struct char_data *ch, struct obj_data *obj, v
   }
 
   if (to->desc)
+  {
     write_to_output(to->desc, "%s", CAP(lbuf));
+    if (carrier_return)
+    {
+      show_pending_disguise_notice(ch, to);
+      if (dg_victim && dg_victim != ch)
+        show_pending_disguise_notice(dg_victim, to);
+    }
+  }
 
   if ((IS_NPC(to) && dg_act_check) && (to != ch))
     act_mtrigger(to, lbuf, ch, dg_victim, obj, dg_target, dg_arg);

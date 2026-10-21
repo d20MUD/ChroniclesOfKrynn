@@ -535,7 +535,7 @@ int savingthrow_full(struct char_data *ch, struct char_data *vict, int type, int
       if (ch)
         send_to_char(ch,
                      "\tR%s's indomitable will allows %s to completely resist your magic!\tn\r\n",
-                     GET_NAME(vict), HMHR(vict));
+                     PERS(vict, ch), HMHR(vict));
 
       return TRUE; /* Automatically succeed */
     }
@@ -553,7 +553,7 @@ int savingthrow_full(struct char_data *ch, struct char_data *vict, int type, int
     send_to_char(vict, "\tY[Dark Master's Will: Your patron grants you intervention over this will save!]\tn\r\n");
     if (ch)
       send_to_char(ch, "\tR%s's patron intervenes, causing %s to resist your magic!\tn\r\n",
-                   GET_NAME(vict), HMHR(vict));
+                   PERS(vict, ch), HMHR(vict));
     act("\tY$n's expression hardens as $s patron's will flows through $m!\tn", FALSE, vict, NULL, ch,
         TO_NOTVICT);
 
@@ -1064,7 +1064,7 @@ int savingthrow_full(struct char_data *ch, struct char_data *vict, int type, int
         send_to_char(vict, "\tYYour legendary resilience allows you to automatically succeed on this saving throw!\tn\r\n");
         if (ch && vict != ch)
         {
-          send_to_char(ch, "\tR%s's legendary resilience allows them to automatically succeed!\tn\r\n", GET_NAME(vict));
+          send_to_char(ch, "\tR%s's legendary resilience allows them to automatically succeed!\tn\r\n", PERS(vict, ch));
         }
         attach_mud_event(new_mud_event(eLEGENDARY_RESILIENCE_USED, vict, NULL), 300 RL_SEC);
         return (TRUE);
@@ -6922,16 +6922,12 @@ void mag_affects_full(int level, struct char_data *ch, struct char_data *victim,
     break;
 
   case SPELL_DISGUISE_SELF:
-    if (affected_by_spell(victim, SPELL_ALTER_SELF))
-      affect_from_char(victim, SPELL_ALTER_SELF);
-
     af[0].location = APPLY_SKILL;
     af[0].specific = ABILITY_DISGUISE;
     af[0].modifier = 10;
-    af[0].duration = 100 * level;
+    af[0].duration = MAX(1, level) * 100;
     af[0].bonus_type = BONUS_TYPE_COMPETENCE;
-    to_vict = "An illusory guise settles over you.";
-    to_room = "$n's appearance subtly shifts under an illusory disguise.";
+    to_vict = "Your ability to disguise yourself is enhanced.";
     break;
 
   case SPELL_BARKSKIN: // transmutation
@@ -8338,7 +8334,7 @@ void mag_affects_full(int level, struct char_data *ch, struct char_data *victim,
     /* Check if grounded by gale spirits */
     if (affected_by_spell(victim, SKILL_RUSH_OF_GALE_SPIRITS))
     {
-      send_to_char(ch, "The violent winds prevent %s from taking flight!\r\n", GET_NAME(victim));
+      send_to_char(ch, "The violent winds prevent %s from taking flight!\r\n", PERS(victim, ch));
       if (ch != victim)
         send_to_char(victim, "The violent winds still prevent you from taking flight!\r\n");
       return;

@@ -380,7 +380,7 @@ ACMD(do_claninvest)
         continue;
       if (GET_CLAN(vict) == GET_CLAN(ch) && vict != ch)
       {
-        send_to_char(vict, "[CLAN] %s has invested %ld gold in %s!\r\n", GET_NAME(ch), amount,
+        send_to_char(vict, "[CLAN] %s has invested %ld gold in %s!\r\n", PERS(ch, vict), amount,
                      invest_names[type]);
       }
     }

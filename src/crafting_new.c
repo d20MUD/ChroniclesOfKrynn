@@ -13376,7 +13376,7 @@ void transfer_golem(struct char_data *ch, struct char_data *golem, struct char_d
   sync_artificer_construct_command_bonuses(golem);
 
   send_to_char(ch, "You transfer your %s %s golem to %s.\r\n", golem_size_names[golem_size],
-               golem_type_names[golem_type], GET_NAME(target));
+               golem_type_names[golem_type], PERS(target, ch));
   send_to_char(target, "%s transfers a %s %s golem to you.\r\n", GET_NAME(ch),
                golem_size_names[golem_size], golem_type_names[golem_type]);
   act("$n transfers a golem to $N.", TRUE, ch, 0, target, TO_NOTVICT);
@@ -13822,7 +13822,7 @@ void newcraft_golem(struct char_data *ch, const char *argument)
     if (golem)
     {
       sync_artificer_construct_command_bonuses(golem);
-      send_to_char(ch, "%s adjusts to the new directive.\r\n", GET_NAME(golem));
+      send_to_char(ch, "%s adjusts to the new directive.\r\n", PERS(golem, ch));
     }
     else
     {

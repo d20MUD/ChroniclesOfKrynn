@@ -3444,7 +3444,7 @@ ACMD(do_questcomplete)
   send_to_char(ch,
                "Questline %d %s quest %d set %s for %s: %d changed, %d already %s",
                quest_line_id, range_desc, cutoff_vnum, set_complete ? "complete" : "incomplete",
-               GET_NAME(victim), changed, unchanged,
+               PERS(victim, ch), changed, unchanged,
                set_complete ? "complete" : "incomplete");
 
   if (active_cleared > 0)
@@ -3462,7 +3462,7 @@ ACMD(do_questcomplete)
     send_to_char(victim,
                  "\tY%s updated your quest progress: questline %d %s quest %d set %s. "
                  "%d changed, %d already %s",
-                 GET_NAME(ch), quest_line_id, range_desc, cutoff_vnum,
+                 PERS(ch, victim), quest_line_id, range_desc, cutoff_vnum,
                  set_complete ? "complete" : "incomplete", changed, unchanged,
                  set_complete ? "complete" : "incomplete");
 

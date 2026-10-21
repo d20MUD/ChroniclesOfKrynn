@@ -912,7 +912,7 @@ ACMD(do_oasis_ibtedit)
       if (d->olc && OLC_NUM(d) == number)
       {
         send_to_char(ch, "That %s is currently being edited by %s.\r\n", ibt_types[subcmd],
-                     GET_NAME(d->character));
+                     PERS(d->character, ch));
         return;
       }
     }

@@ -13,6 +13,7 @@
 #include "comm.h"
 #include "char_descs.h"
 #include "race.h"
+#include "roleplay.h"
 #include "dg_scripts.h"
 #include "class.h"
 #include "mail.h"
@@ -261,7 +262,7 @@ const char *horn_descriptions[] = {"a pair of short horns",  "a pair of long hor
                                    "a crown of short horns", "a ridge of short horns",
                                    "ridges of short horns",  "\n"};
 
-char *current_short_desc(struct char_data *ch)
+static char *format_short_desc(int race, int age, int sex, int pcd1, int pca1, int pcd2, int pca2)
 {
   int i = 0;
   char desc[MEDIUM_STRING];
@@ -269,27 +270,14 @@ char *current_short_desc(struct char_data *ch)
   char adj2[SMALL_STRING];
   char final[MEDIUM_STRING * 2]; /* Increased to handle desc + adj1 + adj2 */
 
-  int race = GET_RACE(ch);
-  int sex = GET_SEX(ch);
-  int pcd1 = GET_PC_DESCRIPTOR_1(ch);
-  int pca1 = GET_PC_ADJECTIVE_1(ch);
-  int pcd2 = GET_PC_DESCRIPTOR_2(ch);
-  int pca2 = GET_PC_ADJECTIVE_2(ch);
+  /* Invalid saved selections cannot index outside the shared adjective tables. */
+  if (!valid_short_desc_feature(pcd1, pca1))
+    pcd1 = pca1 = 0;
+  if (!valid_short_desc_feature(pcd2, pca2))
+    pcd2 = pca2 = 0;
 
-  /*
-        if (AFF_FLAGGED(ch, AFF_DISGUISED) && !DISGUISE_SEEN(ch))
-        {
-            race = GET_DISGUISE_RACE(ch);
-            sex = GET_DISGUISE_SEX(ch);
-            pcd1 = GET_DISGUISE_DESC_1(ch);
-            pca1 = GET_DISGUISE_ADJ_1(ch);
-            pcd2 = GET_DISGUISE_DESC_2(ch);
-            pca2 = GET_DISGUISE_ADJ_2(ch);
-        }
-    */
-
-  snprintf(desc, sizeof(desc), "%s %s %s %s", AN(character_ages[GET_CH_AGE(ch)]),
-           character_ages[GET_CH_AGE(ch)], genders[(int)sex], race_list[(int)race].name);
+  snprintf(desc, sizeof(desc), "%s %s %s %s", AN(character_ages[age]),
+           character_ages[age], genders[(int)sex], race_list[(int)race].name);
   snprintf(adj1, sizeof(adj1), "\tn");
   snprintf(adj2, sizeof(adj2), "\tn");
 
@@ -342,7 +330,7 @@ char *current_short_desc(struct char_data *ch)
 
   case FEATURE_TYPE_COMPLEXION:
     snprintf(adj1, sizeof(adj1), " with %s %s %s", AN(complexion_descriptions[pca1]),
-             complexion_descriptions[GET_PC_ADJECTIVE_1(ch)], "complexion");
+             complexion_descriptions[pca1], "complexion");
     break;
   }
 
@@ -399,13 +387,6 @@ char *current_short_desc(struct char_data *ch)
     break;
   }
 
-  /*
-    if (DISGUISE_SEEN(ch) && GET_DISGUISE_ROLL(ch) > 0)
-    {
-        strcat(desc, " (disguised)");
-    }
-    */
-
   snprintf(final, sizeof(final), "%s%s%s", desc, adj1, adj2);
 
   for (i = 0; i < strlen(final); i++)
@@ -414,35 +395,210 @@ char *current_short_desc(struct char_data *ch)
   return strdup(final);
 }
 
+char *current_short_desc(struct char_data *ch)
+{
+  return format_short_desc(GET_RACE(ch), GET_CH_AGE(ch), GET_SEX(ch),
+                           GET_PC_DESCRIPTOR_1(ch), GET_PC_ADJECTIVE_1(ch),
+                           GET_PC_DESCRIPTOR_2(ch), GET_PC_ADJECTIVE_2(ch));
+}
+
+/* Natural traits are rendered directly; never temporarily mutate the subject. */
+char *current_true_desc(struct char_data *ch)
+{
+  if (IS_NPC(ch))
+    return strdup(GET_NAME(ch));
+  return format_short_desc(GET_REAL_RACE(ch), GET_CH_AGE(ch), GET_SEX(ch),
+                           GET_PC_DESCRIPTOR_1(ch), GET_PC_ADJECTIVE_1(ch),
+                           GET_PC_DESCRIPTOR_2(ch), GET_PC_ADJECTIVE_2(ch));
+}
+
+bool has_altered_form(struct char_data *ch)
+{
+  return ch && !IS_NPC(ch) && (IS_ALTER_SELF(ch) || GET_DISGUISE_RACE(ch) ||
+          IS_MORPHED(ch) || AFF_FLAGGED(ch, AFF_WILD_SHAPE));
+}
+
+int perceived_race(struct char_data *subject, struct char_data *observer)
+{
+  if (!IS_NPC(subject) && has_true_sight(observer))
+    return GET_REAL_RACE(subject);
+  if (HAS_DISGUISE(subject) && !IS_ALTER_SELF(subject) && !disguise_detected(observer, subject))
+    return COSMETIC_DISGUISE(subject).race;
+  return GET_RACE(subject);
+}
+
+/* Describe the physical transformation, independently of the observer's sight.
+ * Legacy shapechange stores a creature family; older animal shapes store a subtype. */
+char *current_altered_desc(struct char_data *ch)
+{
+  const char *name = NULL;
+  char description[MAX_INPUT_LENGTH];
+  int race = GET_DISGUISE_RACE(ch), family = IS_MORPHED(ch), i;
+  if (IS_ALTER_SELF(ch))
+    return current_short_desc(ch);
+  if (race > 0 && race < NUM_EXTENDED_RACES && race_list[race].name)
+    name = race_list[race].name;
+  else if (family == RACE_TYPE_ANIMAL && SUBRACE(ch) > 0 && SUBRACE(ch) < MAX_PC_SUBRACES)
+    name = shape_types[SUBRACE(ch)];
+  else if (family > 0 && family < NUM_RACE_TYPES)
+    name = race_family_types[family];
+  if (!name)
+    name = "altered creature";
+  snprintf(description, sizeof(description), "%s %s", AN(name), name);
+  for (i = 0; description[i]; i++)
+    description[i] = tolower((unsigned char)description[i]);
+  return strdup(description);
+}
+
+bool valid_short_desc_feature(int feature, int adjective)
+{
+  if (feature == FEATURE_TYPE_UNDEFINED)
+    return adjective == 0;
+  return feature >= FEATURE_TYPE_EYES && feature <= NUM_FEATURE_TYPES &&
+         adjective > 0 && adjective < count_adjective_types(feature);
+}
+
+bool parse_short_desc_feature(const char *choice, int *feature, int *adjective)
+{
+  static const char *names[] = {"none", "eyes", "nose", "ears", "face", "scar", "hair",
+                                "build", "complexion", "fur", "skin", "horns", "scales"};
+  char name[32], *end;
+  const char *colon = strchr(choice, ':');
+  long number;
+  int type;
+  if (!str_cmp(choice, "none"))
+  {
+    *feature = *adjective = 0;
+    return TRUE;
+  }
+  if (!colon || colon == choice || colon - choice >= sizeof(name))
+    return FALSE;
+  memcpy(name, choice, colon - choice);
+  name[colon - choice] = '\0';
+  for (type = 1; type <= NUM_FEATURE_TYPES; type++)
+    if (!str_cmp(name, names[type]))
+      break;
+  if (type > NUM_FEATURE_TYPES)
+  {
+    number = strtol(name, &end, 10);
+    if (!*name || *end || number < 1 || number > NUM_FEATURE_TYPES)
+      return FALSE;
+    type = number;
+  }
+  number = strtol(colon + 1, &end, 10);
+  if (end == colon + 1 || *end || number <= 0 || number >= count_adjective_types(type))
+    return FALSE;
+  *feature = type;
+  *adjective = number;
+  return TRUE;
+}
+
+/* Description functions consistently return allocated strings. */
 char *current_morphed_desc(struct char_data *ch)
 {
-  static char desc[200];
-
-  snprintf(desc, sizeof(desc), "%s (morphed)", current_short_desc(ch));
-
-  return desc;
+  char desc[MEDIUM_STRING * 2 + 32];
+  char *base = current_altered_desc(ch);
+  snprintf(desc, sizeof(desc), "%s (morphed)", base);
+  free(base);
+  return strdup(desc);
 }
 
 char *current_wildshape_desc(struct char_data *ch)
 {
-  static char desc[200];
-
-  snprintf(desc, sizeof(desc), "%s (wildshaped)", current_short_desc(ch));
-
-  return desc;
+  char desc[MEDIUM_STRING * 2 + 32];
+  char *base = current_altered_desc(ch);
+  snprintf(desc, sizeof(desc), "%s (wildshaped)", base);
+  free(base);
+  return strdup(desc);
 }
 
 char *current_disguise_desc(struct char_data *ch)
 {
-  static char desc[200];
-  int disguise_race = GET_DISGUISE_RACE(ch);
+  struct disguise_appearance *appearance = &COSMETIC_DISGUISE(ch);
+  if (!HAS_DISGUISE(ch))
+    return current_short_desc(ch);
+  return format_short_desc(IS_ALTER_SELF(ch) ? GET_RACE(ch) : appearance->race, appearance->age, appearance->sex,
+                           appearance->descriptor1, appearance->adjective1,
+                           appearance->descriptor2, appearance->adjective2);
+}
 
-  if (disguise_race > RACE_UNDEFINED && disguise_race < NUM_RACES && *race_list[disguise_race].type)
-    snprintf(desc, sizeof(desc), "%s (disguised as %s)", current_short_desc(ch), race_list[disguise_race].type);
+/* Parse selections from the same feature/adjective tables as natural descriptions. */
+bool parse_disguise_appearance(struct char_data *ch, const char *argument,
+                               struct disguise_appearance *appearance)
+{
+  char input[MAX_INPUT_LENGTH], *fields[5], *cursor, *separator;
+  int count = 0, i, race = -1, age = -1, sex = -1;
+  if (!argument || !*argument || strlen(argument) >= sizeof(input))
+    goto invalid;
+  snprintf(input, sizeof(input), "%s", argument);
+  cursor = input;
+  do
+  {
+    if (count == 5)
+      goto invalid;
+    separator = strchr(cursor, '|');
+    if (separator)
+      *separator = '\0';
+    skip_spaces(&cursor);
+    fields[count++] = cursor;
+    i = strlen(cursor);
+    while (i > 0 && isspace((unsigned char)cursor[i - 1]))
+      cursor[--i] = '\0';
+    cursor = separator ? separator + 1 : NULL;
+  } while (cursor);
+  if (count == 2)
+    goto invalid;
+  for (i = 0; i < NUM_EXTENDED_RACES; i++)
+    if (race_list[i].name && *race_list[i].name && !str_cmp(fields[0], race_list[i].name))
+    {
+      race = i;
+      break;
+    }
+  if (race < 0)
+    goto invalid;
+  if (race_list[race].family != RACE_TYPE_HUMANOID || race_list[race].size != GET_SIZE(ch))
+    goto invalid;
+  if (count == 1)
+  {
+    age = GET_CH_AGE(ch);
+    sex = GET_SEX(ch);
+  }
   else
-    snprintf(desc, sizeof(desc), "%s (disguised)", current_short_desc(ch));
-
-  return desc;
+  {
+    for (i = 0; i < NUM_CHARACTER_AGES; i++)
+      if (!str_cmp(fields[1], character_ages[i]))
+        age = i;
+    for (i = SEX_NEUTRAL; i <= SEX_FEMALE; i++)
+      if (!str_cmp(fields[2], genders[i]))
+        sex = i;
+  }
+  if (age < 0 || age >= NUM_CHARACTER_AGES || sex < 0 || sex > SEX_FEMALE)
+    goto invalid;
+  memset(appearance, 0, sizeof(*appearance));
+  if (count >= 4)
+  {
+    if (!parse_short_desc_feature(fields[3], &appearance->descriptor1, &appearance->adjective1) ||
+        (count >= 5 && !parse_short_desc_feature(fields[4], &appearance->descriptor2, &appearance->adjective2)))
+      goto invalid;
+  }
+  else
+  {
+    appearance->descriptor1 = GET_PC_DESCRIPTOR_1(ch);
+    appearance->adjective1 = GET_PC_ADJECTIVE_1(ch);
+    appearance->descriptor2 = GET_PC_DESCRIPTOR_2(ch);
+    appearance->adjective2 = GET_PC_ADJECTIVE_2(ch);
+    if (!valid_short_desc_feature(appearance->descriptor1, appearance->adjective1) ||
+        !valid_short_desc_feature(appearance->descriptor2, appearance->adjective2))
+      goto invalid;
+  }
+  appearance->race = race;
+  appearance->age = age;
+  appearance->sex = sex;
+  return TRUE;
+invalid:
+  send_to_char(ch, "Choose a valid race | age | gender | feature:adjective | feature:adjective.\r\n"
+                   "Use disguise descriptors <feature> for adjective choices, or none.\r\n");
+  return FALSE;
 }
 
 void short_desc_descriptors_menu(struct char_data *ch)
@@ -821,7 +977,11 @@ void HandleStateGenericDescsMenu(struct descriptor_data *d, char *arg)
 
   int options = 2;
   SEND_TO_Q("Current short description: \tW", d);
-  write_to_output(d, "%s", current_short_desc(d->character));
+  {
+    char *description = current_short_desc(d->character);
+    write_to_output(d, "%s", description);
+    free(description);
+  }
   SEND_TO_Q("\tn\r\n\r\n", d);
   SEND_TO_Q("Are you happy with this short description?\r\n", d);
   SEND_TO_Q("\r\n", d);
@@ -965,18 +1125,20 @@ void HandleStateGenericDescsParseMenuChoice(struct descriptor_data *d, char *arg
   STATE(d) = changeStateTo;
 }
 
+/* Borrowed rotating buffers allow several PERS calls in the same expression.
+ * Callers retaining a value across subsequent output must copy it. */
 char *show_pers(struct char_data *ch, struct char_data *vict)
 {
-  static char someone_buf[] = "someone";
-
-  if (!CAN_SEE(vict, ch))
-    return someone_buf;
-  else
-  {
-    if (has_intro(vict, ch))
-      return GET_NAME(ch);
-    else
-      return which_desc(vict, ch);
-  }
-  return NULL;
+  static char buffers[16][MAX_STRING_LENGTH];
+  static unsigned int next_buffer;
+  char *desc, *result;
+  if (!ch || !vict || !CAN_SEE(vict, ch))
+    return "someone";
+  if (identity_known(vict, ch))
+    return GET_NAME(ch);
+  desc = which_desc(vict, ch);
+  result = buffers[next_buffer++ % 16];
+  snprintf(result, MAX_STRING_LENGTH, "%s", desc);
+  free(desc);
+  return result;
 }

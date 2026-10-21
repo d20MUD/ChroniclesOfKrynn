@@ -1044,6 +1044,23 @@ void char_from_furniture(struct char_data *ch);
 /* Master of Elements perk */
 #define GET_MASTER_OF_ELEMENTS_TYPE(ch) ((ch)->player_specials->saved.master_of_elements_type)
 
+/* Viewer-aware identity. Returned display strings are borrowed. */
+bool disguise_detected(struct char_data *observer, struct char_data *subject);
+void observe_disguise(struct char_data *observer, struct char_data *subject);
+void show_pending_disguise_notice(struct char_data *subject, struct char_data *observer);
+bool identity_known(struct char_data *observer, struct char_data *subject);
+bool identity_matches(struct char_data *observer, struct char_data *subject, const char *name);
+int visible_sex(struct char_data *subject, struct char_data *observer);
+void show_disguise_notice(struct char_data *subject, struct char_data *observer);
+void free_disguise_observations(struct char_data *ch);
+void load_disguise_observation(struct char_data *ch, const char *line);
+void load_cosmetic_disguise(struct char_data *ch, const char *line);
+#define HAS_DISGUISE(ch) (!IS_NPC(ch) && (ch)->player_specials->saved.disguise.instance != 0)
+#define IS_ALTER_SELF(ch) (!IS_NPC(ch) && (ch)->player_specials->saved.alter_self_active)
+#define ALTER_SELF_RACE(ch) ((ch)->player_specials->saved.alter_self_race)
+void reconcile_alter_self(struct char_data *ch);
+#define COSMETIC_DISGUISE(ch) ((ch)->player_specials->saved.disguise)
+
 /* disguise related macros */
 #define GET_DISGUISE_RACE(ch) ((ch)->char_specials.saved.disguise_race)
 #define IS_MORPHED(ch) (ch->player_specials->saved.morphed)
@@ -1052,7 +1069,7 @@ void char_from_furniture(struct char_data *ch);
 #define SUBRACE(ch) ((ch)->player.pc_subrace)
 #define GET_NPC_RACE(ch) (IS_NPC(ch) ? (ch)->player.race : RACE_UNDEFINED)
 
-#define GET_RACE(ch) ((GET_DISGUISE_RACE(ch)) ? GET_DISGUISE_RACE(ch) : GET_REAL_RACE(ch))
+#define GET_RACE(ch) (IS_ALTER_SELF(ch) ? ALTER_SELF_RACE(ch) : ((GET_DISGUISE_RACE(ch)) ? GET_DISGUISE_RACE(ch) : GET_REAL_RACE(ch)))
 #define RACE_ABBR(ch)                                                                              \
   (IS_NPC(ch) ? race_family_abbrevs[GET_RACE(ch)]                                                  \
    : IS_WILDSHAPED(ch)                                                                             \

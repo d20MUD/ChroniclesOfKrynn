@@ -4736,7 +4736,7 @@ SPECIAL(clan_cleric)
           else
           {
             act("$N gives $n some money.", FALSE, this_mob, 0, ch, TO_NOTVICT);
-            send_to_char(ch, "You give %s %d coins.\r\n", GET_NAME(this_mob), clan_prices[i].price);
+            send_to_char(ch, "You give %s %d coins.\r\n", PERS(this_mob, ch), clan_prices[i].price);
             decrease_gold(ch, clan_prices[i].price);
             /* Uncomment the next line to make the mob get RICH! */
             /* increase_gold(this_mob, clan_prices[i].price); */
@@ -6497,7 +6497,7 @@ SPECIAL(pet_shops)
       /* No, you can't have the Implementor as a pet if he's in there. */
       if (!IS_NPC(pet))
         continue;
-      send_to_char(ch, "%8d - %s\r\n", PET_PRICE(pet), GET_NAME(pet));
+      send_to_char(ch, "%8d - %s\r\n", PET_PRICE(pet), PERS(pet, ch));
     }
     return (TRUE);
   }
