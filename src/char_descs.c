@@ -16,6 +16,8 @@
 #include "roleplay.h"
 #include "dg_scripts.h"
 #include "class.h"
+#include "dg_event.h"
+#include "actions.h"
 #include "mail.h"
 
 /* External function declarations */
@@ -395,8 +397,223 @@ static char *format_short_desc(int race, int age, int sex, int pcd1, int pca1, i
   return strdup(final);
 }
 
+/* Innate Sivak forms are snapshots, never pointers into a slain character. */
+struct sivak_form *active_sivak_form(struct char_data *ch)
+{
+  struct sivak_form *form;
+  if (!ch || IS_NPC(ch) || !ch->player_specials || GET_REAL_RACE(ch) != DL_RACE_SIVAK_DRACONIAN ||
+      !ch->player_specials->saved.sivak_active_form)
+    return NULL;
+  for (form = ch->player_specials->saved.sivak_forms; form; form = form->next)
+    if (form->id == ch->player_specials->saved.sivak_active_form)
+      return form;
+  return NULL;
+}
+
+void free_sivak_forms(struct char_data *ch)
+{
+  struct sivak_form *form, *next;
+  if (!ch || IS_NPC(ch) || !ch->player_specials)
+    return;
+  for (form = ch->player_specials->saved.sivak_forms; form; form = next)
+  {
+    next = form->next;
+    free(form);
+  }
+  ch->player_specials->saved.sivak_forms = NULL;
+  ch->player_specials->saved.sivak_active_form = 0;
+}
+
+/* Tildes delimit strings in player files. Snapshot text cannot introduce records. */
+static void copy_sivak_text(char *dest, size_t size, const char *source)
+{
+  char *p;
+  snprintf(dest, size, "%s", source ? source : "");
+  for (p = dest; *p; p++)
+    if (*p == '~')
+      *p = '-';
+}
+
+void remember_sivak_kill(struct char_data *killer, struct char_data *victim)
+{
+  struct sivak_form *form, snapshot;
+  int race;
+  long source;
+  char *description;
+  if (!killer || !victim || killer == victim || IS_NPC(killer) ||
+      GET_REAL_RACE(killer) != DL_RACE_SIVAK_DRACONIAN ||
+      IN_ROOM(victim) == NOWHERE || IN_ARENA(victim) ||
+      (IN_ROOM(killer) != NOWHERE && IN_ARENA(killer)))
+    return;
+  race = GET_RACE(victim);
+  if (IS_NPC(victim))
+  {
+    if (race != RACE_TYPE_HUMANOID || MOB_FLAGGED(victim, MOB_NOKILL))
+      return;
+    /* NPC races are creature families, not PC race indices. Do not invent one. */
+    race = DL_RACE_SIVAK_DRACONIAN;
+    source = GET_MOB_VNUM(victim);
+  }
+  else
+  {
+    if (race < 0 || race >= NUM_EXTENDED_RACES || race_list[race].family != RACE_TYPE_HUMANOID ||
+        (IS_MORPHED(victim) && IS_MORPHED(victim) != RACE_TYPE_HUMANOID))
+      return;
+    source = GET_IDNUM(victim);
+  }
+  memset(&snapshot, 0, sizeof(snapshot));
+  snapshot.source = source;
+  snapshot.npc = !!IS_NPC(victim);
+  snapshot.race = race;
+  snapshot.size = GET_SIZE(victim);
+  snapshot.sex = IS_IRDA_FORM(victim) ? IRDA_APPEARANCE(victim).sex :
+                 IS_SIVAK_FORM(victim) ? active_sivak_form(victim)->sex : GET_SEX(victim);
+  description = IS_NPC(victim) ? strdup(GET_SHORT(victim) ? GET_SHORT(victim) : "a humanoid") :
+                                current_short_desc(victim);
+  copy_sivak_text(snapshot.short_desc, sizeof(snapshot.short_desc), description);
+  copy_sivak_text(snapshot.description, sizeof(snapshot.description),
+                  has_altered_form(victim) || !victim->player.description ? description : victim->player.description);
+  free(description);
+  /* Repeated identical kills do not grow the collection; distinct appearances remain reusable. */
+  for (form = killer->player_specials->saved.sivak_forms; form; form = form->next)
+    if (form->npc == snapshot.npc && form->source == source && form->race == race &&
+        form->size == snapshot.size && form->sex == snapshot.sex &&
+        !strcmp(form->short_desc, snapshot.short_desc) && !strcmp(form->description, snapshot.description))
+      return;
+  CREATE(form, struct sivak_form, 1);
+  snapshot.id = ++killer->player_specials->saved.disguise_generation;
+  snapshot.next = killer->player_specials->saved.sivak_forms;
+  *form = snapshot;
+  killer->player_specials->saved.sivak_forms = form;
+  save_char(killer, 0);
+  send_to_char(killer, "You learn a Sivak form: %s. Use 'disguise forms' to view your forms.\r\n", form->short_desc);
+}
+
+void sivak_form_command(struct char_data *ch, const char *argument)
+{
+  struct sivak_form *form;
+  unsigned long long id;
+  char *end;
+  if (!ch || IS_NPC(ch) || GET_REAL_RACE(ch) != DL_RACE_SIVAK_DRACONIAN)
+  {
+    if (ch)
+      send_to_char(ch, "Only Sivak draconians can assume forms learned from their kills.\r\n");
+    return;
+  }
+  if (!*argument)
+  {
+    send_to_char(ch, "Learned humanoid forms:\r\n");
+    for (form = ch->player_specials->saved.sivak_forms; form; form = form->next)
+      send_to_char(ch, "%llu) %s%s\r\n", form->id, form->short_desc,
+                   active_sivak_form(ch) == form ? " (active)" : "");
+    send_to_char(ch, "Usage: disguise form <number|remove>\r\n");
+    return;
+  }
+  if (IS_ALTER_SELF(ch) || IS_IRDA_FORM(ch) || IS_WILDSHAPED(ch) || IS_MORPHED(ch) ||
+      GET_DISGUISE_RACE(ch) || affected_by_spell(ch, SPELL_POLYMORPH))
+  {
+    send_to_char(ch, "End your other transformation before assuming a Sivak form.\r\n");
+    return;
+  }
+  if (!str_cmp(argument, "remove"))
+  {
+    ch->player_specials->saved.sivak_active_form = 0;
+    send_to_char(ch, "You return to your natural Sivak form.\r\n");
+  }
+  else
+  {
+    if (!isdigit((unsigned char)*argument))
+    {
+      send_to_char(ch, "Choose a number from 'disguise forms'.\r\n");
+      return;
+    }
+    errno = 0;
+    id = strtoull(argument, &end, 10);
+    while (isspace((unsigned char)*end)) end++;
+    if (errno || *end || !id)
+      return;
+    for (form = ch->player_specials->saved.sivak_forms; form; form = form->next)
+      if (form->id == id)
+        break;
+    if (!form)
+    {
+      send_to_char(ch, "You have not learned that form from a humanoid you killed.\r\n");
+      return;
+    }
+    ch->player_specials->saved.sivak_active_form = form->id;
+    send_to_char(ch, "You assume the form of %s.\r\n", form->short_desc);
+  }
+  save_char(ch, 0);
+  act("$n changes form.", TRUE, ch, 0, 0, TO_ROOM);
+  USE_STANDARD_ACTION(ch);
+}
+
+/* Preserve snapshot bytes across sessions, including long lines and color codes.
+ * Oversized/invalid fields are consumed so the following pfile tag stays aligned. */
+static bool read_sivak_text(FILE *fl, char *dest, size_t size)
+{
+  size_t used = 0;
+  int c;
+  bool overflow = FALSE;
+  while ((c = fgetc(fl)) != EOF && c != '~')
+  {
+    if (used + 1 < size)
+      dest[used++] = c;
+    else
+      overflow = TRUE;
+  }
+  dest[used] = '\0';
+  if (c == EOF)
+    return FALSE;
+  c = fgetc(fl);
+  if (c == '\r') c = fgetc(fl);
+  if (c != '\n' && c != EOF) ungetc(c, fl);
+  return !overflow;
+}
+
+void load_sivak_form(struct char_data *ch, const char *line, FILE *fl)
+{
+  struct sivak_form form, *entry;
+  int npc, fields;
+  bool valid_short, valid_description;
+  memset(&form, 0, sizeof(form));
+  fields = sscanf(line, "%llu %ld %d %d %d %d", &form.id, &form.source, &npc,
+                  &form.race, &form.size, &form.sex);
+  valid_short = read_sivak_text(fl, form.short_desc, sizeof(form.short_desc));
+  valid_description = read_sivak_text(fl, form.description, sizeof(form.description));
+  if (fields == 6 && form.id && npc >= 0 && npc <= 1 && form.race >= 0 &&
+      form.race < NUM_EXTENDED_RACES && race_list[form.race].name &&
+      race_list[form.race].family == RACE_TYPE_HUMANOID &&
+      form.size >= SIZE_FINE && form.size <= SIZE_COLOSSAL &&
+      form.sex >= SEX_NEUTRAL && form.sex <= SEX_FEMALE && valid_short && valid_description && *form.short_desc)
+  {
+    form.npc = npc;
+    for (entry = ch->player_specials->saved.sivak_forms; entry; entry = entry->next)
+      if (entry->id == form.id)
+        break;
+    if (!entry)
+    {
+      CREATE(entry, struct sivak_form, 1);
+      entry->next = ch->player_specials->saved.sivak_forms;
+      ch->player_specials->saved.sivak_forms = entry;
+    }
+    form.next = entry->next;
+    *entry = form;
+    if (form.id > ch->player_specials->saved.disguise_generation)
+      ch->player_specials->saved.disguise_generation = form.id;
+  }
+}
+
 char *current_short_desc(struct char_data *ch)
 {
+  if (IS_SIVAK_FORM(ch))
+    return strdup(active_sivak_form(ch)->short_desc);
+  if (IS_IRDA_FORM(ch))
+  {
+    struct disguise_appearance *form = &IRDA_APPEARANCE(ch);
+    return format_short_desc(GET_RACE(ch), form->age, form->sex,
+                             form->descriptor1, form->adjective1, form->descriptor2, form->adjective2);
+  }
   return format_short_desc(GET_RACE(ch), GET_CH_AGE(ch), GET_SEX(ch),
                            GET_PC_DESCRIPTOR_1(ch), GET_PC_ADJECTIVE_1(ch),
                            GET_PC_DESCRIPTOR_2(ch), GET_PC_ADJECTIVE_2(ch));
@@ -414,7 +631,7 @@ char *current_true_desc(struct char_data *ch)
 
 bool has_altered_form(struct char_data *ch)
 {
-  return ch && !IS_NPC(ch) && (IS_ALTER_SELF(ch) || GET_DISGUISE_RACE(ch) ||
+  return ch && !IS_NPC(ch) && (IS_ALTER_SELF(ch) || IS_IRDA_FORM(ch) || IS_SIVAK_FORM(ch) || GET_DISGUISE_RACE(ch) ||
           IS_MORPHED(ch) || AFF_FLAGGED(ch, AFF_WILD_SHAPE));
 }
 
@@ -422,7 +639,7 @@ int perceived_race(struct char_data *subject, struct char_data *observer)
 {
   if (!IS_NPC(subject) && has_true_sight(observer))
     return GET_REAL_RACE(subject);
-  if (HAS_DISGUISE(subject) && !IS_ALTER_SELF(subject) && !disguise_detected(observer, subject))
+  if (HAS_DISGUISE(subject) && !IS_ALTER_SELF(subject) && !IS_IRDA_FORM(subject) && !IS_SIVAK_FORM(subject) && !disguise_detected(observer, subject))
     return COSMETIC_DISGUISE(subject).race;
   return GET_RACE(subject);
 }
@@ -434,7 +651,7 @@ char *current_altered_desc(struct char_data *ch)
   const char *name = NULL;
   char description[MAX_INPUT_LENGTH];
   int race = GET_DISGUISE_RACE(ch), family = IS_MORPHED(ch), i;
-  if (IS_ALTER_SELF(ch))
+  if (IS_ALTER_SELF(ch) || IS_IRDA_FORM(ch) || IS_SIVAK_FORM(ch))
     return current_short_desc(ch);
   if (race > 0 && race < NUM_EXTENDED_RACES && race_list[race].name)
     name = race_list[race].name;
@@ -517,14 +734,14 @@ char *current_disguise_desc(struct char_data *ch)
   struct disguise_appearance *appearance = &COSMETIC_DISGUISE(ch);
   if (!HAS_DISGUISE(ch))
     return current_short_desc(ch);
-  return format_short_desc(IS_ALTER_SELF(ch) ? GET_RACE(ch) : appearance->race, appearance->age, appearance->sex,
+  return format_short_desc((IS_ALTER_SELF(ch) || IS_IRDA_FORM(ch) || IS_SIVAK_FORM(ch)) ? GET_RACE(ch) : appearance->race, appearance->age, appearance->sex,
                            appearance->descriptor1, appearance->adjective1,
                            appearance->descriptor2, appearance->adjective2);
 }
 
 /* Parse selections from the same feature/adjective tables as natural descriptions. */
-bool parse_disguise_appearance(struct char_data *ch, const char *argument,
-                               struct disguise_appearance *appearance)
+bool parse_form_appearance(struct char_data *ch, const char *argument,
+                           struct disguise_appearance *appearance, bool innate)
 {
   char input[MAX_INPUT_LENGTH], *fields[5], *cursor, *separator;
   int count = 0, i, race = -1, age = -1, sex = -1;
@@ -556,7 +773,7 @@ bool parse_disguise_appearance(struct char_data *ch, const char *argument,
     }
   if (race < 0)
     goto invalid;
-  if (race_list[race].family != RACE_TYPE_HUMANOID || race_list[race].size != GET_SIZE(ch))
+  if (race_list[race].family != RACE_TYPE_HUMANOID || (!innate && race_list[race].size != GET_SIZE(ch)))
     goto invalid;
   if (count == 1)
   {
@@ -599,6 +816,29 @@ invalid:
   send_to_char(ch, "Choose a valid race | age | gender | feature:adjective | feature:adjective.\r\n"
                    "Use disguise descriptors <feature> for adjective choices, or none.\r\n");
   return FALSE;
+}
+
+bool parse_disguise_appearance(struct char_data *ch, const char *argument,
+                               struct disguise_appearance *appearance)
+{
+  return parse_form_appearance(ch, argument, appearance, FALSE);
+}
+
+void load_irda_form(struct char_data *ch, const char *line)
+{
+  struct disguise_appearance form;
+  memset(&form, 0, sizeof(form));
+  if (sscanf(line, "%llu %d %d %d %d %d %d %d", &form.instance, &form.race, &form.age,
+             &form.sex, &form.descriptor1, &form.adjective1, &form.descriptor2, &form.adjective2) != 8 ||
+      !form.instance || form.race < 0 || form.race >= NUM_EXTENDED_RACES ||
+      !race_list[form.race].name || race_list[form.race].family != RACE_TYPE_HUMANOID ||
+      form.age < 0 || form.age >= NUM_CHARACTER_AGES || form.sex < SEX_NEUTRAL || form.sex > SEX_FEMALE ||
+      !valid_short_desc_feature(form.descriptor1, form.adjective1) ||
+      !valid_short_desc_feature(form.descriptor2, form.adjective2))
+    return;
+  IRDA_APPEARANCE(ch) = form;
+  if (form.instance > ch->player_specials->saved.disguise_generation)
+    ch->player_specials->saved.disguise_generation = form.instance;
 }
 
 void short_desc_descriptors_menu(struct char_data *ch)

@@ -183,3 +183,181 @@ Room, look, scan, and affected-by displays show this context explicitly. Arrival
 speech, and combat acts show it on the first relevant message and when the form
 changes, without repeating it after every message. Losing true sight restores the
 normal appearance and saved disguise recognition result.
+
+## Irda advanced race
+
+Irda use the existing reserved race ID 52 and are an advanced, Medium humanoid
+race with a 5,000 account experience unlock and level adjustment 2. Their racial
+ability adjustments are +2 Dexterity, Intelligence, Wisdom, and Charisma.
+
+An Irda can assume any registered humanoid race, including a different size,
+using the shared appearance selections:
+
+```
+disguise form human | old-aged | female | hair:43 | eyes:2
+disguise form remove
+```
+
+All age, gender, and descriptor choices come from `char_descs.c`. Use
+`disguise descriptors [feature]` for the adjective menus. A race alone keeps
+natural age, gender, and descriptors; `none` omits a descriptor. Reapply the
+command to select another appearance, including an altered Irda appearance.
+
+This innate ability requires no Disguise training, Disguise roll, Perception
+roll, spell slot, or mana, and has no duration. Changing or removing a form uses
+a standard action. It changes active race, visible description, pronouns, and
+size without granting the Alter Self ability bonuses. Racial ability scores
+remain those of the character. Return to natural form before advancing or
+using another transformation.
+
+An assumed form conceals a known identity and does not reveal the character's
+natural long description. True Sight shows the natural identity (if introduced)
+and description, plus the complete assumed appearance as roleplay context.
+Ordinary disguises may be worn over an innate form and use their own normal
+opposed checks. The innate form itself cannot be exposed by Perception.
+
+The validated `AiFm` player-file tag preserves the complete assumed appearance
+across reconnects. Characters whose real race is not Irda cannot activate it.
+
+## Sivak Draconian advanced race
+
+Sivaks use reserved race ID 50. They are a Large advanced race with a 5,000
+account experience unlock and level adjustment 2. Ability adjustments are
++2 Strength, Dexterity, Constitution, and Intelligence. Their existing racial
+feats grant flight (`fly`), ultravision, disease immunity, spell resistance
+(10 + character level), a swift-action bite (`bite`), draconic devotion,
+draconian gallop, and Improved Trip to represent their tail-tripping aptitude.
+Their racial language is Draconic.
+
+```
+disguise forms
+disguise form <number>
+disguise form remove
+```
+
+A player Sivak learns a reusable snapshot when they personally kill a humanoid
+NPC or PC. The snapshot is captured in `raw_kill`, after pet archival succeeds
+and before death cleanup removes transformations. Group members and pet owners
+do not automatically receive the form. Self-kills, animals, other non-humanoids,
+and arena defeats do not grant forms. There is no victim size or gender restriction.
+Only learned form numbers are accepted; a Sivak cannot freely edit them like an
+Irda. Identical repeat kills do not grow the collection; different appearances
+of the same enemy can be retained separately.
+
+Snapshots retain the victim's short description, long description, apparent
+sex, and size. Player short descriptions come from the shared descriptor
+formatter; NPC descriptions are copied from the NPC. Existing magical changes
+are copied as visible appearances, without exposing the victim's hidden natural
+long description. Mundane costumes, names, titles, equipment, memories, skills,
+and spells are not copied. NPC creature-family IDs are not interpreted as player
+race indices. NPC appearance is described directly instead of displaying a false
+racial label. Snapshot text is bounded to 511 bytes for the short description
+and 2,047 bytes for the long description.
+
+Changing form is a standard action with no Disguise training, opposed check,
+mana cost, or duration. Return to natural form before advancing, wildshaping,
+shapechanging, or casting Alter Self. Ordinary disguises can still be layered
+on top and use their own opposed checks. Assumed forms hide the Sivak's known
+identity; they never teach the victim's name. True Sight reveals the Sivak's
+natural form alongside the copied appearance.
+
+### Player-file persistence
+
+Every learned appearance is saved immediately to the Sivak's normal player file.
+Repeated `SvFm` records contain the stable form ID, NPC/player source identity,
+source namespace, race metadata, size, and sex, followed by two tilde-terminated
+snapshot strings. The `SvAc` record saves the currently assumed form ID.
+
+The loader validates records and restores the collection and active appearance.
+It preserves snapshot bytes and consumes invalid record strings without losing
+the next pfile tag. Saves use bounded chunks below the existing save buffer's
+limit. Snapshots own their data and survive logout, server restarts, NPC extraction,
+and the victim changing their appearance later. Removing a form does not forget it.
+
+### Research and adaptation
+
+The [Dragonlance Nexus Pathfinder conversion](https://dragonlancenexus.com/wp-content/uploads/PFCG-Creatures-of-Ansalon.pdf)
+describes Sivaks with flight, disease immunity, spell resistance, a bite, a tail
+trip, and kill-based shapeshifting. [Steve Kenson's Dragonlance Nexus adventure](https://dragonlancenexus.com/turnabout-rescue-2/)
+also describes flight and the broader draconian traits.
+
+The game uses the requested ability adjustments and reusable forms for all
+Sivaks, rather than the sources' gender, timing, and size restrictions. Improved
+Trip is the existing-system adaptation of tail tripping. The older editions'
+corpse imitation, explosive death throes, female blending, and additional monster
+stat-block armor and attacks are not added by this implementation.
+
+## Aurak Draconian advanced race
+
+Auraks use reserved race ID 51 and are the strongest advanced draconian option.
+They are Medium, cost 15,000 account experience to unlock, and have level
+adjustment 4. Racial ability adjustments are +2 Dexterity, +4 Intelligence,
+and +4 Charisma. They gain +6 natural armor, spell resistance of 12 + character
+level, ultravision, disease immunity, a bite, draconic devotion, Combat Casting,
+and Improved Initiative. They speak Draconic and have no natural flight or glide.
+
+### Racial magic
+
+Use the normal `cast` command. No caster class or prepared spell slot is required.
+Racial caster level is character level; racial spell save DCs use Charisma and
+half caster level, with the normal spell DC bonuses. Access checks are read-only.
+The two signature powers have first-circle handling without adding them to class
+spell lists or accidentally using the default staff-only concentration difficulty.
+
+| Character level | Available racial spells |
+| --- | --- |
+| 1 | aurak energy ray, aurak breath, disguise self, magic missile |
+| 3 | charm, mirror image |
+| 5 | fireball, dispel magic |
+| 7 | greater invisibility |
+| 9 | dominate person |
+
+Examples:
+
+```
+cast 'aurak energy ray' <enemy>
+cast 'aurak breath'
+cast 'disguise self'
+cast 'greater invisibility'
+cast 'dominate person' <enemy>
+```
+
+The energy ray makes one ranged touch attack for 4d6 force damage, allows spell
+resistance, and has no saving throw. A miss deals no damage. Noxious breath is a
+room-area adaptation using the normal area target protections: eligible enemies
+make Fortitude saves or take a temporary 1d2 Strength penalty for 1d4 rounds,
+with blindness for the same duration if susceptible. Poison-immune targets are
+unaffected. The breath recharges after 1d4 six-second combat rounds.
+
+Dominate person is available once per rolling 24 real hours. Other racial spells
+are at will, subject to normal casting actions and restrictions. Cooldowns are
+spent only at effect dispatch after the existing room, target, PvP and antimagic
+checks; a resisted invocation still spends its use. Independent magic devices
+do not consume racial cooldowns. The `AuDm` and `AuBr` player-file tags save
+absolute recharge timestamps, so logout and server restart cannot reset them.
+After the racial domination use is spent, prepared class spells remain available
+and consume their normal slots; device casts also remain independent. Racial
+source is preserved through delayed casting so queued casts cannot bypass the
+daily use.
+Disguise Self retains the game's +10 Disguise-only behavior.
+
+### Death throes
+
+When slain, an Aurak releases 3d6 force damage against eligible enemies in the
+room, with Reflex saves for half damage. This uses the existing draconian death
+hook and area protections, including while the Aurak has an altered appearance.
+It cannot be cast directly. Equipment and resurrection follow the normal game
+rules; no multi-stage dying frenzy is added.
+
+### Sources and adaptation
+
+The published [Dragons of Krynn racial traits](https://files.spawningpool.net/docs/Vault2.0.-.TTRPG-Gamebooks/Dungeons%20%26%20Dragons%20%5Bmulti%5D/D%26D%203.5/Dragonlance%20Setting/Dragons%20of%20Krynn.pdf)
+support the ability adjustments and +6 natural armor. The
+[Dragonlance Nexus Pathfinder conversion](https://dragonlancenexus.com/wp-content/uploads/PFCG-Creatures-of-Ansalon.pdf)
+describes energy rays, noxious breath, defensive magic and domination.
+
+The unlock cost, level adjustment, progressive spell access and recharge rules
+are game adaptations. Charm represents part of their mind-influencing magic;
+it is not a new Suggestion spell. The implementation uses racial spell access
+rather than granting free sorcerer class levels or racial Hit Dice. Animal
+alternate form and dimensional step are not included in this release.

@@ -616,7 +616,10 @@
 #define SPELL_LITANY_OF_DAMNATION 535
 
 /** Total Number of defined spells  */
-#define NUM_SPELLS 536
+#define SPELL_AURAK_ENERGY_RAY 536
+#define SPELL_AURAK_BREATH 537
+#define SPELL_AURAK_DEATH_THROES 538
+#define NUM_SPELLS 539
 #define LAST_SPELL_DEFINE NUM_SPELLS + 1
 
 #define MAX_SPELL_AFFECTS 6 /* change if more needed */
@@ -1947,6 +1950,8 @@ bool isThornMagic(struct char_data *ch, int spellnum);
 bool isSkullMagic(struct char_data *ch, int spellnum);
 bool isDragonRiderMagic(struct char_data *ch, int spellnum);
 bool isBozakMagic(struct char_data *ch, int spellnum);
+bool isAurakMagic(struct char_data *ch, int spellnum);
+bool prepare_aurak_magic(struct char_data *ch, int spellnum, int casttype);
 int find_cantrip_class(struct char_data *ch, int spellnum);
 
 void mag_affects_full(int level, struct char_data *ch, struct char_data *victim,

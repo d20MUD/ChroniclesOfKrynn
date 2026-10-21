@@ -3365,7 +3365,7 @@ ACMDU(do_gain)
     return;
 
   /* limitations, have to be in 'normal' form to advance */
-  if (GET_DISGUISE_RACE(ch) || IS_MORPHED(ch) || HAS_DISGUISE(ch) || IS_ALTER_SELF(ch))
+  if (GET_DISGUISE_RACE(ch) || IS_MORPHED(ch) || HAS_DISGUISE(ch) || IS_ALTER_SELF(ch) || IS_IRDA_FORM(ch) || IS_SIVAK_FORM(ch))
   {
     send_to_char(ch, "You have to remove disguises, wildshape and/or polymorph "
                      "before advancing.\r\n");
@@ -4727,7 +4727,7 @@ bool wildshape_engine(struct char_data *ch, const char *argument, int mode)
     return FALSE;
   }
 
-  if (GET_DISGUISE_RACE(ch) || HAS_DISGUISE(ch) || IS_ALTER_SELF(ch))
+  if (GET_DISGUISE_RACE(ch) || HAS_DISGUISE(ch) || IS_ALTER_SELF(ch) || IS_IRDA_FORM(ch) || IS_SIVAK_FORM(ch))
   {
     send_to_char(ch, "You must remove your disguise before using wildshape.\r\n");
     return FALSE;
@@ -4927,7 +4927,7 @@ void perform_shapechange(struct char_data *ch, char *arg, int mode)
 {
   int form = -1;
 
-  if (HAS_DISGUISE(ch) || IS_ALTER_SELF(ch))
+  if (HAS_DISGUISE(ch) || IS_ALTER_SELF(ch) || IS_IRDA_FORM(ch) || IS_SIVAK_FORM(ch))
   {
     send_to_char(ch, "Remove your disguise or alter self before changing form.\r\n");
     return;
@@ -5184,6 +5184,63 @@ ACMD(do_disguise)
   if (IS_NPC(ch))
     return;
   skip_spaces_c(&argument);
+  if (!str_cmp(argument, "forms"))
+  {
+    sivak_form_command(ch, "");
+    return;
+  }
+  if (!strn_cmp(argument, "form", 4) && (!argument[4] || isspace((unsigned char)argument[4])))
+  {
+    int race;
+    const char *choice = argument + 4;
+    skip_spaces_c(&choice);
+    if (GET_REAL_RACE(ch) == DL_RACE_SIVAK_DRACONIAN)
+    {
+      sivak_form_command(ch, choice);
+      return;
+    }
+    if (GET_REAL_RACE(ch) != DL_RACE_IRDA)
+    {
+      send_to_char(ch, "Only Irda can change humanoid form at will.\r\n");
+      return;
+    }
+    if (IS_ALTER_SELF(ch) || IS_WILDSHAPED(ch) || IS_MORPHED(ch) || GET_DISGUISE_RACE(ch) ||
+        affected_by_spell(ch, SPELL_POLYMORPH))
+    {
+      send_to_char(ch, "Return to your natural form before changing humanoid form.\r\n");
+      return;
+    }
+    if (!str_cmp(choice, "remove"))
+    {
+      memset(&IRDA_APPEARANCE(ch), 0, sizeof(IRDA_APPEARANCE(ch)));
+      send_to_char(ch, "You return to your natural Irda form.\r\n");
+    }
+    else
+    {
+      char *description;
+      if (!*choice)
+      {
+        send_to_char(ch, "Usage: disguise form <race> | <age> | <gender> | <feature:adjective> | <feature:adjective>\r\n"
+                         "       disguise form remove\r\nHumanoid forms: ");
+        for (race = 0; race < NUM_EXTENDED_RACES; race++)
+          if (race_list[race].name && race_list[race].family == RACE_TYPE_HUMANOID)
+            send_to_char(ch, "%s; ", race_list[race].name);
+        send_to_char(ch, "\r\n");
+        return;
+      }
+      if (!parse_form_appearance(ch, choice, &appearance, TRUE))
+        return;
+      appearance.instance = ++ch->player_specials->saved.disguise_generation;
+      IRDA_APPEARANCE(ch) = appearance;
+      description = current_short_desc(ch);
+      send_to_char(ch, "You assume the form of %s.\r\n", description);
+      free(description);
+    }
+    save_char(ch, 0);
+    act("$n changes humanoid form.", TRUE, ch, 0, 0, TO_ROOM);
+    USE_STANDARD_ACTION(ch);
+    return;
+  }
   if (!strn_cmp(argument, "dismiss", 7) && (!argument[7] || isspace((unsigned char)argument[7])))
   {
     int spell = 0;
@@ -5245,6 +5302,9 @@ ACMD(do_disguise)
   {
     send_to_char(ch, "Usage: disguise <race> | <age> | <gender> | <feature:adjective> | <feature:adjective>\r\n"
                      "       disguise descriptors [feature]\r\n"
+                     "       disguise form <race> | <age> | <gender> | <feature:adjective> | <feature:adjective> (Irda)\r\n"
+                     "       disguise form remove (Irda)\r\n"
+                     "       disguise forms; disguise form <number|remove> (Sivak)\r\n"
                      "       disguise remove\r\n"
                      "       disguise dismiss <alter self|disguise self>\r\n"
                      "Example: disguise human | adult | female | hair:43 | eyes:2\r\n"

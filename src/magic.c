@@ -183,6 +183,9 @@ int compute_spell_res(struct char_data *ch, struct char_data *vict, int modifier
   if (HAS_FEAT(vict, FEAT_DRACONIAN_SPELL_RESISTANCE))
     resist = MAX(resist, 10 + GET_LEVEL(vict));
 
+  if (HAS_FEAT(vict, FEAT_AURAK_MAGIC))
+    resist = MAX(resist, 12 + GET_LEVEL(vict));
+
   /* Fae creatures (faeries, pixies) have natural magical resistance */
   if (HAS_FEAT(vict, FEAT_FAE_RESISTANCE))
     resist = MAX(resist, 15 + GET_LEVEL(vict));
@@ -650,7 +653,14 @@ int savingthrow_full(struct char_data *ch, struct char_data *vict, int type, int
   case CAST_SCROLL:
   case CAST_INNATE:
   case CAST_WEAPON_SPELL:
-    challenge += level;
+    if (casttype == CAST_INNATE && ch &&
+        isAurakMagic(ch, spellnum ? spellnum : CASTING_SPELLNUM(ch)))
+    {
+      stat_bonus = GET_CHA_BONUS(ch);
+      challenge += MAX(1, level) / 2 + stat_bonus + get_spell_dc_bonus(ch);
+    }
+    else
+      challenge += level;
     if (HAS_FEAT(vict, FEAT_SPELL_HARDINESS))
       savethrow += 2;
     if (HAS_FEAT(vict, FEAT_STRONG_SPELL_HARDINESS))
@@ -1574,6 +1584,11 @@ void mag_loops(int level, struct char_data *ch, struct char_data *victim, struct
   case SPELL_MISSILE_STORM:
     num_times = MIN(20, level);
     dam = true;
+    break;
+  case SPELL_AURAK_ENERGY_RAY:
+    num_times = 1;
+    dam = true;
+    needs_touch = true;
     break;
   case SPELL_SCORCHING_RAY:
     num_times = MIN(3, 1 + ((level - 3) / 4));
@@ -2769,6 +2784,24 @@ int mag_damage(int level, struct char_data *ch, struct char_data *victim, struct
     num_dice = 1;
     size_dice = 6;
     bonus = MIN(level, 5);
+    break;
+
+  case SPELL_AURAK_DEATH_THROES:
+    save = SAVING_REFL;
+    mag_resist = FALSE;
+    element = DAM_FORCE;
+    num_dice = 3;
+    size_dice = 6;
+    bonus = 0;
+    break;
+
+  case SPELL_AURAK_ENERGY_RAY:
+    save = -1;
+    mag_resist = TRUE;
+    element = DAM_FORCE;
+    num_dice = 4;
+    size_dice = 6;
+    bonus = 0;
     break;
 
   case SPELL_SCORCHING_RAY: // evocation
@@ -7078,6 +7111,27 @@ void mag_affects_full(int level, struct char_data *ch, struct char_data *victim,
     af[0].duration = 1;
     to_room = "$n is covered in acidic blood";
     to_vict = "You are covered in acidic blood.";
+    break;
+
+  case SPELL_AURAK_BREATH:
+    if (!can_poison(victim) || savingthrow_full(ch, victim, SAVING_FORT, 0, casttype, level, CONJURATION, spellnum))
+      return;
+    af[0].location = APPLY_STR;
+    af[0].modifier = -dice(1, 2);
+    af[0].duration = dice(1, 4);
+    if (can_blind(victim))
+    {
+      af[1].location = APPLY_HITROLL;
+      af[1].modifier = -4;
+      af[1].duration = af[0].duration;
+      SET_BIT_AR(af[1].bitvector, AFF_BLIND);
+      af[2].location = APPLY_AC_NEW;
+      af[2].modifier = -4;
+      af[2].duration = af[0].duration;
+      SET_BIT_AR(af[2].bitvector, AFF_BLIND);
+    }
+    to_vict = "Noxious Aurak fumes sap your strength and sting your eyes!";
+    to_room = "$n chokes on the noxious fumes!";
     break;
 
   case SPELL_BLINDNESS: // necromancy
@@ -11445,6 +11499,15 @@ void mag_areas(int level, struct char_data *ch, struct obj_data *obj, int spelln
    * the damaging part of the spell.   */
   switch (spellnum)
   {
+  case SPELL_AURAK_DEATH_THROES:
+    to_char = "Your dying body erupts in a burst of magical force!";
+    to_room = "$n erupts in a burst of magical force!";
+    break;
+  case SPELL_AURAK_BREATH:
+    isEffect = TRUE;
+    to_char = "You exhale a cloud of noxious golden fumes!";
+    to_room = "$n exhales a cloud of noxious golden fumes!";
+    break;
   case AFFECT_POOL_OF_ACID:
     break;
   case WARLOCK_TENACIOUS_PLAGUE:

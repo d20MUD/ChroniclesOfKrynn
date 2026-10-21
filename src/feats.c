@@ -1248,6 +1248,21 @@ void assign_feats(void)
         FEAT_TYPE_INNATE_ABILITY, "Bozaks deal extra lightning damage on all melee attacks.",
         "Bozaks deal extra lightning damage on all melee attacks.");
 
+  feato(FEAT_AURAK_SCALES, "aurak scales", TRUE, FALSE, FALSE, FEAT_TYPE_INNATE_ABILITY,
+        "+6 natural armor.", "Aurak scales grant a +6 natural armor bonus.");
+  feato(FEAT_AURAK_MAGIC, "aurak magic", TRUE, FALSE, FALSE, FEAT_TYPE_INNATE_ABILITY,
+        "Powerful innate magic and spell resistance of 12 + level.",
+        "Cast aurak energy ray, aurak breath, disguise self and magic missile at level 1; "
+        "charm and mirror image at level 3; fireball and dispel magic at level 5; "
+        "greater invisibility at level 7; and dominate person once per 24 hours at level 9. "
+        "Breath recharges in 1d4 combat rounds. Other racial spells are at will. "
+        "These abilities use your character level and Charisma for racial spellcasting.");
+
+  feato(FEAT_AURAK_DEATH_THROES, "aurak death throes", TRUE, FALSE, FALSE,
+        FEAT_TYPE_INNATE_ABILITY, "A 3d6 force burst on death; Reflex halves damage.",
+        "When slain, an Aurak releases a 3d6 force burst against eligible enemies in the room. "
+        "A successful Reflex save halves the damage. Equipment and resurrection follow normal game rules.");
+
   /* End Racial ability feats */
 
   /***/

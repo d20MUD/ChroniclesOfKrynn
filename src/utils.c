@@ -1074,9 +1074,9 @@ int compute_current_size(struct char_data *ch)
     return size;
   int racenum = GET_DISGUISE_RACE(ch);
 
-  if (IS_ALTER_SELF(ch))
+  if (IS_ALTER_SELF(ch) || IS_IRDA_FORM(ch) || IS_SIVAK_FORM(ch))
   {
-    size = race_list[ALTER_SELF_RACE(ch)].size;
+    size = IS_SIVAK_FORM(ch) ? active_sivak_form(ch)->size : race_list[GET_RACE(ch)].size;
     if (affected_by_spell(ch, SPELL_ENLARGE_PERSON))
       size++;
     if (affected_by_spell(ch, SPELL_SHRINK_PERSON))
@@ -7029,6 +7029,11 @@ bool has_bite_attack(struct char_data *ch)
 
 void perform_draconian_death_throes(struct char_data *ch)
 {
+  if (HAS_FEAT(ch, FEAT_AURAK_DEATH_THROES))
+  {
+    call_magic(ch, NULL, NULL, SPELL_AURAK_DEATH_THROES, 0, GET_LEVEL(ch), CAST_INNATE);
+    return;
+  }
   if (!IS_NPC(ch))
   {
     if (!IS_DRACONIAN(ch))

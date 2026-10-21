@@ -2399,6 +2399,11 @@ int compute_spells_circle(struct char_data *ch, int char_class, int spellnum, in
   int min_level = 0;     /* Minimum level to cast this spell */
   int campaign_override = 0;
 
+  /* Aurak signature powers are first-circle racial magic, not additions to a class list. */
+  if (isAurakMagic(ch, spellnum) &&
+      (spellnum == SPELL_AURAK_ENERGY_RAY || spellnum == SPELL_AURAK_BREATH))
+    return 1 + calculate_metamagic_modifier(ch, char_class, metamagic);
+
   /* Validate spell number for class */
   if (!validate_spell_for_class(char_class, spellnum))
     return (NUM_CIRCLES + 1);

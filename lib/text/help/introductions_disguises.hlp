@@ -90,4 +90,89 @@ actual transformed race, size, and abilities unchanged.
 
 See also: INTRODUCE, DISGUISE, ALTERSELF
 #0
+IRDA IRDAFORM
+Irda are an advanced race with +2 Dexterity, Intelligence, Wisdom and Charisma.
+They can change humanoid form at will, including apparent age, gender and
+features from the normal character descriptor menus.
+
+  disguise form <race> | <age> | <gender> | <feature:adjective> | <feature:adjective>
+  disguise form human | old-aged | female | hair:43 | eyes:2
+  disguise form remove
+
+Use disguise descriptors [feature] to see available descriptor choices.
+Any humanoid race is allowed. A race alone uses your natural age, gender and
+features. Use none to omit a feature. Each change takes a standard action.
+
+No Disguise training or opposed Disguise/Perception check is required. Your
+form persists until you change or remove it, including across reconnects.
+True Sight reveals your natural form alongside your assumed appearance.
+Return to natural form before advancing or using another transformation.
+
+See also: DISGUISE, TRUEFORM, INTRODUCE
+#0
+SIVAK SIVAKDRACONIAN SIVAKFORMS
+
+Sivak draconians are Large advanced characters with +2 Strength, Dexterity,
+Constitution and Intelligence. They have flight, ultravision, disease immunity,
+draconian spell resistance, bite, draconic devotion, gallop and Improved Trip.
+
+  disguise forms                List learned humanoid appearances.
+  disguise form <number>        Assume a learned appearance.
+  disguise form remove          Return to natural Sivak form.
+
+Personally killing a humanoid NPC or PC teaches you its appearance. Non-humanoids,
+self-kills and arena defeats do not grant forms. You do not gain forms from
+another group member's or a pet's kills. All genders can use this ability.
+
+Forms reproduce the victim's appearance, visible gender and size, without copying
+their equipment, name, skills or spells. You cannot freely edit a learned form.
+Changing form takes a standard action, without a Disguise or Perception roll.
+True Sight shows your natural form and your assumed appearance together.
+
+Your learned forms AND currently assumed form are saved to your player file.
+They persist across sessions and server restarts. Returning to natural form
+does not erase the collection; you can reuse any learned form later.
+
+Return to natural form before advancing or using another transformation.
+
+See also: DISGUISE, IRDA, TRUEFORM, FLY, BITE, TRIP
+#0
+AURAK AURAKDRACONIAN RACE-AURAK-DRACONIAN
+
+Auraks are the strongest advanced draconian race: Medium, wingless masters of
+magic with +2 Dexterity, +4 Intelligence and +4 Charisma. Unlocking costs 15,000
+account experience; their level adjustment is 4.
+
+They gain +6 natural armor, spell resistance of 12 + character level, ultravision,
+disease immunity, bite, draconic devotion, Combat Casting and Improved Initiative.
+They cannot fly naturally.
+
+Use cast to invoke racial spells, without a caster class or prepared slots:
+  Level 1: aurak energy ray, aurak breath, disguise self, magic missile
+  Level 3: charm, mirror image
+  Level 5: fireball, dispel magic
+  Level 7: greater invisibility
+  Level 9: dominate person (once per rolling 24 real hours)
+
+Examples:
+  cast 'aurak energy ray' <enemy>
+  cast 'aurak breath'
+  cast 'greater invisibility'
+  cast 'dominate person' <enemy>
+
+Energy ray makes one ranged touch attack for 4d6 force damage. Breath affects
+eligible enemies in the room: Fortitude negates a temporary 1d2 Strength penalty
+and blindness lasting 1d4 rounds. Poison immunity protects against the breath;
+blindness immunity protects against its blinding effect. Breath recharges after
+1d4 combat rounds. Other racial spells are at will, with normal casting actions.
+
+Racial magic uses your character level and Charisma. Breath and domination
+recharge times are saved in your player file and persist across sessions.
+Disguise Self grants +10 Disguise, using the normal disguise command for looks.
+
+On death, Auraks release 3d6 force damage against eligible enemies in the room,
+with Reflex saves for half damage. Normal equipment and resurrection rules apply.
+
+See also: DISGUISE, DISGUISESELF, CAST, BITE
+#0
 $

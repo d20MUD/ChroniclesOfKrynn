@@ -229,7 +229,7 @@ ACMD(do_introduce)
     return;
   }
 
-  if (HAS_DISGUISE(ch))
+  if (HAS_DISGUISE(ch) || IS_IRDA_FORM(ch) || IS_SIVAK_FORM(ch))
   {
     send_to_char(ch, "Remove your disguise before introducing yourself.\r\n");
     return;
@@ -357,6 +357,8 @@ bool identity_known(struct char_data *observer, struct char_data *subject)
 {
   if (!observer || !subject)
     return FALSE;
+  if ((IS_IRDA_FORM(subject) || IS_SIVAK_FORM(subject)) && observer != subject && GET_LEVEL(observer) < LVL_IMMORT && !has_true_sight(observer))
+    return FALSE;
   if (HAS_DISGUISE(subject) && !disguise_detected(observer, subject))
     return FALSE;
   return knows_character(observer, subject);
@@ -382,6 +384,10 @@ int visible_sex(struct char_data *subject, struct char_data *observer)
 {
   if (HAS_DISGUISE(subject) && !disguise_detected(observer, subject))
     return COSMETIC_DISGUISE(subject).sex;
+  if (IS_SIVAK_FORM(subject) && !has_true_sight(observer))
+    return active_sivak_form(subject)->sex;
+  if (IS_IRDA_FORM(subject) && !has_true_sight(observer))
+    return IRDA_APPEARANCE(subject).sex;
   return GET_SEX(subject);
 }
 
@@ -395,6 +401,11 @@ static unsigned long long true_form_signature(struct char_data *subject)
   signature = signature * 257 + SUBRACE(subject);
   signature = signature * 257 + (IS_ALTER_SELF(subject) ? ALTER_SELF_RACE(subject) + 1 : 0);
   signature = signature * 257 + AFF_FLAGGED(subject, AFF_WILD_SHAPE);
+  signature = signature * 257 + (IS_IRDA_FORM(subject) ? IRDA_FORM_RACE(subject) + 1 : 0);
+  if (IS_IRDA_FORM(subject))
+    signature = signature * 257 + IRDA_APPEARANCE(subject).instance;
+  if (IS_SIVAK_FORM(subject))
+    signature = signature * 257 + active_sivak_form(subject)->id;
   signature ^= COSMETIC_DISGUISE(subject).instance;
   return signature ? signature : 1;
 }
@@ -432,7 +443,7 @@ void show_disguise_notice(struct char_data *subject, struct char_data *observer)
     free(desc);
     if (has_altered_form(subject))
     {
-      const char *kind = IS_ALTER_SELF(subject) ? "alter self" :
+      const char *kind = IS_SIVAK_FORM(subject) ? "Sivak stolen form" : IS_IRDA_FORM(subject) ? "Irda change shape" : IS_ALTER_SELF(subject) ? "alter self" :
                          IS_WILDSHAPED(subject) ? "wildshaped" : "shapechanged";
       desc = current_altered_desc(subject);
       send_to_char(observer, "%s's altered form is %s (%s).\r\n", identity, desc, kind);

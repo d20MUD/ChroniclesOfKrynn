@@ -2205,7 +2205,7 @@ ASPELL(spell_alter_self)
   char message[MAX_INPUT_LENGTH];
   if (IS_NPC(ch))
     return;
-  if (IS_WILDSHAPED(ch) || IS_MORPHED(ch) || affected_by_spell(ch, SPELL_POLYMORPH))
+  if (IS_SIVAK_FORM(ch) || IS_IRDA_FORM(ch) || IS_WILDSHAPED(ch) || IS_MORPHED(ch) || affected_by_spell(ch, SPELL_POLYMORPH))
   {
     send_to_char(ch, "Return to your normal form before using alter self.\r\n");
     return;

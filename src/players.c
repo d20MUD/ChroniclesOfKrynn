@@ -30,6 +30,7 @@
 #include "dg_scripts.h" /* To enable saving of player variables to disk */
 #include "quest.h"
 #include "spells.h"
+#include "char_descs.h"
 #include "clan.h"
 #include "mud_event.h"
 #include "dg_event.h"
@@ -773,6 +774,17 @@ int load_char(const char *name, struct char_data *ch)
       switch (*tag)
       {
       case 'A':
+        if (!strcmp(tag, "AuDm") || !strcmp(tag, "AuBr"))
+        {
+          long long ready;
+          if (sscanf(line, "%lld", &ready) == 1 && ready >= 0)
+          {
+            if (!strcmp(tag, "AuDm")) ch->player_specials->saved.aurak_dominate_ready = (time_t)ready;
+            else ch->player_specials->saved.aurak_breath_ready = (time_t)ready;
+          }
+        }
+        if (!strcmp(tag, "AiFm"))
+          load_irda_form(ch, line);
         if (!strcmp(tag, "AlRc"))
         {
           int race;
@@ -1909,6 +1921,10 @@ int load_char(const char *name, struct char_data *ch)
         break;
 
       case 'S':
+        if (!strcmp(tag, "SvFm"))
+          load_sivak_form(ch, line, fl);
+        else if (!strcmp(tag, "SvAc"))
+          sscanf(line, "%llu", &ch->player_specials->saved.sivak_active_form);
         if (!strcmp(tag, "Sex "))
           GET_SEX(ch) = atoi(line);
         else if (!strcmp(tag, "SBld"))
@@ -3026,6 +3042,12 @@ void save_char(struct char_data *ch, int mode)
                  appearance->age, appearance->sex, appearance->roll, appearance->descriptor1,
                  appearance->adjective1, appearance->descriptor2, appearance->adjective2);
   }
+  if (IS_IRDA_FORM(ch))
+  {
+    struct disguise_appearance *form = &IRDA_APPEARANCE(ch);
+    BUFFER_WRITE("AiFm: %llu %d %d %d %d %d %d %d\n", form->instance, form->race, form->age, form->sex,
+                 form->descriptor1, form->adjective1, form->descriptor2, form->adjective2);
+  }
   if (IS_ALTER_SELF(ch))
     BUFFER_WRITE("AlRc: %d\n", ALTER_SELF_RACE(ch));
   {
@@ -3034,6 +3056,31 @@ void save_char(struct char_data *ch, int mode)
       if (entry->instance)
         BUFFER_WRITE("DgOb: %ld %llu %d\n", entry->subject, entry->instance, entry->detected);
   }
+
+  if (!IS_NPC(ch) && GET_REAL_RACE(ch) == DL_RACE_SIVAK_DRACONIAN)
+  {
+    struct sivak_form *form;
+    for (form = ch->player_specials->saved.sivak_forms; form; form = form->next)
+    {
+      size_t offset;
+      BUFFER_WRITE("SvFm: %llu %ld %d %d %d %d\n", form->id, form->source,
+                   form->npc, form->race, form->size, form->sex);
+      /* Keep each write below save_char's 2KB temporary buffer. */
+      for (offset = 0; offset < strlen(form->short_desc); offset += 500)
+        BUFFER_WRITE("%.500s", form->short_desc + offset);
+      BUFFER_WRITE("~\n");
+      for (offset = 0; offset < strlen(form->description); offset += 500)
+        BUFFER_WRITE("%.500s", form->description + offset);
+      BUFFER_WRITE("~\n");
+    }
+    if (IS_SIVAK_FORM(ch))
+      BUFFER_WRITE("SvAc: %llu\n", active_sivak_form(ch)->id);
+  }
+
+  if (ch->player_specials->saved.aurak_dominate_ready)
+    BUFFER_WRITE("AuDm: %lld\n", (long long)ch->player_specials->saved.aurak_dominate_ready);
+  if (ch->player_specials->saved.aurak_breath_ready)
+    BUFFER_WRITE("AuBr: %lld\n", (long long)ch->player_specials->saved.aurak_breath_ready);
 
   /* Save introduction list */
   {

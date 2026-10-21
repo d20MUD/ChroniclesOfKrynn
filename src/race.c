@@ -3920,6 +3920,68 @@ void assign_races(void)
 
   // end luminari race info
 #endif
+  add_race(DL_RACE_AURAK_DRACONIAN, "aurak draconian", "Aurak Draconian",
+           "\tYAurak Draconian\tn", "Aurk", "\tYAurk\tn",
+           RACE_TYPE_HUMANOID, SIZE_MEDIUM, TRUE, 4, 15000, IS_ADVANCE);
+  set_race_details(DL_RACE_AURAK_DRACONIAN,
+      "Aurak draconians are wingless, golden-scaled masters of innate magic, the most "
+      "powerful draconian race. They gain +2 Dexterity, +4 Intelligence, +4 Charisma, "
+      "+6 natural armor, spell resistance of 12 + level, disease immunity, ultravision "
+      "and a bite. Their racial magic includes a force energy ray, noxious breath, "
+      "disguise self, and progressively stronger arcane spells, including greater "
+      "invisibility and once-per-day domination. Auraks cannot fly naturally.",
+      "You assume your natural Aurak form.", "$n assumes $s natural Aurak form.");
+  set_race_genders(DL_RACE_AURAK_DRACONIAN, Y, Y, Y);
+  set_race_abilities(DL_RACE_AURAK_DRACONIAN, 0, 0, 4, 0, 2, 4);
+  set_race_alignments(DL_RACE_AURAK_DRACONIAN, Y, Y, Y, Y, Y, Y, Y, Y, Y);
+  feat_race_assignment(DL_RACE_AURAK_DRACONIAN, FEAT_AURAK_SCALES, 1, N);
+  feat_race_assignment(DL_RACE_AURAK_DRACONIAN, FEAT_AURAK_MAGIC, 1, N);
+  feat_race_assignment(DL_RACE_AURAK_DRACONIAN, FEAT_AURAK_DEATH_THROES, 1, N);
+  feat_race_assignment(DL_RACE_AURAK_DRACONIAN, FEAT_ULTRAVISION, 1, N);
+  feat_race_assignment(DL_RACE_AURAK_DRACONIAN, FEAT_DRACONIAN_DISEASE_IMMUNITY, 1, N);
+  feat_race_assignment(DL_RACE_AURAK_DRACONIAN, FEAT_DRACONIAN_SPELL_RESISTANCE, 1, N);
+  feat_race_assignment(DL_RACE_AURAK_DRACONIAN, FEAT_DRACONIAN_BITE, 1, N);
+  feat_race_assignment(DL_RACE_AURAK_DRACONIAN, FEAT_DRACONIC_DEVOTION, 1, N);
+  feat_race_assignment(DL_RACE_AURAK_DRACONIAN, FEAT_COMBAT_CASTING, 1, N);
+  feat_race_assignment(DL_RACE_AURAK_DRACONIAN, FEAT_IMPROVED_INITIATIVE, 1, N);
+  race_list[DL_RACE_AURAK_DRACONIAN].racial_language = SKILL_LANG_DRACONIC;
+
+  add_race(DL_RACE_SIVAK_DRACONIAN, "sivak draconian", "Sivak Draconian",
+           "\tWSivak Draconian\tn", "Sivk", "\tWSivk\tn",
+           RACE_TYPE_HUMANOID, SIZE_LARGE, TRUE, 2, 5000, IS_ADVANCE);
+  set_race_details(DL_RACE_SIVAK_DRACONIAN,
+      "Sivak draconians are silver-scaled, winged infiltrators. They gain +2 Strength, "
+      "Dexterity, Constitution, and Intelligence, flight, darkvision, disease immunity, "
+      "draconian spell resistance, a bite, and improved trip. They can permanently learn "
+      "the appearance of humanoid enemies they personally kill. Use disguise forms to "
+      "list these forms and disguise form <number> to assume one. True Sight reveals "
+      "both their natural and assumed forms.",
+      "You assume your natural Sivak form.", "$n assumes $s natural Sivak form.");
+  set_race_genders(DL_RACE_SIVAK_DRACONIAN, Y, Y, Y);
+  set_race_abilities(DL_RACE_SIVAK_DRACONIAN, 2, 2, 2, 0, 2, 0);
+  set_race_alignments(DL_RACE_SIVAK_DRACONIAN, Y, Y, Y, Y, Y, Y, Y, Y, Y);
+  feat_race_assignment(DL_RACE_SIVAK_DRACONIAN, FEAT_WINGS, 1, N);
+  feat_race_assignment(DL_RACE_SIVAK_DRACONIAN, FEAT_ULTRAVISION, 1, N);
+  feat_race_assignment(DL_RACE_SIVAK_DRACONIAN, FEAT_DRACONIAN_DISEASE_IMMUNITY, 1, N);
+  feat_race_assignment(DL_RACE_SIVAK_DRACONIAN, FEAT_DRACONIAN_SPELL_RESISTANCE, 1, N);
+  feat_race_assignment(DL_RACE_SIVAK_DRACONIAN, FEAT_DRACONIAN_BITE, 1, N);
+  feat_race_assignment(DL_RACE_SIVAK_DRACONIAN, FEAT_DRACONIC_DEVOTION, 1, N);
+  feat_race_assignment(DL_RACE_SIVAK_DRACONIAN, FEAT_DRACONIAN_GALLOP, 1, N);
+  feat_race_assignment(DL_RACE_SIVAK_DRACONIAN, FEAT_IMPROVED_TRIP, 1, N);
+  race_list[DL_RACE_SIVAK_DRACONIAN].racial_language = SKILL_LANG_DRACONIC;
+
+  add_race(DL_RACE_IRDA, "irda", "Irda", "\tCIrda\tn", "Irda", "\tCIrda\tn",
+           RACE_TYPE_HUMANOID, SIZE_MEDIUM, TRUE, 2, 5000, IS_ADVANCE);
+  set_race_details(DL_RACE_IRDA,
+      "Irda are graceful, magically gifted humanoids who can assume humanoid forms at will. "
+      "They gain +2 Dexterity, Intelligence, Wisdom, and Charisma. "
+      "Use disguise form <race> | <age> | <gender> | <feature:adjective> | <feature:adjective>. "
+      "Use disguise form remove to return to your natural form.",
+      "You assume the form of an Irda.", "$n assumes the form of an Irda.");
+  set_race_genders(DL_RACE_IRDA, Y, Y, Y);
+  set_race_abilities(DL_RACE_IRDA, 0, 0, 2, 2, 2, 2);
+  set_race_alignments(DL_RACE_IRDA, Y, Y, Y, Y, Y, Y, Y, Y, Y);
+  race_list[DL_RACE_IRDA].racial_language = SKILL_LANG_COMMON;
   /* affect assignment */
   /*                  race-num  affect            lvl */
   /****************************************************************************/
@@ -5136,6 +5198,11 @@ int parse_race_long(const char *arg_in)
     *(arg + l) = LOWER(*(arg + l));
 #if defined(CAMPAIGN_DL)
 
+  if (is_abbrev(arg, "aurak draconian") || is_abbrev(arg, "aurak-draconian") ||
+      is_abbrev(arg, "aurakdraconian")) return DL_RACE_AURAK_DRACONIAN;
+  if (is_abbrev(arg, "sivak draconian") || is_abbrev(arg, "sivak-draconian") ||
+      is_abbrev(arg, "sivakdraconian")) return DL_RACE_SIVAK_DRACONIAN;
+  if (is_abbrev(arg, "irda")) return DL_RACE_IRDA;
   if (is_abbrev(arg, "human"))
     return DL_RACE_HUMAN;
   if (is_abbrev(arg, "qualinesti elf"))
@@ -5217,7 +5284,6 @@ int parse_race_long(const char *arg_in)
   // if (is_abbrev(arg, "aurak draconian")) return  DL_RACE_AURAK_DRACONIAN;
   // if (is_abbrev(arg, "aurak-draconian")) return  DL_RACE_AURAK_DRACONIAN;
   // if (is_abbrev(arg, "aurakdraconian")) return  DL_RACE_AURAK_DRACONIAN;
-  // if (is_abbrev(arg, "irda")) return  DL_RACE_IRDA;
   // if (is_abbrev(arg, "ogre")) return  DL_RACE_OGRE;
   if (is_abbrev(arg, "lich"))
     return RACE_LICH;
@@ -5226,6 +5292,11 @@ int parse_race_long(const char *arg_in)
 
 #else
 
+  if (is_abbrev(arg, "aurak draconian") || is_abbrev(arg, "aurak-draconian") ||
+      is_abbrev(arg, "aurakdraconian")) return DL_RACE_AURAK_DRACONIAN;
+  if (is_abbrev(arg, "sivak draconian") || is_abbrev(arg, "sivak-draconian") ||
+      is_abbrev(arg, "sivakdraconian")) return DL_RACE_SIVAK_DRACONIAN;
+  if (is_abbrev(arg, "irda")) return DL_RACE_IRDA;
   if (is_abbrev(arg, "human"))
     return RACE_HUMAN;
   if (is_abbrev(arg, "moon-elf"))

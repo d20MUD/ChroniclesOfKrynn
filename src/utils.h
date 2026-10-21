@@ -1056,6 +1056,15 @@ void free_disguise_observations(struct char_data *ch);
 void load_disguise_observation(struct char_data *ch, const char *line);
 void load_cosmetic_disguise(struct char_data *ch, const char *line);
 #define HAS_DISGUISE(ch) (!IS_NPC(ch) && (ch)->player_specials->saved.disguise.instance != 0)
+struct sivak_form *active_sivak_form(struct char_data *ch);
+void remember_sivak_kill(struct char_data *killer, struct char_data *victim);
+void free_sivak_forms(struct char_data *ch);
+void sivak_form_command(struct char_data *ch, const char *argument);
+void load_sivak_form(struct char_data *ch, const char *line, FILE *fl);
+#define IS_SIVAK_FORM(ch) (active_sivak_form(ch) != NULL)
+#define IS_IRDA_FORM(ch) (!IS_NPC(ch) && GET_REAL_RACE(ch) == DL_RACE_IRDA && (ch)->player_specials->saved.irda_form.instance != 0)
+#define IRDA_APPEARANCE(ch) ((ch)->player_specials->saved.irda_form)
+#define IRDA_FORM_RACE(ch) (IRDA_APPEARANCE(ch).race)
 #define IS_ALTER_SELF(ch) (!IS_NPC(ch) && (ch)->player_specials->saved.alter_self_active)
 #define ALTER_SELF_RACE(ch) ((ch)->player_specials->saved.alter_self_race)
 void reconcile_alter_self(struct char_data *ch);
@@ -1069,7 +1078,7 @@ void reconcile_alter_self(struct char_data *ch);
 #define SUBRACE(ch) ((ch)->player.pc_subrace)
 #define GET_NPC_RACE(ch) (IS_NPC(ch) ? (ch)->player.race : RACE_UNDEFINED)
 
-#define GET_RACE(ch) (IS_ALTER_SELF(ch) ? ALTER_SELF_RACE(ch) : ((GET_DISGUISE_RACE(ch)) ? GET_DISGUISE_RACE(ch) : GET_REAL_RACE(ch)))
+#define GET_RACE(ch) (IS_ALTER_SELF(ch) ? ALTER_SELF_RACE(ch) : (IS_SIVAK_FORM(ch) ? active_sivak_form(ch)->race : (IS_IRDA_FORM(ch) ? IRDA_FORM_RACE(ch) : ((GET_DISGUISE_RACE(ch)) ? GET_DISGUISE_RACE(ch) : GET_REAL_RACE(ch)))))
 #define RACE_ABBR(ch)                                                                              \
   (IS_NPC(ch) ? race_family_abbrevs[GET_RACE(ch)]                                                  \
    : IS_WILDSHAPED(ch)                                                                             \

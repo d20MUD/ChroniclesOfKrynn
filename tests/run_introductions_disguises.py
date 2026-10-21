@@ -36,6 +36,8 @@ stubs = r'''
 #define CREATE(p,t,n) do { (p) = calloc((n), sizeof(t)); assert(p); } while (0)
 #define USE_STANDARD_ACTION(ch) ((void)0)
 #define USE_MOVE_ACTION(ch) ((void)0)
+struct index_data test_mob_index[4], *mob_index = test_mob_index;
+mob_rnum top_of_mobt = 3;
 struct char_data *character_list;
 bool can_blindsense_creature(struct char_data *ch, struct char_data *target) { return FALSE; }
 size_t strlcpy(char *dest, const char *source, size_t size) {
@@ -50,6 +52,21 @@ struct room_data rooms[2], *world = rooms;
 const char *character_ages[] = {"adult", "adolescent", "middle-aged", "old-aged", "venerable", "\n"};
 const char *dirs[NUM_OF_DIRS] = {"north", "east", "south", "west", "up", "down"};
 const char *genders[] = {"neutral", "male", "female", "\n"};
+static bool test_poisonable=TRUE, test_blindable=TRUE;
+static int test_save, test_ray_hit=1, test_ray_attacks, test_ray_damage;
+int attack_roll(struct char_data *ch, struct char_data *vict, int type, int touch, int mode) {
+  assert(type==ATTACK_TYPE_RANGED && touch); test_ray_attacks++; return test_ray_hit;
+}
+int mag_damage(int level, struct char_data *ch, struct char_data *vict, struct obj_data *obj, int spell, int meta, int save, int type) { test_ray_damage++; return 1; }
+void mag_affects(int level, struct char_data *ch, struct char_data *vict, struct obj_data *obj, int spell, int save, int type, int meta) {}
+void mag_points(int level, struct char_data *ch, struct char_data *vict, struct obj_data *obj, int spell, int save, int type) {}
+
+int dice(int number, int size) { return number*size; }
+bool can_poison(struct char_data *ch) { return test_poisonable; }
+bool can_blind(struct char_data *ch) { return test_blindable; }
+int get_feat_value(struct char_data *ch, int feat) { return HAS_REAL_FEAT(ch,feat); }
+int savingthrow(struct char_data *ch, struct char_data *vict, int type, int modifier, int casttype, int level, int school) { return test_save; }
+int savingthrow_full(struct char_data *ch, struct char_data *vict, int type, int modifier, int casttype, int level, int school, int spell) { return test_save; }
 static int rolls, saves, roll_value = 10, disguise_bonus, perception_bonus;
 static char output[65536];
 static struct char_data *alice, *bob, *carol;
@@ -160,7 +177,28 @@ load_a = players.index('        if (!strcmp(tag, "AlRc"))')
 load_a = players.index('{', load_a) + 1
 load_b = players.index('\n        }', load_a)
 code += '\nstatic void load_active_race(struct char_data *ch, const char *line) {' + players[load_a:load_b] + '\n}\n'
-code += '\nstatic void save_identity(struct char_data *ch) {\n#define BUFFER_WRITE(...) send_to_char(ch, __VA_ARGS__)\n' + players[a:b] + '\n#undef BUFFER_WRITE\n}\n'
+code += '\nstatic void save_identity(struct char_data *ch) {\n#define BUFFER_WRITE(...) do { char part[2048]; int len=snprintf(part,sizeof(part),__VA_ARGS__); assert(len>=0 && len<sizeof(part)); send_to_char(ch,"%s",part); } while(0)\n' + players[a:b] + '\n#undef BUFFER_WRITE\n}\n'
+# Exercise the actual racial spell eligibility, cooldown and effect code.
+code += function('spell_parser.c', 'bool isAurakMagic(struct char_data *ch, int spellnum)')
+code += function('spell_parser.c', 'bool prepare_aurak_magic(struct char_data *ch, int spellnum, int casttype)')
+magic = (src / 'magic.c').read_text()
+a = magic.index('void mag_loops(')
+code += magic[a:magic.index('\n}', a) + 2] + '\n'
+
+def spell_case(start, end):
+    a = magic.index('  case ' + start + ':')
+    b = magic.index('  case ' + end + ':', a)
+    return magic[a:b]
+code += "\nstatic void test_aurak_breath(struct char_data *ch, struct char_data *victim, struct affected_type *af) {\nint casttype=CAST_INNATE, level=10, spellnum=SPELL_AURAK_BREATH; const char *to_vict=NULL,*to_room=NULL; (void)to_vict; (void)to_room;\nswitch(SPELL_AURAK_BREATH) {\n" + spell_case('SPELL_AURAK_BREATH', 'SPELL_BLINDNESS') + "default: assert(0); } }\n"
+code += "\nstatic void test_aurak_damage(int spell, int *count, int *element_out, int *save_out) {\nint num_dice=0,size_dice=0,bonus=0,element=0,save=0,mag_resist=0;\nswitch(spell) {\n" + spell_case('SPELL_AURAK_DEATH_THROES', 'SPELL_SCORCHING_RAY') + "default: assert(0); } assert(size_dice==6 && bonus==0); assert(mag_resist==(spell==SPELL_AURAK_ENERGY_RAY)); *count=num_dice; *element_out=element; *save_out=save; }\n"
+players_text = (src / 'players.c').read_text()
+a = players_text.index('        if (!strcmp(tag, "AuDm")')
+b = players_text.index('        if (!strcmp(tag, "AiFm")', a)
+code += '\nstatic void load_aurak_timers(struct char_data *ch,const char *tag,const char *line) {\n' + players_text[a:b] + '\n}\n'
+# Gate invocation must remain after combat/room protection and before effect dispatch.
+parser = (src / 'spell_parser.c').read_text()
+assert parser.index('if (!prepare_aurak_magic(caster, spellnum, casttype))') > parser.index('/* PVP CHECK')
+assert parser.index('if (!prepare_aurak_magic(caster, spellnum, casttype))') < parser.index('/* the rest of the routine handling follows: */')
 checks = r'''
 static struct char_data *new_pc(char *name, long id) {
   struct char_data *ch = calloc(1,sizeof(*ch)); assert(ch);
@@ -170,7 +208,7 @@ static struct char_data *new_pc(char *name, long id) {
   return ch;
 }
 static void free_pc(struct char_data *ch) {
-  int i; free_disguise_observations(ch);
+  int i; free_disguise_observations(ch); free_sivak_forms(ch);
   while(ch->affected) { struct affected_type *af=ch->affected; ch->affected=af->next; free(af); }
   for(i=0;i<MAX_INTROS;i++) free(ch->player_specials->saved.intro_list[i]);
   free(ch->player_specials); free(ch);
@@ -499,8 +537,226 @@ int main(void) {
     REMOVE_BIT_AR(AFF_FLAGS(carol),AFF_TRUE_SIGHT);
     IS_MORPHED(alice)=0; *output=0; show_disguise_notice(alice,bob); assert(!*output);
   }
+  /* Irda innate appearance uses all shared selections, with no opposed rolls. */
+  {
+    int before_rolls=rolls;
+    struct char_data *loaded;
+    race_list[DL_RACE_IRDA].name="irda"; race_list[DL_RACE_IRDA].type="Irda";
+    race_list[DL_RACE_IRDA].family=RACE_TYPE_HUMANOID;
+    race_list[DL_RACE_IRDA].size=SIZE_MEDIUM;
+    GET_REAL_RACE(alice)=DL_RACE_IRDA;
+    GET_ABILITY(alice,ABILITY_DISGUISE)=0;
+    do_disguise(alice,"form human | old-aged | female | hair:43 | eyes:2",0,0);
+    assert(IS_IRDA_FORM(alice) && GET_RACE(alice)==0 && GET_REAL_RACE(alice)==DL_RACE_IRDA);
+    assert(IRDA_APPEARANCE(alice).age==3 && IRDA_APPEARANCE(alice).sex==SEX_FEMALE);
+    assert(IRDA_APPEARANCE(alice).descriptor1==FEATURE_TYPE_HAIR && IRDA_APPEARANCE(alice).adjective1==43);
+    assert(IRDA_APPEARANCE(alice).descriptor2==FEATURE_TYPE_EYES && IRDA_APPEARANCE(alice).adjective2==2);
+    desc=which_desc(bob,alice); assert(strstr(desc,"human") && strstr(desc,"silver hair")); free(desc);
+    assert(visible_sex(alice,bob)==SEX_FEMALE && perceived_race(alice,bob)==0);
+    assert(!identity_known(bob,alice) && !strstr(PERS(alice,bob),"Alice"));
+    *output=0; show_disguise_notice(alice,bob); assert(!*output);
+    SET_BIT_AR(AFF_FLAGS(bob),AFF_TRUE_SIGHT);
+    desc=which_desc(bob,alice); assert(strstr(desc,"irda") && !strstr(desc,"silver hair")); free(desc);
+    assert(visible_sex(alice,bob)==SEX_MALE && perceived_race(alice,bob)==DL_RACE_IRDA);
+    *output=0; show_disguise_notice(alice,bob);
+    assert(strstr(output,"true form is") && strstr(output,"altered form is") && strstr(output,"silver hair"));
+    *output=0; save_identity(alice); assert(strstr(output,"AiFm:"));
+    loaded=new_pc("Alice",1); GET_REAL_RACE(loaded)=DL_RACE_IRDA;
+    { char *tag=strstr(output,"AiFm:"); load_irda_form(loaded,tag+5); }
+    assert(IS_IRDA_FORM(loaded) && IRDA_APPEARANCE(loaded).sex==SEX_FEMALE);
+    assert(IRDA_APPEARANCE(loaded).adjective1==43 && IRDA_APPEARANCE(loaded).adjective2==2);
+    free_pc(loaded);
+    loaded=new_pc("Alice",1); GET_REAL_RACE(loaded)=DL_RACE_IRDA;
+    load_irda_form(loaded,"1 0 0 1 6 99999 1 2"); assert(!IS_IRDA_FORM(loaded));
+    load_irda_form(loaded,"1 6 0 1 0 0 0 0"); assert(!IS_IRDA_FORM(loaded));
+    load_irda_form(loaded,"1 0 99 1 0 0 0 0"); assert(!IS_IRDA_FORM(loaded));
+    load_irda_form(loaded,"garbage"); assert(!IS_IRDA_FORM(loaded));
+    free_pc(loaded);
+    SET_BIT_AR(AFF_FLAGS(carol),AFF_TRUE_SIGHT);
+    *output=0; show_disguise_notice(alice,carol); assert(!strstr(output,"Alice") && strstr(output,"irda") && strstr(output,"silver hair"));
+    REMOVE_BIT_AR(AFF_FLAGS(carol),AFF_TRUE_SIGHT);
+    REMOVE_BIT_AR(AFF_FLAGS(bob),AFF_TRUE_SIGHT);
+    /* Small humanoids allowed; no size restriction and no racial stat spell. */
+    do_disguise(alice,"form smallfolk | adult | neutral | none | none",0,0);
+    assert(GET_RACE(alice)==5 && GET_SIZE(alice)==SIZE_SMALL);
+    assert(!affected_by_spell(alice,SPELL_ALTER_SELF));
+    do_disguise(alice,"form wolf",0,0); assert(GET_RACE(alice)==5);
+    do_disguise(alice,"form human | adult | female | hair:99999",0,0); assert(GET_RACE(alice)==5);
+    do_disguise(alice,"form remove",0,0); assert(!IS_IRDA_FORM(alice) && GET_RACE(alice)==DL_RACE_IRDA);
+    do_disguise(bob,"form human",0,0); assert(!IS_IRDA_FORM(bob));
+    assert(rolls==before_rolls);
+  }
+  /* Sivaks learn exact appearance snapshots from their own humanoid kills. */
+  {
+    struct char_data *npc, *loaded;
+    struct sivak_form *form;
+    unsigned long long pc_id, npc_id, generation;
+    int old_rolls=rolls, n;
+    char choice[64], record[512];
+    race_list[DL_RACE_SIVAK_DRACONIAN].name="sivak draconian";
+    race_list[DL_RACE_SIVAK_DRACONIAN].family=RACE_TYPE_HUMANOID;
+    race_list[DL_RACE_SIVAK_DRACONIAN].size=SIZE_LARGE;
+    GET_REAL_RACE(alice)=DL_RACE_SIVAK_DRACONIAN; alice->points.size=SIZE_LARGE;
+    GET_REAL_RACE(bob)=0; GET_SEX(bob)=SEX_FEMALE;
+    bob->player.description="A distinctive humanoid.\r\n";
+    remember_sivak_kill(bob,alice); assert(!bob->player_specials->saved.sivak_forms);
+    remember_sivak_kill(alice,alice); assert(!alice->player_specials->saved.sivak_forms);
+    remember_sivak_kill(NULL,bob); remember_sivak_kill(alice,NULL);
+    remember_sivak_kill(alice,bob);
+    form=alice->player_specials->saved.sivak_forms;
+    assert(form && !form->npc && form->source==GET_IDNUM(bob));
+    assert(form->sex==SEX_FEMALE && form->race==0 && form->size==SIZE_MEDIUM);
+    pc_id=form->id; assert(strstr(form->short_desc,"human"));
+    assert(strstr(form->description,"distinctive"));
+    snprintf(choice,sizeof(choice),"form %llu",pc_id); do_disguise(alice,choice,0,0);
+    assert(IS_SIVAK_FORM(alice) && GET_RACE(alice)==0 && GET_SIZE(alice)==SIZE_MEDIUM);
+    assert(GET_REAL_RACE(alice)==DL_RACE_SIVAK_DRACONIAN && visible_sex(alice,carol)==SEX_FEMALE);
+    assert(!identity_known(bob,alice) && !strstr(PERS(alice,bob),"Alice"));
+    desc=which_desc(carol,alice); assert(!strcmp(desc,form->short_desc)); free(desc);
+    *output=0; show_disguise_notice(alice,carol); assert(!*output);
+    SET_BIT_AR(AFF_FLAGS(carol),AFF_TRUE_SIGHT);
+    desc=which_desc(carol,alice); assert(strstr(desc,"sivak draconian")); free(desc);
+    *output=0; show_disguise_notice(alice,carol);
+    assert(strstr(output,"true form is") && strstr(output,"altered form is") && strstr(output,"Sivak stolen form"));
+    assert(!strstr(output,"Alice"));
+    REMOVE_BIT_AR(AFF_FLAGS(carol),AFF_TRUE_SIGHT);
+    /* Mob family IDs are not player race IDs. NPC text and actual size survive extraction. */
+    npc=new_pc("guard",GET_IDNUM(bob)); SET_BIT_AR(MOB_FLAGS(npc),MOB_ISNPC);
+    npc->nr=0; mob_index[0].vnum=GET_IDNUM(bob);
+    GET_REAL_RACE(npc)=RACE_TYPE_HUMANOID; npc->points.size=SIZE_SMALL;
+    npc->player.short_descr="a scarred watch captain";
+    npc->player.description="A captain with a scar.\r\n";
+    remember_sivak_kill(alice,npc);
+    form=alice->player_specials->saved.sivak_forms; npc_id=form->id;
+    assert(form->npc && form->source==GET_IDNUM(bob) && form->next && form->next->id==pc_id);
+    assert(!strcmp(form->short_desc,"a scarred watch captain"));
+    assert(strstr(form->description,"captain with a scar"));
+    remember_sivak_kill(alice,npc);
+    assert(alice->player_specials->saved.sivak_forms==form && form->next->id==pc_id && !form->next->next);
+    assert(form->id==npc_id);
+    /* No animal forms, arena defeats, or other people's kills. */
+    generation=alice->player_specials->saved.disguise_generation;
+    GET_REAL_RACE(npc)=RACE_TYPE_ANIMAL; remember_sivak_kill(alice,npc);
+    GET_REAL_RACE(npc)=RACE_TYPE_HUMANOID;
+    world[1].number=ARENA_VNUM_START; IN_ROOM(npc)=1; remember_sivak_kill(alice,npc); IN_ROOM(npc)=0;
+    assert(alice->player_specials->saved.disguise_generation==generation);
+    free_pc(npc);
+    do_disguise(alice,"form remove",0,0); assert(!IS_SIVAK_FORM(alice) && GET_SIZE(alice)==SIZE_LARGE);
+    snprintf(choice,sizeof(choice),"form %llu",npc_id); do_disguise(alice,choice,0,0);
+    desc=which_desc(carol,alice); assert(!strcmp(desc,"a scarred watch captain")); free(desc);
+    assert(GET_SIZE(alice)==SIZE_SMALL);
+    do_disguise(alice,"form 999999",0,0); assert(active_sivak_form(alice)->id==npc_id);
+    do_disguise(bob,choice,0,0); assert(!IS_SIVAK_FORM(bob));
+    /* Removing a form preserves the collection; forms remain reusable. */
+    do_disguise(alice,"form remove",0,0); do_disguise(alice,choice,0,0);
+    assert(IS_SIVAK_FORM(alice) && active_sivak_form(alice)->id==npc_id);
+    *output=0; save_identity(alice); assert(strstr(output,"SvFm:") && strstr(output,"SvAc:"));
+    loaded=new_pc("Alice",1); GET_REAL_RACE(loaded)=DL_RACE_SIVAK_DRACONIAN;
+    file=tmpfile(); assert(file); fputs(output,file); rewind(file);
+    while(fgets(record,sizeof(record),file)) {
+      if(!strncmp(record,"SvFm:",5)) load_sivak_form(loaded,record+5,file);
+      if(!strncmp(record,"SvAc:",5)) sscanf(record+5,"%llu",&loaded->player_specials->saved.sivak_active_form);
+    }
+    fclose(file); assert(active_sivak_form(loaded) && active_sivak_form(loaded)->id==npc_id);
+    assert(!strcmp(active_sivak_form(loaded)->short_desc,"a scarred watch captain"));
+    n=0; for(form=loaded->player_specials->saved.sivak_forms;form;form=form->next) n++; assert(n==2);
+    assert(loaded->player_specials->saved.disguise_generation>=npc_id);
+    free_pc(loaded);
+    /* Maximum-length snapshots cross save chunks without truncation or buffer overread. */
+    form=active_sivak_form(alice);
+    memset(form->short_desc,'s',sizeof(form->short_desc)-1); form->short_desc[sizeof(form->short_desc)-1]=0;
+    memset(form->description,'d',sizeof(form->description)-1); form->description[sizeof(form->description)-1]=0;
+    memcpy(form->description+500,"\nSvAc: 999\n",11); /* Text is not parsed as pfile tags. */
+    *output=0; save_identity(alice);
+    loaded=new_pc("Alice",1); GET_REAL_RACE(loaded)=DL_RACE_SIVAK_DRACONIAN;
+    file=tmpfile(); assert(file); fputs(output,file); rewind(file);
+    while(fgets(record,sizeof(record),file)) {
+      if(!strncmp(record,"SvFm:",5)) load_sivak_form(loaded,record+5,file);
+      if(!strncmp(record,"SvAc:",5)) sscanf(record+5,"%llu",&loaded->player_specials->saved.sivak_active_form);
+    }
+    fclose(file);
+    assert(active_sivak_form(loaded) && active_sivak_form(loaded)->id==npc_id);
+    assert(!strcmp(active_sivak_form(loaded)->short_desc,form->short_desc));
+    assert(!strcmp(active_sivak_form(loaded)->description,form->description));
+    free_pc(loaded);
+    /* Invalid records consume their strings without corrupting the next tag. */
+    loaded=new_pc("Alice",1); GET_REAL_RACE(loaded)=DL_RACE_SIVAK_DRACONIAN;
+    file=tmpfile(); assert(file); fputs("a fake~\na fake description~\nNEXT\n",file); rewind(file);
+    load_sivak_form(loaded,"999 2 0 999999 5 1",file);
+    assert(!loaded->player_specials->saved.sivak_forms);
+    assert(fgets(record,sizeof(record),file) && !strcmp(record,"NEXT\n")); fclose(file); free_pc(loaded);
+    assert(rolls==old_rolls); /* Innate form learning and viewing never roll Disguise/Perception. */
+    do_disguise(alice,"form remove",0,0);
+  }
+  /* Aurak access is racial and level-gated; repeated UI queries never spend charges. */
+  {
+    struct char_data *loaded;
+    struct affected_type af[MAX_SPELL_AFFECTS]={{0}};
+    int old_saves, count, element, save;
+    time_t ready, now=time(NULL);
+    GET_REAL_RACE(alice)=DL_RACE_AURAK_DRACONIAN;
+    HAS_REAL_FEAT(alice,FEAT_AURAK_MAGIC)=1; GET_LEVEL(alice)=1;
+    assert(isAurakMagic(alice,SPELL_AURAK_ENERGY_RAY));
+    assert(isAurakMagic(alice,SPELL_AURAK_BREATH) && isAurakMagic(alice,SPELL_DISGUISE_SELF));
+    assert(!isAurakMagic(alice,SPELL_MIRROR_IMAGE) && !isAurakMagic(alice,SPELL_GREATER_INVIS));
+    GET_LEVEL(alice)=3; assert(isAurakMagic(alice,SPELL_MIRROR_IMAGE) && isAurakMagic(alice,SPELL_CHARM));
+    assert(!isAurakMagic(alice,SPELL_FIREBALL));
+    GET_LEVEL(alice)=5; assert(isAurakMagic(alice,SPELL_FIREBALL) && isAurakMagic(alice,SPELL_DISPEL_MAGIC));
+    assert(!isAurakMagic(alice,SPELL_GREATER_INVIS));
+    GET_LEVEL(alice)=7; assert(isAurakMagic(alice,SPELL_GREATER_INVIS) && !isAurakMagic(alice,SPELL_DOMINATE_PERSON));
+    GET_LEVEL(alice)=9; assert(isAurakMagic(alice,SPELL_DOMINATE_PERSON));
+    assert(!isAurakMagic(alice,SPELL_HEAL) && !isAurakMagic(alice,SPELL_AURAK_DEATH_THROES));
+    assert(!isAurakMagic(bob,SPELL_AURAK_ENERGY_RAY));
+    assert(!prepare_aurak_magic(bob,SPELL_AURAK_ENERGY_RAY,CAST_INNATE));
+    HAS_REAL_FEAT(alice,FEAT_AURAK_MAGIC)=0; assert(!isAurakMagic(alice,SPELL_AURAK_ENERGY_RAY));
+    HAS_REAL_FEAT(alice,FEAT_AURAK_MAGIC)=1;
+    old_saves=saves;
+    for(i=0;i<10;i++) assert(isAurakMagic(alice,SPELL_DOMINATE_PERSON));
+    assert(saves==old_saves && !alice->player_specials->saved.aurak_dominate_ready);
+    assert(prepare_aurak_magic(alice,SPELL_DOMINATE_PERSON,CAST_INNATE));
+    ready=alice->player_specials->saved.aurak_dominate_ready;
+    assert(ready>=now+86400 && ready<=time(NULL)+86400 && saves==old_saves+1);
+    assert(!prepare_aurak_magic(alice,SPELL_DOMINATE_PERSON,CAST_INNATE));
+    assert(alice->player_specials->saved.aurak_dominate_ready==ready && saves==old_saves+1);
+    /* Prepared class casts remain available after the racial daily use is spent. */
+    assert(prepare_aurak_magic(alice,SPELL_DOMINATE_PERSON,CAST_SPELL));
+    assert(alice->player_specials->saved.aurak_dominate_ready==ready);
+    /* Independent devices don't consume racial daily uses. */
+    assert(prepare_aurak_magic(alice,SPELL_DOMINATE_PERSON,CAST_DEVICE));
+    assert(alice->player_specials->saved.aurak_dominate_ready==ready);
+    assert(prepare_aurak_magic(alice,SPELL_AURAK_BREATH,CAST_INNATE));
+    assert(alice->player_specials->saved.aurak_breath_ready>=now+6 && alice->player_specials->saved.aurak_breath_ready<=time(NULL)+24);
+    assert(!prepare_aurak_magic(alice,SPELL_AURAK_BREATH,CAST_INNATE));
+    assert(prepare_aurak_magic(alice,SPELL_AURAK_ENERGY_RAY,CAST_INNATE));
+    *output=0; save_identity(alice); assert(strstr(output,"AuDm:") && strstr(output,"AuBr:"));
+    loaded=new_pc("Alice",1); GET_REAL_RACE(loaded)=DL_RACE_AURAK_DRACONIAN;
+    HAS_REAL_FEAT(loaded,FEAT_AURAK_MAGIC)=1; GET_LEVEL(loaded)=9;
+    { char *tag=strstr(output,"AuDm:"); load_aurak_timers(loaded,"AuDm",tag+5);
+      tag=strstr(output,"AuBr:"); load_aurak_timers(loaded,"AuBr",tag+5); }
+    assert(loaded->player_specials->saved.aurak_dominate_ready==ready);
+    assert(!prepare_aurak_magic(loaded,SPELL_DOMINATE_PERSON,CAST_INNATE));
+    assert(!prepare_aurak_magic(loaded,SPELL_AURAK_BREATH,CAST_INNATE));
+    loaded->player_specials->saved.aurak_dominate_ready=time(NULL)-1;
+    assert(prepare_aurak_magic(loaded,SPELL_DOMINATE_PERSON,CAST_INNATE)); free_pc(loaded);
+    test_ray_attacks=test_ray_damage=0;
+    mag_loops(9,alice,bob,NULL,SPELL_AURAK_ENERGY_RAY,0,0,CAST_INNATE);
+    assert(test_ray_attacks==1 && test_ray_damage==1);
+    test_ray_hit=-1; test_ray_attacks=test_ray_damage=0;
+    mag_loops(9,alice,bob,NULL,SPELL_AURAK_ENERGY_RAY,0,0,CAST_INNATE);
+    assert(test_ray_attacks==1 && !test_ray_damage); test_ray_hit=1;
+    test_aurak_damage(SPELL_AURAK_ENERGY_RAY,&count,&element,&save);
+    assert(count==4 && element==DAM_FORCE && save==-1);
+    test_aurak_damage(SPELL_AURAK_DEATH_THROES,&count,&element,&save);
+    assert(count==3 && element==DAM_FORCE && save==SAVING_REFL);
+    test_aurak_breath(alice,bob,af);
+    assert(af[0].location==APPLY_STR && af[0].modifier==-2 && af[0].duration==4);
+    assert(IS_SET_AR(af[1].bitvector,AFF_BLIND) && IS_SET_AR(af[2].bitvector,AFF_BLIND));
+    memset(af,0,sizeof(af)); test_save=1; test_aurak_breath(alice,bob,af); assert(!af[0].duration); test_save=0;
+    test_poisonable=FALSE; test_aurak_breath(alice,bob,af); assert(!af[0].duration); test_poisonable=TRUE;
+    test_blindable=FALSE; test_aurak_breath(alice,bob,af); assert(af[0].duration && !af[1].duration); test_blindable=TRUE;
+  }
   free_pc(alice); free_pc(bob); free_pc(carol);
-  puts("Introductions/disguises: identity, opposed rolls, true sight, persistence, targeting, validation, and full intro lists passed.");
+  puts("Introductions/disguises: identity, opposed rolls, Irda/Sivak forms, Aurak racial magic, true sight, persistence, targeting, validation, and full intro lists passed.");
   return 0;
 }
 '''

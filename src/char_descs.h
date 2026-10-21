@@ -46,6 +46,9 @@ void HandleStateGenericsDescsIntro(struct descriptor_data *d, char *arg);
 /* The same feature IDs and adjective tables serve natural and disguised appearances. */
 bool parse_disguise_appearance(struct char_data *ch, const char *argument,
                                struct disguise_appearance *appearance);
+bool parse_form_appearance(struct char_data *ch, const char *argument,
+                           struct disguise_appearance *appearance, bool innate);
+void load_irda_form(struct char_data *ch, const char *line);
 bool valid_short_desc_feature(int feature, int adjective);
 bool parse_short_desc_feature(const char *choice, int *feature, int *adjective);
 void short_desc_descriptors_menu(struct char_data *ch);

@@ -6537,6 +6537,7 @@ void free_char(struct char_data *ch)
     }
 
     free_disguise_observations(ch);
+    free_sivak_forms(ch);
 
     /* Free introduction list names */
     for (i = 0; i < MAX_INTROS; i++)

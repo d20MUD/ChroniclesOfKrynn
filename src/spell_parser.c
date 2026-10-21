@@ -150,6 +150,9 @@ bool concentration_check(struct char_data *ch, int spellnum)
   /* concentration check */
   int spell_level = spell_info[spellnum].min_level[CASTING_CLASS(ch)];
   int concentration_dc = 0;
+  if (isAurakMagic(ch, spellnum) &&
+      (spellnum == SPELL_AURAK_ENERGY_RAY || spellnum == SPELL_AURAK_BREATH))
+    spell_level = 1; /* Racial abilities have no class spell-list entry. */
 
   if (IS_NPC(ch))
   {
@@ -1216,6 +1219,9 @@ SAVING_WILL here...  */
     if (!IS_NPC(caster))
       start_daily_use_cooldown(caster, FEAT_DRAGOON_POINTS);
   }
+
+  if (!prepare_aurak_magic(caster, spellnum, casttype))
+    return 0;
 
   /* the rest of the routine handling follows: */
 
@@ -2729,6 +2735,8 @@ static int cast_spell_with_type_and_slot(struct char_data *ch, struct char_data 
   }
 
   treat_as_at_will = canCastAtWill(ch, spellnum);
+  if (treat_as_at_will && isAurakMagic(ch, spellnum) && casttype == CAST_SPELL)
+    casttype = CAST_INNATE; /* Preserve racial source through delayed casting. */
 
   /* these are all (most likely) deprecated dummy checks added by zusuk */
   if (ch && IN_ROOM(ch) > top_of_world)
@@ -4289,6 +4297,8 @@ return;
 
         if (isWarlockMagic(ch, spellnum))
           atwill_class = CLASS_WARLOCK;
+        else if (isAurakMagic(ch, spellnum))
+          atwill_class = CLASS_SORCERER;
         else if (spellnum == SPELL_OVERLAND_FLIGHT && isDragonRiderMagic(ch, spellnum))
           atwill_class = CLASS_DRAGONRIDER;
         else
@@ -6199,6 +6209,13 @@ void mag_assign_spells(void)
          NOSCHOOL, FALSE);
   spello(SPELL_POISON_BREATHE, "!UNUSED!", 0, 0, 0, POS_DEAD, TAR_IGNORE, TRUE, MAG_AREAS, NULL, 0,
          0, NOSCHOOL, FALSE);
+  spello(SPELL_AURAK_DEATH_THROES, "aurak death throes", 0, 0, 0, POS_DEAD, TAR_IGNORE,
+         TRUE, MAG_AREAS, NULL, 1, 1, EVOCATION, FALSE);
+  spell_info[SPELL_AURAK_DEATH_THROES].no_player = TRUE;
+  spello(SPELL_AURAK_ENERGY_RAY, "aurak energy ray", 0, 0, 0, POS_FIGHTING,
+         TAR_CHAR_ROOM | TAR_FIGHT_VICT | TAR_NOT_SELF, TRUE, MAG_LOOPS, NULL, 1, 1, EVOCATION, FALSE);
+  spello(SPELL_AURAK_BREATH, "aurak breath", 0, 0, 0, POS_FIGHTING, TAR_IGNORE, TRUE,
+         MAG_AREAS, "The effects of the Aurak fumes fade.", 1, 1, CONJURATION, FALSE);
   spello(SPELL_POISON_BREATH, "poison breath", 58, 43, 1, POS_FIGHTING, TAR_IGNORE, TRUE, MAG_AREAS,
          "You're no longer poisoned.", 5, 13, EVOCATION, FALSE);
   spello(SPELL_DRAGONFEAR, "dragon fear", 0, 0, 0, POS_FIGHTING, TAR_IGNORE, TRUE, MAG_AREAS, NULL,
@@ -7191,6 +7208,9 @@ sbyte canCastAtWill(struct char_data *ch, int spellnum)
     return true;
   if (isDragonRiderMagic(ch, spellnum))
     return true;
+  if (isAurakMagic(ch, spellnum) &&
+      (spellnum != SPELL_DOMINATE_PERSON || ch->player_specials->saved.aurak_dominate_ready <= time(NULL)))
+    return true;
   if (isBozakMagic(ch, spellnum))
     return true;
   if (has_inquisitor_detect_magic_natural(ch) && (spellnum == SPELL_DETECT_MAGIC))
@@ -7199,6 +7219,79 @@ sbyte canCastAtWill(struct char_data *ch, int spellnum)
     return true;
 
   return false;
+}
+
+/* Read-only eligibility: casting UI and validation may query this repeatedly. */
+bool isAurakMagic(struct char_data *ch, int spellnum)
+{
+  int minimum;
+  if (!ch || IS_NPC(ch) || GET_REAL_RACE(ch) != DL_RACE_AURAK_DRACONIAN ||
+      !HAS_REAL_FEAT(ch, FEAT_AURAK_MAGIC))
+    return FALSE;
+  switch (spellnum)
+  {
+  case SPELL_AURAK_ENERGY_RAY:
+  case SPELL_AURAK_BREATH:
+  case SPELL_DISGUISE_SELF:
+  case SPELL_MAGIC_MISSILE:
+    minimum = 1;
+    break;
+  case SPELL_CHARM:
+  case SPELL_MIRROR_IMAGE:
+    minimum = 3;
+    break;
+  case SPELL_FIREBALL:
+  case SPELL_DISPEL_MAGIC:
+    minimum = 5;
+    break;
+  case SPELL_GREATER_INVIS:
+    minimum = 7;
+    break;
+  case SPELL_DOMINATE_PERSON:
+    minimum = 9;
+    break;
+  default:
+    return FALSE;
+  }
+  return GET_LEVEL(ch) >= minimum;
+}
+
+/* Consume only when an invocation reaches effect dispatch, after the normal
+ * room, target, PvP and antimagic checks. A resisted attempt still uses its charge. */
+bool prepare_aurak_magic(struct char_data *ch, int spellnum, int casttype)
+{
+  time_t now, *ready = NULL;
+  int recharge;
+  if (!ch || IS_NPC(ch) || casttype == CAST_DEVICE || casttype == CAST_WEAPON_POISON)
+    return TRUE;
+  if ((spellnum == SPELL_AURAK_ENERGY_RAY || spellnum == SPELL_AURAK_BREATH) &&
+      GET_LEVEL(ch) < LVL_IMMORT && !isAurakMagic(ch, spellnum))
+  {
+    send_to_char(ch, "Only Aurak draconians can invoke that racial magic.\r\n");
+    return FALSE;
+  }
+  if (!isAurakMagic(ch, spellnum))
+    return TRUE;
+  /* A prepared class spell remains available after the racial daily use is spent. */
+  if (spellnum == SPELL_DOMINATE_PERSON && casttype != CAST_INNATE)
+    return TRUE;
+  if (spellnum == SPELL_DOMINATE_PERSON)
+    ready = &ch->player_specials->saved.aurak_dominate_ready;
+  else if (spellnum == SPELL_AURAK_BREATH)
+    ready = &ch->player_specials->saved.aurak_breath_ready;
+  else
+    return TRUE;
+  now = time(NULL);
+  if (*ready > now)
+  {
+    send_to_char(ch, "Your Aurak %s has not recharged yet.\r\n",
+                 spellnum == SPELL_AURAK_BREATH ? "breath" : "domination");
+    return FALSE;
+  }
+  recharge = spellnum == SPELL_AURAK_BREATH ? dice(1, 4) * 6 : 24 * 60 * 60;
+  *ready = now + recharge;
+  save_char(ch, 0);
+  return TRUE;
 }
 
 bool isBozakMagic(struct char_data *ch, int spellnum)

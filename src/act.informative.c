@@ -171,7 +171,8 @@ void lore_id_vict(struct char_data *ch, struct char_data *tch)
   bool has_subrace = false;
   char subraces[MEDIUM_STRING] = {'\0'};
 
-  if (HAS_DISGUISE(tch) && !disguise_detected(ch, tch))
+  if ((IS_SIVAK_FORM(tch) && !has_true_sight(ch)) ||
+      (HAS_DISGUISE(tch) && !disguise_detected(ch, tch)))
   {
     send_to_char(ch, "%s\r\n", PERS(tch, ch));
     return;
@@ -846,7 +847,7 @@ static void diag_char_to_char(struct char_data *i, struct char_data *ch)
 
   /* time to display! */
   /* show disguise race info */
-  if (HAS_DISGUISE(i) || (has_true_sight(ch) && has_altered_form(i)))
+  if (HAS_DISGUISE(i) || IS_SIVAK_FORM(i) || (has_true_sight(ch) && has_altered_form(i)))
   {
     send_to_char(ch, "%s %s\r\n", CAP(pers), diagnosis[ar_index].text);
   }
@@ -924,7 +925,11 @@ static void look_at_char(struct char_data *i, struct char_data *ch)
   {
     send_to_char(ch, "%s\r\n", PERS(i, ch));
   }
-  else if (is_disguised)
+  else if (IS_SIVAK_FORM(i))
+  {
+    send_to_char(ch, "%s\r\n", active_sivak_form(i)->description);
+  }
+  else if (is_disguised || IS_IRDA_FORM(i))
   {
     send_to_char(ch, "%s\r\n", PERS(i, ch));
   }
@@ -1240,7 +1245,7 @@ static void list_one_char(struct char_data *i, struct char_data *ch)
   {
     send_to_char(ch, "\tn[%s] %s", race_list[GET_REAL_RACE(i)].abbrev_color, PERS(i, ch));
   }
-  else if (HAS_DISGUISE(i))
+  else if (HAS_DISGUISE(i) || IS_SIVAK_FORM(i))
   {
     send_to_char(ch, "%s", PERS(i, ch));
   }
@@ -9338,7 +9343,7 @@ ACMD(do_whois)
   }
 
   /* We either have our victim from file or he's playing or function has returned. */
-  sprinttype(GET_SEX(victim), genders, buf, sizeof(buf));
+  sprinttype(visible_sex(victim, ch), genders, buf, sizeof(buf));
   send_to_char(ch, "Name: %s %s\r\nSex: %s\r\n", PERS(victim, ch),
                (victim->player.title ? victim->player.title : ""), buf);
 

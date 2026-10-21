@@ -829,7 +829,7 @@ enum zone_terrain_type {
 
 // space for new quest only races up to 59
 
-#define NUM_EXTENDED_PC_RACES 47
+#define NUM_EXTENDED_PC_RACES 54
 
 #define DL_RACE_KAPAK_DRACONIAN 48
 #define DL_RACE_BOZAK_DRACONIAN 49
@@ -3139,9 +3139,12 @@ enum zone_terrain_type {
 #define FEAT_FASTER_BOMB_PREPARATION 1274
 
 /** reserved above feat# + 1**/
-#define FEAT_LAST_FEAT 1275
+#define FEAT_AURAK_SCALES 1275
+#define FEAT_AURAK_MAGIC 1276
+#define FEAT_AURAK_DEATH_THROES 1277
+#define FEAT_LAST_FEAT 1278
 /** FEAT_LAST_FEAT + 1 ***/
-#define NUM_FEATS 1276
+#define NUM_FEATS 1279
 /** absolute cap **/
 #define MAX_FEATS 1500
 /*****/
@@ -7015,6 +7018,18 @@ struct disguise_appearance
   int descriptor1, adjective1, descriptor2, adjective2;
 };
 
+/* A permanent snapshot learned from a Sivak's own humanoid kills. */
+struct sivak_form
+{
+  unsigned long long id;
+  long source; /* NPC vnum or player ID; namespaces distinguished by npc. */
+  bool npc;
+  int race, size, sex;
+  char short_desc[512];
+  char description[2048];
+  struct sivak_form *next;
+};
+
 /* One remembered result for the most recently observed disguise of each PC. */
 struct disguise_observation
 {
@@ -7290,6 +7305,11 @@ struct player_special_data_saved
 
   unsigned long long disguise_generation;
   struct disguise_appearance disguise;
+  struct disguise_appearance irda_form; /* Innate form; instance zero means natural. */
+  struct sivak_form *sivak_forms;
+  unsigned long long sivak_active_form;
+  time_t aurak_dominate_ready;
+  time_t aurak_breath_ready;
   int alter_self_race;
   bool alter_self_active;
   struct disguise_observation *disguise_observations;

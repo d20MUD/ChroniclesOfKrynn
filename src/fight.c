@@ -1096,7 +1096,11 @@ int compute_armor_class(struct char_data *attacker, struct char_data *ch, int is
   {
     bonuses[BONUS_TYPE_NATURALARMOR] += 6;
   }
-  if (HAS_FEAT(ch, FEAT_BAAZ_DRACONIAN_SCALES))
+  if (HAS_FEAT(ch, FEAT_AURAK_SCALES))
+  {
+    bonuses[BONUS_TYPE_NATURALARMOR] += 6;
+  }
+  else if (HAS_FEAT(ch, FEAT_BAAZ_DRACONIAN_SCALES))
   {
     bonuses[BONUS_TYPE_NATURALARMOR] += 1;
   }
@@ -2707,6 +2711,8 @@ void raw_kill(struct char_data *ch, struct char_data *killer)
       return;
     }
   }
+
+  remember_sivak_kill(killer, ch);
 
   if (!IS_NPC(ch))
   {
