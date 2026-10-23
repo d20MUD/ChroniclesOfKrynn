@@ -9,6 +9,7 @@
 #include "constants.h"
 #include "db.h"
 #include "estate.h"
+#include "player_shop.h"
 #include "handler.h"
 #include "housing.h"
 #include "interpreter.h"
@@ -430,12 +431,195 @@ static struct obj_data *item(const char *name)
   SET_BIT_AR(GET_OBJ_WEAR(obj), ITEM_WEAR_ON_BACK);
   return obj;
 }
+static void stall(struct char_data *ch, const char *format, ...)
+{
+  char command[1024];
+  va_list ap;
+  va_start(ap, format);
+  vsnprintf(command, sizeof(command), format, ap);
+  va_end(ap);
+  output[0] = 0;
+  player_shop_command(ch, command);
+}
+static void test_stalls(struct char_data *seller, struct char_data *buyer,
+                        struct char_data *guest, struct char_data *staff)
+{
+  struct descriptor_data sd = {0}, bd = {0}, gd = {0};
+  struct account_data sa = {0}, ba = {0}, ga = {0};
+  struct obj_data *obj;
+  long first, second;
+  int gold, items;
+  sa.id = 1; ba.id = 2; ga.id = 1;
+  sd.account = &sa; bd.account = &ba; gd.account = &ga;
+  seller->desc = &sd; buyer->desc = &bd; guest->desc = &gd;
+  char_from_room(seller); char_to_room(seller, 1);
+  char_from_room(buyer); char_to_room(buyer, 1);
+  char_from_room(guest); char_to_room(guest, 1);
+  world[1].name = "Test Market";
+  assert(player_shop_init());
+  stall(seller, "admin add 2200 3");
+  assert(scalar("SELECT COUNT(*) FROM player_shop_stalls") == 0);
+  stall(staff, "admin add 2200 3");
+  assert(scalar("SELECT COUNT(*) FROM player_shop_stalls") == 3);
+  gold = GET_GOLD(seller);
+  stall(seller, "rent 1junk");
+  assert(GET_GOLD(seller) == gold);
+  stall(seller, "rent 1");
+  assert(GET_GOLD(seller) == gold - 1000);
+  assert(scalar("SELECT COUNT(*) FROM player_shop_leases") == 1);
+  stall(guest, "rent 2"); /* Same account, different character. */
+  assert(scalar("SELECT COUNT(*) FROM player_shop_leases") == 1);
+  stall(seller, "name Smith's Emporium");
+  assert(strstr(output, "recorded"));
+  player_shop_show_room(buyer);
+  assert(strstr(output, "Smith's Emporium"));
+  obj = item("stallblade");
+  obj->affected[0].location = APPLY_FEAT;
+  obj->affected[0].modifier = FEAT_WEAPON_FOCUS;
+  obj->affected[0].specific = 3;
+  obj_to_char(obj, seller);
+  stall(seller, "sell stallblade 0");
+  assert(scalar("SELECT COUNT(*) FROM player_shop_listings") == 0);
+  SET_BIT_AR(GET_OBJ_EXTRA(obj), ITEM_QUEST);
+  stall(seller, "sell stallblade 25000");
+  assert(scalar("SELECT COUNT(*) FROM player_shop_listings") == 0);
+  REMOVE_BIT_AR(GET_OBJ_EXTRA(obj), ITEM_QUEST);
+  GET_OBJ_BOUND_ID(obj) = 999;
+  stall(seller, "sell stallblade 25000");
+  assert(scalar("SELECT COUNT(*) FROM player_shop_listings") == 0);
+  GET_OBJ_BOUND_ID(obj) = NOBODY;
+  stall(staff, "admin set 1 1000 1");
+  stall(seller, "sell stallblade 25000");
+  assert(strstr(output, "Listing #1 prepared"));
+  assert(scalar("SELECT COUNT(*) FROM player_shop_listings") == 1);
+  first = scalar("SELECT MAX(listing_id) FROM player_shop_listings");
+  obj = item("spareblade"); obj_to_char(obj, seller);
+  stall(seller, "sell spareblade 100");
+  assert(scalar("SELECT COUNT(*) FROM player_shop_listings") == 1);
+  stall(buyer, "reprice %ld 10", first);
+  assert(scalar("SELECT price FROM player_shop_listings LIMIT 1") == 25000);
+  stall(seller, "reprice %ld 18000", first);
+  stall(seller, "reprice %ld 18000", first); /* Unchanged price is valid. */
+  assert(strstr(output, "recorded"));
+  stall(buyer, "search STALLBLADE");
+  assert(strstr(output, "stallblade") && strstr(output, "2200"));
+  stall(buyer, "inspect %ld", first);
+  assert(strstr(output, "IDENTIFY"));
+  char_from_room(buyer); char_to_room(buyer, 0);
+  items = IS_CARRYING_N(buyer); gold = GET_GOLD(buyer);
+  stall(buyer, "buy %ld", first);
+  assert(IS_CARRYING_N(buyer) == items && GET_GOLD(buyer) == gold);
+  char_from_room(buyer); char_to_room(buyer, 1);
+  GET_GOLD(buyer) = 1;
+  stall(buyer, "buy %ld", first);
+  assert(IS_CARRYING_N(buyer) == items);
+  GET_GOLD(buyer) = gold;
+  IS_CARRYING_N(buyer) = 10000;
+  stall(buyer, "buy %ld", first);
+  assert(GET_GOLD(buyer) == gold);
+  IS_CARRYING_N(buyer) = items;
+  stall(seller, "buy %ld", first);
+  assert(scalar("SELECT COUNT(*) FROM player_shop_sales") == 0);
+  /* A competing transaction holding the listing blocks the purchase. It must
+   * leave stock, money and proceeds unchanged when the lock times out. */
+  {
+    MYSQL *other = mysql_init(NULL);
+    MYSQL_RES *locked;
+    char sql[160];
+    assert(mysql_real_connect(other, NULL, "root", NULL, "estate_test", 0,
+                              getenv("STALL_TEST_SOCKET"), 0));
+    assert(mysql_query(other, "START TRANSACTION") == 0);
+    snprintf(sql, sizeof(sql), "SELECT listing_id FROM player_shop_listings WHERE listing_id=%ld FOR UPDATE", first);
+    assert(mysql_query(other, sql) == 0);
+    locked = mysql_store_result(other);
+    assert(locked); mysql_free_result(locked);
+    assert(estate_query("SET SESSION innodb_lock_wait_timeout=1"));
+    stall(buyer, "buy %ld", first);
+    assert(GET_GOLD(buyer) == gold && IS_CARRYING_N(buyer) == items);
+    assert(mysql_query(other, "ROLLBACK") == 0);
+    mysql_close(other);
+  }
+  stall(buyer, "buy %ld", first);
+  assert(GET_GOLD(buyer) == gold - 18000 && IS_CARRYING_N(buyer) == items + 1);
+  assert(buyer->carrying->affected[0].specific == 3);
+  assert(buyer->carrying->affected[0].modifier == FEAT_WEAPON_FOCUS);
+  stall(guest, "buy %ld", first);
+  assert(scalar("SELECT COUNT(*) FROM player_shop_sales") == 1);
+  stall(seller, "earnings");
+  assert(strstr(output, "18000"));
+  gold = GET_GOLD(seller);
+  GET_GOLD(seller) = INT_MAX;
+  stall(seller, "collect");
+  assert(GET_GOLD(seller) == INT_MAX);
+  assert(scalar("SELECT COUNT(*) FROM estate_deliveries WHERE delivered=0") == 1);
+  GET_GOLD(seller) = gold;
+  estate_recover(seller);
+  assert(GET_GOLD(seller) == gold + 18000);
+  estate_recover(seller);
+  stall(seller, "collect");
+  assert(GET_GOLD(seller) == gold + 18000);
+  stall(seller, "sell spareblade 500");
+  second = scalar("SELECT MAX(listing_id) FROM player_shop_listings");
+  assert(second > first);
+  assert(estate_query("UPDATE player_shop_leases SET expires_at=DATE_SUB(NOW(),INTERVAL 1 DAY) WHERE held_stall=1"));
+  stall(buyer, "buy %ld", second);
+  assert(scalar("SELECT COUNT(*) FROM player_shop_sales") == 1);
+  gold = GET_GOLD(seller);
+  stall(seller, "renew");
+  assert(GET_GOLD(seller) == gold - 1000);
+  assert(scalar("SELECT COUNT(*) FROM player_shop_leases WHERE expires_at>NOW()") == 1);
+  assert(estate_query("UPDATE player_shop_leases SET expires_at=DATE_SUB(NOW(),INTERVAL 49 HOUR) WHERE held_stall=1"));
+  stall(buyer, "rent 1");
+  assert(scalar("SELECT COUNT(*) FROM player_shop_leases") == 2);
+  stall(buyer, "browse 1");
+  assert(!strstr(output, "spareblade"));
+  stall(buyer, "withdraw %ld", second);
+  assert(scalar("SELECT COUNT(*) FROM player_shop_listings WHERE state='active'") == 1);
+  char_from_room(seller); char_to_room(seller, 0);
+  items = IS_CARRYING_N(seller);
+  stall(seller, "withdraw %ld", second);
+  assert(IS_CARRYING_N(seller) == items + 1);
+  stall(staff, "admin disable 1");
+  gold = GET_GOLD(buyer);
+  stall(buyer, "renew");
+  assert(GET_GOLD(buyer) == gold);
+  stall(staff, "admin enable 1");
+  assert(estate_query("UPDATE player_shop_leases SET expires_at=DATE_SUB(NOW(),INTERVAL 1 DAY) WHERE held_stall=1"));
+  stall(buyer, "close");
+  assert(scalar("SELECT COUNT(*) FROM player_shop_leases WHERE held_stall IS NOT NULL") == 0);
+  ga.id = 3;
+  stall(guest, "rent 1");
+  stall(staff, "admin evict 1");
+  assert(scalar("SELECT COUNT(*) FROM player_shop_leases WHERE held_stall IS NOT NULL") == 0);
+  stall(staff, "admin history 1");
+  assert(strstr(output, "evict") && strstr(output, "buy"));
+  /* Committed currency payment, interrupted before save/acknowledgement. */
+  gold = GET_GOLD(seller);
+  assert(estate_query("START TRANSACTION"));
+  assert(estate_queue_money(GET_IDNUM(seller), 100));
+  assert(estate_query("COMMIT"));
+  assert(estate_query("CREATE TRIGGER reject_stall_ack BEFORE UPDATE ON estate_deliveries FOR "
+                      "EACH ROW BEGIN IF NEW.delivered=1 THEN SIGNAL SQLSTATE '45000' SET "
+                      "MESSAGE_TEXT='test money ack failure'; END IF; END"));
+  estate_recover(seller);
+  assert(GET_GOLD(seller) == gold - 100);
+  estate_recover(seller);
+  assert(GET_GOLD(seller) == gold - 100);
+  assert(estate_query("DROP TRIGGER reject_stall_ack"));
+  estate_recover(seller);
+  assert(GET_GOLD(seller) == gold - 100);
+  assert(scalar("SELECT COUNT(*) FROM estate_deliveries WHERE delivered=0") == 0);
+  seller->desc = buyer->desc = guest->desc = NULL;
+  puts("PASS: player stalls: account limits, local purchases, typed gear, capacity, rent/grace, "
+       "tenant isolation, recovery, proceeds, staff controls and idempotent money journal");
+}
 int main(int argc, char **argv)
 {
   struct char_data seller, buyer, guest, admin;
   struct obj_data *obj, *chest, *restored;
   char *packed;
   assert(argc == 2);
+  assert(setenv("STALL_TEST_SOCKET", argv[1], 1) == 0);
   conn = mysql_init(NULL);
   assert(mysql_real_connect(conn, NULL, "root", NULL, "estate_test", 0, argv[1], 0));
   assert(estate_init());
@@ -673,6 +857,7 @@ int main(int argc, char **argv)
   assert(!estate_unpack("EOBJ1 999999999 1 0 0\n"));
   puts("PASS: neighborhood purchase/build/guests/reload, chest nesting/sheaths, auction "
        "escrow/search/expiry/cancel/reprice, payouts and delivery recovery");
+  test_stalls(&seller, &buyer, &guest, &admin);
   mysql_close(conn);
   return 0;
 }

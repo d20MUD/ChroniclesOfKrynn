@@ -351,6 +351,16 @@ int estate_receipt_saved(struct char_data *ch)
   return gold == GET_GOLD(ch) && credit == ch->player_specials->estate_credit_receipt &&
          debit == ch->player_specials->estate_debit_receipt;
 }
+/* Empty payloads journal currency-only transfers. Positive amounts debit gold,
+ * negative amounts credit it; all share the ordered delivery receipt. Callers
+ * include this insert in the same transaction as the purchase/lease/payout. */
+int estate_queue_money(long player_id, long debit)
+{
+  if (!debit || debit < -INT_MAX || debit > INT_MAX)
+    return FALSE;
+  return estate_query("INSERT INTO estate_deliveries(player_id,debit,serialized_obj) "
+                      "VALUES(%ld,%ld,'')", player_id, debit);
+}
 int estate_queue_delivery(struct char_data *ch, struct obj_data *obj, long debit)
 {
   char *packed, *q;
@@ -418,6 +428,36 @@ void estate_recover(struct char_data *ch)
   {
     id = strtoull(row[0], NULL, 10);
     debit = atol(row[1]);
+    if (!*row[2])
+    {
+      if (id > ch->player_specials->estate_debit_receipt)
+      {
+        int old_gold = GET_GOLD(ch);
+        unsigned long long old_receipt = ch->player_specials->estate_debit_receipt;
+        if (debit < -INT_MAX || debit > INT_MAX ||
+            (debit > 0 && debit > old_gold) ||
+            (debit < 0 && -debit > (long)INT_MAX - old_gold))
+        {
+          send_to_char(ch, "A stored payment is pending; adjust your gold balance and try again.\r\n");
+          break;
+        }
+        GET_GOLD(ch) -= debit;
+        ch->player_specials->estate_debit_receipt = id;
+        estate_save_player(ch);
+        if (!estate_receipt_saved(ch))
+        {
+          GET_GOLD(ch) = old_gold;
+          ch->player_specials->estate_debit_receipt = old_receipt;
+          break;
+        }
+        send_to_char(ch, "Stored payment: %ld gold %s.\r\n",
+                     debit < 0 ? -debit : debit, debit < 0 ? "received" : "paid");
+      }
+      if (!estate_query("UPDATE estate_deliveries SET delivered=1 WHERE delivery_id=%llu "
+                        "AND player_id=%ld", id, GET_IDNUM(ch)))
+        break;
+      continue;
+    }
     sheath = NULL;
     obj = find_outgoing(ch->carrying, id, &sheath);
     for (i = 0; i < NUM_WEARS && !obj; i++)
@@ -436,7 +476,7 @@ void estate_recover(struct char_data *ch)
       if (debit > GET_GOLD(ch))
       {
         remove_transfer_object(ch, obj, sheath);
-        send_to_char(ch, "An auction delivery is pending; you need %ld gold to finish it.\r\n",
+        send_to_char(ch, "An item delivery is pending; you need %ld gold to finish it.\r\n",
                      debit);
         break;
       }

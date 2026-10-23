@@ -13,6 +13,7 @@
 #include <time.h>
 #include "structs.h"
 #include "housing.h"
+#include "player_shop.h"
 #include "utils.h"
 #include "char_descs.h"
 #include "mob_utils.h"
@@ -1890,6 +1891,7 @@ void look_at_room(struct char_data *ch, int ignore_brief)
   list_obj_to_char(world[IN_ROOM(ch)].contents, ch, SHOW_OBJ_LONG, FALSE, 0);
   /* Show all characters/NPCs in room */
   list_char_to_char(world[IN_ROOM(ch)].people, ch);
+  player_shop_show_room(ch);
 
   /* Inquisitor Read Intentions: sense aggressive mobs one room away */
   if (!IS_NPC(ch) && has_inquisitor_read_intentions(ch))

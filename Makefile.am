@@ -118,6 +118,7 @@ circle_SOURCES = \
 	src/housing.c \
 	src/estate.c \
 	src/auction_house.c \
+	src/player_shop.c \
 	src/hsedit.c \
 	src/hunts.c \
 	src/ibt.c \
@@ -292,6 +293,11 @@ EXTRA_DIST = \
 	src/housing.h \
 	src/estate.h \
 	src/auction_house.h \
+	src/player_shop.h \
+	docs/guides/PLAYER_SHOPS.md \
+	lib/text/help/stalls.hlp \
+	sql/20261023_player_shops.sql \
+	sql/20261023_player_shops_help.sql \
 	docs/housing-auction-port.md \
 	sql/20261009_housing_auction.sql \
 	sql/20261009_housing_auction_help.sql \

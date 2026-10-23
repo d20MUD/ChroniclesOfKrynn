@@ -5,6 +5,8 @@ int estate_init(void);
 int estate_player_ready(struct char_data *);
 unsigned long long estate_prepare_escrow(struct char_data *, struct obj_data *);
 int estate_commit_escrow(unsigned long long);
+/* Journal a currency-only payment inside the caller's transaction; negative credits gold. */
+int estate_queue_money(long player_id, long debit);
 int estate_queue_delivery(struct char_data *, struct obj_data *, long);
 int estate_receipt_saved(struct char_data *);
 void estate_recover(struct char_data *);

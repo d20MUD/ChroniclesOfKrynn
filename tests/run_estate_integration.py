@@ -11,6 +11,7 @@ import time
 
 root = Path(__file__).resolve().parents[1]
 resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
+extra_flags = shlex.split(os.environ.get('ESTATE_TEST_CFLAGS', ''))
 with tempfile.TemporaryDirectory(prefix='krynn-estate-test-') as directory:
     temp = Path(directory)
     data = temp / 'data'
@@ -19,10 +20,10 @@ with tempfile.TemporaryDirectory(prefix='krynn-estate-test-') as directory:
     log = temp / 'mysql.log'
     executable = temp / 'estate-test'
     flags = shlex.split(subprocess.check_output(['pkg-config', '--cflags', '--libs', 'mariadb'], text=True))
-    subprocess.run([os.environ.get('CC', 'cc'), '-std=gnu99', '-Wall', '-Wextra',
+    subprocess.run([os.environ.get('CC', 'cc'), *extra_flags, '-std=gnu99', '-Wall', '-Wextra',
                     '-Wno-unused-parameter', '-ffunction-sections', '-fdata-sections',
                     '-I'+str(root/'src'), str(root/'tests/estate_integration.c'),
-                    *[str(root/'src'/name) for name in ['estate.c', 'housing.c', 'auction_house.c']],
+                    *[str(root/'src'/name) for name in ['estate.c', 'housing.c', 'auction_house.c', 'player_shop.c']],
                     '-Wl,--gc-sections', *flags, '-o', str(executable)], check=True)
     # Extract the production functions verbatim, avoiding unrelated rental code dependencies.
     source = (root/'src/objsave.c').read_text()
@@ -49,7 +50,7 @@ with tempfile.TemporaryDirectory(prefix='krynn-estate-test-') as directory:
                                         function('room_rnum add_runtime_room(', (root/'src/genwld.c').read_text()),
                                         function('int delete_runtime_room(', (root/'src/genwld.c').read_text())]))
     room_executable = temp/'runtime-room-test'
-    subprocess.run([os.environ.get('CC', 'cc'), '-std=gnu99', '-I'+str(root/'src'),
+    subprocess.run([os.environ.get('CC', 'cc'), *extra_flags, '-std=gnu99', '-I'+str(root/'src'),
                     str(root/'tests/runtime_housing_rooms.c'), str(room_functions),
                     *flags, '-o', str(room_executable)], check=True)
     subprocess.run([str(room_executable)], check=True)
@@ -65,11 +66,11 @@ with tempfile.TemporaryDirectory(prefix='krynn-estate-test-') as directory:
                                function('obj_save_data *objsave_parse_objects_db(char *name'),
                                function('int estate_write_record(struct obj_data *obj')]))
     real_executable = temp/'estate-real-codec-test'
-    subprocess.run([os.environ.get('CC', 'cc'), '-std=gnu99', '-Wall', '-Wextra',
+    subprocess.run([os.environ.get('CC', 'cc'), *extra_flags, '-std=gnu99', '-Wall', '-Wextra',
                     '-Wno-unused-parameter', '-ffunction-sections', '-fdata-sections', '-DESTATE_REAL_CODEC',
                     '-I'+str(root/'src'), str(root/'tests/estate_integration.c'),
                     str(root/'tests/estate_real_codec_adapter.c'), str(codec),
-                    *[str(root/'src'/name) for name in ['estate.c', 'housing.c', 'auction_house.c']],
+                    *[str(root/'src'/name) for name in ['estate.c', 'housing.c', 'auction_house.c', 'player_shop.c']],
                     '-Wl,--gc-sections', *flags, '-o', str(real_executable)], check=True)
     subprocess.run(['mariadb-install-db', '--no-defaults', '--datadir='+str(data),
                     '--auth-root-authentication-method=normal', '--skip-test-db'],

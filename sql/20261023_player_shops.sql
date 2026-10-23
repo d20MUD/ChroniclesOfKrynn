@@ -1,0 +1,10 @@
+-- Optional preinstallation; the same schema is created automatically when stalls initialize.
+CREATE TABLE IF NOT EXISTS player_shop_stalls (stall_id BIGINT PRIMARY KEY AUTO_INCREMENT,room_vnum INT NOT NULL,weekly_rent INT NOT NULL DEFAULT 1000,capacity INT NOT NULL DEFAULT 20,enabled TINYINT NOT NULL DEFAULT 1,KEY room(room_vnum)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS player_shop_leases (lease_id BIGINT PRIMARY KEY AUTO_INCREMENT,stall_id BIGINT NOT NULL,held_account BIGINT NULL UNIQUE,held_stall BIGINT NULL UNIQUE,owner_id BIGINT NOT NULL,owner_name VARCHAR(64) NOT NULL,name VARCHAR(80) NOT NULL,expires_at DATETIME NOT NULL,created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,KEY owner(owner_id),FOREIGN KEY(stall_id) REFERENCES player_shop_stalls(stall_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS player_shop_listings (listing_id BIGINT PRIMARY KEY AUTO_INCREMENT,lease_id BIGINT NOT NULL,item_name VARCHAR(255) NOT NULL,keywords TEXT NOT NULL,price BIGINT NOT NULL,serialized_obj LONGTEXT NOT NULL,state ENUM('active','sold','withdrawn') NOT NULL DEFAULT 'active',created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,KEY stock(lease_id,state),FOREIGN KEY(lease_id) REFERENCES player_shop_leases(lease_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS player_shop_sales (sale_id BIGINT PRIMARY KEY AUTO_INCREMENT,listing_id BIGINT NOT NULL UNIQUE,seller_id BIGINT NOT NULL,buyer_id BIGINT NOT NULL,price BIGINT NOT NULL,paid TINYINT NOT NULL DEFAULT 0,created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,KEY proceeds(seller_id,paid),FOREIGN KEY(listing_id) REFERENCES player_shop_listings(listing_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS player_shop_events (event_id BIGINT PRIMARY KEY AUTO_INCREMENT,stall_id BIGINT NOT NULL,actor_id BIGINT NOT NULL,action VARCHAR(32) NOT NULL,amount BIGINT NOT NULL DEFAULT 0,created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,KEY history(stall_id,event_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
