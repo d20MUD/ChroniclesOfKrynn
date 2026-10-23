@@ -1064,6 +1064,14 @@ void autoquest_trigger_check(struct char_data *ch, struct char_data *vict, struc
       break;
 
     case AQ_OBJ_RETURN:
+      if (IS_NPC(vict) && object && GET_OBJ_VNUM(object) == QST_TARGET(rnum) &&
+          GET_MOB_VNUM(vict) != QST_RETURNMOB(rnum))
+      {
+        mob_rnum recipient = real_mobile(QST_RETURNMOB(rnum));
+        send_to_char(ch, "That hand-in does not count toward '%s': return the items to %s.\r\n",
+                     QST_NAME(rnum), recipient == NOBODY ? "the quest's designated recipient"
+                                                       : mob_proto[recipient].player.short_descr);
+      }
       if (IS_NPC(vict) && (GET_MOB_VNUM(vict) == QST_RETURNMOB(rnum)))
         if (object && (GET_OBJ_VNUM(object) == QST_TARGET(rnum)))
         {

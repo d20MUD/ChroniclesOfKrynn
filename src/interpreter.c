@@ -190,6 +190,7 @@ cpp_extern const struct command_info cmd_info[] = {
     {"affects", "aff", POS_DEAD, do_affects, 0, SCMD_AFFECTS, TRUE, ACTION_NONE, {0, 0}, NULL},
     {"afk", "afk", POS_DEAD, do_gen_tog, 0, SCMD_AFK, TRUE, ACTION_NONE, {0, 0}, NULL},
     {"ah", "ah", POS_RESTING, do_auctionhouse, 0, 0, FALSE, ACTION_NONE, {0, 0}, NULL},
+    {"anonymous", "anonymous", POS_DEAD, do_gen_tog, 0, SCMD_ANONYMOUS, TRUE, ACTION_NONE, {0, 0}, NULL},
     {"aoebombs", "aoeb", POS_RECLINING, do_gen_tog, 0, SCMD_AOE_BOMBS, TRUE, ACTION_NONE, {0, 0}, NULL},
     {"applies", "applies", POS_RECLINING, do_craftbonuses, 1, 0, FALSE, ACTION_NONE, {0, 0}, NULL},
     {"apotheosis", "apoth", POS_STANDING, do_sorcerer_arcane_apotheosis, 1, 0, TRUE, ACTION_NONE, {0, 0}, NULL},
@@ -1753,7 +1754,10 @@ void command_interpreter(struct char_data *ch, char *argument)
       //    } else if (HAS_WAIT(ch) && complete_cmd_info[cmd].ignore_wait == FALSE) {
       //      send_to_char(ch, "You need to wait longer before you are able to do that.\r\n");
     }
-  else if (!IS_NPC(ch) && ((IS_SET(complete_cmd_info[cmd].actions_required, ACTION_STANDARD) &&
+  else if (!IS_NPC(ch) &&
+           !(complete_cmd_info[cmd].command_pointer == do_gen_cast &&
+             complete_cmd_info[cmd].subcmd == SCMD_CAST_SPELL && is_aurak_energy_ray_cast(line)) &&
+           ((IS_SET(complete_cmd_info[cmd].actions_required, ACTION_STANDARD) &&
                             !is_action_available(ch, atSTANDARD, FALSE)) ||
                            ((IS_SET(complete_cmd_info[cmd].actions_required, ACTION_MOVE) &&
                              (!is_action_available(ch, atMOVE, FALSE) &&

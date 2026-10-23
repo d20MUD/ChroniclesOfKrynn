@@ -1,0 +1,44 @@
+SIVAK SIVAK-DRACONIAN SIVAKDRACONIAN RACE-SIVAK-DRACONIAN SIVAKFORMS
+
+	g>Description:	n
+
+Sivaks are silver-scaled, winged draconians who
+combine physical strength with an infiltrator's
+talent for borrowed identities. Their large size and
+natural flight make them formidable combatants. By
+personally slaying a humanoid enemy, a Sivak can
+learn its appearance and later assume that form.
+These stolen identities remain available for reuse,
+even after the Sivak returns to its natural shape.
+
+	g>Racial Abilities:	n
+
+Sivak Scales:          - +3 natural armor.
+Wings:                 - Natural flight; use fly.
+Ultravision:           - Can see in darkness.
+Disease Immunity:      - Immune to disease.
+Spell Resistance:      - 10 + character level.
+Draconian Bite:        - Make a bite attack with a swift action; use bite.
+Draconic Devotion:     - +2 to attack rolls when grouped with another draconian or dragon.
+Draconian Gallop:      - Additional movement points when advancing in level.
+Improved Trip:         - Granted as a racial feat.
+Stolen Forms:          - Learn appearances from humanoid NPCs or players you personally kill.
+                       - Group members' and pets' kills, self-kills, and arena defeats grant no forms.
+                       - Use disguise forms to list learned appearances.
+                       - Use disguise form <number> to assume a learned appearance.
+                       - Use disguise form remove to return to your natural form.
+                       - Each change uses a standard action; no opposed Disguise check is required.
+Persistent Forms:      - Learned appearances and the active form persist across sessions.
+True Sight:            - Reveals your natural form alongside your assumed appearance.
+Natural Form:          - Return to natural form before advancing or using another transformation.
+Size:                  - Large.
+Racial Language:       - Draconic.
+Race Unlock:           - Advanced race; costs 8,000 account experience to unlock.
+
+	g>Ability Adjustments:	n  +2 Str, +2 Dex, +2 Con, +2 Int
+
+	g>Experience Modifier:	n  +2 level adjustment
+
+	ySee also:	n RACES, DISGUISE, TRUEFORM, FLY, BITE, TRIP
+#0
+$

@@ -1517,7 +1517,9 @@ enum zone_terrain_type {
 #define PRF_SPONTANEOUS_CASTING 90 /**< Cleric prepared spells convert to cure/inflict spells */
 
 /** Total number of available PRF flags */
-#define NUM_PRF_FLAGS 91
+#define PRF_ANONYMOUS 91          /**< Hide identity from unintroduced viewers on who */
+
+#define NUM_PRF_FLAGS 92
 
 /* Score Color Theme constants */
 #define SCORE_THEME_ENHANCED 0     /**< Enhanced theme with rich colors */
@@ -3142,9 +3144,10 @@ enum zone_terrain_type {
 #define FEAT_AURAK_SCALES 1275
 #define FEAT_AURAK_MAGIC 1276
 #define FEAT_AURAK_DEATH_THROES 1277
-#define FEAT_LAST_FEAT 1278
+#define FEAT_SIVAK_SCALES 1278
+#define FEAT_LAST_FEAT 1279
 /** FEAT_LAST_FEAT + 1 ***/
-#define NUM_FEATS 1279
+#define NUM_FEATS 1280
 /** absolute cap **/
 #define MAX_FEATS 1500
 /*****/

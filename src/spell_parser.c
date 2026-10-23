@@ -3194,7 +3194,15 @@ static int cast_spell_with_type_and_slot(struct char_data *ch, struct char_data 
     }
   }
 
-  if (CONFIG_SPELLCASTING_TIME_MODE == 0)
+  /* The racial ray always uses a swift action, in either casting-time mode. */
+  if (!IS_NPC(ch) && spellnum == SPELL_AURAK_ENERGY_RAY)
+  {
+    if (!is_action_available(ch, atSWIFT, TRUE))
+      return 0;
+    casting_time = 0;
+    USE_SWIFT_ACTION(ch);
+  }
+  else if (CONFIG_SPELLCASTING_TIME_MODE == 0)
   {
     bool rapid_manifest = false;
     /* Rapid Manifester: once per encounter, reduce action time by one step for a metacreativity power */
@@ -3401,9 +3409,9 @@ will be using for casting this spell */
       CASTING_FREE_METAMAGIC(ch) = free_metamagic;
       CASTING_CASTTYPE(ch) = casttype;
     }
-    else
+    else if (spellnum != SPELL_AURAK_ENERGY_RAY)
     {
-      /* mandatory action cost for any spell */
+      /* Instant racial rays already paid their swift action cost. */
       USE_MOVE_ACTION(ch);
     }
 
@@ -3582,6 +3590,24 @@ ACMD(do_abort)
  * determines the spell number and finds a target, throws the die to see if
  * the spell can be cast, checks for sufficient psp (hah) and subtracts it, and
  * passes control to cast_spell(). */
+/* Inspect the quoted spell without changing the command before action queuing. */
+bool is_aurak_energy_ray_cast(const char *argument)
+{
+  const char *start = strchr(argument, '\'');
+  const char *end;
+  char name[MAX_INPUT_LENGTH];
+  size_t length;
+
+  if (!start || !(end = strchr(++start, '\'')))
+    return FALSE;
+  length = end - start;
+  if (!length || length >= sizeof(name))
+    return FALSE;
+  memcpy(name, start, length);
+  name[length] = '\0';
+  return find_skill_num(name) == SPELL_AURAK_ENERGY_RAY;
+}
+
 ACMDU(do_gen_cast)
 {
   struct char_data *tch = NULL;
@@ -5897,6 +5923,9 @@ void mag_assign_spells(void)
          MAG_CREATIONS, NULL, 2, 10, CONJURATION, FALSE);
   spello(SPELL_CREATE_WATER, "create water", 37, 22, 1, POS_FIGHTING, TAR_OBJ_INV | TAR_OBJ_EQUIP,
          FALSE, MAG_MANUAL, NULL, 2, 10, CONJURATION, FALSE);
+  spello(SPELL_PROTECTION_FROM_POISON, "protection from poison", 0, 0, 0, POS_FIGHTING,
+         TAR_CHAR_ROOM, FALSE, MAG_AFFECTS, "Your protection from poison fades.", 2, 10,
+         ABJURATION, FALSE);
   spello(SPELL_CURE_MODERATE, "cure moderate", 30, 15, 1, POS_FIGHTING, TAR_CHAR_ROOM, FALSE,
          MAG_POINTS, NULL, 2, 10, CONJURATION, FALSE);
   spello(SPELL_CAUSE_MODERATE_WOUNDS, "cause moderate wound", 37, 22, 1, POS_FIGHTING,
@@ -5959,6 +5988,9 @@ void mag_assign_spells(void)
   // daylight - shared
 
   // 5th circle
+  spello(SPELL_PANACEA, "panacea", 0, 0, 0, POS_FIGHTING, TAR_CHAR_ROOM, FALSE,
+         MAG_AFFECTS | MAG_UNAFFECTS, "Your immunity to poison and disease fades.", 5, 16,
+         CONJURATION, FALSE);
   spello(SPELL_REMOVE_POISON, "remove poison", 65, 50, 1, POS_FIGHTING,
          TAR_CHAR_ROOM | TAR_OBJ_INV | TAR_OBJ_ROOM, FALSE, MAG_UNAFFECTS | MAG_ALTER_OBJS, NULL, 7,
          16, CONJURATION, FALSE);
@@ -6213,7 +6245,7 @@ void mag_assign_spells(void)
          TRUE, MAG_AREAS, NULL, 1, 1, EVOCATION, FALSE);
   spell_info[SPELL_AURAK_DEATH_THROES].no_player = TRUE;
   spello(SPELL_AURAK_ENERGY_RAY, "aurak energy ray", 0, 0, 0, POS_FIGHTING,
-         TAR_CHAR_ROOM | TAR_FIGHT_VICT | TAR_NOT_SELF, TRUE, MAG_LOOPS, NULL, 1, 1, EVOCATION, FALSE);
+         TAR_CHAR_ROOM | TAR_FIGHT_VICT | TAR_NOT_SELF, TRUE, MAG_LOOPS, NULL, 0, 1, EVOCATION, FALSE);
   spello(SPELL_AURAK_BREATH, "aurak breath", 0, 0, 0, POS_FIGHTING, TAR_IGNORE, TRUE,
          MAG_AREAS, "The effects of the Aurak fumes fade.", 1, 1, CONJURATION, FALSE);
   spello(SPELL_POISON_BREATH, "poison breath", 58, 43, 1, POS_FIGHTING, TAR_IGNORE, TRUE, MAG_AREAS,

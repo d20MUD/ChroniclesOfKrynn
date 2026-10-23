@@ -3920,16 +3920,19 @@ void assign_races(void)
 
   // end luminari race info
 #endif
-  add_race(DL_RACE_AURAK_DRACONIAN, "aurak draconian", "Aurak Draconian",
-           "\tYAurak Draconian\tn", "Aurk", "\tYAurk\tn",
-           RACE_TYPE_HUMANOID, SIZE_MEDIUM, TRUE, 4, 15000, IS_ADVANCE);
-  set_race_details(DL_RACE_AURAK_DRACONIAN,
-      "Aurak draconians are wingless, golden-scaled masters of innate magic, the most "
-      "powerful draconian race. They gain +2 Dexterity, +4 Intelligence, +4 Charisma, "
-      "+6 natural armor, spell resistance of 12 + level, disease immunity, ultravision "
-      "and a bite. Their racial magic includes a force energy ray, noxious breath, "
-      "disguise self, and progressively stronger arcane spells, including greater "
-      "invisibility and once-per-day domination. Auraks cannot fly naturally.",
+  add_race(DL_RACE_AURAK_DRACONIAN, "aurak draconian", "Aurak Draconian", "\tYAurak Draconian\tn",
+           "Aurk", "\tYAurk\tn", RACE_TYPE_HUMANOID, SIZE_MEDIUM, TRUE, 4, 15000, IS_ADVANCE);
+  set_race_details(
+      DL_RACE_AURAK_DRACONIAN,
+      "Auraks were born from gold dragon eggs twisted by dark magic to serve the Dragonarmies "
+      "of Takhisis. Rare even among draconians, these slender, golden-scaled beings have no "
+      "wings, but possess a formidable inheritance of sorcery and cunning. The Dragon Highlords "
+      "employed them as special agents, trusting their intelligence and magical talents with "
+      "missions beyond the reach of ordinary soldiers. Secretive and proud, Auraks prefer to "
+      "shape a battle from a distance or unravel an enemy through deception rather than trade "
+      "blows in the front ranks. Their allegiance to the Dark Queen is often tempered by "
+      "private ambitions, and the pursuit of arcane power may matter more to an Aurak than the "
+      "cause it was created to serve.",
       "You assume your natural Aurak form.", "$n assumes $s natural Aurak form.");
   set_race_genders(DL_RACE_AURAK_DRACONIAN, Y, Y, Y);
   set_race_abilities(DL_RACE_AURAK_DRACONIAN, 0, 0, 4, 0, 2, 4);
@@ -3946,20 +3949,23 @@ void assign_races(void)
   feat_race_assignment(DL_RACE_AURAK_DRACONIAN, FEAT_IMPROVED_INITIATIVE, 1, N);
   race_list[DL_RACE_AURAK_DRACONIAN].racial_language = SKILL_LANG_DRACONIC;
 
-  add_race(DL_RACE_SIVAK_DRACONIAN, "sivak draconian", "Sivak Draconian",
-           "\tWSivak Draconian\tn", "Sivk", "\tWSivk\tn",
-           RACE_TYPE_HUMANOID, SIZE_LARGE, TRUE, 2, 5000, IS_ADVANCE);
-  set_race_details(DL_RACE_SIVAK_DRACONIAN,
-      "Sivak draconians are silver-scaled, winged infiltrators. They gain +2 Strength, "
-      "Dexterity, Constitution, and Intelligence, flight, darkvision, disease immunity, "
-      "draconian spell resistance, a bite, and improved trip. They can permanently learn "
-      "the appearance of humanoid enemies they personally kill. Use disguise forms to "
-      "list these forms and disguise form <number> to assume one. True Sight reveals "
-      "both their natural and assumed forms.",
+  add_race(DL_RACE_SIVAK_DRACONIAN, "sivak draconian", "Sivak Draconian", "\tWSivak Draconian\tn",
+           "Sivk", "\tWSivk\tn", RACE_TYPE_HUMANOID, SIZE_MEDIUM, TRUE, 2, 8000, IS_ADVANCE);
+  set_race_details(
+      DL_RACE_SIVAK_DRACONIAN,
+      "Sivaks trace their origins to silver dragon eggs corrupted for the armies of Takhisis. "
+      "Among the most formidable draconians, they carry the strength of their draconic ancestry "
+      "into battle and possess wings capable of true flight. This gift made them valuable "
+      "scouts in the Dragonarmies, while their skill with heavy blades made them dangerous foes "
+      "on the ground. A more sinister talent allowed a Sivak to wear the appearance of a "
+      "creature it had slain, turning a familiar face into a means of infiltration and "
+      "betrayal. Their history is bound to the wars of the Dragon Highlords, where an enemy "
+      "might arrive from the skies or pass unnoticed among those who believed it a friend.",
       "You assume your natural Sivak form.", "$n assumes $s natural Sivak form.");
   set_race_genders(DL_RACE_SIVAK_DRACONIAN, Y, Y, Y);
   set_race_abilities(DL_RACE_SIVAK_DRACONIAN, 2, 2, 2, 0, 2, 0);
   set_race_alignments(DL_RACE_SIVAK_DRACONIAN, Y, Y, Y, Y, Y, Y, Y, Y, Y);
+  feat_race_assignment(DL_RACE_SIVAK_DRACONIAN, FEAT_SIVAK_SCALES, 1, N);
   feat_race_assignment(DL_RACE_SIVAK_DRACONIAN, FEAT_WINGS, 1, N);
   feat_race_assignment(DL_RACE_SIVAK_DRACONIAN, FEAT_ULTRAVISION, 1, N);
   feat_race_assignment(DL_RACE_SIVAK_DRACONIAN, FEAT_DRACONIAN_DISEASE_IMMUNITY, 1, N);
@@ -3970,13 +3976,19 @@ void assign_races(void)
   feat_race_assignment(DL_RACE_SIVAK_DRACONIAN, FEAT_IMPROVED_TRIP, 1, N);
   race_list[DL_RACE_SIVAK_DRACONIAN].racial_language = SKILL_LANG_DRACONIC;
 
-  add_race(DL_RACE_IRDA, "irda", "Irda", "\tCIrda\tn", "Irda", "\tCIrda\tn",
-           RACE_TYPE_HUMANOID, SIZE_MEDIUM, TRUE, 2, 5000, IS_ADVANCE);
-  set_race_details(DL_RACE_IRDA,
-      "Irda are graceful, magically gifted humanoids who can assume humanoid forms at will. "
-      "They gain +2 Dexterity, Intelligence, Wisdom, and Charisma. "
-      "Use disguise form <race> | <age> | <gender> | <feature:adjective> | <feature:adjective>. "
-      "Use disguise form remove to return to your natural form.",
+  add_race(DL_RACE_IRDA, "irda", "Irda", "\tCIrda\tn", "Irda", "\tCIrda\tn", RACE_TYPE_HUMANOID,
+           SIZE_MEDIUM, TRUE, 2, 5000, IS_ADVANCE);
+  set_race_details(
+      DL_RACE_IRDA,
+      "The Irda preserve the beauty and magical heritage of Krynn's ancient ogres, firstborn "
+      "creations of Takhisis. In the Age of Dreams, their ancestors ruled a wealthy "
+      "civilization sustained by enslaved humans. When the human Eadamm saved the daughter of "
+      "the ogre Igraine, an act of compassion challenged that cruel order. Igraine and his "
+      "followers abandoned their former ways and fled persecution, finding refuge with "
+      "Mishakal's aid on a hidden island in the Dragon Isles. Their descendants retained their "
+      "graceful features and blue skin as other ogres fell into brutality. Solitary and "
+      "contemplative, the Irda guarded their isolation with magic, assuming other shapes when "
+      "traveling among the peoples of Ansalon, who feared their true appearance.",
       "You assume the form of an Irda.", "$n assumes the form of an Irda.");
   set_race_genders(DL_RACE_IRDA, Y, Y, Y);
   set_race_abilities(DL_RACE_IRDA, 0, 0, 2, 2, 2, 2);
@@ -5199,10 +5211,13 @@ int parse_race_long(const char *arg_in)
 #if defined(CAMPAIGN_DL)
 
   if (is_abbrev(arg, "aurak draconian") || is_abbrev(arg, "aurak-draconian") ||
-      is_abbrev(arg, "aurakdraconian")) return DL_RACE_AURAK_DRACONIAN;
+      is_abbrev(arg, "aurakdraconian"))
+    return DL_RACE_AURAK_DRACONIAN;
   if (is_abbrev(arg, "sivak draconian") || is_abbrev(arg, "sivak-draconian") ||
-      is_abbrev(arg, "sivakdraconian")) return DL_RACE_SIVAK_DRACONIAN;
-  if (is_abbrev(arg, "irda")) return DL_RACE_IRDA;
+      is_abbrev(arg, "sivakdraconian"))
+    return DL_RACE_SIVAK_DRACONIAN;
+  if (is_abbrev(arg, "irda"))
+    return DL_RACE_IRDA;
   if (is_abbrev(arg, "human"))
     return DL_RACE_HUMAN;
   if (is_abbrev(arg, "qualinesti elf"))
@@ -5293,10 +5308,13 @@ int parse_race_long(const char *arg_in)
 #else
 
   if (is_abbrev(arg, "aurak draconian") || is_abbrev(arg, "aurak-draconian") ||
-      is_abbrev(arg, "aurakdraconian")) return DL_RACE_AURAK_DRACONIAN;
+      is_abbrev(arg, "aurakdraconian"))
+    return DL_RACE_AURAK_DRACONIAN;
   if (is_abbrev(arg, "sivak draconian") || is_abbrev(arg, "sivak-draconian") ||
-      is_abbrev(arg, "sivakdraconian")) return DL_RACE_SIVAK_DRACONIAN;
-  if (is_abbrev(arg, "irda")) return DL_RACE_IRDA;
+      is_abbrev(arg, "sivakdraconian"))
+    return DL_RACE_SIVAK_DRACONIAN;
+  if (is_abbrev(arg, "irda"))
+    return DL_RACE_IRDA;
   if (is_abbrev(arg, "human"))
     return RACE_HUMAN;
   if (is_abbrev(arg, "moon-elf"))

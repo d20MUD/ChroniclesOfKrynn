@@ -949,10 +949,10 @@ int savingthrow_full(struct char_data *ch, struct char_data *vict, int type, int
     savethrow += 4;
   }
 
-  if (ch && casttype == CAST_WEAPON_POISON)
+  if (ch && (casttype == CAST_WEAPON_POISON || is_poison_spell(spellnum)))
     savethrow += get_poison_save_mod(ch, vict);
-  if (ch && is_poison_spell(spellnum))
-    savethrow += get_poison_save_mod(ch, vict);
+  else if (type == SAVING_POISON && affected_by_spell(vict, SPELL_PROTECTION_FROM_POISON))
+    savethrow += 5;
   if (ch && IS_FRIGHTENED(ch))
     savethrow -= 2;
   if (affected_by_aura_of_despair(vict))
@@ -4092,8 +4092,7 @@ bool passed_poison_checks(struct char_data *ch, struct char_data *victim, int ca
   }
   if (casttype != CAST_INNATE && casttype != CAST_DEVICE && mag_resistance(ch, victim, 0))
     return true;
-  int bonus = get_poison_save_mod(ch, victim);
-  if (savingthrow(ch, victim, SAVING_FORT, bonus, casttype, level, ENCHANTMENT))
+  if (savingthrow_full(ch, victim, SAVING_FORT, 0, casttype, level, ENCHANTMENT, SPELL_POISON))
   {
     send_to_char(ch, "Your victim seems to resist the poison!\r\n");
     return true;
@@ -7978,6 +7977,22 @@ void mag_affects_full(int level, struct char_data *ch, struct char_data *victim,
 
     to_room = "$n seems to be deafened!";
     to_vict = "You have been deafened!";
+    break;
+
+  case SPELL_PROTECTION_FROM_POISON:
+    af[0].location = APPLY_SPECIAL;
+    af[0].modifier = 5;
+    af[0].duration = 100 * level; /* ten minutes per caster level */
+    to_vict = "You feel protected against poison.";
+    to_room = "$n is protected against poison.";
+    break;
+
+  case SPELL_PANACEA:
+    af[0].location = APPLY_SPECIAL;
+    af[0].modifier = 1;
+    af[0].duration = level; /* one round per caster level */
+    to_vict = "A cleansing warmth shields you from poison and disease.";
+    to_room = "$n glows with a cleansing warmth.";
     break;
 
   case SPELL_DEATH_WARD: // necromancy
@@ -14036,6 +14051,22 @@ void mag_unaffects(int level, struct char_data *ch, struct char_data *victim, st
       level += weather_info.moons.lunitari_lv;
     else
       level += weather_info.moons.nuitari_lv;
+  }
+
+  /* Remove individual records safely: one spell can carry several symptoms. */
+  if (spellnum == SPELL_PANACEA)
+  {
+    struct affected_type *next;
+    for (af = victim->affected; af; af = next)
+    {
+      next = af->next;
+      if (IS_SET_AR(af->bitvector, AFF_POISON) || IS_SET_AR(af->bitvector, AFF_DISEASE) ||
+          is_poison_spell(af->spell))
+        affect_remove(victim, af);
+    }
+    REMOVE_BIT_AR(AFF_FLAGS(victim), AFF_POISON);
+    REMOVE_BIT_AR(AFF_FLAGS(victim), AFF_DISEASE);
+    return;
   }
 
   switch (spellnum)

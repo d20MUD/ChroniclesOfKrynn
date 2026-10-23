@@ -981,6 +981,9 @@
  * 2)  if you want this spell to be available as a npc nuke, mobact.c
  */
 
+#define SPELL_PROTECTION_FROM_POISON 1689
+#define SPELL_PANACEA 1690
+
 /* Insert new spells here, up to MAX_SPELLS */
 /* make sure this matches up with structs.h spellbook define */
 // -----NEW NEW NEW -----
@@ -1817,6 +1820,7 @@ ASPELL(spell_alter_self);
 
 /* basic magic calling functions */
 int find_skill_num(char *name);
+bool is_aurak_energy_ray_cast(const char *argument);
 int find_ability_num(char *name);
 bool is_unused_spell(int spellnum);
 

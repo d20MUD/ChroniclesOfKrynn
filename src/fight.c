@@ -1100,6 +1100,10 @@ int compute_armor_class(struct char_data *attacker, struct char_data *ch, int is
   {
     bonuses[BONUS_TYPE_NATURALARMOR] += 6;
   }
+  else if (HAS_FEAT(ch, FEAT_SIVAK_SCALES))
+  {
+    bonuses[BONUS_TYPE_NATURALARMOR] += 3;
+  }
   else if (HAS_FEAT(ch, FEAT_BAAZ_DRACONIAN_SCALES))
   {
     bonuses[BONUS_TYPE_NATURALARMOR] += 1;
@@ -4613,7 +4617,8 @@ int compute_damtype_reduction(struct char_data *ch, int dam_type, struct char_da
     }
     if (GET_RACE(ch) == RACE_GREEN_DRAGON || GET_DISGUISE_RACE(ch) == RACE_GREEN_DRAGON)
       damtype_reduction += 100;
-    if (HAS_FEAT(ch, FEAT_POISON_IMMUNITY) || HAS_FEAT(ch, FEAT_SOUL_OF_THE_FEY))
+    if (affected_by_spell(ch, SPELL_PANACEA) ||
+        HAS_FEAT(ch, FEAT_POISON_IMMUNITY) || HAS_FEAT(ch, FEAT_SOUL_OF_THE_FEY))
       damtype_reduction += 100;
     break;
 

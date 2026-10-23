@@ -8883,6 +8883,9 @@ ACMD(do_gen_tog)
       {"Cleric spontaneous casting disabled.\r\n",
        "Cleric spontaneous casting enabled. Prepared cleric spells will convert to cure or "
        "cause/harm spells based on your energy alignment.\r\n"},
+      // 74
+      {"Your name and title are now visible on who.\r\n",
+       "You now appear anonymously on who to people who do not know you.\r\n"},
   };
 
   if (IS_NPC(ch))
@@ -9224,6 +9227,9 @@ ACMD(do_gen_tog)
     result = PRF_TOG_CHK(ch, PRF_REJECT_TRADES);
     if (result)
       clear_trade_invites(ch, "Trade request canceled.\r\n");
+    break;
+  case SCMD_ANONYMOUS:
+    result = PRF_TOG_CHK(ch, PRF_ANONYMOUS);
     break;
   case SCMD_SPONTANEOUS_CASTING:
     result = PRF_TOG_CHK(ch, PRF_SPONTANEOUS_CASTING);

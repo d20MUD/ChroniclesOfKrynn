@@ -73,8 +73,8 @@ static const int loremaster_knowledge_abilities[NUM_LOREMASTER_KNOWLEDGE_ABILITI
     ABILITY_ARCANA, ABILITY_HISTORY, ABILITY_RELIGION, ABILITY_SURVIVAL};
 
 static const int loremaster_entry_casters[NUM_LOREMASTER_ENTRY_CASTERS] = {
-    CLASS_WIZARD, CLASS_SORCERER, CLASS_BARD,      CLASS_SUMMONER, CLASS_CLERIC,
-    CLASS_DRUID,  CLASS_RANGER,   CLASS_PALADIN,  CLASS_INQUISITOR};
+    CLASS_WIZARD, CLASS_SORCERER, CLASS_BARD,    CLASS_SUMMONER,  CLASS_CLERIC,
+    CLASS_DRUID,  CLASS_RANGER,   CLASS_PALADIN, CLASS_INQUISITOR};
 
 /* SET OF UTILITY FUNCTIONS for the purpose of class prereqs */
 
@@ -320,8 +320,7 @@ static bool loremaster_has_knowledge_skill_focus(struct char_data *ch)
 
   for (i = 0; i < NUM_LOREMASTER_KNOWLEDGE_ABILITIES; i++)
   {
-    if (HAS_SKILL_FEAT(ch, loremaster_knowledge_abilities[i],
-                       feat_to_skfeat(FEAT_SKILL_FOCUS)))
+    if (HAS_SKILL_FEAT(ch, loremaster_knowledge_abilities[i], feat_to_skfeat(FEAT_SKILL_FOCUS)))
       return TRUE;
   }
 
@@ -430,8 +429,7 @@ static bool loremaster_spell_known_for_class(struct char_data *ch, int class, in
   case CLASS_INQUISITOR:
     if (is_a_known_spell(ch, class, spellnum))
       return TRUE;
-    return (spell_is_cantrip(spellnum) &&
-            spell_info[spellnum].min_level[class] == 0 &&
+    return (spell_is_cantrip(spellnum) && spell_info[spellnum].min_level[class] == 0 &&
             CLASS_LEVEL(ch, class) > 0);
   case CLASS_CLERIC:
   case CLASS_DRUID:
@@ -536,8 +534,8 @@ static void display_loremaster_prereq_details(struct char_data *ch)
   send_to_char(ch, "\tn%sKnowledge skills at 7+ ranks: %d/2\tn - %s\r\n",
                knowledge_count >= 2 ? "\tn" : "\tr", knowledge_count,
                knowledge_count >= 2 ? "\tWFulfilled!\tn" : "\trMissing\tn");
-  send_to_char(ch, "\tn%sSkill Focus in a Knowledge skill\tn - %s\r\n",
-               has_focus ? "\tn" : "\tr", has_focus ? "\tWFulfilled!\tn" : "\trMissing\tn");
+  send_to_char(ch, "\tn%sSkill Focus in a Knowledge skill\tn - %s\r\n", has_focus ? "\tn" : "\tr",
+               has_focus ? "\tWFulfilled!\tn" : "\trMissing\tn");
   send_to_char(ch, "\tn%sMetamagic or item creation feats: %d/3\tn - %s\r\n",
                feat_count >= 3 ? "\tn" : "\tr", feat_count,
                feat_count >= 3 ? "\tWFulfilled!\tn" : "\trMissing\tn");
@@ -2051,16 +2049,15 @@ bitvector_t find_class_bitvector(const char *arg)
 
 /* guild guards: stops classes from going in certain directions,
  currently being phased out */
-struct guild_info_type guild_info[] = {
-    /* Midgaard */
-    {-999 /* all */, 3004, NORTH},
-    {-999 /* all */, 3017, SOUTH},
-    {-999 /* all */, 3021, EAST},
-    {-999 /* all */, 3027, EAST},
-    /* Brass Dragon */
-    {-999 /* all */, 5065, WEST},
-    /* this must go last -- add new guards above! */
-    {-1, NOWHERE, -1}};
+struct guild_info_type guild_info[] = {/* Midgaard */
+                                       {-999 /* all */, 3004, NORTH},
+                                       {-999 /* all */, 3017, SOUTH},
+                                       {-999 /* all */, 3021, EAST},
+                                       {-999 /* all */, 3027, EAST},
+                                       /* Brass Dragon */
+                                       {-999 /* all */, 5065, WEST},
+                                       /* this must go last -- add new guards above! */
+                                       {-1, NOWHERE, -1}};
 
 /* certain feats/etc can affect what is an actual class/cross-class ability */
 int modify_class_ability(struct char_data *ch, int ability, int class)
@@ -4989,6 +4986,7 @@ void load_class_list(void)
   spell_assignment(CLASS_CLERIC, SPELL_BANE, 1);
   /*              class num      spell                   level acquired */
   /* 2nd circle */
+  spell_assignment(CLASS_CLERIC, SPELL_PROTECTION_FROM_POISON, 3);
   spell_assignment(CLASS_CLERIC, SPELL_AUGURY, 3);
   spell_assignment(CLASS_CLERIC, SPELL_UNDETECTABLE_ALIGNMENT, 3);
   spell_assignment(CLASS_CLERIC, SPELL_SPIRITUAL_WEAPON, 3);
@@ -5062,6 +5060,7 @@ void load_class_list(void)
   /*              class num      spell                   level acquired */
   /* 5th circle */
   spell_assignment(CLASS_CLERIC, SPELL_POISON, 9);
+  spell_assignment(CLASS_CLERIC, SPELL_PANACEA, 9);
   spell_assignment(CLASS_CLERIC, SPELL_REMOVE_POISON, 9);
   spell_assignment(CLASS_CLERIC, SPELL_PROT_FROM_EVIL, 9);
   spell_assignment(CLASS_CLERIC, SPELL_GROUP_SHIELD_OF_FAITH, 9);
@@ -5654,6 +5653,7 @@ void load_class_list(void)
   spell_assignment(CLASS_DRUID, SPELL_ANT_HAUL, 1);
   /*              class num      spell                   level acquired */
   /* 2nd circle */
+  spell_assignment(CLASS_DRUID, SPELL_PROTECTION_FROM_POISON, 3);
   spell_assignment(CLASS_DRUID, SPELL_BARKSKIN, 3);
   spell_assignment(CLASS_DRUID, SPELL_ENDURANCE, 3);
   spell_assignment(CLASS_DRUID, SPELL_STRENGTH, 3);
@@ -5700,6 +5700,7 @@ void load_class_list(void)
   spell_assignment(CLASS_DRUID, SPELL_FREE_MOVEMENT, 7);
   spell_assignment(CLASS_DRUID, SPELL_ICE_STORM, 7);
   spell_assignment(CLASS_DRUID, SPELL_SPLINTER_STORM, 5);
+  spell_assignment(CLASS_DRUID, SPELL_PANACEA, 9);
   spell_assignment(CLASS_DRUID, SPELL_SHOCKWAVE, 9);
   spell_assignment(CLASS_DRUID, SPELL_SOLID_FOG, 7);
   spell_assignment(CLASS_DRUID, SPELL_LOCATE_CREATURE, 7);
@@ -9161,6 +9162,7 @@ void load_class_list(void)
   spell_assignment(CLASS_INQUISITOR, SPELL_TRUE_STRIKE, 1);
 
   /* spell circle 2 */
+  spell_assignment(CLASS_INQUISITOR, SPELL_PROTECTION_FROM_POISON, 4);
   spell_assignment(CLASS_INQUISITOR, SPELL_AID, 4);
   spell_assignment(CLASS_INQUISITOR, SPELL_WEAPON_OF_AWE, 4);
   spell_assignment(CLASS_INQUISITOR, SPELL_UNDETECTABLE_ALIGNMENT, 4);
@@ -10049,17 +10051,9 @@ void load_class_list(void)
                      /*survival,swim,use_magic_device,perform*/
                      CA, CC, CA, CA);
   assign_class_titles(CLASS_LOREMASTER, /* class number */
-                      "",
-                      "the Loremaster",
-                      "the Loremaster",
-                      "the Loremaster",
-                      "the Loremaster",
-                      "the Loremaster",
-                      "the Loremaster",
-                      "the Immortal Loremaster",
-                      "the Keeper of Secrets",
-                      "the God of Lore",
-                      "the Loremaster");
+                      "", "the Loremaster", "the Loremaster", "the Loremaster", "the Loremaster",
+                      "the Loremaster", "the Loremaster", "the Immortal Loremaster",
+                      "the Keeper of Secrets", "the God of Lore", "the Loremaster");
   /* feat assignment */
   feat_assignment(CLASS_LOREMASTER, FEAT_LORE, Y, 2, N);
   feat_assignment(CLASS_LOREMASTER, FEAT_GREATER_LORE, Y, 6, N);

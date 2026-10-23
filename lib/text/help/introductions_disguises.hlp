@@ -113,7 +113,8 @@ See also: DISGUISE, TRUEFORM, INTRODUCE
 SIVAK SIVAKDRACONIAN SIVAKFORMS
 
 Sivak draconians are Large advanced characters with +2 Strength, Dexterity,
-Constitution and Intelligence. They have flight, ultravision, disease immunity,
+Constitution and Intelligence. They cost 8,000 account XP to unlock and gain
++3 natural armor, flight, ultravision, disease immunity,
 draconian spell resistance, bite, draconic devotion, gallop and Improved Trip.
 
   disguise forms                List learned humanoid appearances.
@@ -160,7 +161,8 @@ Examples:
   cast 'greater invisibility'
   cast 'dominate person' <enemy>
 
-Energy ray makes one ranged touch attack for 4d6 force damage. Breath affects
+Energy ray uses a swift action for one ranged touch attack dealing 4d6 force
+damage. Breath affects
 eligible enemies in the room: Fortitude negates a temporary 1d2 Strength penalty
 and blindness lasting 1d4 rounds. Poison immunity protects against the breath;
 blindness immunity protects against its blinding effect. Breath recharges after

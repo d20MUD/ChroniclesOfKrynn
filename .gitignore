@@ -324,6 +324,10 @@ lib/text/oldnews
 
 # Help files (legacy - now stored in MySQL via hedit)
 lib/text/help/*
+!lib/text/help/disguise.hlp
+!lib/text/help/race-irda.hlp
+!lib/text/help/race-sivak-draconian.hlp
+!lib/text/help/race-aurak-draconian.hlp
 !lib/text/help/README
 !lib/text/help/.gitkeep
 !lib/text/help/formation.hlp

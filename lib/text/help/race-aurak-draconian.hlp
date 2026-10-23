@@ -1,0 +1,49 @@
+AURAK AURAK-DRACONIAN AURAKDRACONIAN RACE-AURAK-DRACONIAN
+
+	g>Description:	n
+
+Auraks are wingless, golden-scaled masters of innate
+magic and the most powerful of the draconian races.
+Their intelligence, presence, and arcane talents
+make them dangerous spellcasters and manipulators.
+Although they lack the natural flight of winged
+draconians, Auraks wield force rays, noxious breath,
+and an expanding array of racial spells. Even death
+releases a final burst of their destructive magic.
+
+	g>Racial Abilities:	n
+
+Aurak Scales:          - +6 natural armor.
+Ultravision:           - Can see in darkness.
+Disease Immunity:      - Immune to disease.
+Spell Resistance:      - 12 + character level.
+Draconian Bite:        - Make a bite attack with a swift action; use bite.
+Draconic Devotion:     - +2 to attack rolls when grouped with another draconian or dragon.
+Combat Casting:        - Granted as a racial feat.
+Improved Initiative:   - Granted as a racial feat.
+Aurak Magic:           - Uses character level and Charisma; requires no caster class or prepared slots.
+                       - Level 1: aurak energy ray, aurak breath, disguise self, magic missile.
+                       - Level 3: charm, mirror image. Level 5: fireball, dispel magic.
+                       - Level 7: greater invisibility. Level 9: dominate person.
+                       - Use cast '<spell name>' [target]; normal casting actions apply except for energy ray.
+Energy Ray:            - One ranged touch attack dealing 4d6 force damage; uses a swift action.
+Noxious Breath:        - Affects eligible enemies in the room; Fortitude negates.
+                       - Inflicts a 1d2 Strength penalty and blindness for 1d4 rounds.
+                       - Poison immunity prevents the breath; blindness immunity prevents blindness.
+                       - Recharges after 1d4 combat rounds.
+Dominate Person:       - Once per rolling 24 real hours; other racial spells are at will.
+Persistent Recharge:   - Breath and domination recharge times persist across sessions.
+Disguise Self:         - +10 to Disguise; use disguise to change your visible appearance.
+Death Throes:          - On death, a 3d6 force burst hits eligible enemies; Reflex halves damage.
+                       - Equipment and resurrection follow normal rules.
+Size:                  - Medium; cannot fly naturally.
+Racial Language:       - Draconic.
+Race Unlock:           - Advanced race; costs 15,000 account experience to unlock.
+
+	g>Ability Adjustments:	n  +2 Dex, +4 Int, +4 Cha
+
+	g>Experience Modifier:	n  +4 level adjustment
+
+	ySee also:	n RACES, DISGUISE, DISGUISESELF, CAST, BITE
+#0
+$

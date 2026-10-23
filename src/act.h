@@ -950,6 +950,7 @@ ACMD_DECL(do_buildwalk);
 #define SCMD_NO_WALKTO_CONFIRM 71
 #define SCMD_REJECT_TRADES 72
 #define SCMD_SPONTANEOUS_CASTING 73
+#define SCMD_ANONYMOUS 74
 
 /* do_quit */
 ACMD_DECL(do_quit);

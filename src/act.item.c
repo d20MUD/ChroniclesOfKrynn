@@ -4349,11 +4349,13 @@ bool perform_give(struct char_data *ch, struct char_data *vict, struct obj_data 
 static struct char_data *give_find_vict(struct char_data *ch, char *arg)
 {
   struct char_data *vict;
+  char name[MAX_INPUT_LENGTH] = {'\0'};
 
-  skip_spaces(&arg);
-  if (!*arg)
+  /* Normalize optional "to" for every give form, preserving N.name. */
+  one_argument(arg, name, sizeof(name));
+  if (!*name)
     send_to_char(ch, "To who?\r\n");
-  else if (!(vict = get_char_vis(ch, arg, NULL, FIND_CHAR_ROOM)))
+  else if (!(vict = get_char_room_vis(ch, name, NULL)))
     send_to_char(ch, "%s", CONFIG_NOPERSON);
   else if (vict == ch)
     send_to_char(ch, "What's the point of that?\r\n");

@@ -7507,6 +7507,9 @@ int get_poison_save_mod(struct char_data *ch, struct char_data *victim)
 {
   int bonus = 0;
 
+  if (affected_by_spell(victim, SPELL_PROTECTION_FROM_POISON))
+    bonus += 5;
+
   if (HAS_FEAT(victim, FEAT_POISON_RESIST)) // poison resist feat
     bonus += 4;
   if (GET_RACE(victim) == RACE_DWARF || // dwarf dwarven poison resist
@@ -7534,14 +7537,10 @@ bool check_poison_resist(struct char_data *ch, struct char_data *victim, int cas
   if (HAS_FEAT(victim, FEAT_POISON_IMMUNITY) || HAS_FEAT(victim, FEAT_SOUL_OF_THE_FEY))
     return TRUE;
 
-  int bonus = 0;
-
   if (casttype != CAST_INNATE && casttype != CAST_DEVICE && mag_resistance(ch, victim, 0))
     return TRUE;
 
-  bonus += get_poison_save_mod(ch, victim);
-
-  if (savingthrow(ch, victim, SAVING_FORT, bonus, casttype, level, ENCHANTMENT))
+  if (savingthrow_full(ch, victim, SAVING_FORT, 0, casttype, level, ENCHANTMENT, SPELL_POISON))
   {
     return TRUE;
   }
@@ -8382,6 +8381,8 @@ bool can_deafen(struct char_data *ch)
 // returns true if the target doesn't have immunity to disease
 bool can_disease(struct char_data *ch)
 {
+  if (affected_by_spell(ch, SPELL_PANACEA))
+    return false;
   if (affected_by_spell(ch, PSIONIC_OAK_BODY))
     return false;
   if (affected_by_spell(ch, PSIONIC_BODY_OF_IRON))
@@ -8567,6 +8568,8 @@ bool can_blindsense_creature(struct char_data *ch, struct char_data *target)
 // returns true if the target doesn't have immunity to poison
 bool can_poison(struct char_data *ch)
 {
+  if (affected_by_spell(ch, SPELL_PANACEA))
+    return false;
   if (affected_by_spell(ch, PSIONIC_OAK_BODY))
     return false;
   if (affected_by_spell(ch, PSIONIC_BODY_OF_IRON))
@@ -9953,6 +9956,7 @@ bool is_poison_spell(int spell)
   case SPELL_POISON:
   case WEAPON_POISON_BLACK_ADDER_VENOM:
   case SPELL_POISON_BREATHE:
+  case SPELL_POISON_BREATH:
     return true;
   }
   return false;

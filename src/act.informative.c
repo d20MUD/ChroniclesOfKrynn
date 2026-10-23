@@ -214,7 +214,8 @@ void lore_id_vict(struct char_data *ch, struct char_data *tch)
     send_to_char(ch, "%s is %d years, %d months, %d days and %d hours old.\r\n", PERS(tch, ch),
                  age(tch)->year, age(tch)->month, age(tch)->day, age(tch)->hours);
   send_to_char(ch, "Race: %s%s.\r\n",
-               !IS_NPC(tch) ? CAP(race_list[perceived_race(tch, ch)].name) : race_family_types[GET_RACE(tch)],
+               !IS_NPC(tch) ? CAP(race_list[perceived_race(tch, ch)].name)
+                            : race_family_types[GET_RACE(tch)],
                has_subrace ? subraces : "");
   if (!AFF_FLAGGED(tch, AFF_HIDE_ALIGNMENT))
     send_to_char(ch, "Alignment: %s.\r\n", get_align_by_num(GET_ALIGNMENT(tch)));
@@ -427,7 +428,6 @@ void lore_id_vict(struct char_data *ch, struct char_data *tch)
   }
   if (has_true_sight(ch))
     show_disguise_notice(tch, ch);
-
 }
 
 /* special affect that allows you to sense 'aggro' enemies */
@@ -1994,7 +1994,8 @@ static void look_in_obj(struct char_data *ch, char *arg)
     send_to_char(ch, "There's nothing inside that!\r\n");
   else
   {
-    if (housing_contents(ch, obj)) return;
+    if (housing_contents(ch, obj))
+      return;
     if (GET_OBJ_TYPE(obj) == ITEM_CONTAINER || GET_OBJ_TYPE(obj) == ITEM_AMMO_POUCH)
     {
       if (OBJVAL_FLAGGED(obj, CONT_CLOSED) &&
@@ -2444,8 +2445,8 @@ void perform_cooldowns(struct char_data *ch, struct char_data *k)
         epic_spell_minutes = epic_spell_seconds_left / 60;
         epic_spell_seconds = epic_spell_seconds_left % 60;
         send_to_char(ch, "Next epic combat cast recovers in %d minute%s %d second%s.\r\n",
-                     epic_spell_minutes, (epic_spell_minutes == 1) ? "" : "s",
-                     epic_spell_seconds, (epic_spell_seconds == 1) ? "" : "s");
+                     epic_spell_minutes, (epic_spell_minutes == 1) ? "" : "s", epic_spell_seconds,
+                     (epic_spell_seconds == 1) ? "" : "s");
       }
       normalize_epic_preparation_casts(k);
       send_to_char(ch, "Epic Preparation Casts: %d/%d available.\r\n",
@@ -2796,8 +2797,8 @@ void perform_cooldowns(struct char_data *ch, struct char_data *k)
   {
     int display_rounds = MAX(1, k->player_specials->saved.defensive_casting_timer - 1);
 
-    send_to_char(ch, "\tGDefensive Casting Active\tn - +4 AC for %d round%s\r\n",
-                 display_rounds, display_rounds == 1 ? "" : "s");
+    send_to_char(ch, "\tGDefensive Casting Active\tn - +4 AC for %d round%s\r\n", display_rounds,
+                 display_rounds == 1 ? "" : "s");
   }
 
   /* Wizard Versatile Caster perk: Spell Shield - show if active */
@@ -2805,8 +2806,8 @@ void perform_cooldowns(struct char_data *ch, struct char_data *k)
   {
     int display_rounds = MAX(1, k->player_specials->saved.spell_shield_timer - 1);
 
-    send_to_char(ch, "\tCSpell Shield Active\tn - 10 DR + 4 AC for %d round%s\r\n",
-                 display_rounds, display_rounds == 1 ? "" : "s");
+    send_to_char(ch, "\tCSpell Shield Active\tn - 10 DR + 4 AC for %d round%s\r\n", display_rounds,
+                 display_rounds == 1 ? "" : "s");
   }
 
   /* Spell Shield cooldown */
@@ -3146,8 +3147,7 @@ void perform_affects(struct char_data *ch, struct char_data *k)
     if (IS_SET_AR(AFF2_FLAGS(k), i))
     {
       send_to_char(ch, "%s%-20s%s - %s%s%s\r\n", CCNRM(ch, C_NRM), affected2_bits[i],
-                   CCNRM(ch, C_NRM), CCNRM(ch, C_NRM), affected2_bit_descs[i],
-                   CCNRM(ch, C_NRM));
+                   CCNRM(ch, C_NRM), CCNRM(ch, C_NRM), affected2_bit_descs[i], CCNRM(ch, C_NRM));
     }
   }
 
@@ -3237,16 +3237,16 @@ void perform_affects(struct char_data *ch, struct char_data *k)
       }
       else if (aff->location == APPLY_SKILL)
       {
-        const char *specific_name =
-            (aff->specific >= 0 && aff->specific <= NUM_ABILITIES) ? ability_names[aff->specific]
-                                                                    : "Unknown";
+        const char *specific_name = (aff->specific >= 0 && aff->specific <= NUM_ABILITIES)
+                                        ? ability_names[aff->specific]
+                                        : "Unknown";
         snprintf(buf3, sizeof(buf3), "%+d to %s (%s)", aff->modifier, apply_name, specific_name);
       }
       else if (aff->location >= APPLY_SPELL_CIRCLE_1 && aff->location <= APPLY_SPELL_CIRCLE_9)
       {
-        const char *specific_name =
-            (aff->specific >= 0 && aff->specific < NUM_CLASSES) ? class_names[aff->specific]
-                                                                : "Unknown";
+        const char *specific_name = (aff->specific >= 0 && aff->specific < NUM_CLASSES)
+                                        ? class_names[aff->specific]
+                                        : "Unknown";
         snprintf(buf3, sizeof(buf3), "%+d to %s (%s)", aff->modifier, apply_name, specific_name);
       }
       else if (aff->location == APPLY_SPELL_POTENCY || aff->location == APPLY_SPELL_DURATION)
@@ -4507,8 +4507,8 @@ ACMD(do_defenses)
   }
   if (dr != NULL)
   {
-    send_to_char(ch,
-                 "\tRDamage reduction output truncated; your DR list appears to be corrupt.\tn\r\n");
+    send_to_char(
+        ch, "\tRDamage reduction output truncated; your DR list appears to be corrupt.\tn\r\n");
     log("SYSERR: do_defenses: possible DR list cycle/corruption for %s", GET_NAME(ch));
   }
   send_to_char(ch, "\tC");
@@ -5110,7 +5110,8 @@ ACMD(do_score)
   if (is_arcane_caster(ch))
   {
     if (!is_moon_phase_affected(ch))
-      send_to_char(ch, "As a Knight of the Thorn, your magic is unaffected by the moon phases.\r\n");
+      send_to_char(ch,
+                   "As a Knight of the Thorn, your magic is unaffected by the moon phases.\r\n");
     else if (IS_GOOD(ch))
     {
       send_to_char(ch,
@@ -5621,36 +5622,35 @@ static const char **get_class_border_style(struct char_data *ch)
 }
 
 /* Race symbol definitions */
-static const char *race_symbols[] = {
-    /* RACE_HUMAN */ "☺",
-    /* RACE_ELF */ "♠",
-    /* RACE_DWARF */ "♦",
-    /* RACE_H_TROLL */ "Ω",
-    /* RACE_CRYSTAL_DWARF */ "◊",
-    /* RACE_HALFLING */ "•",
-    /* RACE_H_ELF */ "♣",
-    /* RACE_H_ORC */ "○",
-    /* RACE_GNOME */ "♥",
-    /* RACE_TRELUX */ "∞",
-    /* RACE_ARCANA_GOLEM */ "◙",
-    /* RACE_DROW */ "▼",
-    /* RACE_DUERGAR */ "■",
-    /* RACE_HIGH_ELF */ "♀",
-    /* RACE_WOOD_ELF */ "♂",
-    /* RACE_HALF_DROW */ "▲",
-    /* RACE_TABAXI */ "♪",
-    /* RACE_TIEFLING */ "Ψ",
-    /* RACE_AASIMAR */ "☼",
-    /* RACE_WARFORGED */ "⌂",
-    /* RACE_DRAGONBORN */ "∆",
-    /* RACE_STOUT_HALFLING */ "◘",
-    /* RACE_FOREST_GNOME */ "♫",
-    /* RACE_GOLD_DWARF */ "◄",
-    /* RACE_AVARIEL */ "↑",
-    /* RACE_YUAN_TI */ "§",
-    /* RACE_CENTAUR */ "¤",
-    /* RACE_AARAKOCRA */ "↔",
-    /* RACE_H_OGRE */ "◦"};
+static const char *race_symbols[] = {/* RACE_HUMAN */ "☺",
+                                     /* RACE_ELF */ "♠",
+                                     /* RACE_DWARF */ "♦",
+                                     /* RACE_H_TROLL */ "Ω",
+                                     /* RACE_CRYSTAL_DWARF */ "◊",
+                                     /* RACE_HALFLING */ "•",
+                                     /* RACE_H_ELF */ "♣",
+                                     /* RACE_H_ORC */ "○",
+                                     /* RACE_GNOME */ "♥",
+                                     /* RACE_TRELUX */ "∞",
+                                     /* RACE_ARCANA_GOLEM */ "◙",
+                                     /* RACE_DROW */ "▼",
+                                     /* RACE_DUERGAR */ "■",
+                                     /* RACE_HIGH_ELF */ "♀",
+                                     /* RACE_WOOD_ELF */ "♂",
+                                     /* RACE_HALF_DROW */ "▲",
+                                     /* RACE_TABAXI */ "♪",
+                                     /* RACE_TIEFLING */ "Ψ",
+                                     /* RACE_AASIMAR */ "☼",
+                                     /* RACE_WARFORGED */ "⌂",
+                                     /* RACE_DRAGONBORN */ "∆",
+                                     /* RACE_STOUT_HALFLING */ "◘",
+                                     /* RACE_FOREST_GNOME */ "♫",
+                                     /* RACE_GOLD_DWARF */ "◄",
+                                     /* RACE_AVARIEL */ "↑",
+                                     /* RACE_YUAN_TI */ "§",
+                                     /* RACE_CENTAUR */ "¤",
+                                     /* RACE_AARAKOCRA */ "↔",
+                                     /* RACE_H_OGRE */ "◦"};
 
 /* Get the symbol for a character's race */
 static const char *get_race_symbol(struct char_data *ch)
@@ -7786,8 +7786,9 @@ ACMD(do_who)
 
     if (CAN_SEE(ch, tch) && IS_PLAYING(d))
     {
-      if (*name_search && (!identity_known(ch, tch) || (str_cmp(GET_NAME(tch), name_search) &&
-          !strstr(GET_TITLE(tch), name_search))))
+      if (*name_search &&
+          ((PRF_FLAGGED(tch, PRF_ANONYMOUS) && !identity_known(ch, tch)) ||
+           (str_cmp(GET_NAME(tch), name_search) && !strstr(GET_TITLE(tch), name_search))))
         continue;
       if (!CAN_SEE(ch, tch) || GET_LEVEL(tch) < low || GET_LEVEL(tch) > high)
         continue;
@@ -7877,8 +7878,9 @@ ACMD(do_who)
         continue;
       if (!IS_PLAYING(d))
         continue;
-      if (*name_search && (!identity_known(ch, tch) || (str_cmp(GET_NAME(tch), name_search) &&
-          !strstr(GET_TITLE(tch), name_search))))
+      if (*name_search &&
+          ((PRF_FLAGGED(tch, PRF_ANONYMOUS) && !identity_known(ch, tch)) ||
+           (str_cmp(GET_NAME(tch), name_search) && !strstr(GET_TITLE(tch), name_search))))
         continue;
       if (!CAN_SEE(ch, tch) || GET_LEVEL(tch) < low || GET_LEVEL(tch) > high)
         continue;
@@ -7898,10 +7900,18 @@ ACMD(do_who)
         continue;
       if (showleader && (!GROUP(tch) || GROUP_LEADER(GROUP(tch)) != tch))
         continue;
-      /* Unknown identities must not leak through titles, real race, or clan metadata. */
-      if (!identity_known(ch, tch) ||
-          (has_true_sight(ch) && (has_altered_form(tch) || HAS_DISGUISE(tch))))
+      /* Only anonymous players require an introduction on the who list. */
+      if (PRF_FLAGGED(tch, PRF_ANONYMOUS) && !identity_known(ch, tch))
       {
+        if (!short_list)
+        {
+#if defined(CAMPAIGN_DL)
+          /* Match the level, race, and faction columns without exposing them. */
+          send_to_char(ch, "\tW[ \tC%2s %-4s %-20s \tW]\tn ", "", "", "");
+#else
+          send_to_char(ch, "[%2s %4s %-11s] ", "", "", "");
+#endif
+        }
         send_to_char(ch, "%s\r\n", PERS(tch, ch));
         if (has_true_sight(ch))
           show_disguise_notice(tch, ch);
@@ -7973,8 +7983,9 @@ ACMD(do_who)
       if (short_list)
       {
         /* changed this to force showing char real race */
-        send_to_char(ch, "[%2d %8s] %-12.12s%s%s", GET_LEVEL(tch), race_list[perceived_race(tch, ch)].abbrev,
-                     PERS(tch, ch), CCNRM(ch, C_SPR), ((!(++num_can_see % 4)) ? "\r\n" : ""));
+        send_to_char(ch, "[%2d %8s] %-12.12s%s%s", GET_LEVEL(tch),
+                     race_list[perceived_race(tch, ch)].abbrev, GET_NAME(tch), CCNRM(ch, C_SPR),
+                     ((!(++num_can_see % 4)) ? "\r\n" : ""));
       }
       else
       {
@@ -8015,7 +8026,7 @@ ACMD(do_who)
         }
 
 #if defined(CAMPAIGN_DL)
-        send_to_char(ch, " %s%s%s%s", PERS(tch, ch), (*GET_TITLE(tch) ? " " : ""), GET_TITLE(tch),
+        send_to_char(ch, " %s%s%s%s", GET_NAME(tch), (*GET_TITLE(tch) ? " " : ""), GET_TITLE(tch),
                      CCNRM(ch, C_SPR));
 #else
         send_to_char(ch, " %s%s", (*GET_TITLE(tch) ? GET_TITLE(tch) : GET_NAME(tch)),
@@ -8124,6 +8135,9 @@ ACMD(do_who)
   }
 
   send_to_char(ch, "Type 'listraces' to understand race abbreviations.\r\n");
+
+  send_to_char(ch, "Please note: information gleaned from the 'who' list is considered "
+                   "out-of-character knowledge and should not be used in-character.\r\n");
 
   if (IS_HAPPYHOUR > 0)
   {
@@ -11061,12 +11075,14 @@ ACMD(do_pets)
     else if (is_abbrev(pet_command, "train") && *id_arg)
       train_companion_skill(ch, get_char_room_vis(ch, id_arg, NULL), option);
     else
-      send_to_char(ch, "Usage: pets | pets fallen | pets revive <ID> | pets discard <ID> CONFIRM | pets train <pet> <skill>\r\n");
+      send_to_char(ch, "Usage: pets | pets fallen | pets revive <ID> | pets discard <ID> CONFIRM | "
+                       "pets train <pet> <skill>\r\n");
     return;
   }
 
   check_npc_followers(ch, NPC_MODE_DISPLAY, 0);
-  send_to_char(ch, "Use 'pets fallen' to see stored pets, or 'pets train <pet> <skill>' to spend training points.\r\n");
+  send_to_char(ch, "Use 'pets fallen' to see stored pets, or 'pets train <pet> <skill>' to spend "
+                   "training points.\r\n");
   if (!IS_NPC(ch))
   {
     struct follow_type *f;
@@ -11078,7 +11094,9 @@ ACMD(do_pets)
       if (IS_PET(pet) && pet->mob_specials.purchased_pet)
         send_to_char(ch, "%s: level %d, pet XP %d/%d%s.\r\n", PERS(pet, ch), GET_LEVEL(pet),
                      pet->mob_specials.pet_experience, purchased_pet_level_cost(pet),
-                     GET_LEVEL(pet) >= MIN(GET_LEVEL(ch), PURCHASED_PET_LEVEL_CAP) ? " (level cap reached)" : "");
+                     GET_LEVEL(pet) >= MIN(GET_LEVEL(ch), PURCHASED_PET_LEVEL_CAP)
+                         ? " (level cap reached)"
+                         : "");
     }
   }
 }
