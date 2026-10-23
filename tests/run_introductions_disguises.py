@@ -157,6 +157,7 @@ code += function('char_descs.c', 'void short_desc_descriptors_menu(struct char_d
 code += function('char_descs.c', 'void short_desc_adjectives_menu(struct char_data *ch, int which_desc)')
 code += function('utils.c', 'char *which_desc(struct char_data *ch, struct char_data *target)')
 code += function('char_descs.c', 'char *show_pers(struct char_data *ch, struct char_data *vict)')
+code += function('act.informative.c', 'static void show_room_player_identity(struct char_data *i, struct char_data *ch)')
 code += function('act.other.c', 'int display_eligible_disguise_races(struct char_data *ch, const char *argument, int silent)')
 code += function('handler.c', 'int get_number(char **name)')
 handler = (src / 'handler.c').read_text()
@@ -232,6 +233,13 @@ int main(void) {
   { char name[]="Bob"; assert(!get_char_vis(alice,name,NULL,FIND_CHAR_ROOM)); }
   { char name[]="0.Bob"; assert(!get_char_vis(alice,name,NULL,FIND_CHAR_ROOM)); }
   { char name[]="Alice"; assert(get_char_vis(bob,name,NULL,FIND_CHAR_ROOM)==alice); }
+  /* Known room occupants include their name AND appearance; strangers reveal no name. */
+  *output=0; show_room_player_identity(alice,bob);
+  assert(strstr(output,"Alice (") && strstr(output,"human"));
+  *output=0; show_room_player_identity(bob,alice);
+  assert(!strstr(output,"Bob") && strstr(output,"human"));
+  *output=0; show_room_player_identity(alice,carol);
+  assert(!strstr(output,"Alice") && strstr(output,"human"));
   world[0].people=NULL;
   assert(!identity_matches(carol,alice,"Alice")); assert(identity_matches(carol,alice,"human"));
   assert(!strcmp(PERS(alice,bob),"Alice")); assert(strstr(PERS(alice,carol),"human"));
@@ -286,6 +294,8 @@ int main(void) {
   before=rolls; assert(!disguise_detected(bob,alice)); assert(rolls==before+1);
   assert(!identity_known(bob,alice)); assert(!identity_matches(bob,alice,"Alice"));
   assert(strstr(PERS(alice,bob),"silver hair")); assert(visible_sex(alice,bob)==SEX_FEMALE);
+  *output=0; show_room_player_identity(alice,bob);
+  assert(!strstr(output,"Alice") && strstr(output,"silver hair"));
   perception_bonus=100;
   for(i=0;i<20;i++) assert(!disguise_detected(bob,alice));
   assert(rolls==before+1);
@@ -294,6 +304,8 @@ int main(void) {
   SET_BIT_AR(AFF_FLAGS(bob),AFF_TRUE_SIGHT);
   assert(disguise_detected(bob,alice)); assert(!strcmp(PERS(alice,bob),"Alice"));
   assert(visible_sex(alice,bob)==SEX_MALE); assert(rolls==before+1);
+  *output=0; show_room_player_identity(alice,bob);
+  assert(strstr(output,"Alice (an adult male human") && !strstr(output,"silver hair"));
   *output=0; show_disguise_notice(alice,bob);
   assert(strstr(output,"Alice\'s true form is an adult male human"));
   assert(strstr(output,"Alice is disguised as an adolescent female human with short silver hair and green eyes.\r\n"));

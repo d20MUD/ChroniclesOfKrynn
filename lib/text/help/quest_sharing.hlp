@@ -1,0 +1,48 @@
+QUESTSHARE QUEST-SHARE QUESTSHARING
+
+	g>Description:	n
+
+Share an active quest with another player in your party. The recipient must
+choose to accept before the quest is added to their list. Sharing does not
+transfer your progress, remove your quest, or mark anything completed.
+
+	g>Usage:	n
+
+  quest progress
+  quest share <index> <player>
+  quest accept
+  quest decline
+
+Use quest progress to see your active quest indexes. For example:
+
+  quest share 0 Caide
+
+The recipient can then type quest accept or quest decline. Offers expire after
+two minutes. A player can have only one pending offer at a time.
+
+	g>Requirements:	n
+
+Both characters must be players, connected, in the same party, and in the same
+room. The sharing player must still have the quest active when it is accepted.
+
+The recipient must qualify for the quest normally: meet its level limits,
+complete required previous quests and dialogue branches, possess any required
+object in inventory or equipment, and have a free quest slot. They cannot
+already have the quest, or repeat a completed quest unless it is repeatable.
+Shared quests do not receive staff eligibility overrides.
+
+These requirements are checked when the offer is sent and again when accepted.
+If the offer can no longer be accepted, request a new offer after resolving
+the problem. An accepted quest begins with fresh progress and its full normal
+time allowance, independently of the sharing player's progress and timer.
+
+	g>Builder Notes:	n
+
+The NO-SHARE quest flag in QEDIT prevents sharing. Existing quests remain
+shareable unless this flag is set. Changing the flag also prevents acceptance
+of an outstanding offer for that quest. The flag does not prevent normal
+questmaster joining or change the separate rules for party objective credit.
+
+	ySee also:	n QUEST, GROUP, QEDIT
+#0
+$

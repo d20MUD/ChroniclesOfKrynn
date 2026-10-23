@@ -244,7 +244,7 @@
 #define SPELL_CUNNING 125           // done
 #define SPELL_WISDOM 126            // done
 #define SPELL_CHARISMA 127          // done
-#define SPELL_FOG_CLOUD 128          // done
+#define SPELL_FOG_CLOUD 128         // done
 #define SPELL_ACID_SPLASH 129       // cantrip, unfinished
 #define SPELL_RAY_OF_FROST 130      // cantrip, unfinished
 #define SPELL_WIZARD_EYE 131        // done
@@ -334,7 +334,7 @@
 #define SPELL_GREATER_SPELL_MANTLE 214 // done
 #define SPELL_MASS_ENHANCE 215         // done
 #define SPELL_PORTAL 216               // done
-#define SPELL_GUST_OF_WIND 217         // done  
+#define SPELL_GUST_OF_WIND 217         // done
 #define SPELL_HOLY_SWORD 218           // done (paladin)
 #define SPELL_INCENDIARY 219           // incendiary cloud proc
 /* some cleric spells */
@@ -619,7 +619,11 @@
 #define SPELL_AURAK_ENERGY_RAY 536
 #define SPELL_AURAK_BREATH 537
 #define SPELL_AURAK_DEATH_THROES 538
-#define NUM_SPELLS 539
+
+#define SPELL_PROTECTION_FROM_POISON 539
+#define SPELL_PANACEA 540
+
+#define NUM_SPELLS 541
 #define LAST_SPELL_DEFINE NUM_SPELLS + 1
 
 #define MAX_SPELL_AFFECTS 6 /* change if more needed */
@@ -980,9 +984,6 @@
  * 1)  if you want this spell to be avaiable as a npc spellup, mobact.c
  * 2)  if you want this spell to be available as a npc nuke, mobact.c
  */
-
-#define SPELL_PROTECTION_FROM_POISON 1689
-#define SPELL_PANACEA 1690
 
 /* Insert new spells here, up to MAX_SPELLS */
 /* make sure this matches up with structs.h spellbook define */
@@ -1658,7 +1659,8 @@ struct spell_info_type
 
   bool quest; // is this a quest spell?
 
-  bool no_player; // if true, spell will not appear in player spell lists and cannot be cast by players
+  bool
+      no_player; // if true, spell will not appear in player spell lists and cannot be cast by players
 
   /* TODO: d20pfsrd expansion */
 
@@ -1954,6 +1956,7 @@ bool isThornMagic(struct char_data *ch, int spellnum);
 bool isSkullMagic(struct char_data *ch, int spellnum);
 bool isDragonRiderMagic(struct char_data *ch, int spellnum);
 bool isBozakMagic(struct char_data *ch, int spellnum);
+bool isShifterMagic(struct char_data *ch, int spellnum);
 bool isAurakMagic(struct char_data *ch, int spellnum);
 bool prepare_aurak_magic(struct char_data *ch, int spellnum, int casttype);
 int find_cantrip_class(struct char_data *ch, int spellnum);

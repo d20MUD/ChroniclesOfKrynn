@@ -896,7 +896,7 @@ void qedit_parse(struct descriptor_data *d, char *arg)
       break;
     else
     {
-      TOGGLE_BIT(OLC_QUEST(d)->flags, number);
+      TOGGLE_BIT(OLC_QUEST(d)->flags, 1L << (number - 1));
       qedit_disp_flag_menu(d);
     }
     return;

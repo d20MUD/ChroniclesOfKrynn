@@ -2266,6 +2266,10 @@ int load_char(const char *name, struct char_data *ch)
   if (CLASS_LEVEL(ch, CLASS_DRAGONRIDER) > 0)
     HAS_REAL_FEAT(ch, FEAT_DRAGON_FLIGHT) = 1;
 
+  /* Existing shifters also receive the new level-one class ability. */
+  if (CLASS_LEVEL(ch, CLASS_SHIFTER) > 0)
+    HAS_REAL_FEAT(ch, FEAT_SHIFTER_GUISE) = 1;
+
   reconcile_alter_self(ch);
 
   /* Legacy nonmagical race-only disguises must be reapplied using the new command.

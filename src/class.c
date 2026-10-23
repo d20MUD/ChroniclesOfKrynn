@@ -8661,6 +8661,7 @@ void load_class_list(void)
   /* feat assignment */
   /*              class num     feat                                 cfeat lvl stack */
   feat_assignment(CLASS_SHIFTER, FEAT_LIMITLESS_SHAPES, Y, 1, N);
+  feat_assignment(CLASS_SHIFTER, FEAT_SHIFTER_GUISE, Y, 1, N);
   feat_assignment(CLASS_SHIFTER, FEAT_SHIFTER_SHAPES_1, Y, 2, N);
   feat_assignment(CLASS_SHIFTER, FEAT_SHIFTER_SHAPES_2, Y, 4, N);
   feat_assignment(CLASS_SHIFTER, FEAT_SHIFTER_SHAPES_3, Y, 6, N);

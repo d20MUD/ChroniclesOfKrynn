@@ -56,12 +56,16 @@
 #define SCMD_QUEST_PROGRESS 4 /* Show progress of current quest       */
 #define SCMD_QUEST_STATUS 5   /* Show complete details of a quest     */
 #define SCMD_QUEST_ASSIGN 6   /* Staff complete quest for target      */
-#define SCMD_QUEST_WALKTO 7   /* Walkto quest target                  */
+#define SCMD_QUEST_SHARE 7     /* Offer an active quest to a party member */
+#define SCMD_QUEST_ACCEPT 8    /* Accept a pending quest offer */
+#define SCMD_QUEST_DECLINE 9   /* Decline a pending quest offer */
+#define SCMD_QUEST_WALKTO 10   /* Walkto quest target                  */
 
 /* AQ Flags (much room for expansion) ********************************* */
 #define AQ_REPEATABLE (1 << 0)         /* Quest can be repeated                */
 #define AQ_REPLACE_OBJ_REWARD (1 << 1) /* Quest obj reward can be reacquired if lost */
-#define NUM_AQ_FLAGS 2
+#define AQ_NO_SHARE (1 << 2)           /* Quest cannot be shared with party members */
+#define NUM_AQ_FLAGS 3
 
 /* Main quest struct ************************************************** */
 struct aq_data

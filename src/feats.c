@@ -4924,6 +4924,12 @@ void assign_feats(void)
         "Use the weaponprof command for the list of specific weapons.");
 
   /* Shifter */
+  feato(FEAT_SHIFTER_GUISE, "shifter guise", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "Cast disguise self and alter self at will.",
+        "Granted at shifter level 1. Cast disguise self and alter self at will using the cast "
+        "command, without preparing spells or expending spell slots. These abilities use "
+        "your total character level for caster level and retain normal casting actions, "
+        "durations, and transformation restrictions.");
   /*1*/ feato(FEAT_LIMITLESS_SHAPES, "limitless shapes", TRUE, FALSE, FALSE,
               FEAT_TYPE_CLASS_ABILITY, "no limit to number of times a shifter changes shapes",
               "no limit to number of times a shifter changes shapes");
@@ -7666,7 +7672,9 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
   int i, sortpos, j;
   int none_shown = TRUE;
   int mode = 0;
-  char buf[MAX_STRING_LENGTH] = {'\0'}, buf2[MAX_STRING_LENGTH] = {'\0'}, buf3[150] = {'\0'};
+  char buf[MAX_STRING_LENGTH] = {'\0'}, buf2[MAX_STRING_LENGTH] = {'\0'};
+  /* Leave room for a full display name and its school, weapon, or rank suffix. */
+  char buf3[MAX_INPUT_LENGTH * 2] = {'\0'};
   int count = 0;
   int subfeat;
   int line_length = 80; /* Width of the display. */

@@ -154,6 +154,9 @@ bool concentration_check(struct char_data *ch, int spellnum)
       (spellnum == SPELL_AURAK_ENERGY_RAY || spellnum == SPELL_AURAK_BREATH))
     spell_level = 1; /* Racial abilities have no class spell-list entry. */
 
+  if (CASTING_CLASS(ch) == CLASS_SHIFTER && isShifterMagic(ch, spellnum))
+    spell_level = spellnum == SPELL_ALTER_SELF ? 2 : 1;
+
   if (IS_NPC(ch))
   {
     spell_level = MIN(GET_LEVEL(ch), 17);
@@ -2168,6 +2171,8 @@ void finishCasting(struct char_data *ch)
         (CASTING_CLASS(ch) == CLASS_PSIONICIST) ? GET_PSIONIC_LEVEL(ch) : CASTER_LEVEL(ch);
     if (CASTING_CLASS(ch) == CLASS_SHADOWDANCER)
       cast_level = ARCANE_LEVEL(ch) + CLASS_LEVEL(ch, CLASS_SHADOWDANCER);
+    if (CASTING_CLASS(ch) == CLASS_SHIFTER && isShifterMagic(ch, spellnum))
+      cast_level = GET_LEVEL(ch);
     if (!IS_NPC(ch) && GET_CASTING_CLASS(ch) == CLASS_SUMMONER && spellnum > 0 &&
         spellnum < NUM_SPELLS)
     {
@@ -2735,8 +2740,9 @@ static int cast_spell_with_type_and_slot(struct char_data *ch, struct char_data 
   }
 
   treat_as_at_will = canCastAtWill(ch, spellnum);
-  if (treat_as_at_will && isAurakMagic(ch, spellnum) && casttype == CAST_SPELL)
-    casttype = CAST_INNATE; /* Preserve racial source through delayed casting. */
+  if (treat_as_at_will && (isAurakMagic(ch, spellnum) || isShifterMagic(ch, spellnum)) &&
+      casttype == CAST_SPELL)
+    casttype = CAST_INNATE; /* Preserve racial/class ability source through delayed casting. */
 
   /* these are all (most likely) deprecated dummy checks added by zusuk */
   if (ch && IN_ROOM(ch) > top_of_world)
@@ -3298,6 +3304,12 @@ will be using for casting this spell */
       {
         clevel = GET_PSIONIC_LEVEL(ch);
         CASTING_CLASS(ch) = CLASS_PSIONICIST;
+      }
+      else if (treat_as_at_will && isShifterMagic(ch, spellnum))
+      {
+        /* Never extract a prepared spell when using the class ability. */
+        clevel = GET_LEVEL(ch);
+        CASTING_CLASS(ch) = CLASS_SHIFTER;
       }
       else if (isWarlockMagic(ch, spellnum))
       {
@@ -4323,6 +4335,8 @@ return;
 
         if (isWarlockMagic(ch, spellnum))
           atwill_class = CLASS_WARLOCK;
+        else if (isShifterMagic(ch, spellnum))
+          atwill_class = CLASS_SHIFTER;
         else if (isAurakMagic(ch, spellnum))
           atwill_class = CLASS_SORCERER;
         else if (spellnum == SPELL_OVERLAND_FLIGHT && isDragonRiderMagic(ch, spellnum))
@@ -7173,6 +7187,8 @@ sbyte canCastAtWill(struct char_data *ch, int spellnum)
 {
   if (GET_LEVEL(ch) >= LVL_IMMORT)
     return true;
+  if (isShifterMagic(ch, spellnum))
+    return true;
   if (find_cantrip_class(ch, spellnum) != CLASS_UNDEFINED)
     return true;
   if (isWarlockMagic(ch, spellnum) && is_a_known_spell(ch, CLASS_WARLOCK, spellnum))
@@ -7251,6 +7267,14 @@ sbyte canCastAtWill(struct char_data *ch, int spellnum)
     return true;
 
   return false;
+}
+
+/* Class-granted magic requires the permanent feat, not a temporary gear bonus. */
+bool isShifterMagic(struct char_data *ch, int spellnum)
+{
+  return ch && !IS_NPC(ch) && CLASS_LEVEL(ch, CLASS_SHIFTER) > 0 &&
+         HAS_REAL_FEAT(ch, FEAT_SHIFTER_GUISE) &&
+         (spellnum == SPELL_DISGUISE_SELF || spellnum == SPELL_ALTER_SELF);
 }
 
 /* Read-only eligibility: casting UI and validation may query this repeatedly. */

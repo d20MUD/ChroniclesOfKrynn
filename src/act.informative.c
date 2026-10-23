@@ -1016,6 +1016,19 @@ static void look_at_char(struct char_data *i, struct char_data *ch)
   }
 }
 
+/* Room listings include appearance even when the viewer knows the player's name. */
+static void show_room_player_identity(struct char_data *i, struct char_data *ch)
+{
+  char *description = which_desc(ch, i);
+
+  if (identity_known(ch, i))
+    send_to_char(ch, "%s (%s)", GET_NAME(i), description);
+  else
+    send_to_char(ch, "%s", CAP(description));
+
+  free(description);
+}
+
 static void list_one_char(struct char_data *i, struct char_data *ch)
 {
   struct obj_data *furniture;
@@ -1238,47 +1251,15 @@ static void list_one_char(struct char_data *i, struct char_data *ch)
     send_to_char(ch, "%s", CAP(short_descr));
     free(short_descr);
     short_descr = NULL;
-
-    /* pc: name/title if not disguise, otherwise disguise info */
-  }
-  else if (has_true_sight(ch) && (has_altered_form(i) || HAS_DISGUISE(i)))
-  {
-    send_to_char(ch, "\tn[%s] %s", race_list[GET_REAL_RACE(i)].abbrev_color, PERS(i, ch));
-  }
-  else if (HAS_DISGUISE(i) || IS_SIVAK_FORM(i))
-  {
-    send_to_char(ch, "%s", PERS(i, ch));
   }
   else
   {
-    if (!GET_DISGUISE_RACE(i))
-    {
-      /* If intro system is off and no title is set, show name */
-      if (!CONFIG_USE_INTRO_SYSTEM && !*GET_TITLE(i))
-        send_to_char(ch, "\tn[%s] %s", RACE_ABBR(i), PERS(i, ch));
-      else
-        send_to_char(ch, "\tn[%s] %s", RACE_ABBR(i), show_pers(i, ch));
-    }
-    else if (AFF_FLAGGED(i, AFF_WILD_SHAPE))
-    {
-      char *an_a, *race_name;
-      an_a = strdup(AN(race_list[GET_DISGUISE_RACE(i)].type));
-      race_name = strdup(race_list[GET_DISGUISE_RACE(i)].type);
-      *race_name = LOWER(*race_name);
-      send_to_char(ch, "%s %s", CAP(an_a), race_name);
-      free(an_a);
-      free(race_name);
-      an_a = NULL;
-      race_name = NULL;
-    }
-    else
-    {
-      char *a_an;
-      a_an = strdup(AN(race_list[GET_DISGUISE_RACE(i)].type));
-      send_to_char(ch, "%s %s", CAP(a_an), race_list[GET_DISGUISE_RACE(i)].type);
-      free(a_an);
-      a_an = NULL;
-    }
+    if (has_true_sight(ch) && (has_altered_form(i) || HAS_DISGUISE(i)))
+      send_to_char(ch, "\tn[%s] ", race_list[GET_REAL_RACE(i)].abbrev_color);
+    else if (!HAS_DISGUISE(i) && !IS_SIVAK_FORM(i) && !GET_DISGUISE_RACE(i))
+      send_to_char(ch, "\tn[%s] ", race_list[perceived_race(i, ch)].abbrev_color);
+
+    show_room_player_identity(i, ch);
   }
 
   /* end display of "middle": short-descrip/name/title etc */

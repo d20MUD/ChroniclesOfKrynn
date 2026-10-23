@@ -3145,9 +3145,10 @@ enum zone_terrain_type {
 #define FEAT_AURAK_MAGIC 1276
 #define FEAT_AURAK_DEATH_THROES 1277
 #define FEAT_SIVAK_SCALES 1278
-#define FEAT_LAST_FEAT 1279
+#define FEAT_SHIFTER_GUISE 1279
+#define FEAT_LAST_FEAT 1280
 /** FEAT_LAST_FEAT + 1 ***/
-#define NUM_FEATS 1280
+#define NUM_FEATS 1281
 /** absolute cap **/
 #define MAX_FEATS 1500
 /*****/
@@ -7913,6 +7914,11 @@ struct char_data
   struct trade_session_data *trade; /**< Active player trade session, if any */
   struct char_data *trade_invite_from; /**< Player who has requested a trade with this character */
   struct char_data *trade_invite_to;   /**< Player this character has requested a trade with */
+
+  /* Ephemeral quest offer: use an ID rather than a pointer to another player. */
+  long quest_share_from_id;
+  qst_vnum quest_share_vnum;
+  time_t quest_share_expires;
 
   long pref; /**< unique session id */
 

@@ -75,7 +75,7 @@ const char *quest_types[NUM_AQ_TYPES + 1] = {"Acquire Object", /* 0 */
                                              "Dialogue Quest",
                                              "\n"};
 
-const char *aq_flags[] = {"REPEATABLE", "REPLACE-OBJ-REWARD", "\n"};
+const char *aq_flags[] = {"REPEATABLE", "REPLACE-OBJ-REWARD", "NO-SHARE", "\n"};
 
 /*--------------------------------------------------------------------------
  * Local (file scope) global variables
@@ -84,15 +84,17 @@ const char *aq_flags[] = {"REPEATABLE", "REPLACE-OBJ-REWARD", "\n"};
 static int cmd_tell;
 
 static const char *quest_cmd[] = {"list", "history", "join", "leave", "progress",
-                                  "status", "assign", "\n"};
+                                  "status", "assign", "share", "accept", "decline", "\n"};
 
 static const char *quest_mort_usage =
   "Usage: quest list | history <optional nn> | progress <optional nn> | join <nn> | leave <nn>\r\n"
+  "Share with your party: quest share <index> <player> | quest accept | quest decline\r\n"
   "Use 'walkto questtarget' or 'walkto questmaster' to navigate to your quest objective.";
 
 static const char *quest_imm_usage =
   "Usage: quest list | history <optional nn> | progress <optional nn> | join <nn> | leave <nn> "
   "| status <vnum> | assign <target> <vnum>\r\n"
+  "Share with your party: quest share <index> <player> | quest accept | quest decline\r\n"
   "Use 'walkto questtarget' or 'walkto questmaster' to navigate to your quest objective.";
 
 /*--------------------------------------------------------------------------*/
@@ -1256,22 +1258,22 @@ void quest_hist(struct char_data *ch, char argument[MAX_STRING_LENGTH])
   }
 }
 
-/* rewrote this so quest objects can be equipped -zusuk */
-/* 2nd re-write to allow for taking multiple quests -z */
-void quest_join(struct char_data *ch, struct char_data *qm, char argument[MAX_INPUT_LENGTH])
+/* Joining and sharing must enforce the same quest requirements. Shared offers
+ * never use the normal immortal overrides. No state changes occur here. */
+static bool quest_join_eligible(struct char_data *ch, qst_rnum rnum, int *slot,
+                                bool allow_staff_override)
 {
-  qst_vnum vnum = NOTHING;
-  qst_rnum rnum = NOWHERE;
+  qst_vnum vnum = QST_NUM(rnum);
   obj_rnum objrnum = NOTHING;
   char buf[MAX_INPUT_LENGTH] = {'\0'};
   bool has_quest_object = FALSE, found = FALSE;
+  bool staff_override = allow_staff_override && GET_LEVEL(ch) >= LVL_IMMORT;
   int i = 0, index = 0, sr_index = 0;
 
-  if (!*argument)
+  if (IS_NPC(ch) || QST_TYPE(rnum) < 0 || QST_TYPE(rnum) >= NUM_AQ_TYPES)
   {
-    snprintf(buf, sizeof(buf), "\r\n%s, what quest did you wish to join?\r\n", GET_NAME(ch));
-    send_to_char(ch, "%s", buf);
-    return;
+    send_to_char(ch, "That quest is not available.\r\n");
+    return FALSE;
   }
 
   /* got a spare slot to join a quest? */
@@ -1289,28 +1291,8 @@ void quest_join(struct char_data *ch, struct char_data *qm, char argument[MAX_IN
     snprintf(buf, sizeof(buf), "\r\n%s, but you don't have any spare slots to join a quest!\r\n",
              GET_NAME(ch));
     send_to_char(ch, "%s", buf);
-    return;
+    return FALSE;
   }
-
-  /* assign vnum */
-  if ((vnum = find_quest_by_qmnum(ch, GET_MOB_VNUM(qm), atoi(argument))) == NOTHING)
-  {
-    snprintf(buf, sizeof(buf), "\r\n%s, I don't know of such a quest!\r\n", GET_NAME(ch));
-    send_to_char(ch, "%s", buf);
-    return;
-  }
-
-  /*debug*/ // send_to_char(ch, "Vnum of this quest: %d.\r\n", vnum);
-
-  /* assign rnum */
-  if ((rnum = real_quest(vnum)) == NOTHING)
-  {
-    snprintf(buf, sizeof(buf), "\r\n%s, I don't know of such a quest!\r\n", GET_NAME(ch));
-    send_to_char(ch, "%s", buf);
-    return;
-  }
-
-  /*debug*/ // send_to_char(ch, "Rnum of this quest: %d.\r\n", rnum);
 
   /* already on this particular quest? */
   found = FALSE; /* reset variable */
@@ -1321,43 +1303,43 @@ void quest_join(struct char_data *ch, struct char_data *qm, char argument[MAX_IN
   {
     snprintf(buf, sizeof(buf), "\r\n%s, you already have accepted that quest!\r\n", GET_NAME(ch));
     send_to_char(ch, "%s", buf);
-    return;
+    return FALSE;
   }
 
   /* quest requirements section */
 
-  if ((GET_LEVEL(ch) < QST_MINLEVEL(rnum)) && GET_LEVEL(ch) < LVL_IMMORT)
+  if ((GET_LEVEL(ch) < QST_MINLEVEL(rnum)) && !staff_override)
   {
     snprintf(buf, sizeof(buf), "\r\n%s, you are not high enough level for that quest!\r\n",
              GET_NAME(ch));
     send_to_char(ch, "%s", buf);
-    return;
+    return FALSE;
   }
-  else if (GET_LEVEL(ch) >= LVL_IMMORT)
+  else if (staff_override)
   {
     send_to_char(ch, "\tRNOTE: you are over-riding Min-Level\tn\r\n");
   }
 
-  if ((GET_LEVEL(ch) > QST_MAXLEVEL(rnum)) && GET_LEVEL(ch) < LVL_IMMORT)
+  if ((GET_LEVEL(ch) > QST_MAXLEVEL(rnum)) && !staff_override)
   {
     snprintf(buf, sizeof(buf), "\r\n%s, you are too experienced for that quest!\r\n", GET_NAME(ch));
     send_to_char(ch, "%s", buf);
-    return;
+    return FALSE;
   }
-  else if (GET_LEVEL(ch) >= LVL_IMMORT)
+  else if (staff_override)
   {
     send_to_char(ch, "\tRNOTE: you are over-riding Max-Level\tn\r\n");
   }
 
   /* repeatable quests are handled here */
   if (is_complete(ch, vnum) && !(IS_SET(QST_FLAGS(rnum), AQ_REPEATABLE)) &&
-      GET_LEVEL(ch) < LVL_IMMORT)
+      !staff_override)
   {
     snprintf(buf, sizeof(buf), "\r\n%s, you have already completed that quest!\r\n", GET_NAME(ch));
     send_to_char(ch, "%s", buf);
-    return;
+    return FALSE;
   }
-  else if (GET_LEVEL(ch) >= LVL_IMMORT)
+  else if (staff_override)
   {
     send_to_char(ch, "\tRNOTE: you are over-riding 'quest completed'\tn\r\n");
   }
@@ -1368,7 +1350,7 @@ void quest_join(struct char_data *ch, struct char_data *qm, char argument[MAX_IN
     snprintf(buf, sizeof(buf), "\r\n%s, that quest is not available to you yet! (quest chain)\r\n",
              GET_NAME(ch));
     send_to_char(ch, "%s", buf);
-    return;
+    return FALSE;
   }
 
   // if this is a dialogue quest's alternative quest, we can join it only if:
@@ -1384,7 +1366,7 @@ void quest_join(struct char_data *ch, struct char_data *qm, char argument[MAX_IN
       else
         send_to_char(ch,
                      "Error getting dialogue alternative quest rnum. Please report to staff.\r\n");
-      return;
+      return FALSE;
     }
   }
 
@@ -1397,14 +1379,14 @@ void quest_join(struct char_data *ch, struct char_data *qm, char argument[MAX_IN
     if (is_dialogue_quest_failed(ch, QST_PREV(rnum)))
     {
       qst_rnum prev_quest = real_quest(QST_PREV(rnum));
-      qst_vnum alt_quest = aquest_table[prev_quest].dialogue_alternative_quest;
+      qst_vnum alt_quest = prev_quest == NOTHING ? NOTHING : QST_DIAGN(prev_quest);
 
       // Only block if there IS an alternative quest and it's NOT complete
       if (alt_quest != NOTHING && alt_quest > 0 && !is_complete(ch, alt_quest))
       {
         send_to_char(ch, "The previous quest was a dialogue quest which failed. You will need to "
                          "complete its alternative quest in order to take this quest.\r\n");
-        return;
+        return FALSE;
       }
     }
   }
@@ -1432,9 +1414,17 @@ void quest_join(struct char_data *ch, struct char_data *qm, char argument[MAX_IN
       snprintf(buf, sizeof(buf), "\r\n%s, you need to have %s first!\r\n", GET_NAME(ch),
                obj_proto[real_object(QST_PREREQ(rnum))].short_description);
       send_to_char(ch, "%s", buf);
-      return;
+      return FALSE;
     }
   }
+
+  *slot = index;
+  return TRUE;
+}
+
+static void quest_begin(struct char_data *ch, qst_rnum rnum, int index)
+{
+  char buf[MAX_INPUT_LENGTH] = {'\0'};
 
   /* we made it! */
   act("You join the quest.", TRUE, ch, NULL, NULL, TO_CHAR);
@@ -1473,6 +1463,27 @@ void quest_join(struct char_data *ch, struct char_data *qm, char argument[MAX_IN
   }
   send_to_char(ch, "%s", buf);
   save_char(ch, 0);
+}
+
+void quest_join(struct char_data *ch, struct char_data *qm, char argument[MAX_INPUT_LENGTH])
+{
+  qst_vnum vnum;
+  qst_rnum rnum;
+  int slot;
+
+  if (!*argument)
+  {
+    send_to_char(ch, "What quest did you wish to join?\r\n");
+    return;
+  }
+  vnum = find_quest_by_qmnum(ch, GET_MOB_VNUM(qm), atoi(argument));
+  if (vnum == NOTHING || (rnum = real_quest(vnum)) == NOTHING)
+  {
+    send_to_char(ch, "I don't know of such a quest!\r\n");
+    return;
+  }
+  if (quest_join_eligible(ch, rnum, &slot, TRUE))
+    quest_begin(ch, rnum, slot);
 }
 
 /* lists available quests, can also accept vnum or list-number to view
@@ -2572,12 +2583,145 @@ ACMDU(do_walkto_quest)
 /* Quest Command Processing Functions                                       */
 /*--------------------------------------------------------------------------*/
 
+#define QUEST_SHARE_TIMEOUT 120
+
+static void quest_share_clear(struct char_data *ch)
+{
+  ch->quest_share_from_id = 0;
+  ch->quest_share_vnum = NOTHING;
+  ch->quest_share_expires = 0;
+}
+
+static bool quest_share_party(struct char_data *from, struct char_data *to)
+{
+  return from && to && from != to && !IS_NPC(from) && !IS_NPC(to) &&
+         from->desc && IS_PLAYING(from->desc) && to->desc && IS_PLAYING(to->desc) &&
+         GROUP(from) && GROUP(from) == GROUP(to) && IN_ROOM(from) != NOWHERE &&
+         IN_ROOM(from) == IN_ROOM(to);
+}
+
+static bool quest_share_active(struct char_data *ch, qst_vnum vnum)
+{
+  int index;
+  for (index = 0; index < MAX_CURRENT_QUESTS; index++)
+    if (GET_QUEST(ch, index) == vnum && GET_QUEST_COUNTER(ch, index) > 0)
+      return TRUE;
+  return FALSE;
+}
+
+static void quest_share_offer(struct char_data *ch, const char *argument)
+{
+  char index_arg[MAX_INPUT_LENGTH], name[MAX_INPUT_LENGTH];
+  char *end;
+  long index;
+  qst_rnum rnum;
+  int slot;
+  struct char_data *recipient;
+
+  two_arguments(argument, index_arg, sizeof(index_arg), name, sizeof(name));
+  index = strtol(index_arg, &end, 10);
+  if (!*index_arg || *end || index < 0 || index >= MAX_CURRENT_QUESTS || !*name)
+  {
+    send_to_char(ch, "Usage: quest share <index from quest progress> <player>\r\n");
+    return;
+  }
+  if ((rnum = real_quest(GET_QUEST(ch, index))) == NOTHING ||
+      GET_QUEST_COUNTER(ch, index) <= 0)
+  {
+    send_to_char(ch, "You do not have an active quest in that slot.\r\n");
+    return;
+  }
+  if (IS_SET(QST_FLAGS(rnum), AQ_NO_SHARE))
+  {
+    send_to_char(ch, "That quest cannot be shared.\r\n");
+    return;
+  }
+  recipient = get_char_vis(ch, name, NULL, FIND_CHAR_ROOM);
+  if (!quest_share_party(ch, recipient))
+  {
+    send_to_char(ch, "You can only share quests with player party members in this room.\r\n");
+    return;
+  }
+  if (recipient->quest_share_expires > time(NULL))
+  {
+    send_to_char(ch, "That player already has a pending quest offer.\r\n");
+    return;
+  }
+  quest_share_clear(recipient);
+  if (!quest_join_eligible(recipient, rnum, &slot, FALSE))
+  {
+    send_to_char(ch, "That player does not qualify to accept this quest.\r\n");
+    return;
+  }
+
+  recipient->quest_share_from_id = GET_IDNUM(ch);
+  recipient->quest_share_vnum = QST_NUM(rnum);
+  recipient->quest_share_expires = time(NULL) + QUEST_SHARE_TIMEOUT;
+  send_to_char(ch, "You offer '%s' to %s. They must accept before it is added.\r\n",
+               QST_NAME(rnum), PERS(recipient, ch));
+  send_to_char(recipient, "%s offers to share the quest '%s' with you.\r\n%s\r\n"
+               "Type 'quest accept' to add it or 'quest decline' to refuse. "
+               "This offer expires in two minutes.\r\n",
+               PERS(ch, recipient), QST_NAME(rnum), QST_DESC(rnum));
+}
+
+static void quest_share_respond(struct char_data *ch, bool accept)
+{
+  struct char_data *from;
+  qst_rnum rnum;
+  qst_vnum vnum = ch->quest_share_vnum;
+  long from_id = ch->quest_share_from_id;
+  time_t expires = ch->quest_share_expires;
+  int slot;
+
+  quest_share_clear(ch);
+  if (!expires)
+  {
+    send_to_char(ch, "You have no pending quest offer.\r\n");
+    return;
+  }
+  if (expires <= time(NULL))
+  {
+    send_to_char(ch, "That quest offer has expired.\r\n");
+    return;
+  }
+  if (!accept)
+  {
+    send_to_char(ch, "You decline the quest offer.\r\n");
+    return;
+  }
+  for (from = character_list; from; from = from->next)
+    if (!IS_NPC(from) && GET_IDNUM(from) == from_id)
+      break;
+  if (!quest_share_party(from, ch))
+  {
+    send_to_char(ch, "The sharing player must still be in your party and in this room.\r\n");
+    return;
+  }
+  if ((rnum = real_quest(vnum)) == NOTHING || IS_SET(QST_FLAGS(rnum), AQ_NO_SHARE) ||
+      !quest_share_active(from, vnum))
+  {
+    send_to_char(ch, "That quest is no longer available to share.\r\n");
+    return;
+  }
+  if (!quest_join_eligible(ch, rnum, &slot, FALSE))
+    return;
+
+  send_to_char(ch, "You accept the shared quest '%s'.\r\n", QST_NAME(rnum));
+  send_to_char(from, "%s accepts your shared quest '%s'.\r\n", PERS(ch, from), QST_NAME(rnum));
+  quest_begin(ch, rnum, slot);
+}
+
 ACMD(do_quest)
 {
   char arg1[MAX_INPUT_LENGTH] = {'\0'}, arg2[MAX_STRING_LENGTH] = {'\0'};
   int tp;
 
-  two_arguments(argument, arg1, sizeof(arg1), arg2, sizeof(arg2));
+  if (IS_NPC(ch))
+    return;
+  argument = one_argument(argument, arg1, sizeof(arg1));
+  skip_spaces_c(&argument);
+  strlcpy(arg2, argument, sizeof(arg2));
   if (!*arg1)
     send_to_char(ch, "%s\r\n", GET_LEVEL(ch) < LVL_IMMORT ? quest_mort_usage : quest_imm_usage);
   else if (((tp = search_block(arg1, quest_cmd, FALSE)) == -1))
@@ -2591,6 +2735,15 @@ ACMD(do_quest)
       /* list, join should have been handled by
        * (SPECIAL(questmaster)) questmaster spec proc */
       send_to_char(ch, "Sorry, but you cannot do that here!\r\n");
+      break;
+    case SCMD_QUEST_SHARE:
+      quest_share_offer(ch, arg2);
+      break;
+    case SCMD_QUEST_ACCEPT:
+      quest_share_respond(ch, TRUE);
+      break;
+    case SCMD_QUEST_DECLINE:
+      quest_share_respond(ch, FALSE);
       break;
     case SCMD_QUEST_HISTORY:
       quest_hist(ch, arg2);
