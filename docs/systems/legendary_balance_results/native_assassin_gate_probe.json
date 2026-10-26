@@ -1,0 +1,112 @@
+{
+  "provenance": "Real native engine loading copied level-30 flat snapshots; anonymized; not live SQL character state",
+  "validation_status": "Native stationary-target outgoing gate probe; incoming retaliation/major rotations/seven-role suite are not modeled. Native damage, crits, mitigation, procs, timers and target death are executed.",
+  "profiles": [
+    {
+      "role": "dual_wielder",
+      "candidate": "candidate_014",
+      "mode": "baseline",
+      "seconds": 30,
+      "class": 25,
+      "level": 30,
+      "equipped_objects": 25,
+      "legendary_channels": 0,
+      "attack_bonus": 49,
+      "primary_display_damage": 13,
+      "offhand_display_damage": 18,
+      "actual_hp_damage": 3131,
+      "damage_packets": 24
+    },
+    {
+      "role": "dual_wielder",
+      "candidate": "candidate_014",
+      "mode": "control",
+      "seconds": 30,
+      "class": 25,
+      "level": 30,
+      "equipped_objects": 25,
+      "legendary_channels": 0,
+      "attack_bonus": 49,
+      "primary_display_damage": 13,
+      "offhand_display_damage": 18,
+      "actual_hp_damage": 3131,
+      "damage_packets": 24
+    },
+    {
+      "role": "dual_wielder",
+      "candidate": "candidate_014",
+      "mode": "legendary",
+      "seconds": 30,
+      "class": 25,
+      "level": 30,
+      "equipped_objects": 25,
+      "legendary_channels": 7,
+      "attack_bonus": 50,
+      "primary_display_damage": 15,
+      "offhand_display_damage": 20,
+      "actual_hp_damage": 3153,
+      "damage_packets": 24
+    },
+    {
+      "role": "dual_wielder",
+      "candidate": "candidate_014",
+      "mode": "baseline",
+      "seconds": 600,
+      "class": 25,
+      "level": 30,
+      "equipped_objects": 25,
+      "legendary_channels": 0,
+      "attack_bonus": 49,
+      "primary_display_damage": 13,
+      "offhand_display_damage": 18,
+      "actual_hp_damage": 62568,
+      "damage_packets": 486
+    },
+    {
+      "role": "dual_wielder",
+      "candidate": "candidate_014",
+      "mode": "control",
+      "seconds": 600,
+      "class": 25,
+      "level": 30,
+      "equipped_objects": 25,
+      "legendary_channels": 0,
+      "attack_bonus": 49,
+      "primary_display_damage": 13,
+      "offhand_display_damage": 18,
+      "actual_hp_damage": 62568,
+      "damage_packets": 486
+    },
+    {
+      "role": "dual_wielder",
+      "candidate": "candidate_014",
+      "mode": "legendary",
+      "seconds": 600,
+      "class": 25,
+      "level": 30,
+      "equipped_objects": 25,
+      "legendary_channels": 7,
+      "attack_bonus": 50,
+      "primary_display_damage": 15,
+      "offhand_display_damage": 20,
+      "actual_hp_damage": 61138,
+      "damage_packets": 484
+    }
+  ],
+  "comparisons": [
+    {
+      "seconds": 30,
+      "baseline_damage": 3131,
+      "legendary_damage": 3153,
+      "outgoing_increase_percent": 0.7026509102523155,
+      "within_five_percent": true
+    },
+    {
+      "seconds": 600,
+      "baseline_damage": 62568,
+      "legendary_damage": 61138,
+      "outgoing_increase_percent": -2.2855133614627285,
+      "within_five_percent": true
+    }
+  ]
+}

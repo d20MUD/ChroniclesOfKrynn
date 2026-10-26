@@ -9,12 +9,15 @@
  **************************************************************************/
 
 #include "conf.h"
+#include "legendary_identity.h"
 #include "sysdep.h"
+#include "durable_file.h"
 #include "structs.h"
 #include "utils.h"
 #include "comm.h"
 #include "handler.h"
 #include "db.h"
+#include "estate.h"
 #include "interpreter.h"
 #include "spells.h"
 #include "act.h"
@@ -79,7 +82,15 @@ obj_save_data *objsave_parse_objects_db_sheath(char *name, long int sheath_idnum
 static int restore_persistent_object(struct obj_data *obj, const char *tag, const char *value)
 {
   int index, a, b, c, d, e;
-  if (!strcmp(tag, "SpCl"))
+  if (!strcmp(tag, "LgId")) legendary_identity_restore(obj, value);
+  else if (!strcmp(tag, "LgQn")) {
+    obj->legendary_quarantined = true;
+    if (!obj->legendary_uuid[0]) {
+      memset(obj->legendary_uuid, '0', 32);
+      obj->legendary_uuid[32] = '\0';
+    }
+  }
+  else if (!strcmp(tag, "SpCl"))
   {
     struct obj_special_ability *node=obj->special_abilities,*next;
     while(node) {next=node->next;free(node->command_word);free(node);node=next;}
@@ -199,6 +210,17 @@ int objsave_save_obj_record_db(struct obj_data *obj, struct char_data *ch, room_
   strlcat(ins_buf, line_buf, sizeof(ins_buf));
 #endif
 
+  if (obj->legendary_uuid[0]) {
+    char identity_line[64];
+    if (!legendary_identity_line(obj, identity_line, sizeof(identity_line))) {
+      extract_obj(temp);
+      return 0;
+    }
+    fputs(identity_line, fp);
+#ifdef OBJSAVE_DB
+    strlcat(ins_buf, identity_line, sizeof(ins_buf));
+#endif
+  }
   if (obj->estate_delivery_id) {
     fprintf(fp, "EId : %llu\n", obj->estate_delivery_id);
 #ifdef OBJSAVE_DB
@@ -1096,23 +1118,18 @@ int Crash_load(struct char_data *ch)
 static int Crash_save(struct obj_data *obj, struct char_data *ch, FILE *fp, int location)
 {
   struct obj_data *tmp;
-  int result;
-
+  int result = TRUE;
   if (obj)
   {
-    Crash_save(obj->next_content, ch, fp, location);
-    Crash_save(obj->contains, ch, fp, MIN(0, location) - 1);
-
-    /* save a single object to file */
-    result = objsave_save_obj_record(obj, ch, fp, location);
-
+    /* Continue the traversal after errors so the caller can restore every
+     * container weight, but propagate ANY failed child write. */
+    if (!Crash_save(obj->next_content, ch, fp, location)) result = FALSE;
+    if (!Crash_save(obj->contains, ch, fp, MIN(0, location) - 1)) result = FALSE;
+    if (!objsave_save_obj_record(obj, ch, fp, location)) result = FALSE;
     for (tmp = obj->in_obj; tmp; tmp = tmp->in_obj)
       GET_OBJ_WEIGHT(tmp) -= GET_OBJ_WEIGHT(obj);
-
-    if (!result)
-      return FALSE;
   }
-  return (TRUE);
+  return result;
 }
 
 // Like crash save but for pets
@@ -1253,104 +1270,63 @@ bool pet_save_objs(struct char_data *ch, struct char_data *owner, long int pet_i
 
 void Crash_crashsave(struct char_data *ch)
 {
-  char buf[MAX_INPUT_LENGTH] = {'\0'};
-  int j;
+  (void)Crash_crashsave_checked(ch);
+}
+
+bool Crash_crashsave_checked(struct char_data *ch)
+{
+  char filename[MAX_INPUT_LENGTH];
+  char *data = NULL;
+  size_t size = 0;
   FILE *fp;
-
-  if (IS_NPC(ch))
-    return;
-
-  if (!get_filename(buf, sizeof(buf), CRASH_FILE, GET_NAME(ch)))
-    return;
-
-  if (!(fp = fopen(buf, "w")))
-    return;
-
+  bool ok = true;
+  int j;
+  struct obj_data *bags[10] = {NULL};
+  if (IS_NPC(ch) || !get_filename(filename, sizeof(filename), CRASH_FILE, GET_NAME(ch))) return false;
+  fp = open_memstream(&data, &size);
+  if (!fp) return false;
 #ifdef OBJSAVE_DB
-  char del_buf[2048];
-  if (mysql_query(conn, "start transaction;"))
+  if (!conn || !mysql_available || mysql_query(conn, "START TRANSACTION")) { fclose(fp); free(data); return false; }
   {
-    log("SYSERR: Unable to start transaction for saving of player object data: %s",
-        mysql_error(conn));
-    fclose(fp);
-    return;
-  }
-  /* Delete existing save data.  In the future may just flag these for deletion. */
-  snprintf(del_buf, sizeof(del_buf), "delete from player_save_objs where name = '%s';",
-           GET_NAME(ch));
-  if (mysql_query(conn, del_buf))
-  {
-    log("SYSERR: Unable to delete player object save data: %s", mysql_error(conn));
-    mysql_query(conn, "rollback;");
-    fclose(fp);
-    return;
+    char *name = estate_quote(GET_NAME(ch));
+    ok = name && estate_query("DELETE FROM player_save_objs WHERE name='%s'", name);
+    free(name);
   }
 #endif
-
-  /* write to file rentcode: rentcode, time, cost for renting, gold, bank-gold */
-  if (!objsave_write_rentcode(fp, RENT_CRASH, 0, ch))
-  {
-#ifdef OBJSAVE_DB
-    mysql_query(conn, "rollback;");
-#endif
-    fclose(fp);
-    return;
-  }
-
-  for (j = 0; j < NUM_WEARS; j++)
+  if (ok) ok = objsave_write_rentcode(fp, RENT_CRASH, 0, ch);
+  for (j = 0; ok && j < NUM_WEARS; j++)
     if (GET_EQ(ch, j))
     {
-      /* recursive write-to-file function (like bags) */
-      if (!Crash_save(GET_EQ(ch, j), ch, fp, j + 1))
-      {
-        fclose(fp);
-#ifdef OBJSAVE_DB
-        mysql_query(conn, "rollback;");
-#endif
-        return;
-      }
-      /* makes sure containers have proper weight for carrying objects with weight value */
+      ok = Crash_save(GET_EQ(ch, j), ch, fp, j + 1);
       Crash_restore_weight(GET_EQ(ch, j));
     }
-
-  // bags
-  Crash_save(ch->bags->bag1, ch, fp, 0);
-  Crash_save(ch->bags->bag2, ch, fp, 0);
-  Crash_save(ch->bags->bag3, ch, fp, 0);
-  Crash_save(ch->bags->bag4, ch, fp, 0);
-  Crash_save(ch->bags->bag5, ch, fp, 0);
-  Crash_save(ch->bags->bag6, ch, fp, 0);
-  Crash_save(ch->bags->bag7, ch, fp, 0);
-  Crash_save(ch->bags->bag8, ch, fp, 0);
-  Crash_save(ch->bags->bag9, ch, fp, 0);
-  Crash_save(ch->bags->bag10, ch, fp, 0);
-
-  /* inventory: recursive write-to-file function (like bags) */
-  if (!Crash_save(ch->carrying, ch, fp, 0))
+  if (ch->bags)
   {
-    fclose(fp);
-#ifdef OBJSAVE_DB
-    mysql_query(conn, "rollback;");
-#endif
-    return;
+    bags[0]=ch->bags->bag1; bags[1]=ch->bags->bag2; bags[2]=ch->bags->bag3;
+    bags[3]=ch->bags->bag4; bags[4]=ch->bags->bag5; bags[5]=ch->bags->bag6;
+    bags[6]=ch->bags->bag7; bags[7]=ch->bags->bag8; bags[8]=ch->bags->bag9; bags[9]=ch->bags->bag10;
   }
-
-  /* makes sure containers have proper weight for carrying objects with weight value */
-  Crash_restore_weight(ch->carrying);
-
-  fprintf(fp, "$~\n");
-  fclose(fp);
-
-#ifdef OBJSAVE_DB
-  if (mysql_query(conn, "commit;"))
+  for (j = 0; ok && j < 10; j++)
   {
-    log("SYSERR: Unable to commit transaction for saving of player object data: %s",
-        mysql_error(conn));
-    mysql_query(conn, "rollback;");
-    return;
+    ok = Crash_save(bags[j], ch, fp, 0);
+    Crash_restore_weight(bags[j]);
   }
+  if (ok)
+  {
+    ok = Crash_save(ch->carrying, ch, fp, 0);
+    Crash_restore_weight(ch->carrying);
+  }
+  if (fprintf(fp, "$~\n") < 0 || ferror(fp)) ok = false;
+  if (fclose(fp)) ok = false;
+  if (ok) ok = durable_file_replace(filename, data, size);
+  free(data);
+#ifdef OBJSAVE_DB
+  if (ok) ok = mysql_query(conn, "COMMIT") == 0;
+  if (!ok) mysql_query(conn, "ROLLBACK");
 #endif
-  REMOVE_BIT_AR(PLR_FLAGS(ch), PLR_CRASH);
+  if (ok) REMOVE_BIT_AR(PLR_FLAGS(ch), PLR_CRASH);
+  else log("SYSERR: durable object checkpoint failed for %s", GET_NAME(ch));
+  return ok;
 }
 
 void Crash_idlesave(struct char_data *ch)
@@ -3210,6 +3186,14 @@ int objsave_save_obj_record_db_pet(struct obj_data *obj, struct char_data *ch,
 
   snprintf(line_buf, sizeof(line_buf), "#%d\n", GET_OBJ_VNUM(obj));
   strlcat(ins_buf, line_buf, sizeof(ins_buf));
+  if (obj->legendary_uuid[0]) {
+    if (!legendary_identity_line(obj, line_buf, sizeof(line_buf))) {
+      extract_obj(temp);
+      return 0;
+    }
+    strlcat(ins_buf, line_buf, sizeof(ins_buf));
+  }
+
 
 
   if (locate)
@@ -3952,6 +3936,14 @@ int objsave_save_obj_record_db_sheath(struct obj_data *obj, struct char_data *ch
 
   snprintf(line_buf, sizeof(line_buf), "#%d\n", GET_OBJ_VNUM(obj));
   strlcat(ins_buf, line_buf, sizeof(ins_buf));
+  if (obj->legendary_uuid[0]) {
+    if (!legendary_identity_line(obj, line_buf, sizeof(line_buf))) {
+      extract_obj(temp);
+      return 0;
+    }
+    strlcat(ins_buf, line_buf, sizeof(ins_buf));
+  }
+
 
   /**** start checks for modifications to default object! ***/
   /* is object modified from default values? */

@@ -117,6 +117,28 @@ circle_SOURCES = \
 	src/house.c \
 	src/housing.c \
 	src/estate.c \
+	src/legendary.c \
+	src/legendary_equipment.c \
+	src/legendary_techniques.c \
+	src/legendary_effects.c \
+	src/legendary_foundations.c \
+	src/legendary_techniques.h \
+	src/legendary_effects.h \
+	src/legendary_foundations.h \
+	src/legendary_equipment.h \
+	src/legendary_commands.c \
+	src/legendary_commands.h \
+	src/legendary_earnings.c \
+	src/legendary_earnings.h \
+	src/legendary_transaction.c \
+	src/legendary_transaction.h \
+	src/durable_file.c \
+	src/durable_file.h \
+	src/legendary.h \
+	src/legendary_store.c \
+	src/legendary_store.h \
+	src/legendary_identity.c \
+	src/legendary_identity.h \
 	src/auction_house.c \
 	src/player_shop.c \
 	src/hsedit.c \

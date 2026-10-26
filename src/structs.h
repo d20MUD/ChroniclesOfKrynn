@@ -1310,8 +1310,9 @@ enum zone_terrain_type {
 #define MOB_SUMMON_SOLAR 105
 #define MOB_FLIGHTLESS                                                                             \
   106 // Flightless mobs cannot fly even if they could under normal, non magical circumstances
+#define MOB_LEGENDARY_BOSS 107 /**< Marks an eligible endgame source of legendary boss materials. */
 /**********************/
-#define NUM_MOB_FLAGS 107
+#define NUM_MOB_FLAGS 108
 /**********************/
 /**********************/
 
@@ -3146,9 +3147,13 @@ enum zone_terrain_type {
 #define FEAT_AURAK_DEATH_THROES 1277
 #define FEAT_SIVAK_SCALES 1278
 #define FEAT_SHIFTER_GUISE 1279
-#define FEAT_LAST_FEAT 1280
+#define FEAT_IRDA_RACIAL_ADJUSTMENT 1280
+#define FEAT_IRDA_CHANGE_SHAPE 1281
+#define FEAT_AUGMENT_PHYSICALITY 1282
+#define FEAT_MIRAGE_FLARE 1283
+#define FEAT_LAST_FEAT 1284
 /** FEAT_LAST_FEAT + 1 ***/
-#define NUM_FEATS 1281
+#define NUM_FEATS 1285
 /** absolute cap **/
 #define MAX_FEATS 1500
 /*****/
@@ -4977,9 +4982,24 @@ enum zone_terrain_type {
 #define MATERIAL_JUTE 79
 #define MATERIAL_AGAVE 80
 
-#define NUM_MATERIALS 81
+#define MATERIAL_BRANCH_CORAL 81
+#define MATERIAL_FAN_CORAL 82
+#define MATERIAL_BLOOD_CORAL 83
+#define MATERIAL_DEEPWATER_CORAL 84
+#define MATERIAL_ADAMANT_CORAL 85
+#define MATERIAL_THIN_FISHSKIN 86
+#define MATERIAL_TOUGH_EELSKIN 87
+#define MATERIAL_SHARKSKIN 88
+#define MATERIAL_PRISTINE_SHARKSKIN 89
+#define MATERIAL_KELP_FIBER 90
+#define MATERIAL_SEAGRASS_FIBER 91
+#define MATERIAL_SPONGE_FIBER 92
+#define MATERIAL_SEA_COTTON 93
+#define MATERIAL_SEA_SILK 94
 
-#define NUM_CRAFT_MATS 61
+#define NUM_MATERIALS 95
+
+#define NUM_CRAFT_MATS 75
 #define NUM_CRAFT_MOTES 9
 
 #define NUM_CRAFT_GROUPS 9
@@ -5739,6 +5759,7 @@ enum zone_terrain_type {
 #define COMBAT_MANEUVER_TYPE_BITE 8
 #define COMBAT_MANEUVER_TYPE_SLAM 9
 #define COMBAT_MANEUVER_TYPE_GORE 10
+#define COMBAT_MANEUVER_TYPE_FORCED_MOVEMENT 11
 
 /* Critical hit types */
 #define CRIT_X2 0
@@ -6265,6 +6286,7 @@ struct crafting_data_info
 /** Trap Data Structure - Attached to rooms or objects */
 struct trap_data
 {
+  char legendary_disarm_id[33]; /* Runtime disarm-source identity, never copied. */
   int trap_type;              /* TRAP_TYPE_* constant (acid, fire, spike, etc) */
   int severity;               /* TRAP_SEVERITY_* (minor, average, strong, deadly, epic) */
   int trigger_type;           /* TRAP_TRIGGER_* (enter room, open container, etc) */
@@ -6292,6 +6314,9 @@ struct trap_data
 struct obj_data
 {
   unsigned long long estate_delivery_id;
+  char legendary_uuid[33]; /* Optional persistent instance identity, never a prototype ID. */
+  bool legendary_quarantined;
+  struct legendary_item_record *legendary_record; /* Owned runtime cache; not serialized. */
   obj_rnum item_number; /**< The unique id of this object instance. */
   room_rnum in_room;    /**< What room is the object lying in, or -1? */
 
@@ -7314,6 +7339,8 @@ struct player_special_data_saved
   unsigned long long sivak_active_form;
   time_t aurak_dominate_ready;
   time_t aurak_breath_ready;
+  time_t irda_augment_ready;
+  time_t irda_mirage_ready[3]; /* Each charge recharges five minutes after use. */
   int alter_self_race;
   bool alter_self_active;
   struct disguise_observation *disguise_observations;
@@ -7474,6 +7501,7 @@ struct player_special_data
   char appearance_cast_args[MAX_INPUT_LENGTH]; /* Per-caster choices survive delayed casting. */
   long housing_house_id, housing_room_id;
   unsigned long long estate_credit_receipt, estate_debit_receipt;
+  char legendary_operation[33]; /* Durable economic lock; LgTx player-file tag. */
   struct player_special_data_saved saved; /**< Information to be saved. */
 
   char *poofin;               /**< Description displayed to room on arrival of a god. */
@@ -7647,6 +7675,8 @@ struct affected_type
 
   struct affected_type *next; /**< The next affect in the list of affects. */
   sh_int specific;
+  int legendary_flags; /* Scripted/boss-locked condition provenance. */
+  int64_t legendary_expiry; /* Optional absolute expiry after Resolve. */
 };
 
 /* The Maximum number of types that can be required to bypass DR. */
@@ -7872,6 +7902,14 @@ struct trade_session_data;
 /** Master structure for PCs and NPCs. */
 struct char_data
 {
+  bool legendary_serializing; /* Temporary save-time gear removal is not unequip. */
+  bool legendary_knockdown; /* Genuine recoverable knockdown; never saved. */
+  struct legendary_foundation_state *legendary_foundations; /* Runtime contributions only. */
+  struct legendary_equipment_cache *legendary_equipment; /* Runtime only; never copied or saved. */
+  char legendary_encounter_id[33]; /* Runtime instance/death identity. */
+  bool legendary_test_encounter; /* Explicit staff/test exclusion. */
+  bool legendary_owned_instance; /* Ownership/summoning permanently excludes this instance. */
+  bool legendary_awards_pending; /* Ephemeral fast path; login scans durable source receipts. */
   int pfilepos;          /**< PC playerfile pos and id number */
   mob_rnum nr;           /**< NPC real instance number */
   int coords[2];         /**< Current coordinate location, used in wilderness. */

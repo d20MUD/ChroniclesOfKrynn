@@ -4,6 +4,7 @@
 #include "conf.h"
 #include "account.h"
 #include "sysdep.h"
+#include "legendary_equipment.h"
 #include <time.h>
 #include "structs.h"
 #include "bool.h"
@@ -414,6 +415,34 @@ int canonical_craft_material(int material)
 {
   switch (material)
   {
+  case CRAFT_MAT_BRANCH_CORAL:
+    return CRAFT_MAT_ASH_WOOD;
+  case CRAFT_MAT_FAN_CORAL:
+    return CRAFT_MAT_MAPLE_WOOD;
+  case CRAFT_MAT_BLOOD_CORAL:
+    return CRAFT_MAT_MAHAGONY_WOOD;
+  case CRAFT_MAT_DEEPWATER_CORAL:
+    return CRAFT_MAT_VALENWOOD;
+  case CRAFT_MAT_ADAMANT_CORAL:
+    return CRAFT_MAT_IRONWOOD;
+  case CRAFT_MAT_THIN_FISHSKIN:
+    return CRAFT_MAT_LOW_GRADE_HIDE;
+  case CRAFT_MAT_TOUGH_EELSKIN:
+    return CRAFT_MAT_MEDIUM_GRADE_HIDE;
+  case CRAFT_MAT_SHARKSKIN:
+    return CRAFT_MAT_HIGH_GRADE_HIDE;
+  case CRAFT_MAT_PRISTINE_SHARKSKIN:
+    return CRAFT_MAT_PRISTINE_GRADE_HIDE;
+  case CRAFT_MAT_KELP_FIBER:
+    return CRAFT_MAT_HEMP;
+  case CRAFT_MAT_SEAGRASS_FIBER:
+    return CRAFT_MAT_FLAX;
+  case CRAFT_MAT_SPONGE_FIBER:
+    return CRAFT_MAT_WOOL;
+  case CRAFT_MAT_SEA_COTTON:
+    return CRAFT_MAT_COTTON;
+  case CRAFT_MAT_SEA_SILK:
+    return CRAFT_MAT_SILK;
   case CRAFT_MAT_BAMBOO:
   case CRAFT_MAT_PINE:
   case CRAFT_MAT_TAMARISK:
@@ -496,6 +525,57 @@ int climate_material_variety(int material, int climate, int terrain)
   return material;
 }
 
+/* Sector comparisons tolerate aliases and never depend on zone terrain. */
+bool is_aquatic_harvesting_sector(int sector)
+{
+  return sector == SECT_WATER_SWIM || sector == SECT_WATER_NOSWIM ||
+         sector == SECT_UNDERWATER || sector == SECT_OCEAN || sector == SECT_RIVER ||
+         sector == SECT_UD_WATER || sector == SECT_UD_NOSWIM;
+}
+
+bool is_marine_harvesting_room(room_rnum room)
+{
+  return room != NOWHERE && room <= top_of_world &&
+         is_aquatic_harvesting_sector(world[room].sector_type);
+}
+
+int marine_material_variety(int material)
+{
+  switch (canonical_craft_material(material))
+  {
+  case CRAFT_MAT_ASH_WOOD:
+    return CRAFT_MAT_BRANCH_CORAL;
+  case CRAFT_MAT_MAPLE_WOOD:
+    return CRAFT_MAT_FAN_CORAL;
+  case CRAFT_MAT_MAHAGONY_WOOD:
+    return CRAFT_MAT_BLOOD_CORAL;
+  case CRAFT_MAT_VALENWOOD:
+    return CRAFT_MAT_DEEPWATER_CORAL;
+  case CRAFT_MAT_IRONWOOD:
+    return CRAFT_MAT_ADAMANT_CORAL;
+  case CRAFT_MAT_LOW_GRADE_HIDE:
+    return CRAFT_MAT_THIN_FISHSKIN;
+  case CRAFT_MAT_MEDIUM_GRADE_HIDE:
+    return CRAFT_MAT_TOUGH_EELSKIN;
+  case CRAFT_MAT_HIGH_GRADE_HIDE:
+    return CRAFT_MAT_SHARKSKIN;
+  case CRAFT_MAT_PRISTINE_GRADE_HIDE:
+    return CRAFT_MAT_PRISTINE_SHARKSKIN;
+  case CRAFT_MAT_HEMP:
+    return CRAFT_MAT_KELP_FIBER;
+  case CRAFT_MAT_FLAX:
+    return CRAFT_MAT_SEAGRASS_FIBER;
+  case CRAFT_MAT_WOOL:
+    return CRAFT_MAT_SPONGE_FIBER;
+  case CRAFT_MAT_COTTON:
+    return CRAFT_MAT_SEA_COTTON;
+  case CRAFT_MAT_SILK:
+    return CRAFT_MAT_SEA_SILK;
+  default:
+    return material;
+  }
+}
+
 const char *harvest_node_name(room_rnum room)
 {
   static char description[MAX_STRING_LENGTH];
@@ -515,6 +595,8 @@ const char *harvest_node_name(room_rnum room)
   material = world[room].harvest_material;
   if (material <= CRAFT_MAT_NONE || material >= NUM_CRAFT_MATS)
     return "an unknown resource";
+  if (material >= CRAFT_MAT_BRANCH_CORAL && material < NUM_CRAFT_MATS)
+    return crafting_material_nodes[material];
   climate = zone_table[world[room].zone].climate;
   if (climate <= ZONE_CLIMATE_UNSPECIFIED || climate >= NUM_ZONE_CLIMATES)
     return crafting_material_nodes[material];
@@ -561,7 +643,9 @@ const char *harvest_activity_name(room_rnum room)
       verb = "mining";
       break;
     case ABILITY_HARVEST_FORESTRY:
-      verb = "logging";
+      verb = world[room].harvest_material >= CRAFT_MAT_BRANCH_CORAL &&
+                     world[room].harvest_material <= CRAFT_MAT_ADAMANT_CORAL
+                 ? "harvesting" : "logging";
       break;
     case ABILITY_HARVEST_HUNTING:
       verb = "hunting";
@@ -597,7 +681,7 @@ void assign_harvest_materials_to_word(void)
 
 void assign_harvest_materials_to_room(room_rnum room)
 {
-  if (room == NOWHERE)
+  if (room == NOWHERE || room > top_of_world)
     return;
 
   int material_type = determine_harvest_material_for_room(room);
@@ -611,14 +695,23 @@ void assign_harvest_materials_to_room(room_rnum room)
 
 int determine_harvest_material_for_room(room_rnum room)
 {
-  if (room == NOWHERE)
+  if (room == NOWHERE || room > top_of_world)
     return 0;
 
   int zone_low = zone_table[world[room].zone].min_level;
   int zone_high = zone_table[world[room].zone].max_level;
   int zone_level = MIN(30, MAX(1, ((zone_high - zone_low) / 2) + zone_low));
   int grade = determine_grade_by_zone_level(zone_level);
-  int group = determine_random_material_group_by_sector_type(world[room].sector_type);
+  int group;
+  if (is_marine_harvesting_room(room))
+  {
+    int chance = dice(1, 100);
+    group = chance <= 30 ? CRAFT_GROUP_WOOD : chance <= 60 ? CRAFT_GROUP_HIDES :
+            chance <= 90 ? CRAFT_GROUP_CLOTH : chance <= 95 ? CRAFT_GROUP_HARD_METALS :
+            CRAFT_GROUP_SOFT_METALS;
+  }
+  else
+    group = determine_random_material_group_by_sector_type(world[room].sector_type);
 
   grade = determine_random_grade(grade);
 
@@ -631,6 +724,9 @@ int determine_harvest_material_for_room(room_rnum room)
   grade = MIN(5, MAX(1, grade));
 
   int material = determine_material_type_by_group_and_grade(group, grade);
+
+  if (is_marine_harvesting_room(room))
+    return marine_material_variety(material);
 
   return climate_material_variety(material, zone_table[world[room].zone].climate,
                                   zone_table[world[room].zone].terrain);
@@ -988,7 +1084,7 @@ int determine_number_of_harvest_units_for_room(void)
 
 bool will_room_have_harvest_materials(room_rnum room)
 {
-  if (room == NOWHERE)
+  if (room == NOWHERE || room > top_of_world)
     return FALSE;
 
   if (ROOM_FLAGGED(room, ROOM_HARVEST_NODE))
@@ -1004,6 +1100,8 @@ bool will_room_have_harvest_materials(room_rnum room)
 
 bool is_valid_harvesting_sector(int sector)
 {
+  if (is_aquatic_harvesting_sector(sector))
+    return TRUE;
   switch (sector)
   {
   case SECT_FIELD:
@@ -1033,7 +1131,7 @@ bool is_valid_harvesting_sector(int sector)
 
 bool room_has_harvest_materials(room_rnum room)
 {
-  if (room == NOWHERE)
+  if (room == NOWHERE || room > top_of_world)
     return FALSE;
 
   int i = 0;
@@ -1049,7 +1147,7 @@ bool is_someone_harvesting_room(room_rnum room)
 {
   struct char_data *ch = NULL;
 
-  if (room == NOWHERE)
+  if (room == NOWHERE || room > top_of_world)
     return FALSE;
 
   for (ch = world[room].people; ch; ch = ch->next_in_room)
@@ -1063,7 +1161,7 @@ bool is_someone_harvesting_room(room_rnum room)
 
 void wipe_room_harvest_materials(room_rnum room)
 {
-  if (room == NOWHERE)
+  if (room == NOWHERE || room > top_of_world)
     return;
 
   int i = 0;
@@ -4287,6 +4385,34 @@ int obj_material_to_craft_material(int material)
 {
   switch (material)
   {
+  case MATERIAL_BRANCH_CORAL:
+    return CRAFT_MAT_BRANCH_CORAL;
+  case MATERIAL_FAN_CORAL:
+    return CRAFT_MAT_FAN_CORAL;
+  case MATERIAL_BLOOD_CORAL:
+    return CRAFT_MAT_BLOOD_CORAL;
+  case MATERIAL_DEEPWATER_CORAL:
+    return CRAFT_MAT_DEEPWATER_CORAL;
+  case MATERIAL_ADAMANT_CORAL:
+    return CRAFT_MAT_ADAMANT_CORAL;
+  case MATERIAL_THIN_FISHSKIN:
+    return CRAFT_MAT_THIN_FISHSKIN;
+  case MATERIAL_TOUGH_EELSKIN:
+    return CRAFT_MAT_TOUGH_EELSKIN;
+  case MATERIAL_SHARKSKIN:
+    return CRAFT_MAT_SHARKSKIN;
+  case MATERIAL_PRISTINE_SHARKSKIN:
+    return CRAFT_MAT_PRISTINE_SHARKSKIN;
+  case MATERIAL_KELP_FIBER:
+    return CRAFT_MAT_KELP_FIBER;
+  case MATERIAL_SEAGRASS_FIBER:
+    return CRAFT_MAT_SEAGRASS_FIBER;
+  case MATERIAL_SPONGE_FIBER:
+    return CRAFT_MAT_SPONGE_FIBER;
+  case MATERIAL_SEA_COTTON:
+    return CRAFT_MAT_SEA_COTTON;
+  case MATERIAL_SEA_SILK:
+    return CRAFT_MAT_SEA_SILK;
   case MATERIAL_BAMBOO:
     return CRAFT_MAT_BAMBOO;
   case MATERIAL_PINE:
@@ -4412,6 +4538,34 @@ int craft_material_to_obj_material(int craftmat)
   /* Distinct object IDs preserve varieties through bundles and finished items. */
   switch (craftmat)
   {
+  case CRAFT_MAT_BRANCH_CORAL:
+    return MATERIAL_BRANCH_CORAL;
+  case CRAFT_MAT_FAN_CORAL:
+    return MATERIAL_FAN_CORAL;
+  case CRAFT_MAT_BLOOD_CORAL:
+    return MATERIAL_BLOOD_CORAL;
+  case CRAFT_MAT_DEEPWATER_CORAL:
+    return MATERIAL_DEEPWATER_CORAL;
+  case CRAFT_MAT_ADAMANT_CORAL:
+    return MATERIAL_ADAMANT_CORAL;
+  case CRAFT_MAT_THIN_FISHSKIN:
+    return MATERIAL_THIN_FISHSKIN;
+  case CRAFT_MAT_TOUGH_EELSKIN:
+    return MATERIAL_TOUGH_EELSKIN;
+  case CRAFT_MAT_SHARKSKIN:
+    return MATERIAL_SHARKSKIN;
+  case CRAFT_MAT_PRISTINE_SHARKSKIN:
+    return MATERIAL_PRISTINE_SHARKSKIN;
+  case CRAFT_MAT_KELP_FIBER:
+    return MATERIAL_KELP_FIBER;
+  case CRAFT_MAT_SEAGRASS_FIBER:
+    return MATERIAL_SEAGRASS_FIBER;
+  case CRAFT_MAT_SPONGE_FIBER:
+    return MATERIAL_SPONGE_FIBER;
+  case CRAFT_MAT_SEA_COTTON:
+    return MATERIAL_SEA_COTTON;
+  case CRAFT_MAT_SEA_SILK:
+    return MATERIAL_SEA_SILK;
   case CRAFT_MAT_BAMBOO:
     return MATERIAL_BAMBOO;
   case CRAFT_MAT_PINE:
@@ -5140,6 +5294,7 @@ void process_craft_critical_success(struct char_data *ch, struct obj_data *obj)
   if (!ch || !obj)
     return;
 
+  if (!legendary_tree_check(ch, obj, LEG_ROUTE_TRANSFORM)) return;
   catalysts = MIN(MAX(GET_CRAFT(ch).catalysts_used, 0), CRAFT_CATALYST_MAX);
   if (catalysts <= 0)
     return;
@@ -5932,7 +6087,8 @@ void newcraft_survey(struct char_data *ch, const char *argument)
     return;
   }
 
-  if (!is_valid_harvesting_sector(world[IN_ROOM(ch)].sector_type))
+  if (IN_ROOM(ch) == NOWHERE || IN_ROOM(ch) > top_of_world ||
+      !is_valid_harvesting_sector(world[IN_ROOM(ch)].sector_type))
   {
     send_to_char(ch, "This locale does not provide harvested resources.\r\n");
     return;
@@ -8677,6 +8833,7 @@ void craft_resize_complete(struct char_data *ch)
     return;
   }
 
+  if (!legendary_tree_check(ch, obj, LEG_ROUTE_TRANSFORM)) return;
   size = GET_CRAFT(ch).new_size;
 
   send_to_char(ch, "You've resized %s to %s!\r\n", obj->short_description, sizes[size]);
@@ -9207,6 +9364,12 @@ bool check_resize(struct char_data *ch, bool verbose)
     fail = TRUE;
   }
 
+  if (obj && !legendary_tree_allowed(ch, obj, LEG_ROUTE_TRANSFORM))
+  {
+    if (verbose) legendary_tree_check(ch, obj, LEG_ROUTE_TRANSFORM);
+    fail = TRUE;
+  }
+
   if (GET_CRAFT(ch).new_size == 0)
   {
     if (verbose)
@@ -9309,6 +9472,7 @@ void newcraft_resize(struct char_data *ch, const char *argument)
       return;
     }
 
+    if (!legendary_tree_check(ch, obj, LEG_ROUTE_TRANSFORM)) return;
     if (!*arg2)
     {
       send_to_char(ch, "Please specify the size you would like to change %s to.\r\n",
@@ -9498,6 +9662,7 @@ void newcraft_disenchant(struct char_data *ch, const char *argument)
     return;
   }
 
+  if (!legendary_tree_check(ch, obj, LEG_ROUTE_TRANSFORM)) return;
   if (GET_OBJ_LEVEL(obj) < DISENCHANT_MIN_LEVEL)
   {
     send_to_char(ch, "That item is not powerful enough to yield catalyst fragments.\r\n");
@@ -14213,6 +14378,12 @@ bool can_repair_golem(struct char_data *ch, struct char_data *golem, int *materi
 
 int material_type_to_crafting_skill(int material)
 {
+  if (material >= MATERIAL_BRANCH_CORAL && material <= MATERIAL_ADAMANT_CORAL)
+    return ABILITY_CRAFT_WOODWORKING;
+  if (material >= MATERIAL_THIN_FISHSKIN && material <= MATERIAL_PRISTINE_SHARKSKIN)
+    return ABILITY_CRAFT_LEATHERWORKING;
+  if (material >= MATERIAL_KELP_FIBER && material <= MATERIAL_SEA_SILK)
+    return ABILITY_CRAFT_TAILORING;
   if (material >= MATERIAL_BAMBOO && material <= MATERIAL_DWARF_WILLOW)
     return ABILITY_CRAFT_WOODWORKING;
   if (material == MATERIAL_JUTE || material == MATERIAL_AGAVE)
@@ -14418,6 +14589,8 @@ static void impl_do_reforge_new_(struct char_data *ch, char *argument,
                      "An object must be flagged as reforgeable to use this command on it.\r\n");
     return;
   }
+
+  if (!legendary_tree_check(ch, obj, LEG_ROUTE_TRANSFORM)) return;
 
   /* Check item type - can only reforge weapons and armor */
   if (GET_OBJ_TYPE(obj) != ITEM_ARMOR && GET_OBJ_TYPE(obj) != ITEM_WEAPON)
@@ -15074,7 +15247,11 @@ static bool exchangeable_material(int material)
 {
   int base = canonical_craft_material(material);
   return base == CRAFT_MAT_ASH_WOOD || base == CRAFT_MAT_MAPLE_WOOD ||
-         base == CRAFT_MAT_MAHAGONY_WOOD || base == CRAFT_MAT_HEMP;
+         base == CRAFT_MAT_MAHAGONY_WOOD || base == CRAFT_MAT_HEMP ||
+         base == CRAFT_MAT_VALENWOOD || base == CRAFT_MAT_IRONWOOD ||
+         (base >= CRAFT_MAT_LOW_GRADE_HIDE && base <= CRAFT_MAT_PRISTINE_GRADE_HIDE) ||
+         base == CRAFT_MAT_FLAX || base == CRAFT_MAT_WOOL ||
+         base == CRAFT_MAT_COTTON || base == CRAFT_MAT_SILK;
 }
 
 static int exchange_material_by_name(char *name)
@@ -15130,13 +15307,14 @@ void exchange_material_varieties(struct char_data *ch, const char *argument)
     *--source = '\0';
   if (!*p || !str_cmp(p, "list"))
   {
-    send_to_char(ch, "Material varieties exchange 1:1 within the same family and grade.\r\n"
+    send_to_char(ch, "Material varieties exchange 1:1 with the same canonical material.\r\n"
                      "Usage: exchange <quantity> <material> for <material>\r\n"
                      "Example: exchange 10 maple for birch\r\n\r\n");
     for (i = 1; i < NUM_CRAFT_MATS; i++)
       if (exchangeable_material(i))
         send_to_char(ch, "Grade %d %-6s %-20s (owned: %d)\r\n", material_grade(i),
-                     craft_group_by_material(i) == CRAFT_GROUP_WOOD ? "Timber" : "Fiber",
+                     craft_group_by_material(i) == CRAFT_GROUP_WOOD ? "Timber" :
+                     craft_group_by_material(i) == CRAFT_GROUP_HIDES ? "Hide" : "Fiber",
                      crafting_materials[i], GET_CRAFT_MAT(ch, i));
     return;
   }

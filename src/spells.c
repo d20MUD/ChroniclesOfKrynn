@@ -10,6 +10,7 @@
 
 #include "conf.h"
 #include "sysdep.h"
+#include "legendary_equipment.h"
 #include "structs.h"
 #include "utils.h"
 #include "epic_magic.h"
@@ -418,7 +419,7 @@ void effect_charm(struct char_data *ch, struct char_data *victim, int spellnum, 
     if (IS_NPC(victim))
       hit(victim, ch, TYPE_UNDEFINED, DAM_RESERVED_DBC, 0, FALSE);
   }
-  else if (savingthrow(ch, victim, SAVING_WILL, bonus, casttype, level, ENCHANTMENT))
+  else if (savingthrow_full(ch, victim, SAVING_WILL, bonus, casttype, level, ENCHANTMENT, spellnum))
   {
     send_to_char(ch, "Your victim resists!\r\n");
     if (IS_NPC(victim))
@@ -430,7 +431,7 @@ void effect_charm(struct char_data *ch, struct char_data *victim, int spellnum, 
     if (!IS_NPC(victim) && HAS_FEAT(victim, FEAT_SLIPPERY_MIND) && spell_info[spellnum].violent)
     {
       send_to_char(victim, "\tW*Slippery Mind*\tn  ");
-      if (savingthrow(ch, victim, SAVING_WILL, 0, casttype, level, ENCHANTMENT))
+      if (savingthrow_full(ch, victim, SAVING_WILL, 0, casttype, level, ENCHANTMENT, spellnum))
       {
         return;
       }
@@ -1696,6 +1697,8 @@ ASPELL(spell_enchant_item) // enchantment
 
   if (ch == NULL || obj == NULL)
     return;
+
+  if (!legendary_tree_check(ch, obj, LEG_ROUTE_TRANSFORM)) return;
 
   /* Either already enchanted or not a weapon. */
   if ((GET_OBJ_TYPE(obj) != ITEM_WEAPON && GET_OBJ_TYPE(obj) != ITEM_ARMOR) ||

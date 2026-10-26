@@ -47,6 +47,8 @@ struct feat_prerequisite
 void load_weapons(void);
 void load_armor(void);
 void assign_feats(void);
+/* Refresh the MySQL feat catalog after assigning all feat definitions. */
+bool sync_feat_info(void);
 void sort_feats(void);
 int feat_is_available(struct char_data *ch, int featnum, int iarg, char *sarg);
 int is_class_feat(int featnum, int class, struct char_data *ch);

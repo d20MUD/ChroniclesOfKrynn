@@ -12,6 +12,7 @@
 
 #include "conf.h"
 #include "sysdep.h"
+#include "legendary_equipment.h"
 #include "structs.h"
 #include "utils.h"
 #include "comm.h"
@@ -337,6 +338,7 @@ static int trade_with(struct obj_data *item, int shop_nr)
 {
   int counter;
 
+  if (legendary_tree_present(item)) return OBJECT_NOTOK;
   if (GET_OBJ_COST(item) < 1)
     return (OBJECT_NOVAL);
 
@@ -514,6 +516,7 @@ static struct obj_data *get_purchase_obj(struct char_data *ch, char *arg, struct
       }
       return (NULL);
     }
+    if (!legendary_tree_check(ch, obj, LEG_ROUTE_TRANSFER)) return NULL;
     if (GET_OBJ_COST(obj) <= 0)
     {
       extract_obj(obj);

@@ -2,6 +2,7 @@
  * account IDs. Item/currency transfers share the estate recovery journal. */
 #include "conf.h"
 #include "sysdep.h"
+#include "legendary_equipment.h"
 #include "structs.h"
 #include "utils.h"
 #include "comm.h"
@@ -164,6 +165,7 @@ static int clean_name(const char *s)
 }
 static int sellable(struct obj_data *obj)
 {
+  if (legendary_tree_present(obj)) return FALSE;
   return OBJ_FLAGGED(obj, ITEM_IDENTIFIED) && !OBJ_FLAGGED(obj, ITEM_NORENT) &&
          !OBJ_FLAGGED(obj, ITEM_NOSELL) && !OBJ_FLAGGED(obj, ITEM_QUEST) && !OBJ_FLAGGED(obj, ITEM_NODROP) &&
          GET_OBJ_BOUND_ID(obj) <= 0 && GET_OBJ_TYPE(obj) != ITEM_MONEY &&

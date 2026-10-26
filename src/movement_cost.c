@@ -10,6 +10,7 @@
 
 #include "conf.h"
 #include "sysdep.h"
+#include "legendary_foundations.h"
 #include "structs.h"
 #include "utils.h"
 #include "comm.h"
@@ -243,7 +244,7 @@ int calculate_movement_cost(struct char_data *ch, room_rnum from_room, room_rnum
   else
     need_movement = MAX(5, need_movement);
 
-  return need_movement;
+  return legendary_foundation_walk(ch, need_movement, riding || RIDDEN_BY(ch));
 }
 
 /**

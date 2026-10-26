@@ -9,6 +9,7 @@
 
 #include "conf.h"
 #include "sysdep.h"
+#include "legendary_techniques.h"
 #include "structs.h"
 #include "utils.h"
 #include "dg_scripts.h"
@@ -147,12 +148,16 @@ void do_dg_cast(void *go, struct script_data *sc, trig_data *trig, int type, cha
     caster->next_in_room = caster_room->people;
     caster_room->people = caster;
     caster->in_room = real_room(caster_room->number);
+    legendary_script_depth++;
     call_magic(caster, tch, tobj, spellnum, 0, DG_SPELL_LEVEL, CAST_SPELL);
+    legendary_script_depth--;
     extract_char(caster);
   }
-  else
-    // cast_spell(caster, tch, tobj, spellnum);
+  else {
+    legendary_script_depth++;
     call_magic(caster, tch, tobj, spellnum, 0, GET_LEVEL(caster), CAST_SPELL);
+    legendary_script_depth--;
+  }
 }
 
 /* Modify an affection on the target. affections can be of the AFF_x variety
@@ -247,6 +252,7 @@ void do_dg_affect(void *go, struct script_data *sc, trig_data *trig, int script_
   /* add the affect */
   new_affect(&af);
   af.spell = SPELL_DG_AFFECT;
+  af.legendary_flags|=LEG_CONDITION_LOCKED;
   af.duration = duration - 1;
   af.modifier = value;
 

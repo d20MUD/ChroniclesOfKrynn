@@ -10,6 +10,10 @@
 
 #include "conf.h"
 #include "sysdep.h"
+#include "legendary_equipment.h"
+#include "durable_file.h"
+#include "legendary_identity.h"
+#include "legendary_store.h"
 #include "structs.h"
 #include "housing.h"
 #include "talents.h"
@@ -774,6 +778,23 @@ int load_char(const char *name, struct char_data *ch)
       switch (*tag)
       {
       case 'A':
+        if (!strcmp(tag, "AiAu"))
+        {
+          long long ready;
+          if (sscanf(line, "%lld", &ready) == 1 && ready >= 0)
+            ch->player_specials->saved.irda_augment_ready = (time_t)ready;
+        }
+        if (!strcmp(tag, "AiMf"))
+        {
+          long long first, second, third;
+          if (sscanf(line, "%lld %lld %lld", &first, &second, &third) == 3 &&
+              first >= 0 && second >= 0 && third >= 0)
+          {
+            ch->player_specials->saved.irda_mirage_ready[0] = (time_t)first;
+            ch->player_specials->saved.irda_mirage_ready[1] = (time_t)second;
+            ch->player_specials->saved.irda_mirage_ready[2] = (time_t)third;
+          }
+        }
         if (!strcmp(tag, "AuDm") || !strcmp(tag, "AuBr"))
         {
           long long ready;
@@ -1314,6 +1335,11 @@ int load_char(const char *name, struct char_data *ch)
         break;
 
       case 'L':
+        if (!strcmp(tag, "LgTx")) {
+          if (legendary_uuid_valid(line)) memcpy(ch->player_specials->legendary_operation, line, 33);
+          else snprintf(ch->player_specials->legendary_operation, 33, "invalid-operation");
+          break;
+        }
         if (!strcmp(tag, "Last"))
           ch->player.time.logon = atol(line);
         else if (!strcmp(tag, "Lang"))
@@ -2270,6 +2296,15 @@ int load_char(const char *name, struct char_data *ch)
   if (CLASS_LEVEL(ch, CLASS_SHIFTER) > 0)
     HAS_REAL_FEAT(ch, FEAT_SHIFTER_GUISE) = 1;
 
+  /* Backfill all Irda racial feats for characters created before their introduction. */
+  if (GET_REAL_RACE(ch) == DL_RACE_IRDA)
+  {
+    HAS_REAL_FEAT(ch, FEAT_IRDA_RACIAL_ADJUSTMENT) = 1;
+    HAS_REAL_FEAT(ch, FEAT_IRDA_CHANGE_SHAPE) = 1;
+    HAS_REAL_FEAT(ch, FEAT_AUGMENT_PHYSICALITY) = 1;
+    HAS_REAL_FEAT(ch, FEAT_MIRAGE_FLARE) = 1;
+  }
+
   reconcile_alter_self(ch);
 
   /* Legacy nonmagical race-only disguises must be reapplied using the new command.
@@ -2308,86 +2343,53 @@ int load_char(const char *name, struct char_data *ch)
 
 /* Write the vital data of a player to the player file. */
 
-/* Helper function for save_char to optimize string operations */
-static inline void buffer_write_string_field(char *buffer, size_t *buffer_used, size_t buffer_size,
-                                             const char *field_name, const char *field_value,
-                                             char *temp_buf, size_t temp_buf_size)
+/* Keep long player descriptions intact in the shared serialization stream. */
+static bool player_write_string_field(FILE *fl, const char *name, const char *value)
 {
-  if (field_value && *field_value)
-  {
-    char stripped[MAX_STRING_LENGTH];
-    strlcpy(stripped, field_value, sizeof(stripped));
-    strip_cr(stripped);
-
-    int len = snprintf(temp_buf, temp_buf_size, "%s:\n%s~\n", field_name, stripped);
-    if (len > 0 && *buffer_used + len < buffer_size)
-    {
-      memcpy(buffer + *buffer_used, temp_buf, len);
-      *buffer_used += len;
-    }
-  }
+  char *stripped;
+  bool ok;
+  if (!value || !*value) return true;
+  stripped = strdup(value);
+  if (!stripped) return false;
+  strip_cr(stripped);
+  ok = fprintf(fl, "%s:\n%s~\n", name, stripped) >= 0;
+  free(stripped);
+  return ok;
 }
 
 /* This is the ASCII Player Files save routine. */
 void save_char(struct char_data *ch, int mode)
 {
-  FILE *fl;
+  (void)save_char_checked(ch, mode);
+}
+
+bool save_char_checked(struct char_data *ch, int mode)
+{
+  bool saved = false;
+  FILE *fl = NULL;
   char filename[40] = {'\0'}, bits[127] = {'\0'}, bits2[127] = {'\0'}, bits3[127] = {'\0'},
        bits4[127] = {'\0'};
   int i = 0, j = 0, id = 0, save_index = FALSE;
   struct affected_type *aff = NULL;
+  int legendary_saved_hp,legendary_saved_move,legendary_saved_psp;
   struct affected_type tmp_aff[MAX_AFFECT] = {{0}};
   struct damage_reduction_type *tmp_dr = NULL, *cur_dr = NULL;
   struct obj_data *char_eq[NUM_WEARS] = {NULL};
   trig_data *t = NULL;
   struct mud_event_data *pMudEvent = NULL;
 
-  /* PERFORMANCE OPTIMIZATION: Buffered I/O system */
   char *write_buffer = NULL;
-  size_t buffer_size = 65536; /* 64KB initial buffer */
   size_t buffer_used = 0;
-  char temp_buf[2048]; /* Temporary buffer for sprintf operations */
 
   /* Performance timing */
   struct timeval start_time, end_time;
   gettimeofday(&start_time, NULL);
 
-  if (IS_NPC(ch) || GET_PFILEPOS(ch) < 0)
-    return;
+  if (IS_NPC(ch) || GET_PFILEPOS(ch) < 0 || ch->legendary_serializing)
+    return false;
 
-  /* Allocate write buffer for performance */
-  CREATE(write_buffer, char, buffer_size);
-  if (!write_buffer)
-  {
-    log("SYSERR: save_char: Could not allocate write buffer for %s", GET_NAME(ch));
-    return;
-  }
-
-/* Helper macro for buffered writes */
-#define BUFFER_WRITE(...)                                                                          \
-  do                                                                                               \
-  {                                                                                                \
-    int len = snprintf(temp_buf, sizeof(temp_buf), __VA_ARGS__);                                   \
-    if (len > 0)                                                                                   \
-    {                                                                                              \
-      if (buffer_used + len >= buffer_size)                                                        \
-      {                                                                                            \
-        /* Expand buffer if needed */                                                              \
-        size_t new_size = buffer_size * 2;                                                         \
-        char *new_buffer = realloc(write_buffer, new_size);                                        \
-        if (!new_buffer)                                                                           \
-        {                                                                                          \
-          log("SYSERR: save_char: Buffer realloc failed");                                         \
-          free(write_buffer);                                                                      \
-          return;                                                                                  \
-        }                                                                                          \
-        write_buffer = new_buffer;                                                                 \
-        buffer_size = new_size;                                                                    \
-      }                                                                                            \
-      memcpy(write_buffer + buffer_used, temp_buf, len);                                           \
-      buffer_used += len;                                                                          \
-    }                                                                                              \
-  } while (0)
+/* Direct helper writers and tagged fields share one ordered memory stream. */
+#define BUFFER_WRITE(...) do { if (fprintf(fl, __VA_ARGS__) < 0) goto restore_character; } while (0)
 
   /* If ch->desc is not null, then update session data before saving. */
   if (ch->desc)
@@ -2414,15 +2416,12 @@ void save_char(struct char_data *ch, int mode)
   /* any problems with file handling? */
   if (!get_filename(filename, sizeof(filename), PLR_FILE, GET_NAME(ch)))
   {
-    free(write_buffer);
-    return;
+    return false;
   }
-  if (!(fl = fopen(filename, "w")))
-  {
-    mudlog(NRM, LVL_STAFF, TRUE, "SYSERR: Couldn't open player file %s for write", filename);
-    free(write_buffer);
-    return;
-  }
+  fl = open_memstream(&write_buffer, &buffer_used);
+  if (!fl) return false;
+  legendary_saved_hp=GET_HIT(ch);legendary_saved_move=GET_MOVE(ch);legendary_saved_psp=GET_PSP(ch);
+  ch->legendary_serializing=true;
 
   /* Unaffect everything a character can be affected by. */
   for (i = 0; i < NUM_WEARS; i++)
@@ -2521,20 +2520,13 @@ void save_char(struct char_data *ch, int mode)
   }
 
   /* Optimize string field writes */
-  buffer_write_string_field(write_buffer, &buffer_used, buffer_size, "Desc", ch->player.description,
-                            temp_buf, sizeof(temp_buf));
-  buffer_write_string_field(write_buffer, &buffer_used, buffer_size, "BGrd", ch->player.background,
-                            temp_buf, sizeof(temp_buf));
-  buffer_write_string_field(write_buffer, &buffer_used, buffer_size, "Goal", ch->player.goals,
-                            temp_buf, sizeof(temp_buf));
-  buffer_write_string_field(write_buffer, &buffer_used, buffer_size, "Pers", ch->player.personality,
-                            temp_buf, sizeof(temp_buf));
-  buffer_write_string_field(write_buffer, &buffer_used, buffer_size, "Idel", ch->player.ideals,
-                            temp_buf, sizeof(temp_buf));
-  buffer_write_string_field(write_buffer, &buffer_used, buffer_size, "Bond", ch->player.bonds,
-                            temp_buf, sizeof(temp_buf));
-  buffer_write_string_field(write_buffer, &buffer_used, buffer_size, "Flaw", ch->player.flaws,
-                            temp_buf, sizeof(temp_buf));
+  if (!player_write_string_field(fl, "Desc", ch->player.description)) goto restore_character;
+  if (!player_write_string_field(fl, "BGrd", ch->player.background)) goto restore_character;
+  if (!player_write_string_field(fl, "Goal", ch->player.goals)) goto restore_character;
+  if (!player_write_string_field(fl, "Pers", ch->player.personality)) goto restore_character;
+  if (!player_write_string_field(fl, "Idel", ch->player.ideals)) goto restore_character;
+  if (!player_write_string_field(fl, "Bond", ch->player.bonds)) goto restore_character;
+  if (!player_write_string_field(fl, "Flaw", ch->player.flaws)) goto restore_character;
   if (BLASTING(ch))
     BUFFER_WRITE("Blst: 1\n");
   if (POOFIN(ch))
@@ -2576,6 +2568,8 @@ void save_char(struct char_data *ch, int mode)
   if (NECROMANCER_CAST_TYPE(ch))
     BUFFER_WRITE("NecC: %d\n", NECROMANCER_CAST_TYPE(ch));
   housing_capture_location(ch);
+  if (*ch->player_specials->legendary_operation)
+    BUFFER_WRITE("LgTx: %s\n", ch->player_specials->legendary_operation);
   BUFFER_WRITE("Hous: %ld\nHrom: %ld\nECrd: %llu\nEDbt: %llu\n", ch->player_specials->housing_house_id,
                ch->player_specials->housing_room_id, ch->player_specials->estate_credit_receipt, ch->player_specials->estate_debit_receipt);
   BUFFER_WRITE("Id  : %ld\n", GET_IDNUM(ch));
@@ -2800,11 +2794,11 @@ void save_char(struct char_data *ch, int mode)
     BUFFER_WRITE("Drnk: %d\n", GET_COND(ch, DRUNK));
 
   if (GET_HIT(ch) != PFDEF_HIT || GET_MAX_HIT(ch) != PFDEF_MAXHIT)
-    BUFFER_WRITE("Hit : %d/%d\n", GET_HIT(ch), GET_MAX_HIT(ch));
+    BUFFER_WRITE("Hit : %d/%d\n", legendary_saved_hp, GET_MAX_HIT(ch));
   if (GET_PSP(ch) != PFDEF_PSP || GET_MAX_PSP(ch) != PFDEF_MAXPSP)
-    BUFFER_WRITE("PSP : %d/%d\n", GET_PSP(ch), GET_MAX_PSP(ch));
+    BUFFER_WRITE("PSP : %d/%d\n", legendary_saved_psp, GET_MAX_PSP(ch));
   if (GET_MOVE(ch) != PFDEF_MOVE || GET_MAX_MOVE(ch) != PFDEF_MAXMOVE)
-    BUFFER_WRITE("Move: %d/%d\n", GET_MOVE(ch), GET_MAX_MOVE(ch));
+    BUFFER_WRITE("Move: %d/%d\n", legendary_saved_move, GET_MAX_MOVE(ch));
 
   if (GET_HP_REGEN(ch) != PFDEF_HP_REGEN)
     BUFFER_WRITE("HPRg : %d\n", GET_HP_REGEN(ch));
@@ -3081,6 +3075,15 @@ void save_char(struct char_data *ch, int mode)
       BUFFER_WRITE("SvAc: %llu\n", active_sivak_form(ch)->id);
   }
 
+  if (ch->player_specials->saved.irda_augment_ready)
+    BUFFER_WRITE("AiAu: %lld\n", (long long)ch->player_specials->saved.irda_augment_ready);
+  if (ch->player_specials->saved.irda_mirage_ready[0] ||
+      ch->player_specials->saved.irda_mirage_ready[1] ||
+      ch->player_specials->saved.irda_mirage_ready[2])
+    BUFFER_WRITE("AiMf: %lld %lld %lld\n",
+                 (long long)ch->player_specials->saved.irda_mirage_ready[0],
+                 (long long)ch->player_specials->saved.irda_mirage_ready[1],
+                 (long long)ch->player_specials->saved.irda_mirage_ready[2]);
   if (ch->player_specials->saved.aurak_dominate_ready)
     BUFFER_WRITE("AuDm: %lld\n", (long long)ch->player_specials->saved.aurak_dominate_ready);
   if (ch->player_specials->saved.aurak_breath_ready)
@@ -4149,15 +4152,15 @@ void save_char(struct char_data *ch, int mode)
   if (tmp_aff[0].spell > 0)
   {
     BUFFER_WRITE("Affs:\n");
-    for (i = 0; i < MAX_AFFECT; i++)
+    for (i = MAX_AFFECT - 1; i >= 0; i--)
     {
       aff = &tmp_aff[i];
       if (aff->spell)
-        BUFFER_WRITE("%d %d %d %d %d %d %d %d %d %d %d %d %d %d\n", aff->spell, aff->duration,
+        BUFFER_WRITE("%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %lld\n", aff->spell, aff->duration,
                      aff->modifier, aff->location, aff->bitvector[0], aff->bitvector[1],
                      aff->bitvector[2], aff->bitvector[3], aff->bonus_type, aff->specific,
                      aff->bitvector2[0], aff->bitvector2[1], aff->bitvector2[2],
-                     aff->bitvector2[3]);
+                     aff->bitvector2[3],aff->legendary_flags,(long long)aff->legendary_expiry);
     }
     BUFFER_WRITE("0 0 0 0 0 0 0 0 0 0 0 0 0 0\n");
   }
@@ -4292,26 +4295,22 @@ void save_char(struct char_data *ch, int mode)
     save_account(ch->desc->account);
   }
 
-  /* Write buffer to file and close */
-  if (buffer_used > 0)
   {
-    if (fwrite(write_buffer, 1, buffer_used, fl) != buffer_used)
-    {
-      log("SYSERR: save_char: Failed to write buffer for %s", GET_NAME(ch));
-    }
+    bool stream_ok = !ferror(fl);
+    if (fclose(fl)) stream_ok = false;
+    fl = NULL;
+    saved = stream_ok && durable_file_replace(filename, write_buffer, buffer_used);
   }
-
-  /* FILE CLOSED!!! */
-  fclose(fl);
-
-  /* Free the write buffer */
+  if (!saved) log("SYSERR: durable character checkpoint failed for %s", GET_NAME(ch));
+restore_character:
+  if (fl) fclose(fl);
   free(write_buffer);
 #undef BUFFER_WRITE
 
   /* add affects, dr, etc back in */
 
   /* More char_to_store code to add spell and eq affections back in. */
-  for (i = 0; i < MAX_AFFECT; i++)
+  for (i = MAX_AFFECT - 1; i >= 0; i--)
   {
     if (tmp_aff[i].spell)
       affect_to_char(ch, &tmp_aff[i]);
@@ -4341,11 +4340,17 @@ void save_char(struct char_data *ch, int mode)
   }
 
   ch->mute_equip_messages = FALSE;
+  ch->legendary_serializing=false;
+  legendary_loadout_invalidate(ch);
+  (void)legendary_loadout_get(ch);
+  GET_HIT(ch)=MIN(legendary_saved_hp,GET_MAX_HIT(ch));
+  GET_MOVE(ch)=MIN(legendary_saved_move,GET_MAX_MOVE(ch));
+  GET_PSP(ch)=MIN(legendary_saved_psp,GET_MAX_PSP(ch));
 
   /* end char_to_store code */
 
   if ((id = get_ptable_by_name(GET_NAME(ch))) < 0)
-    return;
+    return saved;
 
   /* update the player in the player index */
   if (player_table[id].level != GET_LEVEL(ch))
@@ -4388,6 +4393,7 @@ void save_char(struct char_data *ch, int mode)
     log("PERF: save_char(%s) took %ldms (buffer: %zu bytes)", GET_NAME(ch), elapsed_ms,
         buffer_used);
   }
+  return saved;
 }
 
 /* Separate a 4-character id tag from the data it precedes */
@@ -4420,6 +4426,10 @@ void remove_player(int pfilepos)
   if (!*player_table[pfilepos].name)
     return;
 
+  if(!legendary_retire_owner(player_table[pfilepos].id,player_table[pfilepos].name)) {
+    log("SYSERR: Deferring deletion of %s: legendary ownership or economic recovery unavailable",player_table[pfilepos].name);
+    return;
+  }
   /* Unlink all player-owned files */
   for (i = 0; i < MAX_FILES; i++)
   {
@@ -4667,22 +4677,23 @@ static void load_affects(FILE *fl, struct char_data *ch)
       n_vars, num10, num11, num12, num13, num14, num15;
   char line[MAX_INPUT_LENGTH + 1];
   struct affected_type af;
+  long long legendary_expiry=0;
 
   i = 0;
   do
   {
-    new_affect(&af);
-    get_line(fl, line);
+    new_affect(&af);legendary_expiry=0;
+    if(!get_line(fl, line))break;
     n_vars =
-        sscanf(line, "%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d", &num, &num2, &num3, &num4,
-               &num5, &num6, &num7, &num8, &num9, &num10, &num11, &num12, &num13, &num14, &num15);
+        sscanf(line, "%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %lld", &num, &num2, &num3, &num4,
+               &num5, &num6, &num7, &num8, &num9, &num10, &num11, &num12, &num13, &num14, &num15,&legendary_expiry);
     if (num > 0)
     {
       af.spell = num;
       af.duration = num2;
       af.modifier = num3;
       af.location = num4;
-      if (n_vars == 14)
+      if (n_vars >= 14)
       { /* Version with bonus type! */
         af.bitvector[0] = num5;
         af.bitvector[1] = num6;
@@ -4695,6 +4706,8 @@ static void load_affects(FILE *fl, struct char_data *ch)
         af.bitvector2[2] = num13;
         af.bitvector2[3] = num14;
       }
+      if(n_vars>=15)af.legendary_flags=num15;
+      if(n_vars>=16&&legendary_expiry>0)af.legendary_expiry=legendary_expiry;
       if (n_vars == 10)
       { /* Version with bonus type! */
         af.bitvector[0] = num5;
@@ -4730,12 +4743,12 @@ static void load_affects(FILE *fl, struct char_data *ch)
         if (num5 > 0 && num5 <= NUM_AFF_FLAGS) /* Ignore invalid values */
           SET_BIT_AR(af.bitvector, num5);
       }
-      else
+      else if(n_vars<14)
       {
         log("SYSERR: Invalid affects in pfile (%s), expecting 5, 8, 9 values, got %d", GET_NAME(ch),
             n_vars);
       }
-      affect_to_char(ch, &af);
+      if(!af.legendary_expiry||af.legendary_expiry>(int64_t)time(NULL))affect_to_char(ch, &af);
       i++;
     }
   } while (num != 0);

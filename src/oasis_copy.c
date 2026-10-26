@@ -372,12 +372,120 @@ static room_vnum redit_find_new_vnum(zone_rnum zone)
   return (vnum);
 }
 
+/* Normal-room maps derive positions from exits, not wilderness coordinates.
+ * Keep this search on the current floor and inside the zone. */
+static int buildwalk_find_overlap(struct char_data *ch, int dir, room_rnum *target)
+{
+  static const int offsets[NUM_OF_DIRS][2] = {
+      {0, 1}, {1, 0}, {0, -1}, {-1, 0}, {0, 0},
+      {0, 0}, {-1, 1}, {1, 1}, {1, -1}, {-1, -1}};
+  struct buildwalk_position
+  {
+    room_rnum room;
+    int x, y;
+  } *positions;
+  bool *visited;
+  room_rnum room, destination;
+  zone_rnum zone = GET_ROOM_ZONE(IN_ROOM(ch));
+  int count = 0, index, door, capacity = 0;
+
+  *target = NOWHERE;
+  if (dir == UP || dir == DOWN)
+    return 1;
+  for (room = 0; room <= top_of_world; room++)
+    if (GET_ROOM_ZONE(room) == zone)
+      capacity++;
+
+  positions = calloc(capacity, sizeof(*positions));
+  visited = calloc((size_t)top_of_world + 1, sizeof(*visited));
+  if (!positions || !visited)
+  {
+    free(positions);
+    free(visited);
+    send_to_char(ch, "BuildWalk could not check the map; no room was created.\r\n");
+    return 0;
+  }
+
+  positions[count++].room = IN_ROOM(ch);
+  visited[IN_ROOM(ch)] = TRUE;
+  for (index = 0; index < count; index++)
+  {
+    if (positions[index].x == offsets[dir][0] && positions[index].y == offsets[dir][1])
+    {
+      if (*target != NOWHERE)
+      {
+        free(positions);
+        free(visited);
+        send_to_char(ch, "Multiple rooms overlap that map position; fix the existing layout first.\r\n");
+        return 0;
+      }
+      *target = positions[index].room;
+    }
+
+    room = positions[index].room;
+    for (door = 0; door < NUM_OF_DIRS; door++)
+    {
+      if (door == UP || door == DOWN || !W_EXIT(room, door))
+        continue;
+      destination = W_EXIT(room, door)->to_room;
+      if (!VALID_ROOM_RNUM(destination) || GET_ROOM_ZONE(destination) != zone || visited[destination])
+        continue;
+      visited[destination] = TRUE;
+      positions[count].room = destination;
+      positions[count].x = positions[index].x + offsets[door][0];
+      positions[count].y = positions[index].y + offsets[door][1];
+      count++;
+    }
+  }
+
+  free(positions);
+  free(visited);
+  return 1;
+}
+
+/* Do not replace an existing reverse exit, including its door/trap settings. */
+static int buildwalk_connect_overlap(struct char_data *ch, int dir, room_rnum target)
+{
+  room_rnum origin = IN_ROOM(ch);
+  struct room_direction_data *reverse = W_EXIT(target, rev_dir[dir]);
+
+  if (!can_edit_zone(ch, GET_ROOM_ZONE(target)))
+  {
+    send_to_char(ch, "You do not have build permissions for the overlapping room.\r\n");
+    return 0;
+  }
+  if (reverse && reverse->to_room != origin)
+  {
+    send_to_char(ch, "Room #%d overlaps that position, but its %s exit is already in use.\r\n",
+                 GET_ROOM_VNUM(target), dirs[rev_dir[dir]]);
+    return 0;
+  }
+
+  CREATE(W_EXIT(origin, dir), struct room_direction_data, 1);
+  W_EXIT(origin, dir)->to_room = target;
+  W_EXIT(origin, dir)->key = NOTHING;
+  if (!reverse)
+  {
+    CREATE(W_EXIT(target, rev_dir[dir]), struct room_direction_data, 1);
+    W_EXIT(target, rev_dir[dir])->to_room = origin;
+    W_EXIT(target, rev_dir[dir])->key = NOTHING;
+  }
+  add_to_save_list(zone_table[GET_ROOM_ZONE(origin)].number, SL_WLD);
+  add_to_save_list(zone_table[GET_ROOM_ZONE(target)].number, SL_WLD);
+  send_to_char(ch, "%sConnected to existing room #%d (%s) in both directions.%s\r\n",
+               yel, GET_ROOM_VNUM(target), world[target].name, nrm);
+  return 1;
+}
+
 int buildwalk(struct char_data *ch, int dir)
 {
   int new_x = 0, new_y = 0;
   char buf[MAX_INPUT_LENGTH] = {'\0'};
   room_vnum vnum;
   room_rnum rnum;
+
+  if (!ch || dir < 0 || dir >= NUM_OF_DIRS)
+    return 0;
 
   if (!IS_NPC(ch) && PRF_FLAGGED(ch, PRF_BUILDWALK) && GET_LEVEL(ch) >= LVL_BUILDER)
   {
@@ -413,8 +521,19 @@ int buildwalk(struct char_data *ch, int dir)
     if (!can_edit_zone(ch, world[IN_ROOM(ch)].zone))
     {
       send_to_char(ch, "You do not have build permissions in this zone.\r\n");
+      return 0;
     }
-    else if ((vnum = redit_find_new_vnum(world[IN_ROOM(ch)].zone)) == NOWHERE)
+    if (!ZONE_FLAGGED(GET_ROOM_ZONE(IN_ROOM(ch)), ZONE_WILDERNESS))
+    {
+      /* Search before allocating a vnum, even when the zone is otherwise full. */
+      if (EXIT(ch, dir))
+        return 0;
+      if (!buildwalk_find_overlap(ch, dir, &rnum))
+        return 0;
+      if (rnum != NOWHERE)
+        return buildwalk_connect_overlap(ch, dir, rnum);
+    }
+    if ((vnum = redit_find_new_vnum(world[IN_ROOM(ch)].zone)) == NOWHERE)
     {
       send_to_char(ch, "No free vnums are available in this zone!\r\n");
     }

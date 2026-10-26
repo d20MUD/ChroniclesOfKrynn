@@ -16,7 +16,7 @@ def function(source, name):
     brace = source.index('\n{', start)
     return source[start:source.index('\n}', brace) + 2] + '\n'
 
-code = ''
+code = '#define HARVEST_NODE_PERCENT_CHANCE 33\n#define SURVEY_BASE_TIME 3\n'
 for name in ['material_name', 'crafting_materials', 'crafting_material_descriptions',
              'crafting_material_nodes', 'harvesting_messages']:
     start = constants.index('const char *' + name + '[]')
@@ -25,6 +25,11 @@ for name in ['canonical_craft_material', 'material_grade', 'craft_group_by_mater
              'craft_material_level_adjustment', 'harvesting_skill_by_material',
              'craft_material_to_obj_material', 'obj_material_to_craft_material',
              'material_type_to_crafting_skill', 'climate_material_variety',
+             'is_aquatic_harvesting_sector', 'is_marine_harvesting_room', 'marine_material_variety',
+             'is_valid_harvesting_sector', 'get_material_cost', 'newcraft_survey',
+             'assign_harvest_materials_to_word', 'assign_harvest_materials_to_room',
+             'is_someone_harvesting_room', 'wipe_room_harvest_materials',
+             'will_room_have_harvest_materials', 'determine_number_of_harvest_units_for_room',
              'harvest_node_name', 'harvest_activity_name',
              'determine_harvest_material_for_room', 'determine_material_type_by_group_and_grade',
              'determine_random_material_group_by_sector_type', 'determine_grade_by_zone_level',
@@ -71,6 +76,7 @@ size_t send_to_char(struct char_data *ch,const char *fmt,...) {
   va_list ap; va_start(ap,fmt); int n=vsnprintf(output+strlen(output),sizeof(output)-strlen(output),fmt,ap);
   va_end(ap); assert(n>=0 && n<(int)(sizeof(output)-strlen(output))); return n;
 }
+const char *act(const char *str,int hide,struct char_data *ch,struct obj_data *obj,void *vict,int type) { return str; }
 static void exchange(struct char_data *ch,const char *arg) {
   output[0]=0; exchange_material_varieties(ch,arg);
 }
@@ -93,8 +99,10 @@ int main(void) {
     assert(harvesting_skill_by_material(id)==harvesting_skill_by_material(base));
     assert(object>=MATERIAL_BAMBOO && object<NUM_MATERIALS);
     assert(obj_material_to_craft_material(object)==id);
-    assert(material_type_to_crafting_skill(object)==(base==CRAFT_MAT_HEMP ? ABILITY_CRAFT_TAILORING : ABILITY_CRAFT_WOODWORKING));
-    assert(base==CRAFT_MAT_HEMP ? IS_CLOTH(object) : IS_WOOD(object));
+    assert(material_type_to_crafting_skill(object)==material_type_to_crafting_skill(craft_material_to_obj_material(base)));
+    int group=craft_group_by_material(id);
+    assert(group==CRAFT_GROUP_CLOTH ? IS_CLOTH(object) : group==CRAFT_GROUP_HIDES ? IS_LEATHER(object) : IS_WOOD(object));
+    assert(get_material_cost(id)==get_material_cost(base));
   }
   const int timber[]={CRAFT_MAT_ASH_WOOD,CRAFT_MAT_MAPLE_WOOD,CRAFT_MAT_MAHAGONY_WOOD,CRAFT_MAT_VALENWOOD,CRAFT_MAT_IRONWOOD};
   for(int climate=0;climate<NUM_ZONE_CLIMATES;climate++)
@@ -121,6 +129,64 @@ int main(void) {
   assert(climate_material_variety(-1,1,1)==CRAFT_MAT_NONE);
   assert(climate_material_variety(NUM_CRAFT_MATS,1,1)==CRAFT_MAT_NONE);
   assert(climate_material_variety(CRAFT_MAT_MAPLE_WOOD,999,1)==CRAFT_MAT_MAPLE_WOOD);
+  /* Every sector/terrain combination, through normal world regeneration. */
+  const int water[]={SECT_WATER_SWIM,SECT_WATER_NOSWIM,SECT_UNDERWATER,
+                     SECT_OCEAN,SECT_RIVER,SECT_UD_WATER,SECT_UD_NOSWIM};
+  const int dry[]={SECT_INSIDE,SECT_CITY,SECT_FIELD,SECT_FOREST,SECT_HILLS,
+                   SECT_MOUNTAIN,SECT_DESERT,SECT_CAVE,SECT_JUNGLE,SECT_TUNDRA};
+  for(int terrain=0;terrain<NUM_ZONE_TERRAINS;terrain++) {
+    zone.terrain=terrain;
+    for(size_t w=0;w<sizeof(water)/sizeof(*water);w++) {
+      room.sector_type=water[w];
+      assert(is_marine_harvesting_room(0) && is_valid_harvesting_sector(water[w]));
+      GET_CRAFT((&ch)).craft_duration=0; output[0]=0;
+      newcraft_survey(&ch, "");
+      assert(GET_CRAFT((&ch)).crafting_method==SCMD_NEWCRAFT_SURVEY && GET_CRAFT((&ch)).craft_duration==3);
+      GET_CRAFT((&ch)).craft_duration=0;
+      for(int climate=0;climate<NUM_ZONE_CLIMATES;climate++) {
+        zone.climate=climate;
+        for(die=0;die<100;die++) {
+          int id=determine_harvest_material_for_room(0), group=craft_group_by_material(id);
+          assert(id>0 && id<NUM_CRAFT_MATS);
+          if(group==CRAFT_GROUP_WOOD || group==CRAFT_GROUP_HIDES || group==CRAFT_GROUP_CLOTH)
+            assert(id>=CRAFT_MAT_BRANCH_CORAL);
+          else assert(canonical_craft_material(id)==id);
+        }
+      }
+      die=0; assign_harvest_materials_to_word();
+      assert(room.harvest_material>=CRAFT_MAT_BRANCH_CORAL && room.harvest_material_amount>0);
+    }
+    for(size_t d=0;d<sizeof(dry)/sizeof(*dry);d++) {
+      room.sector_type=dry[d]; assert(!is_marine_harvesting_room(0));
+      for(die=0;die<100;die++) assert(determine_harvest_material_for_room(0)<CRAFT_MAT_BRANCH_CORAL);
+    }
+  }
+  assert(!is_marine_harvesting_room(-2) && !is_marine_harvesting_room(1));
+  assert(determine_harvest_material_for_room(-2)==0 && determine_harvest_material_for_room(1)==0);
+  for(int id=CRAFT_MAT_BRANCH_CORAL;id<NUM_CRAFT_MATS;id++) {
+    int base=canonical_craft_material(id);
+    assert(marine_material_variety(base)==id);
+    for(int climate=0;climate<NUM_ZONE_CLIMATES;climate++) {
+      zone.climate=climate; room.harvest_material=id;
+      assert(!strcmp(harvest_node_name(0),crafting_material_nodes[id]));
+      assert(!strstr(harvest_node_name(0),"tracks") && !strstr(harvest_activity_name(0),"logging"));
+      assert(room.harvest_material==id);
+    }
+    for(int tier=1;tier<=5;tier++) {
+      int land=determine_material_type_by_group_and_grade(craft_group_by_material(id),tier);
+      if(land==base) assert(marine_material_variety(land)==id);
+    }
+  }
+  const int marine_tiers[][5]={
+    {CRAFT_MAT_BRANCH_CORAL,CRAFT_MAT_FAN_CORAL,CRAFT_MAT_BLOOD_CORAL,CRAFT_MAT_DEEPWATER_CORAL,CRAFT_MAT_ADAMANT_CORAL},
+    {CRAFT_MAT_THIN_FISHSKIN,CRAFT_MAT_TOUGH_EELSKIN,CRAFT_MAT_SHARKSKIN,CRAFT_MAT_PRISTINE_SHARKSKIN,CRAFT_MAT_PRISTINE_SHARKSKIN},
+    {CRAFT_MAT_KELP_FIBER,CRAFT_MAT_SEAGRASS_FIBER,CRAFT_MAT_SPONGE_FIBER,CRAFT_MAT_SEA_COTTON,CRAFT_MAT_SEA_SILK}};
+  const int groups[]={CRAFT_GROUP_WOOD,CRAFT_GROUP_HIDES,CRAFT_GROUP_CLOTH};
+  for(int family=0;family<3;family++) for(int tier=1;tier<=5;tier++)
+    assert(marine_material_variety(determine_material_type_by_group_and_grade(groups[family],tier))==marine_tiers[family][tier-1]);
+  assert(material_grade(CRAFT_MAT_SEA_SILK)==4);
+  IN_ROOM(&ch)=NOWHERE; output[0]=0; newcraft_survey(&ch, "");
+  assert(!GET_CRAFT((&ch)).craft_duration); IN_ROOM(&ch)=0;
   /* Full room generator, not just the mapping table. High-end grade stays bounded. */
   room.sector_type=SECT_FOREST; zone.climate=ZONE_CLIMATE_TEMPERATE; zone.terrain=ZONE_TERRAIN_FOREST;
   bool found_oak=false;
@@ -157,6 +223,13 @@ int main(void) {
   fp=tmpfile(); for(int id=0;id<NUM_CRAFT_MATS+10;id++) fprintf(fp,"%d\n",id==2?-9:id);
   fprintf(fp,"-1\nNEXT\n"); rewind(fp); load_craft_mats_onhand(fp,&ch);
   assert(!GET_CRAFT_MAT((&ch),2) && fgets(line,sizeof(line),fp) && !strcmp(line,"NEXT\n")); fclose(fp);
+  /* The immediately preceding 61-balance format also stops at its sentinel. */
+  memset(&loaded,0,sizeof(loaded)); fp=tmpfile();
+  for(int id=0;id<61;id++) fprintf(fp,"%d\n",id*3);
+  fprintf(fp,"-1\nNEXT\n"); rewind(fp); load_craft_mats_onhand(fp,&ch);
+  assert(fgets(line,sizeof(line),fp) && !strcmp(line,"NEXT\n")); fclose(fp);
+  for(int id=0;id<61;id++) assert(GET_CRAFT_MAT((&ch),id)==id*3);
+  for(int id=61;id<NUM_CRAFT_MATS;id++) assert(!GET_CRAFT_MAT((&ch),id));
   /* Trades conserve units; rejection never mutates balances or saves a player. */
   memset(&loaded,0,sizeof(loaded)); GET_CRAFT_MAT((&ch),CRAFT_MAT_MAPLE_WOOD)=25;
   exchange(&ch,"10 maple for birch"); assert(saves==1);
@@ -190,6 +263,27 @@ int main(void) {
   assert(materials_exchanger(&ch,&exchanger_object,1,"1 maple for cedar")==1 && saves==8);
   visible=0; assert(!materials_exchanger(&ch,&exchanger_object,1,"")); visible=1;
   assert(!materials_exchanger(&ch,&unrelated,1,""));
+  /* Every exact pair, including regional counterparts, trades both ways. */
+  for(int id=CRAFT_MAT_BRANCH_CORAL;id<NUM_CRAFT_MATS;id++) {
+    int base=canonical_craft_material(id);
+    for(int other=1;other<NUM_CRAFT_MATS;other++) {
+      if(other==id || canonical_craft_material(other)!=base) continue;
+      memset(&loaded,0,sizeof(loaded)); GET_CRAFT_MAT((&ch),other)=10;
+      char trade[256]; int old_saves=saves;
+      snprintf(trade,sizeof(trade),"10 %s for %s",crafting_materials[other],crafting_materials[id]);
+      exchange(&ch,trade); assert(saves==old_saves+1);
+      assert(GET_CRAFT_MAT((&ch),other)==0 && GET_CRAFT_MAT((&ch),id)==10);
+      snprintf(trade,sizeof(trade),"10 %s for %s",crafting_materials[id],crafting_materials[other]);
+      exchange(&ch,trade); assert(saves==old_saves+2);
+      assert(GET_CRAFT_MAT((&ch),other)==10 && GET_CRAFT_MAT((&ch),id)==0);
+    }
+  }
+  GET_CRAFT_MAT((&ch),CRAFT_MAT_SEA_SILK)=10;
+  int old_saves=saves; struct player_special_data snapshot=loaded;
+  exchange(&ch,"1 sea silk for sea cotton");
+  exchange(&ch,"1 sea for silk");
+  assert(saves==old_saves && !memcmp(&loaded,&snapshot,sizeof(loaded)));
+  exchange(&ch,"list"); assert(strstr(output,"Hide") && strstr(output,"pristine sharkskin"));
   return 0;
 }
 '''
@@ -201,4 +295,4 @@ with tempfile.TemporaryDirectory(prefix='climate-materials-') as tmp:
                     '-Wno-unused-parameter', '-I' + str(root / 'src'), str(source), '-o', str(binary)], check=True)
     subprocess.run([str(binary)], check=True)
 assert '"Materials Exchanger", materials_exchanger' in (root / 'src/spec_assign.c').read_text()
-print('Climate materials: all climates/grades, mechanics, object round trips, legacy/new balances, descriptions, trades and spec dispatch passed.')
+print('Climate/marine materials: sectors/terrains, survey/regeneration, tiers/mechanics, object round trips, legacy/new balances, descriptions, trades and spec dispatch passed.')

@@ -12,6 +12,9 @@
 
 #include "conf.h"
 #include "sysdep.h"
+#include "legendary_effects.h"
+#include "legendary_techniques.h"
+#include "legendary_earnings.h"
 #include <stdarg.h>
 #include <time.h>
 
@@ -585,10 +588,10 @@ void copyover_recover()
     }
     else
     {
-      write_to_descriptor(desc, "\n\rCopyover recovery complete.\n\r");
       GET_PREF(d->character) = pref;
 
-      enter_player_game(d);
+      if (enter_player_game(d) == 3) continue;
+      write_to_descriptor(desc, "\n\rCopyover recovery complete.\n\r");
 
       /* Clear their load room if it's not persistant. */
       if (!PLR_FLAGGED(d->character, PLR_LOADROOM))
@@ -1393,6 +1396,16 @@ void proc_update()
 void heartbeat(int heart_pulse)
 {
   static int mins_since_crashsave = 0;
+  legendary_affect_schedule(PULSE_VIOLENCE-heart_pulse%PULSE_VIOLENCE);
+
+  if (!(heart_pulse % PASSES_PER_SEC)) {
+    struct char_data *legendary_ch,*legendary_next;
+    for(legendary_ch=character_list;legendary_ch;legendary_ch=legendary_next){
+      legendary_next=legendary_ch->next;legendary_condition_expire(legendary_ch);
+    }
+    legendary_earnings_maintenance();
+    legendary_effects_pulse();
+  }
 
   PERF_PROF_ENTER(pr_event_process_, "event_process");
   event_process();
@@ -1467,6 +1480,7 @@ void heartbeat(int heart_pulse)
   /* this controls the rate mobiles "act" */
   if (!(heart_pulse % PULSE_MOBILE))
   {
+    legendary_activity_expire();
     PERF_PROF_ENTER(pr_mob_activity_, "mobile_activity");
     mobile_activity();
     PERF_PROF_EXIT(pr_mob_activity_);
@@ -3254,6 +3268,8 @@ static void check_linkdead_players(void)
 
 void close_socket(struct descriptor_data *d)
 {
+  if (d->character)
+    legendary_effects_cancel(d->character);
   struct descriptor_data *temp;
   int keep_desc_for_save = FALSE;
 

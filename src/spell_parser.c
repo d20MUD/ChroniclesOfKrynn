@@ -9,6 +9,7 @@
 
 #include "conf.h"
 #include "sysdep.h"
+#include "legendary_techniques.h"
 #include "structs.h"
 #include "utils.h"
 #include "epic_magic.h"
@@ -235,6 +236,7 @@ bool concentration_check(struct char_data *ch, int spellnum)
       return TRUE;
     }
 
+    legendary_cast_failed(ch,spellnum);
     send_to_char(ch, "You lost your concentration!\r\n");
     act("$n's concentration is lost, and spell is aborted!", TRUE, ch, 0, 0, TO_ROOM);
     resetCastingData(ch);
@@ -1833,6 +1835,7 @@ void mag_objectmagic(struct char_data *ch, struct obj_data *obj, char *argument)
 
 void resetCastingData(struct char_data *ch)
 {
+  legendary_cast_clear(ch);
   IS_CASTING(ch) = FALSE;
   if (!IS_NPC(ch))
     ch->player_specials->appearance_cast_args[0] = '\0';
@@ -2110,6 +2113,7 @@ void finishCasting(struct char_data *ch)
 
   if (final_casttype == CAST_UNDEFINED)
     final_casttype = CAST_SPELL;
+  legendary_cast_effect(ch,CASTING_SPELLNUM(ch),final_casttype);
 
   if (can_mastermind_power(ch, CASTING_SPELLNUM(ch)))
   {
@@ -3398,6 +3402,10 @@ will be using for casting this spell */
     clevel = MAX(1, clevel);
   }
 
+  if (!legendary_cast_commit(ch,spellnum)) {
+    send_to_char(ch,"You lack the points for that power after available discounts.\r\n");
+    legendary_cast_clear(ch);return 0;
+  }
   /* concentration check */
   if (!concentration_check(ch, spellnum))
   {
@@ -3428,6 +3436,7 @@ will be using for casting this spell */
     }
 
     {
+      legendary_cast_effect(ch,spellnum,casttype);
       int result = call_magic(ch, tch, tobj, spellnum, metamagic, clevel, casttype);
 
       /* Inquisitor Righteous Strike: Set flag when inquisitor spell is cast */
@@ -3628,6 +3637,7 @@ ACMDU(do_gen_cast)
   int number = 0, spellnum = 0, i = 0, target = 0, metamagic = 0;
   int slot_class = CLASS_UNDEFINED, slot_spellnum = 0, slot_metamagic = 0;
   int free_metamagic = 0;
+  int legendary_psp_cost = -1;
   int spontaneous_replacement = 0;
   struct affected_type af;
   int class_num = CLASS_UNDEFINED;
@@ -4237,20 +4247,13 @@ return;
         }
       }
 
-      if (GET_PSP(ch) < effective_psp_cost)
-      {
-        send_to_char(ch, "You don't have enough psp to manifest that power.\r\n");
-        return;
+      /* Defer real payment until legal targets and cast prerequisites pass. */
+      if (psionic_powers[spellnum].augment_amount > 1)
+        GET_AUGMENT_PSP(ch) -= GET_AUGMENT_PSP(ch) % psionic_powers[spellnum].augment_amount;
+      legendary_psp_cost=effective_psp_cost+GET_AUGMENT_PSP(ch);
+      if(!legendary_technique_affordable(ch,legendary_psp_cost)) {
+        send_to_char(ch,"You don't have enough PSP to manifest that power.\r\n");return;
       }
-      if (GET_PSP(ch) < (effective_psp_cost + GET_AUGMENT_PSP(ch)))
-      {
-        send_to_char(
-            ch, "You don't have enough psp to manifest that power at that augmented amount.\r\n");
-        return;
-      }
-
-      // All is well, deduct the psp and augment psp
-      GET_PSP(ch) -= (effective_psp_cost + GET_AUGMENT_PSP(ch));
 
       /* Mark Perfect Fabricator as used (daily) */
       if (perfect_fabricator_active)
@@ -4275,8 +4278,7 @@ return;
       // many powers only benefit from certain intervals of augment psp such
       // as damage bonus = augment psp / 2.  So if their augment psp has a remainder
       // after that calculation, we'll just refund the remainder psp
-      if (psionic_powers[spellnum].augment_amount > 1)
-        GET_PSP(ch) += (GET_AUGMENT_PSP(ch) % psionic_powers[spellnum].augment_amount);
+      /* Unusable augmentation was removed before computing actual expenditure. */
     }
   }
 
@@ -4604,7 +4606,7 @@ return;
     send_to_char(ch, "Cannot find the target of your %s!\r\n", do_cast_types[subcmd][2]);
     if (subcmd == SCMD_CAST_PSIONIC)
     {
-      GET_PSP(ch) += psionic_powers[spellnum].psp_cost + GET_AUGMENT_PSP(ch);
+      /* No PSP was paid before target validation. */
       GET_AUGMENT_PSP(ch) = 0;
     }
     return;
@@ -4735,10 +4737,16 @@ return;
     snprintf(ch->player_specials->appearance_cast_args,
              sizeof(ch->player_specials->appearance_cast_args), "%s", cast_arg3);
   }
+  if(legendary_psp_cost>=0&&IS_CASTING(ch)){send_to_char(ch,"Finish your current spell first.\r\n");return;}
+  if(legendary_psp_cost>=0&&!legendary_cast_queue(ch,spellnum,legendary_psp_cost)) {
+    send_to_char(ch,"Unable to record your power expenditure; no points were spent.\r\n");return;
+  }
   cast_spell_with_type_and_slot(ch, tch, tobj, spellnum, metamagic, CAST_SPELL, slot_class,
                                 slot_spellnum, slot_metamagic);
-  if (!IS_CASTING(ch))
+  if (!IS_CASTING(ch)) {
+    legendary_cast_clear(ch);
     ch->player_specials->appearance_cast_args[0] = '\0';
+  }
 }
 
 /* assignment */
@@ -6601,6 +6609,13 @@ void mag_assign_spells(void)
   spello(SPELL_AFFECT_DEATH_ATTACK, "death attack paralyzation", 0, 0, 0, POS_FIGHTING, TAR_IGNORE,
          FALSE, MAG_AFFECTS, "You are no longer paralyzed from a death attack.", 1, 1, EVOCATION,
          FALSE);
+
+  spello(ABILITY_AUGMENT_PHYSICALITY, "augment physicality", 0, 0, 0, POS_FIGHTING,
+         TAR_IGNORE, FALSE, 0, "Your augmented body and equipment return to their normal size.",
+         1, 1, TRANSMUTATION, FALSE);
+  spello(ABILITY_MIRAGE_FLARE, "mirage flare", 0, 0, 0, POS_FIGHTING,
+         TAR_IGNORE, TRUE, 0, "You are no longer dazed by Mirage Flare.",
+         1, 1, ILLUSION, FALSE);
 
   spello(ABILITY_AFFECT_STONES_ENDURANCE, "stone's endurance", 0, 0, 0, POS_FIGHTING, TAR_IGNORE,
          FALSE, MAG_AFFECTS, "You have lost the durability of the mountains.", 1, 1, NOSCHOOL,

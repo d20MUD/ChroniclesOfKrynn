@@ -38,6 +38,9 @@ void set_title(struct char_data *ch, char *title);
 void set_imm_title(struct char_data *ch, char *title);
 void run_autowiz(void);
 int gain_exp(struct char_data *ch, int gain, int mode);
+struct legendary_xp_context;
+int gain_exp_with_source(struct char_data *ch, int gain, int mode,
+                         const struct legendary_xp_context *source);
 int gain_exp_regardless(struct char_data *ch, int gain, bool is_ress);
 void gain_condition(struct char_data *ch, int condition, int value);
 void check_idling(struct char_data *ch);

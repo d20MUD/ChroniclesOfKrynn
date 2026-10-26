@@ -2,6 +2,7 @@
  * Monetary identity is the stable player ID, never a mutable name. */
 #include "conf.h"
 #include "sysdep.h"
+#include "legendary_equipment.h"
 #include "structs.h"
 #include "utils.h"
 #include "auction_house.h"
@@ -31,6 +32,7 @@ static int valid_price(const char *text, long *price)
 static int transferable(struct obj_data *obj)
 {
   struct obj_data *it;
+  if (legendary_tree_present(obj)) return FALSE;
   if (OBJ_FLAGGED(obj, ITEM_NORENT) || OBJ_FLAGGED(obj, ITEM_NOSELL) ||
       OBJ_FLAGGED(obj, ITEM_NODROP) || GET_OBJ_BOUND_ID(obj) > 0 ||
       GET_OBJ_TYPE(obj) == ITEM_MONEY)

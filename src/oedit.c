@@ -2246,7 +2246,18 @@ void oedit_parse(struct descriptor_data *d, char *arg)
 
         obj = OLC_IOBJ(d);
 
-        *obj = *(OLC_OBJ(d));
+        {
+          char uuid[33];
+          bool quarantined = obj->legendary_quarantined;
+          struct legendary_item_record *record = obj->legendary_record;
+          int owner = GET_OBJ_BOUND_ID(obj);
+          memcpy(uuid, obj->legendary_uuid, sizeof(uuid));
+          *obj = *(OLC_OBJ(d));
+          memcpy(obj->legendary_uuid, uuid, sizeof(uuid));
+          obj->legendary_quarantined = quarantined;
+          obj->legendary_record = record;
+          if (uuid[0]) GET_OBJ_BOUND_ID(obj) = owner;
+        }
 
         GET_ID(obj) = max_obj_id++;
 

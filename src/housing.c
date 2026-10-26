@@ -1,6 +1,7 @@
 /* Neighborhood housing, adapted from d20StarWars housing service. */
 #include "conf.h"
 #include "sysdep.h"
+#include "legendary_equipment.h"
 #include "structs.h"
 #include "utils.h"
 #include "housing.h"
@@ -394,6 +395,7 @@ int housing_put(struct char_data *ch, struct obj_data *obj, struct obj_data *con
     send_to_char(ch, "That item cannot be stored.\r\n");
     return TRUE;
   }
+  if (!legendary_tree_check(ch, obj, LEG_ROUTE_OWNER)) return TRUE;
   escrow = estate_prepare_escrow(ch, obj);
   if (!escrow)
   {
@@ -501,6 +503,7 @@ int housing_get(struct char_data *ch, struct obj_data *container, const char *ar
       send_to_char(ch, "That stored item could not be restored; it remains in storage.\r\n");
       break;
     }
+    if (!legendary_tree_check(ch, obj, LEG_ROUTE_OWNER)) { extract_obj(obj); break; }
     if (!CAN_CARRY_OBJ(ch, obj))
     {
       extract_obj(obj);

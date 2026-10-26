@@ -10,14 +10,25 @@ struct obj_data *obj_proto;
 obj_rnum top_of_objt;
 obj_rnum real_object(obj_vnum v)
 {
+#ifdef LEGENDARY_PERSISTENCE_TEST
+  obj_rnum i;
+  for(i=0;obj_index && i<=top_of_objt;i++) if(obj_index[i].vnum==v)return i;
+#else
   (void)v;
+#endif
   return NOTHING;
 }
 struct obj_data *read_object(obj_vnum v, int type)
 {
   (void)v;
   (void)type;
+#ifdef LEGENDARY_PERSISTENCE_TEST
+  struct obj_data *obj=create_obj();
+  obj->item_number=real_object(v);
+  return obj;
+#else
   return create_obj();
+#endif
 }
 void strip_cr(char *s)
 {
@@ -63,6 +74,7 @@ char *fread_string(FILE *fp, const char *error)
   fclose(out);
   return s;
 }
+#ifndef LEGENDARY_PERSISTENCE_TEST
 int objsave_save_obj_record_db_sheath(struct obj_data *obj, struct char_data *ch, long id, int slot)
 {
   (void)obj;
@@ -71,6 +83,8 @@ int objsave_save_obj_record_db_sheath(struct obj_data *obj, struct char_data *ch
   (void)slot;
   abort();
 }
+#endif
+#ifndef LEGENDARY_PERSISTENCE_TEST
 /* New-format records must take the shared file-parser path in this test. */
 char **tokenize(const char *input, const char *delim)
 {
@@ -83,3 +97,5 @@ void free_tokens(char **tokens)
   (void)tokens;
   abort();
 }
+
+#endif

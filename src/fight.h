@@ -12,6 +12,9 @@
  */
 #ifndef _FIGHT_H_
 #define _FIGHT_H_
+struct char_data;
+struct legendary_attack;
+int legendary_combat_packet(struct char_data *,struct char_data *,int,int,int,unsigned int,struct legendary_attack *,int *);
 
 /* Structures and defines */
 #define MODE_ARMOR_CLASS_NORMAL 0
@@ -67,6 +70,7 @@ int compute_damage_bonus(struct char_data *ch, struct char_data *victim, struct 
                          int attktype, int mod, int mode, int attack_type);
 int compute_cmb(struct char_data *ch, int combat_maneuver_type);
 int compute_cmd(struct char_data *vict, int combat_maneuver_type);
+int damage_with_origin(struct char_data *, struct char_data *, int, int, int, int, unsigned int);
 int damage(struct char_data *ch, struct char_data *victim, int dam, int attacktype, int dam_type,
            int dualwield);
 int natural_attack_damage_roll(struct char_data *ch, int attack_type);

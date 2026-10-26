@@ -10,6 +10,7 @@
 
 #include "conf.h"
 #include "sysdep.h"
+#include "legendary_equipment.h"
 #include "structs.h"
 #include "utils.h"
 #include "comm.h"
@@ -2061,6 +2062,7 @@ ACMD(do_load)
     for (i = 0; i < n; i++)
     {
       mob = read_mobile(r_num, REAL);
+      mob->legendary_test_encounter = true;
 
       if (ZONE_FLAGGED(GET_ROOM_ZONE(IN_ROOM(ch)), ZONE_WILDERNESS))
       {
@@ -2140,6 +2142,7 @@ ACMD(do_vstat)
       return;
     }
     mob = read_mobile(r_num, REAL);
+    mob->legendary_test_encounter = true;
     char_to_room(mob, 0);
     do_stat_character(ch, mob);
     extract_char(mob);
@@ -10049,6 +10052,7 @@ ACMD(do_unbind)
     return;
   }
 
+  if (!legendary_tree_check(ch, obj, LEG_ROUTE_TRANSFORM)) return;
   if (GET_OBJ_BOUND_ID(obj) == NOBODY)
   {
     send_to_char(ch, "But, the %s@n is not bound to anyone!\r\n", obj->short_description);
@@ -10101,6 +10105,7 @@ ACMD(do_obind)
     return;
   }
 
+  if (!legendary_tree_check(ch, obj, LEG_ROUTE_TRANSFORM)) return;
   if (GET_OBJ_BOUND_ID(obj) != NOBODY)
   {
     if (GET_OBJ_BOUND_ID(obj) == GET_IDNUM(vict))

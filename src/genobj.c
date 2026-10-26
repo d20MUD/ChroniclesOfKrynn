@@ -6,6 +6,7 @@
  **************************************************************************/
 
 #include "conf.h"
+#include "legendary_identity.h"
 #include "sysdep.h"
 #include "structs.h"
 #include "utils.h"
@@ -69,6 +70,10 @@ static int update_all_objects(struct obj_data *refobj)
     *obj = *refobj;
 
     /* Copy game-time dependent variables over. */
+    memcpy(obj->legendary_uuid, swap.legendary_uuid, sizeof(obj->legendary_uuid));
+    obj->legendary_quarantined = swap.legendary_quarantined;
+    obj->legendary_record = swap.legendary_record;
+    if (obj->legendary_uuid[0]) GET_OBJ_BOUND_ID(obj) = GET_OBJ_BOUND_ID(&swap);
     GET_ID(obj) = swap.id;
     IN_ROOM(obj) = swap.in_room;
     obj->carried_by = swap.carried_by;
@@ -548,6 +553,7 @@ int copy_object_preserve(struct obj_data *to, struct obj_data *from)
 int copy_object_main(struct obj_data *to, struct obj_data *from, int free_object)
 {
   struct trap_data *source_trap = from->trap;
+  legendary_object_unload(to);
 
   if (to->trap)
   {
@@ -556,6 +562,9 @@ int copy_object_main(struct obj_data *to, struct obj_data *from, int free_object
   }
 
   *to = *from;
+  to->legendary_record = NULL;
+  memset(to->legendary_uuid, 0, sizeof(to->legendary_uuid));
+  to->legendary_quarantined = false;
   copy_object_strings(to, from);
   to->trap = source_trap ? copy_trap(source_trap) : NULL;
   return TRUE;

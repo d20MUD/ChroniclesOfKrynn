@@ -300,6 +300,7 @@ const char *walkto_landmarks_dl[][WALKTO_LANDMARKS_FIELDS] = {
     {"Palanthas", "4200", "Palanthas Palace", ""},
     {"Palanthas", "15327", "Palanthas Pawn Shop", ""},
     {"Palanthas", "15330", "Palanthas Quest Item Recovery", ""},
+    {"Palanthas", "15355", "Palanthas Residential Neighbourhood", ""},
     {"Palanthas", "2357", "Palanthas South Gate", ""},
     {"Palanthas", "15303", "Palanthas Stables", ""},
     {"Palanthas", "15348", "Palanthas Temple", ""},
@@ -326,6 +327,7 @@ const char *walkto_landmarks_dl[][WALKTO_LANDMARKS_FIELDS] = {
     {"Sanction", "60373", "Sanction Slave Mines", ""},
     {"Sanction", "6599", "Sanction Thieves Guild", ""},
     {"Sanction", "6584", "Sanction East Gate", ""},
+    {"Sanction", "13836", "Sanction Residential Neighbourhood", ""},
     {"Sanction", "13814", "Sanction Spell Researching", ""},
     {"Sanction", "5399", "Red Dragonarmy Camp", ""},
     {"Sanction", "3705", "Shadowpeople City", ""},
@@ -843,15 +845,17 @@ void travel_tickdown(void)
         if (ch->player_specials->travel_type == TRAVEL_CARRIAGE ||
             ch->player_specials->travel_type == TRAVEL_OVERLAND_FLIGHT)
         {
-          snprintf(car, sizeof(car), "%d", get_carriage_locale_vnum(ch->player_specials->travel_locale));
+          snprintf(car, sizeof(car), "%d",
+                   get_carriage_locale_vnum(ch->player_specials->travel_locale));
         }
         else if (ch->player_specials->travel_type == TRAVEL_SAILING ||
                  ch->player_specials->travel_type == TRAVEL_OVERLAND_FLIGHT_SAIL)
         {
-          snprintf(sail, sizeof(sail), "%d", get_sailing_locale_vnum(ch->player_specials->travel_locale));
+          snprintf(sail, sizeof(sail), "%d",
+                   get_sailing_locale_vnum(ch->player_specials->travel_locale));
         }
 
-        if (ch->player_specials->travel_type == TRAVEL_SAILING || 
+        if (ch->player_specials->travel_type == TRAVEL_SAILING ||
             ch->player_specials->travel_type == TRAVEL_OVERLAND_FLIGHT_SAIL)
         {
           if (atoi(sail) < 1000000)
@@ -1048,7 +1052,7 @@ int get_travel_time(struct char_data *ch, int speed, int locale, int here, int t
 ACMDU(do_walkto)
 {
   char arg1[MAX_INPUT_LENGTH];
-  
+
   /* Check if this is a quest walkto command or confirmation */
   one_argument(argument, arg1, sizeof(arg1));
   if ((GET_WALKTO_CONFIRM(ch) && *arg1 && !strcasecmp(arg1, GET_WALKTO_CONFIRM(ch))) ||
@@ -1106,7 +1110,8 @@ ACMDU(do_walkto_full)
   {
     send_to_char(ch, "You need to specify the landmark you wish to travel to.  Type 'LANDMARKS' "
                      "for a list.\r\n");
-    send_to_char(ch, "You can also use 'walkto questtarget' or 'walkto questmaster' to navigate to an active quest.\r\n");
+    send_to_char(ch, "You can also use 'walkto questtarget' or 'walkto questmaster' to navigate to "
+                     "an active quest.\r\n");
     send_to_char(ch, "You can type 'walkto cancel' to cancel your current walkto action.\r\n");
     return;
   }
@@ -1188,7 +1193,8 @@ ACMDU(do_walkto_city)
   {
     send_to_char(ch, "You need to specify the landmark you wish to travel to.  Type 'LANDMARKS' "
                      "for a list.\r\n");
-    send_to_char(ch, "You can also use 'walkto questtarget' or 'walkto questmaster' to navigate to an active quest.\r\n");
+    send_to_char(ch, "You can also use 'walkto questtarget' or 'walkto questmaster' to navigate to "
+                     "an active quest.\r\n");
     send_to_char(ch, "You can type 'walkto cancel' to cancel your current walkto action.\r\n");
     return;
   }
@@ -1354,8 +1360,8 @@ void process_walkto_actions(void)
     if ((dir = find_first_step(IN_ROOM(ch), destination)) < 0)
     {
       if (*GET_WALKTO_DEST_LABEL(ch))
-        send_to_char(ch, "Your walk to %s has been interrupted %d.\r\n",
-                     GET_WALKTO_DEST_LABEL(ch), dir);
+        send_to_char(ch, "Your walk to %s has been interrupted %d.\r\n", GET_WALKTO_DEST_LABEL(ch),
+                     dir);
       else
         send_to_char(ch, "Your walk to '%s' has been interrupted %d.\r\n",
                      get_walkto_landmark_name(GET_WALKTO_LOC(ch)), dir);
@@ -1380,11 +1386,13 @@ void process_walkto_actions(void)
       {
         distance = count_rooms_between(IN_ROOM(ch), destination);
         if (*GET_WALKTO_DEST_LABEL(ch))
-          send_to_char(ch, "You continue walking to %s.  %d rooms to go. Type walkto cancel to stop.\r\n",
-                       GET_WALKTO_DEST_LABEL(ch), distance);
+          send_to_char(
+              ch, "You continue walking to %s.  %d rooms to go. Type walkto cancel to stop.\r\n",
+              GET_WALKTO_DEST_LABEL(ch), distance);
         else
-          send_to_char(ch, "You continue walking to '%s'.  %d rooms to go. Type walkto cancel to stop.\r\n",
-                       get_walkto_landmark_name(walkto_vnum_to_list_row(GET_WALKTO_LOC(ch))), distance);
+          send_to_char(
+              ch, "You continue walking to '%s'.  %d rooms to go. Type walkto cancel to stop.\r\n",
+              get_walkto_landmark_name(walkto_vnum_to_list_row(GET_WALKTO_LOC(ch))), distance);
       }
     }
   }

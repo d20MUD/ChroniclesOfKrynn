@@ -9,6 +9,7 @@
 
 #include "conf.h"
 #include "sysdep.h"
+#include "legendary_equipment.h"
 #include "structs.h"
 #include "screen.h"
 #include "dg_scripts.h"
@@ -864,6 +865,7 @@ OCMD(do_objbind)
     return;
   }
 
+  if (legendary_tree_present(obj)) { obj_log(obj, "Cannot change immutable legendary ownership"); return; }
   if ((ch = get_char_by_obj(obj, buf)))
   {
     if (!IS_NPC(ch))

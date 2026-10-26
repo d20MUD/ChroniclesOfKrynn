@@ -12,6 +12,7 @@
 #include <limits.h>
 #include "account.h"
 #include "sysdep.h"
+#include "legendary_equipment.h"
 #include "structs.h"
 #include "utils.h"
 #include "comm.h"
@@ -2690,6 +2691,7 @@ void set_armor_object(struct obj_data *obj, int type)
 {
   int wear_inc;
 
+  if (legendary_tree_present(obj)) return;
   GET_OBJ_TYPE(obj) = ITEM_ARMOR;
 
   /* Armor Type, 2nd Value */
@@ -2729,6 +2731,7 @@ void set_weapon_object(struct obj_data *obj, int type)
 {
   int wear_inc;
 
+  if (legendary_tree_present(obj)) return;
   GET_OBJ_TYPE(obj) = ITEM_WEAPON;
 
   /* Weapon Type */

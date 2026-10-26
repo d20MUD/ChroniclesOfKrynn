@@ -14,6 +14,7 @@
 
 #include "conf.h"
 #include "sysdep.h"
+#include "legendary_transaction.h"
 #include "structs.h"
 #include "dg_scripts.h"
 #include "utils.h"
@@ -985,6 +986,8 @@ int command_otrigger(char_data *actor, char *cmd, char *argument)
 
 int wear_otrigger(obj_data *obj, char_data *actor, int where)
 {
+  /* Persistence removes/re-equips gear while the economic lock is held. */
+  if (legendary_transaction_locked(actor)) return 1;
   trig_data *t = NULL;
   char buf[MAX_INPUT_LENGTH] = {'\0'};
   int ret_val = 0;
@@ -1015,6 +1018,8 @@ int wear_otrigger(obj_data *obj, char_data *actor, int where)
 
 int remove_otrigger(obj_data *obj, char_data *actor)
 {
+  /* Persistence removes/re-equips gear while the economic lock is held. */
+  if (legendary_transaction_locked(actor)) return 1;
   trig_data *t;
   char buf[MAX_INPUT_LENGTH] = {'\0'};
   int ret_val;

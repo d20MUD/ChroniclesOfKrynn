@@ -9,7 +9,12 @@
  ************************************************************************ */
 
 #include "conf.h"
+#include "legendary_identity.h"
 #include "sysdep.h"
+#include "legendary_effects.h"
+#include "legendary_techniques.h"
+#include "legendary_foundations.h"
+#include "legendary_equipment.h"
 #include "structs.h"
 #include "housing.h"
 #include "utils.h"
@@ -487,6 +492,8 @@ void reset_char_points(struct char_data *ch)
     ch->points.apply_saving_throw[i] = ch->real_points.apply_saving_throw[i];
   for (i = 0; i < NUM_DAM_TYPES; i++)
     ch->points.resistances[i] = ch->real_points.resistances[i];
+
+  legendary_foundations_reset(ch);
 
   /* NOTE: Perk bonuses are applied in affect_total_plus() */
 
@@ -1074,6 +1081,7 @@ void affect_total_plus(struct char_data *ch, int at_armor)
 
   /* cap character */
   compute_char_cap(ch, 0);
+  legendary_foundations_apply(ch);
 
   /* any dynamic stats need to be modified? (example, con -> hps) */
   if (IS_NPC(ch))
@@ -1221,6 +1229,8 @@ void affect_total(struct char_data *ch)
 {
   int at_armor = 100;
 
+  if (!legendary_foundations_begin(ch)) return;
+
   /* cleanup for disguise system */
   cleanup_disguise(ch);
 
@@ -1231,8 +1241,11 @@ void affect_total(struct char_data *ch)
   /* this will re-add all affects, cap the char, and modify any dynamics */
   affect_total_plus(ch, at_armor);
 
+  legendary_loadout_invalidate(ch);
+
   /* MSDP */
   update_msdp_affects(ch);
+  legendary_foundations_end(ch);
 }
 
 /* Insert an affect_type in a char_data structure. Automatically sets
@@ -1240,6 +1253,10 @@ void affect_total(struct char_data *ch)
 void affect_to_char(struct char_data *ch, struct affected_type *af)
 {
   struct affected_type *affected_alloc;
+  if(legendary_script_depth)af->legendary_flags|=LEG_CONDITION_LOCKED;
+
+  if (IS_NPC(ch) && IS_SET_AR(af->bitvector, AFF_CHARM))
+    ch->legendary_owned_instance = true;
 
   CREATE(affected_alloc, struct affected_type, 1);
 
@@ -1476,6 +1493,7 @@ void affect_join(struct char_data *ch, struct affected_type *af, bool add_dur, b
       else if (avg_mod)
         af->modifier = (af->modifier + hjp->modifier) / 2;
 
+      af->legendary_flags |= hjp->legendary_flags;
       /* replace! */
       affect_remove(ch, hjp);
       affect_to_char(ch, af);
@@ -1582,6 +1600,8 @@ void char_from_room(struct char_data *ch)
     log("SYSERR: NOWHERE in %s, char_from_room, shutting game down!", __FILE__);
     exit(1);
   }
+
+  legendary_effects_depart(ch);
 
   if (FIGHTING(ch) != NULL)
     stop_fighting(ch);
@@ -1832,6 +1852,7 @@ void char_to_room(struct char_data *ch, room_rnum room)
 
 void resize_obj_to_char(struct obj_data *object, struct char_data *ch)
 {
+  if (legendary_tree_present(object)) { obj_to_char(object, ch); return; }
   switch (GET_OBJ_TYPE(object))
   {
   case ITEM_ARMOR:
@@ -1853,6 +1874,7 @@ void obj_to_char(struct obj_data *object, struct char_data *ch)
 {
   if (object && ch)
   {
+    legendary_holder_check(ch, object);
     // log("T1: %s", object->short_description);
     object->next_content = ch->carrying;
     // log("T2: %s", object->short_description);
@@ -1887,6 +1909,7 @@ void obj_to_char(struct obj_data *object, struct char_data *ch)
   }
   else
     log("SYSERR: NULL obj (%p) or char (%p) passed to obj_to_char.", object, ch);
+  legendary_object_live(object);
 }
 
 void obj_to_bag(struct char_data *ch, struct obj_data *object, int bagnum)
@@ -2223,6 +2246,7 @@ void equip_char(struct char_data *ch, struct obj_data *obj, int pos)
     log("SYSERR: EQUIP: Obj is in_room when equip.");
     return;
   }
+  if (!legendary_tree_check(ch, obj, LEG_ROUTE_OWNER)) { obj_to_char(obj, ch); return; }
   if (violates_only_equip_one(ch, obj))
   {
     act("You can only equip one $p at a time.", FALSE, ch, obj, 0, TO_CHAR);
@@ -2300,6 +2324,8 @@ void equip_char(struct char_data *ch, struct obj_data *obj, int pos)
   }
 
   affect_total(ch);
+  legendary_object_live(obj);
+  legendary_loadout_invalidate(ch);
 }
 
 struct obj_data *unequip_char(struct char_data *ch, int pos)
@@ -2360,6 +2386,7 @@ struct obj_data *unequip_char(struct char_data *ch, int pos)
       // affect_modify_ar(ch, obj->affected[j].location, calculate_best_mod(ch, obj->affected[j].location, obj->affected[j].bonus_type, pos, -1), empty_bits, TRUE);
     }
   }
+  legendary_loadout_invalidate(ch);
   affect_total(ch);
 
   return (obj);
@@ -2483,6 +2510,7 @@ void obj_to_room(struct obj_data *object, room_rnum room)
     if (obj_should_fall(object))
       ; // fall event for objects
   }
+  legendary_object_live(object);
 }
 
 /* Take an object from a room */
@@ -2529,6 +2557,14 @@ void obj_to_obj(struct obj_data *obj, struct obj_data *obj_to)
     return;
   }
 
+  {
+    struct obj_data *root = obj_to;
+    int depth = 0;
+    while (root->in_obj && depth++ < 64) root = root->in_obj;
+    if (root->carried_by || root->worn_by)
+      legendary_holder_check(root->carried_by ? root->carried_by : root->worn_by, obj);
+  }
+
   /* Check for circular containment - prevent object from being placed in its own container hierarchy */
   for (tmp_obj = obj_to; tmp_obj; tmp_obj = tmp_obj->in_obj)
   {
@@ -2556,6 +2592,7 @@ void obj_to_obj(struct obj_data *obj, struct obj_data *obj_to)
     if (tmp_obj->carried_by)
       IS_CARRYING_W(tmp_obj->carried_by) += GET_OBJ_WEIGHT(obj);
   }
+  legendary_object_live(obj);
 }
 
 /* remove an object from an object */
@@ -2601,6 +2638,7 @@ void object_list_new_owner(struct obj_data *list, struct char_data *ch)
 /* Extract an object from the world */
 void extract_obj(struct obj_data *obj)
 {
+  legendary_object_unload(obj);
   housing_object_extracted(obj);
   struct descriptor_data *d = NULL;
 
@@ -3006,6 +3044,7 @@ void extract_char_final(struct char_data *ch)
  * really confused otherwise. */
 void extract_char(struct char_data *ch)
 {
+  legendary_effects_cancel(ch);
   char_from_furniture(ch);
   char_from_buff_targets(ch);
 

@@ -32,7 +32,7 @@
 #define ZONE_MINLVL(rnum) (zone_table[(rnum)].min_level)
 
 /* Use the actual body, so a cosmetic disguise cannot grant a swim speed. */
-static bool is_natural_swimmer(struct char_data *ch)
+bool is_natural_swimmer(struct char_data *ch)
 {
   int race;
   int i;

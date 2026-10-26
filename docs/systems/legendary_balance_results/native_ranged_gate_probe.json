@@ -1,0 +1,112 @@
+{
+  "provenance": "Real native engine loading copied level-30 flat snapshots; anonymized; not live SQL character state",
+  "validation_status": "Native stationary-target outgoing gate probe; incoming retaliation/major rotations/seven-role suite are not modeled. Native damage, crits, mitigation, procs, timers and target death are executed.",
+  "profiles": [
+    {
+      "role": "ranged_attacker",
+      "candidate": "candidate_029",
+      "mode": "baseline",
+      "seconds": 30,
+      "class": 2,
+      "level": 30,
+      "equipped_objects": 32,
+      "legendary_channels": 0,
+      "attack_bonus": 50,
+      "primary_display_damage": 1,
+      "offhand_display_damage": 3,
+      "actual_hp_damage": 71,
+      "damage_packets": 15
+    },
+    {
+      "role": "ranged_attacker",
+      "candidate": "candidate_029",
+      "mode": "control",
+      "seconds": 30,
+      "class": 2,
+      "level": 30,
+      "equipped_objects": 32,
+      "legendary_channels": 0,
+      "attack_bonus": 50,
+      "primary_display_damage": 1,
+      "offhand_display_damage": 3,
+      "actual_hp_damage": 71,
+      "damage_packets": 15
+    },
+    {
+      "role": "ranged_attacker",
+      "candidate": "candidate_029",
+      "mode": "legendary",
+      "seconds": 30,
+      "class": 2,
+      "level": 30,
+      "equipped_objects": 32,
+      "legendary_channels": 6,
+      "attack_bonus": 51,
+      "primary_display_damage": 3,
+      "offhand_display_damage": 5,
+      "actual_hp_damage": 101,
+      "damage_packets": 15
+    },
+    {
+      "role": "ranged_attacker",
+      "candidate": "candidate_029",
+      "mode": "baseline",
+      "seconds": 600,
+      "class": 2,
+      "level": 30,
+      "equipped_objects": 32,
+      "legendary_channels": 0,
+      "attack_bonus": 50,
+      "primary_display_damage": 1,
+      "offhand_display_damage": 3,
+      "actual_hp_damage": 1142,
+      "damage_packets": 300
+    },
+    {
+      "role": "ranged_attacker",
+      "candidate": "candidate_029",
+      "mode": "control",
+      "seconds": 600,
+      "class": 2,
+      "level": 30,
+      "equipped_objects": 32,
+      "legendary_channels": 0,
+      "attack_bonus": 50,
+      "primary_display_damage": 1,
+      "offhand_display_damage": 3,
+      "actual_hp_damage": 1142,
+      "damage_packets": 300
+    },
+    {
+      "role": "ranged_attacker",
+      "candidate": "candidate_029",
+      "mode": "legendary",
+      "seconds": 600,
+      "class": 2,
+      "level": 30,
+      "equipped_objects": 32,
+      "legendary_channels": 6,
+      "attack_bonus": 51,
+      "primary_display_damage": 3,
+      "offhand_display_damage": 5,
+      "actual_hp_damage": 1714,
+      "damage_packets": 300
+    }
+  ],
+  "comparisons": [
+    {
+      "seconds": 30,
+      "baseline_damage": 71,
+      "legendary_damage": 101,
+      "outgoing_increase_percent": 42.25352112676056,
+      "within_five_percent": false
+    },
+    {
+      "seconds": 600,
+      "baseline_damage": 1142,
+      "legendary_damage": 1714,
+      "outgoing_increase_percent": 50.08756567425569,
+      "within_five_percent": false
+    }
+  ]
+}

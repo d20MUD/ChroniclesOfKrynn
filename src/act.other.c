@@ -14,6 +14,8 @@
 
 #include "conf.h"
 #include "sysdep.h"
+#include "legendary_techniques.h"
+#include "legendary_transaction.h"
 #include "structs.h"
 #include "utils.h"
 #include "comm.h"
@@ -5199,11 +5201,13 @@ ACMD(do_disguise)
       sivak_form_command(ch, choice);
       return;
     }
-    if (GET_REAL_RACE(ch) != DL_RACE_IRDA)
+    if (GET_REAL_RACE(ch) != DL_RACE_IRDA || !HAS_REAL_FEAT(ch, FEAT_IRDA_CHANGE_SHAPE))
     {
       send_to_char(ch, "Only Irda can change humanoid form at will.\r\n");
       return;
     }
+    if (!is_action_available(ch, atSTANDARD, TRUE))
+      return;
     if (IS_ALTER_SELF(ch) || IS_WILDSHAPED(ch) || IS_MORPHED(ch) || GET_DISGUISE_RACE(ch) ||
         affected_by_spell(ch, SPELL_POLYMORPH))
     {
@@ -6820,6 +6824,8 @@ ACMD(do_steal)
     return;
   }
 
+  if (legendary_transaction_locked(ch) || legendary_transaction_locked(vict)) return;
+
   /* 101% is a complete failure */
   percent = rand_number(1, 35);
 
@@ -7637,6 +7643,7 @@ ACMD(do_formation)
     send_to_char(ch, "They must be conscious and awake to change rows.\r\n");
     return;
   }
+  if(legendary_grounded(target)){send_to_char(ch,"The grounding lance holds that formation position.\r\n");return;}
   if (FIGHTING(target) || is_tanking(target))
   {
     if (!is_action_available(target, atMOVE, FALSE))

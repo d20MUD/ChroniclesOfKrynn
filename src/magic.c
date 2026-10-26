@@ -10,6 +10,9 @@
 
 #include "conf.h"
 #include "sysdep.h"
+#include "legendary_foundations.h"
+#include "legendary_techniques.h"
+#include "legendary_earnings.h"
 #include "structs.h"
 #include "utils.h"
 #include "epic_magic.h"
@@ -345,6 +348,8 @@ int compute_mag_saves(struct char_data *vict, int type, int modifier)
 {
   int saves = 0;
 
+  legendary_foundations_refresh(vict);
+
   /* specific saves and related bonuses/penalties */
   switch (type)
   {
@@ -570,6 +575,7 @@ int savingthrow_full(struct char_data *ch, struct char_data *vict, int type, int
     diceroll = MAX(diceroll, d20(vict));
 
   savethrow = compute_mag_saves(vict, type, modifier) + diceroll;
+  savethrow += legendary_signature_save(vict,type,spellnum?spellnum:ch?CASTING_SPELLNUM(ch):0);
 
   /* Inquisitor Legendary Resilience: +3 vs ability-penalty effects */
   if (!IS_NPC(vict) && has_inquisitor_legendary_resilience(vict) && spell_has_ability_penalty(spellnum))
@@ -1357,6 +1363,7 @@ void affect_update(void)
   int affected_chars = 0, processed_affects = 0;
 
   update_count++;
+  legendary_affect_round();
 
   for (i = character_list; i; i = next_char)
   {                      /* go through everything */
@@ -1381,6 +1388,10 @@ void affect_update(void)
     { /* loop his/her aff list */
       processed_affects++;
       next = af->next;
+      if(af->legendary_expiry>0) {
+        if(af->legendary_expiry<=legendary_effects_now())affect_remove(i,af);
+        continue;
+      }
       if (af->duration >= 1) /* duration > 0, decrement */
         af->duration--;
       else if (af->duration <= -1) /* unlimited duration */
@@ -4112,6 +4123,8 @@ void mag_affects_full(int level, struct char_data *ch, struct char_data *victim,
                       struct obj_data *wpn, int spellnum, int savetype, int casttype, int metamagic,
                       bool recursive_call)
 {
+  bool legendary_had_effect = victim && affected_by_spell(victim, spellnum);
+  bool legendary_applied = false;
   struct affected_type af[MAX_SPELL_AFFECTS];
   bool accum_affect = FALSE, accum_duration = FALSE;
   const char *to_vict = NULL, *to_room = NULL;
@@ -5494,9 +5507,9 @@ void mag_affects_full(int level, struct char_data *ch, struct char_data *victim,
     if (power_resistance(ch, victim, get_psionic_piercing_will_bonus(ch)))
       return;
     if (GET_AUGMENT_PSP(ch) < 4 &&
-        savingthrow(ch, victim, SAVING_WILL,
+        savingthrow_full(ch, victim, SAVING_WILL,
                     dc_mod + (affected_by_aura_of_cowardice(victim) ? -4 : 0), casttype, level,
-                    NOSCHOOL))
+                    NOSCHOOL, spellnum))
       return;
     if (!epic_ward_surge_active(victim))
       change_position(victim, POS_SITTING);
@@ -8337,8 +8350,8 @@ void mag_affects_full(int level, struct char_data *ch, struct char_data *victim,
     }
     if (mag_resistance(ch, victim, 0))
       return;
-    if (savingthrow(ch, victim, SAVING_WILL, dc_mod + enchantment_bonus, casttype, level,
-                    ENCHANTMENT))
+    if (savingthrow_full(ch, victim, SAVING_WILL, dc_mod + enchantment_bonus, casttype, level,
+                    ENCHANTMENT, spellnum))
     {
       return;
     }
@@ -9693,9 +9706,9 @@ void mag_affects_full(int level, struct char_data *ch, struct char_data *victim,
       return;
     if (mag_resistance(ch, victim, 0))
       return;
-    if (savingthrow(ch, victim, SAVING_WILL,
+    if (savingthrow_full(ch, victim, SAVING_WILL,
                     illusion_bonus + dc_mod + (affected_by_aura_of_cowardice(victim) ? -4 : 0),
-                    casttype, level, ILLUSION))
+                    casttype, level, ILLUSION, spellnum))
     {
       return;
     }
@@ -9720,9 +9733,9 @@ void mag_affects_full(int level, struct char_data *ch, struct char_data *victim,
       return;
     if (mag_resistance(ch, victim, 0))
       return;
-    if (savingthrow(ch, victim, SAVING_WILL,
+    if (savingthrow_full(ch, victim, SAVING_WILL,
                     illusion_bonus + dc_mod + (affected_by_aura_of_cowardice(victim) ? -4 : 0),
-                    casttype, level, ILLUSION))
+                    casttype, level, ILLUSION, spellnum))
     {
       return;
     }
@@ -10887,8 +10900,30 @@ void mag_affects_full(int level, struct char_data *ch, struct char_data *victim,
       if (casttype == CAST_POTION)
         if (KNOWS_DISCOVERY(ch, ALC_DISC_EXTEND_POTION))
           af[i].duration *= 2;
+      if(IS_SET_AR(af[i].bitvector,AFF_FEAR)||IS_SET_AR(af[i].bitvector,AFF_BLEED))legendary_condition_origin(&af[i],ch);
       affect_join(victim, af + i, accum_duration, FALSE, accum_affect, FALSE);
+      if (af[i].duration > 0 && affected_by_spell(victim, spellnum)) legendary_applied = true;
     }
+  }
+
+  if (legendary_applied && !legendary_had_effect)
+  {
+    if (spell_info[spellnum].violent)
+      legendary_record_action(ch, victim, LEG_ACTION_DEBUFF, NULL, 1);
+    else
+      switch (spellnum)
+      {
+        case SPELL_ARMOR: case SPELL_MAGE_ARMOR: case SPELL_SHIELD:
+        case SPELL_SHIELD_OF_FAITH: case SPELL_GROUP_SHIELD_OF_FAITH:
+        case SPELL_STONESKIN: case SPELL_RESIST_ENERGY: case SPELL_PROTECTION_FROM_ENERGY:
+        case SPELL_DEATH_WARD: case SPELL_PROTECTION_FROM_ARROWS: case SPELL_SPELL_RESISTANCE:
+        case SPELL_EPIC_MAGE_ARMOR: case SPELL_EPIC_WARDING: case SPELL_SANCTUARY:
+        case SPELL_BARKSKIN: case SPELL_IRONSKIN: case SPELL_BLUR: case SPELL_MIRROR_IMAGE:
+        case SPELL_DISPLACEMENT: case SPELL_MIND_BLANK: case SPELL_PROT_FROM_EVIL:
+        case SPELL_PROT_FROM_GOOD: case SPELL_ELEMENTAL_RESISTANCE: case SPELL_RESISTANCE:
+        case SPELL_SHIELD_OF_FORTIFICATION: case SPELL_PROTECTION_FROM_POISON:
+          legendary_record_support(ch, victim, LEG_ACTION_DEFENSE, 1); break;
+      }
   }
 
   /* Linked Menace perk - apply AC penalty after successful Telepathy debuff */
@@ -13547,6 +13582,9 @@ bool process_healing(struct char_data *ch, struct char_data *victim, int spellnu
 
   /* this is for PSP */
   GET_PSP(victim) = MIN(GET_MAX_PSP(victim), GET_PSP(victim) + psp);
+
+  legendary_record_support(ch, victim, LEG_ACTION_HEAL,
+      MAX(0, MIN(GET_MAX_HIT(victim), GET_HIT(victim)) - start_hp));
 
   /* standard practice! */
   update_pos(victim);

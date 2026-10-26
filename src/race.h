@@ -65,6 +65,8 @@ void sort_races(void);
 
 /* ACMD */
 ACMD_DECL(do_race);
+ACMD_DECL(do_augment_physicality);
+ACMD_DECL(do_mirage_flare);
 ACMD_DECL(do_listraces);
 ACMD_DECL(do_scrounge);
 

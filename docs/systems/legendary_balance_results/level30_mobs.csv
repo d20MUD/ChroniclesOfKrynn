@@ -1,0 +1,204 @@
+vnum,name,stored_xp,solo_infusion_xp,expected_gold,custom_gold
+14,the tutorial questmaster,67500,22500,160,False
+34,Chuck Norris,67500,22500,160,False
+600,a giant jellyfish with a writhing bloom of tentacles,67500,22500,160,False
+601,a green-armoured ogre with charred flesh,67500,22500,160,False
+602,a war-scarred dire wolf in a spiked black harness,67500,22500,160,False
+603,"Hazorgal, a grim, wolf-like bundesphar ranger",67500,22500,160,False
+604,a hungry hyena,67500,22500,160,False
+605,"Ruzk the Silent, Fewmaster of the Green Dragonarmy",67500,22500,160,False
+606,"a sleek, long-limbed kapak in forest-hued leathers",67500,22500,160,False
+607,the zombified corpse of a half-decayed bog turtle,67500,22500,160,False
+608,a silvanesti mage in muddied white robes,67500,22500,160,False
+609,"a keen-eyed, veteran kirath ranger",67500,22500,160,False
+610,a long-bodied giant centipede,67500,22500,160,False
+611,"a hulking, fungus-covered swamp troll with thick limbs",67500,22500,160,False
+612,"Fair-Feather, Prefect of Chislev",67500,22500,160,False
+613,"Jahran Avonalath, Falcon Bladesinger of the Royal Guard",67500,22500,160,False
+614,Lord Althil of House Ambrodel,67500,22500,160,False
+615,"a huge, vicious turtle-shark",67500,22500,160,False
+617,"a large, muscular plains centaur",67500,22500,160,False
+619,"a strange, beautiful dryad",67500,22500,160,False
+620,"Ironbeak, Guardian of the Sanctum",67500,22500,160,False
+622,"a tall, six-limbed coral golem",67500,22500,160,False
+623,"a sleek, long-toothed giant gar",67500,22500,160,False
+624,a lumbering group of giant crabs,67500,22500,160,False
+625,"a huge, writhing sea snake",67500,22500,160,False
+626,a prehistoric dunkleosteus with white-bone scales,67500,22500,160,False
+632,"a withered, vine-covered treant",67500,22500,160,False
+633,a giant chimpanzee with jagged claws,67500,22500,160,False
+634,a plains centaur guard of abnormal size,67500,22500,160,False
+635,a centaur ranger wrapped in steel chainmail,67500,22500,160,False
+636,"a golden, black-spotted dire cheetah",67500,22500,160,False
+637,"a majestic, twelve-pointed megaloceros",67500,22500,160,False
+638,a black-furred dire bison with long horns,67500,22500,160,False
+639,an enormous megatherium sloth,67500,22500,160,False
+640,"a writhing, grasping mass of vines and branches",67500,22500,160,False
+651,a giant swamp anaconda,67500,22500,160,False
+652,a savage dire tiger with sword-like fangs,67500,22500,160,False
+810,a massive chieftain of the pegasi,67500,22500,160,False
+811,a white-feathered giant owl,67500,22500,160,False
+1256,an abhorrent lich clad in rotting finery,200000,29183,160,False
+1345,Horneak Petthyra,200000,29183,160,False
+2514,"a gnarled, ancient spellcaster",200000,29183,160,False
+2523,an elderly dockkeeper,200000,29183,100000,True
+2530,"a long, black eel",200000,29183,160,False
+2532,a loyal guard,200000,29183,160,False
+2617,a half-elven ranger in brown leathers,67500,22500,160,False
+3231,the shadow of an archmage,67500,22500,160,False
+3232,the shadow of an archmage,67500,22500,160,False
+3233,the shadow of an archmage,67500,22500,160,False
+3234,a travelling knight of solamnia,67500,22500,160,False
+3508,"Dertun, a white-robed qualinesti mage",67500,22500,160,False
+3513,Duchess Elira ap Carwyn of Thelgaard,67500,22500,160,False
+3514,"Lord Kelric ap Carwyn, the heir to the Duke",67500,22500,160,False
+3515,"Neressa d'Teneur, a serene, brown-haired solamnic bard",67500,22500,160,False
+3522,"Hosrin d'Orthea, the elder archivist",67500,22500,160,False
+3523,"a heavily robed, slightly hunched figure with strange orange eyes",67500,22500,160,False
+3901,a large marble statue,67500,22500,160,False
+3910,"Balak, a fierce draconian warrior",67500,22500,160,False
+4704,the statue of Chemosh,67500,22500,160,False
+4712,an undead dracolich of Chemosh,67500,22500,160,False
+4713,a messenger of chemosh,67500,22500,160,False
+4718,a souleater serpent,67500,22500,160,False
+5331,"General Golias, Highmaster of the Black Dragonarmy",67500,22500,160,False
+5332,Valkyn of Culthairai,67500,22500,160,False
+5334,"General Marcus Cadrio, Highmaster of the Black Dragonarmy",67500,22500,160,False
+5401,a blank-faced bounty hunter of Hiddukel,67500,22500,160,False
+5414,"Na'resh, a senior prefect of Hiddukel",67500,22500,160,False
+5425,a red-and-white robed cultist jailer,67500,22500,160,False
+5426,"a huge, foul malrauthin demon",67500,22500,160,False
+5427,"a huge, aggressive kalotagh beast",67500,22500,160,False
+5428,"a mighty, brutish balban demon",67500,22500,160,False
+5429,"Dopu, the dark-robed cultist cook",67500,22500,160,False
+5431,a mound of trash,67500,22500,160,False
+5432,"Mureza, a goblin potion-maker",67500,22500,160,False
+5433,"Grok, a goblin dark shaman",67500,22500,160,False
+5434,Amberyl Siath'lin,67500,22500,160,False
+5436,"a dirty, dark-skinned torturer in a bloodied apron",67500,22500,160,False
+5437,"Lumina, a black-robed apprentice wizard",67500,22500,160,False
+5441,an enormous minotaur bodyguard,67500,22500,160,False
+5442,"Scri-yan, aurak sorcerer",67500,22500,160,False
+5444,"Abbadon Blightwood, a noble merchant lord",67500,22500,160,False
+5445,"Cyrustelion, a qualinesti shadowdancer",77075,25691,160,False
+5446,"Aiyse, a mercenary spellsword",67500,22500,160,False
+5447,"Waylen, a mercenary warrior",67500,22500,160,False
+5448,"Murdock, an ergothian duelist",67500,22500,160,False
+5449,"Azouri, a white-robed wizard",67500,22500,160,False
+5451,"Kitana, a qualinesti bard",67500,22500,160,False
+5452,"a lithe, raven-haired succubus with copper skin",67500,22500,160,False
+5458,a green-skinned giant toad covered in warts,67500,22500,160,False
+5469,a one-eyed half-elf Spiritor of Hiddukel,67500,22500,160,False
+5900,"the ghost of a battered, red-haired kender",67500,22500,160,False
+5901,the ghost of a silver armored knight,67500,22500,160,False
+5902,the ghost of a bearded and stocky dwarf,67500,22500,160,False
+5903,"the ghost of a young, brown haired mage",67500,22500,160,False
+5904,"the ghost of a slight, brown-robed woodsman",67500,22500,160,False
+5905,the ghost of an elven priestess,67500,22500,160,False
+5907,a red-scaled behir,67500,22500,160,False
+5911,a slate-grey basilisk,67500,22500,160,False
+5912,"a massive, crystal scorpion",67500,22500,160,False
+6309,a cadre assassin,67500,22500,160,False
+6321,the priest of Mishakal,96675,29183,160,False
+6323,the draconian assassin,67500,22500,160,False
+6324,Vallentis,10,3,100000,True
+6501,Kalkar,200000,29183,100000,True
+6502,Drax,200000,29183,100000,True
+6503,Teniqua,200000,29183,100000,True
+6505,a high priest of Takhisis,67500,22500,160,False
+6715,"Griminy, the pawn broker",200000,29183,160,False
+6939,"a refined, white-robed, silvanesti ambassador",67500,22500,160,False
+6943,an aurak general of the Green Dragonarmy,67500,22500,160,False
+8727,an elite warrior of Takhisis,67500,22500,160,False
+9300,a gruesome sivak captain from the Red Watch,67500,22500,160,False
+9308,"a brawny, motionless guard",67500,22500,160,False
+9309,a scantily-dressed khurish woman,67500,22500,160,False
+9319,the personal advisor to the Dragon Emperor,67500,22500,160,False
+9320,a powerful-looking elite guard,67500,22500,160,False
+9321,a powerful-looking elite guard,67500,22500,160,False
+9325,a smirking half-elven general from the Red Dragonarmy,67500,22500,160,False
+9326,an arrogant minotaur general from the White Dragonarmy,67500,22500,160,False
+9327,"a calm, balding nerakan general from the Blue Dragonarmy",67500,22500,160,False
+9328,Fewmaster Toede from the Red Dragonarmy,67500,22500,160,False
+9334,a heavily-cloaked officer from the Red Dragonarmy,67500,22500,160,False
+9335,an ergothian general from the Black Dragonarmy,67500,22500,160,False
+9336,a hostile kapak guard,67500,22500,160,False
+9343,"an intimidating, grim-faced sivak draconian",67500,22500,160,False
+9346,a hurried cleric of Takhisis,67500,22500,160,False
+9348,a bluish-green orb,67500,22500,160,False
+9349,an elite member of the Red Watch,67500,22500,160,False
+9353,the dread spectre of a flayed elven warrior,67500,22500,160,False
+9354,a reddish-orange orb,67500,22500,160,False
+9534,a frail elderly man,67500,22500,160,False
+9536,"Garinth, a short, balding clerk",67500,22500,100000,True
+9537,"Bawler, a tall, patient man",67500,22500,100000,True
+9718,"Hopsloth, a fat, warty amphidragon",67500,22500,160,False
+11001,"an aged, wizened wyvern",67500,22500,160,False
+11002,"a ferocious, deranged wyvern",67500,22500,160,False
+11003,"a calm, dirt-covered priest of Reorx",67500,22500,160,False
+11004,a wyvern of astounding proportions,67500,22500,160,False
+11006,"a huge, mature adult wyvern with leathery scales",67500,22500,160,False
+11017,"Magran Ashther, Quarry Foreman",67500,22500,160,False
+11023,"a huge, broad-shouldered adult wyvern",67500,22500,160,False
+11026,a horrifying two-headed cave troll,67500,22500,160,False
+11027,a black-robed kobold with draconic features,67500,22500,160,False
+11031,the battle-scarred troglodyte scout leader,67500,22500,160,False
+11034,a thick-bodied daergar bodyguard,67500,22500,160,False
+11600,a half rotting zombie,67500,22500,160,False
+11601,a partially armored skeleton,67500,22500,160,False
+11703,"Zorgnak, the goblin Archmagus",200000,29183,160,False
+11707,"Drek'nak, the goblin High Priest",67500,22500,160,False
+11720,"the thing, a humanoid aberration",67500,22500,160,False
+13009,Tara Le'Beau,67500,22500,160,False
+13010,Thalin Justarious,67500,22500,160,False
+13029,Lord Murat,67500,22500,160,False
+13213,a decaying cultist of Morgion,200000,29183,160,False
+14003,a Baaz Draconian Guard,67500,22500,160,False
+14004,a Bozak Draconian Guard,67500,22500,160,False
+14005,an Aurak Draconian Guard,67500,22500,160,False
+14021,a Kapak Draconian Guard,67500,22500,160,False
+14517,"Silharan Moonthorn, the Head Interrogator",67500,22500,160,False
+14518,a frost draconian guard of the inner sanctum,67500,22500,160,False
+14527,the Kingfisher guardian of the shrine,67500,22500,160,False
+14546,a pulsing cloud of elemetal dust,67500,22500,160,False
+14700,a guardian summoned from the outer planes,67500,22500,160,False
+15564,"Lord Gerard Cobray, Weaponmaster of Castle Caergoth",67500,22500,160,False
+15579,"Montreis ap Gwelyn, Patriarch of Paladine",67500,22500,160,False
+15586,the head record-keeper for Castle Caergoth,67500,22500,160,False
+15587,"Mas'Dief, the master cartographer",67500,22500,160,False
+15588,"a solemn, silver-haired Preceptor of the Sword",67500,22500,160,False
+15590,a hulking Knight of the Crown tournament champion,67500,22500,160,False
+15595,"Darwin, the Chief Engineer",67500,22500,160,False
+21135,"@Wan armored, @Dcoal@W-@Dblack @Wdestrier with @Dblackened tacking@n",0,1,160,False
+34500,"a brutish, towering fire ettin on patrol",67500,22500,160,False
+34501,a fire giant gate guard,67500,22500,160,False
+34502,an elite fire giant king's guard,67500,22500,160,False
+34504,a fire giant queen's servant,67500,22500,160,False
+34506,an off-duty fire giant king's guard,67500,22500,160,False
+34507,a king's pet pyrohydra,67500,22500,160,False
+34508,a towering fire giant,67500,22500,160,False
+34511,the imp assistant to the advisor,67500,22500,160,False
+34512,a fire giant assistant,67500,22500,160,False
+34513,a fire giant matron,67500,22500,160,False
+34514,a gnoll thrall,67500,22500,160,False
+34517,a hell hound,67500,22500,160,False
+34520,a revolting patch of fetid ooze,67500,22500,160,False
+34523,a visiting smoke giant,67500,22500,160,False
+34526,a fire giant youth,67500,22500,160,False
+34527,a fire troll labourer,67500,22500,160,False
+34531,a cruel-looking wererat,67500,22500,160,False
+34534,a fire giant priest,67500,22500,160,False
+34535,a fire troll thrall,67500,22500,160,False
+34541,a wounded fire giant,67500,22500,160,False
+34550,a fire giant lieutenant,67500,22500,160,False
+34551,a patrolling fire giant,67500,22500,160,False
+34552,a fire giant lieutenant,67500,22500,160,False
+34553,a patrolling fire giant,67500,22500,160,False
+34554,"a brutish, towering fire ettin on patrol",67500,22500,160,False
+34555,an elite fire giant soldier of the king's guard,67500,22500,160,False
+34557,a shadow giant envoy,67500,22500,160,False
+34558,a shaitan genie envoy,67500,22500,160,False
+34559,a smoke giant envoy,67500,22500,160,False
+34561,a slag giant craftsman,67500,22500,160,False
+34563,an elite frost giant bodyguard,67500,22500,160,False
+34699,FIRE GIANT INVASION LOADER,67500,22500,160,False

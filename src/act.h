@@ -27,6 +27,7 @@
 
 /* from accounts.c */
 ACMD_DECL(do_accexp);
+ACMD_DECL(do_infuse);
 int has_unlocked_race(struct char_data *ch, int race);
 int has_unlocked_class(struct char_data *ch, int class);
 int hands_available(struct char_data *ch);

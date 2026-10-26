@@ -10,6 +10,7 @@
 
 #include "conf.h"
 #include "sysdep.h"
+#include "legendary_foundations.h"
 #include "structs.h"
 #include "utils.h"
 #include "comm.h"
@@ -836,6 +837,8 @@ int do_simple_move(struct char_data *ch, int dir, int need_specials_check)
     need_movement = MAX(1, need_movement);
   else
     need_movement = MAX(5, need_movement);
+
+  need_movement = legendary_foundation_walk(ch, need_movement, riding || RIDDEN_BY(ch));
 
   /* Move Point Requirement Check */
   if (riding)

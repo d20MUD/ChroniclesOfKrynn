@@ -71,7 +71,22 @@
 #define CRAFT_MAT_JUTE 59
 #define CRAFT_MAT_AGAVE 60
 
-#define NUM_CRAFT_MATS 61
+#define CRAFT_MAT_BRANCH_CORAL 61
+#define CRAFT_MAT_FAN_CORAL 62
+#define CRAFT_MAT_BLOOD_CORAL 63
+#define CRAFT_MAT_DEEPWATER_CORAL 64
+#define CRAFT_MAT_ADAMANT_CORAL 65
+#define CRAFT_MAT_THIN_FISHSKIN 66
+#define CRAFT_MAT_TOUGH_EELSKIN 67
+#define CRAFT_MAT_SHARKSKIN 68
+#define CRAFT_MAT_PRISTINE_SHARKSKIN 69
+#define CRAFT_MAT_KELP_FIBER 70
+#define CRAFT_MAT_SEAGRASS_FIBER 71
+#define CRAFT_MAT_SPONGE_FIBER 72
+#define CRAFT_MAT_SEA_COTTON 73
+#define CRAFT_MAT_SEA_SILK 74
+
+#define NUM_CRAFT_MATS 75
 // also set in structs.h
 
 #define CRAFT_CATALYST_MAX 5
@@ -410,6 +425,9 @@ ACMD_DECL(do_reforge_new);
 SPECIAL_DECL(artisan_shop);
 SPECIAL_DECL(materials_exchanger);
 int canonical_craft_material(int material);
+bool is_aquatic_harvesting_sector(int sector);
+bool is_marine_harvesting_room(room_rnum room);
+int marine_material_variety(int material);
 int climate_material_variety(int material, int climate, int terrain);
 const char *harvest_node_name(room_rnum room);
 const char *harvest_activity_name(room_rnum room);

@@ -13,6 +13,7 @@
 #include <limits.h>
 #include "account.h"
 #include "sysdep.h"
+#include "legendary_earnings.h"
 #include "structs.h"
 #include "utils.h"
 #include "interpreter.h"
@@ -682,7 +683,9 @@ void complete_quest(struct char_data *ch, int index)
   /* Report the actual credited XP, including happyhour and account bonuses. */
   if (QST_EXP(rnum))
   {
-    happy_exp = gain_exp(ch, QST_EXP(rnum), GAIN_EXP_MODE_QUEST);
+    struct legendary_xp_context source;
+    legendary_xp_quest_context(&source, QST_NUM(rnum));
+    happy_exp = gain_exp_with_source(ch, QST_EXP(rnum), GAIN_EXP_MODE_QUEST, &source);
     send_to_char(ch, "You have been awarded %d \tBexperience\tn points for your service.\r\n\r\n",
                  happy_exp);
   }

@@ -84,6 +84,7 @@ ACMD(do_stand)
     /* Were they sitting in something? */
     char_from_furniture(ch);
     /* Will be sitting after a successful bash and may still be fighting. */
+    ch->legendary_knockdown=false;
     GET_POS(ch) = FIGHTING(ch) ? POS_FIGHTING : POS_STANDING;
     USE_MOVE_ACTION(ch);
 
@@ -379,6 +380,7 @@ int change_position(struct char_data *ch, int new_position)
     return 0;
 
   int old_position = GET_POS(ch);
+  if (new_position != POS_SITTING) ch->legendary_knockdown=false;
 
   /* we will put some general checks for having your position changed */
 

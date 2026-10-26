@@ -17,6 +17,7 @@
 #include "dg_scripts.h"
 #include "modify.h"
 #include "feats.h"
+#include "mysql.h"
 #include "class.h"
 #include "mud_event.h"
 #include "assign_wpn_armor.h"
@@ -31,6 +32,125 @@
 int feat_sort_info[MAX_FEATS];
 struct feat_info feat_list[NUM_FEATS];
 /* END */
+
+/* Execute one catalog row with bound parameters, preserving NULL and full text. */
+static bool feat_info_insert(MYSQL_STMT *stmt, int *numbers, int number_count,
+                             const char **strings, int string_count)
+{
+  MYSQL_BIND bindings[12];
+  int i;
+
+  memset(bindings, 0, sizeof(bindings));
+  for (i = 0; i < number_count; i++)
+  {
+    bindings[i].buffer_type = MYSQL_TYPE_LONG;
+    bindings[i].buffer = &numbers[i];
+  }
+  for (i = 0; i < string_count; i++)
+  {
+    bindings[number_count + i].buffer_type = strings[i] ? MYSQL_TYPE_STRING : MYSQL_TYPE_NULL;
+    bindings[number_count + i].buffer = (void *)strings[i];
+    bindings[number_count + i].buffer_length = strings[i] ? strlen(strings[i]) : 0;
+  }
+  if (mysql_stmt_bind_param(stmt, bindings) || mysql_stmt_execute(stmt))
+  {
+    log("SYSERR: Exporting feat info: %s", mysql_stmt_error(stmt));
+    return FALSE;
+  }
+  return TRUE;
+}
+
+/* Boot-time mirror of feat_list. Keep the previous snapshot if any row fails. */
+bool sync_feat_info(void)
+{
+  const char *schema[] = {
+      "CREATE TABLE IF NOT EXISTS feat_info ("
+      "feat_id INT NOT NULL PRIMARY KEY, name TEXT NULL, in_game TINYINT NOT NULL, "
+      "can_learn TINYINT NOT NULL, can_stack TINYINT NOT NULL, feat_type INT NOT NULL, "
+      "short_description LONGTEXT NULL, description LONGTEXT NULL, epic TINYINT NOT NULL, "
+      "combat_feat TINYINT NOT NULL, event INT NOT NULL, teamwork_feat TINYINT NOT NULL"
+      ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+      "CREATE TABLE IF NOT EXISTS feat_info_prerequisites ("
+      "feat_id INT NOT NULL, prerequisite_order INT NOT NULL, prerequisite_type INT NOT NULL, "
+      "description LONGTEXT NULL, value_0 INT NOT NULL, value_1 INT NOT NULL, value_2 INT NOT NULL, "
+      "PRIMARY KEY (feat_id, prerequisite_order), "
+      "FOREIGN KEY (feat_id) REFERENCES feat_info(feat_id) ON DELETE CASCADE"
+      ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"};
+  const char *inserts[] = {
+      "INSERT INTO feat_info (feat_id,in_game,can_learn,can_stack,feat_type,epic,combat_feat,"
+      "event,teamwork_feat,name,short_description,description) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+      "INSERT INTO feat_info_prerequisites (feat_id,prerequisite_order,prerequisite_type,"
+      "value_0,value_1,value_2,description) VALUES (?,?,?,?,?,?,?)"};
+  MYSQL_POOL_CONN *pc;
+  MYSQL *database;
+  MYSQL_STMT *statements[2] = {NULL, NULL};
+  bool transaction = FALSE, success = FALSE;
+  int i, feat_id, order, prerequisite_count = 0;
+
+  if (!mysql_available || !(pc = mysql_pool_acquire()))
+  {
+    log("SYSERR: Feat info export skipped: MySQL is unavailable.");
+    return FALSE;
+  }
+  database = pc->conn;
+  for (i = 0; i < 2; i++)
+  {
+    if (mysql_query(database, schema[i]))
+      goto cleanup;
+    statements[i] = mysql_stmt_init(database);
+    if (!statements[i])
+      goto cleanup;
+    if (mysql_stmt_prepare(statements[i], inserts[i], strlen(inserts[i])))
+    {
+      log("SYSERR: Preparing feat info export: %s", mysql_stmt_error(statements[i]));
+      goto cleanup;
+    }
+  }
+  if (mysql_query(database, "START TRANSACTION"))
+    goto cleanup;
+  transaction = TRUE;
+  /* DELETE is transactional; TRUNCATE would discard the previous snapshot on failure. */
+  if (mysql_query(database, "DELETE FROM feat_info_prerequisites") ||
+      mysql_query(database, "DELETE FROM feat_info"))
+    goto cleanup;
+
+  for (feat_id = 0; feat_id < NUM_FEATS; feat_id++)
+  {
+    const struct feat_info *feat = &feat_list[feat_id];
+    const struct feat_prerequisite *prereq;
+    int numbers[] = {feat_id, feat->in_game, feat->can_learn, feat->can_stack, feat->feat_type,
+                     feat->epic, feat->combat_feat, feat->event, feat->teamwork_feat};
+    const char *strings[] = {feat->name, feat->short_description, feat->description};
+
+    if (!feat_info_insert(statements[0], numbers, 9, strings, 3))
+      goto cleanup;
+    for (prereq = feat->prerequisite_list, order = 0; prereq; prereq = prereq->next, order++)
+    {
+      int values[] = {feat_id, order, prereq->prerequisite_type,
+                      prereq->values[0], prereq->values[1], prereq->values[2]};
+      const char *description[] = {prereq->description};
+      if (!feat_info_insert(statements[1], values, 6, description, 1))
+        goto cleanup;
+      prerequisite_count++;
+    }
+  }
+  if (mysql_query(database, "COMMIT"))
+    goto cleanup;
+  transaction = FALSE;
+  success = TRUE;
+  log("Exported %d feat definitions and %d prerequisites to MySQL.", NUM_FEATS, prerequisite_count);
+
+cleanup:
+  if (!success)
+    log("SYSERR: Feat info export failed; previous snapshot retained: %s", mysql_error(database));
+  if (transaction && mysql_query(database, "ROLLBACK"))
+    log("SYSERR: Rolling back feat info export: %s", mysql_error(database));
+  for (i = 0; i < 2; i++)
+    if (statements[i])
+      mysql_stmt_close(statements[i]);
+  mysql_pool_release(pc);
+  return success;
+}
 
 /* START */
 void free_feats(void)
@@ -1247,6 +1367,31 @@ void assign_feats(void)
   feato(FEAT_BOZAK_LIGHTNING_DISCHARGE, "bozak lightning discharge", TRUE, FALSE, FALSE,
         FEAT_TYPE_INNATE_ABILITY, "Bozaks deal extra lightning damage on all melee attacks.",
         "Bozaks deal extra lightning damage on all melee attacks.");
+
+  feato(FEAT_IRDA_RACIAL_ADJUSTMENT, "irda racial adjustment", TRUE, FALSE, FALSE,
+        FEAT_TYPE_INNATE_ABILITY, "+2 Dexterity, Intelligence, Wisdom and Charisma.",
+        "Irda receive +2 Dexterity, +2 Intelligence, +2 Wisdom and +2 Charisma. "
+        "These adjustments are included in your racial ability scores.");
+  feato(FEAT_IRDA_CHANGE_SHAPE, "irda change shape", TRUE, FALSE, FALSE,
+        FEAT_TYPE_INNATE_ABILITY, "Change humanoid appearance at will.",
+        "Use disguise form <race> as a standard action to assume a humanoid appearance. "
+        "You may choose age, gender and up to two descriptive features without Disguise training "
+        "or an opposed Perception check. The form persists across reconnects until changed or "
+        "removed with disguise form remove. True Sight reveals your natural form. "
+        "Return to your natural form before advancing or using another transformation.");
+  feato(FEAT_AUGMENT_PHYSICALITY, "augment physicality", TRUE, FALSE, FALSE,
+        FEAT_TYPE_INNATE_ABILITY, "Grow one size and gain +4 Strength and +2 Constitution for one minute.",
+        "Use augmentphysicality as a standard action once per five real minutes. "
+        "For ten combat rounds (one minute), you and your worn or carried equipment grow one size "
+        "and you gain +4 Strength and +2 Constitution as size bonuses. "
+        "Augment Physicality cannot be activated while already augmented or enlarged.");
+  feato(FEAT_MIRAGE_FLARE, "mirage flare", TRUE, FALSE, FALSE,
+        FEAT_TYPE_INNATE_ABILITY, "Swift ranged touch attack dealing energy damage and potentially dazing.",
+        "Use mirageflare <target> as a swift action up to three times per five real minutes. "
+        "Each use recharges independently after five minutes, including across reconnects. "
+        "A successful ranged touch attack deals 2d6 + half your character level in energy damage. "
+        "The target must make a Will save (DC 10 + half your level + your Charisma modifier) "
+        "or be dazed for one combat round. A successful save prevents only the daze.");
 
   feato(FEAT_SIVAK_SCALES, "sivak scales", TRUE, FALSE, FALSE, FEAT_TYPE_INNATE_ABILITY,
         "+3 natural armor.", "Sivak scales grant a +3 natural armor bonus.");
@@ -4204,7 +4349,8 @@ void assign_feats(void)
         FEAT_TYPE_GENERAL, "proficiency in monk weapons",
         "You are proficient in the usage of quarterstaff, kama, siangham, and shuriken.");
   feato(FEAT_TONGUE_OF_THE_SUN_AND_MOON, "tongue of the sun and moon", TRUE, FALSE, FALSE,
-        FEAT_TYPE_CLASS_ABILITY, "(temp) +1 threat range", "(temp) +1 threat range");
+        FEAT_TYPE_CLASS_ABILITY, "speak and understand every language",
+        "You can speak and understand every language.");
   /*epic*/ /* free blinding speed */
   /*epic*/ feato(FEAT_KEEN_STRIKE, "keen strike", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
                  "critical more unarmed, better stunning fist",

@@ -315,6 +315,7 @@ path_rnum real_path(path_vnum vnum);
 void Crash_save_all(void);
 void Crash_idlesave(struct char_data *ch);
 void Crash_crashsave(struct char_data *ch);
+bool Crash_crashsave_checked(struct char_data *ch);
 int Crash_load(struct char_data *ch);
 void Crash_listrent(struct char_data *ch, char *name);
 int Crash_clean_file(char *name);
@@ -335,6 +336,8 @@ SPECIAL_DECL(cryogenicist);
 void tag_argument(char *argument, char *tag);
 int load_char(const char *name, struct char_data *ch);
 void save_char(struct char_data *ch, int mode);
+/* False can mean rename succeeded; retain receipts and retry. */
+bool save_char_checked(struct char_data *ch, int mode);
 void init_char(struct char_data *ch);
 struct char_data *create_char(void);
 struct char_data *read_mobile(mob_vnum nr, int type);

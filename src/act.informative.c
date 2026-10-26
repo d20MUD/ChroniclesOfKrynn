@@ -456,7 +456,7 @@ void check_dangersense(struct char_data *ch, room_rnum room)
 
 void show_obj_info(struct obj_data *obj, struct char_data *ch)
 {
-  int size = GET_OBJ_SIZE(obj);
+  int size = compute_object_size(obj);
   int material = GET_OBJ_MATERIAL(obj);
   int type = GET_OBJ_TYPE(obj);
   int weapon_type = GET_WEAPON_TYPE(obj);
@@ -8119,7 +8119,7 @@ ACMD(do_who)
 
   send_to_char(ch, "Type 'listraces' to understand race abbreviations.\r\n");
 
-  send_to_char(ch, "Please note: information gleaned from the 'who' list is considered "
+  send_to_char(ch, "Please note: information gleaned from the 'who' list is considered\r\n"
                    "out-of-character knowledge and should not be used in-character.\r\n");
 
   if (IS_HAPPYHOUR > 0)

@@ -12,6 +12,8 @@
 
 #include "conf.h"
 #include "sysdep.h"
+#include "legendary_foundations.h"
+#include "legendary_techniques.h"
 #include "structs.h"
 #include "utils.h"
 #include "epic_magic.h"
@@ -1746,6 +1748,10 @@ bool perform_knockdown(struct char_data *ch, struct char_data *vict, int skill, 
     defense_check =
         d20(vict) + MAX(GET_STR_BONUS(vict), GET_DEX_BONUS(vict)) + size_modifiers[GET_SIZE(vict)];
 
+    attack_check += legendary_technique_maneuver(ch,COMBAT_MANEUVER_TYPE_KNOCKDOWN,false);
+    defense_check += legendary_technique_maneuver(vict,COMBAT_MANEUVER_TYPE_KNOCKDOWN,true);
+    defense_check += legendary_foundation_value(vict, LEG_F13, 0);
+
     /* Root cantrip: +3 resistance vs trip/knockdown/grapple */
     if (affected_by_spell(vict, SPELL_ROOT))
     {
@@ -1872,6 +1878,8 @@ bool perform_knockdown(struct char_data *ch, struct char_data *vict, int skill, 
       {
         attack_check = (d20(vict) + GET_STR_BONUS(vict) + (GET_SIZE(vict) - GET_SIZE(ch)) * 4);
         defense_check = (d20(ch) + MAX(GET_STR_BONUS(ch), GET_DEX_BONUS(ch)));
+        attack_check += legendary_technique_maneuver(vict,COMBAT_MANEUVER_TYPE_KNOCKDOWN,false);
+        defense_check += legendary_technique_maneuver(ch,COMBAT_MANEUVER_TYPE_KNOCKDOWN,true);
 
         if (GET_RACE(ch) == RACE_DWARF || GET_RACE(ch) == RACE_DUERGAR ||
             GET_RACE(ch) == RACE_CRYSTAL_DWARF) /* Dwarves get a stability bonus. */
@@ -1963,11 +1971,13 @@ bool perform_knockdown(struct char_data *ch, struct char_data *vict, int skill, 
     if (counter_success)
     {
       change_position(ch, POS_SITTING);
+      ch->legendary_knockdown=true;
     }
   }
   else
   { /* success! */
     change_position(vict, POS_SITTING);
+    vict->legendary_knockdown=true;
     if ((skill == SKILL_TRIP) || (skill == SKILL_BASH) || (skill == SKILL_BODYSLAM) ||
         (skill == SKILL_SHIELD_CHARGE))
     {
@@ -5277,6 +5287,8 @@ ACMD(do_flee)
 {
   char arg[MAX_INPUT_LENGTH] = {'\0'};
   int i;
+
+  if(legendary_grounded(ch)){send_to_char(ch,"The grounding lance prevents your escape!\r\n");return;}
 
   if (GET_POS(ch) < POS_FIGHTING || GET_HIT(ch) <= 0)
   {
@@ -13247,7 +13259,7 @@ static int lich_fear_callback(struct char_data *ch, struct char_data *tch, void 
     return 0;
   if (is_immune_mind_affecting(ch, tch, TRUE))
     return 0;
-  if (savingthrow(ch, tch, SAVING_WILL, 0, CAST_INNATE, *cast_level, SCHOOL_NOSCHOOL))
+  if (savingthrow_full(ch, tch, SAVING_WILL, 0, CAST_INNATE, *cast_level, SCHOOL_NOSCHOOL, RACIAL_LICH_FEAR))
     return 0;
 
   /* success */

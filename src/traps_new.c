@@ -9,6 +9,7 @@
 
 #include "conf.h"
 #include "sysdep.h"
+#include "legendary_earnings.h"
 #include "structs.h"
 #include "utils.h"
 #include "comm.h"
@@ -303,6 +304,7 @@ struct trap_data *copy_trap(struct trap_data *source)
 
   CREATE(trap, struct trap_data, 1);
   *trap = *source; // Copy all fields
+  trap->legendary_disarm_id[0] = '\0';
 
   // Deep copy strings
   if (source->trap_name)
@@ -1438,10 +1440,12 @@ ACMD(do_disabletrap)
     act("$n successfully disables the trap!", FALSE, ch, 0, 0, TO_ROOM);
     send_to_char(ch, "You successfully disable the trap!\r\n");
 
+    struct legendary_xp_context source;
+    legendary_xp_trap_context(&source, trap);
     // Grant experience
     exp = trap->disarm_dc * trap->disarm_dc * 100;
     send_to_char(ch, "You receive %d experience points.\r\n",
-                 gain_exp(ch, exp, GAIN_EXP_MODE_TRAP));
+                 gain_exp_with_source(ch, exp, GAIN_EXP_MODE_TRAP, &source));
 
     // Try to recover components
     if (can_recover_trap_components(ch))

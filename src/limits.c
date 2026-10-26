@@ -11,6 +11,8 @@
 #include "conf.h"
 #include <limits.h>
 #include "sysdep.h"
+#include "legendary_foundations.h"
+#include "legendary_earnings.h"
 #include <time.h>
 #include "structs.h"
 #include "utils.h"
@@ -622,6 +624,8 @@ int regen_hps(struct char_data *ch)
   /* exception bonuses */
   if (affected_by_spell(ch, PSIONIC_TRUE_METABOLISM))
     hp += 10;
+
+  hp += legendary_foundation_regen(ch);
 
   /* penalties */
 
@@ -1240,6 +1244,11 @@ long int get_minimum_experience_floor(struct char_data *ch)
 
 int gain_exp(struct char_data *ch, int gain, int mode)
 {
+  return gain_exp_with_source(ch, gain, mode, NULL);
+}
+int gain_exp_with_source(struct char_data *ch, int gain, int mode,
+                         const struct legendary_xp_context *source)
+{
   long int xp_to_lvl = 0;
   long int xp_to_lvl_cap = 0;
   long int gain_cap = 0;
@@ -1407,6 +1416,11 @@ int gain_exp(struct char_data *ch, int gain, int mode)
 
     /* new gain xp cap -zusuk */
     GET_EXP(ch) += gain;
+    if (source && ((source->origin == LEG_XP_KILL &&
+         (mode == GAIN_EXP_MODE_SOLO || mode == GAIN_EXP_MODE_GROUP)) ||
+        (source->origin == LEG_XP_QUEST && mode == GAIN_EXP_MODE_QUEST) ||
+        (source->origin == LEG_XP_TRAP && mode == GAIN_EXP_MODE_TRAP)))
+      legendary_credit_xp(ch, gain, source);
 
     /* Check for stage advancement (Stage-based XP tracking - Step 3) */
     if (!IS_NPC(ch) && GET_LEVEL(ch) < LVL_IMMORT)

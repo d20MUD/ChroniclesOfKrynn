@@ -1,0 +1,13 @@
+{
+  "provenance": "Synthetic sensitivity profiles; these are not approved live character builds.",
+  "seed": 140026,
+  "profiles": [
+    {"role":"two_handed_martial","attack_bonus":40,"enemy_ac":51,"damage":100,"attacks_per_round":4,"incoming_attack":40,"armor_class":51,"incoming_damage":100},
+    {"role":"sword_and_shield","attack_bonus":40,"enemy_ac":51,"damage":80,"attacks_per_round":4,"incoming_attack":40,"armor_class":54,"incoming_damage":100},
+    {"role":"dual_wielder","attack_bonus":38,"enemy_ac":51,"damage":65,"attacks_per_round":6,"incoming_attack":40,"armor_class":51,"incoming_damage":100},
+    {"role":"ranged_attacker","attack_bonus":40,"enemy_ac":51,"damage":90,"attacks_per_round":4,"incoming_attack":40,"armor_class":50,"incoming_damage":100},
+    {"role":"offensive_caster","attack_bonus":40,"enemy_ac":51,"damage":250,"attacks_per_round":1,"incoming_attack":40,"armor_class":48,"incoming_damage":100,"spell":true},
+    {"role":"psionic_character","attack_bonus":40,"enemy_ac":51,"damage":230,"attacks_per_round":1,"incoming_attack":40,"armor_class":48,"incoming_damage":100,"spell":true},
+    {"role":"healer_support","attack_bonus":35,"enemy_ac":51,"damage":50,"attacks_per_round":1,"incoming_attack":40,"armor_class":52,"incoming_damage":100,"spell":true}
+  ]
+}

@@ -760,6 +760,8 @@
 #define AFFECT_EPIC_HELLFIRE 1319
 #define AFFECT_EPIC_WARD_SURGE 1320
 #define AFFECT_EPIC_MUMMY_DREAD 1321
+#define ABILITY_AUGMENT_PHYSICALITY 1322
+#define ABILITY_MIRAGE_FLARE 1323
 
 // 1470 to 1493 are poisons with room saved for more poisons up to 1498
 

@@ -1,0 +1,50 @@
+-- Refresh Irda help with its racial feats and active powers.
+START TRANSACTION;
+INSERT INTO help_entries(tag, category, entry, min_level, max_level, auto_generated)
+VALUES ('race-irda', 'races', REPLACE('	g>Description:	n
+
+Irda are graceful, magically gifted humanoids whose
+keen minds and commanding presence suit a variety of
+magical professions. Their innate ability to change
+shape lets them travel among other peoples without
+revealing their natural identity. An Irda may assume
+another humanoid appearance, choosing its apparent
+age, gender, and distinctive features. True Sight
+reveals the Irda beneath the assumed form.
+
+	g>Racial Abilities:	n
+
+Irda Change Shape:     - Assume any humanoid appearance at will; each change uses a standard action.
+                       - No Disguise training or opposed Perception check is required.
+                       - Use disguise form <race> to assume an appearance.
+                       - Use disguise form remove to return to your natural form.
+Custom Appearance:     - Choose age, gender, and up to two features with disguise form.
+                       - Use disguise descriptors [feature] to see available feature choices.
+Persistent Form:       - Your assumed form persists across reconnects until changed or removed.
+True Sight:            - Reveals your natural form alongside your assumed appearance.
+Natural Form:          - Return to natural form before advancing or using another transformation.
+Augment Physicality:  - Use augmentphysicality as a standard action once per five minutes.
+                       - For one minute (10 rounds), grow one size with your equipment.
+                       - Gain +4 Strength and +2 Constitution as size bonuses.
+Mirage Flare:          - Use mirageflare <target> as a swift action, three times per five minutes.
+                       - Each charge recharges five minutes after use, even across reconnects.
+                       - Ranged touch attack: 2d6 + half your level in energy damage.
+                       - Will DC 10 + half your level + Cha modifier or dazed for one round.
+                       - A successful save prevents only the daze; a miss still uses a charge.
+Size:                  - Medium.
+Racial Language:       - Common.
+Race Unlock:           - Advanced race; costs 5,000 account experience to unlock.
+
+	g>Ability Adjustments:	n  +2 Dex, +2 Int, +2 Wis, +2 Cha
+
+	g>Experience Modifier:	n  +2 level adjustment
+
+	ySee also:	n RACES, DISGUISE, TRUEFORM, INTRODUCE, AUGMENTPHYSICALITY, MIRAGEFLARE
+', CHAR(10), CONCAT(CHAR(13), CHAR(10))), 0, 1000, FALSE)
+ON DUPLICATE KEY UPDATE category=VALUES(category), entry=VALUES(entry),
+  min_level=VALUES(min_level), max_level=VALUES(max_level), auto_generated=VALUES(auto_generated);
+INSERT IGNORE INTO help_keywords(help_tag, keyword) VALUES
+('race-irda', 'irda'), ('race-irda', 'race-irda'), ('race-irda', 'irdaform'),
+('race-irda', 'augmentphysicality'), ('race-irda', 'augment physicality'),
+('race-irda', 'mirageflare'), ('race-irda', 'mirage flare');
+COMMIT;

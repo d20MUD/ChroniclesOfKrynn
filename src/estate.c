@@ -2,9 +2,11 @@
  * Objects use Krynn's complete object record format rather than SW JSON. */
 #include "conf.h"
 #include "sysdep.h"
+#include "legendary_equipment.h"
 #include "structs.h"
 #include "utils.h"
 #include "estate.h"
+#include "legendary_transaction.h"
 #include "comm.h"
 #include "db.h"
 #include "handler.h"
@@ -354,17 +356,22 @@ int estate_receipt_saved(struct char_data *ch)
 /* Empty payloads journal currency-only transfers. Positive amounts debit gold,
  * negative amounts credit it; all share the ordered delivery receipt. Callers
  * include this insert in the same transaction as the purchase/lease/payout. */
+unsigned long long estate_queue_money_receipt(long player_id, long debit)
+{
+  if (!debit || debit < -INT_MAX || debit > INT_MAX ||
+      !estate_query("INSERT INTO estate_deliveries(player_id,debit,serialized_obj) "
+                    "VALUES(%ld,%ld,'')", player_id, debit)) return 0;
+  return mysql_insert_id(conn);
+}
 int estate_queue_money(long player_id, long debit)
 {
-  if (!debit || debit < -INT_MAX || debit > INT_MAX)
-    return FALSE;
-  return estate_query("INSERT INTO estate_deliveries(player_id,debit,serialized_obj) "
-                      "VALUES(%ld,%ld,'')", player_id, debit);
+  return estate_queue_money_receipt(player_id, debit) != 0;
 }
 int estate_queue_delivery(struct char_data *ch, struct obj_data *obj, long debit)
 {
   char *packed, *q;
   unsigned long long id;
+  if (!legendary_tree_check(ch, obj, LEG_ROUTE_OWNER)) return FALSE;
   if (!estate_query(
           "INSERT INTO estate_deliveries(player_id,debit,serialized_obj) VALUES(%ld,%ld,'')",
           GET_IDNUM(ch), debit))
@@ -433,7 +440,6 @@ void estate_recover(struct char_data *ch)
       if (id > ch->player_specials->estate_debit_receipt)
       {
         int old_gold = GET_GOLD(ch);
-        unsigned long long old_receipt = ch->player_specials->estate_debit_receipt;
         if (debit < -INT_MAX || debit > INT_MAX ||
             (debit > 0 && debit > old_gold) ||
             (debit < 0 && -debit > (long)INT_MAX - old_gold))
@@ -443,16 +449,11 @@ void estate_recover(struct char_data *ch)
         }
         GET_GOLD(ch) -= debit;
         ch->player_specials->estate_debit_receipt = id;
-        estate_save_player(ch);
-        if (!estate_receipt_saved(ch))
-        {
-          GET_GOLD(ch) = old_gold;
-          ch->player_specials->estate_debit_receipt = old_receipt;
-          break;
-        }
-        send_to_char(ch, "Stored payment: %ld gold %s.\r\n",
-                     debit < 0 ? -debit : debit, debit < 0 ? "received" : "paid");
       }
+      /* Retry the checkpoint even when the in-memory receipt already advanced.
+       * A failed directory fsync may have left either version durable. Never
+       * roll memory back and risk applying the same debit twice. */
+      if (!save_char_checked(ch, 0) || !estate_receipt_saved(ch)) break;
       if (!estate_query("UPDATE estate_deliveries SET delivered=1 WHERE delivery_id=%llu "
                         "AND player_id=%ld", id, GET_IDNUM(ch)))
         break;
@@ -469,6 +470,11 @@ void estate_recover(struct char_data *ch)
     if (!obj)
     {
       log("SYSERR: Unable to recover estate delivery %llu", id);
+      break;
+    }
+    if (!legendary_tree_check(ch, obj, LEG_ROUTE_OWNER))
+    {
+      if (fresh) extract_obj(obj);
       break;
     }
     if (id > ch->player_specials->estate_debit_receipt)
@@ -524,6 +530,7 @@ unsigned long long estate_prepare_escrow(struct char_data *ch, struct obj_data *
   MYSQL_RES *res;
   char *name;
   int saved;
+  if (!legendary_tree_check(ch, obj, LEG_ROUTE_OWNER)) return 0;
   if (!estate_player_ready(ch))
     return 0;
   if (!estate_query("INSERT INTO estate_outgoing(player_id) VALUES(%ld)", GET_IDNUM(ch)))
@@ -637,6 +644,7 @@ int estate_player_ready(struct char_data *ch)
   MYSQL_RES *res;
   MYSQL_ROW row;
   int ready = FALSE;
+  if (legendary_transaction_locked(ch) && !legendary_transaction_recover(ch)) return FALSE;
   estate_recover(ch);
   res = estate_select(
       "SELECT (SELECT COUNT(*) FROM estate_deliveries WHERE player_id=%ld AND delivered=0)+(SELECT "

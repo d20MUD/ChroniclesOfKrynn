@@ -338,6 +338,7 @@ lib/text/help/*
 !lib/text/help/epicspells.hlp
 !lib/text/help/practiced_spellcaster.hlp
 !lib/text/help/stalls.hlp
+!lib/text/help/infuse.hlp
 
 ####################
 # Unit Tests

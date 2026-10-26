@@ -99,8 +99,17 @@ int add_mobile(struct char_data *mob, mob_vnum vnum)
 
 int copy_mobile(struct char_data *to, struct char_data *from)
 {
+  bool was_owned = to->legendary_owned_instance;
+  bool was_test = to->legendary_test_encounter;
   free_mobile_strings(to);
   *to = *from;
+  to->legendary_equipment = NULL;
+  to->legendary_foundations = NULL;
+  to->legendary_knockdown = false;
+  to->legendary_serializing = false;
+  to->legendary_encounter_id[0] = '\0';
+  to->legendary_test_encounter = was_test || from->legendary_test_encounter;
+  to->legendary_owned_instance = was_owned || from->legendary_owned_instance;
   check_mobile_strings(from);
   copy_mobile_strings(to, from);
   return TRUE;

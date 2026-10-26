@@ -12,6 +12,10 @@
 
 #include "conf.h"
 #include "sysdep.h"
+#include "legendary_effects.h"
+#include "legendary_foundations.h"
+#include "legendary_commands.h"
+#include "legendary_equipment.h"
 #include "structs.h"
 #include "utils.h"
 #include "db.h"
@@ -754,6 +758,8 @@ void boot_world(void)
 
   log("Loading feats.");
   assign_feats();
+  log("Exporting feat definitions to MySQL.");
+  sync_feat_info();
   log("Sorting feats.");
   sort_feats();
 
@@ -4709,6 +4715,13 @@ struct char_data *read_mobile(mob_vnum nr, int type) /* and mob_rnum */
   clear_char(mob);
 
   *mob = mob_proto[i];
+  mob->legendary_equipment = NULL;
+  mob->legendary_foundations = NULL;
+  mob->legendary_knockdown = false;
+  mob->legendary_serializing = false;
+  mob->legendary_encounter_id[0] = '\0';
+  mob->legendary_owned_instance = false;
+  mob->legendary_test_encounter = false;
   mob->next = character_list;
   character_list = mob;
 
@@ -4927,6 +4940,9 @@ struct obj_data *read_object(obj_vnum nr, int type) /* and obj_rnum */
   CREATE(obj, struct obj_data, 1);
   clear_object(obj);
   *obj = obj_proto[i];
+  memset(obj->legendary_uuid, 0, sizeof(obj->legendary_uuid));
+  obj->legendary_record = NULL;
+  obj->legendary_quarantined = false;
   obj->next = object_list;
   object_list = obj;
 
@@ -6487,6 +6503,10 @@ static void free_followers(struct follow_type *k)
 /* release memory allocated for a char struct */
 void free_char(struct char_data *ch)
 {
+  legendary_effects_free(ch);
+  legendary_loadout_free(ch);
+  legendary_foundations_free(ch);
+  legendary_infuse_cleanup(ch);
   int i = 0;
   struct alias_data *a = NULL;
 
@@ -6931,6 +6951,10 @@ static int file_to_string_alloc(const char *name, char **buf)
 void reset_char(struct char_data *ch)
 {
   int i;
+
+  legendary_effects_free(ch);
+  legendary_loadout_free(ch);
+  legendary_foundations_free(ch);
 
   for (i = 0; i < NUM_WEARS; i++)
     GET_EQ(ch, i) = NULL;

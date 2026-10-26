@@ -1282,6 +1282,7 @@ void HandleStateGenericDescsParseMenuChoice(struct descriptor_data *d, char *arg
       d->forced_short_desc_setup = FALSE; /* Clear the flag */
 
       load_result = enter_player_game(d);
+      if (load_result == 3) return;
       send_to_char(d->character, "%s", CONFIG_WELC_MESSG);
 
       /* Clear their load room if it's not persistant. */

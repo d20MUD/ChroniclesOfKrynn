@@ -1,7 +1,7 @@
 # Climate material varieties
 
-Automatically generated crafting nodes use the zone's Climate and Terrain
-metadata. Room sectors still select which resource groups can appear. Zone
+Automatically generated land crafting nodes use the zone's Climate and Terrain
+metadata. Aquatic rooms use marine equivalents regardless of zone metadata. Room sectors still select which resource groups can appear. Zone
 levels and the existing random grade roll still determine node quality.
 
 ## Timber
@@ -19,7 +19,8 @@ levels and the existing random grade roll still determine node quality.
 
 Multiple choices in a cell have equal chances. A temperate swamp chooses willow
 for grade 1. Tropical and subtropical swamps choose cypress for grade 2.
-Underground, ocean and urban zone terrains exclude automatic timber nodes.
+Underground, ocean and urban zone terrains exclude automatic land timber nodes.
+Aquatic sectors in those zones can still generate coral.
 
 Grade 4 remains valenwood and grade 5 remains ironwood in every eligible climate.
 There is no new grade-6 timber or automatic endgame resource placement.
@@ -42,6 +43,48 @@ remain the same. This change does not introduce a separate herb crafting system.
 Random treasure retains the original material selection probabilities rather
 than counting every regional variety as an additional timber/fiber outcome.
 New varieties are available through harvesting, the artisan shop and exchange.
+
+## Marine materials
+
+Water-swim, water-noswim, underwater, ocean, river, underdark-water and
+underdark-noswim sectors qualify in **every** zone terrain, including unspecified
+and mixed. Dry rooms in ocean zones retain their land behavior. Survey and normal
+world node regeneration use the same sector eligibility rule.
+
+Aquatic nodes use 30% coral, 30% hides, 30% fibers, 5% hard metals and 5% soft
+metals. Existing zone-level and random node-tier rolls choose the ordinary
+material first; wood, hides and cloth then map to marine equivalents without
+land climate substitutions. Mineral identities and selection remain unchanged.
+
+| Node tier | Coral → land wood | Marine hide → land hide | Marine fiber → land fiber |
+|---|---|---|---|
+| 1 | Branch Coral → Ash | Thin Fishskin → Low Grade | Kelp Fiber → Hemp |
+| 2 | Fan Coral → Maple | Tough Eelskin → Medium Grade | Seagrass Fiber → Flax |
+| 3 | Blood Coral → Mahogany | Sharkskin → High Grade | Sponge Fiber → Wool |
+| 4 | Deepwater Coral → Valenwood | Pristine Sharkskin → Pristine Grade | Sea Cotton → Cotton |
+| 5 | Adamant Coral → Ironwood | Pristine Sharkskin → Pristine Grade | Sea Silk → Silk |
+
+These are node tiers, not overrides to material grades: sea silk inherits silk's
+actual material grade of 4. Each equivalent inherits the land material's level
+adjustment, crafting family, harvesting skill, tools and artisan-point price.
+Coral is harvested using forestry tools; marine hides use hunting and marine
+fibers use gathering. Marine node descriptions show coral colonies, marine
+animals and resource beds under every climate. Viewing nodes never changes them.
+
+All 14 variants have appended crafting and object IDs, distinct saved balances,
+and identities retained in bundles and crafted objects. Older player files
+initialize new balances to zero. Node frequency, refresh, duration, yields,
+skill checks, critical behavior, motes and canonical treasure weights use their
+existing paths. Linen and satin recipes are unchanged; exchange marine fibers
+for their land ingredients before refining.
+
+```
+exchange 10 branch coral for ash
+exchange 10 ash for branch coral
+exchange 5 tough eelskin for medium grade hide
+exchange 10 flax for seagrass fiber
+exchange 10 sea silk for silk
+```
 
 ## Materials exchanger
 
@@ -66,7 +109,9 @@ or materials already reserved in projects. It transfers equal quantities for
 no gold charge and saves the player immediately. Full names and unique prefixes
 are accepted case-insensitively. Quotes are optional for multi-word names.
 
-Only equivalent timber varieties in grades 1–3 and grade-1 fibers qualify.
+Equivalent regional and marine varieties qualify only when they share the exact
+canonical land material. This includes all five timber and fiber node tiers and
+all four hide materials.
 Different families, different grades, identical source/target materials,
 insufficient stock, invalid quantities and destination overflow are rejected.
 Materials with different properties are not interchangeable solely because
@@ -83,6 +128,8 @@ normal node regeneration; displaying a node never changes its yield.
 The optional `sql/20261012_climate_materials_help.sql` migration installs player
 help and aliases. It is prepared for deployment, not applied to the live database.
 
-`tests/run_climate_materials.py` exercises production selection, equivalence,
+`tests/run_climate_materials.py` exercises every aquatic sector across all zone
+terrains and climates, dry sectors in ocean zones, survey, normal world node
+regeneration, all marine node tiers, production selection, equivalence,
 object conversion, new and legacy pfile balances, node descriptions, exchanger
 accounting and special-procedure dispatch.

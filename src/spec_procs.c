@@ -10,6 +10,10 @@
 
 #include "conf.h"
 #include "sysdep.h"
+#include "legendary_foundations.h"
+#include "legendary_techniques.h"
+#include "legendary_equipment.h"
+#include "legendary_transaction.h"
 #include "structs.h"
 #include "utils.h"
 #include "comm.h"
@@ -1223,6 +1227,8 @@ int compute_ability_full(struct char_data *ch, int abilityNum, bool recursive)
   if (abilityNum < 1 || abilityNum > NUM_ABILITIES)
     return -1;
 
+  legendary_foundations_refresh(ch);
+
   /* this dummy check was added to to possible problems with checking
    affected_by_spell on a target that just died */
   if (GET_HIT(ch) <= 0 || GET_POS(ch) <= POS_STUNNED)
@@ -1405,6 +1411,9 @@ int compute_ability_full(struct char_data *ch, int abilityNum, bool recursive)
   {
     value += get_perk_skill_bonus(ch, abilityNum);
   }
+
+  value += legendary_foundation_skill(ch, abilityNum);
+  value += legendary_technique_skill(ch,abilityNum,false);
 
   switch (abilityNum)
   {
@@ -2352,6 +2361,7 @@ SPECIAL(player_owned_shops)
 static void npc_steal(struct char_data *ch, struct char_data *victim)
 {
   int gold;
+  if (legendary_transaction_locked(victim)) return;
 
   if (IS_NPC(victim))
     return;
@@ -6444,11 +6454,13 @@ SPECIAL(wizard_library)
 
 SPECIAL(dump)
 {
-  struct obj_data *k;
+  struct obj_data *k, *next;
   int value = 0;
 
-  for (k = world[IN_ROOM(ch)].contents; k; k = world[IN_ROOM(ch)].contents)
+  for (k = world[IN_ROOM(ch)].contents; k; k = next)
   {
+    next = k->next_content;
+    if (legendary_tree_present(k)) continue;
     act("$p vanishes in a puff of smoke!", FALSE, 0, k, 0, TO_ROOM);
     extract_obj(k);
   }
@@ -6458,8 +6470,10 @@ SPECIAL(dump)
 
   do_drop(ch, argument, cmd, SCMD_DROP);
 
-  for (k = world[IN_ROOM(ch)].contents; k; k = world[IN_ROOM(ch)].contents)
+  for (k = world[IN_ROOM(ch)].contents; k; k = next)
   {
+    next = k->next_content;
+    if (legendary_tree_present(k)) continue;
     act("$p vanishes in a puff of smoke!", FALSE, 0, k, 0, TO_ROOM);
     value += MAX(1, MIN(50, GET_OBJ_COST(k) / 10));
     extract_obj(k);

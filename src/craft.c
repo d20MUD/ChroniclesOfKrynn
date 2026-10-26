@@ -19,6 +19,7 @@
 #include "conf.h"
 #include "account.h"
 #include "sysdep.h"
+#include "legendary_equipment.h"
 #include "structs.h"
 #include "mysql.h"
 #include "utils.h"
@@ -203,6 +204,7 @@ bool scale_damage(struct char_data *ch, struct obj_data *weapon, int new_size)
     return FALSE;
   }
 
+  if (!legendary_tree_check(ch, weapon, LEG_ROUTE_TRANSFORM)) return FALSE;
   /* this only works for weapons */
   if (GET_OBJ_TYPE(weapon) != ITEM_WEAPON)
   {
@@ -800,6 +802,7 @@ int augment(struct obj_data *kit, struct char_data *ch)
   int skill_type = SKILL_CHEMISTRY; // change this to change the skill used
   int fast_craft_bonus = GET_SKILL(ch, SKILL_FAST_CRAFTER) / 33;
 
+  if (!legendary_tree_check(ch, kit, LEG_ROUTE_TRANSFORM)) return 1;
   // Cycle through contents and categorize
   for (obj = kit->contains; obj != NULL; obj = obj->next_content)
   {
@@ -938,6 +941,7 @@ int convert(struct obj_data *kit, struct char_data *ch)
   struct obj_data *new_mat = NULL, *obj = NULL;
   int fast_craft_bonus = GET_SKILL(ch, SKILL_FAST_CRAFTER) / 33;
 
+  if (!legendary_tree_check(ch, kit, LEG_ROUTE_TRANSFORM)) return 1;
   /* Cycle through contents and categorize */
   for (obj = kit->contains; obj != NULL; obj = obj->next_content)
   {
@@ -1055,6 +1059,7 @@ int restring(char *argument, struct obj_data *kit, struct char_data *ch)
   char buf[MAX_INPUT_LENGTH] = {'\0'};
   int fast_craft_bonus = GET_SKILL(ch, SKILL_FAST_CRAFTER) / 33;
 
+  if (!legendary_tree_check(ch, kit, LEG_ROUTE_OWNER)) return 1;
   /* Cycle through contents */
   /* restring requires just one item be inside the kit */
   for (obj = kit->contains; obj != NULL; obj = obj->next_content)
@@ -1204,6 +1209,7 @@ int redesc(char *argument, struct obj_data *kit, struct char_data *ch)
   char buf[MAX_INPUT_LENGTH] = {'\0'};
   int fast_craft_bonus = GET_SKILL(ch, SKILL_FAST_CRAFTER) / 33;
 
+  if (!legendary_tree_check(ch, kit, LEG_ROUTE_OWNER)) return 1;
   /* Cycle through contents */
   /* redesc requires just one item be inside the kit */
   for (obj = kit->contains; obj != NULL; obj = obj->next_content)
@@ -1341,6 +1347,7 @@ int autocraft(struct obj_data *kit, struct char_data *ch)
 
   material = GET_AUTOCQUEST_MATERIAL(ch);
 
+  if (!legendary_tree_check(ch, kit, LEG_ROUTE_TRANSFORM)) return 1;
   /* Cycle through contents and categorize */
   for (obj = kit->contains; obj != NULL; obj = obj->next_content)
   {
@@ -1423,6 +1430,7 @@ int resize(char *argument, struct obj_data *kit, struct char_data *ch)
   int size_dice = -1;
   int fast_craft_bonus = GET_SKILL(ch, SKILL_FAST_CRAFTER) / 33;
 
+  if (!legendary_tree_check(ch, kit, LEG_ROUTE_TRANSFORM)) return 1;
   /* Cycle through contents */
   /* resize requires just one item be inside the kit */
   for (obj = kit->contains; obj != NULL; obj = obj->next_content)
@@ -1552,6 +1560,7 @@ int bonearmor(char *argument, struct obj_data *kit, struct char_data *ch)
     return 1;
   }
 
+  if (!legendary_tree_check(ch, kit, LEG_ROUTE_TRANSFORM)) return 1;
   /* Cycle through contents */
   /* resize requires just one item be inside the kit */
   for (obj = kit->contains; obj != NULL; obj = obj->next_content)
@@ -1655,6 +1664,7 @@ int reforge(char *argument, struct obj_data *kit, struct char_data *ch)
   char bonus[30];
   int orig_cost = 0, enhancement = 0, material = 0;
 
+  if (!legendary_tree_check(ch, kit, LEG_ROUTE_TRANSFORM)) return 1;
   /* Cycle through contents */
   /* resize requires just one item be inside the kit */
   for (obj = kit->contains; obj != NULL; obj = obj->next_content)
@@ -1877,6 +1887,7 @@ int disenchant(struct obj_data *kit, struct char_data *ch)
   int fast_craft_bonus = GET_SKILL(ch, SKILL_FAST_CRAFTER) / 33;
   int chem_check = GET_SKILL(ch, SKILL_CHEMISTRY) + d20(ch);
 
+  if (!legendary_tree_check(ch, kit, LEG_ROUTE_TRANSFORM)) return 1;
   /* Cycle through contents */
   /* disenchant requires just one item be inside the kit */
   for (obj = kit->contains; obj != NULL; obj = obj->next_content)
@@ -1992,6 +2003,7 @@ int create(char *argument, struct obj_data *kit, struct char_data *ch, int mode)
   int fast_craft_bonus = 0;
   int chance_of_crit = 0;
 
+  if (!legendary_tree_check(ch, kit, LEG_ROUTE_TRANSFORM)) return 1;
   /* weird find, color codes doesn't play nice with the ' character -zusuk */
   if (mode == CREATE_MODE_CREATE && *argument)
   {

@@ -24,6 +24,12 @@
 #include "backgrounds.h"
 #include "treasure.h"
 #include "spec_procs.h"
+#include "mud_event.h"
+#include "actions.h"
+#include "domains_schools.h"
+#include "fight.h"
+#include "shop.h"
+#include "missions.h"
 
 /* defines */
 #define Y TRUE
@@ -450,6 +456,130 @@ ACMDU(do_race)
 
 /*****************************/
 /*****************************/
+
+/* These racial powers use wall-clock recharge times, retained in the player file. */
+static bool irda_magic_available(struct char_data *ch, int feat)
+{
+  if (IS_NPC(ch) || GET_REAL_RACE(ch) != DL_RACE_IRDA || !HAS_REAL_FEAT(ch, feat))
+  {
+    send_to_char(ch, "You do not possess that Irda racial ability.\r\n");
+    return FALSE;
+  }
+  if (ROOM_FLAGGED(IN_ROOM(ch), ROOM_NOMAGIC) || ROOM_AFFECTED(IN_ROOM(ch), RAFF_ANTI_MAGIC))
+  {
+    send_to_char(ch, "Your racial magic cannot function here.\r\n");
+    return FALSE;
+  }
+  return TRUE;
+}
+
+ACMDU(do_augment_physicality)
+{
+  struct affected_type af;
+  time_t now = time(NULL);
+  int i;
+  const int locations[] = {APPLY_SIZE, APPLY_STR, APPLY_CON};
+  const int modifiers[] = {1, 4, 2};
+
+  if (!irda_magic_available(ch, FEAT_AUGMENT_PHYSICALITY) ||
+      !is_action_available(ch, atSTANDARD, TRUE))
+    return;
+  if (ch->player_specials->saved.irda_augment_ready > now)
+  {
+    send_to_char(ch, "Augment Physicality has not recharged yet.\r\n");
+    return;
+  }
+  if (affected_by_spell(ch, ABILITY_AUGMENT_PHYSICALITY) ||
+      affected_by_spell(ch, SPELL_ENLARGE_PERSON) || GET_SIZE(ch) >= SIZE_COLOSSAL)
+  {
+    send_to_char(ch, "You cannot augment your size further in your current state.\r\n");
+    return;
+  }
+  USE_STANDARD_ACTION(ch);
+  for (i = 0; i < 3; i++)
+  {
+    new_affect(&af);
+    af.spell = ABILITY_AUGMENT_PHYSICALITY;
+    af.duration = 10; /* Six-second combat rounds. */
+    af.location = locations[i];
+    af.modifier = modifiers[i];
+    af.bonus_type = BONUS_TYPE_SIZE;
+    affect_to_char(ch, &af);
+  }
+  ch->player_specials->saved.irda_augment_ready = now + 300;
+  save_char(ch, 0);
+  send_to_char(ch, "You and your equipment grow as magic strengthens your body.\r\n");
+  act("$n and $s equipment grow larger as magic augments $s body.", FALSE, ch, 0, 0, TO_ROOM);
+}
+
+ACMDU(do_mirage_flare)
+{
+  char arg[MAX_INPUT_LENGTH];
+  struct char_data *vict;
+  struct affected_type af;
+  time_t now = time(NULL);
+  int charge, dc;
+
+  PREREQ_CAN_FIGHT();
+  if (!irda_magic_available(ch, FEAT_MIRAGE_FLARE) || !is_action_available(ch, atSWIFT, TRUE))
+    return;
+  one_argument(argument, arg, sizeof(arg));
+  vict = *arg ? get_char_vis(ch, arg, NULL, FIND_CHAR_ROOM) : FIGHTING(ch);
+  if (!vict || IN_ROOM(vict) != IN_ROOM(ch))
+  {
+    send_to_char(ch, "Use mirageflare <target>, or use it against your current opponent.\r\n");
+    return;
+  }
+  if (vict == ch || (AFF_FLAGGED(ch, AFF_CHARM) && ch->master == vict))
+  {
+    send_to_char(ch, "You cannot direct Mirage Flare at that target.\r\n");
+    return;
+  }
+  if (ROOM_FLAGGED(IN_ROOM(ch), ROOM_PEACEFUL) || MOB_FLAGGED(vict, MOB_NOKILL))
+  {
+    send_to_char(ch, "You cannot attack that target here.\r\n");
+    return;
+  }
+  if (!pvp_ok(ch, vict, TRUE) || !ok_damage_shopkeeper(ch, vict) || !is_mission_mob(ch, vict))
+    return;
+  for (charge = 0; charge < 3; charge++)
+    if (ch->player_specials->saved.irda_mirage_ready[charge] <= now)
+      break;
+  if (charge == 3)
+  {
+    send_to_char(ch, "All three uses of Mirage Flare are recharging.\r\n");
+    return;
+  }
+  /* An attempted attack consumes its swift action and charge, including a miss. */
+  ch->player_specials->saved.irda_mirage_ready[charge] = now + 300;
+  USE_SWIFT_ACTION(ch);
+  save_char(ch, 0);
+  act("You unleash a flare of shimmering energy at $N!", FALSE, ch, 0, vict, TO_CHAR);
+  act("$n unleashes a flare of shimmering energy at you!", FALSE, ch, 0, vict, TO_VICT);
+  act("$n unleashes a flare of shimmering energy at $N!", FALSE, ch, 0, vict, TO_NOTVICT);
+  if (attack_roll(ch, vict, ATTACK_TYPE_RANGED, TRUE, 1) < 0)
+  {
+    damage(ch, vict, 0, ABILITY_MIRAGE_FLARE, DAM_ENERGY, FALSE);
+    return;
+  }
+  dc = 10 + GET_LEVEL(ch) / 2 + GET_CHA_BONUS(ch);
+  /* damage() may extract a slain target; never dereference it after that. */
+  if (damage(ch, vict, dice(2, 6) + GET_LEVEL(ch) / 2, ABILITY_MIRAGE_FLARE, DAM_ENERGY, FALSE) < 0)
+    return;
+  if (can_daze(vict) && !savingthrow_flatdc(ch, vict, SAVING_WILL, 0, dc, CAST_INNATE, ILLUSION,
+                                            ABILITY_MIRAGE_FLARE))
+  {
+    new_affect(&af);
+    af.spell = ABILITY_MIRAGE_FLARE;
+    af.duration = 1;
+    SET_BIT_AR(af.bitvector, AFF_DAZED);
+    GET_NODAZE_COOLDOWN(vict) = NODAZE_COOLDOWN_TIMER;
+    affect_join(vict, &af, FALSE, FALSE, FALSE, FALSE);
+    act("$N is dazed by your Mirage Flare!", FALSE, ch, 0, vict, TO_CHAR);
+    act("You are dazed by $n's Mirage Flare!", FALSE, ch, 0, vict, TO_VICT);
+    act("$N is dazed by $n's Mirage Flare!", FALSE, ch, 0, vict, TO_NOTVICT);
+  }
+}
 
 /* here is the actual race list */
 void assign_races(void)
@@ -3920,80 +4050,6 @@ void assign_races(void)
 
   // end luminari race info
 #endif
-  add_race(DL_RACE_AURAK_DRACONIAN, "aurak draconian", "Aurak Draconian", "\tYAurak Draconian\tn",
-           "Aurk", "\tYAurk\tn", RACE_TYPE_HUMANOID, SIZE_MEDIUM, TRUE, 4, 15000, IS_ADVANCE);
-  set_race_details(
-      DL_RACE_AURAK_DRACONIAN,
-      "Auraks were born from gold dragon eggs twisted by dark magic to serve the Dragonarmies "
-      "of Takhisis. Rare even among draconians, these slender, golden-scaled beings have no "
-      "wings, but possess a formidable inheritance of sorcery and cunning. The Dragon Highlords "
-      "employed them as special agents, trusting their intelligence and magical talents with "
-      "missions beyond the reach of ordinary soldiers. Secretive and proud, Auraks prefer to "
-      "shape a battle from a distance or unravel an enemy through deception rather than trade "
-      "blows in the front ranks. Their allegiance to the Dark Queen is often tempered by "
-      "private ambitions, and the pursuit of arcane power may matter more to an Aurak than the "
-      "cause it was created to serve.",
-      "You assume your natural Aurak form.", "$n assumes $s natural Aurak form.");
-  set_race_genders(DL_RACE_AURAK_DRACONIAN, Y, Y, Y);
-  set_race_abilities(DL_RACE_AURAK_DRACONIAN, 0, 0, 4, 0, 2, 4);
-  set_race_alignments(DL_RACE_AURAK_DRACONIAN, Y, Y, Y, Y, Y, Y, Y, Y, Y);
-  feat_race_assignment(DL_RACE_AURAK_DRACONIAN, FEAT_AURAK_SCALES, 1, N);
-  feat_race_assignment(DL_RACE_AURAK_DRACONIAN, FEAT_AURAK_MAGIC, 1, N);
-  feat_race_assignment(DL_RACE_AURAK_DRACONIAN, FEAT_AURAK_DEATH_THROES, 1, N);
-  feat_race_assignment(DL_RACE_AURAK_DRACONIAN, FEAT_ULTRAVISION, 1, N);
-  feat_race_assignment(DL_RACE_AURAK_DRACONIAN, FEAT_DRACONIAN_DISEASE_IMMUNITY, 1, N);
-  feat_race_assignment(DL_RACE_AURAK_DRACONIAN, FEAT_DRACONIAN_SPELL_RESISTANCE, 1, N);
-  feat_race_assignment(DL_RACE_AURAK_DRACONIAN, FEAT_DRACONIAN_BITE, 1, N);
-  feat_race_assignment(DL_RACE_AURAK_DRACONIAN, FEAT_DRACONIC_DEVOTION, 1, N);
-  feat_race_assignment(DL_RACE_AURAK_DRACONIAN, FEAT_COMBAT_CASTING, 1, N);
-  feat_race_assignment(DL_RACE_AURAK_DRACONIAN, FEAT_IMPROVED_INITIATIVE, 1, N);
-  race_list[DL_RACE_AURAK_DRACONIAN].racial_language = SKILL_LANG_DRACONIC;
-
-  add_race(DL_RACE_SIVAK_DRACONIAN, "sivak draconian", "Sivak Draconian", "\tWSivak Draconian\tn",
-           "Sivk", "\tWSivk\tn", RACE_TYPE_HUMANOID, SIZE_MEDIUM, TRUE, 2, 8000, IS_ADVANCE);
-  set_race_details(
-      DL_RACE_SIVAK_DRACONIAN,
-      "Sivaks trace their origins to silver dragon eggs corrupted for the armies of Takhisis. "
-      "Among the most formidable draconians, they carry the strength of their draconic ancestry "
-      "into battle and possess wings capable of true flight. This gift made them valuable "
-      "scouts in the Dragonarmies, while their skill with heavy blades made them dangerous foes "
-      "on the ground. A more sinister talent allowed a Sivak to wear the appearance of a "
-      "creature it had slain, turning a familiar face into a means of infiltration and "
-      "betrayal. Their history is bound to the wars of the Dragon Highlords, where an enemy "
-      "might arrive from the skies or pass unnoticed among those who believed it a friend.",
-      "You assume your natural Sivak form.", "$n assumes $s natural Sivak form.");
-  set_race_genders(DL_RACE_SIVAK_DRACONIAN, Y, Y, Y);
-  set_race_abilities(DL_RACE_SIVAK_DRACONIAN, 2, 2, 2, 0, 2, 0);
-  set_race_alignments(DL_RACE_SIVAK_DRACONIAN, Y, Y, Y, Y, Y, Y, Y, Y, Y);
-  feat_race_assignment(DL_RACE_SIVAK_DRACONIAN, FEAT_SIVAK_SCALES, 1, N);
-  feat_race_assignment(DL_RACE_SIVAK_DRACONIAN, FEAT_WINGS, 1, N);
-  feat_race_assignment(DL_RACE_SIVAK_DRACONIAN, FEAT_ULTRAVISION, 1, N);
-  feat_race_assignment(DL_RACE_SIVAK_DRACONIAN, FEAT_DRACONIAN_DISEASE_IMMUNITY, 1, N);
-  feat_race_assignment(DL_RACE_SIVAK_DRACONIAN, FEAT_DRACONIAN_SPELL_RESISTANCE, 1, N);
-  feat_race_assignment(DL_RACE_SIVAK_DRACONIAN, FEAT_DRACONIAN_BITE, 1, N);
-  feat_race_assignment(DL_RACE_SIVAK_DRACONIAN, FEAT_DRACONIC_DEVOTION, 1, N);
-  feat_race_assignment(DL_RACE_SIVAK_DRACONIAN, FEAT_DRACONIAN_GALLOP, 1, N);
-  feat_race_assignment(DL_RACE_SIVAK_DRACONIAN, FEAT_IMPROVED_TRIP, 1, N);
-  race_list[DL_RACE_SIVAK_DRACONIAN].racial_language = SKILL_LANG_DRACONIC;
-
-  add_race(DL_RACE_IRDA, "irda", "Irda", "\tCIrda\tn", "Irda", "\tCIrda\tn", RACE_TYPE_HUMANOID,
-           SIZE_MEDIUM, TRUE, 2, 5000, IS_ADVANCE);
-  set_race_details(
-      DL_RACE_IRDA,
-      "The Irda preserve the beauty and magical heritage of Krynn's ancient ogres, firstborn "
-      "creations of Takhisis. In the Age of Dreams, their ancestors ruled a wealthy "
-      "civilization sustained by enslaved humans. When the human Eadamm saved the daughter of "
-      "the ogre Igraine, an act of compassion challenged that cruel order. Igraine and his "
-      "followers abandoned their former ways and fled persecution, finding refuge with "
-      "Mishakal's aid on a hidden island in the Dragon Isles. Their descendants retained their "
-      "graceful features and blue skin as other ogres fell into brutality. Solitary and "
-      "contemplative, the Irda guarded their isolation with magic, assuming other shapes when "
-      "traveling among the peoples of Ansalon, who feared their true appearance.",
-      "You assume the form of an Irda.", "$n assumes the form of an Irda.");
-  set_race_genders(DL_RACE_IRDA, Y, Y, Y);
-  set_race_abilities(DL_RACE_IRDA, 0, 0, 2, 2, 2, 2);
-  set_race_alignments(DL_RACE_IRDA, Y, Y, Y, Y, Y, Y, Y, Y, Y);
-  race_list[DL_RACE_IRDA].racial_language = SKILL_LANG_COMMON;
   /* affect assignment */
   /*                  race-num  affect            lvl */
   /****************************************************************************/
@@ -4223,6 +4279,86 @@ void assign_races(void)
   /*                  race-num  affect            lvl */
 
 #endif
+
+  /* Advanced Krynn races are available in every campaign. */
+  add_race(DL_RACE_AURAK_DRACONIAN, "aurak draconian", "Aurak Draconian", "\tYAurak Draconian\tn",
+           "Aurk", "\tYAurk\tn", RACE_TYPE_HUMANOID, SIZE_MEDIUM, TRUE, 4, 15000, IS_ADVANCE);
+  set_race_details(
+      DL_RACE_AURAK_DRACONIAN,
+      "Auraks were born from gold dragon eggs twisted by dark magic to serve the Dragonarmies "
+      "of Takhisis. Rare even among draconians, these slender, golden-scaled beings have no "
+      "wings, but possess a formidable inheritance of sorcery and cunning. The Dragon Highlords "
+      "employed them as special agents, trusting their intelligence and magical talents with "
+      "missions beyond the reach of ordinary soldiers. Secretive and proud, Auraks prefer to "
+      "shape a battle from a distance or unravel an enemy through deception rather than trade "
+      "blows in the front ranks. Their allegiance to the Dark Queen is often tempered by "
+      "private ambitions, and the pursuit of arcane power may matter more to an Aurak than the "
+      "cause it was created to serve.",
+      "You assume your natural Aurak form.", "$n assumes $s natural Aurak form.");
+  set_race_genders(DL_RACE_AURAK_DRACONIAN, Y, Y, Y);
+  set_race_abilities(DL_RACE_AURAK_DRACONIAN, 0, 0, 4, 0, 2, 4);
+  set_race_alignments(DL_RACE_AURAK_DRACONIAN, Y, Y, Y, Y, Y, Y, Y, Y, Y);
+  feat_race_assignment(DL_RACE_AURAK_DRACONIAN, FEAT_AURAK_SCALES, 1, N);
+  feat_race_assignment(DL_RACE_AURAK_DRACONIAN, FEAT_AURAK_MAGIC, 1, N);
+  feat_race_assignment(DL_RACE_AURAK_DRACONIAN, FEAT_AURAK_DEATH_THROES, 1, N);
+  feat_race_assignment(DL_RACE_AURAK_DRACONIAN, FEAT_ULTRAVISION, 1, N);
+  feat_race_assignment(DL_RACE_AURAK_DRACONIAN, FEAT_DRACONIAN_DISEASE_IMMUNITY, 1, N);
+  feat_race_assignment(DL_RACE_AURAK_DRACONIAN, FEAT_DRACONIAN_SPELL_RESISTANCE, 1, N);
+  feat_race_assignment(DL_RACE_AURAK_DRACONIAN, FEAT_DRACONIAN_BITE, 1, N);
+  feat_race_assignment(DL_RACE_AURAK_DRACONIAN, FEAT_DRACONIC_DEVOTION, 1, N);
+  feat_race_assignment(DL_RACE_AURAK_DRACONIAN, FEAT_COMBAT_CASTING, 1, N);
+  feat_race_assignment(DL_RACE_AURAK_DRACONIAN, FEAT_IMPROVED_INITIATIVE, 1, N);
+  race_list[DL_RACE_AURAK_DRACONIAN].racial_language = SKILL_LANG_DRACONIC;
+
+  add_race(DL_RACE_SIVAK_DRACONIAN, "sivak draconian", "Sivak Draconian", "\tWSivak Draconian\tn",
+           "Sivk", "\tWSivk\tn", RACE_TYPE_HUMANOID, SIZE_MEDIUM, TRUE, 2, 8000, IS_ADVANCE);
+  set_race_details(
+      DL_RACE_SIVAK_DRACONIAN,
+      "Sivaks trace their origins to silver dragon eggs corrupted for the armies of Takhisis. "
+      "Among the most formidable draconians, they carry the strength of their draconic ancestry "
+      "into battle and possess wings capable of true flight. This gift made them valuable "
+      "scouts in the Dragonarmies, while their skill with heavy blades made them dangerous foes "
+      "on the ground. A more sinister talent allowed a Sivak to wear the appearance of a "
+      "creature it had slain, turning a familiar face into a means of infiltration and "
+      "betrayal. Their history is bound to the wars of the Dragon Highlords, where an enemy "
+      "might arrive from the skies or pass unnoticed among those who believed it a friend.",
+      "You assume your natural Sivak form.", "$n assumes $s natural Sivak form.");
+  set_race_genders(DL_RACE_SIVAK_DRACONIAN, Y, Y, Y);
+  set_race_abilities(DL_RACE_SIVAK_DRACONIAN, 2, 2, 2, 0, 2, 0);
+  set_race_alignments(DL_RACE_SIVAK_DRACONIAN, Y, Y, Y, Y, Y, Y, Y, Y, Y);
+  feat_race_assignment(DL_RACE_SIVAK_DRACONIAN, FEAT_SIVAK_SCALES, 1, N);
+  feat_race_assignment(DL_RACE_SIVAK_DRACONIAN, FEAT_WINGS, 1, N);
+  feat_race_assignment(DL_RACE_SIVAK_DRACONIAN, FEAT_ULTRAVISION, 1, N);
+  feat_race_assignment(DL_RACE_SIVAK_DRACONIAN, FEAT_DRACONIAN_DISEASE_IMMUNITY, 1, N);
+  feat_race_assignment(DL_RACE_SIVAK_DRACONIAN, FEAT_DRACONIAN_SPELL_RESISTANCE, 1, N);
+  feat_race_assignment(DL_RACE_SIVAK_DRACONIAN, FEAT_DRACONIAN_BITE, 1, N);
+  feat_race_assignment(DL_RACE_SIVAK_DRACONIAN, FEAT_DRACONIC_DEVOTION, 1, N);
+  feat_race_assignment(DL_RACE_SIVAK_DRACONIAN, FEAT_DRACONIAN_GALLOP, 1, N);
+  feat_race_assignment(DL_RACE_SIVAK_DRACONIAN, FEAT_IMPROVED_TRIP, 1, N);
+  race_list[DL_RACE_SIVAK_DRACONIAN].racial_language = SKILL_LANG_DRACONIC;
+
+  add_race(DL_RACE_IRDA, "irda", "Irda", "\tCIrda\tn", "Irda", "\tCIrda\tn", RACE_TYPE_HUMANOID,
+           SIZE_MEDIUM, TRUE, 2, 8000, IS_ADVANCE);
+  set_race_details(
+      DL_RACE_IRDA,
+      "The Irda preserve the beauty and magical heritage of Krynn's ancient ogres, firstborn "
+      "creations of Takhisis. In the Age of Dreams, their ancestors ruled a wealthy "
+      "civilization sustained by enslaved humans. When the human Eadamm saved the daughter of "
+      "the ogre Igraine, an act of compassion challenged that cruel order. Igraine and his "
+      "followers abandoned their former ways and fled persecution, finding refuge with "
+      "Mishakal's aid on a hidden island in the Dragon Isles. Their descendants retained their "
+      "graceful features and blue skin as other ogres fell into brutality. Solitary and "
+      "contemplative, the Irda guarded their isolation with magic, assuming other shapes when "
+      "traveling among the peoples of Ansalon, who feared their true appearance.",
+      "You assume the form of an Irda.", "$n assumes the form of an Irda.");
+  set_race_genders(DL_RACE_IRDA, Y, Y, Y);
+  set_race_abilities(DL_RACE_IRDA, 0, 0, 2, 2, 2, 2);
+  set_race_alignments(DL_RACE_IRDA, Y, Y, Y, Y, Y, Y, Y, Y, Y);
+  feat_race_assignment(DL_RACE_IRDA, FEAT_IRDA_RACIAL_ADJUSTMENT, 1, N);
+  feat_race_assignment(DL_RACE_IRDA, FEAT_IRDA_CHANGE_SHAPE, 1, N);
+  feat_race_assignment(DL_RACE_IRDA, FEAT_AUGMENT_PHYSICALITY, 1, N);
+  feat_race_assignment(DL_RACE_IRDA, FEAT_MIRAGE_FLARE, 1, N);
+  race_list[DL_RACE_IRDA].racial_language = SKILL_LANG_COMMON;
 
   /**********/
   /* Animal */

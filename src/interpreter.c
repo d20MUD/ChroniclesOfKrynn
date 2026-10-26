@@ -12,6 +12,12 @@
 
 #include "conf.h"
 #include "sysdep.h"
+#include "legendary_foundations.h"
+#include "legendary_effects.h"
+#include "legendary_equipment.h"
+#include "legendary_store.h"
+#include "legendary_earnings.h"
+#include "legendary_transaction.h"
 #include "structs.h"
 #include "housing.h"
 #include "auction_house.h"
@@ -621,6 +627,7 @@ cpp_extern const struct command_info cmd_info[] = {
     {"immlist", "imm", POS_DEAD, do_gen_ps, 0, SCMD_IMMLIST, TRUE, ACTION_NONE, {0, 0}, NULL},
     {"immtitle", "immtitle", POS_DEAD, do_immtitle, LVL_IMMORT, 0, TRUE, ACTION_NONE, {0, 0}, NULL},
     {"info", "info", POS_SLEEPING, do_gen_ps, 0, SCMD_INFO, TRUE, ACTION_NONE, {0, 0}, NULL},
+    {"infuse", "infuse", POS_DEAD, do_infuse, 1, 0, FALSE, ACTION_NONE, {0, 0}, NULL},
     {"invis", "invi", POS_DEAD, do_invis, LVL_IMMORT, 0, TRUE, ACTION_NONE, {0, 0}, NULL},
     {"invisduergar", "invisduergar", POS_FIGHTING, do_invisduergar, 1, 0, FALSE, ACTION_MOVE, {0, 0}, NULL},
     {"innates", "innates", POS_DEAD, do_innates, 0, 0, TRUE, ACTION_NONE, {0, 0}, NULL},
@@ -665,6 +672,8 @@ cpp_extern const struct command_info cmd_info[] = {
     /* {"command", "sort_as", minimum_position, *command_pointer, minimum_level, subcmd, ignore_wait, actions_required, {action_cooldowns}, *command_check_pointer},*/
 
     {"kill", "k", POS_FIGHTING, do_hit, 0, SCMD_HIT, FALSE, ACTION_STANDARD, {6, 0}, NULL},
+    {"augmentphysicality", "augmentphysicality", POS_FIGHTING, do_augment_physicality, 0, 0, FALSE, ACTION_STANDARD, {6, 0}, NULL},
+    {"mirageflare", "mirageflare", POS_FIGHTING, do_mirage_flare, 0, 0, TRUE, ACTION_SWIFT, {6, 0}, NULL},
     {"kapaksaliva", "kapaksaliva", POS_FIGHTING, do_kapak_saliva, 0, 0, FALSE, ACTION_SWIFT, {6, 0}, NULL},
     {"kick", "ki", POS_FIGHTING, do_process_attack, 1, AA_KICK, FALSE, ACTION_NONE, {6, 0}, can_kick},
     {"keycheck", "keycheck", POS_STANDING, do_keycheck, LVL_IMMORT, 0, TRUE, ACTION_NONE, {0, 0}, NULL},
@@ -1377,6 +1386,12 @@ void command_interpreter(struct char_data *ch, char *argument)
   int cmd = 0, length = 0;
   char *line = NULL;
   char arg[MAX_INPUT_LENGTH] = {'\0'};
+
+  if (!IS_NPC(ch) && (ch->legendary_awards_pending || legendary_transaction_locked(ch)) &&
+      !legendary_earnings_recover(ch))
+    return;
+
+  legendary_foundations_refresh(ch);
 
   /* just drop to next line for hitting CR */
   skip_spaces(&argument);
@@ -2499,6 +2514,36 @@ int enter_player_game(struct descriptor_data *d)
   character_list = d->character;
   char_to_room(d->character, load_room);
   load_result = Crash_load(d->character);
+  (void)legendary_loadout_get(d->character);
+  if (!legendary_earnings_recover(d->character) ||
+      (legendary_earnings_available()&&!legendary_budget_prime(d->character)))
+  {
+    /* Do not expose an unreconciled character to login/greet scripts, pets,
+     * commerce or the world heartbeat. Discard this loaded copy without saving
+     * over the authoritative gold receipt/object checkpoint. */
+    struct char_data *ch=d->character, *temp;
+    struct obj_data *bags[10]={NULL}, *obj, *next;
+    if (ch->bags)
+    {
+      bags[0]=ch->bags->bag1; bags[1]=ch->bags->bag2; bags[2]=ch->bags->bag3;
+      bags[3]=ch->bags->bag4; bags[4]=ch->bags->bag5; bags[5]=ch->bags->bag6;
+      bags[6]=ch->bags->bag7; bags[7]=ch->bags->bag8; bags[8]=ch->bags->bag9; bags[9]=ch->bags->bag10;
+      memset(ch->bags,0,sizeof(*ch->bags));
+    }
+    for (i=0;i<10;i++) for (obj=bags[i];obj;obj=next)
+    {
+      next=obj->next_content; obj->next_content=NULL; obj->carried_by=NULL;
+      extract_obj(obj);
+    }
+    for (i=0;i<NUM_WEARS;i++) if (GET_EQ(ch,i)) extract_obj(GET_EQ(ch,i));
+    while (ch->carrying) extract_obj(ch->carrying);
+    char_from_room(ch);
+    REMOVE_FROM_LIST(ch,character_list,next);
+    free_char(ch); /* clears d->character and the lookup entry */
+    write_to_output(d,"Reconnect after persistence is available to finish recovery.\r\n");
+    STATE(d)=CON_CLOSE;
+    return 3;
+  }
   estate_recover(d->character);
   auction_house_collect(d->character);
 
@@ -3113,8 +3158,14 @@ void nanny(struct descriptor_data *d, char *arg)
         {
           /* Make sure old files are removed so the new player doesn't get the
            * deleted player's equipment. */
-          if ((player_i = get_ptable_by_name(tmp_name)) >= 0)
+          if ((player_i = get_ptable_by_name(tmp_name)) >= 0) {
             remove_player(player_i);
+            if(get_ptable_by_name(tmp_name)>=0) {
+              write_to_output(d,"That name is awaiting deletion recovery. Please try again after recovery.\r\n");
+              STATE(d)=CON_CLOSE;
+              return;
+            }
+          }
 
           /* We get a false positive from the original deleted character. */
           free_char(d->character);
@@ -4715,6 +4766,7 @@ void nanny(struct descriptor_data *d, char *arg)
       }
 
       load_result = enter_player_game(d);
+      if (load_result == 3) break;
       send_to_char(d->character, "%s", CONFIG_WELC_MESSG);
 
       /* Clear their load room if it's not persistant. */
@@ -4880,6 +4932,13 @@ void nanny(struct descriptor_data *d, char *arg)
         write_to_output(d, "You try to kill yourself, but the ice stops you.\r\n"
                            "Character not deleted.\r\n\r\n");
         STATE(d) = CON_CLOSE;
+        return;
+      }
+      if(!legendary_earnings_recover(d->character)||
+         !legendary_retire_owner(GET_IDNUM(d->character),GET_NAME(d->character))) {
+        write_to_output(d,"Deletion deferred: legendary economic or ownership recovery is unavailable. Your character has not been deleted.\r\n");
+        STATE(d)=CON_ACCOUNT_MENU;
+        show_account_menu(d);
         return;
       }
       if (GET_LEVEL(d->character) < LVL_GRSTAFF)

@@ -14,6 +14,13 @@
 #include "housing.h"
 #include "interpreter.h"
 #include <assert.h>
+#ifdef LEGENDARY_PERSISTENCE_TEST
+#include "legendary_identity.h"
+#endif
+#ifndef ESTATE_REAL_CODEC
+struct index_data *obj_index;
+obj_rnum top_of_objt = -1;
+#endif
 MYSQL *conn;
 bool mysql_available = TRUE;
 struct room_data *world;
@@ -56,6 +63,45 @@ const char *act(const char *s, int hide, struct char_data *ch, struct obj_data *
   send_to_char(ch, "%s\n", s);
   return s;
 }
+/* Ordinary wear adapter shared by legendary integration fixtures. */
+bool legendary_test_wear_allowed = true;
+int invalid_align(struct char_data *ch, struct obj_data *o) { (void)ch; (void)o; return 0; }
+int invalid_race(struct char_data *ch, struct obj_data *o) { (void)ch; (void)o; return 0; }
+int invalid_class(struct char_data *ch, struct obj_data *o) { (void)ch; (void)o; return !legendary_test_wear_allowed; }
+bool is_class_req_object(struct char_data *ch, struct obj_data *o, bool output) { (void)ch; (void)o; (void)output; return true; }
+bool is_class_anti_object(struct char_data *ch, struct obj_data *o, bool output) { (void)ch; (void)o; (void)output; return false; }
+int hands_needed_full(struct char_data *ch, struct obj_data *o, int feats) { (void)ch; (void)o; (void)feats; return 1; }
+bool is_two_handed_ranged_weapon(struct obj_data *o) { return GET_OBJ_TYPE(o)==ITEM_FIREWEAPON; }
+bool is_caster_class(int c) { return c==CLASS_WIZARD; }
+bool is_riding_dragon_mount(struct char_data *ch) { return ch && RIDING(ch) && IS_NPC(RIDING(ch)) && GET_REAL_RACE(RIDING(ch))==RACE_TYPE_DRAGON && IN_ROOM(ch)==IN_ROOM(RIDING(ch)); }
+/* Surrounding stat rebuild adapter; legendary apply/caps bookkeeping is real. */
+#include "legendary_foundations.h"
+#include "spells.h"
+static int test_ability_cap=32,test_pool_cap=10000,test_save_cap=15;
+void compute_char_cap(struct char_data *ch,int mode)
+{
+  int i;(void)mode;
+  ch->aff_abils.str=ch->aff_abils.str>test_ability_cap?test_ability_cap:ch->aff_abils.str;
+  ch->aff_abils.dex=ch->aff_abils.dex>test_ability_cap?test_ability_cap:ch->aff_abils.dex;
+  ch->aff_abils.con=ch->aff_abils.con>test_ability_cap?test_ability_cap:ch->aff_abils.con;
+  ch->aff_abils.intel=ch->aff_abils.intel>test_ability_cap?test_ability_cap:ch->aff_abils.intel;
+  ch->aff_abils.wis=ch->aff_abils.wis>test_ability_cap?test_ability_cap:ch->aff_abils.wis;
+  ch->aff_abils.cha=ch->aff_abils.cha>test_ability_cap?test_ability_cap:ch->aff_abils.cha;
+  if(GET_MAX_MOVE(ch)>test_pool_cap)GET_MAX_MOVE(ch)=test_pool_cap;
+  if(GET_MAX_PSP(ch)>test_pool_cap)GET_MAX_PSP(ch)=test_pool_cap;
+  for(i=0;i<NUM_OF_SAVING_THROWS;i++)if(GET_SAVE(ch,i)>test_save_cap)GET_SAVE(ch,i)=test_save_cap;
+}
+void affect_total(struct char_data *ch)
+{
+  int i;if(!legendary_foundations_begin(ch))return;ch->aff_abils=ch->real_abils;
+  GET_MAX_MOVE(ch)=GET_REAL_MAX_MOVE(ch);GET_MAX_PSP(ch)=GET_REAL_MAX_PSP(ch);GET_MAX_HIT(ch)=GET_REAL_MAX_HIT(ch);
+  for(i=0;i<NUM_OF_SAVING_THROWS;i++)GET_SAVE(ch,i)=GET_REAL_SAVE(ch,i);
+  for(i=0;i<NUM_DAM_TYPES;i++)GET_RESISTANCES(ch,i)=GET_REAL_RESISTANCES(ch,i);
+  legendary_foundations_reset(ch);compute_char_cap(ch,0);legendary_foundations_apply(ch);
+  legendary_foundation_hp(ch,GET_REAL_MAX_HIT(ch));legendary_foundations_end(ch);
+}
+int compute_armor_class(struct char_data *a,struct char_data *ch,int touch,int mode)
+{(void)a;(void)touch;(void)mode;return 10+legendary_foundation_deflection(ch,0);}
 int MAX(int a, int b) { return a > b ? a : b; }
 size_t strlcpy(char *dst, const char *src, size_t n)
 {
@@ -253,6 +299,9 @@ void obj_from_room(struct obj_data *obj)
 }
 void extract_obj(struct obj_data *obj)
 {
+#ifdef LEGENDARY_PERSISTENCE_TEST
+  legendary_object_unload(obj);
+#endif
   housing_object_extracted(obj);
   struct obj_data *it, *next;
   if (obj->carried_by)
@@ -293,21 +342,24 @@ int can_carry_weight_limit(struct char_data *ch)
 int get_filename(char *out, size_t n, int mode, const char *name)
 {
   (void)mode;
-  snprintf(out, n, "%s.plr", name);
+  snprintf(out, n, "%s.%s", name, mode == CRASH_FILE ? "objs" : "plr");
   return TRUE;
 }
-void save_char(struct char_data *ch, int mode)
+#include "durable_file.h"
+bool save_char_checked(struct char_data *ch, int mode)
 {
-  char path[128];
-  FILE *f;
+  char path[128], data[256];
+  int len;
   (void)mode;
   get_filename(path, sizeof(path), PLR_FILE, GET_NAME(ch));
-  f = fopen(path, "w");
-  assert(f);
-  fprintf(f, "Gold: %d\nECrd: %llu\nEDbt: %llu\n", GET_GOLD(ch),
-          ch->player_specials->estate_credit_receipt, ch->player_specials->estate_debit_receipt);
-  fclose(f);
+  len=snprintf(data,sizeof(data),"Gold: %d\nECrd: %llu\nEDbt: %llu\nLgTx: %s\n", GET_GOLD(ch),
+      ch->player_specials->estate_credit_receipt,ch->player_specials->estate_debit_receipt,
+      ch->player_specials->legendary_operation);
+  return durable_file_replace(path,data,(size_t)len);
 }
+void save_char(struct char_data *ch, int mode) { assert(save_char_checked(ch,mode)); }
+
+#ifndef LEGENDARY_TRANSACTION_TEST
 static void save_item(struct char_data *ch, struct obj_data *obj)
 {
   char *name, *data, *q;
@@ -325,9 +377,17 @@ static void save_item(struct char_data *ch, struct obj_data *obj)
   for (it = obj->contains; it; it = it->next_content)
     save_item(ch, it);
 }
-void Crash_crashsave(struct char_data *ch)
+
+#endif
+bool Crash_crashsave_checked(struct char_data *ch)
 {
+#ifdef LEGENDARY_TRANSACTION_TEST
+  extern bool test_real_crashsave_checked(struct char_data *);
+  return test_real_crashsave_checked(ch);
+#else
+
   char *q = estate_quote(GET_NAME(ch));
+  assert(estate_query("START TRANSACTION"));
   struct obj_data *it;
   int i;
   assert(estate_query("DELETE FROM player_save_objs WHERE name='%s'", q));
@@ -337,7 +397,11 @@ void Crash_crashsave(struct char_data *ch)
   for (i = 0; i < NUM_WEARS; i++)
     if (GET_EQ(ch, i))
       save_item(ch, GET_EQ(ch, i));
+  assert(estate_query("COMMIT"));
+  return true;
+#endif
 }
+void Crash_crashsave(struct char_data *ch) { assert(Crash_crashsave_checked(ch)); }
 int call_magic(struct char_data *ch, struct char_data *v, struct obj_data *o, int spell, int level,
                int cast, int extra)
 {
@@ -393,6 +457,11 @@ static void init_player(struct char_data *ch, const char *name, long id)
   GET_GOLD(ch) = 500000;
   IN_ROOM(ch) = NOWHERE;
   ch->real_abils.dex = 18;
+  ch->real_abils.str=ch->real_abils.con=ch->real_abils.intel=ch->real_abils.wis=ch->real_abils.cha=10;
+  ch->aff_abils=ch->real_abils;
+  GET_REAL_MAX_HIT(ch)=GET_MAX_HIT(ch)=GET_HIT(ch)=100;
+  GET_REAL_MAX_MOVE(ch)=GET_MAX_MOVE(ch)=GET_MOVE(ch)=100;
+  GET_REAL_MAX_PSP(ch)=GET_MAX_PSP(ch)=GET_PSP(ch)=100;
   char_to_room(ch, 1);
 }
 static long scalar(const char *sql)

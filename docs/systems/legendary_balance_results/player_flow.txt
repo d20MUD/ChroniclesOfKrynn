@@ -1,0 +1,137 @@
+> infuse 
+Dragonmetal Awakening: start with infuse next <item>.
+At level 30, a registered smith can permanently awaken eligible level 20-30 equipment.
+Use infuse materials for your balances; infuse help for all commands.
+Foundations share 12 points; choose at most three active powers across all gear.
+
+> infuse next flowblade
+Next step for flowblade (primary):
+Choose a path with infuse paths <item> primary, then ask the registered smith to infuse awaken <item> primary <path>.
+Awakening is permanent and cannot transfer or refund its investment.
+Next cost: 2000000 infusion XP, 50000 gold, 500 fragments, 0 essences, 0 catalysts. Check infuse materials, then request the smith's quote.
+Nothing is spent until you confirm the exact quote.
+
+> infuse paths flowblade
+Dragonbane (Draconic essence)
+Guardian (Martial essence)
+Spellweaver (Arcane essence)
+Pursuer (Primal essence)
+Lifebinder (Spiritual essence)
+Trickster (Shadow essence)
+Ironwill (Spiritual essence)
+Wayfarer (Primal essence)
+Runekeeper (Arcane essence)
+Commander (Martial essence)
+Slayer (Martial essence)
+Renewal (Spiritual essence)
+Supporting channels require an actually wielded two-handed weapon and assault, guard, or focus family.
+
+> infuse awaken flowblade Slayer
+WARNING: Awakening permanently binds this item to you. It cannot transfer or refund its awakening.
+Proposed: flowblade primary, rank Kindled, Slayer path, None family; F00 subtype 0, T00, S00, modifier None on none.
+Item passive: P00 (one selection for this whole item).
+Exact changes: infusion XP -2000000, gold -50000, fragments -500, catalysts 0.
+Channel: primary. The other channel will not advance.
+Valid for 60 seconds: infuse confirm <id> (or infuse cancel).
+
+> infuse confirm <quote-id>
+Infusion confirmed and saved.
+
+> infuse next flowblade
+Next step for flowblade (primary):
+Choose your free foundation: infuse choices <item> primary, then infuse select <item> primary foundation <Fxx>. Foundations share 12 points across your equipment.
+
+> infuse select flowblade primary foundation F02
+Proposed: flowblade primary, rank Kindled, Slayer path, None family; F02 subtype 0, T00, S00, modifier None on none.
+Item passive: P00 (one selection for this whole item).
+Exact changes: infusion XP 0, gold 0, fragments 0, catalysts 0.
+Channel: primary. The other channel will not advance.
+Valid for 60 seconds: infuse confirm <id> (or infuse cancel).
+
+> infuse confirm <quote-id>
+Infusion confirmed and saved.
+
+> infuse next flowblade
+Next step for flowblade (primary):
+Choose your free additional item passive: infuse choices <item> primary, then infuse select <item> primary passive <Pxx>. One selection per item grows with rank, separately from its foundation.
+
+> infuse select flowblade primary passive P12
+Proposed: flowblade primary, rank Kindled, Slayer path, None family; F02 subtype 0, T00, S00, modifier None on none.
+Item passive: P12 (one selection for this whole item).
+Exact changes: infusion XP 0, gold 0, fragments 0, catalysts 0.
+Channel: primary. The other channel will not advance.
+Valid for 60 seconds: infuse confirm <id> (or infuse cancel).
+
+> infuse confirm <quote-id>
+Infusion confirmed and saved.
+
+> infuse next flowblade
+Next step for flowblade (primary):
+Next cost: 5000000 infusion XP, 100000 gold, 1000 fragments, 200 essences, 0 catalysts. Check infuse materials, then request the smith's quote.
+Request infuse advance <item> primary. Only this channel advances.
+Nothing is spent until you confirm the exact quote.
+
+> infuse advance flowblade primary
+Proposed: flowblade primary, rank Awakened, Slayer path, None family; F02 subtype 0, T00, S00, modifier None on none.
+Item passive: P12 (one selection for this whole item).
+Exact changes: infusion XP -5000000, gold -100000, fragments -1000, catalysts 0.
+  Draconic essence: -100
+  Martial essence: -100
+Channel: primary. The other channel will not advance.
+Valid for 60 seconds: infuse confirm <id> (or infuse cancel).
+
+> infuse confirm <quote-id>
+Infusion confirmed and saved.
+
+> infuse next flowblade
+Next step for flowblade (primary):
+Choose your free technique: infuse choices <item> primary, then infuse select <item> primary technique <Txx>.
+
+> infuse select flowblade primary technique T01
+Proposed: flowblade primary, rank Awakened, Slayer path, None family; F02 subtype 0, T01, S00, modifier None on none.
+Item passive: P12 (one selection for this whole item).
+  T01 rank Awakened values: attack=2; damage=10; window seconds=12; charges=1; cooldown=90s; family cooldown=0s.
+Exact changes: infusion XP 0, gold 0, fragments 0, catalysts 0.
+Channel: primary. The other channel will not advance.
+Valid for 60 seconds: infuse confirm <id> (or infuse cancel).
+
+> infuse confirm <quote-id>
+Infusion confirmed and saved.
+
+> infuse next flowblade
+Next step for flowblade (primary):
+At the smith: infuse attune <item> primary technique. You may attune three powers across all equipment.
+
+> infuse attune flowblade primary technique
+Exact changes: infusion XP 0, gold 0, fragments 0, catalysts 0.
+Channel: primary. The other channel will not advance.
+Valid for 60 seconds: infuse confirm <id> (or infuse cancel).
+
+> infuse confirm <quote-id>
+Infusion confirmed and saved.
+
+> infuse next flowblade
+Next step for flowblade (primary):
+Equip the item, then infuse use T01 [target]. Using it takes a standard action and six seconds of recovery. Inspect shows shared cooldowns.
+Next cost: 10000000 infusion XP, 200000 gold, 2000 fragments, 400 essences, 20 catalysts. Check infuse materials, then request the smith's quote.
+Request infuse advance <item> primary. Only this channel advances.
+Nothing is spent until you confirm the exact quote.
+
+> wield flowblade
+[Fixture equips the ordinary weapon.]
+
+> infuse use T01
+You activate Measured strike.
+
+> infuse inspect flowblade primary
+flowblade: primary channel, permanently bound
+Item passive: P12 Unyielding grip; track value 2 before caps/training. Outfit ceiling: 10. checks resisting disarm; does not grant immunity.
+Current equipped outfit total for P12: 2 (eligibility, capability and ceilings apply).
+Rank Awakened; path Slayer; family None; UUID <id>.
+Foundation: F02 Force (subtype 0); technique: Measured strike; signature: unselected.
+Modifier: None on none. First choices remaining: signature modifier
+Invested: 7000000 XP, 150000 gold, 1500 fragments, 200 essences, 0 catalysts.
+Equipped channel: active. Foundations, techniques and signatures are implemented.
+  T01 rank Awakened values: attack=2; damage=10; window seconds=12; charges=1; cooldown=90s; family cooldown=0s.
+Next rank: 10000000 XP, 200000 gold, 2000 fragments, 400 essences (half matching), 20 catalysts.
+

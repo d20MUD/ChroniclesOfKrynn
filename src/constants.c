@@ -1209,6 +1209,7 @@ const char *action_bits[] = {"<spec>", // 0
                              "No-Teleport",
                              "Summon-Solar",
                              "Flightless",
+                             "Legendary-Boss",
                              "\n"};
 CHECK_TABLE_SIZE(action_bits, NUM_MOB_FLAGS + 1);
 
@@ -1897,7 +1898,21 @@ const char *material_name[] = {"not-set",
     "dwarf willow wood",
     "jute",
     "agave fiber",
-                               "\n"};
+                               "branch coral",
+    "fan coral",
+    "blood coral",
+    "deepwater coral",
+    "adamant coral",
+    "thin fishskin",
+    "tough eelskin",
+    "sharkskin",
+    "pristine sharkskin",
+    "kelp fiber",
+    "seagrass fiber",
+    "sponge fiber",
+    "sea cotton",
+    "sea silk",
+    "\n"};
 CHECK_TABLE_SIZE(material_name, NUM_MATERIALS + 1);
 
 /** Describes the type of object.
@@ -4890,7 +4905,21 @@ const char *crafting_materials[] = {"",
     "dwarf willow wood",
     "jute",
     "agave fiber",
-                                    "\n"};
+                                    "branch coral",
+    "fan coral",
+    "blood coral",
+    "deepwater coral",
+    "adamant coral",
+    "thin fishskin",
+    "tough eelskin",
+    "sharkskin",
+    "pristine sharkskin",
+    "kelp fiber",
+    "seagrass fiber",
+    "sponge fiber",
+    "sea cotton",
+    "sea silk",
+    "\n"};
 CHECK_TABLE_SIZE(crafting_materials, NUM_CRAFT_MATS + 1);
 
 const char *crafting_material_descriptions[] = {"",
@@ -4954,7 +4983,21 @@ const char *crafting_material_descriptions[] = {"",
     "dwarf willow",
     "jute",
     "agave fiber",
-                                                "\n"};
+                                                "branch coral",
+    "fan coral",
+    "blood coral",
+    "deepwater coral",
+    "adamant coral",
+    "thin fishskin",
+    "tough eelskin",
+    "sharkskin",
+    "pristine sharkskin",
+    "kelp fiber",
+    "seagrass fiber",
+    "sponge fiber",
+    "sea cotton",
+    "sea silk",
+    "\n"};
 CHECK_TABLE_SIZE(crafting_material_descriptions, NUM_CRAFT_MATS + 1);
 
 const char *crafting_material_nodes[] = {"",
@@ -5018,7 +5061,21 @@ const char *crafting_material_nodes[] = {"",
     "a stand of dwarf willow",
     "a patch of jute plants",
     "a patch of agave plants",
-                                         "\n"};
+                                         "a colony of branch coral",
+    "a colony of fan coral",
+    "a colony of blood coral",
+    "a colony of deepwater coral",
+    "a colony of adamant coral",
+    "a school of thin-skinned fish",
+    "a shoal of tough-skinned eels",
+    "a hunting ground of sharks",
+    "a hunting ground of pristine sharks",
+    "a bed of kelp",
+    "a bed of seagrass",
+    "a colony of fibrous sponges",
+    "a bed of sea cotton",
+    "a bed of sea silk mussels",
+    "\n"};
 CHECK_TABLE_SIZE(crafting_material_nodes, NUM_CRAFT_MATS + 1);
 
 const char *harvesting_messages[] = {"",
@@ -5082,7 +5139,21 @@ const char *harvesting_messages[] = {"",
     "logging a stand of dwarf willow",
     "gathering a patch of jute plants",
     "gathering a patch of agave plants",
-                                     "\n"};
+                                     "harvesting a colony of branch coral",
+    "harvesting a colony of fan coral",
+    "harvesting a colony of blood coral",
+    "harvesting a colony of deepwater coral",
+    "harvesting a colony of adamant coral",
+    "hunting a school of thin-skinned fish",
+    "hunting a shoal of tough-skinned eels",
+    "hunting a hunting ground of sharks",
+    "hunting a hunting ground of pristine sharks",
+    "gathering a bed of kelp",
+    "gathering a bed of seagrass",
+    "gathering a colony of fibrous sponges",
+    "gathering a bed of sea cotton",
+    "gathering a bed of sea silk mussels",
+    "\n"};
 CHECK_TABLE_SIZE(harvesting_messages, NUM_CRAFT_MATS + 1);
 
 const char *crafting_types[] = {"", "weapon", "armor", "misc", "instrument", "golem", "\n"};

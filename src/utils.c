@@ -12,6 +12,8 @@
 
 #include "conf.h"
 #include "sysdep.h"
+#include "legendary_foundations.h"
+#include "legendary_techniques.h"
 #include "structs.h"
 #include "utils.h"
 #include "epic_magic.h"
@@ -1077,7 +1079,8 @@ int compute_current_size(struct char_data *ch)
   if (IS_ALTER_SELF(ch) || IS_IRDA_FORM(ch) || IS_SIVAK_FORM(ch))
   {
     size = IS_SIVAK_FORM(ch) ? active_sivak_form(ch)->size : race_list[GET_RACE(ch)].size;
-    if (affected_by_spell(ch, SPELL_ENLARGE_PERSON))
+    if (affected_by_spell(ch, ABILITY_AUGMENT_PHYSICALITY) ||
+        affected_by_spell(ch, SPELL_ENLARGE_PERSON))
       size++;
     if (affected_by_spell(ch, SPELL_SHRINK_PERSON))
       size--;
@@ -1085,7 +1088,8 @@ int compute_current_size(struct char_data *ch)
   else if (AFF_FLAGGED(ch, AFF_WILD_SHAPE) && racenum)
   { // wildshaped
     size = race_list[racenum].size;
-    if (affected_by_spell(ch, SPELL_ENLARGE_PERSON))
+    if (affected_by_spell(ch, ABILITY_AUGMENT_PHYSICALITY) ||
+        affected_by_spell(ch, SPELL_ENLARGE_PERSON))
       size++;
     if (affected_by_spell(ch, SPELL_SHRINK_PERSON))
       size--;
@@ -1100,6 +1104,25 @@ int compute_current_size(struct char_data *ch)
   if (size > SIZE_COLOSSAL)
     size = SIZE_COLOSSAL;
 
+  return size;
+}
+
+/* Equipment grows with an augmented bearer, without changing its saved base size.
+ * Items in carried containers also grow; dropped or transferred items revert. */
+int compute_object_size(struct obj_data *obj)
+{
+  struct obj_data *root = obj;
+  struct char_data *bearer;
+  int size;
+
+  if (!obj)
+    return SIZE_UNDEFINED;
+  while (root->in_obj)
+    root = root->in_obj;
+  bearer = root->worn_by ? root->worn_by : root->carried_by;
+  size = GET_OBJ_SIZE(obj);
+  if (bearer && affected_by_spell(bearer, ABILITY_AUGMENT_PHYSICALITY) && size < SIZE_COLOSSAL)
+    size++;
   return size;
 }
 
@@ -2486,6 +2509,8 @@ int skill_roll(struct char_data *ch, int skillnum)
     roll = 10;*/
 
   roll += compute_ability(ch, skillnum);
+  /* Static Stealth is already in compute_ability; only Coordinate consumes here. */
+  roll += legendary_technique_skill(ch,skillnum,true);
 
   /* Beast Master: Natural Empathy perk - +2 per rank to Animal Handling and Animal Empathy */
   if (!IS_NPC(ch))
@@ -4170,6 +4195,7 @@ void die_follower(struct char_data *ch)
  * @param leader The character to be followed. */
 void add_follower(struct char_data *ch, struct char_data *leader)
 {
+  if (IS_NPC(ch)) ch->legendary_owned_instance = true;
   struct follow_type *k;
 
   if (ch->master)
@@ -5570,6 +5596,7 @@ void new_affect(struct affected_type *af)
   af->location = APPLY_NONE;
   af->bonus_type = BONUS_TYPE_ENHANCEMENT;
   af->specific = 0;
+  af->legendary_flags=0;af->legendary_expiry=0;
   af->next = NULL; /* CRITICAL: Must initialize next pointer to prevent heap corruption */
 
   for (i = 0; i < AF_ARRAY_MAX; i++)
@@ -7249,6 +7276,9 @@ bool can_speak_language(struct char_data *ch, int language)
 
   if (GET_LEVEL(ch) >= LVL_IMMORT)
     return true;
+  /* Tongue of the Sun and Moon grants both universal speech and comprehension. */
+  if (HAS_FEAT(ch, FEAT_TONGUE_OF_THE_SUN_AND_MOON))
+    return true;
   if (language == LANG_COMMON)
     return true;
   if (language == (race_list[GET_REAL_RACE(ch)].racial_language - SKILL_LANG_LOW))
@@ -8518,7 +8548,7 @@ bool push_attempt(struct char_data *ch, struct char_data *vict, bool display)
   if (AFF_FLAGGED(ch, AFF_HASTE))
     cmb_bonus += 2;
 
-  if (!combat_maneuver_check(ch, vict, 0, cmb_bonus))
+  if (combat_maneuver_check(ch, vict, COMBAT_MANEUVER_TYPE_FORCED_MOVEMENT, cmb_bonus) <= 0)
     return false;
 
   return true;
@@ -8947,8 +8977,10 @@ int smite_good_target_type(struct char_data *ch)
  */
 void calculate_max_hp(struct char_data *ch, bool display)
 {
-  if (!ch || IS_NPC(ch) || !ch->desc)
+  if (!ch || IS_NPC(ch))
     return;
+
+  legendary_foundations_refresh(ch);
 
   int i = 0, j = 0;
   int max_hp = 20; // start point
@@ -9215,7 +9247,10 @@ void calculate_max_hp(struct char_data *ch, bool display)
     send_to_char(ch, "\r\n\tY%-40s = %d\tn\r\n", "Final Maximum Hit Points", max_hp);
   }
 
-  GET_REAL_MAX_HIT(ch) = GET_MAX_HIT(ch) = max_hp;
+  GET_REAL_MAX_HIT(ch) = max_hp;
+  legendary_foundation_hp(ch, max_hp);
+  if (display) send_to_char(ch, "Legendary Vitality: +%d (effective maximum %d)\r\n",
+      legendary_foundation_value(ch, LEG_F09, 0), GET_MAX_HIT(ch));
 }
 
 void dismiss_all_followers(struct char_data *ch)
@@ -12984,7 +13019,7 @@ bool is_weapon_wielded_two_handed(struct obj_data *obj, struct char_data *ch)
   if (GET_WEAPON_TYPE(obj) == WEAPON_TYPE_QUARTERSTAFF)
     return GET_EQ(ch, WEAR_WIELD_2H) == obj;
 
-  wsize = GET_OBJ_SIZE(obj);
+  wsize = compute_object_size(obj);
   csize = GET_SIZE(ch);
 
   if (wsize >= csize)

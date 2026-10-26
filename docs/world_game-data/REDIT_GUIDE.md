@@ -27,6 +27,14 @@ cannot be edited by two builders simultaneously. Dynamically allocated
 wilderness rooms cannot be edited with `redit`; the editor directs you to use
 `buildwalk` to create static rooms first.
 
+In normal zones, `buildwalk` checks the connected map on the current floor
+before creating a room. If its destination is already occupied, it makes a
+two-way connection to that existing room instead. This includes diagonal
+directions, stays within the current zone, and never follows up/down exits.
+Moving up or down still creates rooms normally. An ambiguous occupied position
+or a conflicting reverse exit stops the operation without creating a duplicate
+or overwriting an exit. New connections are marked for the usual room save.
+
 To create a room, choose an unused **numeric vnum** in your permitted zone.
 `redit new` is not supported by this command parser.
 

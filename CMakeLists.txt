@@ -553,6 +553,17 @@ set(SRC_C_FILES
     src/house.c
     src/housing.c
     src/estate.c
+    src/legendary.c
+    src/legendary_equipment.c
+    src/legendary_techniques.c
+    src/legendary_effects.c
+    src/legendary_foundations.c
+    src/legendary_commands.c
+    src/legendary_earnings.c
+    src/legendary_transaction.c
+    src/durable_file.c
+    src/legendary_store.c
+    src/legendary_identity.c
     src/auction_house.c
     src/player_shop.c
     src/hsedit.c

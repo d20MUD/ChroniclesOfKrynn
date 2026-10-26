@@ -13,6 +13,11 @@
 #include "conf.h"
 #include "account.h"
 #include "sysdep.h"
+#include "legendary_effects.h"
+#include "legendary_techniques.h"
+#include "legendary_foundations.h"
+#include "legendary_equipment.h"
+#include "legendary_earnings.h"
 #include "structs.h"
 #include "utils.h"
 #include "mob_utils.h"
@@ -562,6 +567,8 @@ void perform_flee(struct char_data *ch)
   int i, found = 0, fleeOptions[DIR_COUNT];
   struct char_data *k, *temp;
 
+  if(legendary_grounded(ch)){send_to_char(ch,"The grounding lance prevents your escape!\r\n");return;}
+
   /* disqualifications? */
   if (AFF_FLAGGED(ch, AFF_STUN) || AFF_FLAGGED(ch, AFF_DAZED) || AFF_FLAGGED(ch, AFF_PARALYZED) ||
       char_has_mud_event(ch, eSTUNNED))
@@ -971,7 +978,7 @@ int roll_initiative(struct char_data *ch)
  * a given ch's AC under the circumstances of being attacked
  * by 'attacker' (protection from alignment (evil/good), has dexterity bonus,
  * favored enemy) */
-int compute_armor_class(struct char_data *attacker, struct char_data *ch, int is_touch, int mode)
+static int compute_armor_class_with_decoy(struct char_data *attacker, struct char_data *ch, int is_touch, int mode, bool decoy)
 {
   /* hack to translate old D&D to 3.5 Edition
    * Modified 09/09/2014 : Ornir
@@ -980,6 +987,8 @@ int compute_armor_class(struct char_data *attacker, struct char_data *ch, int is
       ac_penalty = 0; /* we keep track of all AC penalties */
   int i = 0, bonuses[NUM_BONUS_TYPES];
   struct affected_type *affections = NULL, *next = NULL;
+
+  legendary_foundations_refresh(ch);
 
   /* Initialize bonuse-types to 0 */
   for (i = 0; i < NUM_BONUS_TYPES; i++)
@@ -1370,6 +1379,7 @@ int compute_armor_class(struct char_data *attacker, struct char_data *ch, int is
   {
     /* this will include a dex-cap bonus on equipment as well */
     bonuses[BONUS_TYPE_DODGE] += GET_DEX_BONUS(ch);
+    if(decoy)bonuses[BONUS_TYPE_DODGE] += legendary_signature_dodge(ch,false);
 
     if ((get_speed(ch, false) - 10) > get_speed(attacker, false))
     {
@@ -1777,6 +1787,8 @@ int compute_armor_class(struct char_data *attacker, struct char_data *ch, int is
   if (attacker && IS_UNDEAD(attacker) && affected_by_spell(ch, SPELL_VEIL_OF_POSITIVE_ENERGY))
     bonuses[BONUS_TYPE_SACRED] = MAX(bonuses[BONUS_TYPE_SACRED], 2);
 
+  bonuses[BONUS_TYPE_DEFLECTION] = legendary_foundation_deflection(ch, bonuses[BONUS_TYPE_DEFLECTION]);
+
   /* Add up all the bonuses */
   if (is_touch)
   { /* don't include armor, natural armor, shield */
@@ -1839,6 +1851,9 @@ int compute_armor_class(struct char_data *attacker, struct char_data *ch, int is
   return MIN(CONFIG_PLAYER_AC_CAP, armorclass) -
          (affected_by_spell(ch, AFFECT_EPIC_MUMMY_DREAD) ? 4 : 0);
 }
+
+int compute_armor_class(struct char_data *attacker,struct char_data *ch,int is_touch,int mode)
+{return compute_armor_class_with_decoy(attacker,ch,is_touch,mode,false);}
 
 // the whole update_pos system probably needs to be rethought -zusuk
 
@@ -1945,6 +1960,7 @@ void update_pos_dam(struct char_data *victim)
 
 void update_pos(struct char_data *victim)
 {
+  legendary_loadout_invalidate(victim);
   if (HAS_FEAT(victim, FEAT_DEATHLESS_FRENZY) && affected_by_spell(victim, SKILL_RAGE))
   {
     if (GET_HIT(victim) <= -121)
@@ -2096,6 +2112,7 @@ bool set_fighting(struct char_data *ch, struct char_data *vict)
       SET_BIT_AR(AFF_FLAGS(ch), AFF_FLAT_FOOTED);
   }
 
+  legendary_loadout_combat_start(ch);
   FIGHTING(ch) = vict;
 
   if (!CONFIG_PK_ALLOWED)
@@ -2115,7 +2132,7 @@ bool set_fighting(struct char_data *ch, struct char_data *vict)
     if (!is_immune_fear(vict, ch, false) && !is_immune_mind_affecting(vict, ch, false))
     {
       ch->char_specials.terror_cooldown = 200;
-      if (!savingthrow_full(vict, ch, AFFECT_AURA_OF_TERROR, 0, CAST_INNATE, GET_LEVEL(vict),
+      if (!savingthrow_full(vict, ch, SAVING_WILL, 0, CAST_INNATE, GET_LEVEL(vict),
                             ENCHANTMENT, AFFECT_AURA_OF_TERROR))
       {
         struct affected_type af = {0};
@@ -2976,6 +2993,8 @@ void raw_kill(struct char_data *ch, struct char_data *killer)
 
 void die(struct char_data *ch, struct char_data *killer)
 {
+  legendary_effects_cancel(ch);
+  ch->legendary_knockdown=false;
   if (!killer)
     return;
 
@@ -3149,6 +3168,8 @@ void die(struct char_data *ch, struct char_data *killer)
 /* Award each eligible group member their full XP reward. */
 static void perform_group_gain(struct char_data *ch, int base, struct char_data *victim)
 {
+  struct legendary_xp_context source;
+  legendary_xp_kill_context(&source, victim);
   int share, hap_share;
 
   share = MIN(CONFIG_MAX_EXP_GAIN, MAX(1, base));
@@ -3166,16 +3187,16 @@ static void perform_group_gain(struct char_data *ch, int base, struct char_data 
   {
     if (share > 1)
       send_to_char(ch, "You receive %d experience points.\r\n",
-                   gain_exp(ch, share, GAIN_EXP_MODE_GROUP));
+                   gain_exp_with_source(ch, share, GAIN_EXP_MODE_GROUP, &source));
     else
     {
       send_to_char(ch, "You receive one measly little experience point!\r\n");
-      gain_exp(ch, share, GAIN_EXP_MODE_GROUP);
+      gain_exp_with_source(ch, share, GAIN_EXP_MODE_GROUP, &source);
     }
   }
   else
   {
-    gain_exp(ch, share, GAIN_EXP_MODE_GROUP);
+    gain_exp_with_source(ch, share, GAIN_EXP_MODE_GROUP, &source);
   }
 
 #if !defined(CAMPAIGN_FR) && !defined(CAMPAIGN_DL)
@@ -3274,6 +3295,8 @@ static void group_gain(struct char_data *ch, struct char_data *victim)
 /* called for splitting xp if NOT in a group (engine) */
 static void solo_gain(struct char_data *ch, struct char_data *victim)
 {
+  struct legendary_xp_context source;
+  legendary_xp_kill_context(&source, victim);
   int exp = 0, happy_exp = 0;
 
   /* the base exp is the totally victim's exp divided by 3, limited by config */
@@ -3317,11 +3340,11 @@ static void solo_gain(struct char_data *ch, struct char_data *victim)
 
   if (exp > 1)
     send_to_char(ch, "You receive %d experience points.\r\n",
-                 gain_exp(ch, exp, GAIN_EXP_MODE_SOLO));
+                 gain_exp_with_source(ch, exp, GAIN_EXP_MODE_SOLO, &source));
   else
   {
     send_to_char(ch, "You receive one lousy experience point.\r\n");
-    gain_exp(ch, exp, GAIN_EXP_MODE_SOLO);
+    gain_exp_with_source(ch, exp, GAIN_EXP_MODE_SOLO, &source);
   }
 
 #if !defined(CAMPAIGN_FR) && !defined(CAMPAIGN_DL)
@@ -4194,6 +4217,8 @@ int compute_damtype_reduction(struct char_data *ch, int dam_type, struct char_da
                               int w_type)
 {
   int damtype_reduction = 0;
+
+  legendary_foundations_refresh(ch);
 
   /* Psychic Sundering: take 10% more damage from all sources */
   if (affected_by_spell(ch, PERK_PSIONICIST_PSYCHIC_SUNDERING))
@@ -6027,6 +6052,7 @@ int dam_killed_vict(struct char_data *ch, struct char_data *victim)
     }
   }
 
+  legendary_boss_death(victim, ch);
   GET_POS(victim) = POS_DEAD;
 
   if (ch != victim && (IS_NPC(victim) || victim->desc))
@@ -6333,17 +6359,57 @@ int dam_killed_vict(struct char_data *ch, struct char_data *victim)
 int damage(struct char_data *ch, struct char_data *victim, int dam, int w_type, int dam_type,
            int offhand)
 {
+  return damage_with_origin(ch, victim, dam, w_type, dam_type, offhand, LEG_ORIGIN_NORMAL);
+}
+
+int legendary_combat_packet(struct char_data *ch,struct char_data *victim,int dam,int w_type,
+    int dam_type,unsigned int origin,struct legendary_attack *technique,int *extra)
+{
+  int legendary_bonus=0;
+  dam = legendary_effects_damage(ch, victim, dam, dam_type,
+      IS_DRAGON(ch) && (w_type == SPELL_FIRE_BREATHE || w_type == SPELL_FROST_BREATHE ||
+      w_type == SPELL_LIGHTNING_BREATHE || w_type == SPELL_ACID_BREATHE ||
+      w_type == SPELL_POISON_BREATHE || w_type == SPELL_GAS_BREATHE ||
+      w_type == SPELL_DRACONIC_BLOODLINE_BREATHWEAPON || w_type == SPELL_DRAGONBORN_ANCESTRY_BREATH),
+      origin);
+  if (!origin && technique)
+    legendary_bonus = legendary_technique_damage(ch,victim,dam,dam_type,technique);
+  dam += legendary_bonus;
+  if (!origin)
+    legendary_record_action(ch, victim, LEG_ACTION_DAMAGE, NULL, MIN(dam, MAX(0, GET_HIT(victim))));
+  dam = legendary_temporary_absorb(victim,dam);
+  if(extra)*extra=legendary_bonus;
+  return dam;
+}
+
+static int resolve_damage(struct char_data *,struct char_data *,int,int,int,int,unsigned int,struct legendary_attack *);
+int damage_with_origin(struct char_data *ch, struct char_data *victim, int dam, int w_type,
+                       int dam_type, int offhand, unsigned int origin)
+{return resolve_damage(ch,victim,dam,w_type,dam_type,offhand,origin,NULL);}
+static int resolve_damage(struct char_data *ch,struct char_data *victim,int dam,int w_type,
+                          int dam_type,int offhand,unsigned int origin,struct legendary_attack *technique)
+{
   char buf[MAX_INPUT_LENGTH] = {'\0'};
   char buf1[MAX_INPUT_LENGTH] = {'\0'};
   bool is_ranged = FALSE;
   struct affected_type af = {0};
   struct char_data *eidolon, *tch;
+  int legendary_bonus=0;
 
   /* this is just a dummy check */
   if (!ch)
     return 0;
   if (!victim)
     return 0;
+
+  if (origin & LEG_ORIGIN_REDIRECT)
+  {
+    int shifted = MIN(MAX(0, dam), MAX(0, GET_HIT(victim) - 1));
+    GET_HIT(victim) -= shifted;
+    update_pos(victim);
+    return shifted;
+  }
+  int origin_ceiling = MAX(0, dam);
 
   /* Capture whether this is self-inflicted damage (e.g. a per-round DoT such as
      acid fog, bleed, caustic blood) BEFORE the last_attacker rewrite below can
@@ -6665,6 +6731,7 @@ int damage(struct char_data *ch, struct char_data *victim, int dam, int w_type, 
             victim, TO_NOTVICT);
 
         /* Transfer damage to paladin */
+        legendary_record_action(k, ch, LEG_ACTION_INTERCEPT, victim, dam);
         GET_HIT(k) -= dam;
         update_pos(k);
 
@@ -6688,6 +6755,7 @@ int damage(struct char_data *ch, struct char_data *victim, int dam, int w_type, 
     if (transfer > 0 && GET_POS(summoner) > POS_DEAD)
     {
       dam -= transfer;
+      legendary_record_action(summoner, ch, LEG_ACTION_INTERCEPT, victim, transfer);
       GET_HIT(summoner) -= transfer;
       update_pos(summoner);
 
@@ -6708,6 +6776,7 @@ int damage(struct char_data *ch, struct char_data *victim, int dam, int w_type, 
       {
         shared_damage = MIN(shared_damage, dam - 1);
         dam -= shared_damage;
+        legendary_record_action(golem, ch, LEG_ACTION_INTERCEPT, victim, shared_damage);
         GET_HIT(golem) -= shared_damage;
         update_pos(golem);
         send_to_char(victim, "Fortress Engine diverts %d damage to your construct.\r\n",
@@ -6724,6 +6793,7 @@ int damage(struct char_data *ch, struct char_data *victim, int dam, int w_type, 
       {
         shared_damage = MIN(shared_damage, dam - 1);
         dam -= shared_damage;
+        legendary_record_action(victim->master, ch, LEG_ACTION_INTERCEPT, victim, shared_damage);
         GET_HIT(victim->master) -= shared_damage;
         update_pos(victim->master);
         send_to_char(victim->master,
@@ -6733,8 +6803,19 @@ int damage(struct char_data *ch, struct char_data *victim, int dam, int w_type, 
     }
   }
 
+  /* Legendary wards resolve after ordinary defenses and sharing. Explicit
+   * bonus packets are debited only here, after immunity/avoidance resolved. */
+  if (origin & LEG_ORIGIN_BONUS)
+    dam = MIN(dam, origin_ceiling);
+  dam = legendary_combat_packet(ch,victim,dam,w_type,dam_type,origin,technique,&legendary_bonus);
+#ifdef LEGENDARY_NATIVE_PROBE
+  { /* Observation only: identical native HP mutation and death flow below. */
+    extern void legendary_native_observe(struct char_data *,struct char_data *,int);
+    legendary_native_observe(ch,victim,dam);
+  }
+#endif
   GET_HIT(victim) -= dam;
-  if (ch && IS_EPIC_SPELL(w_type))
+  if (!origin && ch && IS_EPIC_SPELL(w_type))
   {
     send_to_char(ch, "%s deals %d damage to %s.\r\n", spell_info[w_type].name, dam,
                  PERS(victim, ch));
@@ -6925,13 +7006,13 @@ int damage(struct char_data *ch, struct char_data *victim, int dam, int w_type, 
   }
 
   /* Blackguard: Sanguine Barrier - gain temp HP from damage dealt */
-  if (dam > 0 && ch && !IS_NPC(ch))
+  if (!origin && dam > 0 && ch && !IS_NPC(ch))
   {
-    apply_blackguard_sanguine_barrier(ch, dam);
+    apply_blackguard_sanguine_barrier(ch, MAX(0,dam-legendary_bonus));
   }
 
   /* Energy Retort (Perk): reflect level-based energy damage on melee hits while psychokinesis affect active */
-  if (dam > 0 && has_energy_retort_perk(victim) && !is_ranged && !original_self_damage &&
+  if (!origin && dam > 0 && has_energy_retort_perk(victim) && !is_ranged && !original_self_damage &&
       w_type != PSIONIC_ENERGY_RETORT)
   {
     if (affected_by_spell(victim, PSIONIC_FORCE_SCREEN) ||
@@ -7322,6 +7403,7 @@ int compute_damage_bonus(struct char_data *ch, struct char_data *vict, struct ob
                          int w_type, int mod, int mode, int attack_type)
 {
   int dambonus = mod;
+  legendary_foundations_refresh(ch);
   bool display_mode = FALSE;
   int str_bonus = GET_STR_BONUS(ch);
   int targeting_lattice_bonus = 0;
@@ -7352,7 +7434,7 @@ int compute_damage_bonus(struct char_data *ch, struct char_data *vict, struct ob
   dambonus += GET_DAMROLL(ch);
 
   /* Blackguard's Reprisal: consume and apply next-attack damage bonus */
-  if (!IS_NPC(ch) && affected_by_spell(ch, AFFECT_BLACKGUARD_REPRISAL))
+  if (!display_mode && !IS_NPC(ch) && affected_by_spell(ch, AFFECT_BLACKGUARD_REPRISAL))
   {
     int reprisal = get_blackguard_reprisal_damage_bonus(ch, vict);
     if (reprisal > 0)
@@ -7461,7 +7543,9 @@ int compute_damage_bonus(struct char_data *ch, struct char_data *vict, struct ob
     }
 
     /* Dark Revelation: +2d6 damage vs lored target (once per combat) */
-    if (vict && ch->char_specials.dark_revelation_mob_rnum == GET_MOB_RNUM(vict) &&
+    if (!display_mode && vict && IS_NPC(vict) &&
+        ch->char_specials.dark_revelation_mob_rnum != NOBODY &&
+        ch->char_specials.dark_revelation_mob_rnum == GET_MOB_RNUM(vict) &&
         !ch->char_specials.dark_revelation_used)
     {
       int dark_rev_dam = dice(2, 6);
@@ -8579,6 +8663,13 @@ int compute_damage_bonus(struct char_data *ch, struct char_data *vict, struct ob
     }
   }
 
+  if (mode != MODE_NORMAL_HIT)
+  {
+    int force = legendary_foundation_weapon(ch, wielded, true);
+    dambonus += force;
+    if (force) send_to_char(ch, "Legendary Force: +%d (flat, not critical-multiplied)\r\n", force);
+  }
+
   /****************************************/
   /**** display, keep mods above this *****/
   /****************************************/
@@ -9457,7 +9548,8 @@ int compute_hit_damage(struct char_data *ch, struct char_data *victim, int w_typ
                        int mode, bool is_critical, int attack_type, int dam_type)
 {
   int dam = 0, damage_holder = 0, base_weapon_damage = 0;
-  int loop = 1;
+  int loop = 1, foundation_damage = 0;
+  legendary_foundations_refresh(ch);
   struct obj_data *wielded = NULL;
 
   /* redundancy necessary due to sometimes arriving here without going through
@@ -9487,7 +9579,11 @@ int compute_hit_damage(struct char_data *ch, struct char_data *victim, int w_typ
     }
 
     /* add any modifers to melee damage: strength, circumstance penalty, fatigue, size, etc etc */
-    dam += compute_damage_bonus(ch, victim, wielded, w_type, NO_MOD, mode, attack_type);
+    {
+      int ordinary_bonus = compute_damage_bonus(ch, victim, wielded, w_type, NO_MOD, mode, attack_type);
+      dam += ordinary_bonus;
+      foundation_damage = MIN(legendary_foundation_weapon(ch, wielded, true), MAX(0, MAX_DAM_BONUS - ordinary_bonus));
+    }
 
     /* calculate bonus to damage based on target position */
     switch (GET_POS(victim))
@@ -9966,6 +10062,7 @@ int compute_hit_damage(struct char_data *ch, struct char_data *victim, int w_typ
         if (victim && (!IS_NPC(victim) || !MOB_FLAGGED(victim, MOB_NOBASH)))
         {
           change_position(victim, POS_SITTING);
+          victim->legendary_knockdown=true;
           act("\tY[\tRSAVAGE CHARGE\tY]\tn Your devastating charge \tRDESTROYS\tn $N, knocking $M "
               "to the ground!",
               FALSE, ch, 0, victim, TO_CHAR);
@@ -10016,10 +10113,11 @@ int compute_hit_damage(struct char_data *ch, struct char_data *victim, int w_typ
     if (AFF_FLAGGED(ch, AFF_CHARGING) && HAS_DRAGON_BOND_ABIL(ch, 10, DRAGON_BOND_KIN))
     {
       dam += 10;
-      if (victim && ((d20(ch) + compute_cmb(ch, COMBAT_MANEUVER_TYPE_KNOCKDOWN)) >
-                     (d20(victim) + compute_cmd(victim, COMBAT_MANEUVER_TYPE_KNOCKDOWN))))
+      if (victim && ((d20(ch) + compute_cmb(ch, COMBAT_MANEUVER_TYPE_KNOCKDOWN) + legendary_technique_maneuver(ch,COMBAT_MANEUVER_TYPE_KNOCKDOWN,false)) >
+                     (d20(victim) + compute_cmd(victim, COMBAT_MANEUVER_TYPE_KNOCKDOWN) + legendary_technique_maneuver(victim,COMBAT_MANEUVER_TYPE_KNOCKDOWN,true))))
       {
         change_position(victim, POS_SITTING);
+        victim->legendary_knockdown=true;
         act("You knock $N to the ground!", FALSE, ch, 0, victim, TO_CHAR);
         act("$n knocks You to the ground!", FALSE, ch, 0, victim, TO_VICT);
         act("$n knocks $N to the ground!", FALSE, ch, 0, victim, TO_NOTVICT);
@@ -10219,6 +10317,8 @@ int compute_hit_damage(struct char_data *ch, struct char_data *victim, int w_typ
     }
   }
 
+  /* Flat Force is added once, after critical/position multipliers and procs. */
+  if (mode == MODE_NORMAL_HIT) dam += foundation_damage;
   return MAX(1, dam); // min damage of 1
 }
 
@@ -11017,6 +11117,8 @@ int compute_attack_bonus_full(struct char_data *ch,     /* Attacker */
   int calc_bab = BAB(ch); /* Start with base attack bonus */
   struct obj_data *wielded = NULL;
   struct char_data *k = NULL;
+
+  legendary_foundations_refresh(ch);
 
   /* redundancy necessary due to sometimes arriving here without going through
    * hit()*/
@@ -12285,6 +12387,12 @@ int compute_attack_bonus_full(struct char_data *ch,     /* Attacker */
       send_to_char(ch, " 1: %-50s\r\n", "Loremaster Weapon Trick");
   }
 
+  {
+    int accuracy = legendary_foundation_weapon(ch, wielded, false);
+    bonuses[BONUS_TYPE_UNDEFINED] += accuracy;
+    if (display && accuracy) send_to_char(ch, "%2d: %-50s\r\n", accuracy, "Legendary Accuracy (subject to attack cap)");
+  }
+
   /* Add up all the bonuses */
   for (i = 0; i < NUM_BONUS_TYPES; i++)
     calc_bab += bonuses[i];
@@ -12400,6 +12508,9 @@ int compute_cmd(struct char_data *vict,   /* Defender */
   int cm_defense =
       9; /* combat maneuver defense, should be 10 but if the difference is 0, then you failed your defense */
 
+  legendary_foundations_refresh(vict);
+  cm_defense += legendary_foundation_maneuver(vict, combat_maneuver_type);
+
   switch (combat_maneuver_type)
   {
   case COMBAT_MANEUVER_TYPE_KNOCKDOWN:
@@ -12497,14 +12608,18 @@ int combat_maneuver_check(struct char_data *ch, struct char_data *vict, int comb
     return 0;
   }
 
+  if(combat_maneuver_type==COMBAT_MANEUVER_TYPE_FORCED_MOVEMENT&&legendary_grounded(vict))return 0;
+
   /* CMB = Base attack bonus + Strength modifier + special size modifier, etc */
-  cm_bonus = compute_cmb(ch, combat_maneuver_type) + attack_roll;
+  cm_bonus += compute_cmb(ch, combat_maneuver_type) + attack_roll;
   if (HAS_FEAT(ch, FEAT_WEAPON_MASTERY_2) &&
       (GET_EQ(ch, WEAR_WIELD_1) || GET_EQ(ch, WEAR_WIELD_OFFHAND || GET_EQ(ch, WEAR_WIELD_2H))))
     cm_bonus += 6;
 
   /* CMD = 10 + Base attack bonus + Strength modifier + Dexterity modifier + special size modifier + miscellaneous modifiers */
   cm_defense = compute_cmd(vict, combat_maneuver_type);
+  cm_bonus += legendary_technique_maneuver(ch,combat_maneuver_type,false);
+  cm_defense += legendary_technique_maneuver(vict,combat_maneuver_type,true);
   if (HAS_FEAT(vict, FEAT_WEAPON_MASTERY_2) &&
       (GET_EQ(vict, WEAR_WIELD_1) ||
        GET_EQ(vict, WEAR_WIELD_OFFHAND || GET_EQ(vict, WEAR_WIELD_2H))))
@@ -13323,6 +13438,7 @@ static int fist_air_callback(struct char_data *ch, struct char_data *tch, void *
         send_to_char(tch, "\tCThe force knocks you off your feet!\tn\r\n");
         act("\tC$N is knocked to the ground by the force!\tn", FALSE, ch, 0, tch, TO_NOTVICT);
         change_position(tch, POS_SITTING);
+        tch->legendary_knockdown=true;
       }
     }
     else
@@ -13338,7 +13454,7 @@ static int fist_air_callback(struct char_data *ch, struct char_data *tch, void *
 int handle_successful_attack(struct char_data *ch, struct char_data *victim,
                              struct obj_data *wielded, int dam, int w_type, int type, int diceroll,
                              int is_critical, int attack_type, int dam_type,
-                             struct obj_data *missile)
+                             struct obj_data *missile, struct legendary_attack *technique)
 {
   struct affected_type af = {0}; /* for crippling strike */
   struct affected_type *af2;     // for hostile juxtaposition
@@ -14172,6 +14288,7 @@ int handle_successful_attack(struct char_data *ch, struct char_data *victim,
           af.modifier = 1; /* 1d6 per round */
           af.location = APPLY_NONE;
           SET_BIT_AR(af.bitvector, AFF_BLEED);
+          legendary_condition_origin(&af,ch);
           affect_to_char(victim, &af);
           send_to_char(victim, "\tRYou begin bleeding from the wound!\tn\r\n");
           send_to_char(ch, "\tWYour strike causes your opponent to bleed!\tn\r\n");
@@ -14491,7 +14608,7 @@ int handle_successful_attack(struct char_data *ch, struct char_data *victim,
       }
 
       /* So do damage! (We aren't trelux, so do it normally) */
-      if (damage(ch, victim, dam, w_type, dam_type, attack_type) < 0)
+      if (resolve_damage(ch, victim, dam, w_type, dam_type, attack_type, LEG_ORIGIN_NORMAL, technique) < 0)
         victim_is_dead = TRUE;
 
       /* Blackguard: Ravaging Smite - apply bleed on smite good hit */
@@ -14965,6 +15082,7 @@ int hit(struct char_data *ch, struct char_data *victim, int type, int dam_type, 
   struct affected_type af = {0};
 
   bool is_critical = FALSE;
+  struct legendary_attack technique={0};
 
   char buf[DAM_MES_LENGTH] = {'\0'}; /* Damage message buffers. */
   char buf1[DAM_MES_LENGTH] = {'\0'};
@@ -15231,7 +15349,10 @@ int hit(struct char_data *ch, struct char_data *victim, int type, int dam_type, 
 
   /* Get the important numbers : ch's Attack bonus and victim's AC
    * attack rolls: 1 = stumble, 20 = hit, also check for threat-range for criticals */
-  victim_ac = compute_armor_class(ch, victim, FALSE, MODE_ARMOR_CLASS_NORMAL);
+  victim_ac = compute_armor_class_with_decoy(ch, victim, FALSE, MODE_ARMOR_CLASS_NORMAL,
+      wielded && (GET_OBJ_TYPE(wielded)==ITEM_WEAPON||GET_OBJ_TYPE(wielded)==ITEM_FIREWEAPON) &&
+      (type==TYPE_UNDEFINED||type==TYPE_ATTACK_OF_OPPORTUNITY) &&
+      attack_type!=ATTACK_TYPE_PSIONICS && attack_type!=ATTACK_TYPE_ELDRITCH_BLAST);
 
   switch (attack_type)
   {
@@ -15268,7 +15389,9 @@ int hit(struct char_data *ch, struct char_data *victim, int type, int dam_type, 
   }
 
   /* Dark Revelation: +2 to hit against lored target */
-  if (!IS_NPC(ch) && ch->char_specials.dark_revelation_mob_rnum == GET_MOB_RNUM(victim) &&
+  if (!IS_NPC(ch) && IS_NPC(victim) &&
+      ch->char_specials.dark_revelation_mob_rnum != NOBODY &&
+      ch->char_specials.dark_revelation_mob_rnum == GET_MOB_RNUM(victim) &&
       !ch->char_specials.dark_revelation_used)
   {
     calc_bab += 2;
@@ -15292,6 +15415,14 @@ int hit(struct char_data *ch, struct char_data *victim, int type, int dam_type, 
     send_combat_roll_info(victim, "\tW[\tRAOO\tW]\tn");
   }
 
+  if ((type == TYPE_UNDEFINED || type == TYPE_ATTACK_OF_OPPORTUNITY) &&
+      attack_type != ATTACK_TYPE_PSIONICS && attack_type != ATTACK_TYPE_ELDRITCH_BLAST)
+  {
+    int technique_bonus=legendary_technique_attack(ch,victim,wielded,&technique);
+    if(wielded&&(GET_OBJ_TYPE(wielded)==ITEM_WEAPON||GET_OBJ_TYPE(wielded)==ITEM_FIREWEAPON))
+      (void)legendary_signature_dodge(victim,true);
+    calc_bab += MIN(technique_bonus,MAX(0,get_attack_bonus_cap(ch)-calc_bab));
+  }
   diceroll = d20(ch);
   weapon_training_bonus = HAS_FEAT(ch, FEAT_WEAPON_TRAINING);
   modified_diceroll = diceroll + weapon_training_bonus;
@@ -15522,7 +15653,7 @@ int hit(struct char_data *ch, struct char_data *victim, int type, int dam_type, 
   {
     /* OK, attack should be a success at this stage */
     dam = handle_successful_attack(ch, victim, wielded, dam, w_type, type, diceroll, is_critical,
-                                   attack_type, dam_type, missile);
+                                   attack_type, dam_type, missile, &technique);
   }
 
   if (is_critical)
@@ -16938,6 +17069,7 @@ int perform_attacks(struct char_data *ch, int mode, int phase)
             af.duration = 3;
             af.modifier = dice(1, 4);
             SET_BIT_AR(af.bitvector, AFF_BLEED);
+            legendary_condition_origin(&af,ch);
             affect_join(FIGHTING(ch), &af, FALSE, FALSE, FALSE, FALSE);
             send_to_char(ch, "\tR[Tiger Claw Bleed!]\tn\r\n");
             send_to_char(FIGHTING(ch), "\tR[You begin to bleed from vicious strikes!]\tn\r\n");
@@ -17582,8 +17714,8 @@ void perform_violence(struct char_data *ch, int phase)
     {
       if (!is_immune_mind_affecting(tch, ch, FALSE) && !is_immune_fear(tch, ch, FALSE))
       {
-        if (!savingthrow(tch, ch, SAVING_WILL, 0, CAST_INNATE, GET_CALL_EIDOLON_LEVEL(tch),
-                         ENCHANTMENT))
+        if (!savingthrow_full(tch, ch, SAVING_WILL, 0, CAST_INNATE, GET_CALL_EIDOLON_LEVEL(tch),
+                         ENCHANTMENT, EVOLUTION_FRIGHTFUL_EFFECT))
         {
           struct affected_type af = {0};
           new_affect(&af);

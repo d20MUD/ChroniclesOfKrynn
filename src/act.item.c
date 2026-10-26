@@ -10,6 +10,8 @@
 
 #include "conf.h"
 #include "sysdep.h"
+#include "legendary_equipment.h"
+#include "legendary_transaction.h"
 #include "structs.h"
 #include "housing.h"
 #include "utils.h"
@@ -567,6 +569,12 @@ static bool trade_participants_ready(struct trade_session_data *trade, char *rea
     return false;
   }
 
+  if (legendary_transaction_locked(a) || legendary_transaction_locked(b))
+  {
+    snprintf(reason, reason_size, "A legendary operation is pending recovery.");
+    return false;
+  }
+
   if (!a->desc || !b->desc || STATE(a->desc) != CON_PLAYING || STATE(b->desc) != CON_PLAYING)
   {
     snprintf(reason, reason_size, "Both players must be connected and playing.");
@@ -660,6 +668,11 @@ static bool trade_validate_objects(struct trade_session_data *trade, char *reaso
         return false;
       }
 
+      if (!legendary_tree_allowed(owner, obj, LEG_ROUTE_TRANSFER))
+      {
+        snprintf(reason, reason_size, "Awakened equipment cannot be traded.");
+        return false;
+      }
       if (OBJ_FLAGGED(obj, ITEM_NODROP) && !PRF_FLAGGED(owner, PRF_NOHASSLE))
       {
         snprintf(reason, reason_size, "%s can no longer trade %s.", GET_NAME(owner),
@@ -1018,6 +1031,7 @@ static void add_trade_item(struct char_data *ch, char *item_name)
     return;
   }
 
+  if (!legendary_tree_check(ch, obj, LEG_ROUTE_TRANSFER)) return;
   if (OBJ_FLAGGED(obj, ITEM_NODROP) && !PRF_FLAGGED(ch, PRF_NOHASSLE))
   {
     act("You can't let go of $p!!", FALSE, ch, obj, 0, TO_CHAR);
@@ -2855,12 +2869,12 @@ void do_stat_object(struct char_data *ch, struct obj_data *j, int mode)
 
   if (mode == ITEM_STAT_MODE_G_LORE)
     send_to_group(NULL, GROUP(ch), "Size: %s, Material: %s, Bound to: %s\r\n",
-                  size_names[GET_OBJ_SIZE(j)], material_name[GET_OBJ_MATERIAL(j)],
+                  size_names[compute_object_size(j)], material_name[GET_OBJ_MATERIAL(j)],
                   (get_name_by_id(GET_OBJ_BOUND_ID(j)) != NULL)
                       ? CAP(get_name_by_id(GET_OBJ_BOUND_ID(j)))
                       : "(Unknown)");
   else
-    send_to_char(ch, "Size: %s, Material: %s, Bound to: %s\r\n", size_names[GET_OBJ_SIZE(j)],
+    send_to_char(ch, "Size: %s, Material: %s, Bound to: %s\r\n", size_names[compute_object_size(j)],
                  material_name[GET_OBJ_MATERIAL(j)],
                  (get_name_by_id(GET_OBJ_BOUND_ID(j)) != NULL)
                      ? CAP(get_name_by_id(GET_OBJ_BOUND_ID(j)))
@@ -3354,6 +3368,7 @@ static void perform_put(struct char_data *ch, struct obj_data *obj, struct obj_d
   char buf[MEDIUM_STRING] = {'\0'};
 
   if (housing_put(ch, obj, cont)) return;
+  if (!legendary_storage_check(ch, obj, cont)) return;
 
   if (!drop_otrigger(obj, ch))
     return;
@@ -3361,7 +3376,8 @@ static void perform_put(struct char_data *ch, struct obj_data *obj, struct obj_d
   if (!obj) /* object might be extracted by drop_otrigger */
     return;
 
-  if ((GET_OBJ_BOUND_ID(cont) != NOBODY) && (GET_OBJ_BOUND_ID(cont) != GET_IDNUM(ch)))
+  if (!legendary_storage_check(ch, obj, cont)) return;
+  if ((GET_OBJ_BOUND_ID(cont) != (int)NOBODY) && (GET_OBJ_BOUND_ID(cont) != GET_IDNUM(ch)))
   {
     if (get_name_by_id(GET_OBJ_BOUND_ID(cont)) != NULL)
     {
@@ -3657,13 +3673,15 @@ static void perform_get_from_container(struct char_data *ch, struct obj_data *ob
   char buf[MAX_INPUT_LENGTH] = {'\0'};
   struct char_data *tch;
 
+  if (!legendary_tree_check(ch, obj, LEG_ROUTE_OWNER)) return;
+
   /* Safety check: ensure ch is still valid */
   if (!ch || IN_ROOM(ch) == NOWHERE)
   {
     return;
   }
 
-  if ((GET_OBJ_BOUND_ID(cont) != NOBODY) && (GET_OBJ_BOUND_ID(cont) != GET_IDNUM(ch)))
+  if ((GET_OBJ_BOUND_ID(cont) != (int)NOBODY) && (GET_OBJ_BOUND_ID(cont) != GET_IDNUM(ch)))
   {
     if (get_name_by_id(GET_OBJ_BOUND_ID(cont)) != NULL)
     {
@@ -3825,6 +3843,7 @@ void get_from_container(struct char_data *ch, struct obj_data *cont, char *arg, 
 
 static int perform_get_from_room(struct char_data *ch, struct obj_data *obj)
 {
+  if (!legendary_tree_check(ch, obj, LEG_ROUTE_OWNER)) return 0;
   if (check_trap(ch, TRAP_TRIGGER_GET_OBJECT, ch->in_room, obj, 0))
     return 0;
 
@@ -4123,12 +4142,14 @@ static int perform_drop(struct char_data *ch, struct obj_data *obj, byte mode, c
   char buf[MAX_STRING_LENGTH] = {'\0'};
   int value;
 
+  if (!legendary_tree_check(ch, obj, LEG_ROUTE_TRANSFER)) return 0;
   if (!drop_otrigger(obj, ch))
     return 0;
 
   if ((mode == SCMD_DROP) && !drop_wtrigger(obj, ch))
     return 0;
 
+  if (!legendary_tree_check(ch, obj, LEG_ROUTE_TRANSFER)) return 0;
   if (OBJ_FLAGGED(obj, ITEM_NODROP) && !PRF_FLAGGED(ch, PRF_NOHASSLE))
   {
     snprintf(buf, sizeof(buf), "You can't %s $p, it must be CURSED!", sname);
@@ -4307,11 +4328,15 @@ ACMD(do_drop)
 
 bool perform_give(struct char_data *ch, struct char_data *vict, struct obj_data *obj)
 {
+  if (!legendary_tree_check(ch, obj, LEG_ROUTE_TRANSFER)) return FALSE;
+  if (legendary_transaction_locked(ch) || legendary_transaction_locked(vict))
+    return FALSE;
   if (!give_otrigger(obj, ch, vict))
     return FALSE;
   if (!receive_mtrigger(vict, ch, obj))
     return FALSE;
 
+  if (!legendary_tree_check(ch, obj, LEG_ROUTE_TRANSFER)) return FALSE;
   if (OBJ_FLAGGED(obj, ITEM_NODROP) && !PRF_FLAGGED(ch, PRF_NOHASSLE))
   {
     act("You can't let go of $p!!  Yeech!", FALSE, ch, obj, 0, TO_CHAR);
@@ -4367,6 +4392,7 @@ static struct char_data *give_find_vict(struct char_data *ch, char *arg)
 
 static void perform_give_gold(struct char_data *ch, struct char_data *vict, int amount)
 {
+  if (legendary_transaction_locked(ch) || legendary_transaction_locked(vict)) return;
   char buf[MAX_STRING_LENGTH] = {'\0'};
 
   if (amount <= 0)
@@ -5435,7 +5461,7 @@ int hands_needed(struct char_data *ch, struct obj_data *obj)
 
 int wield_size_difference(struct char_data *ch, struct obj_data *obj)
 {
-  int size = GET_OBJ_SIZE(obj) - GET_SIZE(ch);
+  int size = compute_object_size(obj) - GET_SIZE(ch);
   /* A quarterstaff's physical length does not force a two-handed grip. */
   if (GET_OBJ_TYPE(obj) == ITEM_WEAPON && GET_WEAPON_TYPE(obj) == WEAPON_TYPE_QUARTERSTAFF)
     size--;
@@ -5638,6 +5664,7 @@ void perform_wear(struct char_data *ch, struct obj_data *obj, int where)
     return;
   }
 
+  if (!legendary_tree_check(ch, obj, LEG_ROUTE_OWNER)) return;
   if (GET_OBJ_BOUND_ID(obj) != NOBODY)
   {
     if (GET_OBJ_BOUND_ID(obj) != GET_IDNUM(ch))
@@ -5681,12 +5708,12 @@ void perform_wear(struct char_data *ch, struct obj_data *obj, int where)
       where != WEAR_CRAFT_JEWEL_PLIERS && where != WEAR_CRAFT_NEEDLE &&
       where != WEAR_CRAFT_WEAPON_HAMMER && where != WEAR_ON_BACK)
   {
-    if (GET_OBJ_SIZE(obj) < GET_SIZE(ch))
+    if (compute_object_size(obj) < GET_SIZE(ch))
     {
       send_to_char(ch, "This item is too small for you (HELP RESIZE).\r\n");
       return;
     }
-    if (GET_OBJ_SIZE(obj) > GET_SIZE(ch))
+    if (compute_object_size(obj) > GET_SIZE(ch))
     {
       send_to_char(ch, "This item is too large for you (HELP RESIZE).\r\n");
       return;
@@ -6294,6 +6321,7 @@ ACMD(do_sac)
     return;
   }
 
+  if (!legendary_tree_check(ch, j, LEG_ROUTE_TRANSFORM)) return;
   if (!CAN_WEAR(j, ITEM_WEAR_TAKE))
   {
     send_to_char(ch, "You can't sacrifice that!\n\r");
@@ -11005,6 +11033,7 @@ ACMD(do_salvage)
     return;
   }
 
+  if (!legendary_tree_check(ch, obj, LEG_ROUTE_TRANSFORM)) return;
   if (OBJ_FLAGGED(obj, ITEM_NO_SALVAGE))
   {
     send_to_char(ch, "That item cannot be salvaged.\r\n");
