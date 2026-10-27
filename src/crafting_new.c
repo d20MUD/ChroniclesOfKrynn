@@ -243,7 +243,9 @@ static void show_craft_tutorial(struct char_data *ch)
 
   if (!fp)
   {
-    send_to_char(ch, "Crafting tutorial file not found.\r\n");
+    send_to_char(ch, "Crafting tutorial file not found. Read the tutorial online:\r\n"
+                     "https://krynn.d20mud.com/wiki/crafting-tutorial\r\n"
+                     "Crafting hub: https://krynn.d20mud.com/wiki/crafting\r\n");
     return;
   }
 

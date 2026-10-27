@@ -80,232 +80,206 @@
 </head>
 <body>
   <main>
-    <h1>Crafting Tutorial</h1>
-    <p>This guide walks through the core crafting loop in order: surveying, harvesting materials and motes, refining, and then creating and resizing items. It is based on the in-game crafting system plus the official wiki page at <a href="https://krynn.d20mud.com/wiki/crafting/">https://krynn.d20mud.com/wiki/crafting/</a>.</p>
-
-    <h2>1) Surveying (find harvestable resources)</h2>
-    <p>Surveying scans nearby rooms for harvestable materials and tells you what is in the current room.</p>
-    <div class="panel">
-      <strong>Commands:</strong>
-      <pre><code>survey</code></pre>
-      <strong>Notes:</strong>
-      <ul>
-        <li>Surveying only works in valid harvesting sectors.</li>
-        <li>Surveying grants a number of "survey rooms" you can spend while harvesting.</li>
-        <li>You must survey before you can harvest.</li>
-      </ul>
-    </div>
-
-    <h2>2) Harvesting materials and motes</h2>
-    <p>Harvesting consumes survey rooms and extracts materials from the current room. You can also find crafting motes during harvesting.</p>
-    <div class="panel">
-      <strong>Commands:</strong>
-      <pre><code>harvest</code></pre>
-      <strong>Requirements:</strong>
-      <ul>
-        <li>You must have survey rooms available.</li>
-        <li>The room must have harvestable materials.</li>
-        <li>You must have the correct harvesting tool equipped for the material type.</li>
-      </ul>
-      <strong>Results:</strong>
-      <ul>
-        <li>Materials are added to your crafting materials inventory.</li>
-        <li>Motes can drop randomly; the type is random, and the amount scales with material grade.</li>
-        <li>Use <code>materials</code> to view your current crafting materials.</li>
-      </ul>
-      <div class="section-note">
-        Wiki references:
-        <ul>
-          <li><a href="https://krynn.d20mud.com/wiki/harvesting-crafting-materials/">https://krynn.d20mud.com/wiki/harvesting-crafting-materials/</a></li>
-          <li><a href="https://krynn.d20mud.com/wiki/crafting-motes/">https://krynn.d20mud.com/wiki/crafting-motes/</a></li>
-        </ul>
-      </div>
-    </div>
-
-    <h2>3) Refining materials</h2>
-    <p>Some materials must be refined from raw materials using a refining station. Refining uses recipes and consumes ingredients.</p>
-    <div class="panel">
-      <strong>Core flow:</strong>
-      <pre><code>refine add &lt;refine_type&gt;
+<h1>Crafting Tutorial</h1>
+<p>Start with one plain item, then add enhancements and custom bonuses as your skills and materials improve. The usual loop is survey, harvest, refine when needed, choose a recipe, assign materials, check the project, and craft.</p>
+<p>The crafting hub on our website is:
+<a href="https://krynn.d20mud.com/wiki/crafting">https://krynn.d20mud.com/wiki/crafting</a></p>
+<p>The web version of this tutorial is:
+<a href="https://krynn.d20mud.com/wiki/crafting-tutorial">https://krynn.d20mud.com/wiki/crafting-tutorial</a></p>
+<h2>1) Check your skills, tools and materials</h2>
+<pre><code>craft score
+craft tools
+craft equipment
+materials
+motes
+</code></pre>
+<ul>
+<li><code>craft score</code> shows crafting and harvesting ranks, progress and specializations.</li>
+<li><code>craft tools</code> and <code>craft equipment</code> show your equipped crafting gear and tools.</li>
+<li><code>materials</code> shows your stored crafting materials; <code>motes</code> shows your motes.</li>
+<li>Harvesting needs the proper tool equipped. Refining and item creation may require the appropriate station in your room.</li>
+<li>Read the choices shown by a command when you leave out its selection. You do not need to memorize every recipe, material or bonus name.</li>
+</ul>
+<h2>2) Survey and harvest</h2>
+<p>Find a suitable outdoor area, then use:</p>
+<pre><code>survey
+harvest
+</code></pre>
+<p>Let surveying finish before harvesting. A successful survey gives you survey rooms, which are used up as you travel. Survey again when they run out.</p>
+<p>Harvesting requires survey rooms, a resource in the current room, and the correct equipped tool. If the room is empty, keep exploring. If your tool is wrong, the game tells you what you need. Allow each harvesting task to finish before starting another.</p>
+<p>Materials go into your stored crafting-material balances. Harvesting can also find motes used for magical improvements.</p>
+<p>Regional varieties of wood, hides and other materials have distinct names. Use the exact material name shown in your balances and recipe choices. A regional variety retains its underlying material group and grade; its different name does not automatically make it stronger.</p>
+<p>More information:
+<a href="https://krynn.d20mud.com/wiki/harvesting-crafting-materials">https://krynn.d20mud.com/wiki/harvesting-crafting-materials</a>
+<a href="https://krynn.d20mud.com/wiki/crafting-motes">https://krynn.d20mud.com/wiki/crafting-motes</a></p>
+<h2>3) Refine raw materials</h2>
+<p>Type <code>refine</code> to see recipes and their ingredients. Refining needs the appropriate station, such as a smelter, loom or alchemy laboratory.</p>
+<p>Prepare, review and start a project:</p>
+<pre><code>refine add &lt;result material&gt; [batch count|all]
 refine show
 refine begin
-refine remove</code></pre>
-      <strong>Notes:</strong>
-      <ul>
-        <li>Use <code>refine add</code> to pick a recipe and allocate required materials.</li>
-        <li>You must be in a room with the correct refining station to begin. Stations are found in
-	starting cities like Palanthas and Sanction.</li>
-        <li><code>refine show</code> displays allocated materials, result, and DC.</li>
-        <li><code>refine remove</code> cancels and returns allocated materials.</li>
-      </ul>
-      <div class="section-note">
-        Wiki reference:
-        <ul>
-          <li><a href="https://krynn.d20mud.com/wiki/refining-materials/">https://krynn.d20mud.com/wiki/refining-materials/</a></li>
-        </ul>
-      </div>
-    </div>
-
-    <h2>4) Crafting items (variants, materials, bonuses, motes)</h2>
-    <p>Crafting items is a multi-step setup followed by a start. You configure item type, specific type, variant, text, and then assign materials, bonuses, and motes as needed.</p>
-    <div class="panel">
-      <strong>Typical setup flow:</strong>
-      <pre><code>craft itemtype &lt;weapon|armor|misc|instrument&gt;
+</code></pre>
+<p>For example, <code>refine add steel 5</code> prepares five batches if you have the required ingredients. A batch produces the quantity listed in that recipe; five batches do not necessarily mean five units.</p>
+<p>You can also prepare and start in one command:</p>
+<pre><code>refine batch &lt;result material&gt; [batch count|all]
+refine smelt &lt;result material&gt; [batch count|all]
+</code></pre>
+<p><code>refine batch</code> works with refining recipes generally; <code>refine smelt</code> selects smelter recipes. The maximum is 20 batches per project. The <code>all</code> option selects the available amount within that limit.</p>
+<p>Use <code>refine remove</code> to clear a prepared refining project and return its allocated ingredients. For an active task, use <code>cancel craft</code> and read the result before preparing another project.</p>
+<p>More information:
+<a href="https://krynn.d20mud.com/wiki/refining-materials">https://krynn.d20mud.com/wiki/refining-materials</a></p>
+<h2>4) Create your first item</h2>
+<p>Begin by choosing the item category, specific type and variant:</p>
+<pre><code>craft itemtype &lt;weapon|armor|jewelry|instrument|misc&gt;
 craft specifictype &lt;type&gt;
-craft variant &lt;variant_name&gt;
-craft keywords &lt;keyword string&gt;
+craft variant &lt;variant name&gt;
+</code></pre>
+<p>The variant determines the recipe, material groups, quantities and crafting skill. Use <code>craft show</code> to review those requirements.</p>
+<p>Set the text other players will see:</p>
+<pre><code>craft keywords &lt;targeting keywords&gt;
 craft shortdesc &lt;short description&gt;
-craft roomdesc &lt;room description&gt;
-craft extradesc &lt;extra description&gt;</code></pre>
-      <strong>Add materials:</strong>
-      <pre><code>craft materials add &lt;material&gt;
-craft materials remove &lt;material&gt;</code></pre>
-      <strong>Add bonuses and motes:</strong>
-      <pre><code>craft bonuses &lt;slot&gt; &lt;bonus location&gt; &lt;bonus type&gt; &lt;modifier&gt; &lt;specific&gt;
-craft motes add &lt;enhancement|quality|effectiveness|breakability|bonus_slot&gt;
-craft motes remove &lt;enhancement|quality|effectiveness|breakability|bonus_slot&gt;</code></pre>
-      <strong>Mote reference:</strong>
-      <pre><code>motes</code></pre>
-      <strong>Enhancement or instrument-specific settings:</strong>
-      <pre><code>craft enhancement &lt;amount&gt;
-craft instrument &lt;quality|effectiveness|breakability&gt; &lt;amount&gt;</code></pre>
-      <strong>Review and start:</strong>
-      <pre><code>craft show
-craft check
-craft start</code></pre>
-
-      <p><strong>Explanation of the example:</strong><br />
-      We set the item to a weapon, chose the specific type (long sword) and the variant (broad sword), then provided the keyword and description text the game uses to display the item. We added the required materials (steel and low grade hide), set a +2 enhancement bonus, added motes for the enhancement, and added two bonus slots: +2 Strength (universal) and +4 Constitution (enhancement). We then assigned motes to both bonus slots so the bonuses can be applied. Finally, we reviewed the project, checked for missing requirements, and started the craft.</p>
-
-      <strong>Notes:</strong>
-      <ul>
-        <li>Variants control the material profile and descriptive requirements for the recipe.</li>
-        <li>Motes are required for most bonus and enhancement effects.</li>
-        <li>Some commands only apply to certain item types (for example, enhancement on weapons/armor).</li>
-        <li>Crafting stations are required for many crafting and refining tasks and can be found in
-	starting cities such as Palanthas and Sanction.</li>
-      </ul>
-
-      <strong>Complete example (weapon craft):</strong>
-      <pre><code>craft itemtype weapon
+craft roomdesc &lt;description when the item is on the ground&gt;
+craft extradesc &lt;extra description&gt;
+</code></pre>
+<p>Assign suitable materials from your balances:</p>
+<pre><code>craft materials add &lt;material name&gt;
+craft materials remove &lt;material name&gt;
+</code></pre>
+<p>Start with a plain version of the item. You can explore magical bonuses after you understand its material and skill requirements.</p>
+<p>Example: a plain iron broad sword</p>
+<pre><code>craft itemtype weapon
 craft specifictype long sword
 craft variant broad sword
-craft keywords broad sword silver steel
-craft shortdesc a silver steel broad sword
-craft roomdesc A silver steel broad sword lies here.
-craft materials add steel
+craft keywords iron broad sword
+craft shortdesc an iron broad sword
+craft roomdesc An iron broad sword lies here.
+craft materials add iron
 craft materials add low grade hide
-craft enhancement 2
-craft motes add enhancement
-craft bonuses 1 strength universal 2
-craft bonuses 2 constitution enhancement 4
-craft motes add 1
-craft motes add 2
 craft show
 craft check
-craft start</code></pre>
-
-      <div class="section-note">
-        Wiki reference:
-        <ul>
-          <li><a href="https://krynn.d20mud.com/wiki/creating-equipment/">https://krynn.d20mud.com/wiki/creating-equipment/</a></li>
-        </ul>
-      </div>
-    </div>
-
-    <h2>5) Resizing crafted (and many existing) items</h2>
-    <p>Resizing uses materials based on the object and target size. You must set the object and size, then allocate materials and begin.</p>
-    <div class="panel">
-      <strong>Commands:</strong>
-      <pre><code>resize &lt;object&gt; &lt;new_size&gt;
-resize add
+craft start
+</code></pre>
+<p>This is an example recipe, not a grant of materials or skill. You need enough iron and hide, the appropriate tool and station, and the ability to attempt the project. If <code>craft check</code> reports a problem, resolve it before starting.</p>
+<h2>5) Add enhancements, bonuses and motes</h2>
+<p>Once you can make plain equipment, add improvements that suit your character.</p>
+<pre><code>craft enhancement &lt;amount&gt;
+craft bonuses &lt;slot&gt; &lt;bonus location&gt; &lt;bonus type&gt; &lt;modifier&gt; [specific]
+craft motes add enhancement
+craft motes add &lt;bonus slot number&gt;
+craft show
+craft check
+</code></pre>
+<p>For example:</p>
+<pre><code>craft enhancement 2
+craft bonuses 1 strength universal 2
+craft motes add enhancement
+craft motes add 1
+</code></pre>
+<p>These choices require the relevant materials, motes and crafting ability. Higher bonuses can make a project harder and increase the finished item's required level. Your project display shows its actual requirements.</p>
+<ul>
+<li>Use <code>applies</code> to see bonus locations. The supported bonus types are enhancement and universal.</li>
+<li>A specific selection is required for bonuses such as a particular skill or spell circle. Follow the command's help for those choices.</li>
+<li>Adding motes to a numbered slot assigns the required mote type and quantity for that bonus.</li>
+<li>Use <code>craft motes remove &lt;slot&gt;</code> or <code>craft motes remove enhancement</code> to reclaim an allocation before crafting.</li>
+<li>Instrument projects have their own quality, effectiveness and breakability settings through <code>craft instrument</code>.</li>
+<li>Crafting does not support granting arbitrary feats to an item.</li>
+</ul>
+<p>You can adjust the finished item's level with:</p>
+<pre><code>craft leveladjust &lt;adjustment&gt;
+</code></pre>
+<p>Reducing the final level by one increases the crafting difficulty by five. Increasing the final level by one reduces the difficulty by five. Review <code>craft show</code> and <code>craft check</code> after making changes.</p>
+<p>More information:
+<a href="https://krynn.d20mud.com/wiki/creating-equipment">https://krynn.d20mud.com/wiki/creating-equipment</a></p>
+<h2>6) Optional catalysts and disenchanting</h2>
+<p>Crafting catalysts can give a successful item craft a small chance of an extra improvement. They are optional; they do not replace the required materials or motes.</p>
+<pre><code>disenchant &lt;item&gt;
+refine add catalyst
+refine show
+refine begin
+craft catalysts 1
+craft show
+</code></pre>
+<p>Disenchanting permanently destroys an eligible magical item from your inventory and gives catalyst fragments. It requires an alchemy laboratory. Restricted items cannot be disenchanted, including legendary equipment.</p>
+<p>The catalyst recipe uses 10 catalyst fragments to make one crafting catalyst. Allocate zero to five catalysts to an item project: each allocated catalyst adds one percentage point to its critical-success chance, up to 5%. They do not guarantee success or an extra improvement.</p>
+<pre><code>craft catalysts add &lt;number&gt;
+craft catalysts remove [number]
+</code></pre>
+<p>Set these before crafting begins. Crafting catalysts and their fragments are separate from the boss-earned materials used by Dragonmetal Awakening.</p>
+<h2>7) Resize an item</h2>
+<p>Keep the item in your inventory and select its new size:</p>
+<pre><code>resize &lt;item keyword&gt; &lt;new size&gt;
 resize show
+resize check
 resize begin
-resize remove</code></pre>
-      <strong>Notes:</strong>
-      <ul>
-        <li><code>resize add</code> consumes materials based on object weight and size change.</li>
-        <li><code>resize begin</code> runs the resize skill check.</li>
-        <li><code>resize remove</code> cancels and refunds materials.</li>
-      </ul>
-      <div class="section-note">
-        Wiki reference:
-        <ul>
-          <li><a href="https://krynn.d20mud.com/wiki/resizing-gear/">https://krynn.d20mud.com/wiki/resizing-gear/</a></li>
-        </ul>
-      </div>
-    </div>
-
-    <h2>6) Crafting talents</h2>
-    <p>Crafting and harvesting skills level up as you work, and each skill rank can award crafting
-talent points. Talents can improve speed, yield, and overall results.</p>
-    <div class="panel">
-      <strong>Commands:</strong>
-      <pre><code>craft score
-talents</code></pre>
-      <strong>Details:</strong>
-      <ul>
-        <li>Use <code>craft score</code> to see your current crafting and harvesting skill ranks and progress.</li>
-        <li>Skills gain experience when you successfully survey, harvest, refine, or craft items.</li>
-        <li>When a skill rank increases, you earn talent points.</li>
-        <li>Use <code>talents</code> to view available talent trees and spend points.</li>
-        <li>Some talents improve harvest yields, refining efficiency, crafting speed, or crafting success.</li>
-      </ul>
-    </div>
-
-    <h2>7) Supply orders</h2>
-    <p>Supply orders are structured crafting jobs that reward experience and currency. They are a good
-way to level crafting skills.</p>
-    <div class="panel">
-      <strong>Common flow:</strong>
-      <pre><code>supplyorder list
-supplyorder select &lt;id&gt;
+</code></pre>
+<p>For example, <code>resize sword small</code> selects a carried sword for resizing. The item must be eligible for transformation; legendary equipment cannot be resized.</p>
+<p>Use <code>resize reset</code> to clear the selected project. There are no <code>resize add</code> or <code>resize remove</code> steps. Keep the item with you until the task finishes.</p>
+<p>More information:
+<a href="https://krynn.d20mud.com/wiki/resizing-gear">https://krynn.d20mud.com/wiki/resizing-gear</a></p>
+<h2>8) Skills, talents and specialization</h2>
+<p>Crafting and harvesting activities develop their associated skills. Use <code>craft score</code> to follow your progress and <code>talents</code> to explore the available crafting talent trees.</p>
+<pre><code>craft score
+talents
+craft specialize &lt;skill name&gt;
+</code></pre>
+<p>You can permanently specialize in up to two crafting or harvesting skills. Each specialization grants +5 to that skill's checks and doubles its experience gains. Check the names in <code>craft score</code> before choosing: specializations cannot be changed.</p>
+<p>Talents can improve such things as speed, yields and crafting results. Read the individual talent before spending points.</p>
+<h2>9) Complete supply orders</h2>
+<p>Supply orders are crafting jobs from a quartermaster. Request the job there, inspect its requirements, assign materials, and work at the required crafting station.</p>
+<pre><code>supplyorder request
 supplyorder show
+supplyorder material add all
 supplyorder start
-supplyorder material add &lt;material&gt;
-supplyorder complete</code></pre>
-      <div class="section-note">
-        Wiki reference:
-        <ul>
-          <li><a href="https://krynn.d20mud.com/wiki/crafting/">https://krynn.d20mud.com/wiki/crafting/</a></li>
-        </ul>
-      </div>
-    </div>
-
-    <h2>8) Crafting golems</h2>
-    <p>Golem crafting is a specialized crafting path that creates controllable golem followers. You set
-type and size, then start construction. Golems can be recalled, upgraded, and shut down later.</p>
-    <div class="panel">
-      <strong>Common flow:</strong>
-      <pre><code>craft golem type &lt;wood|stone|iron&gt;
+</code></pre>
+<p>You can assign a particular suitable material with <code>supplyorder material add &lt;material&gt;</code> instead of <code>all</code>. Allow the work to finish, then check <code>supplyorder show</code>. Add more materials and repeat <code>supplyorder start</code> as needed until the required quantity is complete.</p>
+<p>Return to a quartermaster to collect the reward:</p>
+<pre><code>supplyorder complete
+</code></pre>
+<p>Useful controls:</p>
+<pre><code>supplyorder material remove
+supplyorder reset
+supplyorder abandon
+supplyorder cooldown
+</code></pre>
+<p><code>reset</code> clears the current work setup; <code>abandon</code> cancels the order itself. Check the game's messages before replacing an order. <code>cooldown</code> shows your current timing restrictions. The current system uses <code>request</code>, not <code>supplyorder list</code> or <code>supplyorder select</code>.</p>
+<p>More information:
+<a href="https://krynn.d20mud.com/wiki/supply-orders">https://krynn.d20mud.com/wiki/supply-orders</a></p>
+<h2>10) Craft a golem</h2>
+<p>Golem construction is a separate path requiring the appropriate construct feats, materials and crafting requirements.</p>
+<pre><code>craft golem type &lt;wood|stone|iron&gt;
 craft golem size &lt;small|medium|large|huge&gt;
+craft golem appearance &lt;material|default&gt;
 craft golem show
-craft golem start</code></pre>
-      <strong>Notes:</strong>
-      <ul>
-        <li>Golem crafting requires the appropriate construct feats for each golem type.</li>
-        <li>You can recall, upgrade, or shut down a golem with the related subcommands.</li>
-      </ul>
-    </div>
-
-    <h2>Helpful tips</h2>
-    <ul>
-      <li>Use <code>craft show</code> at any time to review your current craft project.</li>
-      <li>If you get stuck, <code>craft reset</code> (or <code>refine remove</code> / <code>resize remove</code>) clears the project and refunds materials when appropriate.</li>
-      <li>Check your harvesting and crafting tools: <code>craft tools</code> and <code>craft equipment</code>.</li>
-      <li>Crafting and harvesting tools are purchased in crafting halls; use <code>craft tools</code> to see what
-	you have equipped.</li>
-    </ul>
-
-    <h2>Extra learning</h2>
-    <p>The main crafting overview and related topics are on the wiki:</p>
-    <ul>
-      <li><a href="https://krynn.d20mud.com/wiki/crafting/">https://krynn.d20mud.com/wiki/crafting/</a></li>
-      <li><a href="https://krynn.d20mud.com/wiki/harvesting-crafting-materials/">https://krynn.d20mud.com/wiki/harvesting-crafting-materials/</a></li>
-      <li><a href="https://krynn.d20mud.com/wiki/crafting-motes/">https://krynn.d20mud.com/wiki/crafting-motes/</a></li>
-      <li><a href="https://krynn.d20mud.com/wiki/refining-materials/">https://krynn.d20mud.com/wiki/refining-materials/</a></li>
-      <li><a href="https://krynn.d20mud.com/wiki/creating-equipment/">https://krynn.d20mud.com/wiki/creating-equipment/</a></li>
-      <li><a href="https://krynn.d20mud.com/wiki/resizing-gear/">https://krynn.d20mud.com/wiki/resizing-gear/</a></li>
-    </ul>
+craft golem start
+</code></pre>
+<p>Type <code>craft golem</code> to see the complete menu. Appearance choices are cosmetic and do not change the golem's construction type or combat abilities.</p>
+<p>Other controls include <code>craft golem reset</code>, <code>craft golem recall</code>, <code>craft golem deploy</code>, <code>craft golem upgrade &lt;size&gt;</code> and <code>craft golem shutdown</code>. Read their messages before changing an existing golem. Features such as stowing an active golem and tactical directives depend on your abilities.</p>
+<h2>Getting unstuck</h2>
+<ul>
+<li>Review a project with <code>craft show</code> and diagnose missing requirements with <code>craft check</code>.</li>
+<li>Use <code>cancel craft</code> to stop an active task before changing projects.</li>
+<li>Use <code>craft reset</code> to clear item-project setup, <code>refine remove</code> for refining, and <code>resize reset</code> for resizing. Read the messages showing what was returned; cancellation does not promise to recover ingredients already consumed by completed work.</li>
+<li>Check your equipped tools and the station required by the recipe.</li>
+<li>If you cannot allocate a material, check its exact name, available quantity, group and grade.</li>
+<li>Use <code>supplyorder show</code> for job progress rather than normal item-project commands.</li>
+</ul>
+<h2>Website guides</h2>
+<p>Crafting hub:
+<a href="https://krynn.d20mud.com/wiki/crafting">https://krynn.d20mud.com/wiki/crafting</a></p>
+<p>Step-by-step tutorial:
+<a href="https://krynn.d20mud.com/wiki/crafting-tutorial">https://krynn.d20mud.com/wiki/crafting-tutorial</a></p>
+<p>Harvesting materials:
+<a href="https://krynn.d20mud.com/wiki/harvesting-crafting-materials">https://krynn.d20mud.com/wiki/harvesting-crafting-materials</a></p>
+<p>Motes:
+<a href="https://krynn.d20mud.com/wiki/crafting-motes">https://krynn.d20mud.com/wiki/crafting-motes</a></p>
+<p>Refining:
+<a href="https://krynn.d20mud.com/wiki/refining-materials">https://krynn.d20mud.com/wiki/refining-materials</a></p>
+<p>Creating equipment:
+<a href="https://krynn.d20mud.com/wiki/creating-equipment">https://krynn.d20mud.com/wiki/creating-equipment</a></p>
+<p>Resizing:
+<a href="https://krynn.d20mud.com/wiki/resizing-gear">https://krynn.d20mud.com/wiki/resizing-gear</a></p>
+<p>Supply orders:
+<a href="https://krynn.d20mud.com/wiki/supply-orders">https://krynn.d20mud.com/wiki/supply-orders</a></p>
   </main>
-
+</body>
+</html>
