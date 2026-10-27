@@ -1,1 +1,1 @@
-/usr/bin/cc  -Wall -Wno-char-subscripts -g CMakeFiles/sign.dir/util/sign.c.o -o /home/krynn/code/bin/sign 
+/usr/bin/cc  -Wall -Wno-char-subscripts -g -Wl,--dependency-file=CMakeFiles/sign.dir/link.d CMakeFiles/sign.dir/util/sign.c.o -o /home/krynn/code/bin/sign

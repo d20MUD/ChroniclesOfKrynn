@@ -12,12 +12,20 @@ def function(source, signature):
     start = source.index(signature + '\n{')
     return source[start:source.index('\n}', start) + 2] + '\n'
 players = (root/'src/players.c').read_text()
+assert 'restore_eidolon_training(ch, mob);' in (root/'src/act.other.c').read_text()
+assert 'remember_eidolon_training(ch);' in function((root/'src/handler.c').read_text(), 'void extract_char(struct char_data *ch)')
 mobile = (root/'src/mob_utils.c').read_text()
 schema = (root/'src/db_init.c').read_text()
 start = schema.index('  /* pet_data - Saved companion information */')
 end = schema.index('  /* player_data - Core player character information */', start)
 code = 'static void upgrade_pet_schema(void) {\n' + schema[start:end] + '\n}\n'
+code += 'static void explicit_pet_upgrade(void) { sql(' + '"-- Explicit upgrade for existing pet tables. Required by companion save/load,\\n-- bought-pet progression, fallen pets and training. Existing rows are preserved.\\nALTER TABLE pet_data\\n ADD COLUMN IF NOT EXISTS purchased_pet INT NOT NULL DEFAULT 0,\\n ADD COLUMN IF NOT EXISTS pet_experience INT NOT NULL DEFAULT 0,\\n ADD COLUMN IF NOT EXISTS pet_hitroll INT NOT NULL DEFAULT 0,\\n ADD COLUMN IF NOT EXISTS pet_damroll INT NOT NULL DEFAULT 0,\\n ADD COLUMN IF NOT EXISTS pet_damnodice INT NOT NULL DEFAULT 0,\\n ADD COLUMN IF NOT EXISTS pet_damsizedice INT NOT NULL DEFAULT 0,\\n ADD COLUMN IF NOT EXISTS pet_dead INT NOT NULL DEFAULT 0,\\n ADD COLUMN IF NOT EXISTS pet_kind INT NOT NULL DEFAULT 0,\\n ADD COLUMN IF NOT EXISTS pet_training_rank INT NOT NULL DEFAULT 0,\\n ADD COLUMN IF NOT EXISTS pet_training_exp INT NOT NULL DEFAULT 0,\\n ADD COLUMN IF NOT EXISTS pet_skill_health INT NOT NULL DEFAULT 0,\\n ADD COLUMN IF NOT EXISTS pet_skill_attack INT NOT NULL DEFAULT 0,\\n ADD COLUMN IF NOT EXISTS pet_skill_damage INT NOT NULL DEFAULT 0,\\n ADD COLUMN IF NOT EXISTS pet_skill_armor INT NOT NULL DEFAULT 0,\\n ADD COLUMN IF NOT EXISTS pet_skill_saves INT NOT NULL DEFAULT 0,\\n ADD COLUMN IF NOT EXISTS pet_save_fort INT DEFAULT NULL,\\n ADD COLUMN IF NOT EXISTS pet_save_reflex INT DEFAULT NULL,\\n ADD COLUMN IF NOT EXISTS pet_save_will INT DEFAULT NULL,\\n ADD COLUMN IF NOT EXISTS pet_save_poison INT DEFAULT NULL,\\n ADD COLUMN IF NOT EXISTS pet_save_death INT DEFAULT NULL,\\n ADD COLUMN IF NOT EXISTS pet_gold INT NOT NULL DEFAULT 0;\\n"' + '); }\n'
+code += function(players, 'static bool persist_char_pets_returning(struct char_data *ch, struct char_data *returning)')
 code += function(players, 'static bool persist_char_pets(struct char_data *ch)')
+code += function(players, 'bool return_eidolon_gear(struct char_data *pet)')
+code += function(players, 'bool return_all_eidolon_gear(struct char_data *owner)')
+code += function(players, 'static void load_eidolon_training(struct char_data *ch, const char *line)')
+code += function(players, 'bool save_char_pets_checked(struct char_data *ch)')
 code += function(players, 'void save_char_pets(struct char_data *ch)')
 code += function(players, 'bool archive_fallen_pet(struct char_data *pet)')
 code += function(players, 'static struct char_data *load_char_pets_filtered(struct char_data *ch, int revive_id)')
@@ -30,6 +38,8 @@ code += function(mobile, 'void award_purchased_pet_exp(struct char_data *owner, 
 for signature in [
     'int companion_training_kind(struct char_data *pet)',
     'void restore_companion_kind(struct char_data *pet, int kind)',
+    'void remember_eidolon_training(struct char_data *pet)',
+    'void restore_eidolon_training(struct char_data *owner, struct char_data *pet)',
     'bool is_persistent_pet(struct char_data *pet)',
     'static int companion_unspent_points(struct char_data *pet)',
     'void award_companion_training_exp(struct char_data *owner, struct char_data *victim, int reward)',
@@ -42,6 +52,36 @@ gear_code += function(objects, 'static int Crash_save_pet(struct obj_data *obj, 
 gear_code += function(objects, 'bool pet_save_objs(struct char_data *ch, struct char_data *owner, long int pet_idnum)').replace('bool pet_save_objs(', 'static bool production_pet_save_objs(', 1)
 gear_code += function(objects, 'static int handle_obj(struct obj_data *temp, struct char_data *ch, int locate,\n                      struct obj_data **cont_row)')
 gear_code += function(objects, 'bool pet_load_objs(struct char_data *ch, struct char_data *owner, long int pet_idnum)').replace('bool pet_load_objs(', 'static bool production_pet_load_objs(', 1)
+start = players.index('  if (ch->player_specials->saved.eidolon_training_saved)')
+end = players.index('  if (ch->player_specials->saved.aurak_magic_refresh)', start)
+code += '\nstatic void save_eidolon_training_record(struct char_data *ch) {\n#define BUFFER_WRITE(...) snprintf(messages, sizeof(messages), __VA_ARGS__)\n' + players[start:end] + '\n#undef BUFFER_WRITE\n}\n'
+stubs_extra = r"""
+static int deny_return, defer_return;
+int estate_init(void) { return 1; }
+int estate_queue_delivery(struct char_data *owner,struct obj_data *obj,long debit) {
+  char q[256];
+  if(deny_return && --deny_return==0) return 0;
+  snprintf(q,sizeof(q),"INSERT INTO test_returns(value) VALUES(%d)",GET_OBJ_VAL(obj,0));
+  if(mysql_query(conn,q)) return 0;
+  for(struct obj_data *child=obj->contains;child;child=child->next_content)
+    if(!estate_queue_delivery(owner,child,0)) return 0;
+  return 1;
+}
+int estate_queue_money(long owner,long debit) {
+  char q[256];snprintf(q,sizeof(q),"INSERT INTO test_returns(value) VALUES(%ld)",debit);
+  return !mysql_query(conn,q);
+}
+void estate_recover(struct char_data *owner) {
+  if(defer_return) return;
+  MYSQL_RES *r;MYSQL_ROW row;
+  assert(!mysql_query(conn,"SELECT value FROM test_returns ORDER BY id"));
+  r=mysql_store_result(conn);
+  while((row=mysql_fetch_row(r))) {
+    struct obj_data *obj=calloc(1,sizeof(*obj));GET_OBJ_VAL(obj,0)=atoi(row[0]);obj_to_char(obj,owner);
+  }
+  mysql_free_result(r);assert(!mysql_query(conn,"DELETE FROM test_returns"));
+}
+"""
 headers = '\n'.join('#include "'+h+'"' for h in
     ['conf.h','sysdep.h','structs.h','utils.h','db.h','comm.h','mysql.h','spells.h',
      'handler.h','mudlim.h','oasis.h','mud_event.h','dg_event.h','evolutions.h','crafting_new.h','mob_utils.h'])
@@ -185,6 +225,7 @@ obj_save_data *objsave_parse_objects_db_pet(char *name,long id) {
 checks = r'''
 int main(int argc,char **argv) {
   struct char_data owner={0},pet={0},victim={0},summon={0};
+  struct player_special_data owner_saved={0};
   struct descriptor_data desc={0}; struct follow_type follower={0},second={0};
   struct room_data rooms[2]={0}; struct zone_data zones[1]={0}; struct index_data indices[1]={0};
   assert(argc==2); conn=mysql_init(NULL);
@@ -196,11 +237,14 @@ int main(int argc,char **argv) {
       "intel INT DEFAULT 0, wis INT, cha INT, purge_mob_timer INT DEFAULT 0)");
   sql("CREATE TABLE pet_save_objs (row_id INT AUTO_INCREMENT PRIMARY KEY, owner_name VARCHAR(50), pet_idnum INT, serialized_obj TEXT)");
   sql("INSERT INTO pet_data(owner_name) VALUES('old')");
+  explicit_pet_upgrade(); explicit_pet_upgrade();
   upgrade_pet_schema(); upgrade_pet_schema();
   sql("SELECT purchased_pet,pet_experience FROM pet_data WHERE owner_name='old'");
   MYSQL_RES *result=mysql_store_result(conn); MYSQL_ROW row=mysql_fetch_row(result);
   assert(atoi(row[0])==0 && atoi(row[1])==0); mysql_free_result(result);
   world=rooms; zone_table=zones; mob_index=indices; top_of_world=1; indices[0].vnum=500;
+  sql("CREATE TABLE test_returns(id INT AUTO_INCREMENT PRIMARY KEY,value INT) ENGINE=InnoDB");
+  owner.player_specials=&owner_saved;
   owner.player.name="Trainer"; owner.desc=&desc; GET_EXP(&owner)=12345; GET_LEVEL(&owner)=5;
   IN_ROOM(&owner)=IN_ROOM(&pet)=IN_ROOM(&victim)=IN_ROOM(&summon)=0;
   SET_BIT_AR(MOB_FLAGS(&pet),MOB_ISNPC); SET_BIT_AR(AFF_FLAGS(&pet),AFF_CHARM);
@@ -335,6 +379,15 @@ int main(int argc,char **argv) {
   sql("SELECT COUNT(*) FROM pet_data WHERE owner_name='Trainer'");
   result=mysql_store_result(conn); row=mysql_fetch_row(result); assert(atoi(row[0])==0); mysql_free_result(result);
   while (owner.carrying) extract_obj(owner.carrying);
+  /* Hired mercenaries are purchased companions, saved without manual summon. */
+  follower.follower=&pet; follower.next=NULL; owner.followers=&follower;
+  pet.master=&owner; pet.mob_specials.purchased_pet=TRUE;
+  SET_BIT_AR(MOB_FLAGS(&pet),MOB_MERCENARY); GET_LEVEL(&pet)=3;
+  assert(save_char_pets_checked(&owner)); owner.followers=NULL;
+  load_char_pets(&owner);
+  assert(loaded.mob_specials.purchased_pet && GET_LEVEL(&loaded)==3 && loaded.master==&owner);
+  owner.followers=NULL; destroy_pet_holder(&loaded);
+  REMOVE_BIT_AR(MOB_FLAGS(&pet),MOB_MERCENARY);
   /* Companion ranks award points without raising the creature's level. */
   follower.follower=&pet; follower.next=NULL; owner.followers=&follower;
   pet.master=&owner; pet.mob_specials.purchased_pet=FALSE; SET_BIT_AR(MOB_FLAGS(&pet),MOB_EIDOLON);
@@ -368,6 +421,65 @@ int main(int argc,char **argv) {
   assert(GET_GOLD(&owner)==0 && GET_LEVEL(&loaded)==12 && companion_training_kind(&loaded)==4);
   assert(loaded.mob_specials.pet_training_rank==10 && loaded.mob_specials.pet_training_skills[0]==5);
   assert(GET_REAL_MAX_HIT(&loaded)==200 && GET_REAL_SAVE(&loaded,SAVING_FORT)==3);
+  /* A newly summoned body restores the same owner's eidolon bond, not rank zero. */
+  {
+    struct char_data fresh={0}, other_owner={0};
+    struct player_special_data other_saved={0};
+    SET_BIT_AR(MOB_FLAGS(&fresh),MOB_ISNPC); SET_BIT_AR(MOB_FLAGS(&fresh),MOB_EIDOLON);
+    fresh.master=&owner; GET_REAL_MAX_HIT(&fresh)=100; GET_HIT(&fresh)=30;
+    save_eidolon_training_record(&owner);
+    assert(strstr(messages,"EiTr: 10 0 5 1 1 1 2"));
+    other_owner.player_specials=&other_saved;
+    load_eidolon_training(&other_owner,messages+6);
+    assert(other_saved.saved.eidolon_training_saved && other_saved.saved.eidolon_training_rank==10);
+    restore_eidolon_training(&other_owner,&fresh);
+    assert(fresh.mob_specials.pet_training_rank==10 && fresh.mob_specials.pet_training_skills[0]==5);
+    assert(GET_REAL_MAX_HIT(&fresh)==200 && GET_HIT(&fresh)==30);
+    restore_eidolon_training(&other_owner,&fresh);
+    assert(GET_REAL_MAX_HIT(&fresh)==200 && GET_HIT(&fresh)==30); /* no double bonus/heal */
+    /* A partial rank and its spent point also survive dismissal/reboot. */
+    load_eidolon_training(&other_owner,"2 1234 1 1 0 0 0");
+    restore_eidolon_training(&other_owner,&fresh);
+    assert(fresh.mob_specials.pet_training_rank==2 && fresh.mob_specials.pet_training_experience==1234);
+    assert(GET_REAL_MAX_HIT(&fresh)==120);
+    load_eidolon_training(&other_owner,"1 0 5 0 0 0 0"); /* reject overspent record */
+    assert(other_saved.saved.eidolon_training_rank==2);
+    temporary_pet=&fresh;
+    restore_eidolon_training(&owner,&fresh); remember_eidolon_training(&fresh);
+    assert(fresh.mob_specials.pet_training_rank==2 && owner.player_specials->saved.eidolon_training_rank==10);
+    temporary_pet=NULL;
+    remember_eidolon_training(&fresh); /* timer removed before extraction */
+    assert(owner.player_specials->saved.eidolon_training_rank==10);
+  }
+  /* Gear returns are atomic with removal of the saved live eidolon. */
+  {
+    struct obj_data *armor=calloc(1,sizeof(*armor)), *bag=calloc(1,sizeof(*bag)), *gem=calloc(1,sizeof(*gem));
+    owner.followers=&follower; follower.next=NULL; follower.follower=&pet; pet.master=&owner;
+    GET_POS(&pet)=POS_STANDING; FIGHTING(&pet)=NULL;
+    GET_OBJ_VAL(armor,0)=901; GET_OBJ_TYPE(armor)=ITEM_ARMOR; equip_char(&pet,armor,WEAR_BODY);
+    GET_OBJ_VAL(bag,0)=902; GET_OBJ_TYPE(bag)=ITEM_CONTAINER; obj_to_char(bag,&pet);
+    GET_OBJ_VAL(gem,0)=903; obj_to_obj(gem,bag);
+    save_char_pets(&owner);
+    deny_return=2; assert(!return_eidolon_gear(&pet)); deny_return=0;
+    assert(GET_EQ(&pet,WEAR_BODY)==armor && bag->contains==gem);
+    sql("SELECT COUNT(*) FROM test_returns");result=mysql_store_result(conn);row=mysql_fetch_row(result);assert(atoi(row[0])==0);mysql_free_result(result);
+    defer_return=1; assert(return_all_eidolon_gear(&owner));
+    assert(!GET_EQ(&pet,WEAR_BODY) && !pet.carrying);
+    sql("SELECT COUNT(*) FROM test_returns");result=mysql_store_result(conn);row=mysql_fetch_row(result);assert(atoi(row[0])==3);mysql_free_result(result);
+    sql("SELECT COUNT(*) FROM pet_data WHERE pet_dead=0 AND pet_kind=4");result=mysql_store_result(conn);row=mysql_fetch_row(result);assert(atoi(row[0])==0);mysql_free_result(result);
+    assert(return_eidolon_gear(&pet)); /* repeated extraction cannot enqueue twice */
+    defer_return=0; estate_recover(&owner);
+    int recovered=0;
+    for(struct obj_data *obj=owner.carrying;obj;obj=obj->next_content)
+      if(GET_OBJ_VAL(obj,0)>=901 && GET_OBJ_VAL(obj,0)<=903) recovered++;
+    assert(recovered==3);
+    while(owner.carrying) extract_obj(owner.carrying);
+    armor=calloc(1,sizeof(*armor)); GET_OBJ_VAL(armor,0)=904;
+    equip_char(&pet,armor,WEAR_BODY);
+    owner.desc=NULL; assert(return_all_eidolon_gear(&owner)); owner.desc=&desc;
+    assert(!GET_EQ(&pet,WEAR_BODY) && owner.carrying && GET_OBJ_VAL(owner.carrying,0)==904);
+    while(owner.carrying) extract_obj(owner.carrying);
+  }
   /* Familiar support and ridden mounts can train; temporary reflections cannot. */
   owner.followers=&follower; pet.mob_specials.pet_training_rank=0;
   pet.mob_specials.pet_training_experience=0;
@@ -393,7 +505,7 @@ assert 'while (ch->carrying)' in death[:archived]
 
 with tempfile.TemporaryDirectory(prefix='pet-progression-') as tmp:
     temp=Path(tmp); data=temp/'data'; data.mkdir(); socket=temp/'mysql.sock'; log=temp/'mysql.log'
-    path=temp/'check.c'; path.write_text(headers+stubs+gear_code+r"""
+    path=temp/'check.c'; path.write_text(headers+stubs+gear_code+stubs_extra+r"""
 bool pet_save_objs(struct char_data *pet,struct char_data *owner,long id) {
   save_objects++; return production_pet_save_objs(pet,owner,id);
 }

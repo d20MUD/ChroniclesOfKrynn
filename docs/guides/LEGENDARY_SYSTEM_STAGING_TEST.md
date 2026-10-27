@@ -7,7 +7,7 @@ outcome.
 
 ## 1. Staff setup
 
-Apply migrations through schema v8, then configure the smith:
+Apply migrations through schema v10, then configure the smith:
 
 ```sh
 mysql --defaults-extra-file=/etc/krynn/staging-mysql.cnf krynn_stage < sql/20261023_legendary_objects.sql
@@ -18,6 +18,8 @@ mysql --defaults-extra-file=/etc/krynn/staging-mysql.cnf krynn_stage < sql/20261
 mysql --defaults-extra-file=/etc/krynn/staging-mysql.cnf krynn_stage < sql/20261025_legendary_item_passives.sql
 mysql --defaults-extra-file=/etc/krynn/staging-mysql.cnf krynn_stage < sql/20261025_legendary_release_controls.sql
 mysql --defaults-extra-file=/etc/krynn/staging-mysql.cnf krynn_stage < sql/20261026_legendary_mob_bosses.sql
+mysql --defaults-extra-file=/etc/krynn/staging-mysql.cnf krynn_stage < sql/20261026_legendary_smith_specproc.sql
+mysql --defaults-extra-file=/etc/krynn/staging-mysql.cnf krynn_stage < sql/20261026_legendary_daily_limits.sql
 mysql --defaults-extra-file=/etc/krynn/staging-mysql.cnf krynn_stage < sql/20261025_legendary_release_registry.sql
 ```
 
@@ -29,14 +31,20 @@ Confirm the initial state:
 ```sql
 SELECT `version` FROM legendary_schema WHERE singleton=1;
 SELECT feature_name, enabled FROM legendary_features ORDER BY feature_name;
-SELECT mob_vnum, enabled FROM legendary_smiths WHERE mob_vnum=10500;
+SELECT COUNT(*) AS obsolete_smith_registry_tables
+FROM information_schema.tables
+WHERE table_schema=DATABASE() AND table_name='legendary_smiths';
 SELECT COUNT(*) AS obsolete_boss_registry_tables
 FROM information_schema.tables
 WHERE table_schema=DATABASE() AND table_name='legendary_boss_registry';
 ```
 
-Expected: schema version `8`, all three features disabled, smith 10500 enabled,
-and zero obsolete boss-registry tables.
+Expected: schema version `10`, all three features disabled, and zero obsolete
+smith- or boss-registry tables.
+
+In `medit 10500`, open **Special Procedure**, select **Infusion Smith**, and save
+the mobile through the normal builder workflow. Reopen MEDIT to verify the
+assignment. No SQL registration is needed.
 
 Create or prepare a level-30 test character with an eligible permanent item of
 level 20–30. A two-handed greatsword is recommended. Begin with no shield or
@@ -140,8 +148,8 @@ UPDATE legendary_features SET enabled=TRUE WHERE feature_name='earnings';
 
    ```sql
    UPDATE legendary_characters
-   SET allowance_date=UTC_DATE(), fragments_today=95, essences_today=19,
-       catalysts_today=1, version=version+1
+   SET allowance_date=UTC_DATE(), fragments_today=195, essences_today=39,
+       catalysts_today=2, version=version+1
    WHERE player_id=PLAYER_ID;
    ```
 

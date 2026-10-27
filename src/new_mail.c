@@ -9,6 +9,7 @@
 \ / \ / \ / \ / \ / \ / \ / \ / \ / \ / \ / \ / \ / \ / \ / \ /*/
 
 #include "conf.h"
+#include <limits.h>
 #include "sysdep.h"
 #include "structs.h"
 #include "utils.h"
@@ -36,10 +37,79 @@ extern struct clan_type *clan_info;
 
 void send_editor_help(struct descriptor_data *d);
 
+/* Sending and replying share the existing editor and /s delivery handling. */
+static void mail_start_editor(struct char_data *ch, const char *receiver, const char *subject)
+{
+  free(ch->player_specials->new_mail_receiver);
+  free(ch->player_specials->new_mail_subject);
+  free(ch->player_specials->new_mail_content);
+  ch->player_specials->new_mail_receiver = strdup(receiver);
+  ch->player_specials->new_mail_subject = strdup(subject);
+  ch->player_specials->new_mail_content = strdup(" ");
+  send_editor_help(ch->desc);
+  act("$n starts to write a mail.", TRUE, ch, 0, 0, TO_ROOM);
+  SET_BIT_AR(PLR_FLAGS(ch), PLR_MAILING);
+  string_write(ch->desc, &ch->player_specials->new_mail_content, MAX_STRING_LENGTH, -999, NULL);
+  STATE(ch->desc) = CON_NEWMAIL;
+  send_to_char(ch, "To: %s\r\nSubject: %s\r\n"
+                   "Please write your mail below. Type /s to send or /a to cancel.\r\n\r\n",
+               receiver, subject);
+}
+
+static void perform_mail_reply(struct char_data *ch, const char *argument)
+{
+  char query[MAX_STRING_LENGTH], subject[200], *end, *name, *receiver;
+  MYSQL_RES *res;
+  MYSQL_ROW row;
+  long id;
+  errno = 0;
+  id = strtol(argument, &end, 10);
+  while (isspace((unsigned char)*end)) end++;
+  if (errno || end == argument || *end || id <= 0 || id > INT_MAX)
+  {
+    send_to_char(ch, "Usage: mail reply <mail id>\r\n");
+    return;
+  }
+  if (!MYSQL_PING_CONN(conn))
+  {
+    send_to_char(ch, "Database connection error. Cannot reply to mail right now.\r\n");
+    return;
+  }
+  name = mysql_escape_string_alloc(conn, GET_NAME(ch));
+  if (!name) return;
+  /* Resolve only received mail (including broadcasts), and never reply to All.
+   * Joining the player table also verifies that the sender can receive mail. */
+  snprintf(query, sizeof(query),
+           "SELECT p.name,m.subject FROM player_mail m JOIN player_data p ON p.name=m.sender "
+           "WHERE m.mail_id=%ld AND (m.receiver='%s' OR m.receiver='All') "
+           "AND NOT EXISTS (SELECT 1 FROM player_mail_deleted d "
+           "WHERE d.mail_id=m.mail_id AND d.player_name='%s')", id, name, name);
+  free(name);
+  if (mysql_query(conn, query) || !(res = mysql_store_result(conn)))
+  {
+    send_to_char(ch, "Database error. Cannot reply to mail right now.\r\n");
+    return;
+  }
+  row = mysql_fetch_row(res);
+  if (!row)
+  {
+    mysql_free_result(res);
+    send_to_char(ch, "That received mail is unavailable, or its sender can no longer receive mail.\r\n");
+    return;
+  }
+  receiver = strdup(row[0]);
+  snprintf(subject, sizeof(subject), "%s%s",
+           row[1] && !strn_cmp(row[1], "Re:", 3) ? "" : "Re: ", row[1] ? row[1] : "");
+  mysql_free_result(res);
+  mail_start_editor(ch, receiver, subject);
+  free(receiver);
+}
+
 ACMD(do_new_mail)
 {
   char arg3[200], arg4[200];
 
+  if (!ch || IS_NPC(ch) || !ch->desc) return;
   skip_spaces_c(&argument);
 
   if (!*argument)
@@ -49,6 +119,7 @@ ACMD(do_new_mail)
             "-- mail list inbox            : (shows the mail in your inbox)\r\n"
             "-- mail list sent             : (shows the mail in your outbox)\r\n"
             "-- mail read <num>            : (read the specified mail)\r\n"
+            "-- mail reply <num>           : (reply to received mail)\r\n"
             "-- mail days <num of days>    : (determines how many days back to list mail for)\r\n"
             "-- mail delete <num>          : (deletes the specified mail for you only)\r\n"
             "-- mail send <name> <subject> : (sends a mail to specified person)\r\n");
@@ -65,6 +136,7 @@ ACMD(do_new_mail)
               "-- mail list inbox            : (shows the mail in your inbox)\r\n"
               "-- mail list sent             : (shows the mail in your outbox)\r\n"
               "-- mail read <num>            : (read the specified mail)\r\n"
+              "-- mail reply <num>           : (reply to received mail)\r\n"
               "-- mail days <num of days>    : (determines how many days back to list mail for)\r\n"
               "-- mail delete <num>          : (deletes the specified mail for you only)\r\n"
               "-- mail send <name> <subject> : (sends a mail to specified person)\r\n");
@@ -123,6 +195,11 @@ ACMD(do_new_mail)
         return;
       }
       perform_mail_read(ch, mnum);
+      return;
+    }
+    else if (is_abbrev(arg3, "reply"))
+    {
+      perform_mail_reply(ch, arg4);
       return;
     }
     else if (is_abbrev(arg3, "delete"))
@@ -222,21 +299,7 @@ ACMD(do_new_mail)
         return;
       }
 
-      ch->player_specials->new_mail_receiver = strdup(arg5);
-      ch->player_specials->new_mail_subject = strdup(arg6);
-      if (ch->player_specials->new_mail_content)
-      {
-        ch->player_specials->new_mail_content = NULL;
-      }
-
-      send_editor_help(ch->desc);
-      act("$n starts to write a mail.", TRUE, ch, 0, 0, TO_ROOM);
-      SET_BIT_AR(PLR_FLAGS(ch), PLR_MAILING); /* string_write() sets writing. */
-      ch->player_specials->new_mail_content = strdup(" ");
-      string_write(ch->desc, &ch->player_specials->new_mail_content, MAX_STRING_LENGTH, -999, NULL);
-      STATE(ch->desc) = CON_NEWMAIL;
-      send_to_char(
-          ch, "Please write your mail in the space below.  Type /s when you are done.\r\n\r\n");
+      mail_start_editor(ch, arg5, arg6);
       return;
     }
     else
@@ -246,6 +309,7 @@ ACMD(do_new_mail)
                    "-- mail list inbox            : (shows the mail in your inbox)\r\n"
                    "-- mail list sent             : (shows the mail in your outbox)\r\n"
                    "-- mail read <num>            : (read the specified mail)\r\n"
+                   "-- mail reply <num>           : (reply to received mail)\r\n"
                    "-- mail delete <num>          : (deletes the specified mail for you only)\r\n"
                    "-- mail send <name> <subject> : (sends a mail to specified person)\r\n");
       return;

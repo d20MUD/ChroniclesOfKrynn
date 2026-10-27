@@ -57,6 +57,44 @@ The clan system in LuminariMUD provides a comprehensive framework for player org
 - **Player Storage**: Clan membership is stored in both player files and the player index
 - **No MySQL Storage**: Unlike other systems, clans use file-based storage exclusively
 
+## Application notices at login
+
+Each login shows a yellow reminder when applications are awaiting review.
+Staff (immortal level and above) see counts for every clan with pending
+applications. Enrolled members see only their own clan's count, regardless of
+rank. Applicants are not treated as enrolled members. Counts include online
+and offline applicants and exclude deleted characters. The notice includes
+`clan list <clan ID>` to view members and applicants.
+
+Approving an application with `clan enrol` records a green approval notice.
+Using `clan expel` on an applicant records a red rejection notice, including
+when the applicant is offline. Expelling an enrolled member does not create an
+application-rejection notice. Applicants see the decision once on their next
+login, even if they were online when it was made. The notice is saved in their
+player file as `CApp` until delivered; no database migration is required.
+
+### Other clan events
+
+Players also receive colored, one-time notices on their next login for:
+
+- Promotions and demotions, including the new rank title and who made the change.
+- Expulsion, clan disbanding, leadership appointment/transfer, and clan creation.
+- Clan-point awards and voluntarily leaving a clan.
+- Member arrivals/departures, leadership changes, alliances formed/broken, wars
+  declared/ended (including automatic expiry), and territory gained/lost/removed.
+
+Personal notices go to the affected player. Clan-wide notices go to enrolled
+members of the affected clan(s), including offline members; applicants do not
+receive member-only announcements. Existing immediate messages remain in use.
+
+Several events are queued in order rather than replacing one another. Each
+saved player-file `CNot` line contains one notice, including its color codes.
+Login displays and clears the queue, then saves the player so notices do not
+repeat. Notices retain the clan/rank names from when the event occurred, even
+if the clan is renamed or disbanded before the recipient logs in. Players in
+editors or linkdead states use their live character rather than a second loaded
+copy, preventing queued notices from being overwritten by later saves.
+
 ## Data Structures
 
 ### Main Clan Structure

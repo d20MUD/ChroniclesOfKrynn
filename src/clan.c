@@ -34,6 +34,12 @@ struct claim_data *claim_list = NULL;
 int num_of_clans = 0;
 struct clan_hash_entry *clan_hash_table[CLAN_HASH_SIZE];
 
+static struct char_data *clan_online_player(const char *name);
+static void clan_queue_notice(struct char_data *ch, const char *color, const char *format, ...)
+    __attribute__((format(printf, 3, 4)));
+static void clan_notify_members(clan_rnum clan, const char *color, const char *format, ...)
+    __attribute__((format(printf, 3, 4)));
+
 /* Clan privileges.  Each of these is assigned a minimum rank */
 const char *const clan_priv_names[] = {"Award",      /**< 'clan award' command    */
                                        "Claim",      /**< 'clan claim' command    */
@@ -684,6 +690,7 @@ bool auto_appoint_new_clan_leader(clan_rnum c_n)
   long new_l_id = NOBODY;
   int i, rk_num, max_rk;
   bool loaded = FALSE;
+  char leader_name[MAX_NAME_LENGTH + 1];
 
   /* Verify c_n */
   if (c_n >= num_of_clans)
@@ -696,7 +703,7 @@ bool auto_appoint_new_clan_leader(clan_rnum c_n)
   {
     if (player_table[i].clan == clan_list[c_n].vnum)
     {
-      if ((v = is_playing(player_table[i].name)) != NULL)
+      if ((v = clan_online_player(player_table[i].name)) != NULL)
       {
         /* If they are playing, no need to load the pfile to get data */
         rk_num = GET_CLANRANK(v) - 1;
@@ -739,7 +746,7 @@ bool auto_appoint_new_clan_leader(clan_rnum c_n)
     return (FALSE);
 
   /* Load the new leader's pfile again if required */
-  if ((new_l = is_playing(player_table[new_l_id].name)) == NULL)
+  if ((new_l = clan_online_player(player_table[new_l_id].name)) == NULL)
   {
     new_l = new_char();
 
@@ -753,6 +760,7 @@ bool auto_appoint_new_clan_leader(clan_rnum c_n)
     loaded = TRUE;
   }
 
+  clan_queue_notice(new_l, "\tG", "You were appointed LEADER of %s.", clan_list[c_n].clan_name);
   GET_CLANRANK(new_l) = 1;                  /* Set to top rank */
   clan_list[c_n].leader = GET_IDNUM(new_l); /* Set clan leader */
   mark_clan_modified(c_n);
@@ -761,6 +769,7 @@ bool auto_appoint_new_clan_leader(clan_rnum c_n)
   log("(CLAN) %s auto-appointed as new clan leader for '%s'", GET_NAME(new_l),
       clan_list[c_n].clan_name);
 
+  strlcpy(leader_name, GET_NAME(new_l), sizeof(leader_name));
   if (loaded)
   {
     save_char(new_l, 0);
@@ -768,9 +777,11 @@ bool auto_appoint_new_clan_leader(clan_rnum c_n)
   }
   else
   {
+    save_char(new_l, 0);
     send_to_char(new_l, "You have been promoted to Clan Leader!\r\n");
     send_to_char(new_l, "'%s' is now YOUR clan!\r\n", clan_list[c_n].clan_name);
   }
+  clan_notify_members(c_n, "\tC", "%s was appointed leader of %s.", leader_name, clan_list[c_n].clan_name);
   return (TRUE);
 }
 
@@ -1563,6 +1574,148 @@ ACMD(do_clan)
   }
 }
 
+/* Include editors, switched characters and linkdead players: loading a second
+ * copy would let a later save of the live body overwrite its queued notices. */
+static struct char_data *clan_online_player(const char *name)
+{
+  struct char_data *member;
+  for (member = character_list; member; member = member->next)
+    if (!IS_NPC(member) && !str_cmp(GET_NAME(member), name)) return member;
+  return NULL;
+}
+
+void clan_restore_login_notice(struct char_data *ch, const char *text)
+{
+  struct txt_block *notice, **tail;
+  if (!ch || IS_NPC(ch) || !text || !*text) return;
+  CREATE(notice, struct txt_block, 1);
+  notice->text = strdup(text);
+  tail = &ch->player_specials->saved.clan_login_notices;
+  while (*tail) tail = &(*tail)->next;
+  *tail = notice;
+}
+
+static void clan_queue_notice(struct char_data *ch, const char *color, const char *format, ...)
+{
+  char body[400], text[450];
+  char *p;
+  va_list args;
+  va_start(args, format);
+  vsnprintf(body, sizeof(body), format, args);
+  va_end(args);
+  for (p = body; *p; p++) if (*p == '\r' || *p == '\n') *p = ' ';
+  snprintf(text, sizeof(text), "%s[CLAN] %s\tn", color, body);
+  clan_restore_login_notice(ch, text);
+}
+
+/* Only enrolled members receive clan-wide announcements, including offline
+ * members. Personal decisions/removals are queued separately for their target. */
+static void clan_notify_members(clan_rnum clan, const char *color, const char *format, ...)
+{
+  char body[400];
+  va_list args;
+  int i, loaded;
+  struct char_data *member;
+  if (clan == NO_CLAN || clan >= (clan_rnum)num_of_clans) return;
+  va_start(args, format);
+  vsnprintf(body, sizeof(body), format, args);
+  va_end(args);
+  for (i = 0; i <= top_of_p_table; i++)
+  {
+    if (!player_table[i].name || IS_SET(player_table[i].flags, PINDEX_DELETED) ||
+        (clan_vnum)player_table[i].clan != clan_list[clan].vnum) continue;
+    loaded = FALSE;
+    member = clan_online_player(player_table[i].name);
+    if (!member)
+    {
+      member = new_char();
+      if (load_char(player_table[i].name, member) < 0) { free_char(member); continue; }
+      loaded = TRUE;
+    }
+    if (GET_CLAN(member) == clan_list[clan].vnum && GET_CLANRANK(member) > NO_CLANRANK)
+    {
+      clan_queue_notice(member, color, "%s", body);
+      save_char(member, 0);
+    }
+    if (loaded) free_char(member);
+  }
+}
+
+static void clan_queue_application_result(struct char_data *ch, clan_rnum clan, bool approved)
+{
+  ch->player_specials->saved.clan_application_result = approved ? 1 : 2;
+  strlcpy(ch->player_specials->saved.clan_application_name, clan_list[clan].clan_name,
+          sizeof(ch->player_specials->saved.clan_application_name));
+}
+
+/* Applicants may be offline. The player index has the clan, but only a loaded
+ * player or player file has the rank needed to distinguish pending members. */
+static int clan_pending_applications(clan_rnum clan)
+{
+  int i, count = 0;
+  struct char_data *applicant;
+  for (i = 0; i <= top_of_p_table; i++)
+  {
+    if (!player_table[i].name || IS_SET(player_table[i].flags, PINDEX_DELETED) ||
+        (clan_vnum)player_table[i].clan != clan_list[clan].vnum)
+      continue;
+    applicant = clan_online_player(player_table[i].name);
+    if (applicant)
+    {
+      if (GET_CLAN(applicant) == clan_list[clan].vnum && GET_CLANRANK(applicant) == NO_CLANRANK)
+        count++;
+    }
+    else
+    {
+      applicant = new_char();
+      if (load_char(player_table[i].name, applicant) >= 0 &&
+          GET_CLAN(applicant) == clan_list[clan].vnum && GET_CLANRANK(applicant) == NO_CLANRANK)
+        count++;
+      free_char(applicant);
+    }
+  }
+  return count;
+}
+
+void clan_login_notifications(struct char_data *ch)
+{
+  int clan, count, result, changed = FALSE;
+  struct txt_block *notice;
+  clan_rnum own;
+  if (!ch || IS_NPC(ch) || !ch->desc) return;
+  result = ch->player_specials->saved.clan_application_result;
+  if (result == 1 || result == 2)
+  {
+    send_to_char(ch, "%s[CLAN APPLICATION] Your application to %s has been %s.\tn\r\n",
+                 result == 1 ? "\tG" : "\tR",
+                 ch->player_specials->saved.clan_application_name,
+                 result == 1 ? "APPROVED" : "REJECTED");
+    ch->player_specials->saved.clan_application_result = 0;
+    *ch->player_specials->saved.clan_application_name = '\0';
+    changed = TRUE;
+  }
+  while ((notice = ch->player_specials->saved.clan_login_notices))
+  {
+    send_to_char(ch, "%s\r\n", notice->text);
+    ch->player_specials->saved.clan_login_notices = notice->next;
+    free(notice->text);
+    free(notice);
+    changed = TRUE;
+  }
+  if (changed) save_char(ch, 0);
+  own = real_clan(GET_CLAN(ch));
+  for (clan = 0; clan < num_of_clans; clan++)
+  {
+    if (GET_LEVEL(ch) < LVL_IMMORT && (own != (clan_rnum)clan || GET_CLANRANK(ch) == NO_CLANRANK))
+      continue;
+    count = clan_pending_applications(clan);
+    if (count)
+      send_to_char(ch, "\tY[CLAN APPLICATIONS] %s has %d application%s awaiting review. "
+                       "Use 'clan list %d' to view its members and applicants.\tn\r\n",
+                   clan_list[clan].clan_name, count, count == 1 ? "" : "s", clan_list[clan].vnum);
+  }
+}
+
 /* clan apply command */
 ACMD(do_clanapply)
 {
@@ -1617,6 +1770,7 @@ ACMD(do_clanapply)
   /* Set player as in the clan with no clan rank (pending) */
   set_clan(ch, clan_list[c_n].vnum);
   GET_CLANRANK(ch) = NO_CLANRANK;
+  save_char(ch, 0);
 
   send_to_char(ch,
                "You've applied to clan '%s%s'\r\n"
@@ -1695,6 +1849,9 @@ ACMD(do_clanaward)
   }
 
   GET_CLANPOINTS(l) += num_cp;
+  clan_queue_notice(l, "\tG", "You were awarded %ld clan points in %s by %s.",
+                    num_cp, clan_list[c_r].clan_name, GET_NAME(ch));
+  save_char(l, 0);
   CLAN_BANK(c_r) -= (num_cp * 10);
 
   send_to_char(l, "%sCLAN: You have been awarded %s%ld%s clan points!%s\r\n", CCMAG(l, C_NRM),
@@ -1716,6 +1873,7 @@ ACMD(do_clanclaim)
 {
   zone_vnum zv;
   zone_rnum zr;
+  clan_rnum previous;
 
   zr = GET_ROOM_ZONE(IN_ROOM(ch));
   zv = zone_table[(zr)].number; /* Players current zone vnum */
@@ -1756,6 +1914,7 @@ ACMD(do_clanclaim)
     return;
   }
 
+  previous = real_clan(get_owning_clan(zv));
   log("%s claiming zone %d: Current Clan=%d, New Clan=%d", GET_NAME(ch), zv, get_owning_clan(zv),
       GET_CLAN(ch));
 
@@ -1787,6 +1946,9 @@ ACMD(do_clanclaim)
                       zone_table[real_zone(zv)].name, zv);
 
     save_claims();
+    clan_notify_members(cr, "\tG", "%s claimed %s for your clan.", GET_NAME(ch), zone_table[zr].name);
+    if (previous != NO_CLAN && previous != cr)
+      clan_notify_members(previous, "\tR", "Your clan lost its claim on %s to %s.", zone_table[zr].name, clan_list[cr].clan_name);
   }
   else
   {
@@ -1961,6 +2123,7 @@ ACMD(do_clancreate)
     send_to_char(ch, "Clan added successfully.\r\n");
     save_clans(); /* Full save for new clan */
     /* Now we need to set the clan data in the leaders pindex record */
+    clan_queue_notice(l, "\tG", "Your clan %s was created; you are its leader.", c_n);
     GET_CLANRANK(l) = 1;
     if (set_clan(l, v))
     {
@@ -2014,7 +2177,7 @@ ACMD(do_clandemote)
         return;
       }
       /* If currently playing */
-      if ((vict = is_playing(player_table[j].name)) != NULL)
+      if ((vict = clan_online_player(player_table[j].name)) != NULL)
       {
         if (vict == ch)
         {
@@ -2069,6 +2232,8 @@ ACMD(do_clandemote)
           return;
         }
         GET_CLANRANK(vict) = GET_CLANRANK(vict) + 1;
+        clan_queue_notice(vict, "\tY", "You were DEMOTED to %s in %s by %s.",
+                          clan_list[c_n].rank_name[GET_CLANRANK(vict) - 1], clan_list[c_n].clan_name, GET_NAME(ch));
         save_char(vict, 0);
         send_to_char(vict, "You have been demoted to %s within your clan!\r\n",
                      clan_list[c_n].rank_name[(GET_CLANRANK(vict) - 1)]);
@@ -2139,6 +2304,8 @@ ACMD(do_clandemote)
           return;
         }
         GET_CLANRANK(vict) = GET_CLANRANK(vict) + 1;
+        clan_queue_notice(vict, "\tY", "You were DEMOTED to %s in %s by %s.",
+                          clan_list[c_n].rank_name[GET_CLANRANK(vict) - 1], clan_list[c_n].clan_name, GET_NAME(ch));
         GET_PFILEPOS(vict) = p_pos;
         save_char(vict, 0);
 
@@ -2421,11 +2588,12 @@ ACMD(do_clandestroy)
     if (player_table[j].clan == clan_list[c_n].vnum)
     {
       /* If currently playing */
-      if ((vict = is_playing(player_table[j].name)) != NULL)
+      if ((vict = clan_online_player(player_table[j].name)) != NULL)
       {
         /* Invalidate cache before removing member */
         clan_list[c_n].cache_timestamp = 0;
 
+        clan_queue_notice(vict, "\tR", "Your clan %s has been DISBANDED.", clan_list[c_n].clan_name);
         GET_CLAN(vict) = 0;
         GET_CLANRANK(vict) = 0;
         save_char(vict, 0);
@@ -2447,6 +2615,7 @@ ACMD(do_clandestroy)
         /* Invalidate cache before removing member */
         clan_list[c_n].cache_timestamp = 0;
 
+        clan_queue_notice(vict, "\tR", "Your clan %s has been DISBANDED.", clan_list[c_n].clan_name);
         GET_CLAN(vict) = 0;
         GET_CLANRANK(vict) = 0;
         GET_PFILEPOS(vict) = p_pos;
@@ -2602,6 +2771,7 @@ ACMD(do_clanenrol)
     }
   }
 
+  clan_queue_application_result(v, c_n, TRUE);
   GET_CLANRANK(v) = (clan_list[(c_n)].ranks); /* Set to lowest rank    */
   set_clan(v, clan_list[(c_n)].vnum);         /* Set the clan and save */
 
@@ -2620,6 +2790,8 @@ ACMD(do_clanenrol)
                QNRM);
   send_to_char(v, "You have been enrolled into %s%s.\r\n", clan_list[(c_n)].clan_name,
                CCNRM(v, C_NRM));
+
+  clan_notify_members(c_n, "\tC", "%s joined %s.", GET_NAME(v), clan_list[c_n].clan_name);
 
   /* Log the enrollment */
   log_clan_activity(clan_list[c_n].vnum, "%s enrolled %s as %s (rank %d)", GET_NAME(ch),
@@ -2676,6 +2848,9 @@ ACMDU(do_clanleave)
     ch->player_specials->clan_leave_code = NULL;
   }
 
+  clan_queue_notice(ch, "\tY", "You left %s.", clan_list[c_n].clan_name);
+  save_char(ch, 0);
+  clan_notify_members(c_n, "\tC", "%s left %s.", GET_NAME(ch), clan_list[c_n].clan_name);
   send_to_char(ch, "You have left %s%s.\r\n", clan_list[c_n].clan_name, CCNRM(ch, C_NRM));
 }
 
@@ -2686,7 +2861,7 @@ ACMD(do_clanexpel) /* Expel a member */
   struct char_data *v = NULL;
   long v_id;
   int v_pos;
-  bool immcom = FALSE;
+  bool immcom = FALSE, was_applicant;
 
   if (GET_LEVEL(ch) == LVL_IMPL)
     immcom = TRUE;
@@ -2732,7 +2907,7 @@ ACMD(do_clanexpel) /* Expel a member */
 
   c_n = real_clan(player_table[(v_id)].clan);
 
-  if ((v = is_playing(player_table[(v_id)].name)) != NULL)
+  if ((v = clan_online_player(player_table[(v_id)].name)) != NULL)
   {
     /* Invalidate cache before removing member */
     clan_list[c_n].cache_timestamp = 0;
@@ -2740,6 +2915,11 @@ ACMD(do_clanexpel) /* Expel a member */
     mark_clan_modified(c_n);
     save_single_clan(c_n);
 
+    was_applicant = GET_CLANRANK(v) == NO_CLANRANK;
+    if (was_applicant)
+      clan_queue_application_result(v, c_n, FALSE);
+    else
+      clan_queue_notice(v, "\tR", "You were EXPELLED from %s by %s.", clan_list[c_n].clan_name, GET_NAME(ch));
     GET_CLAN(v) = 0;
     GET_CLANRANK(v) = NO_CLANRANK;
     player_table[v_id].clan = 0;
@@ -2757,6 +2937,8 @@ ACMD(do_clanexpel) /* Expel a member */
 
     save_char(v, 0);
     save_player_index();
+    if (!was_applicant)
+      clan_notify_members(c_n, "\tY", "%s was removed from %s.", GET_NAME(v), clan_list[c_n].clan_name);
   }
   else
   {
@@ -2774,6 +2956,11 @@ ACMD(do_clanexpel) /* Expel a member */
     mark_clan_modified(c_n);
     save_single_clan(c_n);
 
+    was_applicant = GET_CLANRANK(v) == NO_CLANRANK;
+    if (was_applicant)
+      clan_queue_application_result(v, c_n, FALSE);
+    else
+      clan_queue_notice(v, "\tR", "You were EXPELLED from %s by %s.", clan_list[c_n].clan_name, GET_NAME(ch));
     GET_CLAN(v) = 0;
     GET_CLANRANK(v) = NO_CLANRANK;
     player_table[v_id].clan = 0;
@@ -2789,6 +2976,8 @@ ACMD(do_clanexpel) /* Expel a member */
 
     save_char(v, 0);
     save_player_index();
+    if (!was_applicant)
+      clan_notify_members(c_n, "\tY", "%s was removed from %s.", GET_NAME(v), clan_list[c_n].clan_name);
 
     free_char(v);
   }
@@ -3212,12 +3401,18 @@ ACMD(do_clanowner)
     send_to_char(ch, "The new owner must be a member of the clan!\r\n");
     return;
   }
+  clan_queue_notice(new_l, "\tG", "You became LEADER of %s, appointed by %s.", clan_list[c_n].clan_name, GET_NAME(ch));
+  if (ch != new_l)
+    clan_queue_notice(ch, "\tY", "Leadership of %s was transferred to %s.", clan_list[c_n].clan_name, GET_NAME(new_l));
   GET_CLANRANK(ch) = 1;    /* Set to top rank */
   GET_CLANRANK(new_l) = 1; /* Set to top rank */
   clan_list[c_n].leader = GET_IDNUM(new_l);
   mark_clan_modified(c_n);
   save_single_clan(c_n);
 
+  save_char(ch, 0);
+  save_char(new_l, 0);
+  clan_notify_members(c_n, "\tC", "%s is now leader of %s.", GET_NAME(new_l), clan_list[c_n].clan_name);
   send_to_char(ch, "Ownership changed to %s.\r\n", PERS(new_l, ch));
   send_to_char(new_l, "You have been promoted to Clan Leader!\r\n");
   send_to_char(new_l, "'%s' is now YOUR clan!\r\n", clan_list[c_n].clan_name);
@@ -3260,7 +3455,7 @@ ACMD(do_clanpromote)
         return;
       }
       /* If currently playing */
-      if ((vict = is_playing(player_table[j].name)) != NULL)
+      if ((vict = clan_online_player(player_table[j].name)) != NULL)
       {
         if (vict == ch)
         {
@@ -3314,6 +3509,8 @@ ACMD(do_clanpromote)
           return;
         }
         GET_CLANRANK(vict) = rk_num;
+        clan_queue_notice(vict, "\tG", "You were PROMOTED to %s in %s by %s.",
+                          clan_list[c_n].rank_name[GET_CLANRANK(vict) - 1], clan_list[c_n].clan_name, GET_NAME(ch));
         save_char(vict, 0);
         send_to_char(vict,
                      "You have been promoted to %s within your"
@@ -3385,6 +3582,8 @@ ACMD(do_clanpromote)
           return;
         }
         GET_CLANRANK(vict) = rk_num;
+        clan_queue_notice(vict, "\tG", "You were PROMOTED to %s in %s by %s.",
+                          clan_list[c_n].rank_name[GET_CLANRANK(vict) - 1], clan_list[c_n].clan_name, GET_NAME(ch));
         GET_PFILEPOS(vict) = p_pos;
         save_char(vict, 0);
 
@@ -3669,8 +3868,10 @@ ACMD(do_clanunclaim)
     {
       found = TRUE;
       /* For total removal, including popularity, use remove_claim_from_list */
+      clan_notify_members(real_clan(CLAIM_CLAN(this_claim)), "\tY", "Your clan's claim on %s was removed by %s.", zone_table[zr].name, GET_NAME(ch));
       CLAIM_CLAN(this_claim) = NO_CLAN;
       CLAIM_CLAIMANT(this_claim) = 0L; /* same as (long int) 0 */
+      save_claims();
       send_to_char(ch, "Claim removed from %s\r\n", zone_table[real_zone(z)].name);
     }
   }
@@ -3771,6 +3972,8 @@ ACMD(do_clanally)
     snprintf(buf, sizeof(buf), "[CLAN] Alliance between %s and %s has been broken!",
              clan_list[my_clan].clan_name, clan_list[target_clan].clan_name);
 
+    clan_notify_members(my_clan, "\tY", "%s", buf + 7);
+    clan_notify_members(target_clan, "\tY", "%s", buf + 7);
     struct descriptor_data *d;
     for (d = descriptor_list; d; d = d->next)
     {
@@ -3810,6 +4013,8 @@ ACMD(do_clanally)
     snprintf(buf, sizeof(buf), "[CLAN] Alliance formed between %s and %s!",
              clan_list[my_clan].clan_name, clan_list[target_clan].clan_name);
 
+    clan_notify_members(my_clan, "\tY", "%s", buf + 7);
+    clan_notify_members(target_clan, "\tY", "%s", buf + 7);
     struct descriptor_data *d;
     for (d = descriptor_list; d; d = d->next)
     {
@@ -3930,6 +4135,8 @@ ACMD(do_clanwar)
     snprintf(buf, sizeof(buf), "[CLAN] War between %s and %s has ended!",
              clan_list[my_clan].clan_name, clan_list[target_clan].clan_name);
 
+    clan_notify_members(my_clan, "\tY", "%s", buf + 7);
+    clan_notify_members(target_clan, "\tY", "%s", buf + 7);
     struct descriptor_data *d;
     for (d = descriptor_list; d; d = d->next)
     {
@@ -3966,6 +4173,8 @@ ACMD(do_clanwar)
     snprintf(buf, sizeof(buf), "[CLAN] %s has declared war on %s!", clan_list[my_clan].clan_name,
              clan_list[target_clan].clan_name);
 
+    clan_notify_members(my_clan, "\tY", "%s", buf + 7);
+    clan_notify_members(target_clan, "\tY", "%s", buf + 7);
     struct descriptor_data *d;
     for (d = descriptor_list; d; d = d->next)
     {
@@ -5616,6 +5825,8 @@ void update_clans(void)
             {
               clan_list[j].at_war[i] = FALSE;
               mark_clan_modified(j);
+              clan_notify_members(i, "\tY", "The war between %s and %s has ended.", clan_list[i].clan_name, clan_list[j].clan_name);
+              clan_notify_members(j, "\tY", "The war between %s and %s has ended.", clan_list[i].clan_name, clan_list[j].clan_name);
             }
 
             /* Notify online clan members */

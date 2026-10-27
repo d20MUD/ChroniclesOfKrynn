@@ -56,6 +56,8 @@ static void say_spell(struct char_data *ch, int spellnum, struct char_data *tch,
                       struct obj_data *tobj, bool start);
 static int cast_spell_with_type(struct char_data *ch, struct char_data *tch, struct obj_data *tobj,
                                 int spellnum, int metamagic, int casttype);
+static bool aurak_magic_has_points(struct char_data *ch, int spellnum);
+
 static int cast_spell_with_type_and_slot(struct char_data *ch, struct char_data *tch,
                                          struct obj_data *tobj, int spellnum, int metamagic,
                                          int casttype, int slot_class, int slot_spellnum,
@@ -2747,6 +2749,11 @@ static int cast_spell_with_type_and_slot(struct char_data *ch, struct char_data 
   if (treat_as_at_will && (isAurakMagic(ch, spellnum) || isShifterMagic(ch, spellnum)) &&
       casttype == CAST_SPELL)
     casttype = CAST_INNATE; /* Preserve racial/class ability source through delayed casting. */
+  /* Reject an exhausted racial pool before consuming casting actions. Recheck
+   * at dispatch as another queued cast may spend points in the meantime. */
+  if (casttype == CAST_INNATE && !aurak_magic_has_points(ch, spellnum))
+    return 0;
+
 
   /* these are all (most likely) deprecated dummy checks added by zusuk */
   if (ch && IN_ROOM(ch) > top_of_world)
@@ -7327,12 +7334,44 @@ bool isAurakMagic(struct char_data *ch, int spellnum)
   return GET_LEVEL(ch) >= minimum;
 }
 
+/* Base wizard circle determines racial cost; metamagic does not change it.
+ * Daily domination and the two signature attacks have independent rules. */
+int aurak_magic_cost(struct char_data *ch, int spellnum)
+{
+  if (!isAurakMagic(ch, spellnum) || spellnum == SPELL_AURAK_ENERGY_RAY ||
+      spellnum == SPELL_AURAK_BREATH || spellnum == SPELL_DOMINATE_PERSON)
+    return 0;
+  return compute_spells_circle(ch, CLASS_WIZARD, spellnum, 0, 0);
+}
+
+/* Read-only: menus and failed casting checks never start or postpone a refill. */
+int aurak_magic_points(struct char_data *ch)
+{
+  if (!isAurakMagic(ch, SPELL_DISGUISE_SELF))
+    return 0;
+  if (ch->player_specials->saved.aurak_magic_refresh <= time(NULL))
+    return 10;
+  return MAX(0, 10 - ch->player_specials->saved.aurak_magic_spent);
+}
+
+static bool aurak_magic_has_points(struct char_data *ch, int spellnum)
+{
+  int cost = aurak_magic_cost(ch, spellnum);
+  int points = aurak_magic_points(ch);
+  if (cost <= points)
+    return TRUE;
+  send_to_char(ch, "Your Aurak magic needs %d points; you have %d/10. "
+                   "The pool refreshes in %ld seconds.\r\n", cost, points,
+               (long)(ch->player_specials->saved.aurak_magic_refresh - time(NULL)));
+  return FALSE;
+}
+
 /* Consume only when an invocation reaches effect dispatch, after the normal
  * room, target, PvP and antimagic checks. A resisted attempt still uses its charge. */
 bool prepare_aurak_magic(struct char_data *ch, int spellnum, int casttype)
 {
   time_t now, *ready = NULL;
-  int recharge;
+  int recharge, cost;
   if (!ch || IS_NPC(ch) || casttype == CAST_DEVICE || casttype == CAST_WEAPON_POISON)
     return TRUE;
   if ((spellnum == SPELL_AURAK_ENERGY_RAY || spellnum == SPELL_AURAK_BREATH) &&
@@ -7343,6 +7382,21 @@ bool prepare_aurak_magic(struct char_data *ch, int spellnum, int casttype)
   }
   if (!isAurakMagic(ch, spellnum))
     return TRUE;
+  if (casttype == CAST_INNATE && (cost = aurak_magic_cost(ch, spellnum)) > 0)
+  {
+    if (!aurak_magic_has_points(ch, spellnum))
+      return FALSE;
+    now = time(NULL);
+    if (ch->player_specials->saved.aurak_magic_refresh <= now)
+    {
+      ch->player_specials->saved.aurak_magic_spent = 0;
+      ch->player_specials->saved.aurak_magic_refresh = now + 5 * 60;
+    }
+    ch->player_specials->saved.aurak_magic_spent += cost;
+    save_char(ch, 0);
+    send_to_char(ch, "Aurak magic: %d/10 points remaining.\r\n", aurak_magic_points(ch));
+    return TRUE;
+  }
   /* A prepared class spell remains available after the racial daily use is spent. */
   if (spellnum == SPELL_DOMINATE_PERSON && casttype != CAST_INNATE)
     return TRUE;

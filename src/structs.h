@@ -7141,6 +7141,9 @@ struct player_special_data_saved
   int clanpoints; /**< Clan points may be spent in a clanhall */
   clan_vnum clan; /**< The clan number to which the player belongs     */
   int clanrank;   /**< The player's rank within their clan (1=highest) */
+  struct txt_block *clan_login_notices; /* Ordered, persisted personal/clan events. */
+  int clan_application_result; /* 1 approved, 2 rejected; consumed at next login. */
+  char clan_application_name[61];
 
 /* autoquest */
 #define MAX_CURRENT_QUESTS 3
@@ -7337,6 +7340,12 @@ struct player_special_data_saved
   struct disguise_appearance irda_form; /* Innate form; instance zero means natural. */
   struct sivak_form *sivak_forms;
   unsigned long long sivak_active_form;
+  bool eidolon_training_saved;
+  int eidolon_training_rank;
+  int eidolon_training_experience;
+  int eidolon_training_skills[5];
+  int aurak_magic_spent; /* Shared ten-point racial spell pool. */
+  time_t aurak_magic_refresh; /* Full refill five minutes after first use. */
   time_t aurak_dominate_ready;
   time_t aurak_breath_ready;
   time_t irda_augment_ready;

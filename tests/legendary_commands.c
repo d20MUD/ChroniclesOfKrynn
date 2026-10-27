@@ -2,6 +2,7 @@
 #include "estate_integration.c"
 #undef main
 #include "legendary_commands.h"
+#include "spec_procs.h"
 #include "legendary_transaction.h"
 #include "legendary_earnings.h"
 #include "spells.h"
@@ -121,8 +122,20 @@ int main(int argc,char **argv)
   assert(estate_query("INSERT INTO legendary_characters(player_id,infusion_xp,fragments,catalysts,draconic,martial,arcane,spiritual,primal,shadow) VALUES(1,400000000,400000,2000,20000,20000,20000,20000,20000,20000)"));
   GET_GOLD(&ch)=20000000;assert(save_char_checked(&ch,0));
   o=item("blade");GET_ID(o)=200;o->item_number=0;GET_OBJ_LEVEL(o)=25;SET_BIT_AR(GET_OBJ_WEAR(o),ITEM_WEAR_WIELD);obj_to_char(o,&ch);
-  command(&ch,"awaken blade Guardian");assert(strstr(output,"registered"));assert(!*o->legendary_uuid);
-  assert(estate_query("INSERT INTO legendary_smiths VALUES(600,1,0)"));
+  command(&ch,"awaken blade Guardian");assert(strstr(output,"infusion smith"));assert(!*o->legendary_uuid);
+  /* Eligibility is entirely the prototype's assigned special procedure. */
+  assert(scalar("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name='legendary_smiths'")==0);
+  mob_index[0].func=infusion_smith;
+  SET_BIT_AR(AFF_FLAGS(&mob),AFF_CHARM);
+  command(&ch,"awaken blade Guardian");assert(!*o->legendary_uuid&&!strstr(output,"infuse confirm "));
+  REMOVE_BIT_AR(AFF_FLAGS(&mob),AFF_CHARM);
+  GET_POS(&mob)=POS_SLEEPING;
+  command(&ch,"awaken blade Guardian");assert(!strstr(output,"infuse confirm "));
+  GET_POS(&mob)=POS_STANDING;
+  command(&ch,"awaken blade Guardian");assert(sscanf(strstr(output,"infuse confirm "),"infuse confirm %32s",id)==1);
+  mob_index[0].func=NULL;
+  snprintf(s,sizeof(s),"confirm %s",id);command(&ch,s);assert(!*o->legendary_uuid);
+  mob_index[0].func=infusion_smith;
   other=item("blade duplicate");GET_ID(other)=201;obj_to_char(other,&ch);
   command(&ch,"awaken blade Guardian");assert(strstr(output,"Ambiguous"));assert(!*o->legendary_uuid);extract_obj(other);
   command(&ch,"awaken blade Guardian");assert(strstr(output,"permanently"));assert(!*o->legendary_uuid);
@@ -157,7 +170,7 @@ int main(int argc,char **argv)
   before=GET_GOLD(&ch);CLASS_LEVEL((&ch),CLASS_WIZARD)=0;snprintf(s,sizeof(s),"confirm %s",id);command(&ch,s);
   assert(strstr(output,"invalidated"));assert(GET_GOLD(&ch)==before&&saved(o).channels[0].foundation==8);
   before=scalar("SELECT arcane FROM legendary_characters WHERE player_id=1");perform(&ch,"exchange essence Martial Arcane 2");assert(scalar("SELECT arcane FROM legendary_characters WHERE player_id=1")==before+2);
-  perform(&ch,"exchange catalyst 1");command(&ch,"exchange catalyst 1");assert(strstr(output,"unavailable"));
+  perform(&ch,"exchange catalyst 1");perform(&ch,"exchange catalyst 1");command(&ch,"exchange catalyst 1");assert(strstr(output,"unavailable"));
   command(&ch,"materials");assert(strstr(output,"UTC"));command(&ch,"choices blade primary");assert(strstr(output,"registered dragonlance required"));
   command(&ch,"advance blade supporting");assert(sscanf(strstr(output,"infuse confirm "),"infuse confirm %32s",id)==1);
   legendary_transaction_clock_offset=61;snprintf(s,sizeof(s),"confirm %s",id);command(&ch,s);assert(strstr(output,"stale"));legendary_transaction_clock_offset=0;assert(saved(o).channels[1].rank==3);

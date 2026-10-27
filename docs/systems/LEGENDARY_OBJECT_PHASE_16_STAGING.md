@@ -33,7 +33,7 @@ scripts/legendary_phase16_rehearsal.sh --defaults-file /etc/krynn/staging-mysql.
 
 The two save-root variables are optional, but production-equivalent rehearsal
 should provide both. The script captures them and a consistent SQL dump before
-it applies schema v1–v8. It then proves that schema version is `8`, the obsolete
+it applies schema v1–v10. It then proves that schema version is `10`, the obsolete
 `legendary_boss_registry` table is absent, and all three feature gates remain
 disabled. It runs the read-only diagnostics and the automated release,
 security, flow and build checks.

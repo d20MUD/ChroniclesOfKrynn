@@ -1199,6 +1199,7 @@ static const struct spec_func_data spec_func_list[] = {
     {"Guildmaster", guild, ""},
     {"Hunts Master", huntsmaster, ""},
     {"Identify Mob", identify_mob, ""},
+    {"Infusion Smith", infusion_smith, "Dragonmetal awakening and legendary item services"},
     {"Janitor", janitor, ""},
     {"Materials Exchanger", materials_exchanger, "Trade equivalent material varieties 1:1"},
     {"New Supply Orders", new_supply_orders, ""},

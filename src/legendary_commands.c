@@ -18,6 +18,7 @@
 #include "act.h"
 #include "estate.h"
 #include "legendary_commands.h"
+#include "spec_procs.h"
 #include "legendary_equipment.h"
 #include "legendary_identity.h"
 #include "legendary_transaction.h"
@@ -116,16 +117,21 @@ static unsigned long long item_fingerprint(struct obj_data *o)
 #undef MIX_FACT
   return h;
 }
+/* Assignable service marker. The normal infuse command owns parsing and quotes. */
+SPECIAL_DECL(infusion_smith)
+{
+  (void)ch; (void)me; (void)cmd; (void)argument;
+  return FALSE;
+}
+
 static long smith(struct char_data *ch)
 {
-  struct char_data *mob;MYSQL_RES *r;MYSQL_ROW row;char sql[180];bool yes;
+  struct char_data *mob;
   if(IN_ROOM(ch)==NOWHERE)return 0;
   for(mob=world[IN_ROOM(ch)].people;mob;mob=mob->next_in_room) {
     if(!IS_NPC(mob)||mob->master||mob->legendary_owned_instance||mob->legendary_test_encounter||
        AFF_FLAGGED(mob,AFF_CHARM)||GET_POS(mob)<=POS_SLEEPING||GET_MOB_RNUM(mob)==NOBODY)continue;
-    snprintf(sql,sizeof(sql),"SELECT enabled FROM legendary_smiths WHERE mob_vnum=%d",GET_MOB_VNUM(mob));
-    r=estate_select("%s",sql);if(!r)return 0;row=mysql_fetch_row(r);yes=row&&row[0]&&!strcmp(row[0],"1");mysql_free_result(r);
-    if(yes)return GET_ID(mob);
+    if(GET_MOB_SPEC(mob)==infusion_smith)return GET_ID(mob);
   }
   return 0;
 }
@@ -134,7 +140,7 @@ static bool service(struct char_data *ch)
   if(GET_LEVEL(ch)!=30||GET_HIT(ch)<=0||!ch->desc||STATE(ch->desc)!=CON_PLAYING||FIGHTING(ch)||GET_POS(ch)<=POS_SLEEPING) {
     send_to_char(ch,"Infusion requires a conscious level 30 character out of combat.\r\n");return false;
   }
-  if(!smith(ch)){send_to_char(ch,"Visit a registered dragonmetal smith for changes.\r\n");return false;}
+  if(!smith(ch)){send_to_char(ch,"Visit a dragonmetal infusion smith for changes.\r\n");return false;}
   if(!legendary_feature_enabled(LEG_FEATURE_PURCHASES)){
     send_to_char(ch,"Legendary purchases and reshapes are currently disabled.\r\n");return false;
   }
@@ -282,7 +288,7 @@ static void infuse_help(struct char_data *ch)
   send_to_char(ch,
     "Dragonmetal Awakening: infuse next <item> [primary|supporting] | inspect <item> [channel]\r\n"
     "infuse materials | paths <item> [channel] | choices <item> [channel] | loadout\r\n"
-    "At a registered smith, out of combat, at level 30:\r\n"
+    "At a infusion smith, out of combat, at level 30:\r\n"
     "infuse awaken <item> [primary] <path>\r\n"
     "infuse awaken <item> supporting <assault|guard|focus> <path>\r\n"
     "infuse advance <item> [channel]\r\n"
@@ -339,7 +345,7 @@ static void next_step(struct char_data *ch,struct obj_data *obj,const struct leg
   send_to_char(ch,"Next step for %s (%s):\r\n",obj->short_description,side);
   if(!c->present){
     cost=legendary_rank_costs[1];
-    send_to_char(ch,"Choose a path with infuse paths <item> %s, then ask the registered smith to infuse awaken <item> %s %s<path>.\r\n",side,side,channel?"<assault|guard|focus> ":"");
+    send_to_char(ch,"Choose a path with infuse paths <item> %s, then ask the infusion smith to infuse awaken <item> %s %s<path>.\r\n",side,side,channel?"<assault|guard|focus> ":"");
     send_to_char(ch,"Awakening is permanent and cannot transfer or refund its investment.\r\n");
   } else if(!c->foundation){
     send_to_char(ch,"Choose your free foundation: infuse choices <item> %s, then infuse select <item> %s foundation <Fxx>. Foundations share 12 points across your equipment.\r\n",side,side);return;
@@ -500,7 +506,7 @@ void legendary_infuse(struct char_data *ch,const char *argument)
   expire_quotes();
   if(IS_NPC(ch)){send_to_char(ch,"Players only.\r\n");return;}
   n=words(argument,w);if(n<0){send_to_char(ch,"Malformed, overlong, or unclosed quoted input.\r\n");return;}
-  if(!n){send_to_char(ch,"Dragonmetal Awakening: start with infuse next <item>.\r\nAt level 30, a registered smith can permanently awaken eligible level 20-30 equipment.\r\nUse infuse materials for your balances; infuse help for all commands.\r\nFoundations share 12 points; choose at most three active powers across all gear.\r\n");return;}
+  if(!n){send_to_char(ch,"Dragonmetal Awakening: start with infuse next <item>.\r\nAt level 30, a infusion smith can permanently awaken eligible level 20-30 equipment.\r\nUse infuse materials for your balances; infuse help for all commands.\r\nFoundations share 12 points; choose at most three active powers across all gear.\r\n");return;}
   if(n==1&&!strcasecmp(w[0],"help")){infuse_help(ch);return;}
   if(!strcasecmp(w[0],"cancel")&&n==1){legendary_infuse_cleanup(ch);send_to_char(ch,"Quote cancelled; no charges.\r\n");return;}
   if(!legendary_earnings_available()){send_to_char(ch,"Legendary service unavailable; required schema migration is not installed.\r\n");return;}

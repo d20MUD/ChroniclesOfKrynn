@@ -17,8 +17,13 @@
 #define PET_TRAINING_SKILL_CAP 5
 #define PET_TRAINING_SKILLS 5
 int companion_training_kind(struct char_data *pet);
+void remember_eidolon_training(struct char_data *pet);
+bool return_eidolon_gear(struct char_data *pet);
+bool return_all_eidolon_gear(struct char_data *owner);
+void restore_eidolon_training(struct char_data *owner, struct char_data *pet);
 void restore_companion_kind(struct char_data *pet, int kind);
 bool is_persistent_pet(struct char_data *pet);
+bool save_char_pets_checked(struct char_data *ch);
 void award_companion_training_exp(struct char_data *owner, struct char_data *victim, int reward);
 void train_companion_skill(struct char_data *owner, struct char_data *pet, const char *skill);
 void show_companion_training(struct char_data *owner, struct char_data *pet);

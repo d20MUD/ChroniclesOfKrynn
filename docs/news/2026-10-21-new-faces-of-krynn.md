@@ -140,7 +140,10 @@ The **energy ray** makes a ranged touch attack for **4d6 force damage**.
 with a Fortitude save to resist and a recharge of **1d4 combat rounds**.
 
 Racial **Dominate Person** is usable once per rolling **24 real hours**. Other
-racial spells are at will, subject to normal casting rules. Recharge times
+at-will racial spells share **10 points**, costing their wizard spell circle
+(for example, Fireball costs 3). The full pool refills five minutes after its
+first use. Energy ray costs no points and has no use limit; breath costs no
+points and keeps its own recharge. Use `innates` to check the pool. Recharge times
 persist across sessions; ordinary class spell slots remain separate from the
 racial domination use.
 

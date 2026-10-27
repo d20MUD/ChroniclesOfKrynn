@@ -128,6 +128,73 @@ bool is_persistent_pet(struct char_data *pet)
          (pet->mob_specials.purchased_pet || companion_training_kind(pet) > 0);
 }
 
+/* The main eidolon is a continuing bond, even when its summoned body is gone.
+ * Temporary reflections never read or write that bond's training. */
+void remember_eidolon_training(struct char_data *pet)
+{
+  struct char_data *owner;
+  int i, changed;
+  if (companion_training_kind(pet) != 4 || !(owner = pet->master) || IS_NPC(owner))
+    return;
+  /* A stale stored body or an expiring, untrained reflection must never roll
+   * the continuing bond backwards, even after its purge event is removed. */
+  if (owner->player_specials->saved.eidolon_training_saved &&
+      (pet->mob_specials.pet_training_rank < owner->player_specials->saved.eidolon_training_rank ||
+       (pet->mob_specials.pet_training_rank == owner->player_specials->saved.eidolon_training_rank &&
+        pet->mob_specials.pet_training_experience < owner->player_specials->saved.eidolon_training_experience)))
+    return;
+  if (owner->player_specials->saved.eidolon_training_saved)
+    for (i = 0; i < PET_TRAINING_SKILLS; i++)
+      if (pet->mob_specials.pet_training_skills[i] < owner->player_specials->saved.eidolon_training_skills[i])
+        return;
+  changed = !owner->player_specials->saved.eidolon_training_saved ||
+      owner->player_specials->saved.eidolon_training_rank != pet->mob_specials.pet_training_rank ||
+      owner->player_specials->saved.eidolon_training_experience != pet->mob_specials.pet_training_experience;
+  for (i = 0; i < PET_TRAINING_SKILLS; i++)
+    if (owner->player_specials->saved.eidolon_training_skills[i] != pet->mob_specials.pet_training_skills[i])
+      changed = TRUE;
+  if (!changed)
+    return;
+  owner->player_specials->saved.eidolon_training_saved = TRUE;
+  owner->player_specials->saved.eidolon_training_rank = pet->mob_specials.pet_training_rank;
+  owner->player_specials->saved.eidolon_training_experience = pet->mob_specials.pet_training_experience;
+  for (i = 0; i < PET_TRAINING_SKILLS; i++)
+    owner->player_specials->saved.eidolon_training_skills[i] = pet->mob_specials.pet_training_skills[i];
+  save_char(owner, 0);
+}
+
+void restore_eidolon_training(struct char_data *owner, struct char_data *pet)
+{
+  int i, delta, hit;
+  if (!owner || IS_NPC(owner) || companion_training_kind(pet) != 4 ||
+      !owner->player_specials->saved.eidolon_training_saved)
+    return;
+  hit = GET_HIT(pet);
+  /* Apply only the difference: DB-loaded bodies already include their bonuses. */
+  for (i = 0; i < PET_TRAINING_SKILLS; i++)
+  {
+    delta = owner->player_specials->saved.eidolon_training_skills[i] - pet->mob_specials.pet_training_skills[i];
+    switch (i)
+    {
+    case 0: GET_REAL_MAX_HIT(pet) += 20 * delta; break;
+    case 1: GET_REAL_HITROLL(pet) = MIN(127, MAX(-128, GET_REAL_HITROLL(pet) + delta)); break;
+    case 2: GET_REAL_DAMROLL(pet) = MIN(127, MAX(-128, GET_REAL_DAMROLL(pet) + delta)); break;
+    case 3: GET_REAL_AC(pet) = MIN(32767, MAX(-32768, GET_REAL_AC(pet) + 10 * delta)); break;
+    case 4:
+      {
+        int save;
+        for (save = 0; save < NUM_OF_SAVING_THROWS; save++) GET_REAL_SAVE(pet, save) += delta;
+      }
+      break;
+    }
+    pet->mob_specials.pet_training_skills[i] = owner->player_specials->saved.eidolon_training_skills[i];
+  }
+  pet->mob_specials.pet_training_rank = owner->player_specials->saved.eidolon_training_rank;
+  pet->mob_specials.pet_training_experience = owner->player_specials->saved.eidolon_training_experience;
+  affect_total(pet);
+  GET_HIT(pet) = MIN(hit, GET_MAX_HIT(pet));
+}
+
 static int companion_unspent_points(struct char_data *pet)
 {
   int i, points = pet->mob_specials.pet_training_rank;

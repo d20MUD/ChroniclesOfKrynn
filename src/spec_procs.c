@@ -6540,7 +6540,16 @@ SPECIAL(pet_shops)
     /* success! */
     decrease_gold(ch, PET_PRICE(pet));
 
-    pet = read_mobile(GET_MOB_RNUM(pet), REAL);
+    {
+      int price = PET_PRICE(pet);
+      pet = read_mobile(GET_MOB_RNUM(pet), REAL);
+      if (!pet)
+      {
+        increase_gold(ch, price);
+        send_to_char(ch, "The companion could not be created; your gold was returned.\r\n");
+        return TRUE;
+      }
+    }
     pet->mob_specials.purchased_pet = TRUE;
     pet->mob_specials.pet_experience = 0;
     GET_EXP(pet) = 0;
@@ -6612,6 +6621,15 @@ SPECIAL(pet_shops)
     IS_CARRYING_W(pet) = 1000;
     IS_CARRYING_N(pet) = 100;
 
+    if (!save_char_pets_checked(ch))
+    {
+      increase_gold(ch, PET_PRICE(pet));
+      stop_follower(pet);
+      extract_char(pet);
+      send_to_char(ch, "The companion could not be saved; your purchase was cancelled and gold returned.\r\n");
+      return TRUE;
+    }
+    save_char(ch, 0);
     send_to_char(ch, "May you enjoy your pet.\r\n");
     act("$n buys $N as a pet.", FALSE, ch, 0, pet, TO_ROOM);
 
@@ -10689,12 +10707,24 @@ SPECIAL(bought_pet)
     pet->mob_specials.pet_experience = 0;
     GET_EXP(pet) = 0;
 
+    if (!save_char_pets_checked(obj->carried_by))
+    {
+      send_to_char(obj->carried_by, "The companion could not be saved. Your purchase item has been kept.\r\n");
+      stop_follower(pet);
+      extract_char(pet);
+      return TRUE;
+    }
+
     /* success message */
     send_to_char(obj->carried_by, "You have acquired a companion.\r\n");
 
-    /* get rid of the purchased object */
-    obj_from_char(obj);
-    extract_obj(obj);
+    /* Persist consumption too: a reconnect must not recreate a second pet. */
+    {
+      struct char_data *owner = obj->carried_by;
+      obj_from_char(obj);
+      extract_obj(obj);
+      perform_save(owner, 0);
+    }
 
     /* bingo */
     return TRUE;

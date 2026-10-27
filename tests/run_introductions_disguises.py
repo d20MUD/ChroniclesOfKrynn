@@ -20,7 +20,7 @@ def function(file, signature):
 headers = '\n'.join('#include "' + h + '"' for h in [
     'conf.h', 'sysdep.h', 'structs.h', 'utils.h', 'comm.h', 'interpreter.h',
     'db.h', 'handler.h', 'act.h', 'spells.h', 'char_descs.h', 'roleplay.h',
-    'race.h', 'mud_event.h', 'spec_procs.h', 'dg_scripts.h', 'domains_schools.h', 'constants.h'])
+    'race.h', 'mob_utils.h', 'mud_event.h', 'spec_procs.h', 'dg_scripts.h', 'domains_schools.h', 'constants.h'])
 stubs = r'''
 #include <assert.h>
 #define MAX(a,b) ((a)>(b)?(a):(b))
@@ -61,6 +61,18 @@ int mag_damage(int level, struct char_data *ch, struct char_data *vict, struct o
 void mag_affects(int level, struct char_data *ch, struct char_data *vict, struct obj_data *obj, int spell, int save, int type, int meta) {}
 void mag_points(int level, struct char_data *ch, struct char_data *vict, struct obj_data *obj, int spell, int save, int type) {}
 
+/* Wizard-circle adapter: explicit spell costs are asserted below. */
+int compute_spells_circle(struct char_data *ch, int cls, int spell, int meta, int domain) {
+  assert(cls==CLASS_WIZARD && !meta && !domain);
+  switch(spell) {
+    case SPELL_DISGUISE_SELF: case SPELL_MAGIC_MISSILE: case SPELL_CHARM: return 1;
+    case SPELL_MIRROR_IMAGE: return 2;
+    case SPELL_FIREBALL: case SPELL_DISPEL_MAGIC: return 3;
+    case SPELL_GREATER_INVIS: return 4;
+    default: assert(0); return 10;
+  }
+}
+bool is_action_available(struct char_data *ch, int action, bool display) { return TRUE; }
 int dice(int number, int size) { return number*size; }
 bool can_poison(struct char_data *ch) { return test_poisonable; }
 bool can_blind(struct char_data *ch) { return test_blindable; }
@@ -171,6 +183,7 @@ code += spells[a:spells.index('ASPELL(spell_polymorph)', a)]
 code += function('act.other.c', 'ACMD(do_disguise)')
 code += function('introduce.c', 'ACMD(do_introduce)')
 code += function('players.c', 'static void load_introductions(FILE *fl, struct char_data *ch)')
+code += function('players.c', 'static void load_eidolon_training(struct char_data *ch, const char *line)')
 players = (src / 'players.c').read_text()
 a = players.index('  if (ch->player_specials->saved.disguise_generation)\n    BUFFER_WRITE')
 b = players.index('  /* Save introduction list */', a)
@@ -181,6 +194,9 @@ code += '\nstatic void load_active_race(struct char_data *ch, const char *line) 
 code += '\nstatic void save_identity(struct char_data *ch) {\n#define BUFFER_WRITE(...) do { char part[2048]; int len=snprintf(part,sizeof(part),__VA_ARGS__); assert(len>=0 && len<sizeof(part)); send_to_char(ch,"%s",part); } while(0)\n' + players[a:b] + '\n#undef BUFFER_WRITE\n}\n'
 # Exercise the actual racial spell eligibility, cooldown and effect code.
 code += function('spell_parser.c', 'bool isAurakMagic(struct char_data *ch, int spellnum)')
+code += function('spell_parser.c', 'int aurak_magic_cost(struct char_data *ch, int spellnum)')
+code += function('spell_parser.c', 'int aurak_magic_points(struct char_data *ch)')
+code += function('spell_parser.c', 'static bool aurak_magic_has_points(struct char_data *ch, int spellnum)')
 code += function('spell_parser.c', 'bool prepare_aurak_magic(struct char_data *ch, int spellnum, int casttype)')
 magic = (src / 'magic.c').read_text()
 a = magic.index('void mag_loops(')
@@ -557,6 +573,7 @@ int main(void) {
     race_list[DL_RACE_IRDA].family=RACE_TYPE_HUMANOID;
     race_list[DL_RACE_IRDA].size=SIZE_MEDIUM;
     GET_REAL_RACE(alice)=DL_RACE_IRDA;
+    HAS_REAL_FEAT(alice,FEAT_IRDA_CHANGE_SHAPE)=1;
     GET_ABILITY(alice,ABILITY_DISGUISE)=0;
     do_disguise(alice,"form human | old-aged | female | hair:43 | eyes:2",0,0);
     assert(IS_IRDA_FORM(alice) && GET_RACE(alice)==0 && GET_REAL_RACE(alice)==DL_RACE_IRDA);
@@ -740,12 +757,61 @@ int main(void) {
     assert(alice->player_specials->saved.aurak_breath_ready>=now+6 && alice->player_specials->saved.aurak_breath_ready<=time(NULL)+24);
     assert(!prepare_aurak_magic(alice,SPELL_AURAK_BREATH,CAST_INNATE));
     assert(prepare_aurak_magic(alice,SPELL_AURAK_ENERGY_RAY,CAST_INNATE));
-    *output=0; save_identity(alice); assert(strstr(output,"AuDm:") && strstr(output,"AuBr:"));
+    /* Shared pool: race level only unlocks spells; cost uses wizard circles. */
+    assert(aurak_magic_points(alice)==10 && !alice->player_specials->saved.aurak_magic_refresh);
+    assert(aurak_magic_cost(alice,SPELL_DISGUISE_SELF)==1);
+    assert(aurak_magic_cost(alice,SPELL_MAGIC_MISSILE)==1);
+    assert(aurak_magic_cost(alice,SPELL_CHARM)==1);
+    assert(aurak_magic_cost(alice,SPELL_MIRROR_IMAGE)==2);
+    assert(aurak_magic_cost(alice,SPELL_FIREBALL)==3);
+    assert(aurak_magic_cost(alice,SPELL_DISPEL_MAGIC)==3);
+    assert(aurak_magic_cost(alice,SPELL_GREATER_INVIS)==4);
+    assert(aurak_magic_cost(alice,SPELL_DOMINATE_PERSON)==0);
+    assert(aurak_magic_cost(alice,SPELL_AURAK_ENERGY_RAY)==0);
+    assert(aurak_magic_cost(alice,SPELL_AURAK_BREATH)==0);
+    /* Validation and independent class/device casts must not spend points. */
+    assert(aurak_magic_has_points(alice,SPELL_FIREBALL));
+    assert(prepare_aurak_magic(alice,SPELL_FIREBALL,CAST_DEVICE));
+    assert(prepare_aurak_magic(alice,SPELL_FIREBALL,CAST_SPELL));
+    assert(!alice->player_specials->saved.aurak_magic_refresh);
+    assert(prepare_aurak_magic(alice,SPELL_FIREBALL,CAST_INNATE));
+    assert(aurak_magic_points(alice)==7);
+    assert(alice->player_specials->saved.aurak_magic_refresh>=now+300 &&
+           alice->player_specials->saved.aurak_magic_refresh<=time(NULL)+300);
+    { time_t refill=alice->player_specials->saved.aurak_magic_refresh;
+      assert(prepare_aurak_magic(alice,SPELL_MIRROR_IMAGE,CAST_INNATE));
+      assert(prepare_aurak_magic(alice,SPELL_GREATER_INVIS,CAST_INNATE));
+      assert(aurak_magic_points(alice)==1);
+      old_saves=saves;
+      assert(!prepare_aurak_magic(alice,SPELL_FIREBALL,CAST_INNATE));
+      assert(aurak_magic_points(alice)==1 && saves==old_saves);
+      assert(alice->player_specials->saved.aurak_magic_refresh==refill);
+      assert(prepare_aurak_magic(alice,SPELL_MAGIC_MISSILE,CAST_INNATE));
+      assert(aurak_magic_points(alice)==0);
+      assert(!prepare_aurak_magic(alice,SPELL_DISGUISE_SELF,CAST_INNATE));
+      for(i=0;i<20;i++) assert(prepare_aurak_magic(alice,SPELL_AURAK_ENERGY_RAY,CAST_INNATE));
+      alice->player_specials->saved.aurak_breath_ready=0;
+      assert(prepare_aurak_magic(alice,SPELL_AURAK_BREATH,CAST_INNATE));
+      assert(!prepare_aurak_magic(alice,SPELL_AURAK_BREATH,CAST_INNATE));
+      assert(aurak_magic_points(alice)==0 && alice->player_specials->saved.aurak_magic_refresh==refill);
+    }
+    *output=0; save_identity(alice); assert(strstr(output,"AuDm:") && strstr(output,"AuBr:") && strstr(output,"AuMp:"));
     loaded=new_pc("Alice",1); GET_REAL_RACE(loaded)=DL_RACE_AURAK_DRACONIAN;
     HAS_REAL_FEAT(loaded,FEAT_AURAK_MAGIC)=1; GET_LEVEL(loaded)=9;
     { char *tag=strstr(output,"AuDm:"); load_aurak_timers(loaded,"AuDm",tag+5);
-      tag=strstr(output,"AuBr:"); load_aurak_timers(loaded,"AuBr",tag+5); }
+      tag=strstr(output,"AuBr:"); load_aurak_timers(loaded,"AuBr",tag+5);
+      tag=strstr(output,"AuMp:"); load_aurak_timers(loaded,"AuMp",tag+5); }
     assert(loaded->player_specials->saved.aurak_dominate_ready==ready);
+    assert(aurak_magic_points(loaded)==0);
+    assert(!prepare_aurak_magic(loaded,SPELL_FIREBALL,CAST_INNATE));
+    assert(prepare_aurak_magic(loaded,SPELL_AURAK_ENERGY_RAY,CAST_INNATE));
+    load_aurak_timers(loaded,"AuMp","-1 9999999999"); assert(aurak_magic_points(loaded)==0);
+    load_aurak_timers(loaded,"AuMp","11 9999999999"); assert(aurak_magic_points(loaded)==0);
+    loaded->player_specials->saved.aurak_magic_refresh=time(NULL)-1;
+    assert(aurak_magic_points(loaded)==10);
+    assert(prepare_aurak_magic(loaded,SPELL_FIREBALL,CAST_INNATE));
+    assert(aurak_magic_points(loaded)==7);
+
     assert(!prepare_aurak_magic(loaded,SPELL_DOMINATE_PERSON,CAST_INNATE));
     assert(!prepare_aurak_magic(loaded,SPELL_AURAK_BREATH,CAST_INNATE));
     loaded->player_specials->saved.aurak_dominate_ready=time(NULL)-1;

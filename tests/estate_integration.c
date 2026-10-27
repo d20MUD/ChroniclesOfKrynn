@@ -678,6 +678,49 @@ static void test_stalls(struct char_data *seller, struct char_data *buyer,
   estate_recover(seller);
   assert(GET_GOLD(seller) == gold - 100);
   assert(scalar("SELECT COUNT(*) FROM estate_deliveries WHERE delivered=0") == 0);
+  /* Room deletion retires every slot atomically, preserving stock and proceeds. */
+  char_from_room(seller); char_to_room(seller, 1);
+  stall(seller, "rent 2");
+  obj = item("retirementstock"); obj_to_char(obj, seller);
+  stall(seller, "sell retirementstock 50");
+  first = scalar("SELECT MAX(listing_id) FROM player_shop_listings");
+  stall(buyer, "buy %ld", first);
+  obj = item("retirementspare"); obj_to_char(obj, seller);
+  stall(seller, "sell retirementspare 75");
+  second = scalar("SELECT MAX(listing_id) FROM player_shop_listings");
+  stall(seller, "admin delete-room 2200");
+  assert(scalar("SELECT COUNT(*) FROM player_shop_stalls WHERE room_vnum=2200") == 3);
+  stall(staff, "admin delete-room 2200 extra");
+  assert(scalar("SELECT COUNT(*) FROM player_shop_stalls WHERE room_vnum=2200") == 3);
+  assert(estate_query("CREATE TRIGGER reject_market_delete BEFORE UPDATE ON player_shop_stalls "
+                      "FOR EACH ROW BEGIN IF NEW.room_vnum=-1 THEN SIGNAL SQLSTATE '45000' SET "
+                      "MESSAGE_TEXT='test market deletion failure'; END IF; END"));
+  stall(staff, "admin delete-room 2200");
+  assert(scalar("SELECT COUNT(*) FROM player_shop_stalls WHERE room_vnum=2200") == 3);
+  assert(scalar("SELECT COUNT(*) FROM player_shop_leases WHERE held_stall=2") == 1);
+  assert(scalar("SELECT COUNT(*) FROM player_shop_events WHERE action='delete-room'") == 0);
+  assert(estate_query("DROP TRIGGER reject_market_delete"));
+  stall(staff, "admin delete-room 2200");
+  assert(strstr(output, "Removed 3 stalls"));
+  assert(scalar("SELECT COUNT(*) FROM player_shop_stalls WHERE room_vnum=2200") == 0);
+  assert(scalar("SELECT COUNT(*) FROM player_shop_leases WHERE held_stall IS NOT NULL") == 0);
+  stall(buyer, "directory"); assert(!strstr(output, "Test Market"));
+  output[0] = 0; player_shop_show_room(buyer); assert(!*output);
+  stall(staff, "admin enable 2");
+  assert(scalar("SELECT enabled FROM player_shop_stalls WHERE stall_id=2") == 0);
+  stall(buyer, "rent 2");
+  assert(scalar("SELECT COUNT(*) FROM player_shop_leases WHERE held_stall IS NOT NULL") == 0);
+  stall(buyer, "buy %ld", second);
+  assert(scalar("SELECT COUNT(*) FROM player_shop_listings WHERE state='active'") == 1);
+  char_from_room(seller); char_to_room(seller, 0);
+  items = IS_CARRYING_N(seller);
+  stall(seller, "info"); assert(strstr(output, "retirementspare"));
+  stall(seller, "withdraw %ld", second); assert(IS_CARRYING_N(seller) == items + 1);
+  gold = GET_GOLD(seller); stall(seller, "collect"); assert(GET_GOLD(seller) == gold + 50);
+  stall(staff, "admin history 2"); assert(strstr(output, "delete-room"));
+  stall(staff, "admin delete-room 2200"); assert(strstr(output, "no stalls configured"));
+  stall(staff, "admin add 2200 1");
+  stall(buyer, "directory"); assert(strstr(output, "Test Market") && !strstr(output, "#2:"));
   seller->desc = buyer->desc = guest->desc = NULL;
   puts("PASS: player stalls: account limits, local purchases, typed gear, capacity, rent/grace, "
        "tenant isolation, recovery, proceeds, staff controls and idempotent money journal");

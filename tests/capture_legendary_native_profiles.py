@@ -48,7 +48,7 @@ def main():
                 time.sleep(.1)
             else:raise RuntimeError('Sandbox SQL unavailable')
             subprocess.run([*client,'-e','CREATE DATABASE estate_test'],check=True)
-            migration=''.join((ROOT/'sql'/name).read_text() for name in ['20261023_legendary_objects.sql','20261024_legendary_transactions.sql','20261024_legendary_earnings.sql','20261024_legendary_smiths.sql','20261024_legendary_effects.sql','20261025_legendary_item_passives.sql','20261025_legendary_release_controls.sql','20261026_legendary_mob_bosses.sql'])
+            migration=''.join((ROOT/'sql'/name).read_text() for name in ['20261023_legendary_objects.sql','20261024_legendary_transactions.sql','20261024_legendary_earnings.sql','20261024_legendary_smiths.sql','20261024_legendary_effects.sql','20261025_legendary_item_passives.sql','20261025_legendary_release_controls.sql','20261026_legendary_mob_bosses.sql','20261026_legendary_smith_specproc.sql','20261026_legendary_daily_limits.sql'])
             subprocess.run([*client,'estate_test'],input=migration,text=True,check=True)
             captured=[]
             runs=[(None,None)] if not args.probe else [(seconds,mode) for seconds in (30,600) for mode in ('baseline','control','legendary')]

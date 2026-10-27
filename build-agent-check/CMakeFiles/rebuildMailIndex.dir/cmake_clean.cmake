@@ -1,6 +1,7 @@
 file(REMOVE_RECURSE
   "/home/krynn/code/bin/rebuildMailIndex"
   "/home/krynn/code/bin/rebuildMailIndex.pdb"
+  "CMakeFiles/rebuildMailIndex.dir/link.d"
   "CMakeFiles/rebuildMailIndex.dir/util/rebuildMailIndex.c.o"
   "CMakeFiles/rebuildMailIndex.dir/util/rebuildMailIndex.c.o.d"
 )

@@ -1,11 +1,10 @@
 -- Phase 15 reviewed service configuration. This file is intentionally NOT a
 -- world-file edit and does not enable the global earnings/purchase/effect gates.
--- Apply only after schema v8 and the content-verification script pass.
+-- Apply only after schema v9 and the content-verification script pass.
 
--- Lord Orelor is an existing Elder Forger of Reorx: mob 10500, reset into room
--- 8795 by zone 87.  His service remains inert until purchases are enabled.
-INSERT INTO legendary_smiths(mob_vnum,enabled) VALUES (10500,TRUE)
-ON DUPLICATE KEY UPDATE enabled=VALUES(enabled),version=version+1;
+-- Assign Infusion Smith to Lord Orelor Silverveins (mob 10500, room 8795)
+-- through MEDIT's Special Procedure menu and save the mobile's zone file.
+-- This is world content, not database configuration. Purchases remain gated.
 
 -- Bosses are no longer database configuration. Set the MEDIT mobile flag
 -- Legendary-Boss (MOB_LEGENDARY_BOSS) on approved encounter prototypes, then

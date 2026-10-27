@@ -3943,6 +3943,15 @@ ACMD(do_innates)
   int race = -1;
 
   send_to_char(ch, "\tmAbility\tn Innates:\r\n\r\n");
+  if (isAurakMagic(ch, SPELL_DISGUISE_SELF))
+  {
+    send_to_char(ch, "Aurak magic: %d/10 points", aurak_magic_points(ch));
+    if (ch->player_specials->saved.aurak_magic_refresh > time(NULL))
+      send_to_char(ch, "; full refill in %ld seconds",
+                   (long)(ch->player_specials->saved.aurak_magic_refresh - time(NULL)));
+    send_to_char(ch, ".\r\n\r\n");
+  }
+
   send_to_char(ch, "\tMRacial:\tn\r\n");
   if (IS_NPC(ch) || IS_MORPHED(ch))
   {

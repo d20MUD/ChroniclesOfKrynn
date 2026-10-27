@@ -329,8 +329,16 @@ make Fortitude saves or take a temporary 1d2 Strength penalty for 1d4 rounds,
 with blindness for the same duration if susceptible. Poison-immune targets are
 unaffected. The breath recharges after 1d4 six-second combat rounds.
 
-Dominate person is available once per rolling 24 real hours. Other racial spells
-are at will, subject to normal casting actions and restrictions. Cooldowns are
+Dominate person is available once per rolling 24 real hours. Energy ray has no
+use limit, and breath keeps its own recharge; neither costs spell points.
+The other at-will racial spells share **10 points**, costing their base wizard
+circle: disguise self, magic missile and charm cost 1; mirror image costs 2;
+fireball and dispel magic cost 3; greater invisibility costs 4. The entire pool
+refills five minutes after its first use. Later casts do not postpone that refill.
+`innates` shows the remaining points and refill timer. Points persist through
+logout and restart via the `AuMp` player-file tag. Prepared class casts and
+devices do not spend this pool. Normal casting actions and restrictions apply.
+Cooldowns and points are
 spent only at effect dispatch after the existing room, target, PvP and antimagic
 checks; a resisted invocation still spends its use. Independent magic devices
 do not consume racial cooldowns. The `AuDm` and `AuBr` player-file tags save

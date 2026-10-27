@@ -15,7 +15,7 @@ const char *const legendary_family_names[4] = {"None", "Assault", "Guard", "Focu
 const char *const legendary_modifier_names[4] = {"None", "Enduring", "Ready", "Distant aid"};
 
 const struct legendary_rules legendary_rules = {
-  .daily_fragments=100, .daily_essences=20, .daily_catalysts=1,
+  .daily_fragments=200, .daily_essences=40, .daily_catalysts=2,
   .global_cooldown=6, .quote_seconds=60, .boss_cooldown_seconds=72000,
   .participation_actions=3, .participation_recent=30,
   .encounter_expiry=180, .offense_limit=60, .prevention_limit=100, .healing_limit=100,

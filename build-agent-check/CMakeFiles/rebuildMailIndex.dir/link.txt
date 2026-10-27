@@ -1,1 +1,1 @@
-/usr/bin/cc  -Wall -Wno-char-subscripts -g CMakeFiles/rebuildMailIndex.dir/util/rebuildMailIndex.c.o -o /home/krynn/code/bin/rebuildMailIndex 
+/usr/bin/cc  -Wall -Wno-char-subscripts -g -Wl,--dependency-file=CMakeFiles/rebuildMailIndex.dir/link.d CMakeFiles/rebuildMailIndex.dir/util/rebuildMailIndex.c.o -o /home/krynn/code/bin/rebuildMailIndex

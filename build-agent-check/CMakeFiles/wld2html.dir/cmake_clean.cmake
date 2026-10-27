@@ -1,6 +1,7 @@
 file(REMOVE_RECURSE
   "/home/krynn/code/bin/wld2html"
   "/home/krynn/code/bin/wld2html.pdb"
+  "CMakeFiles/wld2html.dir/link.d"
   "CMakeFiles/wld2html.dir/util/wld2html.c.o"
   "CMakeFiles/wld2html.dir/util/wld2html.c.o.d"
 )

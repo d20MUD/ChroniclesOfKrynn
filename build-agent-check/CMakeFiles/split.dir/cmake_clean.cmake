@@ -1,6 +1,7 @@
 file(REMOVE_RECURSE
   "/home/krynn/code/bin/split"
   "/home/krynn/code/bin/split.pdb"
+  "CMakeFiles/split.dir/link.d"
   "CMakeFiles/split.dir/util/split.c.o"
   "CMakeFiles/split.dir/util/split.c.o.d"
 )

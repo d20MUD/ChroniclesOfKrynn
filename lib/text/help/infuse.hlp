@@ -17,7 +17,7 @@ Start anywhere:
   infuse use <power-ID|quoted name> [target]
   infuse track
 
-For changes, visit a registered dragonmetal smith while out of combat:
+For changes, visit a dragonmetal infusion smith while out of combat:
   infuse awaken <item> [primary] <path>
   infuse awaken <item> supporting <assault|guard|focus> <path>
   infuse advance <item> [primary|supporting]
@@ -64,7 +64,7 @@ Exchange personal materials:
 
 Each output essence costs three of another essence. One catalyst costs
 100 fragments and 20 essences. Outputs count against daily acquisition
-limits (100 fragments, 20 essences, 1 catalyst), shared with boss rewards.
+limits (200 fragments, 40 essences, 2 catalysts), shared with boss rewards.
 Materials shows remaining allowances and the next midnight UTC reset.
 
 Every change first displays an exact quote; nothing is spent until:

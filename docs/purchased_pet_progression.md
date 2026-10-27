@@ -11,7 +11,22 @@ Stored pets leave no corpse and generate no random loot. The pet's identity, lev
 - `pets revive <ID>` costs 500 carried gold per pet level and returns the same pet at full health with its equipment and inventory restored. Requires follower space and being outside combat.
 - `pets discard <ID> CONFIRM` returns stored worn gear and inventory to the owner's inventory, and returns held gold and permanently deletes that pet, including XP and training. No gold fee. Requires enough inventory capacity and being outside combat.
 
-Stored pets survive logout and ordinary saves; login only loads living pets. Owner-scoped record selection and one-time revival/discard prevent retrieving another player's pets or retrieving the same gear twice. Gear rows restore in saved ID order, including items saved during the same second. Failed restoration retains the stored state and refunds revival gold. Discard checks capacity and commits deletion before transferring items, then saves the owner's inventory. Dismissal/replacement creates a fresh companion and does not carry over an old pet's training.
+Stored pets survive logout and ordinary saves; login only loads living pets. Owner-scoped record selection and one-time revival/discard prevent retrieving another player's pets or retrieving the same gear twice. Gear rows restore in saved ID order, including items saved during the same second. Failed restoration retains the stored state and refunds revival gold. Discard checks capacity and commits deletion before transferring items, then saves the owner's inventory. Dismissal/replacement normally creates a fresh companion without the old pet's training. The main eidolon is an exception: its training belongs to the owner's continuing eidolon bond and is restored when called again. Temporary reflections never share that training.
+
+## Existing-server upgrade and purchases
+
+Apply `sql/20261027_pet_persistence.sql` to older pet tables before deploying
+these companion features. It adds missing progression/death/training columns
+without removing existing pets or equipment. Missing `pet_dead` causes both
+saving and `pets fallen` to fail; a server reboot alone does not run this
+explicit migration.
+
+Successful pet-shop purchases, including the Silver Sword mercenaries in room
+15306, save their owner and companion immediately. A failed companion save
+cancels the purchase and refunds its gold. Companion purchase objects are kept
+if conversion cannot be saved. Purchased companions return automatically on
+login; `summon` is not a purchase-recovery command. The shop continues listing
+its usual stock and prices after a sale.
 
 ## Purchased pet levels
 
@@ -34,6 +49,35 @@ Maximum training rank is 10. Each rank requires 2,000 times that next rank in XP
 | `pets train <pet> saves` | 1 pet skill point | +1 to all saving throws |
 
 Use the pet's targeting keyword, including `2.keyword` for duplicates. Training requires ownership, presence in the owner's room and neither owner nor pet being in combat. Health training preserves current HP. Training ranks, remaining XP, skill purchases and improved stats persist across logout, death and revival; they belong to that individual pet.
+
+## Eidolon equipment on dismissal and logout
+
+Dismissing your main eidolon automatically returns its worn equipment, carried
+items (including container contents), and gold to you. Logging out or timing out
+while linkdead returns those belongings before removing the eidolon as well.
+You do not need to order it to unequip and hand back each item individually.
+
+Returns use the estate delivery journal. Removing the eidolon's saved gear and
+recording the owner deliveries happen in one database transaction. If that
+fails, the eidolon keeps its belongings and dismissal/logout stops. If delivery
+is interrupted after the transaction commits, the saved returns recover on
+login. Returned gear is not also restored on the eidolon. Equipment on a fallen
+eidolon remains in its existing death archive for `pets revive` or `pets discard`.
+
+## Eidolon re-summoning
+
+The main eidolon's rank, partial training XP, and purchased skills survive
+`dismiss eidolon`, logout, death, and reboot. Training is saved with the owner
+in an `EiTr` player-file record as well as on an existing saved body. Calling a
+new main eidolon restores those ranks and skills, applying their bonuses once.
+Re-summoning does not grant additional points or train temporary reflections.
+Existing living or revived eidolons seed the owner-side record automatically.
+Returning to an older saved body uses the current bond's training.
+
+For a fallen companion whose original body is still saved, use `pets fallen`
+and `pets revive <ID>` to retrieve that body with its saved training and gear.
+Training already overwritten before this fix needs a surviving record or backup
+to recover; this change does not invent previously lost XP.
 
 ## Persistence and validation
 

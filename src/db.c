@@ -6621,6 +6621,14 @@ void free_char(struct char_data *ch)
       if (GET_HISTORY(ch, i))
         free_history(ch, i);
 
+    while (ch->player_specials->saved.clan_login_notices)
+    {
+      struct txt_block *notice = ch->player_specials->saved.clan_login_notices;
+      ch->player_specials->saved.clan_login_notices = notice->next;
+      free(notice->text);
+      free(notice);
+    }
+
     /* free todo list - must be done before freeing player_specials */
     if (ch && ch->player_specials && GET_TODO(ch))
     {

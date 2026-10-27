@@ -49,8 +49,8 @@ def main() -> None:
         checked(args.world, vnum, *data)
     # No MySQL registry may sneak back into the release configuration.
     registry = (ROOT / 'sql/20261025_legendary_release_registry.sql').read_text()
-    if 'legendary_boss_registry' in registry:
-        raise RuntimeError('release configuration must not contain a MySQL boss registry')
+    if 'legendary_boss_registry' in registry or 'legendary_smiths' in registry:
+        raise RuntimeError('release configuration must not contain a MySQL boss or smith registry')
     print(f'PASS: verified smith and {len(BOSSES)} approved mobile candidates; builder flags remain a reviewed world edit')
 
 if __name__ == '__main__':

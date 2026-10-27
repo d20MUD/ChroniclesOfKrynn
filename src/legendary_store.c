@@ -41,10 +41,10 @@ bool legendary_schema_ready(void)
   res=estate_select("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() "
     "AND table_name IN ('legendary_schema','legendary_characters','legendary_items',"
     "'legendary_channels','legendary_cooldowns','legendary_budgets','legendary_boss_claims',"
-    "'legendary_quest_xp_claims','legendary_operations','legendary_dragonlances','legendary_awards','legendary_smiths','legendary_activations','legendary_features') "
+    "'legendary_quest_xp_claims','legendary_operations','legendary_dragonlances','legendary_awards','legendary_activations','legendary_features') "
     "AND engine='InnoDB'");
   if (!res) return false;
-  row=mysql_fetch_row(res); ok=row && row[0] && !strcmp(row[0],"14");
+  row=mysql_fetch_row(res); ok=row && row[0] && !strcmp(row[0],"13");
   mysql_free_result(res); return ok;
 }
 

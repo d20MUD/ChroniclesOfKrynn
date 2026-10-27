@@ -107,8 +107,13 @@ Noxious Breath:        - Affects eligible enemies in the room; Fortitude negates
                        - Inflicts a 1d2 Strength penalty and blindness for 1d4 rounds.
                        - Poison immunity prevents the breath; blindness immunity prevents blindness.
                        - Recharges after 1d4 combat rounds.
-Dominate Person:       - Once per rolling 24 real hours; other racial spells are at will.
-Persistent Recharge:   - Breath and domination recharge times persist across sessions.
+Aurak Spell Points:    - Other at-will racial spells share 10 points; each costs its wizard circle.
+                       - Full refill five minutes after first spending points. Use innates to check.
+                       - 1 point: disguise self, magic missile, charm. 2 points: mirror image.
+                       - 3 points: fireball, dispel magic. 4 points: greater invisibility.
+                       - Energy ray and breath cost no points; breath keeps its own recharge.
+Dominate Person:       - Once per rolling 24 real hours; does not spend spell points.
+Persistent Recharge:   - Spell points, breath and domination recharge persist across sessions.
 Disguise Self:         - +10 to Disguise; use disguise to change your visible appearance.
 Death Throes:          - On death, a 3d6 force burst hits eligible enemies; Reflex halves damage.
                        - Equipment and resurrection follow normal rules.

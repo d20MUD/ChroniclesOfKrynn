@@ -1,6 +1,7 @@
 file(REMOVE_RECURSE
   "/home/krynn/code/bin/autowiz"
   "/home/krynn/code/bin/autowiz.pdb"
+  "CMakeFiles/autowiz.dir/link.d"
   "CMakeFiles/autowiz.dir/util/autowiz.c.o"
   "CMakeFiles/autowiz.dir/util/autowiz.c.o.d"
 )

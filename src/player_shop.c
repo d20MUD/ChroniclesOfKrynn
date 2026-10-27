@@ -14,6 +14,8 @@
 #include "spells.h"
 
 #define STALL_MAX_PRICE 99999999L
+/* Retain historical leases/stock/sales without keeping a market in a room. */
+#define STALL_REMOVED_ROOM -1
 
 /* The standalone SQL migration is generated from these same definitions. */
 static const char *stall_schema[] = {
@@ -56,7 +58,7 @@ static int stall_ready;
 
 static int refresh_rooms(void)
 {
-  MYSQL_RES *res = estate_select("SELECT DISTINCT room_vnum FROM player_shop_stalls");
+  MYSQL_RES *res = estate_select("SELECT DISTINCT room_vnum FROM player_shop_stalls WHERE room_vnum>=0");
   MYSQL_ROW row;
   struct stall_room *room;
   if (!res)
@@ -184,7 +186,7 @@ static void list_stalls(struct char_data *ch, int directory)
                       "COALESCE(l.name,'Available'),COALESCE(l.owner_name,''),"
                       "COALESCE(l.expires_at,''),COALESCE(l.expires_at>NOW(),0) "
                       "FROM player_shop_stalls s LEFT JOIN player_shop_leases l "
-                      "ON l.held_stall=s.stall_id WHERE (%d=1 OR s.room_vnum=%d) "
+                      "ON l.held_stall=s.stall_id WHERE s.room_vnum>=0 AND (%d=1 OR s.room_vnum=%d) "
                       "ORDER BY s.room_vnum,s.stall_id LIMIT 200", directory, here(ch));
   if (!res)
     return;
@@ -596,6 +598,46 @@ static void admin(struct char_data *ch, const char *text)
     goto usage;
   for (i = 0; i < 4; i++)
     text = one_argument(text, args[i], sizeof(args[i]));
+  if (!str_cmp(verb, "delete-room"))
+  {
+    if (*args[0])
+      goto usage;
+    if (!estate_query("START TRANSACTION"))
+      return;
+    /* Match rent's stall-first locking order, then release all reservations.
+     * Keep foreign-key targets so former tenants can retrieve stock/proceeds. */
+    res = estate_select("SELECT stall_id FROM player_shop_stalls WHERE room_vnum=%ld "
+                        "ORDER BY stall_id FOR UPDATE", id);
+    if (!res)
+      goto fail;
+    count = mysql_num_rows(res);
+    if (!count)
+    {
+      mysql_free_result(res);
+      estate_query("ROLLBACK");
+      send_to_char(ch, "There are no stalls configured in room %ld.\r\n", id);
+      return;
+    }
+    while ((row = mysql_fetch_row(res)))
+      if (!audit(ch, atol(row[0]), "delete-room", id))
+      {
+        mysql_free_result(res);
+        goto fail;
+      }
+    mysql_free_result(res);
+    if (!estate_query("UPDATE player_shop_leases l JOIN player_shop_stalls s USING(stall_id) "
+                      "SET l.held_account=NULL,l.held_stall=NULL WHERE s.room_vnum=%ld", id) ||
+        !estate_query("UPDATE player_shop_stalls SET enabled=0,room_vnum=%d WHERE room_vnum=%ld",
+                      STALL_REMOVED_ROOM, id))
+      goto fail;
+    if (finish(ch))
+    {
+      if (!refresh_rooms())
+        stall_ready = FALSE;
+      send_to_char(ch, "Removed %ld stalls from room %ld. Owners retain their items and earnings.\r\n", count, id);
+    }
+    return;
+  }
   if (!str_cmp(verb, "history"))
   {
     res = estate_select("SELECT actor_id,action,amount,created_at FROM player_shop_events "
@@ -610,14 +652,14 @@ static void admin(struct char_data *ch, const char *text)
   }
   if (str_cmp(verb, "add"))
   {
-    res = estate_select("SELECT stall_id FROM player_shop_stalls WHERE stall_id=%ld", id);
+    res = estate_select("SELECT stall_id FROM player_shop_stalls WHERE stall_id=%ld AND room_vnum>=0", id);
     if (!res)
       return;
     i = mysql_num_rows(res) != 0;
     mysql_free_result(res);
     if (!i)
     {
-      send_to_char(ch, "There is no stall with that ID.\r\n");
+      send_to_char(ch, "There is no active stall with that ID.\r\n");
       return;
     }
   }
@@ -670,6 +712,7 @@ fail:
 usage:
   send_to_char(ch, "stall admin add <room vnum> <count: 1-100> [weekly rent] [capacity: 1-200]\r\n"
                    "stall admin set <stall ID> <weekly rent> <capacity>\r\n"
+                   "stall admin delete-room <room vnum> (preserves owner items and earnings)\r\n"
                    "stall admin enable|disable|evict|history <stall ID>\r\n");
 }
 void player_shop_command(struct char_data *ch, const char *argument)

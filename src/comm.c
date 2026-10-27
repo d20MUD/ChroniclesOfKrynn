@@ -66,6 +66,7 @@
  * files that is included is controlled by conf.h for that platform. */
 
 #include "structs.h"
+#include "mob_utils.h"
 #include "utils.h"
 #include "comm.h"
 #include "interpreter.h"
@@ -3221,6 +3222,8 @@ static void extract_linkdead_player(struct char_data *ch)
 
   if (PLR_FLAGGED(ch, PLR_NOTDEADYET))
     return;
+
+  if (!return_all_eidolon_gear(ch)) return;
 
   mudlog(CMP, LVL_STAFF, TRUE, "%s linkdead for 5 minutes; saving and extracting.",
          GET_NAME(ch));

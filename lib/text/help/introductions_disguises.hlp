@@ -166,9 +166,13 @@ damage. Breath affects
 eligible enemies in the room: Fortitude negates a temporary 1d2 Strength penalty
 and blindness lasting 1d4 rounds. Poison immunity protects against the breath;
 blindness immunity protects against its blinding effect. Breath recharges after
-1d4 combat rounds. Other racial spells are at will, with normal casting actions.
+1d4 combat rounds. Neither attack costs Aurak spell points. Other at-will racial
+spells share 10 points, costing their base wizard circle per cast. The full pool
+refills five minutes after its first use. Use innates to check remaining points.
+Disguise self, magic missile and charm cost 1; mirror image costs 2; fireball and
+dispel magic cost 3; greater invisibility costs 4. Normal casting actions apply.
 
-Racial magic uses your character level and Charisma. Breath and domination
+Racial magic uses your character level and Charisma. Spell points, breath and domination
 recharge times are saved in your player file and persist across sessions.
 Disguise Self grants +10 Disguise, using the normal disguise command for looks.
 

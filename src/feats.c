@@ -1402,7 +1402,9 @@ void assign_feats(void)
         "Cast aurak energy ray, aurak breath, disguise self and magic missile at level 1; "
         "charm and mirror image at level 3; fireball and dispel magic at level 5; "
         "greater invisibility at level 7; and dominate person once per 24 hours at level 9. "
-        "Energy ray uses a swift action. Breath recharges in 1d4 combat rounds. Other racial spells are at will. "
+        "Energy ray is unlimited and uses a swift action. Breath recharges in 1d4 combat rounds. "
+        "Other at-will racial spells share 10 points, costing their base wizard circle per cast. "
+        "The full pool refreshes five minutes after its first use; use innates to check it. "
         "These abilities use your character level and Charisma for racial spellcasting.");
 
   feato(FEAT_AURAK_DEATH_THROES, "aurak death throes", TRUE, FALSE, FALSE,

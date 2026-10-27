@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/krynn/code/build-agent-check/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

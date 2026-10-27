@@ -10,9 +10,11 @@ SELECT feature_name, enabled
   FROM legendary_features
  ORDER BY feature_name;
 
-SELECT mob_vnum, enabled
-  FROM legendary_smiths
- ORDER BY mob_vnum;
+-- Smith assignments are inspected through MEDIT (Infusion Smith), not SQL.
+SELECT COUNT(*) AS obsolete_smith_registry_tables
+  FROM information_schema.tables
+ WHERE table_schema=DATABASE()
+   AND table_name='legendary_smiths';
 
 SELECT COUNT(*) AS obsolete_boss_registry_tables
   FROM information_schema.tables

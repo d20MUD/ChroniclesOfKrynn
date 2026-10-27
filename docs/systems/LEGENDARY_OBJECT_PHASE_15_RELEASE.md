@@ -66,6 +66,8 @@ Apply migrations in order through:
 6. `20261025_legendary_item_passives.sql`
 7. `20261025_legendary_release_controls.sql`
 8. `20261026_legendary_mob_bosses.sql`
+9. `20261026_legendary_smith_specproc.sql`
+10. `20261026_legendary_daily_limits.sql`
 
 Schema v7 adds `legendary_features`. It creates three independent, fail-closed
 controls, all initially disabled:
@@ -86,7 +88,7 @@ powers, or audit rows.
 
 1. Stop normal economic mutations and make one coherent backup of player files,
    object stores, the SQL database, and `lib/etc/legendary-budgets/` together.
-2. Deploy the compatible binary, apply schema v8, then run the content verifier.
+2. Deploy the compatible binary, apply schema v10, then run the content verifier.
 3. Apply `20261025_legendary_release_registry.sql` and complete the reviewed
    MEDIT flag changes. Confirm all three feature rows are `0`; inspect schema,
    smith and flagged mobile prototypes.
@@ -113,6 +115,10 @@ To halt safely, set the relevant row to `FALSE`; do not delete ledger rows or
 downgrade schema. Rollback requires a binary that still reads legendary UUID
 tags and a coherent backup of both flat-file and SQL sides of each operation.
 
+Assign **Infusion Smith** to mobile 10500 using MEDIT's Special Procedure menu
+and save the mobile. This replaces SQL smith registration; no smith table or
+field is needed. The release SQL file documents the world-content steps only.
+
 ## Preflight and reconciliation
 
 Run before release and record output:
@@ -129,14 +135,14 @@ At startup and after each feature change, inspect:
 ```sql
 SELECT version FROM legendary_schema WHERE singleton=1;
 SELECT feature_name,enabled FROM legendary_features ORDER BY feature_name;
-SELECT mob_vnum,enabled FROM legendary_smiths WHERE mob_vnum=10500;
+-- Verify Infusion Smith on mobile 10500 through MEDIT.
 SELECT state,COUNT(*) FROM legendary_operations GROUP BY state;
 SELECT COUNT(*) AS pending_awards FROM legendary_awards WHERE state='pending';
 ```
 
-Expected production configuration is schema version 8, three feature rows,
-smith 10500 enabled, and the approved `MOB_LEGENDARY_BOSS` mobile flags. The
-database deliberately contains no boss registry.
+Expected production configuration is schema version 10, three feature rows,
+smith 10500 assigned Infusion Smith, and the approved `MOB_LEGENDARY_BOSS` mobile flags. The
+database deliberately contains no smith or boss registry.
 Before major effects are enabled, Phase 14B must supply its completed seven-role
 native encounter evidence; the current preliminary probes are not sufficient.
 
@@ -145,6 +151,6 @@ native encounter evidence; the current preliminary probes are not sufficient.
 The in-game `INFUSE` help and the Markdown player guide use the exact costs,
 UTC daily reset, permanent-binding warning, two-handed independent-rank rule,
 and additional item-passive rule. Before enabling purchases, change the guide's
-deployment note from the old schema-v6/unselected-location wording to schema v8
+deployment note from the old schema-v6/unselected-location wording to schema v9
 and Lord Orelor, then publish it with the binary. Do not promise true-lance
 powers until their object records are added.

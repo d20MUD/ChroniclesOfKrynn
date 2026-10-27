@@ -1,1 +1,1 @@
-/usr/bin/cc  -Wall -Wno-char-subscripts -g CMakeFiles/webster.dir/util/webster.c.o -o /home/krynn/code/bin/webster 
+/usr/bin/cc  -Wall -Wno-char-subscripts -g -Wl,--dependency-file=CMakeFiles/webster.dir/link.d CMakeFiles/webster.dir/util/webster.c.o -o /home/krynn/code/bin/webster

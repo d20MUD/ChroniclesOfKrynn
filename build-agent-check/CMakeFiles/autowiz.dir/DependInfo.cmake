@@ -9,6 +9,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/krynn/code/util/autowiz.c" "CMakeFiles/autowiz.dir/util/autowiz.c.o" "gcc" "CMakeFiles/autowiz.dir/util/autowiz.c.o.d"
+  "" "/home/krynn/code/bin/autowiz" "gcc" "CMakeFiles/autowiz.dir/link.d"
   )
 
 # Targets to which this target links which contain Fortran sources.

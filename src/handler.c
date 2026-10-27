@@ -16,6 +16,7 @@
 #include "legendary_foundations.h"
 #include "legendary_equipment.h"
 #include "structs.h"
+#include "mob_utils.h"
 #include "housing.h"
 #include "utils.h"
 #include "comm.h"
@@ -3044,6 +3045,9 @@ void extract_char_final(struct char_data *ch)
  * really confused otherwise. */
 void extract_char(struct char_data *ch)
 {
+  if (IS_NPC(ch) && !MOB_FLAGGED(ch, MOB_NOTDEADYET) && !return_eidolon_gear(ch))
+    return;
+  remember_eidolon_training(ch);
   legendary_effects_cancel(ch);
   char_from_furniture(ch);
   char_from_buff_targets(ch);

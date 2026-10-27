@@ -109,7 +109,7 @@ You buy each rank in order. Each row below is the cost of that upgrade alone.
 | V — Legendary | Stronger technique and signature effects | 40,000,000 | 800,000 | 6,500 | 1,400 | 60 |
 | **Total I–V** | **One completed progression** | **77,000,000** | **1,550,000** | **14,000** | **2,800** | **120** |
 
-With no saved materials, one complete progression requires at least **140 daily allowance windows** for fragments and essences, plus its XP, gold and catalysts.
+With no saved materials, one complete progression requires at least **70 daily allowance windows** for fragments and essences, plus its XP, gold and catalysts.
 
 Your item passive also improves as you advance. You can stop at any rank and continue using the item.
 
@@ -155,9 +155,9 @@ Each character can acquire up to:
 
 | Material | Daily allowance |
 | --- | ---: |
-| Fragments | 100 |
-| Essences | 20 across all types combined |
-| Catalysts | 1 |
+| Fragments | 200 |
+| Essences | 40 across all types combined |
+| Catalysts | 2 |
 
 Allowances reset at **midnight UTC**. Saved materials carry over; unused daily allowance does not. Spending materials does not reopen today's allowance. Rewards above the remaining allowance are reduced or lost rather than held for tomorrow.
 

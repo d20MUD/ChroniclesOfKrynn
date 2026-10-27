@@ -36,9 +36,9 @@ SELECT state, COUNT(*) AS operations,
 
 SELECT 'daily-cap-saturation-current-utc-day' AS section;
 SELECT COUNT(*) AS tracked_characters,
-       COALESCE(SUM(fragments_today>=100),0) AS fragment_cap_reached,
-       COALESCE(SUM(essences_today>=20),0) AS essence_cap_reached,
-       COALESCE(SUM(catalysts_today>=1),0) AS catalyst_cap_reached
+       COALESCE(SUM(fragments_today>=200),0) AS fragment_cap_reached,
+       COALESCE(SUM(essences_today>=40),0) AS essence_cap_reached,
+       COALESCE(SUM(catalysts_today>=2),0) AS catalyst_cap_reached
   FROM legendary_characters
  WHERE allowance_date=UTC_DATE();
 

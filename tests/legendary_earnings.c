@@ -144,22 +144,24 @@ int main(int argc,char **argv)
   reset();FIGHTING(&pc[0])=NULL;actions(&pc[1],LEG_ACTION_HEAL,&pc[0]);death();assert(scalar("SELECT COUNT(*) FROM legendary_awards")==0);
   reset();actions(&pc[0],LEG_ACTION_DAMAGE,NULL);boss.legendary_test_encounter=true;death();assert(scalar("SELECT COUNT(*) FROM legendary_awards")==0);
   reset();assert(legendary_balance_load(&pc[0],&b));
-  assert(estate_query("UPDATE legendary_characters SET fragments=1999999998,draconic=1999999999,allowance_date=DATE_ADD('1970-01-01',INTERVAL 20000 DAY),fragments_today=95,essences_today=19,catalysts_today=1,version=version+1 WHERE player_id=1"));
+  assert(estate_query("UPDATE legendary_characters SET fragments=1999999998,draconic=1999999999,allowance_date=DATE_ADD('1970-01-01',INTERVAL 20000 DAY),fragments_today=195,essences_today=39,catalysts_today=2,version=version+1 WHERE player_id=1"));
   actions(&pc[0],LEG_ACTION_DAMAGE,NULL);death();assert(balance(1,"fragments")==2000000000 && balance(1,"draconic")==2000000000);
-  assert(balance(1,"fragments_today")==97 && balance(1,"essences_today")==20 && balance(1,"catalysts")==0);
+  assert(balance(1,"fragments_today")==197 && balance(1,"essences_today")==40 && balance(1,"catalysts")==0);
   assert(estate_query("UPDATE legendary_characters SET fragments=0,draconic=0,version=version+1 WHERE player_id=1"));
-  spawn(1);actions(&pc[0],LEG_ACTION_DAMAGE,NULL);death();assert(balance(1,"fragments")==3 && balance(1,"fragments_today")==100);
+  spawn(1);actions(&pc[0],LEG_ACTION_DAMAGE,NULL);death();assert(balance(1,"fragments")==3 && balance(1,"fragments_today")==200);
   spawn(2);actions(&pc[0],LEG_ACTION_DAMAGE,NULL);death();assert(balance(1,"fragments")==3);
   legendary_earnings_test_time+=86400;spawn(2);actions(&pc[0],LEG_ACTION_DAMAGE,NULL);death();assert(balance(1,"fragments")==33); /* zero award did not start cooldown */
   reset();assert(legendary_balance_load(&pc[0],&b));
-  assert(estate_query("UPDATE legendary_characters SET fragments=1000,draconic=60,allowance_date=DATE_ADD('1970-01-01',INTERVAL 20000 DAY),essences_today=19,version=version+1 WHERE player_id=1"));
+  assert(estate_query("UPDATE legendary_characters SET fragments=1000,draconic=60,allowance_date=DATE_ADD('1970-01-01',INTERVAL 20000 DAY),essences_today=39,version=version+1 WHERE player_id=1"));
   assert(!legendary_exchange_quote(&pc[0],0,1,2)); /* combat */
   FIGHTING(&pc[0])=NULL;assert(!legendary_exchange_quote(&pc[0],0,1,2));assert(!legendary_exchange_quote(&pc[0],0,0,1));
   x=legendary_exchange_quote(&pc[0],0,1,1);assert(x && legendary_exchange_delta(x)->essences[0]==-3);
   assert(legendary_exchange_confirm(&pc[0],x));assert(!legendary_exchange_confirm(&pc[0],x));legendary_exchange_discard(x);
-  assert(balance(1,"draconic")==57 && balance(1,"martial")==1 && balance(1,"essences_today")==20);
+  assert(balance(1,"draconic")==57 && balance(1,"martial")==1 && balance(1,"essences_today")==40);
   x=legendary_exchange_quote(&pc[0],0,-1,1);assert(x && legendary_exchange_confirm(&pc[0],x));legendary_exchange_discard(x);
   assert(balance(1,"draconic")==37 && balance(1,"fragments")==900 && balance(1,"catalysts_today")==1);
+  x=legendary_exchange_quote(&pc[0],0,-1,1);assert(x && legendary_exchange_confirm(&pc[0],x));legendary_exchange_discard(x);
+  assert(balance(1,"catalysts_today")==2);
   assert(!legendary_exchange_quote(&pc[0],0,-1,1));assert(!legendary_exchange_quote(&pc[0],0,1,INT_MAX));
   legendary_earnings_test_time+=86400;assert(legendary_balance_load(&pc[0],&b) && !b.essences_today && !b.catalysts_today);
   assert(estate_query("UPDATE legendary_characters SET draconic=10,martial=10,catalysts=0,version=version+1 WHERE player_id=1"));
@@ -178,11 +180,11 @@ int main(int argc,char **argv)
   legendary_credit_xp(&pc[1],50,&source);assert(balance(2,"infusion_xp")==50); /* character, never account */
   /* Concurrent accepted kills share the final daily allowance atomically. */
   reset();assert(legendary_balance_load(&pc[0],&b));
-  assert(estate_query("UPDATE legendary_characters SET allowance_date=DATE_ADD('1970-01-01',INTERVAL 20000 DAY),fragments_today=85,essences_today=20,catalysts_today=1,version=version+1 WHERE player_id=1"));
+  assert(estate_query("UPDATE legendary_characters SET allowance_date=DATE_ADD('1970-01-01',INTERVAL 20000 DAY),fragments_today=185,essences_today=40,catalysts_today=2,version=version+1 WHERE player_id=1"));
   actions(&pc[0],LEG_ACTION_DAMAGE,NULL);legendary_transaction_fault=6;death();
   spawn(1);actions(&pc[0],LEG_ACTION_DAMAGE,NULL);death();legendary_transaction_fault=0;
   restart_receipt(&pc[0]);assert(legendary_earnings_recover(&pc[0]));
-  assert(balance(1,"fragments")==15 && balance(1,"fragments_today")==100);
+  assert(balance(1,"fragments")==15 && balance(1,"fragments_today")==200);
   assert(scalar("SELECT SUM(fragments) FROM legendary_boss_claims")==15);
   /* An uncommitted material source cannot spend tomorrow's allowance. */
   reset();actions(&pc[0],LEG_ACTION_DAMAGE,NULL);legendary_transaction_fault=6;death();

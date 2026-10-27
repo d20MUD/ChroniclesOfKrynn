@@ -19,6 +19,7 @@ stall admin disable 1
 stall admin enable 1
 stall admin history 1
 stall admin evict 1
+stall admin delete-room 2200
 ```
 
 `add <room vnum> <count> [weekly rent] [capacity]` creates independently rented
@@ -30,6 +31,22 @@ sales, rentals and owner customization/renewal; owners can still withdraw
 items and collect earnings. Evict releases the account and slot immediately,
 preserving all stock and proceeds. Staff can browse the directory and inspect
 the transaction history for a stall.
+
+### Removing a market room
+
+Use `stall admin delete-room <room vnum>` to remove **all stalls in that room**
+from the market directory and room display. This takes a room number, not a
+stall ID, and does not delete the world room itself.
+
+The command stops sales, releases every tenant's stall/account reservation,
+and preserves unsold items, unpaid earnings, and transaction history. Former
+tenants can use `stall info`, `stall withdraw <listing ID>`, and `stall collect`
+from anywhere. Rent is not refunded. The entire removal is one transaction;
+a failed removal leaves the market intact.
+
+Removed stalls cannot be re-enabled. To reopen the room, use `stall admin add`
+to create new stalls with new IDs. `stall admin history <old stall ID>` still
+shows the old records, including the room-removal event.
 
 No market is automatically installed in a live room. Run `admin add` at the
 locations you want to use. All market configuration lives in MySQL; this

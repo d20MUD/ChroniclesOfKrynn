@@ -1,1 +1,1 @@
-/usr/bin/cc  -Wall -Wno-char-subscripts -g CMakeFiles/asciipasswd.dir/util/asciipasswd.c.o -o /home/krynn/code/bin/asciipasswd  /usr/lib/x86_64-linux-gnu/libcrypt.so 
+/usr/bin/cc  -Wall -Wno-char-subscripts -g -Wl,--dependency-file=CMakeFiles/asciipasswd.dir/link.d CMakeFiles/asciipasswd.dir/util/asciipasswd.c.o -o /home/krynn/code/bin/asciipasswd  /usr/lib/x86_64-linux-gnu/libcrypt.so

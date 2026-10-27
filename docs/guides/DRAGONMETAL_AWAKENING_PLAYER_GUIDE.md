@@ -15,8 +15,8 @@
 > boundaries, storage/commerce, corpse retrieval and character deletion.
 > XP, gold and material purchase costs include the 20× difficulty increase. Native combat balance
 > validation remains in interim phase 14B before release.
-> Deployment requires schema v7 and Lord Orelor Silverveins (mobile 10500) as
-> the explicitly registered smith. XP/material earning, purchases and major
+> Deployment requires schema v10 and Lord Orelor Silverveins (mobile 10500) as
+> a smith with the Infusion Smith special procedure. XP/material earning, purchases and major
 > powers are independently enabled in stages by the live release process.
 
 **Preview for review: this system is not available until its staged release
@@ -221,9 +221,9 @@ Fight different eligible bosses while that reward is on cooldown.
 
 | Material | Maximum acquired per character each UTC day |
 | --- | ---: |
-| Fragments | 100 |
-| Essences | 20 total across all types. |
-| Catalysts | 1 |
+| Fragments | 200 |
+| Essences | 40 total across all types. |
+| Catalysts | 2 |
 
 Allowances reset at **midnight UTC**. Saved materials remain yours across days.
 Unused allowance does not carry forward, and spending materials does not restore
@@ -232,8 +232,8 @@ allowance are reduced or blocked; they are not saved for tomorrow.
 
 Characters on the same account have separate balances and allowances. Materials
 cannot be traded between them. With no stock saved, a rank-V item requires at
-least **140 daily allowance windows** of fragments and essences, plus its XP,
-gold and other requirements. This is not a promise of 140 days of playtime.
+least **70 daily allowance windows** of fragments and essences, plus its XP,
+gold and other requirements. This is not a promise of 70 days of playtime.
 
 Check everything with:
 

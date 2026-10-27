@@ -16,7 +16,7 @@ static void rank_cases(struct char_data *ch)
   long gold,fragments;int points,contribution,majors;int64_t expiry,start;char query[256];
   technique_clean(ch);foundation_reset(ch);legendary_effects_test_time+=1000;
   if(!mob_index)mob_index=calloc(1,sizeof(*mob_index));
-  mob_index[0].vnum=600;
+  mob_index[0].vnum=600;mob_index[0].func=infusion_smith;
   assert(estate_query("UPDATE legendary_characters SET infusion_xp=400000000,fragments=400000,catalysts=2000,draconic=20000,martial=20000,arcane=20000,spiritual=20000,primal=20000,shadow=20000,version=version+1 WHERE player_id=1"));
   GET_GOLD(ch)=20000000;assert(save_char_checked(ch,0));CLASS_LEVEL(ch,CLASS_WIZARD)=1;
   o=legendary_test_item(ch,"rankblade",0,LEG_F01,true);r=saved(o);

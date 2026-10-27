@@ -345,3 +345,7 @@ extern struct clan_data *clan_list;
 extern int num_of_clans;
 //extern struct clan_rec clan[MAX_CLANS];
 #endif
+
+/* Login reminders and persisted application decisions. */
+void clan_login_notifications(struct char_data *ch);
+void clan_restore_login_notice(struct char_data *ch, const char *text);

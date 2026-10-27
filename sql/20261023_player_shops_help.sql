@@ -98,6 +98,19 @@ again. A stored payment message confirms gold paid or received. If the game
 reports that your player data cannot be saved, contact staff before trying
 more trades.
 
+STAFF: REMOVING A MARKET ROOM
+
+Senior staff can remove every stall in a room with:
+
+  stall admin delete-room <room vnum>
+
+Use the room number, not a stall number. The world room remains intact.
+The market disappears from the directory and room display; sales stop and
+all tenant reservations are released. Owners keep unsold items and earnings
+and can use info, withdraw and collect from anywhere. Rent is not refunded.
+Removed stalls cannot be re-enabled; admin add creates new stalls if needed.
+Transaction history remains available through admin history <old stall ID>.
+
 Type stall for a quick command reminder.
 
 See also: AUCTIONHOUSE, BUY, SELL

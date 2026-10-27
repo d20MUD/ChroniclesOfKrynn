@@ -1,6 +1,7 @@
 file(REMOVE_RECURSE
   "/home/krynn/code/bin/sign"
   "/home/krynn/code/bin/sign.pdb"
+  "CMakeFiles/sign.dir/link.d"
   "CMakeFiles/sign.dir/util/sign.c.o"
   "CMakeFiles/sign.dir/util/sign.c.o.d"
 )

@@ -1960,6 +1960,8 @@ bool isDragonRiderMagic(struct char_data *ch, int spellnum);
 bool isBozakMagic(struct char_data *ch, int spellnum);
 bool isShifterMagic(struct char_data *ch, int spellnum);
 bool isAurakMagic(struct char_data *ch, int spellnum);
+int aurak_magic_cost(struct char_data *ch, int spellnum);
+int aurak_magic_points(struct char_data *ch);
 bool prepare_aurak_magic(struct char_data *ch, int spellnum, int casttype);
 int find_cantrip_class(struct char_data *ch, int spellnum);
 

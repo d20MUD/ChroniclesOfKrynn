@@ -72,7 +72,7 @@ bool legendary_balance_load(struct char_data *ch,struct legendary_balance *out)
   for(i=0;row && i<14;i++)if(!num(row[i],&n[i]))break;
   mysql_free_result(r);if(!row || i!=14)return false;
   for(i=0;i<9;i++)if(n[i]>LEGENDARY_BALANCE_MAX)return false;
-  if(n[9]==INT64_MAX || n[11]>100 || n[12]>20 || n[13]>1)return false;
+  if(n[9]==INT64_MAX || n[11]>legendary_rules.daily_fragments || n[12]>legendary_rules.daily_essences || n[13]>legendary_rules.daily_catalysts)return false;
   memset(&b,0,sizeof(b));b.wallet.xp=n[0];b.wallet.fragments=n[1];b.wallet.catalysts=n[2];
   b.wallet.gold=GET_GOLD(ch);for(i=0;i<6;i++)b.wallet.essences[i]=n[3+i];
   b.version=n[9];b.utc_day=now_utc()/86400;
@@ -146,9 +146,9 @@ static void cap_outputs(struct grant_context *g)
 {
   const struct legendary_balance *b=&g->before;
   g->received_xp=cap(g->award.xp,b->wallet.xp,-1);
-  g->fragments=cap(g->award.fragments,b->wallet.fragments,100-b->fragments_today);
-  g->essences=cap(g->award.essences,b->wallet.essences[g->award.essence],20-b->essences_today);
-  g->catalysts=cap(g->award.catalysts,b->wallet.catalysts,1-b->catalysts_today);
+  g->fragments=cap(g->award.fragments,b->wallet.fragments,legendary_rules.daily_fragments-b->fragments_today);
+  g->essences=cap(g->award.essences,b->wallet.essences[g->award.essence],legendary_rules.daily_essences-b->essences_today);
+  g->catalysts=cap(g->award.catalysts,b->wallet.catalysts,legendary_rules.daily_catalysts-b->catalysts_today);
 }
 static bool exists(const char *sql,bool *result)
 {
@@ -267,7 +267,7 @@ bool legendary_earnings_recover(struct char_data *ch)
     memset(&g,0,sizeof(g));
     if(!legendary_uuid_valid(row[1]))goto fail;
     for(i=0;i<9;i++)if(i!=1 && !num(row[i],&n[i>1?i-1:i]))goto fail;
-    if(n[0]<1 || n[0]>4 || n[1]>INT_MAX || n[3]>INT_MAX || n[4]>100 || n[5]>20 || n[6]>1 || n[7]>5)goto fail;
+    if(n[0]<1 || n[0]>4 || n[1]>INT_MAX || n[3]>INT_MAX || n[4]>legendary_rules.daily_fragments || n[5]>legendary_rules.daily_essences || n[6]>legendary_rules.daily_catalysts || n[7]>5)goto fail;
     g.award.kind=n[0];memcpy(g.award.id,row[1],33);g.award.vnum=n[1];g.award.occurred=n[2];g.award.xp=n[3];
     g.award.fragments=n[4];g.award.essences=n[5];g.award.catalysts=n[6];g.award.essence=n[7];
     if(!prepare_grant(ch,&g,&plan) || !(quote=legendary_transaction_quote(ch,&plan)))goto fail;
@@ -305,7 +305,7 @@ struct legendary_exchange { struct legendary_quote *quote; struct grant_context 
 struct legendary_exchange *legendary_exchange_quote(struct char_data *ch,int from,int to,int quantity)
 {
   struct legendary_exchange *x; struct legendary_transaction_plan plan; int64_t payment[6]; int i;
-  if(!recipient(ch) || FIGHTING(ch) || quantity<=0 || quantity>20 || to < -1 || to>5 ||
+  if(!recipient(ch) || FIGHTING(ch) || quantity<=0 || quantity>legendary_rules.daily_essences || to < -1 || to>5 ||
     (to>=0 && (from<0 || from>5 || to==from)))return NULL;
   x=calloc(1,sizeof(*x));if(!x)return NULL;
   x->grant.exchange=true;x->grant.award.essence=to<0?0:to;

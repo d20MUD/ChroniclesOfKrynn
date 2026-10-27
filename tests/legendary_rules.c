@@ -49,8 +49,8 @@ static void costs_and_parity(void)
   assert(!legendary_cost_between(0,1,NULL));
   assert(legendary_reshape_costs[LEG_RESHAPE_PATH_FAMILY].essences == 200);
   assert(legendary_reshape_costs[LEG_RESHAPE_SIGNATURE].gold == 50000);
-  assert(legendary_rules.daily_fragments == 100 && legendary_rules.daily_essences == 20);
-  assert(legendary_rules.daily_catalysts == 1 && legendary_rules.boss_cooldown_seconds == 72000);
+  assert(legendary_rules.daily_fragments == 200 && legendary_rules.daily_essences == 40);
+  assert(legendary_rules.daily_catalysts == 2 && legendary_rules.boss_cooldown_seconds == 72000);
   assert(legendary_boss_rewards[2].fragments == 30 && legendary_boss_rewards[2].catalysts == 1);
 }
 

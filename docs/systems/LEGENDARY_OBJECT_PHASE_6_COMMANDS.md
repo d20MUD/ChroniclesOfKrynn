@@ -15,7 +15,7 @@ Loadout displays persisted priorities/major selections and character cooldowns;
 it explicitly identifies these as configuration rather than active bonuses.
 
 Changes require a conscious, connected level 30 character out of combat, at an
-explicitly registered smith. Recognition uses the NPC prototype and live runtime
+smith assigned the Infusion Smith special procedure. Recognition uses the NPC prototype and live runtime
 identity, rejecting pets, charmed NPCs and test instances. The same smith must
 still be present at confirmation. No name-based recognition is used.
 
@@ -74,18 +74,17 @@ binding in the rollback journal.
 
 ## Offline deployment preparation
 
-Apply existing migrations v1–v3, then
-[`20261024_legendary_smiths.sql`](../../sql/20261024_legendary_smiths.sql).
-Schema v4 adds `legendary_smiths`; readiness checks all thirteen InnoDB tables.
-The migration is repeatable and never downgrades a newer schema. Missing schema
-fails closed; ordinary characters without pending awards/operations retain
-normal play. Runtime does not auto-create or migrate tables.
+Apply the ordered legendary migrations through schema v10. The historical
+schema-v4 step remains for upgrade ordering, but creates no smith registry.
+Schema v9 drops any old `legendary_smiths` table; readiness checks the thirteen
+remaining InnoDB tables. Runtime never creates or migrates tables automatically.
 
-Register a chosen existing NPC prototype explicitly, substituting its real vnum:
-
-```sql
-INSERT INTO legendary_smiths(mob_vnum, enabled) VALUES (<smith_vnum>, 1);
-```
+In MEDIT, open the chosen existing NPC's **Special Procedure** menu, select
+**Infusion Smith**, and save the mobile normally. Its persisted procedure name
+is `SpecProc: Infusion Smith`. No MySQL row or mobile flag is needed. Existing
+live instances use the prototype's assigned procedure. Removing or changing it
+immediately removes service eligibility and invalidates pending confirmations.
+The procedure leaves command handling to the normal `infuse` command.
 
 No live SQL migration, NPC placement, world file edits or server restart was
 performed. Content placement remains Phase 15. Player help is provided in

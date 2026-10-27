@@ -9,6 +9,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/krynn/code/util/wld2html.c" "CMakeFiles/wld2html.dir/util/wld2html.c.o" "gcc" "CMakeFiles/wld2html.dir/util/wld2html.c.o.d"
+  "" "/home/krynn/code/bin/wld2html" "gcc" "CMakeFiles/wld2html.dir/link.d"
   )
 
 # Targets to which this target links which contain Fortran sources.

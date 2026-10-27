@@ -60,7 +60,18 @@ For example: PETS TRAIN CROCODILE HEALTH
 Use the pet''s targeting keyword; 2.keyword selects a second matching pet.
 Both you and your pet must be outside combat, and the pet must be here.
 Ranks and skills belong to that individual companion, surviving logout,
-death and revival. Discarding or replacing the pet loses its training.
+death and revival. Replacing other companions loses their training.
+Dismissing your main eidolon or logging out automatically returns its worn
+and carried gear and gold to you. You do not need to unequip it first. Returns
+are saved before the body is removed and recover on login if interrupted.
+A failed return stops dismissal/logout and leaves its belongings intact.
+Fallen eidolon gear remains stored for PETS REVIVE or PETS DISCARD.
+
+The main eidolon is the same continuing bond: its rank, remaining training XP
+and skill purchases survive dismissal and re-summoning as well. They are saved
+with the owner, including across reboot. Temporary eidolon reflections neither
+inherit nor overwrite the main eidolon training. Discarding a stored eidolon
+body removes that body and its gear record, not the continuing bond training.
 ', CHAR(10), CONCAT(CHAR(13), CHAR(10))), 0, 1000, FALSE)
 ON DUPLICATE KEY UPDATE
   category = VALUES(category), entry = VALUES(entry),

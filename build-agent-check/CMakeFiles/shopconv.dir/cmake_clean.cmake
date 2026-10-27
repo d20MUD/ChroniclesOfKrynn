@@ -1,6 +1,7 @@
 file(REMOVE_RECURSE
   "/home/krynn/code/bin/shopconv"
   "/home/krynn/code/bin/shopconv.pdb"
+  "CMakeFiles/shopconv.dir/link.d"
   "CMakeFiles/shopconv.dir/util/shopconv.c.o"
   "CMakeFiles/shopconv.dir/util/shopconv.c.o.d"
 )

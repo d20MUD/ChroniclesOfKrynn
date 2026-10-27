@@ -1,1 +1,1 @@
-/usr/bin/cc  -Wall -Wno-char-subscripts -g CMakeFiles/plrtoascii.dir/util/plrtoascii.c.o -o /home/krynn/code/bin/plrtoascii 
+/usr/bin/cc  -Wall -Wno-char-subscripts -g -Wl,--dependency-file=CMakeFiles/plrtoascii.dir/link.d CMakeFiles/plrtoascii.dir/util/plrtoascii.c.o -o /home/krynn/code/bin/plrtoascii

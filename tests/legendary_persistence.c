@@ -144,10 +144,10 @@ int main(int argc,char **argv)
   extract_obj(copy);extract_obj(obj);
   assert(estate_query("UPDATE legendary_schema SET version=99 WHERE singleton=1"));
   assert(!legendary_schema_ready());assert(legendary_store_load(uuid,&record)==LEG_LOAD_ERROR);
-  assert(estate_query("UPDATE legendary_schema SET version=8 WHERE singleton=1"));
+  assert(estate_query("UPDATE legendary_schema SET version=10 WHERE singleton=1"));
   /* FK/uniqueness/check constraints and rollback are real database behavior. */
   assert(!estate_query("INSERT INTO legendary_channels(uuid,channel_id,rank_id,path_id) VALUES('11111111111111111111111111111111',0,1,1)"));
-  assert(!estate_query("INSERT INTO legendary_characters(player_id,fragments_today) VALUES(1,101)"));
+  assert(!estate_query("INSERT INTO legendary_characters(player_id,fragments_today) VALUES(1,201)"));
   assert(estate_query("START TRANSACTION"));
   assert(legendary_uuid_generate(other));memset(&record,0,sizeof(record));memcpy(record.uuid,other,33);
   record.owner=1;record.prototype=500;record.slot=0;assert(legendary_store_insert(&record));

@@ -452,10 +452,17 @@ void House_boot(void)
 
 /* "House Control" functions */
 const char *HCONTROL_FORMAT =
-    "Usage: hcontrol build <house vnum> <exit direction> <player name>\r\n"
-    "       hcontrol destroy <house vnum>\r\n"
-    "       hcontrol pay <house vnum>\r\n"
-    "       hcontrol show [house vnum | .]\r\n";
+    "Neighborhood housing:\r\n"
+    "  hcontrol neighborhood list\r\n"
+    "  hcontrol neighborhood add <existing room vnum> <name>\r\n"
+    "  hcontrol houses [neighborhood ID]\r\n"
+    "Legacy housing:\r\n"
+    "  hcontrol build <house vnum> <exit direction> <player name>\r\n"
+    "  hcontrol destroy <house vnum>\r\n"
+    "  hcontrol pay <house vnum>\r\n"
+    "  hcontrol show [house vnum | .]\r\n"
+    "  hcontrol asciiconvert\r\n"
+    "  Legacy commands also accept: hcontrol legacy <command> [arguments]\r\n";
 
 void hcontrol_list_houses(struct char_data *ch, char *arg)
 {
@@ -841,7 +848,7 @@ ACMD(do_hcontrol)
     hcontrol_pay_house(ch, arg2);
   else if (is_abbrev(arg1, "show"))
     hcontrol_list_houses(ch, arg2);
-  /* CONVERSION code starts here -- see comment below not in hcontrol_format. */
+  /* Legacy ASCII conversion -- see the implementation notes below. */
   else if (!str_cmp(arg1, "asciiconvert"))
     hcontrol_convert_houses(ch);
   /* CONVERSION ends here -- read more below. */

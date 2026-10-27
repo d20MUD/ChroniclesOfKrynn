@@ -17,6 +17,7 @@
 #include "legendary_techniques.h"
 #include "legendary_transaction.h"
 #include "structs.h"
+#include "mob_utils.h"
 #include "utils.h"
 #include "comm.h"
 #include "interpreter.h"
@@ -2064,6 +2065,7 @@ void perform_call(struct char_data *ch, int call_type, int level)
     GET_HIT(mob) = GET_REAL_MAX_HIT(mob);
     set_eidolon_descs(ch);
     assign_eidolon_evolutions(ch, mob, false);
+    restore_eidolon_training(ch, mob);
     if (GET_EIDOLON_SHORT_DESCRIPTION(ch) && GET_EIDOLON_LONG_DESCRIPTION(ch))
     {
       char buf[MAX_EXTRA_DESC];
@@ -2502,6 +2504,7 @@ ACMD(do_dismiss)
       }
 
       extract_char(vict);
+      if (!MOB_FLAGGED(vict, MOB_NOTDEADYET)) return;
       found = 1;
     }
   }
@@ -5629,6 +5632,8 @@ void perform_player_quit(struct char_data *ch)
 
   if (!ch || IS_NPC(ch) || !ch->desc)
     return;
+
+  if (!return_all_eidolon_gear(ch)) return;
 
   act("$n has left the game.", TRUE, ch, 0, 0, TO_ROOM);
   mudlog(NRM, LVL_STAFF, TRUE, "%s has quit the game.", GET_NAME(ch));

@@ -1,1 +1,1 @@
-/usr/bin/cc  -Wall -Wno-char-subscripts -g CMakeFiles/wld2html.dir/util/wld2html.c.o -o /home/krynn/code/bin/wld2html 
+/usr/bin/cc  -Wall -Wno-char-subscripts -g -Wl,--dependency-file=CMakeFiles/wld2html.dir/link.d CMakeFiles/wld2html.dir/util/wld2html.c.o -o /home/krynn/code/bin/wld2html

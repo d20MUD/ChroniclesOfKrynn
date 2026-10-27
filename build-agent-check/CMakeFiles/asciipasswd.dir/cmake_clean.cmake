@@ -1,6 +1,7 @@
 file(REMOVE_RECURSE
   "/home/krynn/code/bin/asciipasswd"
   "/home/krynn/code/bin/asciipasswd.pdb"
+  "CMakeFiles/asciipasswd.dir/link.d"
   "CMakeFiles/asciipasswd.dir/util/asciipasswd.c.o"
   "CMakeFiles/asciipasswd.dir/util/asciipasswd.c.o.d"
 )

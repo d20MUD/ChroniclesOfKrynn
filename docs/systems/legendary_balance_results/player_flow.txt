@@ -1,12 +1,12 @@
 > infuse 
 Dragonmetal Awakening: start with infuse next <item>.
-At level 30, a registered smith can permanently awaken eligible level 20-30 equipment.
+At level 30, a infusion smith can permanently awaken eligible level 20-30 equipment.
 Use infuse materials for your balances; infuse help for all commands.
 Foundations share 12 points; choose at most three active powers across all gear.
 
 > infuse next flowblade
 Next step for flowblade (primary):
-Choose a path with infuse paths <item> primary, then ask the registered smith to infuse awaken <item> primary <path>.
+Choose a path with infuse paths <item> primary, then ask the infusion smith to infuse awaken <item> primary <path>.
 Awakening is permanent and cannot transfer or refund its investment.
 Next cost: 2000000 infusion XP, 50000 gold, 500 fragments, 0 essences, 0 catalysts. Check infuse materials, then request the smith's quote.
 Nothing is spent until you confirm the exact quote.

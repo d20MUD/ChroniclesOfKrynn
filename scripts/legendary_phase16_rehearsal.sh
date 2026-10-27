@@ -12,7 +12,7 @@ Usage:
   ./scripts/legendary_phase16_rehearsal.sh [--defaults-file /path/to/mysql.cnf]
 
 The script snapshots the named staging database and the configured save roots,
-applies legendary migrations through schema v8, proves all gates remain disabled,
+applies legendary migrations through schema v10, proves all gates remain disabled,
 runs read-only diagnostics, then executes the automated regression suite.
 It refuses database names that do not end in _stage or _staging.
 
@@ -92,6 +92,8 @@ migrations=(
   20261025_legendary_item_passives.sql
   20261025_legendary_release_controls.sql
   20261026_legendary_mob_bosses.sql
+  20261026_legendary_smith_specproc.sql
+  20261026_legendary_daily_limits.sql
 )
 for migration in "${migrations[@]}"; do
   mysql "${mysql_args[@]}" "$db" < "$repo/sql/$migration"
@@ -103,8 +105,10 @@ version=$(mysql "${mysql_args[@]}" --batch --skip-column-names "$db" -e \
   "SELECT version FROM legendary_schema WHERE singleton=1")
 legacy=$(mysql "${mysql_args[@]}" --batch --skip-column-names "$db" -e \
   "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name='legendary_boss_registry'")
-if [[ "$version" != "8" || "$features" != "0" || "$legacy" != "0" ]]; then
-  echo "Post-migration safety check failed (schema=$version enabled_features=$features legacy_boss_table=$legacy)." >&2
+legacy_smith=$(mysql "${mysql_args[@]}" --batch --skip-column-names "$db" -e \
+  "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name='legendary_smiths'")
+if [[ "$version" != "10" || "$features" != "0" || "$legacy" != "0" || "$legacy_smith" != "0" ]]; then
+  echo "Post-migration safety check failed (schema=$version enabled_features=$features legacy_boss_table=$legacy legacy_smith_table=$legacy_smith)." >&2
   exit 1
 fi
 

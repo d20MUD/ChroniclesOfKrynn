@@ -270,19 +270,19 @@ with tempfile.TemporaryDirectory(prefix='krynn-estate-test-') as directory:
         subprocess.run([str(real_executable), str(socket)], cwd=temp, check=True)
         if legendary_executable:
             subprocess.run([*client, '-e', 'DROP DATABASE estate_test; CREATE DATABASE estate_test'], check=True)
-            migration = (root/'sql/20261023_legendary_objects.sql').read_text() + (root/'sql/20261024_legendary_transactions.sql').read_text() + (root/'sql/20261024_legendary_earnings.sql').read_text() + (root/'sql/20261024_legendary_smiths.sql').read_text() + (root/'sql/20261024_legendary_effects.sql').read_text() + (root/'sql/20261025_legendary_item_passives.sql').read_text() + (root/'sql/20261025_legendary_release_controls.sql').read_text() + (root/'sql/20261026_legendary_mob_bosses.sql').read_text()
+            migration = (root/'sql/20261023_legendary_objects.sql').read_text() + (root/'sql/20261024_legendary_transactions.sql').read_text() + (root/'sql/20261024_legendary_earnings.sql').read_text() + (root/'sql/20261024_legendary_smiths.sql').read_text() + (root/'sql/20261024_legendary_effects.sql').read_text() + (root/'sql/20261025_legendary_item_passives.sql').read_text() + (root/'sql/20261025_legendary_release_controls.sql').read_text() + (root/'sql/20261026_legendary_mob_bosses.sql').read_text() + (root/'sql/20261026_legendary_smith_specproc.sql').read_text() + (root/'sql/20261026_legendary_daily_limits.sql').read_text()
             for _ in range(2):
                 subprocess.run([*client, 'estate_test'], input=migration, text=True, check=True)
             subprocess.run([str(legendary_executable), str(socket)], cwd=temp, check=True)
         if transaction_executable:
             subprocess.run([*client, '-e', 'DROP DATABASE estate_test; CREATE DATABASE estate_test'], check=True)
-            migration = (root/'sql/20261023_legendary_objects.sql').read_text() + (root/'sql/20261024_legendary_transactions.sql').read_text() + (root/'sql/20261024_legendary_earnings.sql').read_text() + (root/'sql/20261024_legendary_smiths.sql').read_text() + (root/'sql/20261024_legendary_effects.sql').read_text() + (root/'sql/20261025_legendary_item_passives.sql').read_text() + (root/'sql/20261025_legendary_release_controls.sql').read_text() + (root/'sql/20261026_legendary_mob_bosses.sql').read_text()
+            migration = (root/'sql/20261023_legendary_objects.sql').read_text() + (root/'sql/20261024_legendary_transactions.sql').read_text() + (root/'sql/20261024_legendary_earnings.sql').read_text() + (root/'sql/20261024_legendary_smiths.sql').read_text() + (root/'sql/20261024_legendary_effects.sql').read_text() + (root/'sql/20261025_legendary_item_passives.sql').read_text() + (root/'sql/20261025_legendary_release_controls.sql').read_text() + (root/'sql/20261026_legendary_mob_bosses.sql').read_text() + (root/'sql/20261026_legendary_smith_specproc.sql').read_text() + (root/'sql/20261026_legendary_daily_limits.sql').read_text()
             subprocess.run([*client, 'estate_test'], input=migration, text=True, check=True)
             subprocess.run([str(transaction_executable), str(socket)], cwd=temp, check=True)
         if earnings_executable:
             subprocess.run([*client, '-e', 'DROP DATABASE estate_test; CREATE DATABASE estate_test'], check=True)
             migration = ''.join((root/'sql'/name).read_text() for name in
-                ['20261023_legendary_objects.sql','20261024_legendary_transactions.sql','20261024_legendary_earnings.sql','20261024_legendary_smiths.sql','20261024_legendary_effects.sql','20261025_legendary_item_passives.sql','20261025_legendary_release_controls.sql','20261026_legendary_mob_bosses.sql'])
+                ['20261023_legendary_objects.sql','20261024_legendary_transactions.sql','20261024_legendary_earnings.sql','20261024_legendary_smiths.sql','20261024_legendary_effects.sql','20261025_legendary_item_passives.sql','20261025_legendary_release_controls.sql','20261026_legendary_mob_bosses.sql','20261026_legendary_smith_specproc.sql','20261026_legendary_daily_limits.sql'])
             for _ in range(2):
                 subprocess.run([*client, 'estate_test'], input=migration, text=True, check=True)
             subprocess.run([str(earnings_executable), str(socket)], cwd=temp, check=True)
@@ -290,7 +290,7 @@ with tempfile.TemporaryDirectory(prefix='krynn-estate-test-') as directory:
             subprocess.run([*client, '-e', 'DROP DATABASE estate_test; CREATE DATABASE estate_test'], check=True)
             migration = ''.join((root/'sql'/name).read_text() for name in
                 ['20261023_legendary_objects.sql','20261024_legendary_transactions.sql',
-                 '20261024_legendary_earnings.sql','20261024_legendary_smiths.sql','20261024_legendary_effects.sql','20261025_legendary_item_passives.sql','20261025_legendary_release_controls.sql','20261026_legendary_mob_bosses.sql'])
+                 '20261024_legendary_earnings.sql','20261024_legendary_smiths.sql','20261024_legendary_effects.sql','20261025_legendary_item_passives.sql','20261025_legendary_release_controls.sql','20261026_legendary_mob_bosses.sql','20261026_legendary_smith_specproc.sql','20261026_legendary_daily_limits.sql'])
             for _ in range(2):
                 subprocess.run([*client, 'estate_test'], input=migration, text=True, check=True)
             subprocess.run([str(commands_executable), str(socket)], cwd=temp, check=True)

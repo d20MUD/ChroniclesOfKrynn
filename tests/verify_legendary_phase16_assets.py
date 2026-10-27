@@ -20,6 +20,8 @@ def main() -> None:
                   'legendary_boss_registry'):
         need(diagnostics, query)
     need(migration, 'DROP TABLE IF EXISTS legendary_boss_registry')
+    need(ROOT / 'sql/20261026_legendary_smith_specproc.sql', 'DROP TABLE IF EXISTS legendary_smiths')
+    need(ROOT / 'src/spec_assign.c', '"Infusion Smith", infusion_smith')
     print('PASS: Phase-16 staging harness, diagnostics and boss-flag migration guards verified')
 
 if __name__ == '__main__':

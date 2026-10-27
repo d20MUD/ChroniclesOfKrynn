@@ -19,6 +19,7 @@
 #include "talents.h"
 #include "utils.h"
 #include "mob_utils.h"
+#include "estate.h"
 #include "mudlim.h"
 #include "epic_magic.h"
 #include "db.h"
@@ -368,6 +369,28 @@ char *get_name_by_id(long id)
 
 /* New load_char reads ASCII Player Files. Load a char, TRUE if loaded, FALSE
  * if not. */
+/* Backward-compatible owner-side record for a re-summonable main eidolon. */
+static void load_eidolon_training(struct char_data *ch, const char *line)
+{
+  int rank, xp, skills[5], i, total = 0;
+  if (sscanf(line, "%d %d %d %d %d %d %d", &rank, &xp,
+             &skills[0], &skills[1], &skills[2], &skills[3], &skills[4]) != 7 ||
+      rank < 0 || rank > PET_TRAINING_RANK_CAP || xp < 0 ||
+      (rank == PET_TRAINING_RANK_CAP ? xp != 0 : xp >= 2000 * (rank + 1)))
+    return;
+  for (i = 0; i < PET_TRAINING_SKILLS; i++)
+  {
+    if (skills[i] < 0 || skills[i] > PET_TRAINING_SKILL_CAP) return;
+    total += skills[i];
+  }
+  if (total > rank) return;
+  ch->player_specials->saved.eidolon_training_saved = TRUE;
+  ch->player_specials->saved.eidolon_training_rank = rank;
+  ch->player_specials->saved.eidolon_training_experience = xp;
+  for (i = 0; i < PET_TRAINING_SKILLS; i++)
+    ch->player_specials->saved.eidolon_training_skills[i] = skills[i];
+}
+
 int load_char(const char *name, struct char_data *ch)
 {
   int id, i, j;
@@ -804,6 +827,19 @@ int load_char(const char *name, struct char_data *ch)
             else ch->player_specials->saved.aurak_breath_ready = (time_t)ready;
           }
         }
+        if (!strcmp(tag, "EiTr"))
+          load_eidolon_training(ch, line);
+        if (!strcmp(tag, "AuMp"))
+        {
+          int spent;
+          long long refresh;
+          if (sscanf(line, "%d %lld", &spent, &refresh) == 2 &&
+              spent >= 0 && spent <= 10 && refresh >= 0)
+          {
+            ch->player_specials->saved.aurak_magic_spent = spent;
+            ch->player_specials->saved.aurak_magic_refresh = (time_t)refresh;
+          }
+        }
         if (!strcmp(tag, "AiFm"))
           load_irda_form(ch, line);
         if (!strcmp(tag, "AlRc"))
@@ -976,6 +1012,19 @@ int load_char(const char *name, struct char_data *ch)
           load_class_level(fl, ch);
         else if (!strcmp(tag, "Cln "))
           GET_CLAN(ch) = atoi(line);
+        else if (!strcmp(tag, "CNot"))
+          clan_restore_login_notice(ch, line);
+        else if (!strcmp(tag, "CApp"))
+        {
+          int result;
+          char name[61];
+          if (sscanf(line, "%d %60[^\r\n]", &result, name) == 2 && (result == 1 || result == 2))
+          {
+            ch->player_specials->saved.clan_application_result = result;
+            strlcpy(ch->player_specials->saved.clan_application_name, name,
+                    sizeof(ch->player_specials->saved.clan_application_name));
+          }
+        }
         else if (!strcmp(tag, "Clrk"))
           GET_CLANRANK(ch) = atoi(line);
         else if (!strcmp(tag, "Clty"))
@@ -3084,6 +3133,18 @@ bool save_char_checked(struct char_data *ch, int mode)
                  (long long)ch->player_specials->saved.irda_mirage_ready[0],
                  (long long)ch->player_specials->saved.irda_mirage_ready[1],
                  (long long)ch->player_specials->saved.irda_mirage_ready[2]);
+  if (ch->player_specials->saved.eidolon_training_saved)
+    BUFFER_WRITE("EiTr: %d %d %d %d %d %d %d\n",
+                 ch->player_specials->saved.eidolon_training_rank,
+                 ch->player_specials->saved.eidolon_training_experience,
+                 ch->player_specials->saved.eidolon_training_skills[0],
+                 ch->player_specials->saved.eidolon_training_skills[1],
+                 ch->player_specials->saved.eidolon_training_skills[2],
+                 ch->player_specials->saved.eidolon_training_skills[3],
+                 ch->player_specials->saved.eidolon_training_skills[4]);
+  if (ch->player_specials->saved.aurak_magic_refresh)
+    BUFFER_WRITE("AuMp: %d %lld\n", ch->player_specials->saved.aurak_magic_spent,
+                 (long long)ch->player_specials->saved.aurak_magic_refresh);
   if (ch->player_specials->saved.aurak_dominate_ready)
     BUFFER_WRITE("AuDm: %lld\n", (long long)ch->player_specials->saved.aurak_dominate_ready);
   if (ch->player_specials->saved.aurak_breath_ready)
@@ -3125,6 +3186,14 @@ bool save_char_checked(struct char_data *ch, int mode)
     BUFFER_WRITE("DipT: %d\n", GET_DIPTIMER(ch));
   if (GET_CLAN(ch) != PFDEF_CLAN)
     BUFFER_WRITE("Cln : %d\n", GET_CLAN(ch));
+  {
+    struct txt_block *notice;
+    for (notice = ch->player_specials->saved.clan_login_notices; notice; notice = notice->next)
+      BUFFER_WRITE("CNot: %s\n", notice->text);
+  }
+  if (ch->player_specials->saved.clan_application_result)
+    BUFFER_WRITE("CApp: %d %s\n", ch->player_specials->saved.clan_application_result,
+                 ch->player_specials->saved.clan_application_name);
   if (GET_CLANRANK(ch) != PFDEF_CLANRANK)
     BUFFER_WRITE("Clrk: %d\n", GET_CLANRANK(ch));
   if (GET_CLANPOINTS(ch) != PFDEF_CLANPOINTS)
@@ -5858,9 +5927,9 @@ bool valid_pet_name(char *name)
   return true;
 }
 
-static bool persist_char_pets(struct char_data *ch)
+static bool persist_char_pets_returning(struct char_data *ch, struct char_data *returning)
 {
-  if (!ch || !ch->desc || IS_NPC(ch))
+  if (!ch || IS_NPC(ch))
     return FALSE;
 
   struct follow_type *f = NULL;
@@ -5920,8 +5989,31 @@ static bool persist_char_pets(struct char_data *ch)
   for (f = ch->followers; f; f = f->next)
   {
     tch = f->follower;
-    if (!IS_NPC(tch))
+    if (!IS_NPC(tch) || (MOB_FLAGGED(tch, MOB_NOTDEADYET) && companion_training_kind(tch) == 4))
       continue;
+    if (tch == returning)
+    {
+      struct obj_data *obj;
+      int slot;
+      for (slot = 0; slot < NUM_WEARS; slot++)
+        if (GET_EQ(tch, slot) && !estate_queue_delivery(ch, GET_EQ(tch, slot), 0))
+        {
+          mysql_query(conn, "ROLLBACK");
+          return FALSE;
+        }
+      for (obj = tch->carrying; obj; obj = obj->next_content)
+        if (!estate_queue_delivery(ch, obj, 0))
+        {
+          mysql_query(conn, "ROLLBACK");
+          return FALSE;
+        }
+      if (GET_GOLD(tch) && !estate_queue_money(GET_IDNUM(ch), -GET_GOLD(tch)))
+      {
+        mysql_query(conn, "ROLLBACK");
+        return FALSE;
+      }
+      continue; /* Remove the old live-pet snapshot in the same transaction. */
+    }
     if (!AFF_FLAGGED(tch, AFF_CHARM))
       continue;
     snprintf(query2, sizeof(query2),
@@ -6040,15 +6132,67 @@ static bool persist_char_pets(struct char_data *ch)
   return TRUE;
 }
 
+static bool persist_char_pets(struct char_data *ch)
+{
+  return persist_char_pets_returning(ch, NULL);
+}
+
+/* Commit saved-pet removal and owner deliveries together before destroying the
+ * live source. A crash leaves either the original pet save or pending returns. */
+bool return_eidolon_gear(struct char_data *pet)
+{
+  struct char_data *owner;
+  int slot, has_items = FALSE;
+  if (companion_training_kind(pet) != 4 || !(owner = pet->master) || IS_NPC(owner) ||
+      GET_POS(pet) == POS_DEAD)
+    return TRUE; /* Fallen pets already have their own gear archive. */
+  for (slot = 0; slot < NUM_WEARS; slot++)
+    if (GET_EQ(pet, slot)) has_items = TRUE;
+  if (!has_items && !pet->carrying && !GET_GOLD(pet)) return TRUE;
+  remember_eidolon_training(pet);
+  if (!estate_init() || !persist_char_pets_returning(owner, pet))
+  {
+    send_to_char(owner, "Your eidolon's gear could not be returned safely. It has not been dismissed.\r\n");
+    return FALSE;
+  }
+  for (slot = 0; slot < NUM_WEARS; slot++)
+    if (GET_EQ(pet, slot)) extract_obj(unequip_char(pet, slot));
+  while (pet->carrying) extract_obj(pet->carrying);
+  GET_GOLD(pet) = 0;
+  send_to_char(owner, "Your eidolon's equipment and belongings have been saved for return to you.\r\n");
+  estate_recover(owner);
+  return TRUE;
+}
+
+bool return_all_eidolon_gear(struct char_data *owner)
+{
+  struct follow_type *f;
+  if (!owner || IS_NPC(owner)) return TRUE;
+  for (f = owner->followers; f; f = f->next)
+    if (!return_eidolon_gear(f->follower)) return FALSE;
+  return TRUE;
+}
+
+bool save_char_pets_checked(struct char_data *ch)
+{
+  struct follow_type *f;
+  if (ch && !IS_NPC(ch))
+    for (f = ch->followers; f; f = f->next)
+      remember_eidolon_training(f->follower);
+  return persist_char_pets(ch);
+}
+
 void save_char_pets(struct char_data *ch)
 {
-  persist_char_pets(ch);
+  if (!save_char_pets_checked(ch) && ch && !IS_NPC(ch))
+    log("SYSERR: Companion save failed for %s", GET_NAME(ch));
 }
 
 bool archive_fallen_pet(struct char_data *pet)
 {
   if (!is_persistent_pet(pet))
     return FALSE;
+  remember_eidolon_training(pet);
   GET_POS(pet) = POS_DEAD;
   return persist_char_pets(pet->master);
 }
@@ -6275,6 +6419,10 @@ static struct char_data *load_char_pets_filtered(struct char_data *ch, int reviv
     if (revive_id <= 0)
       load_mtrigger(mob);
     add_follower(mob, ch);
+    if (ch->player_specials->saved.eidolon_training_saved)
+      restore_eidolon_training(ch, mob);
+    else
+      remember_eidolon_training(mob);
     if (!GROUP(mob) && GROUP(ch) && GROUP_LEADER(GROUP(ch)) == ch)
       join_group(mob, GROUP(ch));
     act("$N appears beside you.", true, ch, 0, mob, TO_CHAR);
