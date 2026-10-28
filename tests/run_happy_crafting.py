@@ -11,7 +11,8 @@ craft=(root/'src/crafting_new.c').read_text()
 def function(source,name):
     start=re.search(r'^(?:static )?(?:void|int|bool) '+name+r'\([^;]*?\)\n\{',source,re.M).start()
     return source[start:source.index('\n}',start)+2]+'\n'
-code=''.join(function(craft,n) for n in ['canonical_craft_material','material_grade',
+code=function((root/'src/utils.c').read_text(),'get_jack_of_all_trades_bonus')
+code+=''.join(function(craft,n) for n in ['canonical_craft_material','material_grade',
     'harvesting_skill_by_material','get_insightful_talent_bonus','gain_craft_exp',
     'happy_hour_quantity_bonus','apply_happy_hour_yield','craft_refine_complete',
     'harvest_complete','butcher_complete'])
@@ -35,7 +36,13 @@ const char *ability_names[NUM_ABILITIES+1];
 const char *crafting_materials[NUM_CRAFT_MATS+1];
 const char *crafting_motes[NUM_CRAFT_MOTES+1];
 static struct obj_data corpse;
-static int roll=10, efficient, expertise, mote_rank, skill_value=30;
+static int roll=10, efficient, expertise, mote_rank, skill_value=30, jack_feats;
+int get_feat_value(struct char_data *ch, int feat) {
+  if (feat == FEAT_JACK_OF_ALL_TRADES) return jack_feats & 1;
+  if (feat == FEAT_IMPROVED_JACK_OF_ALL_TRADES) return jack_feats & 2;
+  if (feat == FEAT_EXEMPLAR) return jack_feats & 4;
+  return 0;
+}
 static char output[32768];
 void basic_mud_log(const char *fmt,...) { assert(0); }
 int MAX(int a,int b) { return a>b?a:b; }
@@ -65,7 +72,7 @@ size_t send_to_char(struct char_data *ch,const char *fmt,...) {
 }
 static void reset(struct char_data *ch) {
   memset(ch->player_specials,0,sizeof(*ch->player_specials)); memset(&corpse,0,sizeof(corpse));
-  output[0]=0; efficient=expertise=mote_rank=0; roll=10; skill_value=30;
+  output[0]=0; jack_feats=0; efficient=expertise=mote_rank=0; roll=10; skill_value=30;
 }
 '''
 checks=r'''
@@ -123,6 +130,33 @@ int main(void) {
   reset(&ch); rooms[0].harvest_material=CRAFT_MAT_HEMP; rooms[0].harvest_material_amount=10;
   harvest_complete(&ch); assert(GET_CRAFT_MAT((&ch),CRAFT_MAT_HEMP)==4);
   assert(GET_CRAFT_SKILL_EXP((&ch),ABILITY_HARVEST_GATHERING)==45);
+  /* Each versatility upgrade changes a failed check into a success at its exact boundary. */
+  for (int mask = 0; mask < 8; mask++) {
+    int bonus = mask & 4 ? 10 : mask & 2 ? 6 : mask & 1 ? 3 : 0;
+    for (int below = 0; below < 2; below++) {
+      for (int i = 0; i < 4; i++) {
+        reset(&ch); jack_feats=mask; CLASS_LEVEL((&ch),CLASS_ARTIFICER)=20;
+        rooms[0].harvest_material=materials[i]; rooms[0].harvest_material_amount=100;
+        int dc=HARVEST_BASE_DC+MAX(1,material_grade(materials[i])*5);
+        skill_value=dc-roll-bonus-below;
+        harvest_complete(&ch);
+        assert((GET_CRAFT_MAT((&ch),materials[i])>0)==!below);
+        assert(GET_ABILITY((&ch),harvesting_skill_by_material(materials[i]))==0);
+        if(bonus) assert(strstr(output,"jack of all trades") || strstr(output,"exemplar"));
+      }
+      reset(&ch); jack_feats=mask; CLASS_LEVEL((&ch),CLASS_ARTIFICER)=20;
+      skill_value=15-roll-bonus-below; GET_CRAFT((&ch)).butcher_material=CRAFT_MAT_LOW_GRADE_HIDE;
+      butcher_complete(&ch);
+      assert((GET_CRAFT_MAT((&ch),CRAFT_MAT_LOW_GRADE_HIDE)>0)==!below);
+      reset(&ch); jack_feats=mask; CLASS_LEVEL((&ch),CLASS_ARTIFICER)=20;
+      skill_value=20-roll-bonus-below;
+      GET_CRAFT((&ch)).refining_result[0]=CRAFT_MAT_STEEL;
+      GET_CRAFT((&ch)).refining_result[1]=1; GET_CRAFT((&ch)).refining_batch_quantity=1;
+      GET_CRAFT((&ch)).dc=20; GET_CRAFT((&ch)).skill_type=ABILITY_HARVEST_MINING;
+      craft_refine_complete(&ch);
+      assert((GET_CRAFT_MAT((&ch),CRAFT_MAT_STEEL)>0)==!below);
+    }
+  }
   return 0;
 }
 '''

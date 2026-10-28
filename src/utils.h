@@ -186,6 +186,7 @@ bool affected_by_aura_of_righteousness(struct char_data *ch);
 void objs_from_sheath(struct char_data *ch, struct obj_data *sheath);
 bool is_fear_spell(int spellnum);
 bool is_grouped_with_soldier(struct char_data *ch);
+int get_jack_of_all_trades_bonus(struct char_data *ch);
 int get_elbow_grease_bonus(struct char_data *ch);
 bool is_crafting_skill(int skillnum);
 bool is_selectable_region(int region);

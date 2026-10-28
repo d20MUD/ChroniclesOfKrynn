@@ -1212,7 +1212,8 @@ ACMD(do_brew)
 
   /* Calculate alchemy skill check DC (for later use in event) */
   dc = 10 + (highest_circle * 2) + (num_spells - 1) * 3; /* +3 DC per additional spell */
-  brewing_skill = get_craft_skill_value(ch, craft_skill_to_ability(ABILITY_CRAFT_ALCHEMY));
+  brewing_skill = get_craft_skill_value(ch, craft_skill_to_ability(ABILITY_CRAFT_ALCHEMY)) +
+                  get_elbow_grease_bonus(ch) + get_jack_of_all_trades_bonus(ch);
 
   /* Materials are available - start alchemy process without consuming them yet */
   send_to_char(ch, "You have the required materials. Starting alchemy process...\r\n");

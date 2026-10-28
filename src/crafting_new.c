@@ -1409,7 +1409,8 @@ void survey_complete(struct char_data *ch)
   GET_CRAFT(ch).craft_duration = 0;
   roll = d20(ch);
   talent_bonus = get_talent_rank(ch, TALENT_SURVEYOR);
-  skill_bonus = get_craft_skill_value(ch, ABILITY_HARVEST_SURVEYING) + get_elbow_grease_bonus(ch);
+  skill_bonus = get_craft_skill_value(ch, ABILITY_HARVEST_SURVEYING) + get_elbow_grease_bonus(ch) +
+               get_jack_of_all_trades_bonus(ch);
   GET_SURVEY_ROOMS(ch) = roll + talent_bonus + skill_bonus;
 
   char talent_bonus_text[128];
@@ -4279,7 +4280,7 @@ bool create_craft_skill_check(struct char_data *ch, struct obj_data *obj, int sk
 
   /* Shared with harvesting and the general ability calculation. */
   elbow_grease_bonus = get_elbow_grease_bonus(ch);
-  skill_mod += elbow_grease_bonus;
+  skill_mod += elbow_grease_bonus + get_jack_of_all_trades_bonus(ch);
 
   if (artificer_efficient_crafter_applies(ch))
     skill_mod += 2;
@@ -4314,6 +4315,12 @@ bool create_craft_skill_check(struct char_data *ch, struct obj_data *obj, int sk
   {
     char bonus_text[256] = "";
     char *ptr = bonus_text;
+    if (get_jack_of_all_trades_bonus(ch) > 0)
+      ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + %s [%d]",
+                      HAS_FEAT(ch, FEAT_EXEMPLAR) ? "exemplar" :
+                      HAS_FEAT(ch, FEAT_IMPROVED_JACK_OF_ALL_TRADES) ?
+                      "improved jack of all trades" : "jack of all trades",
+                      get_jack_of_all_trades_bonus(ch));
 
     if (specialization_bonus > 0)
       ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + specialization [%d]",
@@ -4350,6 +4357,12 @@ bool create_craft_skill_check(struct char_data *ch, struct obj_data *obj, int sk
   {
     char bonus_text[256] = "";
     char *ptr = bonus_text;
+    if (get_jack_of_all_trades_bonus(ch) > 0)
+      ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + %s [%d]",
+                      HAS_FEAT(ch, FEAT_EXEMPLAR) ? "exemplar" :
+                      HAS_FEAT(ch, FEAT_IMPROVED_JACK_OF_ALL_TRADES) ?
+                      "improved jack of all trades" : "jack of all trades",
+                      get_jack_of_all_trades_bonus(ch));
 
     if (specialization_bonus > 0)
       ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + specialization [%d]",
@@ -6171,7 +6184,8 @@ void craft_refine_complete(struct char_data *ch)
   roll = d20(ch);
   dc = GET_CRAFT(ch).dc;
   skill_type = GET_CRAFT(ch).skill_type;
-  skill = get_craft_skill_value(ch, skill_type) + get_elbow_grease_bonus(ch);
+  skill = get_craft_skill_value(ch, skill_type) + get_elbow_grease_bonus(ch) +
+          get_jack_of_all_trades_bonus(ch);
 
   /* Add proficient talent bonus */
   skill += get_proficient_talent_bonus(ch, skill_type);
@@ -6216,6 +6230,12 @@ void craft_refine_complete(struct char_data *ch)
     char bonus_text[128] = "";
     if (spec_bonus > 0)
       snprintf(bonus_text, sizeof(bonus_text), " + specialization [%d]", spec_bonus);
+    if (get_jack_of_all_trades_bonus(ch) > 0)
+      snprintf(bonus_text + strlen(bonus_text), sizeof(bonus_text) - strlen(bonus_text),
+               " + %s [%d]", HAS_FEAT(ch, FEAT_EXEMPLAR) ? "exemplar" :
+               HAS_FEAT(ch, FEAT_IMPROVED_JACK_OF_ALL_TRADES) ?
+               "improved jack of all trades" : "jack of all trades",
+               get_jack_of_all_trades_bonus(ch));
 
     send_to_char(
         ch,
@@ -6237,6 +6257,12 @@ void craft_refine_complete(struct char_data *ch)
     char bonus_text[128] = "";
     if (spec_bonus > 0)
       snprintf(bonus_text, sizeof(bonus_text), " + specialization [%d]", spec_bonus);
+    if (get_jack_of_all_trades_bonus(ch) > 0)
+      snprintf(bonus_text + strlen(bonus_text), sizeof(bonus_text) - strlen(bonus_text),
+               " + %s [%d]", HAS_FEAT(ch, FEAT_EXEMPLAR) ? "exemplar" :
+               HAS_FEAT(ch, FEAT_IMPROVED_JACK_OF_ALL_TRADES) ?
+               "improved jack of all trades" : "jack of all trades",
+               get_jack_of_all_trades_bonus(ch));
 
     send_to_char(ch,
                  "You rolled %d + base skill %d%s for a total of %d >= dc of %d. You succeed!\r\n",
@@ -6287,7 +6313,8 @@ void harvest_complete(struct char_data *ch)
   }
 
   roll = d20(ch);
-  skill_roll = get_craft_skill_value(ch, skill) + get_elbow_grease_bonus(ch);
+  skill_roll = get_craft_skill_value(ch, skill) + get_elbow_grease_bonus(ch) +
+               get_jack_of_all_trades_bonus(ch);
 
   /* Add proficient talent bonus */
   prof_bonus = get_proficient_talent_bonus(ch, skill);
@@ -6336,6 +6363,12 @@ void harvest_complete(struct char_data *ch)
   {
     char bonus_text[256] = "";
     char *ptr = bonus_text;
+    if (get_jack_of_all_trades_bonus(ch) > 0)
+      ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + %s [%d]",
+                      HAS_FEAT(ch, FEAT_EXEMPLAR) ? "exemplar" :
+                      HAS_FEAT(ch, FEAT_IMPROVED_JACK_OF_ALL_TRADES) ?
+                      "improved jack of all trades" : "jack of all trades",
+                      get_jack_of_all_trades_bonus(ch));
     if (get_elbow_grease_bonus(ch) > 0)
       ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + elbow grease [%d]",
                       get_elbow_grease_bonus(ch));
@@ -6381,6 +6414,12 @@ void harvest_complete(struct char_data *ch)
     {
       char bonus_text[256] = "";
       char *ptr = bonus_text;
+      if (get_jack_of_all_trades_bonus(ch) > 0)
+        ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + %s [%d]",
+                        HAS_FEAT(ch, FEAT_EXEMPLAR) ? "exemplar" :
+                        HAS_FEAT(ch, FEAT_IMPROVED_JACK_OF_ALL_TRADES) ?
+                        "improved jack of all trades" : "jack of all trades",
+                        get_jack_of_all_trades_bonus(ch));
       if (get_elbow_grease_bonus(ch) > 0)
         ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + elbow grease [%d]",
                         get_elbow_grease_bonus(ch));
@@ -6726,7 +6765,8 @@ void butcher_complete(struct char_data *ch)
   skill = ABILITY_HARVEST_BUTCHERING;
 
   roll = d20(ch);
-  skill_roll = get_craft_skill_value(ch, skill) + get_elbow_grease_bonus(ch);
+  skill_roll = get_craft_skill_value(ch, skill) + get_elbow_grease_bonus(ch) +
+               get_jack_of_all_trades_bonus(ch);
   prof_bonus = get_proficient_talent_bonus(ch, skill);
 
   /* Total skill bonus includes proficiency and tool bonus */
@@ -6771,6 +6811,12 @@ void butcher_complete(struct char_data *ch)
   {
     char bonus_text[512] = "";
     char *ptr = bonus_text;
+    if (get_jack_of_all_trades_bonus(ch) > 0)
+      ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + %s [%d]",
+                      HAS_FEAT(ch, FEAT_EXEMPLAR) ? "exemplar" :
+                      HAS_FEAT(ch, FEAT_IMPROVED_JACK_OF_ALL_TRADES) ?
+                      "improved jack of all trades" : "jack of all trades",
+                      get_jack_of_all_trades_bonus(ch));
     if (get_elbow_grease_bonus(ch) > 0)
       ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + elbow grease [%d]",
                       get_elbow_grease_bonus(ch));
@@ -6839,6 +6885,12 @@ void butcher_complete(struct char_data *ch)
   {
     char bonus_text[512] = "";
     char *ptr = bonus_text;
+    if (get_jack_of_all_trades_bonus(ch) > 0)
+      ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + %s [%d]",
+                      HAS_FEAT(ch, FEAT_EXEMPLAR) ? "exemplar" :
+                      HAS_FEAT(ch, FEAT_IMPROVED_JACK_OF_ALL_TRADES) ?
+                      "improved jack of all trades" : "jack of all trades",
+                      get_jack_of_all_trades_bonus(ch));
     if (get_elbow_grease_bonus(ch) > 0)
       ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + elbow grease [%d]",
                       get_elbow_grease_bonus(ch));

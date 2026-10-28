@@ -11770,6 +11770,17 @@ bool is_in_hometown(struct char_data *ch)
 }
 
 /* Check bonuses must not be included in stored crafting skill ranks or XP. */
+int get_jack_of_all_trades_bonus(struct char_data *ch)
+{
+  if (HAS_FEAT(ch, FEAT_EXEMPLAR))
+    return CLASS_LEVEL(ch, CLASS_ARTIFICER) / 2;
+  if (HAS_FEAT(ch, FEAT_IMPROVED_JACK_OF_ALL_TRADES))
+    return 6;
+  if (HAS_FEAT(ch, FEAT_JACK_OF_ALL_TRADES))
+    return 3;
+  return 0;
+}
+
 int get_elbow_grease_bonus(struct char_data *ch)
 {
   int level;
