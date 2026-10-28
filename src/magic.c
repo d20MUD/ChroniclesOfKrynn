@@ -37,6 +37,7 @@
 #include "alchemy.h"
 #include "missions.h"
 #include "psionics.h"
+#include "spell_prep.h"
 #include "combat_modes.h"
 #include "spec_procs.h"
 #include "evolutions.h"
@@ -508,6 +509,11 @@ int savingthrow_full(struct char_data *ch, struct char_data *vict, int type, int
       diceroll = d20(vict), stat_bonus = 0, savethrow = 0;
   struct affected_type *af = NULL;
 
+  /* Most power effects use savingthrow(), which has no spell number argument.
+   * Preserve the active power so its circle and discipline bonuses are applied. */
+  if (!spellnum && ch && casttype == CAST_SPELL && is_spellnum_psionic(CASTING_SPELLNUM(ch)))
+    spellnum = CASTING_SPELLNUM(ch);
+
   /* Irresistible Magic perk - auto-fail saving throw for victim */
   if (ch && affected_by_spell(ch, PERK_WIZARD_IRRESISTIBLE_MAGIC))
   {
@@ -713,16 +719,25 @@ int savingthrow_full(struct char_data *ch, struct char_data *vict, int type, int
   default:
     if (ch)
     {
-      if (spell_info[spellnum].effective_level)
-        challenge += level; /* this is a spell-like ability */
-      else
-        challenge += (DIVINE_LEVEL(ch) + MAGIC_LEVEL(ch)) / 2; /* caster level */
-
-      stat_bonus = GET_WIS_BONUS(ch);
-      if (GET_CHA_BONUS(ch) > stat_bonus)
-        stat_bonus = GET_CHA_BONUS(ch);
-      if (GET_INT_BONUS(ch) > stat_bonus)
+      if (is_spellnum_psionic(spellnum))
+      {
+        /* Manifested powers use their power circle, not arcane/divine levels. */
+        challenge += compute_powers_circle(CLASS_PSIONICIST, spellnum, METAMAGIC_NONE);
         stat_bonus = GET_INT_BONUS(ch);
+      }
+      else
+      {
+        if (spell_info[spellnum].effective_level)
+          challenge += level; /* this is a spell-like ability */
+        else
+          challenge += (DIVINE_LEVEL(ch) + MAGIC_LEVEL(ch)) / 2; /* caster level */
+
+        stat_bonus = GET_WIS_BONUS(ch);
+        if (GET_CHA_BONUS(ch) > stat_bonus)
+          stat_bonus = GET_CHA_BONUS(ch);
+        if (GET_INT_BONUS(ch) > stat_bonus)
+          stat_bonus = GET_INT_BONUS(ch);
+      }
 
       challenge += stat_bonus;
 
