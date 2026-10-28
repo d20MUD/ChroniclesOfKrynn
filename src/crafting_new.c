@@ -1410,7 +1410,7 @@ void survey_complete(struct char_data *ch)
   GET_CRAFT(ch).craft_duration = 0;
   roll = d20(ch);
   talent_bonus = get_talent_rank(ch, TALENT_SURVEYOR);
-  skill_bonus = get_craft_skill_value(ch, ABILITY_HARVEST_SURVEYING);
+  skill_bonus = get_craft_skill_value(ch, ABILITY_HARVEST_SURVEYING) + get_elbow_grease_bonus(ch);
   GET_SURVEY_ROOMS(ch) = roll + talent_bonus + skill_bonus;
 
   char talent_bonus_text[128];
@@ -4266,19 +4266,9 @@ bool create_craft_skill_check(struct char_data *ch, struct obj_data *obj, int sk
     skill_mod += 5;
   }
 
-  /* Add elbow grease bonus for artificers */
-  if (HAS_FEAT(ch, FEAT_ELBOW_GREASE))
-  {
-    int artificer_level = CLASS_LEVEL(ch, CLASS_ARTIFICER);
-    if (artificer_level >= 10)
-      elbow_grease_bonus = 6;
-    else if (artificer_level >= 5)
-      elbow_grease_bonus = 4;
-    else
-      elbow_grease_bonus = 2;
-
-    skill_mod += elbow_grease_bonus;
-  }
+  /* Shared with harvesting and the general ability calculation. */
+  elbow_grease_bonus = get_elbow_grease_bonus(ch);
+  skill_mod += elbow_grease_bonus;
 
   if (artificer_efficient_crafter_applies(ch))
     skill_mod += 2;
@@ -4311,7 +4301,7 @@ bool create_craft_skill_check(struct char_data *ch, struct obj_data *obj, int sk
   }
   else if ((roll + skill_mod) < dc)
   {
-    char bonus_text[256];
+    char bonus_text[256] = "";
     char *ptr = bonus_text;
 
     if (specialization_bonus > 0)
@@ -4347,7 +4337,7 @@ bool create_craft_skill_check(struct char_data *ch, struct obj_data *obj, int sk
   }
   else
   {
-    char bonus_text[256];
+    char bonus_text[256] = "";
     char *ptr = bonus_text;
 
     if (specialization_bonus > 0)
@@ -6143,7 +6133,7 @@ void craft_refine_complete(struct char_data *ch)
   roll = d20(ch);
   dc = GET_CRAFT(ch).dc;
   skill_type = GET_CRAFT(ch).skill_type;
-  skill = get_craft_skill_value(ch, skill_type);
+  skill = get_craft_skill_value(ch, skill_type) + get_elbow_grease_bonus(ch);
 
   /* Add proficient talent bonus */
   skill += get_proficient_talent_bonus(ch, skill_type);
@@ -6259,7 +6249,7 @@ void harvest_complete(struct char_data *ch)
   }
 
   roll = d20(ch);
-  skill_roll = get_craft_skill_value(ch, skill);
+  skill_roll = get_craft_skill_value(ch, skill) + get_elbow_grease_bonus(ch);
 
   /* Add proficient talent bonus */
   prof_bonus = get_proficient_talent_bonus(ch, skill);
@@ -6306,8 +6296,11 @@ void harvest_complete(struct char_data *ch)
   }
   else if ((roll + skill_roll + prof_bonus) < dc)
   {
-    char bonus_text[256];
+    char bonus_text[256] = "";
     char *ptr = bonus_text;
+    if (get_elbow_grease_bonus(ch) > 0)
+      ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + elbow grease [%d]",
+                      get_elbow_grease_bonus(ch));
 
     if (spec_bonus > 0)
       ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + specialization [%d]",
@@ -6348,8 +6341,11 @@ void harvest_complete(struct char_data *ch)
     }
     else
     {
-      char bonus_text[256];
+      char bonus_text[256] = "";
       char *ptr = bonus_text;
+      if (get_elbow_grease_bonus(ch) > 0)
+        ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + elbow grease [%d]",
+                        get_elbow_grease_bonus(ch));
 
       if (spec_bonus > 0)
         ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + specialization [%d]",
@@ -6692,7 +6688,7 @@ void butcher_complete(struct char_data *ch)
   skill = ABILITY_HARVEST_BUTCHERING;
 
   roll = d20(ch);
-  skill_roll = get_craft_skill_value(ch, skill);
+  skill_roll = get_craft_skill_value(ch, skill) + get_elbow_grease_bonus(ch);
   prof_bonus = get_proficient_talent_bonus(ch, skill);
 
   /* Total skill bonus includes proficiency and tool bonus */
@@ -6735,8 +6731,11 @@ void butcher_complete(struct char_data *ch)
   /* Failure */
   if ((roll + skill_roll + total_bonus) < dc)
   {
-    char bonus_text[512];
+    char bonus_text[512] = "";
     char *ptr = bonus_text;
+    if (get_elbow_grease_bonus(ch) > 0)
+      ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + elbow grease [%d]",
+                      get_elbow_grease_bonus(ch));
 
     if (spec_bonus > 0)
       ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + specialization [%d]",
@@ -6800,8 +6799,11 @@ void butcher_complete(struct char_data *ch)
   }
   else
   {
-    char bonus_text[512];
+    char bonus_text[512] = "";
     char *ptr = bonus_text;
+    if (get_elbow_grease_bonus(ch) > 0)
+      ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + elbow grease [%d]",
+                      get_elbow_grease_bonus(ch));
 
     if (spec_bonus > 0)
       ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + specialization [%d]",

@@ -3297,6 +3297,20 @@ struct char_data *get_char_world_no_vis(struct char_data *ch, char *name, int *n
     num = get_number(&name);
   }
 
+  /* Prefer an exact player name for ordinary world targeting, even when
+   * a local mission mob has that name as a keyword. Probe with a separate
+   * ordinal so a miss cannot consume the caller's numbered selection.
+   * Explicit ordinals above one retain the normal room/world ordering. */
+  if (*number == 1 && str_cmp(name, "self") && str_cmp(name, "me"))
+  {
+    int player_number = 1;
+    if ((i = get_player_no_vis(ch, name, &player_number, FIND_CHAR_WORLD)) != NULL)
+    {
+      *number = 0;
+      return i;
+    }
+  }
+
   if ((i = get_char_room_no_vis(ch, name, number)) != NULL)
     return (i);
 
@@ -3330,6 +3344,20 @@ struct char_data *get_char_world_vis(struct char_data *ch, char *name, int *numb
   {
     number = &num;
     num = get_number(&name);
+  }
+
+  /* Prefer an exact player name for ordinary world targeting, even when
+   * a local mission mob has that name as a keyword. Probe with a separate
+   * ordinal so a miss cannot consume the caller's numbered selection.
+   * Explicit ordinals above one retain the normal room/world ordering. */
+  if (*number == 1 && str_cmp(name, "self") && str_cmp(name, "me"))
+  {
+    int player_number = 1;
+    if ((i = get_player_vis(ch, name, &player_number, FIND_CHAR_WORLD)) != NULL)
+    {
+      *number = 0;
+      return i;
+    }
   }
 
   if ((i = get_char_room_vis(ch, name, number)) != NULL)
@@ -3380,14 +3408,7 @@ struct char_data *get_char_no_vis(struct char_data *ch, char *name, int *number,
   }
   else if (where == FIND_CHAR_WORLD)
   {
-    if (get_player_no_vis(ch, name, NULL, FIND_CHAR_WORLD) == NULL)
-    {
-      return get_char_world_no_vis(ch, name, number);
-    }
-    else
-    {
-      return get_player_no_vis(ch, name, NULL, FIND_CHAR_WORLD);
-    }
+    return get_char_world_no_vis(ch, name, number);
   }
   else
     return (NULL);

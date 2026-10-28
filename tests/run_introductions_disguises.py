@@ -249,6 +249,36 @@ int main(void) {
   { char name[]="Bob"; assert(!get_char_vis(alice,name,NULL,FIND_CHAR_ROOM)); }
   { char name[]="0.Bob"; assert(!get_char_vis(alice,name,NULL,FIND_CHAR_ROOM)); }
   { char name[]="Alice"; assert(get_char_vis(bob,name,NULL,FIND_CHAR_ROOM)==alice); }
+  /* World lookups prefer exact visible PCs over mission keywords, including
+   * local mobs. Explicit ordinals and room-only targeting keep their order. */
+  {
+    struct char_data mob = {0};
+    struct char_data *old_list = character_list;
+    char name[32]; int ordinal;
+    mob.player.name = "guard Bob"; SET_BIT_AR(MOB_FLAGS(&mob), MOB_ISNPC);
+    mob.char_specials.position = POS_STANDING;
+    mob.next = old_list; character_list = &mob;
+    mob.next_in_room = world[0].people; world[0].people = &mob;
+    CONFIG_USE_INTRO_SYSTEM = 0;
+    bob->in_room = 1;
+    strcpy(name,"Bob"); assert(get_char_world_vis(alice,name,NULL)==bob);
+    strcpy(name,"Bob"); ordinal=1;
+    assert(get_char_vis(alice,name,&ordinal,FIND_CHAR_WORLD)==bob && ordinal==0);
+    strcpy(name,"1.Bob"); assert(get_char_world_vis(alice,name,NULL)==bob);
+    strcpy(name,"2.Bob"); assert(get_char_world_vis(alice,name,NULL)==bob);
+    strcpy(name,"0.Bob"); assert(get_char_world_vis(alice,name,NULL)==bob);
+    strcpy(name,"Bob"); assert(get_char_room_vis(alice,name,NULL)==&mob);
+    strcpy(name,"guard"); assert(get_char_world_vis(alice,name,NULL)==&mob);
+    SET_BIT_AR(AFF_FLAGS(bob), AFF_INVISIBLE);
+    strcpy(name,"Bob"); assert(get_char_world_vis(alice,name,NULL)==&mob);
+    strcpy(name,"Bob"); assert(get_char_world_no_vis(alice,name,NULL)==bob);
+    REMOVE_BIT_AR(AFF_FLAGS(bob), AFF_INVISIBLE);
+    CONFIG_USE_INTRO_SYSTEM = 1;
+    strcpy(name,"Bob"); assert(get_char_world_vis(alice,name,NULL)==&mob);
+    strcpy(name,"self"); assert(get_char_world_vis(alice,name,NULL)==alice);
+    bob->in_room = 0;
+    world[0].people = mob.next_in_room; character_list = old_list;
+  }
   /* Known room occupants include their name AND appearance; strangers reveal no name. */
   *output=0; show_room_player_identity(alice,bob);
   assert(strstr(output,"Alice (") && strstr(output,"human"));

@@ -7,9 +7,14 @@ source=(root/'src/clan.c').read_text()
 players=(root/'src/players.c').read_text()
 def function(signature):
     a=source.index(signature+'\n{');return source[a:source.index('\n}',a)+2]+'\n'
-headers='\n'.join('#include "'+h+'"' for h in ['conf.h','sysdep.h','structs.h','utils.h','db.h','comm.h','clan.h','interpreter.h'])
+headers='\n'.join('#include "'+h+'"' for h in ['conf.h','sysdep.h','structs.h','utils.h','db.h','comm.h','clan.h','interpreter.h','handler.h'])
 code=headers+r'''
 #include <assert.h>
+#define QCYN "\tC"
+#define QYEL "\tY"
+#define QNRM "\tn"
+#define C_NRM 0
+#define CCNRM(ch,level) "\tn"
 static struct clan_data clans[2];struct clan_data *clan_list=clans;int num_of_clans=2;
 static struct player_index_element entries[6];struct player_index_element *player_table=entries;int top_of_p_table=5;
 static struct char_data online;
@@ -18,6 +23,7 @@ static struct player_special_data online_saved;
 struct player_special_data dummy_mob;
 void basic_mud_log(const char *fmt,...) {}
 static int writes, loads, member_notices, allow_priv=1, last_rank;
+static int freed, approved_rank, approved_result, approved_pos;
 static char last_notice[512];
 static char member_text[512];
 static char output[8192],record[4096];
@@ -27,6 +33,10 @@ size_t send_to_char(struct char_data *ch,const char *fmt,...) {
 }
 void save_char(struct char_data *ch,int mode) {
   writes++;last_rank=GET_CLANRANK(ch);
+  if(ch->player.name && !strcmp(ch->player.name,"Offline") && GET_CLANRANK(ch)>0) {
+    approved_rank=GET_CLANRANK(ch);approved_result=ch->player_specials->saved.clan_application_result;
+    approved_pos=GET_PFILEPOS(ch);
+  }
   if(ch->player_specials->saved.clan_login_notices)
     strlcpy(last_notice,ch->player_specials->saved.clan_login_notices->text,sizeof(last_notice));
   if(ch->player.name && !strcmp(ch->player.name,"Member") && ch->player_specials->saved.clan_login_notices) {
@@ -41,7 +51,7 @@ int load_char(const char *name,struct char_data *ch) {
   if(!strcmp(name,"Missing"))return -1;
   GET_CLAN(ch)=!strcmp(name,"Other")?20:10;
   GET_CLANRANK(ch)=!strcmp(name,"Member")?2:0;
-  return 0;
+  return 7;
 }
 #undef PERS
 #define PERS(ch,viewer) GET_NAME(ch)
@@ -55,6 +65,7 @@ bool check_clanpriv(struct char_data *ch,int priv) {return allow_priv;}
 void save_player_index(void) {}
 void log_clan_activity(clan_vnum clan,const char *format,...) {}
 void free_char(struct char_data *ch) {
+  freed++;
   struct txt_block *n;
   while((n=ch->player_specials->saved.clan_login_notices)) {
     ch->player_specials->saved.clan_login_notices=n->next;free(n->text);free(n);
@@ -62,8 +73,21 @@ void free_char(struct char_data *ch) {
   free(ch->player_specials);free(ch);
 }
 '''
+code+=r'''
+long get_ptable_by_name(const char *name) {
+  for(int i=0;i<=top_of_p_table;i++)if(!strcasecmp(name,entries[i].name))return i;
+  return -1;
+}
+int is_number(const char *s) {if(!*s)return 0;for(;*s;s++)if(!isdigit((unsigned char)*s))return 0;return 1;}
+struct char_data *get_player_vis(struct char_data *ch,char *name,int *number,int where) {return !strcmp(name,"Online")?&online:NULL;}
+int count_clan_members(clan_rnum c) {return 1;}
+void mark_clan_modified(clan_rnum c) {}
+void save_single_clan(clan_rnum c) {}
+bool set_clan(struct char_data *ch,clan_vnum id) {GET_CLAN(ch)=id;save_char(ch,0);return TRUE;}
+'''
 for signature in ['static struct char_data *clan_online_player(const char *name)', 'void clan_restore_login_notice(struct char_data *ch, const char *text)', 'static void clan_queue_notice(struct char_data *ch, const char *color, const char *format, ...)', 'static void clan_notify_members(clan_rnum clan, const char *color, const char *format, ...)', 'static void clan_queue_application_result(struct char_data *ch, clan_rnum clan, bool approved)', 'static int clan_pending_applications(clan_rnum clan)', 'void clan_login_notifications(struct char_data *ch)']:
     code+=function(signature)
+code+=function('ACMD(do_clanenrol)')
 code+=function('ACMD(do_clanpromote)')
 code+=function('ACMD(do_clandemote)')
 a=players.index('  if (ch->player_specials->saved.clan_application_result)\n    BUFFER_WRITE');b=players.index('  if (GET_CLANRANK(ch)',a)
@@ -84,7 +108,7 @@ int main(void) {
   online.player.name="Online";online.player_specials=&online_saved;GET_CLAN(&online)=10;GET_CLANRANK(&online)=0;
   assert(clan_pending_applications(0)==2 && clan_pending_applications(1)==1);
   clan_login_notifications(&ch);assert(strstr(output,"Silver Swords has 2 applications")&&!strstr(output,"Red Robes"));
-  assert(strstr(output,"\tY[CLAN APPLICATIONS]")&&strstr(output,"clan list 10"));
+  assert(strstr(output,"\tY[CLAN APPLICATIONS]")&&strstr(output,"clan who 10") && strstr(output,"clan enrol <player>") && strstr(output,"clan expel <player>"));
   *output=0;GET_CLANRANK(&ch)=0;clan_login_notifications(&ch);assert(!*output); /* applicants aren't members */
   GET_LEVEL(&ch)=LVL_IMMORT;clan_login_notifications(&ch);assert(strstr(output,"Silver Swords")&&strstr(output,"Red Robes"));
   GET_LEVEL(&ch)=10;GET_CLAN(&ch)=0;*output=0;clan_login_notifications(&ch);assert(!*output);
@@ -134,6 +158,39 @@ int main(void) {
   assert(writes==before && GET_CLANRANK(&online)==2 && !online_saved.saved.clan_login_notices);
   allow_priv=1;GET_CLANRANK(&online)=1;do_clanpromote(&ch,"Online",0,0);assert(writes==before);
   GET_CLANRANK(&online)=6;do_clandemote(&ch,"Online",0,0);assert(writes==before);
+  /* Greater staff can approve without belonging to the target clan. */
+  GET_LEVEL(&ch)=LVL_GRSTAFF;GET_CLAN(&ch)=0;allow_priv=0;
+  GET_CLANRANK(&online)=0;*output=0;
+  do_clanenrol(&ch,"",0,0);assert(strstr(output,"clan who <clan ID>"));
+  do_clanenrol(&ch,"Online",0,0);
+  assert(GET_CLANRANK(&online)==6 && online_saved.saved.clan_application_result==1);
+  *output=0;clan_login_notifications(&online);
+  GET_CLANRANK(&online)=0;GET_LEVEL(&ch)=LVL_STAFF;*output=0;
+  do_clanenrol(&ch,"Online",0,0);assert(GET_CLANRANK(&online)==0); /* no cross-clan authority */
+  GET_CLAN(&ch)=10;GET_CLANRANK(&ch)=2;*output=0;
+  do_clanenrol(&ch,"Online",0,0);assert(GET_CLANRANK(&online)==0); /* clan permission denied */
+  allow_priv=1;do_clanenrol(&ch,"Online",0,0);assert(GET_CLANRANK(&online)==6);
+  *output=0;clan_login_notifications(&online);
+  /* Offline approval saves both rank and queued decision before releasing
+   * the loaded body. Validation failures must release it without saving. */
+  GET_LEVEL(&ch)=LVL_GRSTAFF;GET_CLAN(&ch)=0;
+  clans[0].rank_name[5]="Recruit";
+  before=freed;*output=0;do_clanenrol(&ch,"Offline",0,0);
+  assert(approved_rank==6 && approved_result==1 && approved_pos==7);
+  assert(freed>before && strstr(output,"Offline is now a member"));
+  before=writes;int old_freed=freed;*output=0;
+  do_clanenrol(&ch,"Member",0,0);assert(writes==before && freed==old_freed+1 && strstr(output,"already enrolled"));
+  old_freed=freed;*output=0;do_clanenrol(&ch,"Missing",0,0);
+  assert(writes==before && freed==old_freed+1 && strstr(output,"Unable to load"));
+  *output=0;do_clanenrol(&ch,"Deleted",0,0);assert(writes==before && strstr(output,"No such player"));
+  *output=0;do_clanenrol(&ch,"Nobody",0,0);assert(writes==before && strstr(output,"No such player"));
+  clans[0].max_members=1;old_freed=freed;*output=0;
+  do_clanenrol(&ch,"Offline",0,0);assert(writes==before && freed==old_freed+1 && strstr(output,"maximum member limit"));
+  clans[0].max_members=0;GET_LEVEL(&ch)=10;GET_CLAN(&ch)=20;GET_CLANRANK(&ch)=1;
+  old_freed=freed;*output=0;do_clanenrol(&ch,"Offline",0,0);
+  assert(writes==before && freed==old_freed+1 && strstr(output,"YOUR clan"));
+  GET_CLAN(&ch)=10;*output=0;do_clanenrol(&ch,"Offline",0,0);
+  assert(writes>before && approved_rank==6);
   puts("Clan login notices: online/offline applicants, member/staff scope, deleted players, colors, application decisions, ordered event persistence, personal/group scope, actual online/offline promotions/demotions, permissions and one-time delivery PASS");
 }
 '''

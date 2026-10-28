@@ -1268,16 +1268,8 @@ int compute_ability_full(struct char_data *ch, int abilityNum, bool recursive)
     value += 1;
   }
 
-  if (HAS_FEAT(ch, FEAT_ELBOW_GREASE) && is_crafting_skill(abilityNum))
-  {
-    int artificer_level = CLASS_LEVEL(ch, CLASS_ARTIFICER);
-    if (artificer_level >= 10)
-      value += 6;
-    else if (artificer_level >= 6)
-      value += 4;
-    else if (artificer_level >= 1)
-      value += 2;
-  }
+  if (is_crafting_skill(abilityNum))
+    value += get_elbow_grease_bonus(ch);
 
   if (HAS_FEAT(ch, FEAT_BG_SAILOR) && abilityNum == ABILITY_CRAFT_FISHING)
     value += 5;

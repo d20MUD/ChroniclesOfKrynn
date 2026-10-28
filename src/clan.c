@@ -1711,7 +1711,7 @@ void clan_login_notifications(struct char_data *ch)
     count = clan_pending_applications(clan);
     if (count)
       send_to_char(ch, "\tY[CLAN APPLICATIONS] %s has %d application%s awaiting review. "
-                       "Use 'clan list %d' to view its members and applicants.\tn\r\n",
+                       "Use 'clan who %d' to view members and applicants. Approve applicants with 'clan enrol <player>'; reject with 'clan expel <player>'.\tn\r\n",
                    clan_list[clan].clan_name, count, count == 1 ? "" : "s", clan_list[clan].vnum);
   }
 }
@@ -2655,10 +2655,12 @@ ACMD(do_clanenrol)
   char arg[MAX_INPUT_LENGTH] = {'\0'};
   clan_rnum c_n = NO_CLAN;
   struct char_data *v = NULL;
-  bool immcom = FALSE;
-  int count = 0, i, current_count;
+  bool immcom = FALSE, loaded = FALSE;
+  long player_index;
+  int p_pos;
+  int current_count;
 
-  if (GET_LEVEL(ch) == LVL_IMPL)
+  if (GET_LEVEL(ch) >= LVL_GRSTAFF)
     immcom = TRUE;
 
   one_argument(argument, arg, sizeof(arg));
@@ -2668,25 +2670,6 @@ ACMD(do_clanenrol)
     send_to_char(ch, "You aren't a member of any clan.\r\n");
     return;
   }
-  else if (immcom)
-  {
-    if (*arg && is_number(arg))
-    {
-      if ((c_n = real_clan(atoi(arg))) == NO_CLAN)
-      {
-        send_to_char(ch, "Invalid clan ID\r\n");
-        return;
-      }
-    }
-    else
-    {
-      if (!immcom && (c_n = real_clan(GET_CLAN(ch))) == NO_CLAN)
-      {
-        send_to_char(ch, "You aren't a member of any clan.\r\n");
-        return;
-      }
-    }
-  }
 
   if (!immcom && (GET_CLANRANK(ch) < 1))
   {
@@ -2694,69 +2677,67 @@ ACMD(do_clanenrol)
     return;
   }
 
-  if (!check_clanpriv(ch, CP_ENROL))
+  if (!immcom && !check_clanpriv(ch, CP_ENROL))
   {
     send_to_char(ch, "You don't have sufficient access to enrol "
                      "applicants!\r\n");
     return;
   }
 
-  if (!immcom && !*arg)
+  if (immcom && (!*arg || is_number(arg)))
   {
-    for (i = 0; i <= top_of_p_table; i++)
-    {
-      if (player_table[i].clan == clan_list[c_n].vnum)
-      {
-        if ((v = is_playing(player_table[i].name)) != NULL)
-        {
-          if (GET_CLANRANK(v) == NO_CLANRANK)
-          {
-            if (count == 0)
-            {
-              send_to_char(ch, "%sApplicants to the '%s%s' clan:%s\r\n", QCYN,
-                           clan_list[c_n].clan_name, QCYN, QNRM);
-            }
-            send_to_char(ch, "%s%c%-15s  %s(Level %d)%s\r\n", QYEL, UPPER(*player_table[i].name),
-                         player_table[i].name + 1, QCYN, player_table[i].level, QNRM);
-            count++;
-          }
-        }
-      }
-    }
-    if (count)
-    {
-      send_to_char(ch,
-                   "%sThere are %d online player%s awaiting "
-                   "enrolment.\r\n",
-                   QNRM, count, (count == 1) ? "" : "s");
-      send_to_char(ch, "Usage: %sclan enrol <player>%s\r\n", QYEL, QNRM);
-    }
+    send_to_char(ch, "Use 'clan who <clan ID>' to view members and applicants.\r\n"
+                     "Use 'clan enrol <player>' to approve an online or offline applicant; "
+                     "the applicant's clan is selected automatically.\r\n");
     return;
   }
 
-  if (!(v = get_player_vis(ch, arg, NULL, FIND_CHAR_WORLD)))
+  if (!*arg)
   {
-    send_to_char(ch, "Er, Who ??  You can only enrol someone if they are"
-                     " online!\r\n");
+    send_to_char(ch, "Use 'clan who' to view members and applicants, including offline players.\r\n"
+                     "Usage: clan enrol <player>\r\n");
     return;
+  }
+
+  player_index = get_ptable_by_name(arg);
+  if (player_index < 0 || IS_SET(player_table[player_index].flags, PINDEX_DELETED))
+  {
+    send_to_char(ch, "No such player.\r\n");
+    return;
+  }
+
+  /* Reuse any live body (including editors, switched and linkdead players)
+   * so a later save cannot overwrite an approval made on a second copy. */
+  v = clan_online_player(player_table[player_index].name);
+  if (!v)
+  {
+    v = new_char();
+    loaded = TRUE;
+    if ((p_pos = load_char(player_table[player_index].name, v)) < 0)
+    {
+      send_to_char(ch, "Unable to load that player.\r\n");
+      free_char(v);
+      return;
+    }
+    GET_PFILEPOS(v) = p_pos;
   }
 
   if ((c_n = real_clan(GET_CLAN(v))) == NO_CLAN)
   {
-    send_to_char(ch, "%s has not yet applied to join any clan.\r\n", PERS(v, ch));
-    return;
+    send_to_char(ch, "%s has not yet applied to join any clan.\r\n", GET_NAME(v));
+    goto cleanup;
   }
 
   if (!immcom && (c_n != real_clan(GET_CLAN(ch))))
   {
-    send_to_char(ch, "%s has not applied to join YOUR clan.\r\n", PERS(v, ch));
-    return;
+    send_to_char(ch, "%s has not applied to join YOUR clan.\r\n", GET_NAME(v));
+    goto cleanup;
   }
 
   if (GET_CLANRANK(v) != NO_CLANRANK)
   {
-    send_to_char(ch, "%s is already enrolled.\r\n", PERS(v, ch));
-    return;
+    send_to_char(ch, "%s is already enrolled.\r\n", GET_NAME(v));
+    goto cleanup;
   }
 
   /* Check member limit */
@@ -2767,7 +2748,7 @@ ACMD(do_clanenrol)
     {
       send_to_char(ch, "The clan has reached its maximum member limit of %d.\r\n",
                    clan_list[c_n].max_members);
-      return;
+      goto cleanup;
     }
   }
 
@@ -2786,9 +2767,10 @@ ACMD(do_clanenrol)
   mark_clan_modified(c_n);
   save_single_clan(c_n);
 
-  send_to_char(ch, "%s is now a member of %s%s.\r\n", PERS(v, ch), clan_list[(c_n)].clan_name,
+  send_to_char(ch, "%s is now a member of %s%s.\r\n", GET_NAME(v), clan_list[(c_n)].clan_name,
                QNRM);
-  send_to_char(v, "You have been enrolled into %s%s.\r\n", clan_list[(c_n)].clan_name,
+  if (!loaded)
+    send_to_char(v, "You have been enrolled into %s%s.\r\n", clan_list[(c_n)].clan_name,
                CCNRM(v, C_NRM));
 
   clan_notify_members(c_n, "\tC", "%s joined %s.", GET_NAME(v), clan_list[c_n].clan_name);
@@ -2796,6 +2778,10 @@ ACMD(do_clanenrol)
   /* Log the enrollment */
   log_clan_activity(clan_list[c_n].vnum, "%s enrolled %s as %s (rank %d)", GET_NAME(ch),
                     GET_NAME(v), clan_list[c_n].rank_name[(GET_CLANRANK(v) - 1)], GET_CLANRANK(v));
+
+cleanup:
+  if (loaded)
+    free_char(v);
 }
 
 ACMDU(do_clanleave)
@@ -2863,7 +2849,7 @@ ACMD(do_clanexpel) /* Expel a member */
   int v_pos;
   bool immcom = FALSE, was_applicant;
 
-  if (GET_LEVEL(ch) == LVL_IMPL)
+  if (GET_LEVEL(ch) >= LVL_GRSTAFF)
     immcom = TRUE;
 
   one_argument(argument, arg, sizeof(arg));
@@ -2880,7 +2866,7 @@ ACMD(do_clanexpel) /* Expel a member */
     return;
   }
 
-  if (!check_clanpriv(ch, CP_EXPEL))
+  if (!immcom && !check_clanpriv(ch, CP_EXPEL))
   {
     send_to_char(ch, "You don't have sufficient access to expel clan"
                      " members!\r\n");
@@ -2906,6 +2892,11 @@ ACMD(do_clanexpel) /* Expel a member */
   }
 
   c_n = real_clan(player_table[(v_id)].clan);
+  if (c_n == NO_CLAN)
+  {
+    send_to_char(ch, "That player has no clan membership or application.\r\n");
+    return;
+  }
 
   if ((v = clan_online_player(player_table[(v_id)].name)) != NULL)
   {

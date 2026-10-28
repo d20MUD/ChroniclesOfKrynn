@@ -11769,6 +11769,22 @@ bool is_in_hometown(struct char_data *ch)
   return false;
 }
 
+/* Check bonuses must not be included in stored crafting skill ranks or XP. */
+int get_elbow_grease_bonus(struct char_data *ch)
+{
+  int level;
+
+  if (!HAS_FEAT(ch, FEAT_ELBOW_GREASE))
+    return 0;
+
+  level = CLASS_LEVEL(ch, CLASS_ARTIFICER);
+  if (level >= 10)
+    return 6;
+  if (level >= 6)
+    return 4;
+  return level >= 1 ? 2 : 0;
+}
+
 bool is_crafting_skill(int skillnum)
 {
   if (skillnum >= START_CRAFT_ABILITIES && skillnum <= END_CRAFT_ABILITIES)
