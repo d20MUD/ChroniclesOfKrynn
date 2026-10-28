@@ -1003,7 +1003,6 @@ ACMD_DECL(do_lore);
 ACMD_DECL(do_glore);
 ACMD_DECL(do_truelore);
 ACMD_DECL(do_not_here);
-ACMD_DECL(do_practice);
 ACMD_DECL(do_report);
 ACMD_DECL(do_save);
 ACMD_DECL(do_search);

@@ -57,6 +57,7 @@ void text_line(struct char_data *ch,const char *s,int length,char first,char sec
 void draw_line(struct char_data *ch,int length,char first,char second) {}
 int d20(struct char_data *ch) { checks++; return die; }
 int get_craft_skill_value(struct char_data *ch,int skill) { return skill_value; }
+int get_elbow_grease_bonus(struct char_data *ch) { return 0; }
 int get_proficient_talent_bonus(struct char_data *ch,int skill) { return 0; }
 void gain_craft_exp(struct char_data *ch,int exp,int abil,bool verbose) { xp+=exp; xp_skill=abil; }
 void reset_current_craft(struct char_data *ch,char *arg,bool verbose,bool reimburse) {

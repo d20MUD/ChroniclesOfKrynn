@@ -44,6 +44,7 @@ int d20(struct char_data *ch) { return roll; }
 int dice(int count,int sides) { return count*sides; }
 int rand_number(int low,int high) { return low; }
 int get_craft_skill_value(struct char_data *ch,int skill) { return skill_value; }
+int get_elbow_grease_bonus(struct char_data *ch) { return 0; }
 int craft_skill_level_exp(struct char_data *ch,int level) { return 10000000; }
 int get_proficient_talent_bonus(struct char_data *ch,int skill) { return 0; }
 int get_efficient_talent_bonus(struct char_data *ch,int skill) { return efficient; }

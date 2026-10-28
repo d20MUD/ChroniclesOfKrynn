@@ -3225,7 +3225,6 @@ cpp_extern const struct command_info cmd_info[] = {
     {"picklock", "pi", POS_STANDING, do_gen_door, 1, SCMD_PICK, FALSE, ACTION_NONE, {0, 0}, NULL},
 #endif
     {"pilfer", "pil", POS_STANDING, do_loot, 1, SCMD_PILFER, FALSE, ACTION_STANDARD, {0, 0}, NULL},
-    {"practice", "pr", POS_RECLINING, do_practice, 1, 0, FALSE, ACTION_NONE, {0, 0}, NULL},
     {"profanebond",
      "profanebond",
      POS_RECLINING,

@@ -56,7 +56,6 @@
 #define GOLEM_OMNI_FORGE_COMMANDER_COOLDOWN (60 * 60)
 #define DISENCHANT_MIN_LEVEL 5
 
-ACMD_DECL(do_practice);
 
 int copy_object(struct obj_data *to, struct obj_data *from);
 void process_craft_critical_success(struct char_data *ch, struct obj_data *obj);
@@ -2956,6 +2955,12 @@ int crafting_mote_by_bonus_location(int location, int specific, int bonus_type)
 
 void show_current_craft(struct char_data *ch)
 {
+  if (player_has_supply_order(ch))
+  {
+    show_supply_order(ch);
+    return;
+  }
+
   char spec_item_type[100];
   char temp[MAX_EXTRA_DESC];
   char extra_desc[MAX_EXTRA_DESC + 5];
@@ -3759,6 +3764,12 @@ static bool artificer_efficient_crafter_applies(struct char_data *ch)
 
 void begin_current_craft(struct char_data *ch)
 {
+  if (player_has_supply_order(ch))
+  {
+    start_supply_order(ch);
+    return;
+  }
+
   if (!is_craft_ready(ch, TRUE))
   {
     send_to_char(ch, "\tCPlease fix the above errors before continuing.\tn\r\n");
@@ -5376,6 +5387,12 @@ void craft_create_complete(struct char_data *ch)
 
 void check_current_craft(struct char_data *ch, bool verbose)
 {
+  if (player_has_supply_order(ch))
+  {
+    show_supply_order(ch);
+    return;
+  }
+
   if (!is_craft_ready(ch, verbose))
   {
     send_to_char(ch,
@@ -5923,6 +5940,27 @@ void newcraft_create(struct char_data *ch, const char *argument)
   char arg1[200], arg2[MAX_EXTRA_DESC];
 
   half_chop_c(argument, arg1, sizeof(arg1), arg2, sizeof(arg2));
+
+  if (player_has_supply_order(ch))
+  {
+    if (!*arg1 || is_abbrev(arg1, "display") || is_abbrev(arg1, "show") ||
+        is_abbrev(arg1, "review") || is_abbrev(arg1, "information") || is_abbrev(arg1, "check"))
+      show_supply_order(ch);
+    else if (is_abbrev(arg1, "start") || is_abbrev(arg1, "begin"))
+      start_supply_order(ch);
+    else if (is_abbrev(arg1, "materials"))
+      newcraft_supplyorder(ch, argument);
+    else if (is_abbrev(arg1, "reset"))
+      reset_supply_order(ch);
+    else if (is_abbrev(arg1, "score"))
+      show_craft_score(ch, arg2);
+    else if (is_abbrev(arg1, "specialize"))
+      set_craft_specialization(ch, arg2);
+    else
+      send_to_char(ch, "You have an active supply order. Use 'supplyorder show', "
+                       "'supplyorder start', or 'supplyorder abandon'.\r\n");
+    return;
+  }
 
   if (!*arg1)
   {
@@ -8797,7 +8835,7 @@ ACMD(do_craft_score)
   switch (CONFIG_CRAFTING_SYSTEM)
   {
   case CRAFTING_SYSTEM_KITS:
-    do_practice(ch, argument, cmd, subcmd);
+    list_crafting_skills(ch);
     break;
   case CRAFTING_SYSTEM_MOTES:
     do_craft_score_new(ch, argument, cmd, subcmd);
@@ -10336,6 +10374,29 @@ void show_available_contracts(struct char_data *ch)
   send_to_char(ch, "(Artisan points will be usable for special rewards in the future)\r\n\r\n");
 }
 
+/* Recipe enums differ from crafting project types and ability numbers. */
+static void update_supply_order_project(struct char_data *ch)
+{
+  int recipe = GET_CRAFT(ch).crafting_recipe;
+  int variant = GET_CRAFT(ch).craft_variant;
+  int type;
+
+  if (recipe <= CRAFT_RECIPE_NONE || recipe >= NUM_CRAFTING_RECIPES ||
+      variant < 0 || variant >= NUM_CRAFT_VARIANTS)
+    return;
+
+  for (type = CRAFT_TYPE_WEAPON; type <= CRAFT_TYPE_INSTRUMENT; type++)
+    if (craft_recipe_by_type(type) == crafting_recipes[recipe].object_type)
+      break;
+
+  GET_CRAFT(ch).crafting_item_type = type <= CRAFT_TYPE_INSTRUMENT ? type : CRAFT_TYPE_NONE;
+  GET_CRAFT(ch).crafting_specific = crafting_recipes[recipe].object_subtype;
+  GET_CRAFT(ch).skill_type =
+      recipe_skill_to_actual_crafting_skill(crafting_recipes[recipe].variant_skill[variant]);
+  /* Supply orders complete without a DC check. */
+  GET_CRAFT(ch).dc = 0;
+}
+
 void request_new_supply_order(struct char_data *ch)
 {
   int recipe = 0;
@@ -10413,13 +10474,11 @@ void request_new_supply_order(struct char_data *ch)
     int quantity = dice(1, 3) + 1; // 2-4 items per supply order
 
     GET_CRAFT(ch).crafting_recipe = recipe;
-    GET_CRAFT(ch).crafting_item_type = crafting_recipes[recipe].object_type;
-    GET_CRAFT(ch).crafting_specific = crafting_recipes[recipe].object_subtype;
     GET_CRAFT(ch).craft_variant = variant;
     GET_CRAFT(ch).crafting_method = SCMD_NEWCRAFT_SUPPLYORDER;
     GET_CRAFT(ch).supply_num_required = quantity;
     GET_NSUPPLY_NUM_MADE(ch) = 0;
-    GET_CRAFT(ch).skill_type = crafting_recipes[recipe].variant_skill[variant];
+    update_supply_order_project(ch);
 
     send_to_char(ch, "You've requested a new supply order to make %d %ss.\r\n", quantity,
                  crafting_recipes[recipe].variant_descriptions[variant]);
@@ -10446,6 +10505,12 @@ int num_supply_order_requisitions_to_go(struct char_data *ch)
 
 void start_supply_order(struct char_data *ch)
 {
+  if (GET_CRAFT(ch).craft_duration > 0)
+  {
+    send_to_char(ch, "You are already working on a crafting project.\r\n");
+    return;
+  }
+
   if (!player_has_supply_order(ch))
   {
     send_to_char(ch, "You need to request a supply order first.\r\n");
@@ -10463,8 +10528,8 @@ void start_supply_order(struct char_data *ch)
   else
   {
     // Check if the player is in a room with the required crafting station
-    int recipe_skill = GET_CRAFT(ch).skill_type;
-    int actual_skill = recipe_skill_to_actual_crafting_skill(recipe_skill);
+    update_supply_order_project(ch);
+    int actual_skill = GET_CRAFT(ch).skill_type;
     if (!has_crafting_station_in_room(ch, actual_skill))
     {
       send_to_char(ch, "You need to be in a room with %s to work on this supply order.\r\n",
@@ -10562,7 +10627,11 @@ void show_supply_order(struct char_data *ch)
 
   // Show the required crafting station
   {
-    int actual_skill = recipe_skill_to_actual_crafting_skill(GET_CRAFT(ch).skill_type);
+    update_supply_order_project(ch);
+    int actual_skill = GET_CRAFT(ch).skill_type;
+    send_to_char(ch, "-- Crafting Skill: %s [rank %d]\r\n", ability_names[actual_skill],
+                 get_craft_skill_value(ch, actual_skill));
+    send_to_char(ch, "-- Completion: No skill check required.\r\n");
     send_to_char(ch, "-- Crafting Station: %s\r\n", get_crafting_station_name(actual_skill));
   }
 
@@ -11464,13 +11533,11 @@ int select_contract_by_id(struct char_data *ch, int contract_id)
 
   // Set up the player's crafting project
   GET_CRAFT(ch).crafting_recipe = contract->recipe;
-  GET_CRAFT(ch).crafting_item_type = crafting_recipes[contract->recipe].object_type;
-  GET_CRAFT(ch).crafting_specific = crafting_recipes[contract->recipe].object_subtype;
   GET_CRAFT(ch).craft_variant = contract->variant;
   GET_CRAFT(ch).crafting_method = SCMD_NEWCRAFT_SUPPLYORDER;
   GET_CRAFT(ch).supply_num_required = contract->quantity;
   GET_NSUPPLY_NUM_MADE(ch) = 0;
-  GET_CRAFT(ch).skill_type = crafting_recipes[contract->recipe].variant_skill[contract->variant];
+  update_supply_order_project(ch);
 
   // Store contract type and advanced features
   GET_CRAFT(ch).supply_contract_type = contract->contract_type;

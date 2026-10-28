@@ -7160,31 +7160,6 @@ ACMD(do_boosts)
   send_to_char(ch, "\tDType 'spells <classname>' to see your currently known spells\tn\r\n");
 }
 
-/* skill practice entry point, the rest of the
- * code is in spec_procs.c guild code */
-ACMD(do_practice)
-{
-  char arg[MAX_INPUT_LENGTH] = {'\0'};
-
-  if (IS_NPC(ch))
-    return;
-
-  one_argument(argument, arg, sizeof(arg));
-
-  if (*arg)
-    ; // send_to_char(ch, "Type '\tYcraft\tn' without an argument to view your crafting skills.\r\n");
-  else
-    list_crafting_skills(ch);
-
-  send_to_char(ch, "\tDType 'feats' to see your feats\tn\r\n");
-  send_to_char(ch, "\tDType 'train' to see your abilities\tn\r\n");
-  send_to_char(ch, "\tDType 'boost' to adjust your stats\tn\r\n");
-  if (IS_CASTER(ch))
-  {
-    send_to_char(ch, "\tDType 'spells' to see your spells\tn\r\n");
-  }
-}
-
 /* ability training entry point, the rest of the
  * code is in spec_procs.c guild code */
 ACMD(do_train)
@@ -7214,7 +7189,7 @@ ACMD(do_train)
   // send_to_char(ch, "\tDType 'train knowledge' to see your knowledge abilities\tn\r\n");
   /* as of 10/30/2014, we have decided to make sure crafting is an indepedent system */
   // send_to_char(ch, "\tDType 'train craft' to see your crafting abilities\tn\r\n");
-  send_to_char(ch, "\tDType 'practice' to see your crafting abilities\tn\r\n");
+  send_to_char(ch, "\tDType 'craft' to see your crafting proficiency\tn\r\n");
   // send_to_char(ch, "\tDType 'boost' to adjust your stats\tn\r\n");
   if (IS_CASTER(ch))
   {

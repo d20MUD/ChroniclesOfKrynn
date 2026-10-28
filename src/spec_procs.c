@@ -3367,94 +3367,16 @@ SPECIAL(chan)
 
 SPECIAL(guild)
 {
-  int skill_num, percent;
+  int skill_num;
   char arg[MAX_STRING_LENGTH] = {'\0'}, buf[MAX_STRING_LENGTH] = {'\0'};
   char *ability_name = NULL;
 
-  if (IS_NPC(ch) || (!CMD_IS("practice") && !CMD_IS("train") && !CMD_IS("boosts")))
+  if (IS_NPC(ch) || (!CMD_IS("train") && !CMD_IS("boosts")))
     return (FALSE);
 
   skip_spaces(&argument);
 
-  // Practice code
-  if (CMD_IS("practice"))
-  {
-    list_crafting_skills(ch);
-    return (TRUE);
-
-    /***************************************/
-    /* everything below this is deprecated */
-    /***************************************/
-
-    if (!*argument)
-    {
-      list_skills(ch);
-      return (TRUE);
-    }
-    if (GET_PRACTICES(ch) <= 0)
-    {
-      send_to_char(ch, "You do not seem to be able to practice now.\r\n");
-      return (TRUE);
-    }
-
-    skill_num = find_skill_num(argument);
-
-    if (skill_num < 1 || GET_LEVEL(ch) < spell_info[skill_num].min_level[(int)GET_CLASS(ch)])
-    {
-      send_to_char(ch, "You do not know of that skill.\r\n");
-      return (TRUE);
-    }
-
-    /*
-    if (GET_SKILL(ch, skill_num) >= LEARNED(ch)) {
-      send_to_char(ch, "You are already learned in that area.\r\n");
-      return (TRUE);
-    }
-     */
-
-    if (skill_num > SPELL_RESERVED_DBC && skill_num < MAX_SPELLS)
-    {
-      send_to_char(ch, "You can't practice spells.\r\n");
-      return (TRUE);
-    }
-
-    if (!meet_skill_reqs(ch, skill_num))
-    {
-      send_to_char(ch, "You haven't met the pre-requisites for that skill.\r\n");
-      return (TRUE);
-    }
-
-    /* added with addition of crafting system so you can't use your
-     'practice points' for training your crafting skills which have
-     a much lower base value than 75 */
-
-    if (GET_SKILL(ch, skill_num))
-    {
-      send_to_char(ch, "You already have this skill trained.\r\n");
-      return TRUE;
-    }
-
-    send_to_char(ch, "You practice '%s' with your trainer...\r\n", spell_info[skill_num].name);
-    GET_PRACTICES(ch)
-    --;
-
-    percent = GET_SKILL(ch, skill_num);
-    percent += int_app[GET_INT(ch)].learn;
-
-    SET_SKILL(ch, skill_num, percent);
-
-    /*
-    if (GET_SKILL(ch, skill_num) >= LEARNED(ch))
-      send_to_char(ch, "You are now \tGlearned\tn in '%s.'\r\n",
-            spell_info[skill_num].name);
-     */
-
-    // for further expansion - zusuk
-    process_skill(ch, skill_num);
-
-    return (TRUE);
-  }
-  else if (CMD_IS("train"))
+  if (CMD_IS("train"))
   {
     // training code
 

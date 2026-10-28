@@ -26,6 +26,7 @@
 #include "crafts.h"
 #include "item.h"
 #include "crafting_new.h"
+#include "spec_procs.h"
 
 
 /* Statics */
@@ -749,7 +750,7 @@ ACMDU(do_craft)
   switch (CONFIG_CRAFTING_SYSTEM)
   {
   case CRAFTING_SYSTEM_KITS:
-    do_practice(ch, argument, cmd, subcmd);
+    list_crafting_skills(ch);
     break;
   case CRAFTING_SYSTEM_MOTES:
     do_newcraft(ch, argument, cmd, SCMD_NEWCRAFT_CREATE);
