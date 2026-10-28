@@ -60,8 +60,6 @@ bool can_add_mummy_dust_follower(struct char_data *ch);
 #define SUMMON_SPELL_DURATION_MULTIPLIER 3
 
 /* local file scope function prototypes */
-static int mag_materials(struct char_data *ch, IDXTYPE item0, IDXTYPE item1, IDXTYPE item2,
-                         int extract, int verbose);
 static void perform_mag_groups(int level, struct char_data *ch, struct char_data *tch,
                                struct obj_data *obj, int spellnum, int savetype, int casttype);
 
@@ -1471,116 +1469,6 @@ void affect_update(void)
         "processed: %d",
         char_count, npc_count, pc_count, affected_chars, processed_affects);
   }
-}
-
-/* Checks for up to 3 vnums (spell reagents) in the player's inventory. If
- * multiple vnums are passed in, the function ANDs the items together as
- * requirements (ie. if one or more are missing, the spell will not fail).
- * @param ch The caster of the spell.
- * @param item0 The first required item of the spell, NOTHING if not required.
- * @param item1 The second required item of the spell, NOTHING if not required.
- * @param item2 The third required item of the spell, NOTHING if not required.
- * @param extract TRUE if mag_materials should consume (destroy) the items in
- * the players inventory, FALSE if not. Items will only be removed on a
- * successful cast.
- * @param verbose TRUE to provide some generic failure or success messages,
- * FALSE to send no in game messages from this function.
- * @retval int TRUE if ch has all materials to cast the spell, FALSE if not.
- */
-static int mag_materials(struct char_data *ch, IDXTYPE item0, IDXTYPE item1, IDXTYPE item2,
-                         int extract, int verbose)
-{
-  /* Begin Local variable definitions. */
-  /*------------------------------------------------------------------------*/
-  /* Used for object searches. */
-  struct obj_data *tobj = NULL;
-  /* Points to found reagents. */
-  struct obj_data *obj0 = NULL, *obj1 = NULL, *obj2 = NULL;
-  /*------------------------------------------------------------------------*/
-  /* End Local variable definitions. */
-
-  /* Begin success checks. Checks must pass to signal a success. */
-  /*------------------------------------------------------------------------*/
-  /* Check for the objects in the players inventory. */
-  for (tobj = ch->carrying; tobj; tobj = tobj->next_content)
-  {
-    if ((item0 != NOTHING) && (GET_OBJ_VNUM(tobj) == item0))
-    {
-      obj0 = tobj;
-      item0 = NOTHING;
-    }
-    else if ((item1 != NOTHING) && (GET_OBJ_VNUM(tobj) == item1))
-    {
-      obj1 = tobj;
-      item1 = NOTHING;
-    }
-    else if ((item2 != NOTHING) && (GET_OBJ_VNUM(tobj) == item2))
-    {
-      obj2 = tobj;
-      item2 = NOTHING;
-    }
-  }
-
-  /* If we needed items, but didn't find all of them, then the spell is a
-   * failure. */
-  if ((item0 != NOTHING) || (item1 != NOTHING) || (item2 != NOTHING))
-  {
-    /* Generic spell failure messages. */
-    if (verbose)
-    {
-      switch (rand_number(0, 2))
-      {
-      case 0:
-        send_to_char(ch, "A wart sprouts on your nose.\r\n");
-        break;
-      case 1:
-        send_to_char(ch, "Your hair falls out in clumps.\r\n");
-        break;
-      case 2:
-        send_to_char(ch, "A huge corn develops on your big toe.\r\n");
-        break;
-      }
-    }
-    /* Return fales, the material check has failed. */
-    return (FALSE);
-  }
-  /*------------------------------------------------------------------------*/
-  /* End success checks. */
-
-  /* From here on, ch has all required materials in their inventory and the
-   * material check will return a success. */
-
-  /* Begin Material Processing. */
-  /*------------------------------------------------------------------------*/
-  /* Extract (destroy) the materials, if so called for. */
-  if (extract)
-  {
-    if (obj0 != NULL)
-      extract_obj(obj0);
-    if (obj1 != NULL)
-      extract_obj(obj1);
-    if (obj2 != NULL)
-      extract_obj(obj2);
-    /* Generic success messages that signals extracted objects. */
-    if (verbose)
-    {
-      send_to_char(ch, "A puff of smoke rises from your pack.\r\n");
-      act("A puff of smoke rises from $n's pack.", TRUE, ch, NULL, NULL, TO_ROOM);
-    }
-  }
-
-  /* Don't extract the objects, but signal materials successfully found. */
-  if (!extract && verbose)
-  {
-    send_to_char(ch, "Your pack rumbles.\r\n");
-    act("Something rumbles in $n's pack.", TRUE, ch, NULL, NULL, TO_ROOM);
-  }
-  /*------------------------------------------------------------------------*/
-  /* End Material Processing. */
-
-  /* Signal to calling function that the materials were successfully found
-   * and processed. */
-  return (TRUE);
 }
 
 void mag_loops(int level, struct char_data *ch, struct char_data *victim, struct obj_data *wpn,
@@ -12384,19 +12272,9 @@ void mag_summons(int level, struct char_data *ch, struct obj_data *obj, int spel
     msg = 11;
     fmsg = rand_number(2, 6); /* Random fail message. */
     mob_num = MOB_CLONE;
-    /*
-     * We have designated the clone spell as the example for how to use the
-     * mag_materials function.
-     * In stock FaerunMUD it checks to see if the character has item with
-     * vnum 161 which is a set of sacrificial entrails. If we have the entrails
-     * the spell will succeed,  and if not, the spell will fail 102% of the time
-     * (prevents random success... see below).
-     * The object is extracted and the generic cast messages are displayed.
-     */
-    if (!mag_materials(ch, OBJ_CLONE, NOTHING, NOTHING, TRUE, TRUE))
-      pfail = 102; /* No materials, spell fails. */
-    else
-      pfail = 0; /* We have the entrails, spell is successfully cast. */
+    /* The stock material-check example required an undefined object (161).
+     * Clone uses the same component-free summoning flow as the other spells. */
+    pfail = 0;
     break;
 
   case VAMPIRE_ABILITY_CHILDREN_OF_THE_NIGHT: // necromancy

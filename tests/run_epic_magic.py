@@ -22,6 +22,10 @@ code = headers + r'''
 struct config_data config_info;
 struct player_special_data dummy_mob;
 void basic_mud_log(const char *format, ...) {}
+bool legendary_cast_commit(struct char_data *ch, int spellnum) { return true; }
+void legendary_cast_clear(struct char_data *ch) {}
+struct sivak_form *active_sivak_form(struct char_data *ch) { return NULL; }
+char *show_pers(struct char_data *ch, struct char_data *vict) { return GET_NAME(ch); }
 int char_has_evolution(struct char_data *ch, int evo) { return 0; }
 struct room_data *world;
 struct spell_info_type spell_info[TOP_SPELL_DEFINE + 1];

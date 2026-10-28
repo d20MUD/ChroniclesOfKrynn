@@ -14839,6 +14839,18 @@ int handle_successful_attack(struct char_data *ch, struct char_data *victim,
     }
   }
 
+  /* Battle Cleric Holy Weapon applies to every melee hit, including bare fists.
+   * Keep its holy damage separate from physical damage and critical multipliers. */
+  if (ch && victim && !victim_is_dead && !IS_NPC(ch) &&
+      attack_type != ATTACK_TYPE_RANGED && attack_type != ATTACK_TYPE_PSIONICS &&
+      attack_type != ATTACK_TYPE_ELDRITCH_BLAST)
+  {
+    int holy_damage = get_cleric_total_holy_weapon_bonus(ch);
+    if (holy_damage > 0 &&
+        damage(ch, victim, holy_damage, TYPE_SPECAB_HOLY, DAM_HOLY, FALSE) < 0)
+      victim_is_dead = TRUE;
+  }
+
   /* weapon spells - deprecated, although many weapons still have these.  Weapon Special Abilities supercede
    * this implementation. */
   if (ch && victim && wielded && !victim_is_dead)
