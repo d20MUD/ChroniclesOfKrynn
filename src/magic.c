@@ -3687,11 +3687,14 @@ int mag_damage(int level, struct char_data *ch, struct char_data *victim, struct
   }
   else if (spellnum == PSIONIC_DEADLY_FEAR)
   {
-    GET_DC_BONUS(ch) += bonus;
-    if (!savingthrow(ch, victim, save, race_bonus + dc_mod, SAVING_WILL, level, NOSCHOOL))
+    /* savingthrow consumes the DC bonus; both saves use the same bonus. */
+    int fear_dc_bonus = GET_DC_BONUS(ch) + bonus;
+    dam = 0;
+    GET_DC_BONUS(ch) = fear_dc_bonus;
+    if (!savingthrow(ch, victim, SAVING_WILL, race_bonus + dc_mod, casttype, level, NOSCHOOL))
     {
-      GET_DC_BONUS(ch) += bonus;
-      if (savingthrow(ch, victim, save, race_bonus + dc_mod, SAVING_FORT, level, NOSCHOOL))
+      GET_DC_BONUS(ch) = fear_dc_bonus;
+      if (savingthrow(ch, victim, SAVING_FORT, race_bonus + dc_mod, casttype, level, NOSCHOOL))
         dam = dice(3, 6);
       else
         dam = GET_HIT(victim) + 100;

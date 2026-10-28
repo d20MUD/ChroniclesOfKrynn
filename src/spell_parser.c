@@ -777,11 +777,19 @@ int call_magic(struct char_data *caster, struct char_data *cvict, struct obj_dat
 static int resolve_call_magic(struct char_data *caster, struct char_data *cvict, struct obj_data *ovict,
                int spellnum, int metamagic, int level, int casttype)
 {
-  int savetype = 0, spell_level = 0;
+  int savetype = 0, spell_level = 0, routines;
   struct char_data *tmp = NULL;
 
   if (spellnum < 1 || spellnum > TOP_SPELL_DEFINE)
     return (0);
+
+  /* Resolve augmented targeting before target defenses and routine dispatch. */
+  routines = spell_info[spellnum].routines;
+  if (spellnum == PSIONIC_DEADLY_FEAR && GET_AUGMENT_PSP(caster) >= 8)
+  {
+    REMOVE_BIT(routines, MAG_DAMAGE);
+    SET_BIT(routines, MAG_AREAS);
+  }
 
   level = apply_arcane_supremacy_caster_level(caster, spellnum, casttype, level);
 
@@ -876,7 +884,7 @@ static int resolve_call_magic(struct char_data *caster, struct char_data *cvict,
   }
 
   if (cvict && cvict != caster && AFF_FLAGGED(cvict, AFF_BLINKING) &&
-      !IS_SET(spell_info[spellnum].routines, MAG_AREAS) &&
+      !IS_SET(routines, MAG_AREAS) &&
       !(can_see_invisible_creatures(caster) && can_strike_ethereal_creatures(caster)) &&
       rand_number(1, 100) <= 50)
   {
@@ -907,7 +915,7 @@ static int resolve_call_magic(struct char_data *caster, struct char_data *cvict,
 
   if ((casttype != CAST_WEAPON_POISON) && caster && caster->in_room && caster->in_room != NOWHERE &&
       caster->in_room < top_of_world && ROOM_FLAGGED(IN_ROOM(caster), ROOM_PEACEFUL) &&
-      (SINFO.violent || IS_SET(SINFO.routines, MAG_DAMAGE)))
+      (SINFO.violent || IS_SET(routines, MAG_DAMAGE)))
   {
     send_to_char(caster,
                  "A flash of white light fills the room, dispelling your violent magic!\r\n");
@@ -917,7 +925,7 @@ static int resolve_call_magic(struct char_data *caster, struct char_data *cvict,
   }
 
   /* PVP CHECK - prevent casting harmful spells on players without mutual PVP consent */
-  if (cvict && (SINFO.violent || IS_SET(SINFO.routines, MAG_DAMAGE)))
+  if (cvict && (SINFO.violent || IS_SET(routines, MAG_DAMAGE)))
   {
     if (!IS_NPC(cvict) || (IS_NPC(cvict) && cvict->master && !IS_NPC(cvict->master)))
     {
@@ -1022,7 +1030,7 @@ static int resolve_call_magic(struct char_data *caster, struct char_data *cvict,
     /* minor globe */
     /* we're translating level to circle, so 4 = 2nd circle */
     if (AFF_FLAGGED(cvict, AFF_MINOR_GLOBE) && lvl <= 4 &&
-        (SINFO.violent || IS_SET(SINFO.routines, MAG_DAMAGE)))
+        (SINFO.violent || IS_SET(routines, MAG_DAMAGE)))
     {
       send_to_char(caster, "A minor globe from your victim repels your spell!\r\n");
       act("$n's magic is repelled by $N's minor globe spell!", FALSE, caster, 0, cvict, TO_ROOM);
@@ -1036,7 +1044,7 @@ static int resolve_call_magic(struct char_data *caster, struct char_data *cvict,
       /* we're translating level to circle so 8 = 4th circle */
     }
     else if (AFF_FLAGGED(cvict, AFF_GLOBE_OF_INVULN) && lvl <= 8 &&
-             (SINFO.violent || IS_SET(SINFO.routines, MAG_DAMAGE)))
+             (SINFO.violent || IS_SET(routines, MAG_DAMAGE)))
     {
       send_to_char(caster, "A globe from your victim repels your spell!\r\n");
       act("$n's magic is repelled by $N's globe spell!", FALSE, caster, 0, cvict, TO_ROOM);
@@ -1049,7 +1057,7 @@ static int resolve_call_magic(struct char_data *caster, struct char_data *cvict,
       /* here is spell mantles */
     }
     else if (AFF_FLAGGED(cvict, AFF_SPELL_MANTLE) && GET_SPELL_MANTLE(cvict) > 0 &&
-             (SINFO.violent || IS_SET(SINFO.routines, MAG_DAMAGE)))
+             (SINFO.violent || IS_SET(routines, MAG_DAMAGE)))
     {
       send_to_char(caster, "A spell mantle from your victim absorbs your spell!\r\n");
       act("$n's magic is absorbed by $N's spell mantle!", FALSE, caster, 0, cvict, TO_ROOM);
@@ -1146,7 +1154,7 @@ SAVING_WILL here...  */
   if (cvict && casttype != CAST_DEVICE)
   {
     if (AFF_FLAGGED(cvict, AFF_SPELL_TURNING) &&
-        (SINFO.violent || IS_SET(SINFO.routines, MAG_DAMAGE)))
+        (SINFO.violent || IS_SET(routines, MAG_DAMAGE)))
     {
       send_to_char(caster, "Your spell has been turned!\r\n");
       act("$n's magic is turned by $N!", FALSE, caster, 0, cvict, TO_ROOM);
@@ -1232,48 +1240,46 @@ SAVING_WILL here...  */
 
   /* the rest of the routine handling follows: */
 
-  if (spellnum == PSIONIC_DEADLY_FEAR && GET_AUGMENT_PSP(caster) >= 8)
-    mag_areas(spell_level, caster, ovict, spellnum, metamagic, savetype, casttype);
-  else if (IS_SET(SINFO.routines, MAG_DAMAGE))
+  if (IS_SET(routines, MAG_DAMAGE))
     if (mag_damage(spell_level, caster, cvict, ovict, spellnum, metamagic, savetype, casttype) ==
         -1)
       return (-1); /* Successful and target died, don't cast again. */
 
-  if (IS_SET(SINFO.routines, MAG_LOOPS))
+  if (IS_SET(routines, MAG_LOOPS))
     mag_loops(spell_level, caster, cvict, ovict, spellnum, metamagic, savetype, casttype);
 
-  if (IS_SET(SINFO.routines, MAG_AFFECTS))
+  if (IS_SET(routines, MAG_AFFECTS))
     mag_affects(spell_level, caster, cvict, ovict, spellnum, savetype, casttype, metamagic);
 
-  if (IS_SET(SINFO.routines, MAG_UNAFFECTS))
+  if (IS_SET(routines, MAG_UNAFFECTS))
     mag_unaffects(spell_level, caster, cvict, ovict, spellnum, savetype, casttype);
 
-  if (IS_SET(SINFO.routines, MAG_POINTS))
+  if (IS_SET(routines, MAG_POINTS))
     mag_points(spell_level, caster, cvict, ovict, spellnum, savetype, casttype);
 
-  if (IS_SET(SINFO.routines, MAG_ALTER_OBJS))
+  if (IS_SET(routines, MAG_ALTER_OBJS))
     mag_alter_objs(spell_level, caster, ovict, spellnum, savetype, casttype);
 
-  if (IS_SET(SINFO.routines, MAG_GROUPS))
+  if (IS_SET(routines, MAG_GROUPS))
     mag_groups(spell_level, caster, ovict, spellnum, savetype, casttype);
 
-  if (IS_SET(SINFO.routines, MAG_MASSES))
+  if (IS_SET(routines, MAG_MASSES))
     mag_masses(spell_level, caster, ovict, spellnum, savetype, casttype, metamagic);
 
-  if (IS_SET(SINFO.routines, MAG_AREAS))
+  if (IS_SET(routines, MAG_AREAS))
     mag_areas(spell_level, caster, ovict, spellnum, metamagic, savetype, casttype);
 
-  if (IS_SET(SINFO.routines, MAG_SUMMONS))
+  if (IS_SET(routines, MAG_SUMMONS))
     mag_summons(spell_level, caster, ovict, spellnum, savetype, casttype);
 
-  if (IS_SET(SINFO.routines, MAG_CREATIONS))
+  if (IS_SET(routines, MAG_CREATIONS))
     mag_creations(spell_level, caster, cvict, ovict, spellnum, casttype);
 
-  if (IS_SET(SINFO.routines, MAG_ROOM))
+  if (IS_SET(routines, MAG_ROOM))
     mag_room(spell_level, caster, ovict, spellnum, casttype);
 
   /* this switch statement sends us to spells.c for the manual spells */
-  if (IS_SET(SINFO.routines, MAG_MANUAL))
+  if (IS_SET(routines, MAG_MANUAL))
     switch (spellnum)
     {
     case SPELL_GIRD_ALLIES:
