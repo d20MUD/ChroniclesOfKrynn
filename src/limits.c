@@ -1590,6 +1590,16 @@ void check_idling(struct char_data *ch)
     }
     else if (ch->char_specials.timer > CONFIG_IDLE_RENT_TIME)
     {
+      save_char_pets(ch);
+      dismiss_all_followers(ch);
+
+      if (CONFIG_FREE_RENT)
+      {
+        if (!Crash_rentsave(ch, 0))
+          return;
+      }
+      else
+        Crash_idlesave(ch);
       if (IN_ROOM(ch) != NOWHERE)
         char_from_room(ch);
       char_to_room(ch, 3);
@@ -1603,13 +1613,6 @@ void check_idling(struct char_data *ch)
         ch->desc->character = NULL;
         ch->desc = NULL;
       }
-      save_char_pets(ch);
-      dismiss_all_followers(ch);
-
-      if (CONFIG_FREE_RENT)
-        Crash_rentsave(ch, 0);
-      else
-        Crash_idlesave(ch);
       mudlog(CMP, LVL_STAFF, TRUE, "%s force-rented and extracted (idle).", GET_NAME(ch));
       add_llog_entry(ch, LAST_IDLEOUT);
       extract_char(ch);

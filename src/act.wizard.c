@@ -6953,8 +6953,19 @@ void perform_do_copyover()
       }
 
       GET_LOADROOM(och) = GET_ROOM_VNUM(IN_ROOM(och));
-      Crash_rentsave(och, 0);
-      save_char(och, 0);
+      if (!save_char_checked(och, 0) || !Crash_crashsave_checked(och))
+      {
+        struct descriptor_data *notify;
+        log("SYSERR: copyover: Failed to save player %s; restart cancelled", GET_NAME(och));
+        fclose(fp);
+        for (notify = descriptor_list; notify; notify = notify->next)
+          if (notify->character && STATE(notify) == CON_PLAYING)
+            write_to_descriptor(notify->descriptor,
+                                "\r\n*** COPYOVER CANCELLED: A player save failed. "
+                                "Your equipment remains with you. ***\r\n");
+        copyover_status = COPYOVER_NONE;
+        return;
+      }
       saved_count++;
 
       COPYOVER_DEBUG("copyover: Saved player %s (room %d, desc %d)", GET_NAME(och),

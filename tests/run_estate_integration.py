@@ -117,6 +117,9 @@ with tempfile.TemporaryDirectory(prefix='krynn-estate-test-') as directory:
             function('static int Crash_save(struct obj_data *', source[source.index('/* recursive function using linked lists'):]),
             function('static void Crash_restore_weight(struct obj_data *', source[source.index('static void Crash_restore_weight(struct obj_data *', source.index('// Like crash save')):]),
             function('static int objsave_write_rentcode(FILE *', source[source.index('static int objsave_write_rentcode(FILE *', source.index('void Crash_idlesave')):]),
+            function('static int Crash_is_unrentable(struct obj_data *', source[source.index('static int Crash_is_unrentable(struct obj_data *', source.index('static void Crash_restore_weight(struct obj_data *', source.index('// Like crash save'))):]),
+            function('static int Crash_save_rent(struct obj_data *'),
+            function('static bool Crash_checkpoint(struct char_data *'),
             function('bool Crash_crashsave_checked(struct char_data *').replace('Crash_crashsave_checked(', 'test_real_crashsave_checked(', 1)]))
 
         subprocess.run([os.environ.get('CC', 'cc'), *extra_flags, '-std=gnu99', '-Wall', '-Wextra',

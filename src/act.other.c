@@ -5635,8 +5635,6 @@ void perform_player_quit(struct char_data *ch)
 
   if (!return_all_eidolon_gear(ch)) return;
 
-  act("$n has left the game.", TRUE, ch, 0, 0, TO_ROOM);
-  mudlog(NRM, LVL_STAFF, TRUE, "%s has quit the game.", GET_NAME(ch));
   save_eidolon_descs(ch);
   save_char_pets(ch);
   dismiss_all_followers(ch);
@@ -5651,14 +5649,16 @@ void perform_player_quit(struct char_data *ch)
       quest_timeout(ch, index);
   }
 
-  send_to_char(ch, "Goodbye, friend.. Come back soon!\r\n");
-
   // /* We used to check here for duping attempts, but we may as well do it right
   //  * in extract_char(), since there is no check if a player rents out and it
   //  * can leave them in an equally screwy situation. */
 
-  if (CONFIG_FREE_RENT)
-    Crash_rentsave(ch, 0);
+  if (CONFIG_FREE_RENT && !Crash_rentsave(ch, 0))
+    return;
+
+  act("$n has left the game.", TRUE, ch, 0, 0, TO_ROOM);
+  mudlog(NRM, LVL_STAFF, TRUE, "%s has quit the game.", GET_NAME(ch));
+  send_to_char(ch, "Goodbye, friend.. Come back soon!\r\n");
 
   GET_LOADROOM(ch) = GET_ROOM_VNUM(IN_ROOM(ch));
 

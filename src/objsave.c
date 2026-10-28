@@ -1132,6 +1132,28 @@ static int Crash_save(struct obj_data *obj, struct char_data *ch, FILE *fp, int 
   return result;
 }
 
+/* Visit even excluded subtrees so weight subtraction/restoration stays balanced.
+ * Explicit temporary/no-rent items are excluded in every inventory location. */
+static int Crash_save_rent(struct obj_data *obj, struct char_data *ch, FILE *fp,
+                           int location, bool excluded)
+{
+  struct obj_data *tmp;
+  int result = TRUE;
+
+  if (!obj)
+    return TRUE;
+  if (!Crash_save_rent(obj->next_content, ch, fp, location, excluded))
+    result = FALSE;
+  excluded = excluded || Crash_is_unrentable(obj);
+  if (!Crash_save_rent(obj->contains, ch, fp, MIN(0, location) - 1, excluded))
+    result = FALSE;
+  if (!excluded && !objsave_save_obj_record(obj, ch, fp, location))
+    result = FALSE;
+  for (tmp = obj->in_obj; tmp; tmp = tmp->in_obj)
+    GET_OBJ_WEIGHT(tmp) -= GET_OBJ_WEIGHT(obj);
+  return result;
+}
+
 // Like crash save but for pets
 static int Crash_save_pet(struct obj_data *obj, struct char_data *ch, struct char_data *owner,
                           long int pet_idnum, int location)
@@ -1202,10 +1224,10 @@ static int Crash_is_unrentable(struct obj_data *obj)
   if (!obj)
     return FALSE;
 
-  if (OBJ_FLAGGED(obj, ITEM_NORENT) || GET_OBJ_RENT(obj) < 0 || GET_OBJ_RNUM(obj) == NOTHING ||
+  if (OBJ_FLAGGED(obj, ITEM_NORENT) || GET_OBJ_RENT(obj) < 0 ||
       GET_OBJ_TYPE(obj) == ITEM_KEY)
   {
-    log("Crash_is_unrentable: removing object %s", obj->short_description);
+    log("Crash_is_unrentable: excluding object %s", obj->short_description);
     return TRUE;
   }
 
@@ -1273,7 +1295,7 @@ void Crash_crashsave(struct char_data *ch)
   (void)Crash_crashsave_checked(ch);
 }
 
-bool Crash_crashsave_checked(struct char_data *ch)
+static bool Crash_checkpoint(struct char_data *ch, int rentcode, int cost, bool renting)
 {
   char filename[MAX_INPUT_LENGTH];
   char *data = NULL;
@@ -1293,11 +1315,12 @@ bool Crash_crashsave_checked(struct char_data *ch)
     free(name);
   }
 #endif
-  if (ok) ok = objsave_write_rentcode(fp, RENT_CRASH, 0, ch);
+  if (ok) ok = objsave_write_rentcode(fp, rentcode, cost, ch);
   for (j = 0; ok && j < NUM_WEARS; j++)
     if (GET_EQ(ch, j))
     {
-      ok = Crash_save(GET_EQ(ch, j), ch, fp, j + 1);
+      ok = renting ? Crash_save_rent(GET_EQ(ch, j), ch, fp, j + 1, FALSE) :
+                     Crash_save(GET_EQ(ch, j), ch, fp, j + 1);
       Crash_restore_weight(GET_EQ(ch, j));
     }
   if (ch->bags)
@@ -1308,12 +1331,14 @@ bool Crash_crashsave_checked(struct char_data *ch)
   }
   for (j = 0; ok && j < 10; j++)
   {
-    ok = Crash_save(bags[j], ch, fp, 0);
+    ok = renting ? Crash_save_rent(bags[j], ch, fp, 0, FALSE) :
+                   Crash_save(bags[j], ch, fp, 0);
     Crash_restore_weight(bags[j]);
   }
   if (ok)
   {
-    ok = Crash_save(ch->carrying, ch, fp, 0);
+    ok = renting ? Crash_save_rent(ch->carrying, ch, fp, 0, FALSE) :
+                   Crash_save(ch->carrying, ch, fp, 0);
     Crash_restore_weight(ch->carrying);
   }
   if (fprintf(fp, "$~\n") < 0 || ferror(fp)) ok = false;
@@ -1327,6 +1352,11 @@ bool Crash_crashsave_checked(struct char_data *ch)
   if (ok) REMOVE_BIT_AR(PLR_FLAGS(ch), PLR_CRASH);
   else log("SYSERR: durable object checkpoint failed for %s", GET_NAME(ch));
   return ok;
+}
+
+bool Crash_crashsave_checked(struct char_data *ch)
+{
+  return Crash_checkpoint(ch, RENT_CRASH, 0, FALSE);
 }
 
 void Crash_idlesave(struct char_data *ch)
@@ -1467,117 +1497,22 @@ void Crash_idlesave(struct char_data *ch)
   Crash_extract_objs(ch->carrying);
 }
 
-/* primary function for saving player object file, will extract objs once
- * file is closed */
-void Crash_rentsave(struct char_data *ch, int cost)
+/* Only remove live equipment after every record and the checkpoint are durable. */
+bool Crash_rentsave(struct char_data *ch, int cost)
 {
-  char buf[MAX_INPUT_LENGTH] = {'\0'};
   int j;
-  FILE *fp;
 
-  if (IS_NPC(ch))
-    return;
-
-  if (!get_filename(buf, sizeof(buf), CRASH_FILE, GET_NAME(ch)))
-    return;
-
-  if (!(fp = fopen(buf, "w")))
-    return;
-
-#ifdef OBJSAVE_DB
-  char del_buf[2048];
-  if (mysql_query(conn, "start transaction;"))
+  if (!Crash_checkpoint(ch, RENT_RENTED, cost, TRUE))
   {
-    log("SYSERR: Unable to start transaction for saving of player object data: %s",
-        mysql_error(conn));
-    fclose(fp);
-    return;
-  }
-  /* Delete existing save data.  In the future may just flag these for deletion. */
-  snprintf(del_buf, sizeof(del_buf), "delete from player_save_objs where name = '%s';",
-           GET_NAME(ch));
-  if (mysql_query(conn, del_buf))
-  {
-    log("SYSERR: Unable to delete player object save data: %s", mysql_error(conn));
-    mysql_query(conn, "rollback;");
-    fclose(fp);
-    return;
-  }
-#endif
-
-  /* get rid of all !rent items */
-  Crash_extract_norent_eq(ch);
-  Crash_extract_norents(ch->carrying);
-
-  /* write to file rentcode: rentcode, time, cost for renting, gold, bank-gold */
-  if (!objsave_write_rentcode(fp, RENT_RENTED, cost, ch))
-  {
-#ifdef OBJSAVE_DB
-    mysql_query(conn, "rollback;");
-#endif
-    fclose(fp);
-    return;
+    send_to_char(ch, "Your equipment could not be saved. Logout was cancelled; "
+                     "your belongings are still with you. Please try again.\r\n");
+    return FALSE;
   }
 
-  /* go through all equipment worn and save */
   for (j = 0; j < NUM_WEARS; j++)
-  {
-    if (GET_EQ(ch, j))
-    {
-      /* recursive save function (like bags) */
-      if (!Crash_save(GET_EQ(ch, j), ch, fp, j + 1))
-      {
-        fclose(fp);
-#ifdef OBJSAVE_DB
-        mysql_query(conn, "rollback;");
-#endif
-        return;
-      }
-      /* makes sure containers have proper weight for carrying objects with weight value */
-      Crash_restore_weight(GET_EQ(ch, j));
-      /* recursively remove objects and their contents */
-      Crash_extract_objs(GET_EQ(ch, j));
-    }
-  }
-
-  // bags
-  Crash_save(ch->bags->bag1, ch, fp, 0);
-  Crash_save(ch->bags->bag2, ch, fp, 0);
-  Crash_save(ch->bags->bag3, ch, fp, 0);
-  Crash_save(ch->bags->bag4, ch, fp, 0);
-  Crash_save(ch->bags->bag5, ch, fp, 0);
-  Crash_save(ch->bags->bag6, ch, fp, 0);
-  Crash_save(ch->bags->bag7, ch, fp, 0);
-  Crash_save(ch->bags->bag8, ch, fp, 0);
-  Crash_save(ch->bags->bag9, ch, fp, 0);
-  Crash_save(ch->bags->bag10, ch, fp, 0);
-
-  /* inventory: recursive save function (like bags) */
-  if (!Crash_save(ch->carrying, ch, fp, 0))
-  {
-    fclose(fp);
-#ifdef OBJSAVE_DB
-    mysql_query(conn, "rollback;");
-#endif
-    return;
-  }
-
-  /* file terminating char and close */
-  fprintf(fp, "$~\n");
-  fclose(fp);
-
-#ifdef OBJSAVE_DB
-  if (mysql_query(conn, "commit;"))
-  {
-    log("SYSERR: Unable to commit transaction for saving of player object data: %s",
-        mysql_error(conn));
-    mysql_query(conn, "rollback;");
-    return;
-  }
-#endif
-
-  /* recursively remove objects and their contents */
+    Crash_extract_objs(GET_EQ(ch, j));
   Crash_extract_objs(ch->carrying);
+  return TRUE;
 }
 
 /* write to file rentcode: rentcode, time, cost for renting, gold, bank-gold */
@@ -1834,7 +1769,8 @@ static int gen_receptionist(struct char_data *ch, struct char_data *recep, int c
     {
       act("$n stores your belongings and helps you into your private chamber.", FALSE, recep, 0, ch,
           TO_VICT);
-      Crash_rentsave(ch, cost);
+      if (!Crash_rentsave(ch, cost))
+        return TRUE;
       mudlog(NRM, MAX(LVL_IMMORT, GET_INVIS_LEV(ch)), TRUE, "%s has rented (%d/day, %d tot.)",
              GET_NAME(ch), cost, GET_GOLD(ch) + GET_BANK_GOLD(ch));
     }

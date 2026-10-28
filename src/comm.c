@@ -3244,7 +3244,8 @@ static void extract_linkdead_player(struct char_data *ch)
   save_char_pets(ch);
   dismiss_all_followers(ch);
   save_char(ch, 0);
-  Crash_rentsave(ch, 0);
+  if (!Crash_rentsave(ch, 0))
+    return;
   add_llog_entry(ch, LAST_IDLEOUT);
   extract_char(ch);
 }
