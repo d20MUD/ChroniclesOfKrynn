@@ -18512,6 +18512,24 @@ void update_stage_data(struct char_data *ch)
   ch->player_specials->saved.stage_info.exp_to_next_stage = calculate_stage_xp_needed(ch);
 }
 
+/* Absolute XP boundary for a completed stage (0=start, 4=next level).
+ * Round fractional boundaries up so no stage or level is announced early. */
+long stage_exp_threshold(struct char_data *ch, int stage)
+{
+  long current_xp, next_xp;
+
+  if (!ch)
+    return 0;
+  current_xp = level_exp(ch, GET_LEVEL(ch));
+  if (stage <= 0 || GET_LEVEL(ch) >= LVL_IMMORT)
+    return current_xp;
+  next_xp = level_exp(ch, GET_LEVEL(ch) + 1);
+  if (stage >= STAGES_PER_LEVEL)
+    return next_xp;
+  return current_xp + ((next_xp - current_xp) * stage + STAGES_PER_LEVEL - 1) /
+                          STAGES_PER_LEVEL;
+}
+
 /**
  * Calculate how much XP is needed to advance to the next stage.
  * Each stage requires 25% of the total XP needed for the level.
@@ -18521,28 +18539,14 @@ void update_stage_data(struct char_data *ch)
  */
 int calculate_stage_xp_needed(struct char_data *ch)
 {
-  int current_level, next_level_xp, current_level_xp, xp_for_level, stage_xp;
-  int current_stage;
+  int stage;
 
-  if (!ch)
+  if (!ch || GET_LEVEL(ch) >= LVL_IMMORT)
     return 0;
-
-  current_level = GET_LEVEL(ch);
-  current_stage = ch->player_specials->saved.stage_info.current_stage;
-
-  /* At max level or stage 4 (ready to level) */
-  if (current_level >= LVL_IMMORT || current_stage >= STAGES_PER_LEVEL)
+  stage = ch->player_specials->saved.stage_info.current_stage;
+  if (stage >= STAGES_PER_LEVEL)
     return 0;
-
-  /* Calculate total XP needed for this level */
-  next_level_xp = level_exp(ch, current_level + 1);
-  current_level_xp = level_exp(ch, current_level);
-  xp_for_level = next_level_xp - current_level_xp;
-
-  /* Each stage is 25% of the level */
-  stage_xp = xp_for_level / STAGES_PER_LEVEL;
-
-  return stage_xp;
+  return stage_exp_threshold(ch, stage + 1) - stage_exp_threshold(ch, stage);
 }
 
 /**
@@ -18652,7 +18656,7 @@ static void get_award_perk_classes(struct char_data *ch, int award_class, int *p
  */
 bool check_stage_advancement(struct char_data *ch, int *perk_points_awarded)
 {
-  int current_level_xp, stage_xp_needed, stages_gained = 0;
+  int stages_gained = 0;
   int current_stage;
   bool advanced = FALSE;
 
@@ -18664,7 +18668,7 @@ bool check_stage_advancement(struct char_data *ch, int *perk_points_awarded)
     return FALSE;
   }
 
-  if (!ch || IS_NPC(ch))
+  if (!ch || IS_NPC(ch) || GET_LEVEL(ch) >= LVL_IMMORT)
   {
     if (perk_points_awarded)
       *perk_points_awarded = 0;
@@ -18682,13 +18686,9 @@ bool check_stage_advancement(struct char_data *ch, int *perk_points_awarded)
   if (current_stage >= STAGES_PER_LEVEL)
     return FALSE;
 
-  /* Calculate how much XP we have within this level */
-  current_level_xp = level_exp(ch, GET_LEVEL(ch));
-  stage_xp_needed = calculate_stage_xp_needed(ch);
-
-  /* Check if we have enough XP to advance stages */
+  /* Advance only after completing the next quarter of this level's XP. */
   while (current_stage < STAGES_PER_LEVEL &&
-         GET_EXP(ch) >= (current_level_xp + (stage_xp_needed * current_stage)))
+         GET_EXP(ch) >= stage_exp_threshold(ch, current_stage + 1))
   {
     current_stage++;
     stages_gained++;
@@ -18810,8 +18810,6 @@ static int pick_likely_starting_class(struct char_data *ch)
 
 static int calculate_stage_awards_from_current_xp(struct char_data *ch, int *resulting_stage)
 {
-  int current_level_xp;
-  int stage_xp_needed;
   int stage = 0;
   int stage_awards = 0;
 
@@ -18825,17 +18823,7 @@ static int calculate_stage_awards_from_current_xp(struct char_data *ch, int *res
     return 0;
   }
 
-  current_level_xp = level_exp(ch, GET_LEVEL(ch));
-  stage_xp_needed = calculate_stage_xp_needed(ch);
-
-  if (stage_xp_needed <= 0)
-  {
-    if (resulting_stage)
-      *resulting_stage = 0;
-    return 0;
-  }
-
-  while (stage < STAGES_PER_LEVEL && GET_EXP(ch) >= (current_level_xp + (stage_xp_needed * stage)))
+  while (stage < STAGES_PER_LEVEL && GET_EXP(ch) >= stage_exp_threshold(ch, stage + 1))
   {
     stage++;
     if (stage < STAGES_PER_LEVEL)

@@ -5937,16 +5937,21 @@ static void display_experience_section(struct char_data *ch, int line_length)
       if (current_stage < STAGES_PER_LEVEL)
       {
         /* Calculate XP within current stage */
-        int base_level_xp = (GET_LEVEL(ch) > 1 ? level_exp(ch, GET_LEVEL(ch)) : 0);
-        int stage_start_xp = base_level_xp + (stage_xp_needed * (current_stage - 1));
-        stage_xp = GET_EXP(ch) - stage_start_xp;
+        long stage_start_xp = stage_exp_threshold(ch, current_stage);
+        stage_xp = MAX(0, GET_EXP(ch) - stage_start_xp);
 
         send_to_char(ch, "\tc             \tn \tYStage:\tn %d/4 \tc|\tn \tYStage XP:\tn %s/%s\r\n",
                      current_stage, add_commas(stage_xp), add_commas(stage_xp_needed));
       }
-      else
+      else if (GET_EXP(ch) >= level_exp(ch, GET_LEVEL(ch) + 1))
       {
         send_to_char(ch, "\tc             \tn \tYStage:\tn 4/4 (Ready to level!)\r\n");
+      }
+      else
+      {
+        /* Preserve previously earned stages after XP loss or an older early award. */
+        send_to_char(ch, "\tc             \tn \tYStage:\tn 4/4 completed; %ld XP needed to level.\r\n",
+                     level_exp(ch, GET_LEVEL(ch) + 1) - GET_EXP(ch));
       }
     }
   }

@@ -365,6 +365,7 @@ bool display_perk_info(struct char_data *ch, const char *perkname);
 /* Stage-based progression functions */
 void init_stage_data(struct char_data *ch);
 void update_stage_data(struct char_data *ch);
+long stage_exp_threshold(struct char_data *ch, int stage);
 int calculate_stage_xp_needed(struct char_data *ch);
 bool check_stage_advancement(struct char_data *ch, int *perk_points_awarded);
 bool reconcile_legacy_perk_progress(struct char_data *ch, int *points_granted);
