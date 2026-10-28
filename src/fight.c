@@ -7309,8 +7309,10 @@ static int resolve_damage(struct char_data *ch,struct char_data *victim,int dam,
   if (GET_POS(victim) <= POS_STUNNED && FIGHTING(victim) != NULL)
     stop_fighting(victim);
 
-  // lose hide/invis
-  if (AFF_FLAGGED(ch, AFF_INVISIBLE) || AFF_FLAGGED(ch, AFF_HIDE))
+  /* Poison suffering is not an attack made by the poisoned character.
+   * Use the original source: kill-credit attribution may have reassigned ch. */
+  if (!(original_self_damage && w_type == SPELL_POISON) &&
+      (AFF_FLAGGED(ch, AFF_INVISIBLE) || AFF_FLAGGED(ch, AFF_HIDE)))
     appear(ch, FALSE);
 
   if (GET_POS(victim) == POS_DEAD) // victim died

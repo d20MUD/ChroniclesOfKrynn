@@ -5758,6 +5758,7 @@ int can_lore_target(struct char_data *ch, struct char_data *target_ch, struct ob
   if (HAS_FEAT(ch, FEAT_BG_SAGE) && target_obj)
     lore_bonus += 2;
 
+  /* Item and creature lore both use the strongest knowledge skill. */
   lore_skill = ABILITY_ARCANA;
   if (compute_ability(ch, lore_skill) < compute_ability(ch, ABILITY_RELIGION))
     lore_skill = ABILITY_RELIGION;
@@ -5807,7 +5808,6 @@ int can_lore_target(struct char_data *ch, struct char_data *target_ch, struct ob
       send_to_char(ch, "You can only lore mobs.\r\n");
       return 0;
     }
-    lore_skill = get_knowledge_skill_from_creature_type(GET_RACE(target_ch));
     skill = (compute_ability(ch, lore_skill) + lore_bonus);
     dc = (int)(GET_LEVEL(target_ch) * 1.5);
     send_to_char(
