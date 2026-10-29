@@ -1266,4 +1266,5 @@ ACMD_DECL(do_devote);
 ACMD_DECL(do_temote);
 
 ACMD_DECL(do_dialogue_quest);
+ACMD_DECL(do_spellhelp);
 #endif /* _ACT_H_ */

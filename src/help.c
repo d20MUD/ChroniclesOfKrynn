@@ -16,6 +16,7 @@
 #include "lists.h"
 #include "help.h"
 #include "feats.h"
+#include "spellhelp.h"
 #include "spells.h" /* need this for class.h NUM_ABILITIES */
 #include "class.h"
 #include "race.h"
@@ -1536,6 +1537,9 @@ ACMDU(do_help)
       page_string(ch->desc, ihelp, 0);
     return;
   }
+
+  if (spellhelp_try_show(ch, argument))
+    return;
 
   /* Prepare arguments for handlers */
   raw_argument = strdup(argument); /* Keep original for handlers that need it */

@@ -783,14 +783,6 @@ static int resolve_call_magic(struct char_data *caster, struct char_data *cvict,
   if (spellnum < 1 || spellnum > TOP_SPELL_DEFINE)
     return (0);
 
-  /* Resolve augmented targeting before target defenses and routine dispatch. */
-  routines = spell_info[spellnum].routines;
-  if (spellnum == PSIONIC_DEADLY_FEAR && GET_AUGMENT_PSP(caster) >= 8)
-  {
-    REMOVE_BIT(routines, MAG_DAMAGE);
-    SET_BIT(routines, MAG_AREAS);
-  }
-
   level = apply_arcane_supremacy_caster_level(caster, spellnum, casttype, level);
 
   // Message for debugging
@@ -858,6 +850,14 @@ static int resolve_call_magic(struct char_data *caster, struct char_data *cvict,
       spellnum = SPELL_HEAL;
       break;
     }
+  }
+
+  /* Resolve routines after spell conversion, before defenses and dispatch. */
+  routines = spell_info[spellnum].routines;
+  if (spellnum == PSIONIC_DEADLY_FEAR && GET_AUGMENT_PSP(caster) >= DEADLY_FEAR_AREA_AUGMENT)
+  {
+    REMOVE_BIT(routines, MAG_DAMAGE);
+    SET_BIT(routines, MAG_AREAS);
   }
 
   if ((casttype != CAST_WEAPON_POISON) && caster && caster->in_room && caster->in_room != NOWHERE &&

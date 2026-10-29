@@ -56,8 +56,6 @@ void set_vampire_spawn_feats(struct char_data *mob);
 bool can_add_solar_follower(struct char_data *ch);
 bool can_add_mummy_dust_follower(struct char_data *ch);
 
-#define EPIC_SPELL_DAMAGE_MULTIPLIER_PERCENT 150
-#define SUMMON_SPELL_DURATION_MULTIPLIER 3
 
 /* local file scope function prototypes */
 static void perform_mag_groups(int level, struct char_data *ch, struct char_data *tch,
@@ -2939,7 +2937,7 @@ int mag_damage(int level, struct char_data *ch, struct char_data *victim, struct
   case SPELL_HARM:
     save = SAVING_FORT;
     mag_resist = TRUE;
-    element = DAM_HOLY;
+    element = DAM_UNHOLY;
     num_dice = MIN(22, level);
     size_dice = 8;
     bonus = num_dice;

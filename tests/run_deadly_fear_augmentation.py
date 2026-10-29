@@ -9,7 +9,7 @@ root = Path(__file__).resolve().parents[1]
 parser = (root / 'src/spell_parser.c').read_text()
 magic = (root / 'src/magic.c').read_text()
 start = parser.index('  routines = spell_info[spellnum].routines;', parser.index('static int resolve_call_magic(', parser.index('int call_magic(')))
-setup = parser[start:parser.index('\n  level = apply_arcane_supremacy', start)]
+setup = parser[start:parser.index('\n  if ((casttype != CAST_WEAPON_POISON)', start)]
 start = parser.index('  if (IS_SET(routines, MAG_DAMAGE))', parser.index('/* the rest of the routine handling follows: */'))
 dispatch = parser[start:parser.index('  if (IS_SET(routines, MAG_SUMMONS))', start)]
 start = magic.index('  for (tch = world[IN_ROOM(ch)].people;', magic.index('void mag_areas('))

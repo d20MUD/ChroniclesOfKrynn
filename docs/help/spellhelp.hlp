@@ -1,0 +1,27 @@
+SPELLHELP
+
+	cUsage:	n spellhelp <spell or psionic power name>
+       spellhelp coverage
+
+Displays school, classes and levels gained, domains and circles gained,
+targets, augmentation rules, and documented effects. Damage entries show
+amount and damage type; conditions describe their penalties and duration.
+Labels appear in cyan and descriptions in normal text.
+
+	cExamples:	n
+  spellhelp deadly fear
+  spellhelp magic missile
+  spellhelp blindness
+
+The help command also displays this output for matching spell or power names.
+Full names and unambiguous prefixes work. Quotes are optional. Effects that
+have not yet been documented are marked with a brief note. Use spellhelp
+coverage to see overall documentation progress.
+
+Damage formulas describe base mechanics; applicable live server damage,
+preparation, summon-stat, and AC-cap modifiers are shown separately.
+Feats, perks, class features, equipment,
+and server settings may change the result. This command does not cast
+anything or spend resources.
+#0
+$

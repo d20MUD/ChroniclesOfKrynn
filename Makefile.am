@@ -221,6 +221,7 @@ circle_SOURCES = \
 	src/spec_procs.c \
 	src/specs.artifacts.c \
 	src/casting_visuals.c \
+	src/spellhelp.c \
 	src/spell_parser.c \
 	src/spell_prep.c \
 	src/spellbook_scroll.c \
