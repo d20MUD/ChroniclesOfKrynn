@@ -7683,17 +7683,19 @@ void define_wizard_perks(void)
   perk = &perk_list[PERK_WIZARD_ARCANE_AUGMENTATION];
   perk->id = PERK_WIZARD_ARCANE_AUGMENTATION;
   perk->name = strdup("Arcane Augmentation");
-  perk->description = strdup("+5 spell points per rank");
+  perk->description = strdup("Wizard spells take 5% less time to prepare per rank");
   perk->associated_class = CLASS_WIZARD;
   perk->perk_category = PERK_CATEGORY_VERSATILE_CASTER;
   perk->cost = 1;
   perk->max_rank = 5;
   perk->prerequisite_perk = -1;
   perk->prerequisite_rank = 0;
-  perk->effect_type = PERK_EFFECT_SPELL_POINTS;
+  perk->effect_type = PERK_EFFECT_SPECIAL;
   perk->effect_value = 5;
   perk->effect_modifier = 0;
-  perk->special_description = strdup("");
+  perk->special_description = strdup("Reduces wizard spell preparation time by 5% per rank, up to 25%. "
+                                     "Stacks multiplicatively with other preparation reductions; "
+                                     "the minimum preparation time still applies.");
 
   /* Extended Spell I */
   perk = &perk_list[PERK_WIZARD_EXTENDED_SPELL_1];

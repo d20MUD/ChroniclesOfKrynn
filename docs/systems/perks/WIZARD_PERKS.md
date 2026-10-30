@@ -7,6 +7,15 @@ Wizards are masters of arcane magic, wielding devastating spells and controlling
 
 ---
 
+## Arcane Augmentation (#103)
+
+- Cost: 1 point per rank; maximum 5 ranks.
+- Wizard spells take 5% less time to prepare per rank (25% at rank 5).
+- Applies multiplicatively after other preparation reductions, with the existing minimum of one second per spell circle.
+- Replaces the former spell-point bonus. Existing ranks retain their investment and gain the new effect.
+
+---
+
 ## Tree 1: Evoker (45 points total)
 *Focus on raw damage, blasting enemies with elemental fury*
 

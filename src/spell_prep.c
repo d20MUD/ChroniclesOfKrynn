@@ -4438,6 +4438,13 @@ int compute_spells_prep_time(struct char_data *ch, int class, int circle, int do
     prep_time -= swift_bonus;
   }
 
+  /* Arcane Augmentation applies only to wizard preparation, after other reductions. */
+  if (class == CLASS_WIZARD && !IS_NPC(ch))
+  {
+    int rank = get_perk_rank(ch, PERK_WIZARD_ARCANE_AUGMENTATION, CLASS_WIZARD);
+    prep_time *= (100 - 5 * MIN(5, MAX(0, rank))) / 100.0f;
+  }
+
   /* Final cap: preparation time cannot be less than the spell's circle
    * This ensures higher level spells always take meaningful time
    */

@@ -15734,7 +15734,7 @@ int hit(struct char_data *ch, struct char_data *victim, int type, int dam_type, 
 
     /* Target makes Fortitude save or is stunned for 2 rounds */
     int dc = 10 + GET_LEVEL(ch) + GET_STR_BONUS(ch);
-    if (!savingthrow(ch, victim, SAVING_FORT, dc, CAST_INNATE, GET_LEVEL(ch), NOSCHOOL))
+    if (!savingthrow_flatdc(ch, victim, SAVING_FORT, 0, dc, CAST_INNATE, NOSCHOOL, 0))
     {
       struct affected_type af = {0};
       new_affect(&af);
