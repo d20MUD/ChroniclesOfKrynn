@@ -10606,6 +10606,9 @@ bool do_not_list_spell(int spellnum)
 {
   switch (spellnum)
   {
+  /* Aurak signature abilities are racial powers, not learnable class spells. */
+  case SPELL_AURAK_ENERGY_RAY:
+  case SPELL_AURAK_BREATH:
   case SPELL_LUSKAN_RECALL:
   case SPELL_TRIBOAR_RECALL:
   case SPELL_MIRABAR_RECALL:

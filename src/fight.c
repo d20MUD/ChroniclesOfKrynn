@@ -3638,6 +3638,8 @@ int skill_message(int dam, struct char_data *ch, struct char_data *vict, int att
   struct obj_data *shield = NULL;
   int (*name)(struct char_data *ch, void *me, int cmd, const char *argument);
   bool is_ranged = FALSE;
+  bool show_ability_damage = (attacktype == SKILL_SLAM || attacktype == SKILL_BITE);
+  char ability_damage_message[MAX_STRING_LENGTH];
 
   if (DEBUGMODE)
   {
@@ -3743,7 +3745,14 @@ int skill_message(int dam, struct char_data *ch, struct char_data *vict, int att
             if (msg->die_msg.attacker_msg)
             {
               send_to_char(ch, CCYEL(ch, C_CMP));
-              act(msg->die_msg.attacker_msg, FALSE, ch, weap, vict, TO_CHAR);
+              if (show_ability_damage)
+              {
+                snprintf(ability_damage_message, sizeof(ability_damage_message), "%s (%d damage)",
+                         msg->die_msg.attacker_msg, dam);
+                act(ability_damage_message, FALSE, ch, weap, vict, TO_CHAR);
+              }
+              else
+                act(msg->die_msg.attacker_msg, FALSE, ch, weap, vict, TO_CHAR);
               send_to_char(ch, CCNRM(ch, C_CMP));
             }
 
@@ -3762,7 +3771,7 @@ int skill_message(int dam, struct char_data *ch, struct char_data *vict, int att
 
           if (msg->hit_msg.attacker_msg && ch != vict)
           {
-            if (!IS_NPC(ch) && PRF_FLAGGED(ch, PRF_CONDENSED) && CNDNSD(ch))
+            if (!show_ability_damage && !IS_NPC(ch) && PRF_FLAGGED(ch, PRF_CONDENSED) && CNDNSD(ch))
             {
               CNDNSD(ch)->num_times_attacking++;
               CNDNSD(ch)->num_times_hit_targets++;
@@ -3770,7 +3779,14 @@ int skill_message(int dam, struct char_data *ch, struct char_data *vict, int att
             else
             {
               send_to_char(ch, CCYEL(ch, C_CMP));
-              act(msg->hit_msg.attacker_msg, FALSE, ch, weap, vict, TO_CHAR);
+              if (show_ability_damage)
+              {
+                snprintf(ability_damage_message, sizeof(ability_damage_message), "%s (%d damage)",
+                         msg->hit_msg.attacker_msg, dam);
+                act(ability_damage_message, FALSE, ch, weap, vict, TO_CHAR);
+              }
+              else
+                act(msg->hit_msg.attacker_msg, FALSE, ch, weap, vict, TO_CHAR);
               send_to_char(ch, CCNRM(ch, C_CMP));
             }
           }
