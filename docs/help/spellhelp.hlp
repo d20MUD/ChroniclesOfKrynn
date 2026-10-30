@@ -18,8 +18,8 @@ Full names and unambiguous prefixes work. Quotes are optional. Effects that
 have not yet been documented are marked with a brief note. Use spellhelp
 coverage to see overall documentation progress.
 
-Damage formulas describe base mechanics; applicable live server damage,
-preparation, summon-stat, and AC-cap modifiers are shown separately.
+Damage formulas describe base mechanics; applicable global damage bonuses
+and AC-cap modifiers are shown separately.
 Feats, perks, class features, equipment,
 and server settings may change the result. This command does not cast
 anything or spend resources.

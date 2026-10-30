@@ -62,6 +62,11 @@ static void check_alignment(const char *text)
 {
   const char *line, *end, *cursor, *colon;
   int visible;
+  if (text) {
+    assert(!strstr(text,"Preparation") && !strstr(text,"Summon scaling"));
+    assert(!strstr(text,"Damage calculation"));
+    assert(!strstr(text,"Levels 1-10:") && !strstr(text,"Levels 11-20:") && !strstr(text,"Levels 21+:"));
+  }
   if (!text || (strncmp(text, "\tcSpell", 7) && strncmp(text, "\tcPower", 7))) return;
   for (line=text; *line; line=end+2)
   {
@@ -242,7 +247,7 @@ int main(void)
   /* Synthetic unused boundary ID exercises the fallback renderer. */
   registered(PSIONIC_POWER_END,"undocumented test power"); command(&ch,"undocumented test power");
   assert(strstr(output,"Detailed effects are not yet documented.") && !strstr(output,"\tcDamage:"));
-  /* Live cedit values affect the appropriate damage/prep paths only. */
+  /* Nonzero prep/summon settings remain hidden; damage and AC settings are shown. */
   CONFIG_PSIONIC_DAMAGE=25; CONFIG_ARCANE_DAMAGE=50; CONFIG_DIVINE_DAMAGE=0;
   CONFIG_ARCANE_PREP_TIME=CONFIG_DIVINE_PREP_TIME=CONFIG_ALCHEMY_PREP_TIME=67;
   CONFIG_PSIONIC_PREP_TIME=100; CONFIG_PLAYER_AC_CAP=70;
@@ -260,30 +265,28 @@ int main(void)
   command(&ch,"fireball");
   assert(strstr(output,"Wizard/Sorcerer/Bard +50% (150% of normal damage)"));
   assert(!strstr(output,"Cleric/Druid/Paladin/Ranger +0%"));
-  assert(strstr(output,"Arcane 67% of normal preparation time"));
-  assert(strstr(output,"Divine 67% of normal preparation time"));
+  assert(!strstr(output,"normal preparation time"));
+
   spell_info[SPELL_HEAL].min_level[CLASS_CLERIC]=11; command(&ch,"heal");
-  assert(!strstr(output,"Global damage bonus:") && strstr(output,"Divine 67%"));
+  assert(!strstr(output,"Global damage bonus:") && !strstr(output,"Divine 67%"));
   command(&ch,"mental barrier");
   assert(!strstr(output,"Global damage bonus:") && strstr(output,"total AC is capped at 70"));
   spell_info[SPELL_SUMMON_CREATURE_1].routines=MAG_SUMMONS;
   text=render_checked(SPELL_SUMMON_CREATURE_1);
-  assert(strstr(text,"creature's level") && strstr(text,"Levels 1-10: maximum HP 200%; AC 150%"));
-  assert(strstr(text,"Levels 11-20: maximum HP 150%; AC 125%"));
-  assert(strstr(text,"Levels 21+: maximum HP 115%; AC 115%"));
-  assert(strstr(text,"each damage-dice dimension 150%")); free(text);
+  assert(!strstr(text,"maximum HP 200%") && !strstr(text,"each damage-dice dimension"));
+  free(text);
   spell_info[SPELL_MAGIC_MISSILE].routines=MAG_LOOPS;
   spell_info[SPELL_MAGIC_MISSILE].min_level[CLASS_SUMMONER]=1;
   command(&ch,"magic missile");
   assert(!strstr(output,"Wizard/Sorcerer/Bard +50%"));
-  assert(strstr(output,"Arcane 67%"));
+  assert(!strstr(output,"Arcane 67%"));
   assert(!strstr(output,"after the first damage event"));
   spell_info[SPELL_ACID_FOG].min_level[CLASS_WIZARD]=11;
   text=render_checked(SPELL_ACID_FOG);
   assert(!strstr(text,"Global damage bonus:") && strstr(text,"original caster's global damage bonus is not preserved")); free(text);
   spell_info[SPELL_CURE_LIGHT].min_level[CLASS_ALCHEMIST]=1;
   text=render_checked(SPELL_CURE_LIGHT);
-  assert(strstr(text,"Alchemy 67%") && !strstr(text,"Global damage bonus:")); free(text);
+  assert(!strstr(text,"Alchemy 67%") && !strstr(text,"Global damage bonus:")); free(text);
   CONFIG_PSIONIC_DAMAGE=0; command(&ch,"deadly fear");
   assert(!strstr(output,"Global damage bonus:") && !strstr(output,"Damage calculation:"));
   CONFIG_ARCANE_DAMAGE=CONFIG_DIVINE_DAMAGE=0;
@@ -408,14 +411,14 @@ int main(void)
   command(&ch,"feeblemind"); assert(strstr(output,"Intelligence, Wisdom, and Charisma") && strstr(output,"minus 3"));
   command(&ch,"nightmare"); assert(strstr(output,"Caster level d4 + 10 illusion") && strstr(output,"Fortitude negates fatigue"));
   command(&ch,"mind fog"); assert(strstr(output,"-10 on Will") && strstr(output,"single-target debuff"));
-  command(&ch,"faithful hound"); assert(strstr(output,"hound as a charmed follower") && strstr(output,"Summon scaling:"));
+  command(&ch,"faithful hound"); assert(strstr(output,"hound as a charmed follower") && !strstr(output,"Summon scaling:"));
   command(&ch,"dismissal"); assert(strstr(output,"first charmed extraplanar") && strstr(output,"follower's master"));
   command(&ch,"cone of cold"); assert(strstr(output,"min(22, caster level)d6 cold") && strstr(output,"single-target"));
   command(&ch,"telekinesis"); assert(strstr(output,"59% chance") && strstr(output,"min(20, caster level)d4 bludgeoning"));
   command(&ch,"firebrand"); assert(strstr(output,"min(22, caster level)d6 fire"));
   command(&ch,"deathcloud"); assert(!spellhelp_public(SPELL_DEATHCLOUD) && strstr(output,"internal creature ability") && strstr(output,"Effect level d4 poison"));
   command(&ch,"freezing sphere"); assert(strstr(output,"min(24, caster level)d10") && strstr(output,"caster level / 2"));
-  command(&ch,"summon creature vi"); assert(strstr(output,"dire tiger") && strstr(output,"Summon scaling:"));
+  command(&ch,"summon creature vi"); assert(strstr(output,"dire tiger") && !strstr(output,"Summon scaling:"));
   command(&ch,"transformation"); assert(strstr(output,"base attack bonus to total character level") && strstr(output,"Prevents starting"));
   command(&ch,"eyebite"); assert(strstr(output,"three-fifths of maximum HP") && strstr(output,"75 rounds"));
   assert(!strstr(output,"Global damage bonus:"));
@@ -427,7 +430,7 @@ int main(void)
   command(&ch,"globe of invuln"); assert(strstr(output,"class level is 8 or less") && strstr(output,"Device casts and Warlock"));
   command(&ch,"greater dispelling"); assert(strstr(output,"2d2 dispels") && strstr(output,"Each successful attempt removes one affect record"));
   command(&ch,"grasping hand"); assert(strstr(output,"min(26, caster level)d6") && strstr(output,"2d4 - 1 rounds") && strstr(output,"separate Reflex save"));
-  command(&ch,"summon creature vii"); assert(strstr(output,"level is set to 16") && strstr(output,"Summon scaling:"));
+  command(&ch,"summon creature vii"); assert(strstr(output,"level is set to 16") && !strstr(output,"Summon scaling:"));
   command(&ch,"power word blind"); assert(strstr(output,"No saving throw") && strstr(output,"No target-HP threshold"));
   command(&ch,"waves of exhaustion"); assert(strstr(output,"20 + caster level movement") && strstr(output,"No saving throw"));
   command(&ch,"mass hold person"); assert(strstr(output,"does not impose a level-11 cap") && strstr(output,"1d3 + 1 rounds"));
@@ -443,7 +446,7 @@ int main(void)
   command(&ch,"clenched fist"); assert(strstr(output,"min(28, caster level)d11") && strstr(output,"100 seconds") && strstr(output,"one-in-three chance"));
   command(&ch,"incendiary cloud"); assert(strstr(output,"five-second affliction pulse") && strstr(output,"Arcane magic level d5"));
   assert(!strstr(output,"Global damage bonus:"));
-  command(&ch,"summon creature viii"); assert(strstr(output,"level is set to 18") && strstr(output,"Summon scaling:"));
+  command(&ch,"summon creature viii"); assert(strstr(output,"level is set to 18") && !strstr(output,"Summon scaling:"));
   command(&ch,"horrid wilting"); assert(strstr(output,"min(28, caster level)d8") && strstr(output,"negative-energy damage"));
   command(&ch,"greater animation"); assert(strstr(output,"wight at 30+") && strstr(output,"set to level 18") && strstr(output,"corpse's contents transfer"));
   command(&ch,"irresistible dance"); assert(strstr(output,"checks the caster for Paralysis Resistance") && strstr(output,"regardless of the result"));
@@ -464,7 +467,7 @@ int main(void)
     static const struct {const char *name, *effect, *detail;} cases[] = {
       {"iron skin", "up to 50 damage", "35 times max(10, caster level)"},
       {"mass cunning", "Intelligence of 2 + caster level / 5", "requires a group"},
-      {"blade of disaster", "level is set to 20", "Summon scaling:"},
+      {"blade of disaster", "level is set to 20", "Duration:"},
       {"summon creature ix", "level is set to 20", "10 out of 102"},
       {"wail of the banshee", "(caster level + 2)d5", "a separate Fortitude save negates fear"},
       {"power word kill", "10d8 mental damage", "121 HP or less"},
@@ -540,12 +543,12 @@ int main(void)
       {"magic stone", "1d6 + 1 bludgeoning", "up to five stones"},
       {"obscuring mist", "20% concealment", "divine caster level"},
       {"produce flame", "1d6 + min(5, caster level) fire", "underwater"},
-      {"natures ally i", "dire badger", "Summon scaling:"},
-      {"natures ally ii", "dire boar", "Summon scaling:"},
-      {"natures ally iii", "dire wolf", "Summon scaling:"},
-      {"natures ally iv", "dire spider", "Summon scaling:"},
-      {"natures ally v", "dire bear", "Summon scaling:"},
-      {"natures ally vi", "dire tiger", "Summon scaling:"},
+      {"natures ally i", "dire badger", "Duration:"},
+      {"natures ally ii", "dire boar", "Duration:"},
+      {"natures ally iii", "dire wolf", "Duration:"},
+      {"natures ally iv", "dire spider", "Duration:"},
+      {"natures ally v", "dire bear", "Duration:"},
+      {"natures ally vi", "dire tiger", "Duration:"},
       {"natures ally vii", "level is set to 16", "10 out of 102"},
       {"natures ally viii", "level is set to 18", "10 out of 102"},
       {"natures ally ix", "level is set to 20", "10 out of 102"},
@@ -611,7 +614,7 @@ int main(void)
   command(&ch,"animal shapes"); assert(strstr(output,"+4 Stealth") && strstr(output,"base 2d6 damage dice") && strstr(output,"suppress wielded weapons and dual wielding"));
   {
     static const struct {const char *name, *effect, *detail;} cases[] = {
-      {"shambler", "1d4 + 2", "Summon scaling:"},
+      {"shambler", "1d4 + 2", "Duration:"},
       {"shapechange", "unimplemented numeric ID", "Unavailable: unfinished ID"},
       {"blade barrier", "25d6 + 2 slashing", "including the original caster and allies"},
       {"blades", "Effect level d6 + 2 slashing", "internal creature ability"},
@@ -811,7 +814,7 @@ int main(void)
   CONFIG_ARCANE_DAMAGE=50;
   command(&ch,"aqueous orb"); assert(!strstr(output,"Global damage bonus:"));
   command(&ch,"caustic blood"); assert(!strstr(output,"Global damage bonus:"));
-  command(&ch,"geniekind"); assert(strstr(output,"Summon scaling:"));
+  command(&ch,"geniekind"); assert(!strstr(output,"Summon scaling:"));
   command(&ch,"gird allies"); assert(strstr(output,"Armor class limit:"));
   command(&ch,"mass daze monster"); assert(strstr(output,"Recipients:") && strstr(output,"Group members in the room"));
   command(&ch,"communal stone skin"); assert(strstr(output,"Group members in the room"));
@@ -863,7 +866,7 @@ int main(void)
   CONFIG_ARCANE_DAMAGE=0;
   command(&ch,"fire bolt"); assert(!strstr(output,"Global damage bonus:"));
   command(&ch,"holy aura"); assert(strstr(output,"Armor class limit:") && strstr(output,"Group members in the room"));
-  command(&ch,"summon solar"); assert(strstr(output,"Summon scaling:"));
+  command(&ch,"summon solar"); assert(!strstr(output,"Summon scaling:"));
   command(&ch,"poison breath"); assert(!strstr(output,"Global damage bonus:"));
   command(&ch,"aurak death throes"); assert(strstr(output,"internal creature ability"));
   command(&ch,"solid fog"); assert(strstr(output,"50% concealment"));
@@ -1013,7 +1016,7 @@ int main(void)
   CONFIG_PSIONIC_DAMAGE=0;
   command(&ch,"mind thrust"); assert(!strstr(output,"Global damage bonus:"));
   command(&ch,"force screen"); assert(strstr(output,"Armor class limit:"));
-  command(&ch,"ectoplasmic shambler"); assert(strstr(output,"Summon scaling:"));
+  command(&ch,"ectoplasmic shambler"); assert(!strstr(output,"Summon scaling:"));
   free_psionic_registration();
   puts("spellhelp: all registered psionic powers, retired definitions, perk IDs, augmentation, damage settings, and read-only state passed.");
   free_batch_registration();

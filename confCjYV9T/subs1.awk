@@ -1,0 +1,127 @@
+BEGIN {
+S["am__EXEEXT_FALSE"]=""
+S["am__EXEEXT_TRUE"]="#"
+S["LTLIBOBJS"]=""
+S["LIBOBJS"]=""
+S["am__fastdepCXX_FALSE"]="#"
+S["am__fastdepCXX_TRUE"]=""
+S["CXXDEPMODE"]="depmode=gcc3"
+S["ac_ct_CXX"]="g++"
+S["CXXFLAGS"]="-g -O2"
+S["CXX"]="g++"
+S["am__fastdepCC_FALSE"]="#"
+S["am__fastdepCC_TRUE"]=""
+S["CCDEPMODE"]="depmode=gcc3"
+S["am__nodep"]="_no"
+S["AMDEPBACKSLASH"]="\\"
+S["AMDEP_FALSE"]="#"
+S["AMDEP_TRUE"]=""
+S["am__include"]="include"
+S["DEPDIR"]=".deps"
+S["OBJEXT"]="o"
+S["EXEEXT"]=""
+S["ac_ct_CC"]="gcc"
+S["CPPFLAGS"]=""
+S["LDFLAGS"]=""
+S["CFLAGS"]="-g -O2"
+S["CC"]="gcc"
+S["MORE"]="less"
+S["CRYPTLIB"]="-lcrypt"
+S["NETLIB"]=""
+S["MYFLAGS"]="-Wall"
+S["am__xargs_n"]="xargs -n"
+S["am__rm_f_notfound"]=""
+S["AM_BACKSLASH"]="\\"
+S["AM_DEFAULT_VERBOSITY"]="1"
+S["AM_DEFAULT_V"]="$(AM_DEFAULT_VERBOSITY)"
+S["AM_V"]="$(V)"
+S["CSCOPE"]="cscope"
+S["ETAGS"]="etags"
+S["CTAGS"]="ctags"
+S["am__untar"]="tar -xf -"
+S["am__tar"]="tar --format=ustar -chf - \"$$tardir\""
+S["AMTAR"]="$${TAR-tar}"
+S["am__leading_dot"]="."
+S["SET_MAKE"]=""
+S["AWK"]="gawk"
+S["mkdir_p"]="$(MKDIR_P)"
+S["MKDIR_P"]="/usr/bin/mkdir -p"
+S["INSTALL_STRIP_PROGRAM"]="$(install_sh) -c -s"
+S["STRIP"]=""
+S["install_sh"]="${SHELL} /home/krynn/code/install-sh"
+S["MAKEINFO"]="${SHELL} '/home/krynn/code/missing' makeinfo"
+S["AUTOHEADER"]="${SHELL} '/home/krynn/code/missing' autoheader"
+S["AUTOMAKE"]="${SHELL} '/home/krynn/code/missing' automake-1.18"
+S["AUTOCONF"]="${SHELL} '/home/krynn/code/missing' autoconf"
+S["ACLOCAL"]="${SHELL} '/home/krynn/code/missing' aclocal-1.18"
+S["VERSION"]="2.5002-beta"
+S["PACKAGE"]="luminarimud"
+S["CYGPATH_W"]="echo"
+S["am__isrc"]=""
+S["INSTALL_DATA"]="${INSTALL} -m 644"
+S["INSTALL_SCRIPT"]="${INSTALL}"
+S["INSTALL_PROGRAM"]="${INSTALL}"
+S["target_alias"]=""
+S["host_alias"]=""
+S["build_alias"]=""
+S["LIBS"]=""
+S["ECHO_T"]=""
+S["ECHO_N"]="-n"
+S["ECHO_C"]=""
+S["DEFS"]="-DHAVE_CONFIG_H"
+S["mandir"]="${datarootdir}/man"
+S["localedir"]="${datarootdir}/locale"
+S["libdir"]="${exec_prefix}/lib"
+S["psdir"]="${docdir}"
+S["pdfdir"]="${docdir}"
+S["dvidir"]="${docdir}"
+S["htmldir"]="${docdir}"
+S["infodir"]="${datarootdir}/info"
+S["docdir"]="${datarootdir}/doc/${PACKAGE_TARNAME}"
+S["oldincludedir"]="/usr/include"
+S["includedir"]="${prefix}/include"
+S["runstatedir"]="${localstatedir}/run"
+S["localstatedir"]="${prefix}/var"
+S["sharedstatedir"]="${prefix}/com"
+S["sysconfdir"]="${prefix}/etc"
+S["datadir"]="${datarootdir}"
+S["datarootdir"]="${prefix}/share"
+S["libexecdir"]="${exec_prefix}/libexec"
+S["sbindir"]="${exec_prefix}/sbin"
+S["bindir"]="${exec_prefix}/bin"
+S["program_transform_name"]="s,x,x,"
+S["prefix"]="/usr/local"
+S["exec_prefix"]="${prefix}"
+S["PACKAGE_URL"]=""
+S["PACKAGE_BUGREPORT"]="bugs@luminarimud.com"
+S["PACKAGE_STRING"]="LuminariMUD 2.5002-beta"
+S["PACKAGE_VERSION"]="2.5002-beta"
+S["PACKAGE_TARNAME"]="luminarimud"
+S["PACKAGE_NAME"]="LuminariMUD"
+S["PATH_SEPARATOR"]=":"
+S["SHELL"]="/bin/bash"
+S["am__quote"]=""
+  for (key in S) S_is_set[key] = 1
+  FS = ""
+
+}
+{
+  line = $ 0
+  nfields = split(line, field, "@")
+  substed = 0
+  len = length(field[1])
+  for (i = 2; i < nfields; i++) {
+    key = field[i]
+    keylen = length(key)
+    if (S_is_set[key]) {
+      value = S[key]
+      line = substr(line, 1, len) "" value "" substr(line, len + keylen + 3)
+      len += length(value) + length(field[++i])
+      substed = 1
+    } else
+      len += 1 + keylen
+  }
+
+  print line
+}
+

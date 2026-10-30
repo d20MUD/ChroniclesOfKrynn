@@ -151,16 +151,7 @@ column 23 (counting from 1), with wrapped lines indented to match at 80 columns.
 The class mapping follows `fight.c`, including classes that currently receive no
 configured damage adjustment. Domain access adds the divine casting route.
 
-Preparation percentages follow the separate switch in `spell_prep.c`: Summoner
-uses arcane preparation; Blackguard and Inquisitor use divine preparation;
-Alchemy uses its own percentage. Psionicists do not prepare powers, and the
-psionic prep setting is currently unused. Preparation settings are not casting
-or effect-duration multipliers.
-
-Summoning entries show all three level bands from `mag_summons`, based on the
-summoned creature's level. The final band applies at level 21 and above, even
-though cedit labels it 21-30. Percentages scale maximum HP, AC, hitroll, damroll,
-and both damage-dice count and size separately; later summon bonuses still apply.
+Preparation settings and summon-scaling tables are omitted from spellhelp.
 Documented AC buffs, including Mage Armor and Epic Mage Armor, also show the
 configured total AC cap.
 

@@ -4884,14 +4884,14 @@ static void sh_line(struct sh_text *out, const char *label, const char *descript
     sh_append(out, "\tc%s:\tn %s\r\n", label, description);
 }
 
-/* Match the casting-class switches in fight.c and spell_prep.c. These
- * settings modify damage/preparation, not healing, save DCs or durations. */
+/* Match the damage casting-class switch in fight.c. These settings do not
+ * modify healing, save DCs or durations. */
 static void sh_server_settings(struct sh_text *out, int spellnum,
                                const struct spellhelp_rule *rule)
 {
   const struct spell_info_type *info = &spell_info[spellnum];
   int i, j, damaging, arcane = 0, divine = 0, psionic = 0;
-  int arcane_prep = 0, divine_prep = 0, alchemy_prep = 0, damage_rows = 0;
+  int damage_rows = 0;
   damaging = rule ? strcmp(rule->damage, "None.") != 0 : IS_SET(info->routines, MAG_DAMAGE);
   /* These delayed/environmental/ability paths do not preserve the original casting-class bonus. */
   if (spellnum == SPELL_ACID_FOG || spellnum == SPELL_ACID_ARROW ||
@@ -4918,19 +4918,10 @@ static void sh_server_settings(struct sh_text *out, int spellnum,
       switch (i)
       {
       case CLASS_WIZARD: case CLASS_SORCERER: case CLASS_BARD:
-        arcane = arcane_prep = 1;
+        arcane = 1;
         break;
       case CLASS_CLERIC: case CLASS_DRUID: case CLASS_PALADIN: case CLASS_RANGER:
-        divine = divine_prep = 1;
-        break;
-      case CLASS_SUMMONER:
-        arcane_prep = 1;
-        break;
-      case CLASS_BLACKGUARD: case CLASS_INQUISITOR:
-        divine_prep = 1;
-        break;
-      case CLASS_ALCHEMIST:
-        alchemy_prep = 1;
+        divine = 1;
         break;
       default:
         break;
@@ -4940,7 +4931,7 @@ static void sh_server_settings(struct sh_text *out, int spellnum,
     for (i = 0; i < NUM_DOMAINS; i++)
       for (j = 0; j < MAX_DOMAIN_SPELLS; j++)
         if (domain_list[i].domain_spells[j] == spellnum)
-          divine = divine_prep = 1;
+          divine = 1;
   }
   if (damaging)
   {
@@ -4956,30 +4947,12 @@ static void sh_server_settings(struct sh_text *out, int spellnum,
     damage_rows = (psionic && CONFIG_PSIONIC_DAMAGE != 0) ||
                   (arcane && CONFIG_ARCANE_DAMAGE != 0) ||
                   (divine && CONFIG_DIVINE_DAMAGE != 0);
-    if (damage_rows)
-      sh_line(out, "Damage calculation", "Base damage formulas exclude this modifier. It applies to player-cast damage with integer rounding; other bonuses and defenses still apply.");
   }
   if (damage_rows && IS_SET(info->routines, MAG_LOOPS))
     sh_line(out, "Repeated hits", "The current combat rules consume the casting-class bonus after the first damage event; later hits do not automatically receive it.");
   if (spellnum == SPELL_ACID_FOG &&
       ((arcane && CONFIG_ARCANE_DAMAGE) || (divine && CONFIG_DIVINE_DAMAGE)))
     sh_line(out, "Periodic damage", "Acid Fog uses the affected creature as its damage source; the original caster's global damage bonus is not preserved.");
-  if (arcane_prep)
-    sh_append(out, "\tcPreparation:\tn Arcane %d%% of normal preparation time.\r\n", CONFIG_ARCANE_PREP_TIME);
-  if (divine_prep)
-    sh_append(out, "\tcPreparation:\tn Divine %d%% of normal preparation time.\r\n", CONFIG_DIVINE_PREP_TIME);
-  if (alchemy_prep)
-    sh_append(out, "\tcPreparation:\tn Alchemy %d%% of normal preparation time.\r\n", CONFIG_ALCHEMY_PREP_TIME);
-  if (IS_SET(info->routines, MAG_SUMMONS) || (rule && strstr(rule->sources, "mag_summons")))
-  {
-    sh_line(out, "Summon scaling", "Based on the summoned creature's level, before later summoning bonuses:");
-    sh_append(out, "  Levels 1-10: maximum HP %d%%; AC %d%%; hit/damage rolls and each damage-dice dimension %d%%.\r\n",
-      CONFIG_SUMMON_LEVEL_1_10_HP, CONFIG_SUMMON_LEVEL_1_10_AC, CONFIG_SUMMON_LEVEL_1_10_HIT_DAM);
-    sh_append(out, "  Levels 11-20: maximum HP %d%%; AC %d%%; hit/damage rolls and each damage-dice dimension %d%%.\r\n",
-      CONFIG_SUMMON_LEVEL_11_20_HP, CONFIG_SUMMON_LEVEL_11_20_AC, CONFIG_SUMMON_LEVEL_11_20_HIT_DAM);
-    sh_append(out, "  Levels 21+: maximum HP %d%%; AC %d%%; hit/damage rolls and each damage-dice dimension %d%%.\r\n",
-      CONFIG_SUMMON_LEVEL_21_30_HP, CONFIG_SUMMON_LEVEL_21_30_AC, CONFIG_SUMMON_LEVEL_21_30_HIT_DAM);
-  }
   if (spellnum == SPELL_SHIELD || spellnum == PSIONIC_MENTAL_BARRIER || spellnum == SPELL_INVISIBLE ||
       spellnum == SPELL_MAGE_ARMOR || spellnum == SPELL_EPIC_MAGE_ARMOR ||
       spellnum == SPELL_GREATER_INVIS || spellnum == SPELL_INVISIBILITY_SPHERE ||
