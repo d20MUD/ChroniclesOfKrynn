@@ -3879,7 +3879,94 @@ enum zone_terrain_type {
 /* ============================================================================
  * SORCERER PERKS (800-899)
  * ============================================================================ */
-/* Not yet implemented */
+/* TREE 1: GENERAL SORCERER - Tier 1 Perks (800-808) */
+#define PERK_SORCERER_SPELL_FOCUS_1 800
+#define PERK_SORCERER_SPELL_FOCUS_2 801
+#define PERK_SORCERER_SPELL_FOCUS_3 802
+#define PERK_SORCERER_ARCANE_AUGMENTATION 803
+#define PERK_SORCERER_EXTENDED_SPELL_1 804
+#define PERK_SORCERER_EXTENDED_SPELL_2 805
+#define PERK_SORCERER_POTENT_MAGIC_1 806
+#define PERK_SORCERER_POTENT_MAGIC_2 807
+#define PERK_SORCERER_POTENT_MAGIC_3 808
+
+/* TREE 2: EVOKER - Tier 1 Perks (809-813) */
+#define PERK_SORCERER_SPELL_POWER_1 809
+#define PERK_SORCERER_ENERGY_AFFINITY_FIRE 810
+#define PERK_SORCERER_ENERGY_AFFINITY_COLD 811
+#define PERK_SORCERER_ENERGY_AFFINITY_LIGHTNING 812
+#define PERK_SORCERER_SPELL_PENETRATION_1 813
+
+/* TREE 2: EVOKER - Tier 2 Perks (814-819) */
+#define PERK_SORCERER_SPELL_POWER_2 814
+#define PERK_SORCERER_FOCUSED_ELEMENT_FIRE 815
+#define PERK_SORCERER_FOCUSED_ELEMENT_COLD 816
+#define PERK_SORCERER_FOCUSED_ELEMENT_LIGHTNING 817
+#define PERK_SORCERER_SPELL_CRITICAL_1 818
+#define PERK_SORCERER_MAXIMIZE_SPELL 819
+
+/* TREE 2: EVOKER - Tier 3 Perks (820-824) */
+#define PERK_SORCERER_SPELL_POWER_3 820
+#define PERK_SORCERER_MASTER_OF_ELEMENTS 821
+#define PERK_SORCERER_SPELL_CRITICAL_2 822
+#define PERK_SORCERER_EMPOWER_SPELL 823
+#define PERK_SORCERER_SPELL_PENETRATION_2 824
+
+/* TREE 2: EVOKER - Tier 4 Perks (825-826) */
+#define PERK_SORCERER_ARCANE_ANNIHILATION 825
+#define PERK_SORCERER_OVERWHELMING_MAGIC 826
+
+/* TREE 3: CONTROLLER - Tier 1 Perks (827-832) */
+#define PERK_SORCERER_SPELL_FOCUS_ENCHANTMENT_1 827
+#define PERK_SORCERER_SPELL_FOCUS_ENCHANTMENT_2 828
+#define PERK_SORCERER_SPELL_FOCUS_ENCHANTMENT_3 829
+#define PERK_SORCERER_SPELL_FOCUS_ENCHANTMENT_4 830
+#define PERK_SORCERER_SPELL_FOCUS_ENCHANTMENT_5 831
+#define PERK_SORCERER_EXTEND_SPELL 832
+
+/* TREE 3: CONTROLLER - Tier 2 Perks (833-837) */
+#define PERK_SORCERER_GREATER_SPELL_FOCUS_ENCHANTMENT_1 833
+#define PERK_SORCERER_GREATER_SPELL_FOCUS_ENCHANTMENT_2 834
+#define PERK_SORCERER_GREATER_SPELL_FOCUS_ENCHANTMENT_3 835
+#define PERK_SORCERER_PERSISTENT_SPELL 836
+#define PERK_SORCERER_SPLIT_ENCHANTMENT 837
+
+/* TREE 3: CONTROLLER - Tier 3 Perks (838-842) */
+#define PERK_SORCERER_EXTENDED_SPELL_3 838
+#define PERK_SORCERER_MASTER_ENCHANTER 839
+#define PERK_SORCERER_MASTER_ILLUSIONIST 840
+#define PERK_SORCERER_MASTER_TRANSMUTER 841
+#define PERK_SORCERER_SPELL_MASTERY 842
+
+/* TREE 3: CONTROLLER - Tier 4 Capstones (843-844) */
+#define PERK_SORCERER_ARCHMAGE_OF_CONTROL 843
+#define PERK_SORCERER_IRRESISTIBLE_MAGIC 844
+
+/* TREE 4: VERSATILE CASTER - Tier 1 Perks (845-848) */
+#define PERK_SORCERER_SPELL_FOCUS_I                                                                  \
+  845                                /* 2% chance per rank spell doesn't expend slot, max 5 ranks */
+#define PERK_SORCERER_QUICK_CAST_I 846 /* Free quicken metamagic once per 5 min */
+#define PERK_SORCERER_ARCANE_KNOWLEDGE_I 847 /* +2 spellcraft per rank, max 3 ranks */
+#define PERK_SORCERER_COMBAT_CASTING_I 848   /* +2 concentration in combat per rank, max 3 */
+
+/* TREE 4: VERSATILE CASTER - Tier 2 Perks (849-853) */
+#define PERK_SORCERER_SPELL_FOCUS_II 849     /* Additional 2% chance per rank, max 3 ranks */
+#define PERK_SORCERER_QUICK_CAST_II 850      /* Free quicken once per combat */
+#define PERK_SORCERER_SPELL_RECALL 851       /* Restore a spell slot once every 2 minutes */
+#define PERK_SORCERER_METAMAGIC_MASTER_I 852 /* Randomly reduce metamagic circle increase by 1 */
+#define PERK_SORCERER_DEFENSIVE_CASTING 853  /* +4 AC when casting */
+
+/* TREE 4: VERSATILE CASTER - Tier 3 Perks (854-858) */
+#define PERK_SORCERER_SPELL_FOCUS_III 854 /* Additional 2% chance per rank, max 2 ranks (total 16%) */
+#define PERK_SORCERER_METAMAGIC_MASTER_II 855 /* Metamagic circle increase reduced by 1 */
+#define PERK_SORCERER_ARCANE_RECOVERY 856     /* Reduce spell prep time once per 10 minutes */
+#define PERK_SORCERER_SPELL_SHIELD 857        /* 10 DR + 4 AC when attacked first */
+
+/* TREE 4: VERSATILE CASTER - Tier 4 Capstones (858-859) */
+#define PERK_SORCERER_ARCHMAGES_POWER 858  /* +5% free spell, -1 metamagic cost */
+#define PERK_SORCERER_ARCANE_SUPREMACY 859 /* +2 spell DCs, +2 arcane caster level, +2 spell damage */
+
+
 
 /* ============================================================================
  * PALADIN PERKS (900-999)
@@ -7403,6 +7490,7 @@ struct player_special_data_saved
   struct stage_data stage_info; /**< Current stage and stage XP within level */
   int perk_points[NUM_CLASSES]; /**< Unspent perk points per class */
   struct char_perk_data *perks; /**< Linked list of acquired perks */
+  bool sorcerer_perks_migrated; /**< Separate sorcerer tree migration has run. */
   byte perk_toggles[32];        /**< Bitfield tracking toggled perks (256 perks max, 1 bit each) */
   bool perk_legacy_migrated;    /**< TRUE once legacy perk/stage catch-up has been applied */
 

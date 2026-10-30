@@ -1597,6 +1597,8 @@ int load_char(const char *name, struct char_data *ch)
           ch->player_specials->saved.stage_info.stage_exp = atoi(line);
         else if (!strcmp(tag, "PMig"))
           ch->player_specials->saved.perk_legacy_migrated = (atoi(line) != 0);
+        else if (!strcmp(tag, "PSMg"))
+          ch->player_specials->saved.sorcerer_perks_migrated = (atoi(line) != 0);
         else if (!strcmp(tag, "PTog"))
           load_perk_toggles(fl, ch);
         else if (!strcmp(tag, "PKil"))
@@ -3641,6 +3643,7 @@ bool save_char_checked(struct char_data *ch, int mode)
   BUFFER_WRITE("PStg: %d\n", ch->player_specials->saved.stage_info.current_stage);
   BUFFER_WRITE("PSXp: %d\n", ch->player_specials->saved.stage_info.stage_exp);
   BUFFER_WRITE("PMig: %d\n", ch->player_specials->saved.perk_legacy_migrated ? 1 : 0);
+  BUFFER_WRITE("PSMg: %d\n", ch->player_specials->saved.sorcerer_perks_migrated ? 1 : 0);
 
   /* Save perk toggles as hex string (32 bytes = 256 bits = 64 hex chars) */
   BUFFER_WRITE("PTog: ");

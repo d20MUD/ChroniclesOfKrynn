@@ -8409,7 +8409,7 @@ ACMD(do_spiritualweapon)
 
 ACMDCHECK(can_irresistablemagic)
 {
-  ACMDCHECK_PREREQ_HASFEAT(PERK_WIZARD_IRRESISTIBLE_MAGIC,
+  ACMDCHECK_PERMFAIL_IF(!has_arcane_perk(ch, PERK_WIZARD_IRRESISTIBLE_MAGIC),
                            "You don't have the Irresistible Magic perk.\r\n");
   return CAN_CMD;
 }
@@ -8422,7 +8422,7 @@ ACMD(do_irresistablemagic)
   PREREQ_CHECK(can_irresistablemagic);
 
   /* Check if perk is available */
-  if (!has_perk(ch, PERK_WIZARD_IRRESISTIBLE_MAGIC))
+  if (!has_arcane_perk(ch, PERK_WIZARD_IRRESISTIBLE_MAGIC))
   {
     send_to_char(ch, "You don't have the Irresistible Magic perk.\r\n");
     return;
@@ -8488,7 +8488,7 @@ static void show_metamagic_perk_status(struct char_data *ch)
   else
     send_to_char(ch, "  Pending: empower\r\n");
 
-  if (has_perk(ch, PERK_WIZARD_MAXIMIZE_SPELL))
+  if (has_arcane_perk(ch, PERK_WIZARD_MAXIMIZE_SPELL))
   {
     if (can_use_maximize_spell_perk(ch))
       send_to_char(ch, "  Maximize Spell: ready\r\n");
@@ -8497,7 +8497,7 @@ static void show_metamagic_perk_status(struct char_data *ch)
                           (int)(ch->player_specials->saved.maximize_spell_cooldown - time(0)));
   }
 
-  if (has_perk(ch, PERK_WIZARD_EMPOWER_SPELL))
+  if (has_arcane_perk(ch, PERK_WIZARD_EMPOWER_SPELL))
   {
     can_use_empower_spell_perk(ch);
     send_to_char(ch, "  Empower Spell: %d/2 charges",
@@ -8515,7 +8515,7 @@ static void set_metamagic_perk_pending(struct char_data *ch, int metamagic)
 {
   if (metamagic == METAMAGIC_MAXIMIZE)
   {
-    if (!has_perk(ch, PERK_WIZARD_MAXIMIZE_SPELL))
+    if (!has_arcane_perk(ch, PERK_WIZARD_MAXIMIZE_SPELL))
     {
       send_to_char(ch, "You don't have the Maximize Spell perk.\r\n");
       return;
@@ -8542,7 +8542,7 @@ static void set_metamagic_perk_pending(struct char_data *ch, int metamagic)
 
   if (metamagic == METAMAGIC_EMPOWER)
   {
-    if (!has_perk(ch, PERK_WIZARD_EMPOWER_SPELL))
+    if (!has_arcane_perk(ch, PERK_WIZARD_EMPOWER_SPELL))
     {
       send_to_char(ch, "You don't have the Empower Spell perk.\r\n");
       return;
@@ -8587,8 +8587,8 @@ ACMD(do_metamagic_perk)
 
     if (!*arg || is_abbrev(arg, "status"))
     {
-      if (!has_perk(ch, PERK_WIZARD_MAXIMIZE_SPELL) &&
-          !has_perk(ch, PERK_WIZARD_EMPOWER_SPELL))
+      if (!has_arcane_perk(ch, PERK_WIZARD_MAXIMIZE_SPELL) &&
+          !has_arcane_perk(ch, PERK_WIZARD_EMPOWER_SPELL))
       {
         send_to_char(ch, "You don't have any free metamagic perks.\r\n");
         return;
@@ -8624,7 +8624,7 @@ ACMDCHECK(can_spellrecall)
   if (IS_NPC(ch))
     return CANT_CMD_PERM;
 
-  ACMDCHECK_PERMFAIL_IF(!has_perk(ch, PERK_WIZARD_SPELL_RECALL),
+  ACMDCHECK_PERMFAIL_IF(!has_arcane_perk(ch, PERK_WIZARD_SPELL_RECALL),
                         "You don't have the Spell Recall perk.\r\n");
 
   if (GET_SPELL_RECALL_COOLDOWN(ch) > 0)
@@ -8854,7 +8854,7 @@ ACMDCHECK(can_arcanerecovery)
   if (IS_NPC(ch))
     return CANT_CMD_PERM;
 
-  ACMDCHECK_PERMFAIL_IF(!has_perk(ch, PERK_WIZARD_ARCANE_RECOVERY),
+  ACMDCHECK_PERMFAIL_IF(!has_arcane_perk(ch, PERK_WIZARD_ARCANE_RECOVERY),
                         "You don't have the Arcane Recovery perk.\r\n");
 
   if (GET_ARCANE_RECOVERY_COOLDOWN(ch) > time(0))

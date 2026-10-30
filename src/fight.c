@@ -15296,7 +15296,7 @@ int hit(struct char_data *ch, struct char_data *victim, int type, int dam_type, 
       if (same_room)
       {
         /* Activate spell shield if being attacked by non-group member and non-charmie */
-        if (!IS_NPC(victim) && has_perk(victim, PERK_WIZARD_SPELL_SHIELD))
+        if (!IS_NPC(victim) && has_arcane_perk(victim, PERK_WIZARD_SPELL_SHIELD))
         {
           bool is_enemy = TRUE;
           /* Check if attacker is a group member */

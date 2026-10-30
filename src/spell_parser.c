@@ -1571,7 +1571,7 @@ similar method added -zusuk */
   GET_DC_BONUS(caster) = 0;
 
   /* Wizard Controller Perk: Defensive Casting - +4 AC for 1 round after casting */
-  if (!IS_NPC(caster) && has_perk(caster, PERK_WIZARD_DEFENSIVE_CASTING))
+  if (!IS_NPC(caster) && has_arcane_perk(caster, PERK_WIZARD_DEFENSIVE_CASTING))
   {
     activate_defensive_casting(caster);
   }
@@ -3354,11 +3354,14 @@ will be using for casting this spell */
            * - This requires modification to spell_prep_gen_extract to accept a "free metamagic" flag
            * - Notify player: "You channel your Spell Metamastery to enhance this spell without cost!"
            */
-          if (slot_class != CLASS_UNDEFINED)
-            ch_class =
-                spell_prep_gen_extract_by_class(ch, slot_class, slot_spellnum, slot_metamagic);
-          else
-            ch_class = spell_prep_gen_extract(ch, slot_spellnum, slot_metamagic);
+          if (!(treat_as_at_will && isAurakMagic(ch, spellnum)))
+          {
+            if (slot_class != CLASS_UNDEFINED)
+              ch_class =
+                  spell_prep_gen_extract_by_class(ch, slot_class, slot_spellnum, slot_metamagic);
+            else
+              ch_class = spell_prep_gen_extract(ch, slot_spellnum, slot_metamagic);
+          }
           if (treat_as_at_will)
           {
             ch_class = GET_CASTING_CLASS(ch);
@@ -7211,6 +7214,30 @@ int find_cantrip_class(struct char_data *ch, int spellnum)
 
   return CLASS_UNDEFINED;
 }
+/* Keep class spells on their normal casting source even while slots recover.
+ * Only spells outside the class's known/prepared repertoire use Aurak magic. */
+static bool has_class_spell_source(struct char_data *ch, int spellnum)
+{
+  int class;
+
+  if (!ch || IS_NPC(ch) || spellnum == SPELL_AURAK_ENERGY_RAY || spellnum == SPELL_AURAK_BREATH)
+    return FALSE;
+
+  for (class = 0; class < NUM_CLASSES; class++)
+  {
+    if (CLASS_LEVEL(ch, class) <= 0)
+      continue;
+    if (compute_spells_circle(ch, class, spellnum, METAMAGIC_NONE, DOMAIN_UNDEFINED) >
+        get_class_highest_circle(ch, class))
+      continue;
+    if (is_a_known_spell(ch, class, spellnum) ||
+        is_spell_in_collection(ch, class, spellnum, METAMAGIC_NONE) ||
+        is_spell_in_prep_queue(ch, class, spellnum, METAMAGIC_NONE))
+      return TRUE;
+  }
+  return FALSE;
+}
+
 sbyte canCastAtWill(struct char_data *ch, int spellnum)
 {
   if (GET_LEVEL(ch) >= LVL_IMMORT)
@@ -7284,7 +7311,7 @@ sbyte canCastAtWill(struct char_data *ch, int spellnum)
     return true;
   if (isDragonRiderMagic(ch, spellnum))
     return true;
-  if (isAurakMagic(ch, spellnum) &&
+  if (isAurakMagic(ch, spellnum) && !has_class_spell_source(ch, spellnum) &&
       (spellnum != SPELL_DOMINATE_PERSON || ch->player_specials->saved.aurak_dominate_ready <= time(NULL)))
     return true;
   if (isBozakMagic(ch, spellnum))

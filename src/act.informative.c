@@ -2692,7 +2692,7 @@ void perform_cooldowns(struct char_data *ch, struct char_data *k)
     send_to_char(ch, "Maximize Spell (Free) Cooldown  - Duration: %d seconds\r\n", remaining);
   }
 
-  if (CONFIG_PERK_SYSTEM && !IS_NPC(k) && has_perk(k, PERK_WIZARD_EMPOWER_SPELL))
+  if (CONFIG_PERK_SYSTEM && !IS_NPC(k) && has_arcane_perk(k, PERK_WIZARD_EMPOWER_SPELL))
   {
     /* Force regeneration check */
     can_use_empower_spell_perk(k);
@@ -2712,7 +2712,7 @@ void perform_cooldowns(struct char_data *ch, struct char_data *k)
   }
 
   /* Wizard Controller perk cooldowns */
-  if (CONFIG_PERK_SYSTEM && !IS_NPC(k) && has_perk(k, PERK_WIZARD_PERSISTENT_SPELL))
+  if (CONFIG_PERK_SYSTEM && !IS_NPC(k) && has_arcane_perk(k, PERK_WIZARD_PERSISTENT_SPELL))
   {
     /* Force regeneration check */
     can_use_persistent_spell_perk(k);
@@ -2834,8 +2834,8 @@ void perform_cooldowns(struct char_data *ch, struct char_data *k)
 
   /* Metamagic Reduction uses (Metamagic Master I/II + Archmage's Power) */
   if (CONFIG_PERK_SYSTEM && !IS_NPC(k) &&
-      (has_perk(k, PERK_WIZARD_METAMAGIC_MASTER_I) ||
-       has_perk(k, PERK_WIZARD_METAMAGIC_MASTER_II) || has_perk(k, PERK_WIZARD_ARCHMAGES_POWER)))
+      (has_arcane_perk(k, PERK_WIZARD_METAMAGIC_MASTER_I) ||
+       has_arcane_perk(k, PERK_WIZARD_METAMAGIC_MASTER_II) || has_arcane_perk(k, PERK_WIZARD_ARCHMAGES_POWER)))
   {
     /* Force regeneration check */
     can_use_metamagic_reduction(k);

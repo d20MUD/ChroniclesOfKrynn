@@ -5374,7 +5374,7 @@ ACMD(do_masterofelements)
     return;
   }
 
-  if (!has_perk(ch, PERK_WIZARD_MASTER_OF_ELEMENTS))
+  if (!has_arcane_perk(ch, PERK_WIZARD_MASTER_OF_ELEMENTS))
   {
     send_to_char(ch, "You need the Master of Elements perk to use this command.\r\n");
     return;
@@ -5466,7 +5466,7 @@ ACMD(do_persistentspell)
     return;
   }
 
-  if (!HAS_FEAT(ch, PERK_WIZARD_PERSISTENT_SPELL))
+  if (!has_arcane_perk(ch, PERK_WIZARD_PERSISTENT_SPELL))
   {
     send_to_char(ch, "You need the Persistent Spell perk to use this command.\r\n");
     return;
@@ -5513,7 +5513,7 @@ ACMD(do_splitenchantment)
     return;
   }
 
-  if (!HAS_FEAT(ch, PERK_WIZARD_SPLIT_ENCHANTMENT))
+  if (!has_arcane_perk(ch, PERK_WIZARD_SPLIT_ENCHANTMENT))
   {
     send_to_char(ch, "You need the Split Enchantment perk to use this command.\r\n");
     return;

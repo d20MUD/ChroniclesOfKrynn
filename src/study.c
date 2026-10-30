@@ -1171,6 +1171,7 @@ static void sorc_known_spells_disp_menu(struct descriptor_data *d)
                   "%s 9%s) 9th Circle     : %s%d of %d selected\r\n"
                   "\r\n"
                   "%s"
+                  "Bloodline spells are free and do not count toward selections.\r\n"
                   "%s Q%s) Quit\r\n"
                   "\r\n"
                   "Enter Choice : ",
@@ -1198,23 +1199,23 @@ static void sorc_known_spells_disp_menu(struct descriptor_data *d)
                   grn, nrm
 */
                   mgn, grn, nrm, yel, count_known_spells_by_circle(d->character, CLASS_SORCERER, 1),
-                  compute_slots_by_circle(d->character, CLASS_SORCERER, 1), grn, nrm, yel,
+                  compute_sorcerer_known_limit(d->character, 1), grn, nrm, yel,
                   count_known_spells_by_circle(d->character, CLASS_SORCERER, 2),
-                  compute_slots_by_circle(d->character, CLASS_SORCERER, 2), grn, nrm, yel,
+                  compute_sorcerer_known_limit(d->character, 2), grn, nrm, yel,
                   count_known_spells_by_circle(d->character, CLASS_SORCERER, 3),
-                  compute_slots_by_circle(d->character, CLASS_SORCERER, 3), grn, nrm, yel,
+                  compute_sorcerer_known_limit(d->character, 3), grn, nrm, yel,
                   count_known_spells_by_circle(d->character, CLASS_SORCERER, 4),
-                  compute_slots_by_circle(d->character, CLASS_SORCERER, 4), grn, nrm, yel,
+                  compute_sorcerer_known_limit(d->character, 4), grn, nrm, yel,
                   count_known_spells_by_circle(d->character, CLASS_SORCERER, 5),
-                  compute_slots_by_circle(d->character, CLASS_SORCERER, 5), grn, nrm, yel,
+                  compute_sorcerer_known_limit(d->character, 5), grn, nrm, yel,
                   count_known_spells_by_circle(d->character, CLASS_SORCERER, 6),
-                  compute_slots_by_circle(d->character, CLASS_SORCERER, 6), grn, nrm, yel,
+                  compute_sorcerer_known_limit(d->character, 6), grn, nrm, yel,
                   count_known_spells_by_circle(d->character, CLASS_SORCERER, 7),
-                  compute_slots_by_circle(d->character, CLASS_SORCERER, 7), grn, nrm, yel,
+                  compute_sorcerer_known_limit(d->character, 7), grn, nrm, yel,
                   count_known_spells_by_circle(d->character, CLASS_SORCERER, 8),
-                  compute_slots_by_circle(d->character, CLASS_SORCERER, 8), grn, nrm, yel,
+                  compute_sorcerer_known_limit(d->character, 8), grn, nrm, yel,
                   count_known_spells_by_circle(d->character, CLASS_SORCERER, 9),
-                  compute_slots_by_circle(d->character, CLASS_SORCERER, 9), arcana_slots, grn, nrm);
+                  compute_sorcerer_known_limit(d->character, 9), arcana_slots, grn, nrm);
 
   OLC_MODE(d) = STUDY_SORC_KNOWN_SPELLS_MENU;
 }
@@ -1279,7 +1280,10 @@ void sorc_study_menu(struct descriptor_data *d, int circle)
     if (compute_spells_circle(d->character, CLASS_SORCERER, counter, METAMAGIC_NONE,
                               DOMAIN_UNDEFINED) == circle)
     {
-      if (is_a_known_spell(d->character, CLASS_SORCERER, counter))
+      if (is_sorc_bloodline_spell(get_sorc_bloodline(d->character), counter))
+        write_to_output(d, "%s%3d%s)%sB%-20.20s %s", grn, counter, nrm, cyn,
+                        spell_info[counter].name, !(++columns % 3) ? "\r\n" : "");
+      else if (is_a_known_spell(d->character, CLASS_SORCERER, counter))
         write_to_output(d, "%s%3d%s)%s+%-20.20s %s", grn, counter, nrm, mgn,
                         spell_info[counter].name, !(++columns % 3) ? "\r\n" : "");
       else
@@ -1288,14 +1292,14 @@ void sorc_study_menu(struct descriptor_data *d, int circle)
     }
   }
   write_to_output(d, "\r\n");
-  write_to_output(d, "%sNumber of slots available:%s %d.\r\n", grn, nrm,
+  write_to_output(d, "%sSpell selections remaining:%s %d.\r\n", grn, nrm,
                   //          sorcerer_known[class_level][circle] -
-                  compute_slots_by_circle(d->character, CLASS_SORCERER, circle) -
+                  compute_sorcerer_known_limit(d->character, circle) -
                       count_known_spells_by_circle(d->character, CLASS_SORCERER, circle));
   write_to_output(
       d,
       "\tCType the spell number followed by 'help' to see help on that spell.  Eg. 81 help\r\n\tn");
-  write_to_output(d, "%s+ A plus sign marks your current selection(s).\r\n", nrm);
+  write_to_output(d, "%s+ = selected spell; B = free bloodline spell (does not count toward selections).\r\n", nrm);
   write_to_output(d,
                   "%sEnter spell choice, to add or remove "
                   "(Q to exit to main menu) : ",
@@ -4558,6 +4562,11 @@ void study_parse(struct descriptor_data *d, char *arg)
               snprintf(buf, sizeof(buf), "%s", spell_info[counter].name);
               do_help(d->character, buf, 0, 0);
               return;
+            }
+            if (is_sorc_bloodline_spell(get_sorc_bloodline(ch), counter))
+            {
+              write_to_output(d, "That spell is granted by your bloodline and does not use a spell selection.\r\n");
+              break;
             }
             if (is_a_known_spell(d->character, CLASS_SORCERER, counter))
             {

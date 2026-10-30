@@ -43,6 +43,8 @@
 
 /* Forward declarations */
 static void define_wizard_controller_perks(void);
+static void define_sorcerer_controller_perks(void);
+static void define_sorcerer_versatile_caster_perks(void);
 static void define_wizard_versatile_caster_perks(void);
 static void get_award_perk_classes(struct char_data *ch, int award_class, int *perk_class_1,
                                    int *perk_class_2);
@@ -134,6 +136,17 @@ static const struct perk_tier_range perk_tier_ranges[] = {
     {PERK_WIZARD_SPELL_FOCUS_II, PERK_WIZARD_DEFENSIVE_CASTING, 2},
     {PERK_WIZARD_SPELL_FOCUS_III, PERK_WIZARD_SPELL_SHIELD, 3},
     {PERK_WIZARD_ARCHMAGES_POWER, PERK_WIZARD_ARCANE_SUPREMACY, 4},
+
+    /* Sorcerer */
+    {PERK_SORCERER_SPELL_POWER_2, PERK_SORCERER_MAXIMIZE_SPELL, 2},
+    {PERK_SORCERER_SPELL_POWER_3, PERK_SORCERER_SPELL_PENETRATION_2, 3},
+    {PERK_SORCERER_ARCANE_ANNIHILATION, PERK_SORCERER_OVERWHELMING_MAGIC, 4},
+    {PERK_SORCERER_GREATER_SPELL_FOCUS_ENCHANTMENT_1, PERK_SORCERER_SPLIT_ENCHANTMENT, 2},
+    {PERK_SORCERER_EXTENDED_SPELL_3, PERK_SORCERER_SPELL_MASTERY, 3},
+    {PERK_SORCERER_ARCHMAGE_OF_CONTROL, PERK_SORCERER_IRRESISTIBLE_MAGIC, 4},
+    {PERK_SORCERER_SPELL_FOCUS_II, PERK_SORCERER_DEFENSIVE_CASTING, 2},
+    {PERK_SORCERER_SPELL_FOCUS_III, PERK_SORCERER_SPELL_SHIELD, 3},
+    {PERK_SORCERER_ARCHMAGES_POWER, PERK_SORCERER_ARCANE_SUPREMACY, 4},
 
     /* Cleric */
     {PERK_CLERIC_HEALING_POWER_2, PERK_CLERIC_HEALING_AURA_1, 2},
@@ -337,9 +350,6 @@ static int get_perk_tier_min_level(int tier)
 
 static int normalize_perk_class_id(int class_id)
 {
-  if (class_id == CLASS_SORCERER)
-    return CLASS_WIZARD;
-
   return class_id;
 }
 
@@ -427,19 +437,30 @@ static int get_loremaster_perk_award_class(struct char_data *ch)
   return best_class;
 }
 
-static void migrate_sorcerer_perk_points_to_wizard(struct char_data *ch)
+void migrate_sorcerer_perks(struct char_data *ch)
 {
-  int sorcerer_points;
+  struct char_perk_data *perk;
 
-  if (!ch || IS_NPC(ch))
+  if (!ch || IS_NPC(ch) || ch->player_specials->saved.sorcerer_perks_migrated)
     return;
 
-  sorcerer_points = ch->player_specials->saved.perk_points[CLASS_SORCERER];
-  if (sorcerer_points <= 0)
-    return;
-
-  ch->player_specials->saved.perk_points[CLASS_WIZARD] += sorcerer_points;
-  ch->player_specials->saved.perk_points[CLASS_SORCERER] = 0;
+  /* A shared wizard pool has no provenance for wizard/sorcerer multiclasses.
+   * Preserve those investments; only unambiguous sorcerer-only pools move. */
+  if (CLASS_LEVEL(ch, CLASS_SORCERER) > 0 && CLASS_LEVEL(ch, CLASS_WIZARD) == 0)
+  {
+    ch->player_specials->saved.perk_points[CLASS_SORCERER] +=
+        ch->player_specials->saved.perk_points[CLASS_WIZARD];
+    ch->player_specials->saved.perk_points[CLASS_WIZARD] = 0;
+    for (perk = ch->player_specials->saved.perks; perk; perk = perk->next)
+    {
+      if (perk->perk_class == CLASS_WIZARD && perk->perk_id >= 100 && perk->perk_id <= 159)
+      {
+        perk->perk_id += 700;
+        perk->perk_class = CLASS_SORCERER;
+      }
+    }
+  }
+  ch->player_specials->saved.sorcerer_perks_migrated = TRUE;
 }
 
 static bool character_can_use_perk_class(struct char_data *ch, int class_id)
@@ -528,12 +549,6 @@ static int find_perk_class_source_class(struct char_data *ch, int class_id)
 
 static const char *get_accessible_perk_class_display_name(struct char_data *ch, int class_id)
 {
-  if (class_id == CLASS_WIZARD && ch && CLASS_LEVEL(ch, CLASS_WIZARD) == 0 &&
-      CLASS_LEVEL(ch, CLASS_SORCERER) > 0)
-  {
-    return "Wizard (Sorcerer)";
-  }
-
   if (class_id >= 0 && class_id < NUM_CLASSES)
     return class_names[class_id];
 
@@ -547,7 +562,7 @@ static bool should_show_perk_class(struct char_data *ch, int class_id)
   if (!ch || IS_NPC(ch))
     return FALSE;
 
-  if (class_id < 0 || class_id >= NUM_CLASSES || class_id == CLASS_SORCERER)
+  if (class_id < 0 || class_id >= NUM_CLASSES)
     return FALSE;
 
   perk_class = normalize_perk_class_id(class_id);
@@ -562,12 +577,6 @@ static bool should_show_perk_class(struct char_data *ch, int class_id)
 
 static const char *get_perk_class_display_name(int requested_class, int perk_class)
 {
-  if (requested_class == CLASS_SORCERER && perk_class == CLASS_WIZARD)
-    return "Sorcerer (Wizard)";
-
-  if (requested_class == CLASS_WIZARD && perk_class == CLASS_WIZARD)
-    return class_names[CLASS_WIZARD];
-
   return class_names[requested_class];
 }
 /* Forward declarations for perk definition functions */
@@ -619,6 +628,11 @@ void init_perks(void)
 
   /* Define Wizard Versatile Caster Perks */
   define_wizard_versatile_caster_perks();
+
+  /* Independent sorcerer definitions, initially copied from wizard. */
+  define_sorcerer_perks();
+  define_sorcerer_controller_perks();
+  define_sorcerer_versatile_caster_perks();
 
   /* Define Cleric Perks */
   define_cleric_perks();
@@ -8601,6 +8615,957 @@ void define_wizard_versatile_caster_perks(void)
   perk->cost = 5;
   perk->max_rank = 1;
   perk->prerequisite_perk = PERK_WIZARD_ARCANE_KNOWLEDGE_I;
+  perk->prerequisite_rank = 3; /* Must max out Arcane Knowledge I */
+  perk->effect_type = PERK_EFFECT_SPECIAL;
+  perk->effect_value = 2; /* +2 to various stats */
+  perk->special_description =
+      strdup("Requires Arcane Knowledge I (max) and Metamagic Master II. Gain +2 to all spell DCs, "
+             "+2 effective caster level for arcane spells you cast, and +2 spell damage.");
+}
+
+/* Define Sorcerer Perks */
+void define_sorcerer_perks(void)
+{
+  struct perk_data *perk;
+
+  /* Spell Focus I */
+  perk = &perk_list[PERK_SORCERER_SPELL_FOCUS_1];
+  perk->id = PERK_SORCERER_SPELL_FOCUS_1;
+  perk->name = strdup("Spell Focus Enhancement I");
+  perk->description = strdup("+1 DC to chosen spell school");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_VERSATILE_CASTER;
+  perk->cost = 1;
+  perk->max_rank = 1;
+  perk->prerequisite_perk = -1;
+  perk->prerequisite_rank = 0;
+  perk->effect_type = PERK_EFFECT_SPELL_DC;
+  perk->effect_value = 1;
+  perk->effect_modifier = 0;
+  perk->special_description = strdup("Choose spell school when taking this perk");
+
+  /* Arcane Augmentation */
+  perk = &perk_list[PERK_SORCERER_ARCANE_AUGMENTATION];
+  perk->id = PERK_SORCERER_ARCANE_AUGMENTATION;
+  perk->name = strdup("Arcane Augmentation");
+  perk->description = strdup("Sorcerer spell slots recover 5% faster per rank");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_VERSATILE_CASTER;
+  perk->cost = 1;
+  perk->max_rank = 5;
+  perk->prerequisite_perk = -1;
+  perk->prerequisite_rank = 0;
+  perk->effect_type = PERK_EFFECT_SPECIAL;
+  perk->effect_value = 5;
+  perk->effect_modifier = 0;
+  perk->special_description = strdup("Reduces sorcerer slot recovery time by 5% per rank, up to 25%. "
+                                     "Stacks multiplicatively with other preparation reductions; "
+                                     "the minimum preparation time still applies.");
+
+  /* Extended Spell I */
+  perk = &perk_list[PERK_SORCERER_EXTENDED_SPELL_1];
+  perk->id = PERK_SORCERER_EXTENDED_SPELL_1;
+  perk->name = strdup("Extended Spell Enhancement I");
+  perk->description = strdup("+10% spell duration");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_CONTROLLER;
+  perk->cost = 2;
+  perk->max_rank = 1;
+  perk->prerequisite_perk = -1;
+  perk->prerequisite_rank = 0;
+  perk->effect_type = PERK_EFFECT_SPELL_DURATION;
+  perk->effect_value = 10;
+  perk->effect_modifier = 0;
+  perk->special_description = strdup("");
+
+  /* Potent Magic I */
+  perk = &perk_list[PERK_SORCERER_POTENT_MAGIC_1];
+  perk->id = PERK_SORCERER_POTENT_MAGIC_1;
+  perk->name = strdup("Potent Magic I");
+  perk->description = strdup("+1 to spell penetration checks");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_EVOKER;
+  perk->cost = 1;
+  perk->max_rank = 1;
+  perk->prerequisite_perk = -1;
+  perk->prerequisite_rank = 0;
+  perk->effect_type = PERK_EFFECT_SPECIAL;
+  perk->effect_value = 1;
+  perk->effect_modifier = 0;
+  perk->special_description = strdup("Bonus to spell penetration checks");
+
+  /*** EVOKER TREE - TIER 1 PERKS (1 point each) ***/
+
+  /* Spell Power I */
+  perk = &perk_list[PERK_SORCERER_SPELL_POWER_1];
+  perk->id = PERK_SORCERER_SPELL_POWER_1;
+  perk->name = strdup("Spell Power I");
+  perk->description = strdup("+1 spell damage per rank");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_EVOKER;
+  perk->cost = 1;
+  perk->max_rank = 5;
+  perk->prerequisite_perk = -1;
+  perk->prerequisite_rank = 0;
+  perk->effect_type = PERK_EFFECT_SPECIAL;
+  perk->effect_value = 1;
+  perk->effect_modifier = 0;
+  perk->special_description = strdup("Increases damage dealt by damaging spells by +1 per rank. "
+                                     "Can be taken 5 times for +5 damage total.");
+
+  /* Energy Affinity: Fire */
+  perk = &perk_list[PERK_SORCERER_ENERGY_AFFINITY_FIRE];
+  perk->id = PERK_SORCERER_ENERGY_AFFINITY_FIRE;
+  perk->name = strdup("Energy Affinity: Fire");
+  perk->description = strdup("Fire spells deal +10% damage");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_EVOKER;
+  perk->cost = 1;
+  perk->max_rank = 1;
+  perk->prerequisite_perk = -1;
+  perk->prerequisite_rank = 0;
+  perk->effect_type = PERK_EFFECT_SPECIAL;
+  perk->effect_value = 10; /* +10% */
+  perk->effect_modifier = 0;
+  perk->special_description = strdup("All fire damage spells deal 10% additional damage.");
+
+  /* Energy Affinity: Cold */
+  perk = &perk_list[PERK_SORCERER_ENERGY_AFFINITY_COLD];
+  perk->id = PERK_SORCERER_ENERGY_AFFINITY_COLD;
+  perk->name = strdup("Energy Affinity: Cold");
+  perk->description = strdup("Cold spells deal +10% damage");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_EVOKER;
+  perk->cost = 1;
+  perk->max_rank = 1;
+  perk->prerequisite_perk = -1;
+  perk->prerequisite_rank = 0;
+  perk->effect_type = PERK_EFFECT_SPECIAL;
+  perk->effect_value = 10; /* +10% */
+  perk->effect_modifier = 0;
+  perk->special_description = strdup("All cold damage spells deal 10% additional damage.");
+
+  /* Energy Affinity: Lightning */
+  perk = &perk_list[PERK_SORCERER_ENERGY_AFFINITY_LIGHTNING];
+  perk->id = PERK_SORCERER_ENERGY_AFFINITY_LIGHTNING;
+  perk->name = strdup("Energy Affinity: Lightning");
+  perk->description = strdup("Lightning spells deal +10% damage");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_EVOKER;
+  perk->cost = 1;
+  perk->max_rank = 1;
+  perk->prerequisite_perk = -1;
+  perk->prerequisite_rank = 0;
+  perk->effect_type = PERK_EFFECT_SPECIAL;
+  perk->effect_value = 10; /* +10% */
+  perk->effect_modifier = 0;
+  perk->special_description =
+      strdup("All lightning/electricity damage spells deal 10% additional damage.");
+
+  /* Spell Penetration I */
+  perk = &perk_list[PERK_SORCERER_SPELL_PENETRATION_1];
+  perk->id = PERK_SORCERER_SPELL_PENETRATION_1;
+  perk->name = strdup("Spell Penetration I");
+  perk->description = strdup("+2 to overcome spell resistance per rank");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_EVOKER;
+  perk->cost = 1;
+  perk->max_rank = 3;
+  perk->prerequisite_perk = -1;
+  perk->prerequisite_rank = 0;
+  perk->effect_type = PERK_EFFECT_SPECIAL;
+  perk->effect_value = 2;
+  perk->effect_modifier = 0;
+  perk->special_description =
+      strdup("Bonus to overcome spell resistance. Can be taken 3 times for +6 total.");
+
+  /*** EVOKER TREE - TIER 2 PERKS (2 points each) ***/
+
+  /* Spell Power II */
+  perk = &perk_list[PERK_SORCERER_SPELL_POWER_2];
+  perk->id = PERK_SORCERER_SPELL_POWER_2;
+  perk->name = strdup("Spell Power II");
+  perk->description = strdup("Additional +1 spell damage per rank");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_EVOKER;
+  perk->cost = 2;
+  perk->max_rank = 3;
+  perk->prerequisite_perk = PERK_SORCERER_SPELL_POWER_1;
+  perk->prerequisite_rank = 5; /* Must max Spell Power I */
+  perk->effect_type = PERK_EFFECT_SPECIAL;
+  perk->effect_value = 1;
+  perk->effect_modifier = 0;
+  perk->special_description =
+      strdup("Requires Spell Power I (max). Further increases damage by +1 per rank. Can be taken "
+             "3 times for +8 total with Spell Power I.");
+
+  /* Focused Element: Fire */
+  perk = &perk_list[PERK_SORCERER_FOCUSED_ELEMENT_FIRE];
+  perk->id = PERK_SORCERER_FOCUSED_ELEMENT_FIRE;
+  perk->name = strdup("Focused Element: Fire");
+  perk->description = strdup("Fire spells deal +20% damage total, +1 spell DC");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_EVOKER;
+  perk->cost = 2;
+  perk->max_rank = 1;
+  perk->prerequisite_perk = PERK_SORCERER_ENERGY_AFFINITY_FIRE;
+  perk->prerequisite_rank = 1;
+  perk->effect_type = PERK_EFFECT_SPECIAL;
+  perk->effect_value = 20;   /* +20% total (replaces +10% from affinity) */
+  perk->effect_modifier = 1; /* +1 spell DC */
+  perk->special_description =
+      strdup("Requires Energy Affinity: Fire. Fire spells deal +20% total damage and have +1 DC.");
+
+  /* Focused Element: Cold */
+  perk = &perk_list[PERK_SORCERER_FOCUSED_ELEMENT_COLD];
+  perk->id = PERK_SORCERER_FOCUSED_ELEMENT_COLD;
+  perk->name = strdup("Focused Element: Cold");
+  perk->description = strdup("Cold spells deal +20% damage total, +1 spell DC");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_EVOKER;
+  perk->cost = 2;
+  perk->max_rank = 1;
+  perk->prerequisite_perk = PERK_SORCERER_ENERGY_AFFINITY_COLD;
+  perk->prerequisite_rank = 1;
+  perk->effect_type = PERK_EFFECT_SPECIAL;
+  perk->effect_value = 20;   /* +20% total (replaces +10% from affinity) */
+  perk->effect_modifier = 1; /* +1 spell DC */
+  perk->special_description =
+      strdup("Requires Energy Affinity: Cold. Cold spells deal +20% total damage and have +1 DC.");
+
+  /* Focused Element: Lightning */
+  perk = &perk_list[PERK_SORCERER_FOCUSED_ELEMENT_LIGHTNING];
+  perk->id = PERK_SORCERER_FOCUSED_ELEMENT_LIGHTNING;
+  perk->name = strdup("Focused Element: Lightning");
+  perk->description = strdup("Lightning spells deal +20% damage total, +1 spell DC");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_EVOKER;
+  perk->cost = 2;
+  perk->max_rank = 1;
+  perk->prerequisite_perk = PERK_SORCERER_ENERGY_AFFINITY_LIGHTNING;
+  perk->prerequisite_rank = 1;
+  perk->effect_type = PERK_EFFECT_SPECIAL;
+  perk->effect_value = 20;   /* +20% total (replaces +10% from affinity) */
+  perk->effect_modifier = 1; /* +1 spell DC */
+  perk->special_description = strdup("Requires Energy Affinity: Lightning. Lightning spells deal "
+                                     "+20% total damage and have +1 DC.");
+
+  /* Spell Critical I */
+  perk = &perk_list[PERK_SORCERER_SPELL_CRITICAL_1];
+  perk->id = PERK_SORCERER_SPELL_CRITICAL_1;
+  perk->name = strdup("Spell Critical I");
+  perk->description = strdup("Damage spells have 5% chance to deal 1.5x damage");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_EVOKER;
+  perk->cost = 2;
+  perk->max_rank = 1;
+  perk->prerequisite_perk = PERK_SORCERER_SPELL_POWER_1;
+  perk->prerequisite_rank = 3; /* Need at least 3 ranks */
+  perk->effect_type = PERK_EFFECT_SPECIAL;
+  perk->effect_value = 5; /* 5% chance */
+  perk->effect_modifier = 0;
+  perk->special_description = strdup("Requires Spell Power I (at least 3 ranks). Damaging spells "
+                                     "have a 5% chance to critically strike for 1.5x damage.");
+
+  /* Maximize Spell */
+  perk = &perk_list[PERK_SORCERER_MAXIMIZE_SPELL];
+  perk->id = PERK_SORCERER_MAXIMIZE_SPELL;
+  perk->name = strdup("Maximize Spell");
+  perk->description = strdup("Cast 1 spell with max damage (no level increase), 5min cooldown");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_EVOKER;
+  perk->cost = 2;
+  perk->max_rank = 1;
+  perk->prerequisite_perk = PERK_SORCERER_SPELL_POWER_1;
+  perk->prerequisite_rank = 5; /* Must max Spell Power I */
+  perk->effect_type = PERK_EFFECT_SPECIAL;
+  perk->effect_value = 0;
+  perk->effect_modifier = 0;
+  perk->special_description =
+      strdup("Requires Spell Power I (max). Once every 5 minutes, you can cast a spell with the "
+             "Maximize metamagic effect (maximum damage dice) without increasing the spell level. "
+             "Use 'metamagic maximize' before casting.");
+
+  /*** SORCERER EVOKER TREE - TIER 3 PERKS (3-4 points each) ***/
+
+  /* Spell Power III */
+  perk = &perk_list[PERK_SORCERER_SPELL_POWER_3];
+  perk->id = PERK_SORCERER_SPELL_POWER_3;
+  perk->name = strdup("Spell Power III");
+  perk->description = strdup("+2 spell damage per rank");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_EVOKER;
+  perk->cost = 3;
+  perk->max_rank = 2;
+  perk->prerequisite_perk = PERK_SORCERER_SPELL_POWER_2;
+  perk->prerequisite_rank = 3; /* Must max Spell Power II */
+  perk->effect_type = PERK_EFFECT_SPELL_DAMAGE;
+  perk->effect_value = 2; /* +2 per rank */
+  perk->effect_modifier = 0;
+  perk->special_description =
+      strdup("Requires Spell Power II (max). Your mastery of evocation continues to grow.");
+
+  /* Master of Elements */
+  perk = &perk_list[PERK_SORCERER_MASTER_OF_ELEMENTS];
+  perk->id = PERK_SORCERER_MASTER_OF_ELEMENTS;
+  perk->name = strdup("Master of Elements");
+  perk->description = strdup("All elemental damage +15%, can change energy type of spells. Use "
+                             "'masterofelements' command.");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_EVOKER;
+  perk->cost = 4;
+  perk->max_rank = 1;
+  perk->prerequisite_perk = 0; /* Special: requires any two Focused Element perks */
+  perk->prerequisite_rank = 0;
+  perk->effect_type = PERK_EFFECT_SPECIAL;
+  perk->effect_value = 15; /* +15% to all elemental damage */
+  perk->effect_modifier = 0;
+  perk->special_description =
+      strdup("Requires any two Focused Element perks. You gain mastery over elemental forces, "
+             "increasing all elemental spell damage by 15% and gaining the ability to change the "
+             "energy type of spells.");
+
+  /* Spell Critical II */
+  perk = &perk_list[PERK_SORCERER_SPELL_CRITICAL_2];
+  perk->id = PERK_SORCERER_SPELL_CRITICAL_2;
+  perk->name = strdup("Spell Critical II");
+  perk->description = strdup("Critical chance increases to 10%, critical damage x2.5");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_EVOKER;
+  perk->cost = 3;
+  perk->max_rank = 1;
+  perk->prerequisite_perk = PERK_SORCERER_SPELL_CRITICAL_1;
+  perk->prerequisite_rank = 1;
+  perk->effect_type = PERK_EFFECT_SPECIAL;
+  perk->effect_value = 10;     /* 10% chance */
+  perk->effect_modifier = 250; /* 2.5x damage stored as 250 (will divide by 100) */
+  perk->special_description =
+      strdup("Requires Spell Critical I. Your critical strike chance increases to 10% and critical "
+             "spells deal 2.5x damage instead of 1.5x.");
+
+  /* Empower Spell */
+  perk = &perk_list[PERK_SORCERER_EMPOWER_SPELL];
+  perk->id = PERK_SORCERER_EMPOWER_SPELL;
+  perk->name = strdup("Empower Spell");
+  perk->description = strdup("Cast 1 spell with +50% damage (no level increase), 5min cooldown");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_EVOKER;
+  perk->cost = 3;
+  perk->max_rank = 1;
+  perk->prerequisite_perk = PERK_SORCERER_MAXIMIZE_SPELL;
+  perk->prerequisite_rank = 1;
+  perk->effect_type = PERK_EFFECT_SPECIAL;
+  perk->effect_value = 50; /* +50% damage */
+  perk->effect_modifier = 0;
+  perk->special_description =
+      strdup("Requires Maximize Spell. Once every 5 minutes, you can cast a spell with the Empower "
+             "metamagic effect (+50% damage) without increasing the spell level. Use 'metamagic "
+             "empower' before casting.");
+
+  /* Spell Penetration II */
+  perk = &perk_list[PERK_SORCERER_SPELL_PENETRATION_2];
+  perk->id = PERK_SORCERER_SPELL_PENETRATION_2;
+  perk->name = strdup("Spell Penetration II");
+  perk->description = strdup("+4 to overcome spell resistance");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_EVOKER;
+  perk->cost = 3;
+  perk->max_rank = 1;
+  perk->prerequisite_perk = PERK_SORCERER_SPELL_PENETRATION_1;
+  perk->prerequisite_rank = 3; /* Must max Spell Penetration I */
+  perk->effect_type = PERK_EFFECT_SPECIAL;
+  perk->effect_value = 4;
+  perk->effect_modifier = 0;
+  perk->special_description = strdup("Requires Spell Penetration I (max). Your spells become even "
+                                     "more effective at piercing magical defenses.");
+
+  /*** SORCERER EVOKER TREE - TIER 4 CAPSTONE PERKS (5+ points each) ***/
+
+  /* Arcane Annihilation */
+  perk = &perk_list[PERK_SORCERER_ARCANE_ANNIHILATION];
+  perk->id = PERK_SORCERER_ARCANE_ANNIHILATION;
+  perk->name = strdup("Arcane Annihilation");
+  perk->description = strdup("Damage spells deal +3d6 damage, +2 spell DC");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_EVOKER;
+  perk->cost = 5;
+  perk->max_rank = 1;
+  perk->prerequisite_perk = PERK_SORCERER_SPELL_POWER_3;
+  perk->prerequisite_rank = 2; /* Must max Spell Power III + need Master of Elements */
+  perk->effect_type = PERK_EFFECT_SPECIAL;
+  perk->effect_value = 3;    /* 3d6 dice */
+  perk->effect_modifier = 2; /* +2 DC */
+  perk->special_description =
+      strdup("Requires Spell Power III (max) and Master of Elements. Your evocation spells reach "
+             "devastating power, dealing an additional 3d6 damage and increasing spell DCs by 2.");
+
+  /* Overwhelming Magic */
+  perk = &perk_list[PERK_SORCERER_OVERWHELMING_MAGIC];
+  perk->id = PERK_SORCERER_OVERWHELMING_MAGIC;
+  perk->name = strdup("Overwhelming Magic");
+  perk->description = strdup("Spell resistance reduced by 10 against your spells");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_EVOKER;
+  perk->cost = 5;
+  perk->max_rank = 1;
+  perk->prerequisite_perk = PERK_SORCERER_SPELL_PENETRATION_2;
+  perk->prerequisite_rank = 1;
+  perk->effect_type = PERK_EFFECT_SPECIAL;
+  perk->effect_value = 10;
+  perk->effect_modifier = 0;
+  perk->special_description =
+      strdup("Requires Spell Penetration II. Your spells are so potent that enemies' spell "
+             "resistance is effectively reduced by 10 against your magic.");
+}
+
+/* Define Sorcerer Controller Perks */
+static void define_sorcerer_controller_perks(void)
+{
+  struct perk_data *perk;
+
+  /*** CONTROLLER TREE - TIER 1 PERKS ***/
+
+  /* Spell Focus (Enchantment) I */
+  perk = &perk_list[PERK_SORCERER_SPELL_FOCUS_ENCHANTMENT_1];
+  perk->id = PERK_SORCERER_SPELL_FOCUS_ENCHANTMENT_1;
+  perk->name = strdup("Spell Focus (Enchantment) I");
+  perk->description = strdup("+1 DC to enchantment spells per rank");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_CONTROLLER;
+  perk->cost = 1;
+  perk->max_rank = 5;
+  perk->prerequisite_perk = -1;
+  perk->prerequisite_rank = 0;
+  perk->effect_type = PERK_EFFECT_SPELL_DC;
+  perk->effect_value = 1;
+
+  /* Spell Focus (Enchantment) II */
+  perk = &perk_list[PERK_SORCERER_SPELL_FOCUS_ENCHANTMENT_2];
+  perk->id = PERK_SORCERER_SPELL_FOCUS_ENCHANTMENT_2;
+  perk->name = strdup("Spell Focus (Enchantment) II");
+  perk->description = strdup("+1 DC to enchantment spells per rank");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_CONTROLLER;
+  perk->cost = 1;
+  perk->max_rank = 5;
+  perk->prerequisite_perk = PERK_SORCERER_SPELL_FOCUS_ENCHANTMENT_1;
+  perk->prerequisite_rank = 5;
+  perk->effect_type = PERK_EFFECT_SPELL_DC;
+  perk->effect_value = 1;
+
+  /* Spell Focus (Enchantment) III */
+  perk = &perk_list[PERK_SORCERER_SPELL_FOCUS_ENCHANTMENT_3];
+  perk->id = PERK_SORCERER_SPELL_FOCUS_ENCHANTMENT_3;
+  perk->name = strdup("Spell Focus (Enchantment) III");
+  perk->description = strdup("+1 DC to enchantment spells per rank");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_CONTROLLER;
+  perk->cost = 1;
+  perk->max_rank = 5;
+  perk->prerequisite_perk = PERK_SORCERER_SPELL_FOCUS_ENCHANTMENT_2;
+  perk->prerequisite_rank = 5;
+  perk->effect_type = PERK_EFFECT_SPELL_DC;
+  perk->effect_value = 1;
+
+  /* Spell Focus (Enchantment) IV */
+  perk = &perk_list[PERK_SORCERER_SPELL_FOCUS_ENCHANTMENT_4];
+  perk->id = PERK_SORCERER_SPELL_FOCUS_ENCHANTMENT_4;
+  perk->name = strdup("Spell Focus (Enchantment) IV");
+  perk->description = strdup("+1 DC to enchantment spells per rank");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_CONTROLLER;
+  perk->cost = 2;
+  perk->max_rank = 5;
+  perk->prerequisite_perk = PERK_SORCERER_SPELL_FOCUS_ENCHANTMENT_3;
+  perk->prerequisite_rank = 5;
+  perk->effect_type = PERK_EFFECT_SPELL_DC;
+  perk->effect_value = 1;
+
+  /* Spell Focus (Enchantment) V */
+  perk = &perk_list[PERK_SORCERER_SPELL_FOCUS_ENCHANTMENT_5];
+  perk->id = PERK_SORCERER_SPELL_FOCUS_ENCHANTMENT_5;
+  perk->name = strdup("Spell Focus (Enchantment) V");
+  perk->description = strdup("+1 DC to enchantment spells per rank");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_CONTROLLER;
+  perk->cost = 2;
+  perk->max_rank = 5;
+  perk->prerequisite_perk = PERK_SORCERER_SPELL_FOCUS_ENCHANTMENT_4;
+  perk->prerequisite_rank = 5;
+  perk->effect_type = PERK_EFFECT_SPELL_DC;
+  perk->effect_value = 1;
+
+  /* Extend Spell */
+  perk = &perk_list[PERK_SORCERER_EXTEND_SPELL];
+  perk->id = PERK_SORCERER_EXTEND_SPELL;
+  perk->name = strdup("Extend Spell");
+  perk->description =
+      strdup("Buff spell durations are increased by 5% per rank (minimum +1 round)");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_CONTROLLER;
+  perk->cost = 1;
+  perk->max_rank = 10;
+  perk->prerequisite_perk = PERK_SORCERER_SPELL_FOCUS_ENCHANTMENT_1;
+  perk->prerequisite_rank = 3;
+  perk->effect_type = PERK_EFFECT_SPELL_DURATION;
+  perk->effect_value = 5;
+
+  /*** CONTROLLER TREE - TIER 2 PERKS ***/
+
+  /* Greater Spell Focus (Enchantment) I */
+  perk = &perk_list[PERK_SORCERER_GREATER_SPELL_FOCUS_ENCHANTMENT_1];
+  perk->id = PERK_SORCERER_GREATER_SPELL_FOCUS_ENCHANTMENT_1;
+  perk->name = strdup("Greater Spell Focus (Enchantment) I");
+  perk->description = strdup("+2 DC to enchantment spells per rank");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_CONTROLLER;
+  perk->cost = 2;
+  perk->max_rank = 3;
+  perk->prerequisite_perk = PERK_SORCERER_SPELL_FOCUS_ENCHANTMENT_5;
+  perk->prerequisite_rank = 5;
+  perk->effect_type = PERK_EFFECT_SPELL_DC;
+  perk->effect_value = 2;
+
+  /* Greater Spell Focus (Enchantment) II */
+  perk = &perk_list[PERK_SORCERER_GREATER_SPELL_FOCUS_ENCHANTMENT_2];
+  perk->id = PERK_SORCERER_GREATER_SPELL_FOCUS_ENCHANTMENT_2;
+  perk->name = strdup("Greater Spell Focus (Enchantment) II");
+  perk->description = strdup("+2 DC to enchantment spells per rank");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_CONTROLLER;
+  perk->cost = 2;
+  perk->max_rank = 3;
+  perk->prerequisite_perk = PERK_SORCERER_GREATER_SPELL_FOCUS_ENCHANTMENT_1;
+  perk->prerequisite_rank = 3;
+  perk->effect_type = PERK_EFFECT_SPELL_DC;
+  perk->effect_value = 2;
+
+  /* Greater Spell Focus (Enchantment) III */
+  perk = &perk_list[PERK_SORCERER_GREATER_SPELL_FOCUS_ENCHANTMENT_3];
+  perk->id = PERK_SORCERER_GREATER_SPELL_FOCUS_ENCHANTMENT_3;
+  perk->name = strdup("Greater Spell Focus (Enchantment) III");
+  perk->description = strdup("+2 DC to enchantment spells per rank");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_CONTROLLER;
+  perk->cost = 3;
+  perk->max_rank = 3;
+  perk->prerequisite_perk = PERK_SORCERER_GREATER_SPELL_FOCUS_ENCHANTMENT_2;
+  perk->prerequisite_rank = 3;
+  perk->effect_type = PERK_EFFECT_SPELL_DC;
+  perk->effect_value = 2;
+
+  /* Persistent Spell */
+  perk = &perk_list[PERK_SORCERER_PERSISTENT_SPELL];
+  perk->id = PERK_SORCERER_PERSISTENT_SPELL;
+  perk->name = strdup("Persistent Spell");
+  perk->description = strdup("Activate to force target to save twice vs next spell (2 uses, "
+                             "regenerates 1 per 5 min). Use 'persistentspell' command.");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_CONTROLLER;
+  perk->cost = 3;
+  perk->max_rank = 1;
+  perk->prerequisite_perk = PERK_SORCERER_SPELL_FOCUS_ENCHANTMENT_3;
+  perk->prerequisite_rank = 3;
+  perk->effect_type = PERK_EFFECT_SPECIAL;
+  perk->effect_value = 0;
+
+  /* Split Enchantment */
+  perk = &perk_list[PERK_SORCERER_SPLIT_ENCHANTMENT];
+  perk->id = PERK_SORCERER_SPLIT_ENCHANTMENT;
+  perk->name = strdup("Split Enchantment");
+  perk->description = strdup("Activate to make next enchantment spell affect all enemies in room "
+                             "(5 min cooldown). Use 'splitenchantment' command.");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_CONTROLLER;
+  perk->cost = 4;
+  perk->max_rank = 1;
+  perk->prerequisite_perk = PERK_SORCERER_GREATER_SPELL_FOCUS_ENCHANTMENT_1;
+  perk->prerequisite_rank = 2;
+  perk->effect_type = PERK_EFFECT_SPECIAL;
+  perk->effect_value = 0;
+
+  /*** SORCERER CONTROLLER TREE - TIER 3 PERKS ***/
+
+  /* Extended Spell III */
+  perk = &perk_list[PERK_SORCERER_EXTENDED_SPELL_3];
+  perk->id = PERK_SORCERER_EXTENDED_SPELL_3;
+  perk->name = strdup("Extended Spell III");
+  perk->description = strdup("+5 rounds duration");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_CONTROLLER;
+  perk->cost = 3;
+  perk->max_rank = 1;
+  perk->prerequisite_perk = PERK_SORCERER_EXTENDED_SPELL_2;
+  perk->prerequisite_rank = 2; /* Must have Extended Spell II maxed */
+  perk->effect_type = PERK_EFFECT_SPECIAL;
+  perk->effect_value = 5;
+  perk->special_description = strdup("Requires Extended Spell II (max). Your spell durations are "
+                                     "extended by an additional 5 rounds.");
+
+  /* Master Enchanter */
+  perk = &perk_list[PERK_SORCERER_MASTER_ENCHANTER];
+  perk->id = PERK_SORCERER_MASTER_ENCHANTER;
+  perk->name = strdup("Master Enchanter");
+  perk->description = strdup("Enchantment DC +3 (total +5), duration doubled");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_CONTROLLER;
+  perk->cost = 4;
+  perk->max_rank = 1;
+  perk->prerequisite_perk = PERK_SORCERER_GREATER_SPELL_FOCUS_ENCHANTMENT_1;
+  perk->prerequisite_rank = 1; /* Must have Greater Spell Focus: Enchantment */
+  perk->effect_type = PERK_EFFECT_SPECIAL;
+  perk->effect_value = 3; /* +3 DC */
+  perk->special_description =
+      strdup("Requires Greater Spell Focus: Enchantment. You become a true master of enchantment "
+             "magic. Enchantment spell DCs increase by +3 (total +5), and all enchantment spell "
+             "durations are doubled.");
+
+  /* Master Illusionist */
+  perk = &perk_list[PERK_SORCERER_MASTER_ILLUSIONIST];
+  perk->id = PERK_SORCERER_MASTER_ILLUSIONIST;
+  perk->name = strdup("Master Illusionist");
+  perk->description = strdup("Illusion DC +3 (total +5), enemies get -4 to disbelief");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_CONTROLLER;
+  perk->cost = 4;
+  perk->max_rank = 1;
+  perk->prerequisite_perk =
+      PERK_SORCERER_SPELL_FOCUS_ENCHANTMENT_3; /* Using enchantment focus as proxy for illusion */
+  perk->prerequisite_rank = 1;
+  perk->effect_type = PERK_EFFECT_SPECIAL;
+  perk->effect_value = 3; /* +3 DC */
+  perk->special_description =
+      strdup("You become a true master of illusion magic. Illusion spell DCs increase by +3 (total "
+             "+5), and enemies get -4 to disbelief checks.");
+
+  /* Master Transmuter */
+  perk = &perk_list[PERK_SORCERER_MASTER_TRANSMUTER];
+  perk->id = PERK_SORCERER_MASTER_TRANSMUTER;
+  perk->name = strdup("Master Transmuter");
+  perk->description = strdup("Transmutation DC +3 (total +5), duration increased 50%");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_CONTROLLER;
+  perk->cost = 4;
+  perk->max_rank = 1;
+  perk->prerequisite_perk =
+      PERK_SORCERER_SPELL_FOCUS_ENCHANTMENT_4; /* Using enchantment focus as proxy for transmutation */
+  perk->prerequisite_rank = 1;
+  perk->effect_type = PERK_EFFECT_SPECIAL;
+  perk->effect_value = 3; /* +3 DC */
+  perk->special_description =
+      strdup("You become a true master of transmutation magic. Transmutation spell DCs increase by "
+             "+3 (total +5), and all transmutation spell durations are increased by 50%.");
+
+  /* Spell Mastery */
+  perk = &perk_list[PERK_SORCERER_SPELL_MASTERY];
+  perk->id = PERK_SORCERER_SPELL_MASTERY;
+  perk->name = strdup("Spell Mastery");
+  perk->description = strdup("+2 to all spell DCs");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_CONTROLLER;
+  perk->cost = 3;
+  perk->max_rank = 1;
+  perk->prerequisite_perk = PERK_SORCERER_SPELL_FOCUS_ENCHANTMENT_5; /* Using mental clarity proxy */
+  perk->prerequisite_rank = 1;
+  perk->effect_type = PERK_EFFECT_SPECIAL;
+  perk->effect_value = 2; /* +2 DC */
+  perk->special_description = strdup("Your mastery of magic grants +2 to all spell DCs.");
+
+  /*** SORCERER CONTROLLER TREE - TIER 4 CAPSTONE PERKS ***/
+
+  /* Archmage of Control */
+  perk = &perk_list[PERK_SORCERER_ARCHMAGE_OF_CONTROL];
+  perk->id = PERK_SORCERER_ARCHMAGE_OF_CONTROL;
+  perk->name = strdup("Archmage of Control");
+  perk->description = strdup("Control spells last 50% longer, +5 DC vs charm/confuse/daze/sleep");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_CONTROLLER;
+  perk->cost = 5;
+  perk->max_rank = 1;
+  perk->prerequisite_perk = PERK_SORCERER_EXTENDED_SPELL_3;
+  perk->prerequisite_rank = 1; /* Must have Extended Spell III */
+  perk->effect_type = PERK_EFFECT_SPECIAL;
+  perk->effect_value = 5; /* +5 DC */
+  perk->special_description =
+      strdup("Requires Extended Spell III and Spell Mastery. You become an archmage of control "
+             "magic. All spells that apply charm, confusion, daze, or sleep effects have their "
+             "duration extended by 50% and gain +5 to their save DCs.");
+
+  /* Irresistible Magic */
+  perk = &perk_list[PERK_SORCERER_IRRESISTIBLE_MAGIC];
+  perk->id = PERK_SORCERER_IRRESISTIBLE_MAGIC;
+  perk->name = strdup("Irresistible Magic");
+  perk->description = strdup("Once per 5 minutes, cast spell that cannot be resisted");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_CONTROLLER;
+  perk->cost = 5;
+  perk->max_rank = 1;
+  perk->prerequisite_perk = PERK_SORCERER_PERSISTENT_SPELL;
+  perk->prerequisite_rank = 1; /* Must have Persistent Spell */
+  perk->effect_type = PERK_EFFECT_SPECIAL;
+  perk->effect_value = 0;
+  perk->special_description =
+      strdup("Requires Persistent Spell and Spell Mastery. Once every 5 minutes, you can use the "
+             "'irresistablemagic' command to make your next spell automatically succeed (no saving "
+             "throw allowed).");
+}
+
+/*****************************************************************************
+ * Sorcerer Versatile Caster Tree Perk Definitions
+ *****************************************************************************/
+
+void define_sorcerer_versatile_caster_perks(void)
+{
+  struct perk_data *perk;
+
+  /*** VERSATILE CASTER TREE - TIER 1 PERKS ***/
+
+  /* Spell Focus I - 2% chance per rank to not expend spell slot */
+  perk = &perk_list[PERK_SORCERER_SPELL_FOCUS_I];
+  perk->id = PERK_SORCERER_SPELL_FOCUS_I;
+  perk->name = strdup("Spell Focus I");
+  perk->description = strdup("2% chance per rank that spells don't expend a slot when cast");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_VERSATILE_CASTER;
+  perk->cost = 1;
+  perk->max_rank = 5;
+  perk->prerequisite_perk = -1;
+  perk->prerequisite_rank = 0;
+  perk->effect_type = PERK_EFFECT_SPECIAL;
+  perk->effect_value = 2; /* 2% per rank */
+  perk->special_description = strdup("When you cast a spell, there is a 2% chance per rank (max "
+                                     "10% at rank 5) that the spell slot is not expended.");
+
+  /* Quick Cast I */
+  perk = &perk_list[PERK_SORCERER_QUICK_CAST_I];
+  perk->id = PERK_SORCERER_QUICK_CAST_I;
+  perk->name = strdup("Quick Cast I");
+  perk->description =
+      strdup("Use quicken metamagic without spell circle increase once per 5 minutes");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_VERSATILE_CASTER;
+  perk->cost = 1;
+  perk->max_rank = 1;
+  perk->prerequisite_perk = -1;
+  perk->prerequisite_rank = 0;
+  perk->effect_type = PERK_EFFECT_SPECIAL;
+  perk->effect_value = 0;
+  perk->special_description = strdup("Once every 5 minutes, you can apply quicken metamagic to a "
+                                     "spell without increasing its spell circle requirement.");
+
+  /* Arcane Knowledge I */
+  perk = &perk_list[PERK_SORCERER_ARCANE_KNOWLEDGE_I];
+  perk->id = PERK_SORCERER_ARCANE_KNOWLEDGE_I;
+  perk->name = strdup("Arcane Knowledge I");
+  perk->description = strdup("+2 to spellcraft skill per rank");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_VERSATILE_CASTER;
+  perk->cost = 1;
+  perk->max_rank = 3;
+  perk->prerequisite_perk = -1;
+  perk->prerequisite_rank = 0;
+  perk->effect_type = PERK_EFFECT_SKILL;
+  perk->effect_value = 2; /* +2 per rank */
+  perk->special_description = strdup("Increases your spellcraft skill by +2 per rank.");
+
+  /* Combat Casting I */
+  perk = &perk_list[PERK_SORCERER_COMBAT_CASTING_I];
+  perk->id = PERK_SORCERER_COMBAT_CASTING_I;
+  perk->name = strdup("Combat Casting I");
+  perk->description = strdup("+2 concentration when in combat per rank");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_VERSATILE_CASTER;
+  perk->cost = 1;
+  perk->max_rank = 3;
+  perk->prerequisite_perk = -1;
+  perk->prerequisite_rank = 0;
+  perk->effect_type = PERK_EFFECT_SPECIAL;
+  perk->effect_value = 2; /* +2 per rank when in combat */
+  perk->special_description =
+      strdup("Increases your concentration skill by +2 per rank when you are in combat.");
+
+  /*** VERSATILE CASTER TREE - TIER 2 PERKS ***/
+
+  /* Spell Focus II - Additional 2% chance per rank */
+  perk = &perk_list[PERK_SORCERER_SPELL_FOCUS_II];
+  perk->id = PERK_SORCERER_SPELL_FOCUS_II;
+  perk->name = strdup("Spell Focus II");
+  perk->description = strdup("Additional 2% chance per rank that spells don't expend slots");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_VERSATILE_CASTER;
+  perk->cost = 2;
+  perk->max_rank = 3;
+  perk->prerequisite_perk = PERK_SORCERER_SPELL_FOCUS_I;
+  perk->prerequisite_rank = 5; /* Must max Spell Focus I */
+  perk->effect_type = PERK_EFFECT_SPECIAL;
+  perk->effect_value = 2; /* 2% per rank */
+  perk->special_description = strdup("Requires Spell Focus I (max). Increases the chance by an "
+                                     "additional 2% per rank (total 16% at max ranks of both).");
+
+  /* Quick Cast II */
+  perk = &perk_list[PERK_SORCERER_QUICK_CAST_II];
+  perk->id = PERK_SORCERER_QUICK_CAST_II;
+  perk->name = strdup("Quick Cast II");
+  perk->description = strdup("Can cast one spell per combat as instant action");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_VERSATILE_CASTER;
+  perk->cost = 2;
+  perk->max_rank = 1;
+  perk->prerequisite_perk = PERK_SORCERER_QUICK_CAST_I;
+  perk->prerequisite_rank = 1;
+  perk->effect_type = PERK_EFFECT_SPECIAL;
+  perk->effect_value = 0;
+  perk->special_description = strdup("Requires Quick Cast I. Once per combat, you can cast a spell "
+                                     "as an instant action without using the quicken metamagic.");
+
+  /* Spell Recall */
+  perk = &perk_list[PERK_SORCERER_SPELL_RECALL];
+  perk->id = PERK_SORCERER_SPELL_RECALL;
+  perk->name = strdup("Spell Recall");
+  perk->description = strdup("Restore one spell slot or prepared spell every 2 minutes");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_VERSATILE_CASTER;
+  perk->cost = 2;
+  perk->max_rank = 1;
+  perk->prerequisite_perk = PERK_SORCERER_SPELL_FOCUS_I;
+  perk->prerequisite_rank = 3; /* Must have at least 3 ranks */
+  perk->effect_type = PERK_EFFECT_SPECIAL;
+  perk->effect_value = 0;
+  perk->special_description =
+      strdup("Requires Spell Focus I (at least 3 ranks). Once every 2 minutes, use the "
+             "'spellrecall' command to restore one spell slot. For spontaneous casters, restores "
+             "a random slot. For preparation casters, randomly advances one spell currently being "
+             "memorized.");
+
+  /* Metamagic Master I */
+  perk = &perk_list[PERK_SORCERER_METAMAGIC_MASTER_I];
+  perk->id = PERK_SORCERER_METAMAGIC_MASTER_I;
+  perk->name = strdup("Metamagic Master I");
+  perk->description = strdup("Metamagic reduces spell circle increase by 1");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_VERSATILE_CASTER;
+  perk->cost = 2;
+  perk->max_rank = 1;
+  perk->prerequisite_perk = -1;
+  perk->prerequisite_rank = 0;
+  perk->effect_type = PERK_EFFECT_SPECIAL;
+  perk->effect_value = 1; /* -1 circle reduction */
+  perk->special_description =
+      strdup("When using metamagic feats, reduce the spell circle increase by 1 (minimum 0). "
+             "Limited to 2 uses per 5 minutes. Use 'cooldowns' to check remaining uses.");
+
+  /* Defensive Casting */
+  perk = &perk_list[PERK_SORCERER_DEFENSIVE_CASTING];
+  perk->id = PERK_SORCERER_DEFENSIVE_CASTING;
+  perk->name = strdup("Defensive Casting");
+  perk->description = strdup("+4 AC when casting spells");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_VERSATILE_CASTER;
+  perk->cost = 2;
+  perk->max_rank = 1;
+  perk->prerequisite_perk = PERK_SORCERER_COMBAT_CASTING_I;
+  perk->prerequisite_rank = 2; /* Must have at least 2 ranks */
+  perk->effect_type = PERK_EFFECT_SPECIAL;
+  perk->effect_value = 4; /* +4 AC */
+  perk->special_description = strdup("Requires Combat Casting I (at least 2 ranks). You gain +4 AC "
+                                     "when casting spells, lasting until your next turn.");
+
+  /*** VERSATILE CASTER TREE - TIER 3 PERKS (3-4 points each) ***/
+
+  perk = &perk_list[PERK_SORCERER_SPELL_FOCUS_III];
+  perk->id = PERK_SORCERER_SPELL_FOCUS_III;
+  perk->name = strdup("Spell Focus III");
+  perk->description = strdup("2% chance per rank spell doesn't consume slot");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_VERSATILE_CASTER;
+  perk->cost = 3;
+  perk->max_rank = 2;
+  perk->prerequisite_perk = PERK_SORCERER_SPELL_FOCUS_II;
+  perk->prerequisite_rank = 3; /* Must max out Spell Focus II */
+  perk->effect_type = PERK_EFFECT_SPECIAL;
+  perk->effect_value = 2; /* +2% per rank */
+  perk->special_description =
+      strdup("Requires Spell Focus II (max). Additional 2% chance per rank that spells don't "
+             "consume prepared slots (total up to 16% with all ranks).");
+
+  perk = &perk_list[PERK_SORCERER_METAMAGIC_MASTER_II];
+  perk->id = PERK_SORCERER_METAMAGIC_MASTER_II;
+  perk->name = strdup("Metamagic Master II");
+  perk->description = strdup("Metamagic spell circle increase reduced by 1");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_VERSATILE_CASTER;
+  perk->cost = 3;
+  perk->max_rank = 1;
+  perk->prerequisite_perk = PERK_SORCERER_METAMAGIC_MASTER_I;
+  perk->prerequisite_rank = 1;
+  perk->effect_type = PERK_EFFECT_SPECIAL;
+  perk->effect_value = -1; /* -1 to metamagic circle cost */
+  perk->special_description =
+      strdup("Requires Metamagic Master I. Metamagic feats increase spell circle by 1 less (stacks "
+             "with Metamagic Master I for total -2). Limited to 2 uses per 5 minutes. Use "
+             "'cooldowns' to check remaining uses.");
+
+  perk = &perk_list[PERK_SORCERER_ARCANE_RECOVERY];
+  perk->id = PERK_SORCERER_ARCANE_RECOVERY;
+  perk->name = strdup("Arcane Recovery");
+  perk->description = strdup("Reduce spell preparation and slot recovery time");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_VERSATILE_CASTER;
+  perk->cost = 3;
+  perk->max_rank = 1;
+  perk->prerequisite_perk = PERK_SORCERER_SPELL_RECALL;
+  perk->prerequisite_rank = 1;
+  perk->effect_type = PERK_EFFECT_SPECIAL;
+  perk->effect_value = 0;
+  perk->special_description =
+      strdup("Requires Spell Recall. Once every 10 minutes, halve current spell preparation "
+             "timers. Spontaneous casters halve the next 5 recovering spell slots. Use "
+             "'arcanerecovery' command.");
+
+  perk = &perk_list[PERK_SORCERER_SPELL_SHIELD];
+  perk->id = PERK_SORCERER_SPELL_SHIELD;
+  perk->name = strdup("Spell Shield");
+  perk->description = strdup("10 DR + 4 AC when attacked first");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_VERSATILE_CASTER;
+  perk->cost = 4;
+  perk->max_rank = 1;
+  perk->prerequisite_perk = PERK_SORCERER_DEFENSIVE_CASTING;
+  perk->prerequisite_rank = 1;
+  perk->effect_type = PERK_EFFECT_SPECIAL;
+  perk->effect_value = 10; /* 10 DR */
+  perk->special_description =
+      strdup("Requires Defensive Casting. When an enemy initiates combat against you, "
+             "automatically activate a spell shield granting 10 DR and +4 AC for 1 round.");
+
+  /*** VERSATILE CASTER TREE - TIER 4 CAPSTONE PERKS (5 points each) ***/
+
+  perk = &perk_list[PERK_SORCERER_ARCHMAGES_POWER];
+  perk->id = PERK_SORCERER_ARCHMAGES_POWER;
+  perk->name = strdup("Archmage's Power");
+  perk->description = strdup("+5% free spell chance, -1 metamagic cost");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_VERSATILE_CASTER;
+  perk->cost = 5;
+  perk->max_rank = 1;
+  perk->prerequisite_perk = PERK_SORCERER_SPELL_FOCUS_III;
+  perk->prerequisite_rank = 2; /* Must max out Spell Focus III */
+  perk->effect_type = PERK_EFFECT_SPECIAL;
+  perk->effect_value = 5; /* +5% free spell chance */
+  perk->special_description =
+      strdup("Requires Spell Focus III (max) and Metamagic Master II. Additional 5% chance spells "
+             "don't consume slots, and metamagic reduces spell circle by 1 additional level. "
+             "Limited to 2 uses per 5 minutes. Use 'cooldowns' to check remaining uses.");
+
+  perk = &perk_list[PERK_SORCERER_ARCANE_SUPREMACY];
+  perk->id = PERK_SORCERER_ARCANE_SUPREMACY;
+  perk->name = strdup("Arcane Supremacy");
+  perk->description = strdup("+2 spell DCs, +2 caster level for arcane spells, +2 spell damage");
+  perk->associated_class = CLASS_SORCERER;
+  perk->perk_category = PERK_CATEGORY_VERSATILE_CASTER;
+  perk->cost = 5;
+  perk->max_rank = 1;
+  perk->prerequisite_perk = PERK_SORCERER_ARCANE_KNOWLEDGE_I;
   perk->prerequisite_rank = 3; /* Must max out Arcane Knowledge I */
   perk->effect_type = PERK_EFFECT_SPECIAL;
   perk->effect_value = 2; /* +2 to various stats */
@@ -18966,7 +19931,7 @@ void award_stage_perk_points(struct char_data *ch, int class_id)
     return;
   }
 
-  migrate_sorcerer_perk_points_to_wizard(ch);
+  migrate_sorcerer_perks(ch);
   get_award_perk_classes(ch, class_id, &perk_class_1, &perk_class_2);
   perk_class_1 = normalize_perk_class_id(perk_class_1);
   perk_class_2 = normalize_perk_class_id(perk_class_2);
@@ -19108,7 +20073,7 @@ void display_perk_points(struct char_data *ch)
   if (!ch || IS_NPC(ch))
     return;
 
-  migrate_sorcerer_perk_points_to_wizard(ch);
+  migrate_sorcerer_perks(ch);
   send_to_char(ch, "\tWPerk Points:\tn\r\n");
 
   /* Display points for each perk tree the character can access. */
@@ -19264,6 +20229,23 @@ int get_perk_rank(struct char_data *ch, int perk_id, int class_id)
   return perk ? perk->current_rank : 0;
 }
 
+/* Copied trees share effect handlers, but never ownership or prerequisites.
+ * Matching effects use the higher rank to avoid doubling identical bonuses. */
+int get_arcane_perk_ranks(struct char_data *ch, int wizard_perk_id)
+{
+  if (wizard_perk_id < 100 || wizard_perk_id > 159)
+    return 0;
+  return MAX(get_total_perk_ranks(ch, wizard_perk_id),
+             get_total_perk_ranks(ch, wizard_perk_id + 700));
+}
+
+bool has_arcane_perk(struct char_data *ch, int wizard_perk_id)
+{
+  if (wizard_perk_id < 100 || wizard_perk_id > 159)
+    return FALSE;
+  return has_perk(ch, wizard_perk_id) || has_perk(ch, wizard_perk_id + 700);
+}
+
 /**
  * Get the total rank of a perk across all classes.
  * Useful for perks that stack between classes.
@@ -19358,7 +20340,7 @@ bool can_purchase_perk(struct char_data *ch, int perk_id, int class_id, char *er
     return FALSE;
   }
   perk_class = normalize_perk_class_id(class_id);
-  migrate_sorcerer_perk_points_to_wizard(ch);
+  migrate_sorcerer_perks(ch);
 
   /* Get perk data */
   perk = get_perk_by_id(perk_id);
@@ -22961,16 +23943,16 @@ int get_enchantment_spell_dc_bonus(struct char_data *ch)
     return 0;
 
   /* Spell Focus I-V: +1 per rank */
-  bonus += get_perk_rank(ch, PERK_WIZARD_SPELL_FOCUS_ENCHANTMENT_1, CLASS_WIZARD);
-  bonus += get_perk_rank(ch, PERK_WIZARD_SPELL_FOCUS_ENCHANTMENT_2, CLASS_WIZARD);
-  bonus += get_perk_rank(ch, PERK_WIZARD_SPELL_FOCUS_ENCHANTMENT_3, CLASS_WIZARD);
-  bonus += get_perk_rank(ch, PERK_WIZARD_SPELL_FOCUS_ENCHANTMENT_4, CLASS_WIZARD);
-  bonus += get_perk_rank(ch, PERK_WIZARD_SPELL_FOCUS_ENCHANTMENT_5, CLASS_WIZARD);
+  bonus += get_arcane_perk_ranks(ch, PERK_WIZARD_SPELL_FOCUS_ENCHANTMENT_1);
+  bonus += get_arcane_perk_ranks(ch, PERK_WIZARD_SPELL_FOCUS_ENCHANTMENT_2);
+  bonus += get_arcane_perk_ranks(ch, PERK_WIZARD_SPELL_FOCUS_ENCHANTMENT_3);
+  bonus += get_arcane_perk_ranks(ch, PERK_WIZARD_SPELL_FOCUS_ENCHANTMENT_4);
+  bonus += get_arcane_perk_ranks(ch, PERK_WIZARD_SPELL_FOCUS_ENCHANTMENT_5);
 
   /* Greater Spell Focus I-III: +2 per rank */
-  bonus += get_perk_rank(ch, PERK_WIZARD_GREATER_SPELL_FOCUS_ENCHANTMENT_1, CLASS_WIZARD) * 2;
-  bonus += get_perk_rank(ch, PERK_WIZARD_GREATER_SPELL_FOCUS_ENCHANTMENT_2, CLASS_WIZARD) * 2;
-  bonus += get_perk_rank(ch, PERK_WIZARD_GREATER_SPELL_FOCUS_ENCHANTMENT_3, CLASS_WIZARD) * 2;
+  bonus += get_arcane_perk_ranks(ch, PERK_WIZARD_GREATER_SPELL_FOCUS_ENCHANTMENT_1) * 2;
+  bonus += get_arcane_perk_ranks(ch, PERK_WIZARD_GREATER_SPELL_FOCUS_ENCHANTMENT_2) * 2;
+  bonus += get_arcane_perk_ranks(ch, PERK_WIZARD_GREATER_SPELL_FOCUS_ENCHANTMENT_3) * 2;
 
   return bonus;
 }
@@ -22988,7 +23970,7 @@ int get_extend_spell_bonus(struct char_data *ch, int spellnum)
   if (!ch || IS_NPC(ch))
     return 100;
 
-  if (!has_perk(ch, PERK_WIZARD_EXTEND_SPELL))
+  if (!has_arcane_perk(ch, PERK_WIZARD_EXTEND_SPELL))
     return 100;
 
   /* Only extend buff spells (non-violent, can target self) */
@@ -22996,7 +23978,7 @@ int get_extend_spell_bonus(struct char_data *ch, int spellnum)
     return 100;
 
   /* Calculate bonus: 5% per rank */
-  int ranks = get_perk_rank(ch, PERK_WIZARD_EXTEND_SPELL, CLASS_WIZARD);
+  int ranks = get_arcane_perk_ranks(ch, PERK_WIZARD_EXTEND_SPELL);
   return 100 + (ranks * 5); /* +5% per rank */
 }
 
@@ -23014,7 +23996,7 @@ bool can_use_persistent_spell_perk(struct char_data *ch)
   if (!ch || IS_NPC(ch))
     return FALSE;
 
-  if (!has_perk(ch, PERK_WIZARD_PERSISTENT_SPELL))
+  if (!has_arcane_perk(ch, PERK_WIZARD_PERSISTENT_SPELL))
     return FALSE;
 
   current_time = time(0);
@@ -23107,7 +24089,7 @@ bool can_use_split_enchantment_perk(struct char_data *ch)
   if (!ch || IS_NPC(ch))
     return FALSE;
 
-  if (!has_perk(ch, PERK_WIZARD_SPLIT_ENCHANTMENT))
+  if (!has_arcane_perk(ch, PERK_WIZARD_SPLIT_ENCHANTMENT))
     return FALSE;
 
   /* Check cooldown */
@@ -23144,7 +24126,7 @@ void activate_defensive_casting(struct char_data *ch)
   if (!ch || IS_NPC(ch))
     return;
 
-  if (!has_perk(ch, PERK_WIZARD_DEFENSIVE_CASTING))
+  if (!has_arcane_perk(ch, PERK_WIZARD_DEFENSIVE_CASTING))
     return;
 
   /* Use a guard tick so the bonus survives the next global round pulse. */
@@ -23412,6 +24394,12 @@ bool display_perk_info(struct char_data *ch, const char *perkname)
 
   skip_spaces_c(&perkname);
   perk_id = find_perk_num_by_name(perkname);
+  /* Shared names default to the sorcerer copy for sorcerer-only characters.
+   * Numeric IDs always refer to exactly the requested definition. */
+  if (perk_id >= 100 && perk_id <= 159 && !is_number(perkname) &&
+      CLASS_LEVEL(ch, CLASS_SORCERER) > 0 && CLASS_LEVEL(ch, CLASS_WIZARD) == 0)
+    perk_id += 700;
+
   if (perk_id < 0)
     return FALSE;
 
@@ -23610,7 +24598,7 @@ void list_perks_for_class(struct char_data *ch, int class_id, int list_mode)
     return;
   }
 
-  migrate_sorcerer_perk_points_to_wizard(ch);
+  migrate_sorcerer_perks(ch);
   perk_class = normalize_perk_class_id(class_id);
   display_class_name = get_perk_class_display_name(requested_class, perk_class);
   if (requested_class == CLASS_WIZARD)
@@ -24031,7 +25019,7 @@ ACMD(do_perk)
     return;
   }
 
-  migrate_sorcerer_perk_points_to_wizard(ch);
+  migrate_sorcerer_perks(ch);
 
   *arg1 = '\0';
   *arg2 = '\0';
@@ -24654,13 +25642,13 @@ int get_wizard_spell_power_bonus(struct char_data *ch)
     return 0;
 
   /* Spell Power I: +1 per rank, max 5 ranks */
-  bonus += get_total_perk_ranks(ch, PERK_WIZARD_SPELL_POWER_1);
+  bonus += get_arcane_perk_ranks(ch, PERK_WIZARD_SPELL_POWER_1);
 
   /* Spell Power II: +1 per rank, max 3 ranks */
-  bonus += get_total_perk_ranks(ch, PERK_WIZARD_SPELL_POWER_2);
+  bonus += get_arcane_perk_ranks(ch, PERK_WIZARD_SPELL_POWER_2);
 
   /* Spell Power III: +2 per rank, max 2 ranks */
-  bonus += 2 * get_total_perk_ranks(ch, PERK_WIZARD_SPELL_POWER_3);
+  bonus += 2 * get_arcane_perk_ranks(ch, PERK_WIZARD_SPELL_POWER_3);
 
   return bonus;
 }
@@ -24683,7 +25671,7 @@ int get_master_of_elements_override(struct char_data *ch, int dam_type)
   if (!ch || IS_NPC(ch))
     return dam_type;
 
-  if (!has_perk(ch, PERK_WIZARD_MASTER_OF_ELEMENTS))
+  if (!has_arcane_perk(ch, PERK_WIZARD_MASTER_OF_ELEMENTS))
     return dam_type;
 
   preferred_type = GET_MASTER_OF_ELEMENTS_TYPE(ch);
@@ -24735,22 +25723,22 @@ int get_wizard_elemental_damage_bonus(struct char_data *ch, int dam_type)
   case DAM_COLD:
   case DAM_ELECTRIC:
     /* Focused Element gives +20% (replaces +10% from affinity) */
-    if ((dam_type == DAM_FIRE && has_perk(ch, PERK_WIZARD_FOCUSED_ELEMENT_FIRE)) ||
-        (dam_type == DAM_COLD && has_perk(ch, PERK_WIZARD_FOCUSED_ELEMENT_COLD)) ||
-        (dam_type == DAM_ELECTRIC && has_perk(ch, PERK_WIZARD_FOCUSED_ELEMENT_LIGHTNING)))
+    if ((dam_type == DAM_FIRE && has_arcane_perk(ch, PERK_WIZARD_FOCUSED_ELEMENT_FIRE)) ||
+        (dam_type == DAM_COLD && has_arcane_perk(ch, PERK_WIZARD_FOCUSED_ELEMENT_COLD)) ||
+        (dam_type == DAM_ELECTRIC && has_arcane_perk(ch, PERK_WIZARD_FOCUSED_ELEMENT_LIGHTNING)))
     {
       bonus = 20;
     }
     /* Energy Affinity gives +10% */
-    else if ((dam_type == DAM_FIRE && has_perk(ch, PERK_WIZARD_ENERGY_AFFINITY_FIRE)) ||
-             (dam_type == DAM_COLD && has_perk(ch, PERK_WIZARD_ENERGY_AFFINITY_COLD)) ||
-             (dam_type == DAM_ELECTRIC && has_perk(ch, PERK_WIZARD_ENERGY_AFFINITY_LIGHTNING)))
+    else if ((dam_type == DAM_FIRE && has_arcane_perk(ch, PERK_WIZARD_ENERGY_AFFINITY_FIRE)) ||
+             (dam_type == DAM_COLD && has_arcane_perk(ch, PERK_WIZARD_ENERGY_AFFINITY_COLD)) ||
+             (dam_type == DAM_ELECTRIC && has_arcane_perk(ch, PERK_WIZARD_ENERGY_AFFINITY_LIGHTNING)))
     {
       bonus = 10;
     }
 
     /* Master of Elements adds +15% to all elemental damage */
-    if (has_perk(ch, PERK_WIZARD_MASTER_OF_ELEMENTS))
+    if (has_arcane_perk(ch, PERK_WIZARD_MASTER_OF_ELEMENTS))
     {
       bonus += 15;
     }
@@ -24776,17 +25764,17 @@ int get_wizard_elemental_dc_bonus(struct char_data *ch, int dam_type)
   switch (dam_type)
   {
   case DAM_FIRE:
-    if (has_perk(ch, PERK_WIZARD_FOCUSED_ELEMENT_FIRE))
+    if (has_arcane_perk(ch, PERK_WIZARD_FOCUSED_ELEMENT_FIRE))
       return 1;
     break;
 
   case DAM_COLD:
-    if (has_perk(ch, PERK_WIZARD_FOCUSED_ELEMENT_COLD))
+    if (has_arcane_perk(ch, PERK_WIZARD_FOCUSED_ELEMENT_COLD))
       return 1;
     break;
 
   case DAM_ELECTRIC:
-    if (has_perk(ch, PERK_WIZARD_FOCUSED_ELEMENT_LIGHTNING))
+    if (has_arcane_perk(ch, PERK_WIZARD_FOCUSED_ELEMENT_LIGHTNING))
       return 1;
     break;
   }
@@ -24808,14 +25796,14 @@ int get_wizard_spell_penetration_bonus(struct char_data *ch)
     return 0;
 
   /* Spell Penetration I: +2 per rank, max 3 ranks = +6 */
-  bonus += 2 * get_total_perk_ranks(ch, PERK_WIZARD_SPELL_PENETRATION_1);
+  bonus += 2 * get_arcane_perk_ranks(ch, PERK_WIZARD_SPELL_PENETRATION_1);
 
   /* Spell Penetration II: +4 */
-  if (has_perk(ch, PERK_WIZARD_SPELL_PENETRATION_2))
+  if (has_arcane_perk(ch, PERK_WIZARD_SPELL_PENETRATION_2))
     bonus += 4;
 
   /* Overwhelming Magic: +10 (effective SR reduction) */
-  if (has_perk(ch, PERK_WIZARD_OVERWHELMING_MAGIC))
+  if (has_arcane_perk(ch, PERK_WIZARD_OVERWHELMING_MAGIC))
     bonus += 10;
 
   return bonus;
@@ -24832,7 +25820,7 @@ bool has_wizard_spell_critical(struct char_data *ch)
   if (!ch || IS_NPC(ch))
     return FALSE;
 
-  return (has_perk(ch, PERK_WIZARD_SPELL_CRITICAL_1) || has_perk(ch, PERK_WIZARD_SPELL_CRITICAL_2));
+  return (has_arcane_perk(ch, PERK_WIZARD_SPELL_CRITICAL_1) || has_arcane_perk(ch, PERK_WIZARD_SPELL_CRITICAL_2));
 }
 
 /**
@@ -24847,11 +25835,11 @@ int get_wizard_spell_critical_chance(struct char_data *ch)
     return 0;
 
   /* Spell Critical II: 10% chance */
-  if (has_perk(ch, PERK_WIZARD_SPELL_CRITICAL_2))
+  if (has_arcane_perk(ch, PERK_WIZARD_SPELL_CRITICAL_2))
     return 10;
 
   /* Spell Critical I: 5% chance */
-  if (has_perk(ch, PERK_WIZARD_SPELL_CRITICAL_1))
+  if (has_arcane_perk(ch, PERK_WIZARD_SPELL_CRITICAL_1))
     return 5;
 
   return 0;
@@ -24869,11 +25857,11 @@ int get_wizard_spell_critical_multiplier(struct char_data *ch)
     return 100;
 
   /* Spell Critical II: 2.5x damage (250%) */
-  if (has_perk(ch, PERK_WIZARD_SPELL_CRITICAL_2))
+  if (has_arcane_perk(ch, PERK_WIZARD_SPELL_CRITICAL_2))
     return 250;
 
   /* Spell Critical I: 1.5x damage (150%) */
-  if (has_perk(ch, PERK_WIZARD_SPELL_CRITICAL_1))
+  if (has_arcane_perk(ch, PERK_WIZARD_SPELL_CRITICAL_1))
     return 150;
 
   return 100;
@@ -24890,7 +25878,7 @@ bool can_use_maximize_spell_perk(struct char_data *ch)
   if (!ch || IS_NPC(ch))
     return FALSE;
 
-  if (!has_perk(ch, PERK_WIZARD_MAXIMIZE_SPELL))
+  if (!has_arcane_perk(ch, PERK_WIZARD_MAXIMIZE_SPELL))
     return FALSE;
 
   /* Check cooldown */
@@ -24929,7 +25917,7 @@ bool can_use_empower_spell_perk(struct char_data *ch)
   if (!ch || IS_NPC(ch))
     return FALSE;
 
-  if (!has_perk(ch, PERK_WIZARD_EMPOWER_SPELL))
+  if (!has_arcane_perk(ch, PERK_WIZARD_EMPOWER_SPELL))
     return FALSE;
 
   current_time = time(0);
@@ -24992,7 +25980,7 @@ int get_arcane_annihilation_bonus_dice(struct char_data *ch)
   if (!ch || IS_NPC(ch))
     return 0;
 
-  if (has_perk(ch, PERK_WIZARD_ARCANE_ANNIHILATION))
+  if (has_arcane_perk(ch, PERK_WIZARD_ARCANE_ANNIHILATION))
     return 3;
 
   return 0;
@@ -25009,7 +25997,7 @@ int get_arcane_annihilation_dc_bonus(struct char_data *ch)
   if (!ch || IS_NPC(ch))
     return 0;
 
-  if (has_perk(ch, PERK_WIZARD_ARCANE_ANNIHILATION))
+  if (has_arcane_perk(ch, PERK_WIZARD_ARCANE_ANNIHILATION))
     return 2;
 
   return 0;
@@ -25031,7 +26019,7 @@ float get_master_enchanter_duration_multiplier(struct char_data *ch)
   if (!ch || IS_NPC(ch))
     return 1.0;
 
-  if (has_perk(ch, PERK_WIZARD_MASTER_ENCHANTER))
+  if (has_arcane_perk(ch, PERK_WIZARD_MASTER_ENCHANTER))
     return 2.0;
 
   return 1.0;
@@ -25049,7 +26037,7 @@ float get_master_transmuter_duration_multiplier(struct char_data *ch)
   if (!ch || IS_NPC(ch))
     return 1.0;
 
-  if (has_perk(ch, PERK_WIZARD_MASTER_TRANSMUTER))
+  if (has_arcane_perk(ch, PERK_WIZARD_MASTER_TRANSMUTER))
     return 1.5;
 
   return 1.0;
@@ -25068,7 +26056,7 @@ float get_archmage_control_duration_multiplier(struct char_data *ch)
   if (!ch || IS_NPC(ch))
     return 1.0;
 
-  if (has_perk(ch, PERK_WIZARD_ARCHMAGE_OF_CONTROL))
+  if (has_arcane_perk(ch, PERK_WIZARD_ARCHMAGE_OF_CONTROL))
     return 1.5;
 
   return 1.0;
@@ -25086,7 +26074,7 @@ int get_archmage_control_dc_bonus(struct char_data *ch)
   if (!ch || IS_NPC(ch))
     return 0;
 
-  if (has_perk(ch, PERK_WIZARD_ARCHMAGE_OF_CONTROL))
+  if (has_arcane_perk(ch, PERK_WIZARD_ARCHMAGE_OF_CONTROL))
     return 5;
 
   return 0;
@@ -25103,7 +26091,7 @@ int get_master_enchanter_dc_bonus(struct char_data *ch)
   if (!ch || IS_NPC(ch))
     return 0;
 
-  if (has_perk(ch, PERK_WIZARD_MASTER_ENCHANTER))
+  if (has_arcane_perk(ch, PERK_WIZARD_MASTER_ENCHANTER))
     return 3;
 
   return 0;
@@ -25120,7 +26108,7 @@ int get_master_transmuter_dc_bonus(struct char_data *ch)
   if (!ch || IS_NPC(ch))
     return 0;
 
-  if (has_perk(ch, PERK_WIZARD_MASTER_TRANSMUTER))
+  if (has_arcane_perk(ch, PERK_WIZARD_MASTER_TRANSMUTER))
     return 3;
 
   return 0;
@@ -25137,7 +26125,7 @@ int get_master_illusionist_dc_bonus(struct char_data *ch)
   if (!ch || IS_NPC(ch))
     return 0;
 
-  if (has_perk(ch, PERK_WIZARD_MASTER_ILLUSIONIST))
+  if (has_arcane_perk(ch, PERK_WIZARD_MASTER_ILLUSIONIST))
     return 3;
 
   return 0;
@@ -25155,7 +26143,7 @@ int get_spell_mastery_dc_bonus(struct char_data *ch)
   if (!ch || IS_NPC(ch))
     return 0;
 
-  if (has_perk(ch, PERK_WIZARD_SPELL_MASTERY))
+  if (has_arcane_perk(ch, PERK_WIZARD_SPELL_MASTERY))
     return 2;
 
   return 0;
@@ -25181,7 +26169,7 @@ int get_combat_casting_concentration_bonus(struct char_data *ch)
     return 0;
 
   /* +2 per rank, max 3 ranks = +6 */
-  return 2 * get_total_perk_ranks(ch, PERK_WIZARD_COMBAT_CASTING_I);
+  return 2 * get_arcane_perk_ranks(ch, PERK_WIZARD_COMBAT_CASTING_I);
 }
 
 /**
@@ -25195,7 +26183,7 @@ bool can_use_spell_recall(struct char_data *ch)
   if (!ch || IS_NPC(ch))
     return FALSE;
 
-  if (!has_perk(ch, PERK_WIZARD_SPELL_RECALL))
+  if (!has_arcane_perk(ch, PERK_WIZARD_SPELL_RECALL))
     return FALSE;
 
   /* Check active cooldown */
@@ -25217,7 +26205,7 @@ int get_metamagic_master_reduction(struct char_data *ch)
   if (!ch || IS_NPC(ch))
     return 0;
 
-  if (!has_perk(ch, PERK_WIZARD_METAMAGIC_MASTER_I))
+  if (!has_arcane_perk(ch, PERK_WIZARD_METAMAGIC_MASTER_I))
     return 0;
 
   /* 50% chance to reduce circle increase by 1 */
@@ -25239,7 +26227,7 @@ int get_arcane_knowledge_spellcraft_bonus(struct char_data *ch)
     return 0;
 
   /* +2 per rank, max 3 ranks = +6 */
-  return 2 * get_total_perk_ranks(ch, PERK_WIZARD_ARCANE_KNOWLEDGE_I);
+  return 2 * get_arcane_perk_ranks(ch, PERK_WIZARD_ARCANE_KNOWLEDGE_I);
 }
 
 /**
@@ -25259,16 +26247,16 @@ bool check_spell_slot_preservation(struct char_data *ch)
     return FALSE;
 
   /* Spell Focus I: 2% per rank, max 5 ranks = 10% */
-  chance += 2 * get_total_perk_ranks(ch, PERK_WIZARD_SPELL_FOCUS_I);
+  chance += 2 * get_arcane_perk_ranks(ch, PERK_WIZARD_SPELL_FOCUS_I);
 
   /* Spell Focus II: 2% per rank, max 3 ranks = 6% */
-  chance += 2 * get_total_perk_ranks(ch, PERK_WIZARD_SPELL_FOCUS_II);
+  chance += 2 * get_arcane_perk_ranks(ch, PERK_WIZARD_SPELL_FOCUS_II);
 
   /* Spell Focus III: 2% per rank, max 2 ranks = 4% */
-  chance += 2 * get_total_perk_ranks(ch, PERK_WIZARD_SPELL_FOCUS_III);
+  chance += 2 * get_arcane_perk_ranks(ch, PERK_WIZARD_SPELL_FOCUS_III);
 
   /* Archmage's Power: +5% */
-  if (has_perk(ch, PERK_WIZARD_ARCHMAGES_POWER))
+  if (has_arcane_perk(ch, PERK_WIZARD_ARCHMAGES_POWER))
     chance += 5;
 
   /* Roll percentage check */
@@ -25294,7 +26282,7 @@ void activate_spell_shield(struct char_data *ch)
   if (!ch || IS_NPC(ch))
     return;
 
-  if (!has_perk(ch, PERK_WIZARD_SPELL_SHIELD))
+  if (!has_arcane_perk(ch, PERK_WIZARD_SPELL_SHIELD))
     return;
 
   /* Check if spell shield is on cooldown (2 minutes = 120 seconds) */
@@ -25376,8 +26364,8 @@ int get_metamagic_circle_reduction(struct char_data *ch)
     return 0;
 
   /* Check if character has any metamagic reduction perks */
-  if (!has_perk(ch, PERK_WIZARD_METAMAGIC_MASTER_I) &&
-      !has_perk(ch, PERK_WIZARD_METAMAGIC_MASTER_II) && !has_perk(ch, PERK_WIZARD_ARCHMAGES_POWER))
+  if (!has_arcane_perk(ch, PERK_WIZARD_METAMAGIC_MASTER_I) &&
+      !has_arcane_perk(ch, PERK_WIZARD_METAMAGIC_MASTER_II) && !has_arcane_perk(ch, PERK_WIZARD_ARCHMAGES_POWER))
     return 0;
 
   /* Regenerate charges if needed (same system as Empower Spell) */
@@ -25402,13 +26390,13 @@ int get_metamagic_circle_reduction(struct char_data *ch)
     return 0;
 
   /* Calculate maximum possible reduction based on perks */
-  if (has_perk(ch, PERK_WIZARD_METAMAGIC_MASTER_I))
+  if (has_arcane_perk(ch, PERK_WIZARD_METAMAGIC_MASTER_I))
     max_reduction -= 1;
 
-  if (has_perk(ch, PERK_WIZARD_METAMAGIC_MASTER_II))
+  if (has_arcane_perk(ch, PERK_WIZARD_METAMAGIC_MASTER_II))
     max_reduction -= 1;
 
-  if (has_perk(ch, PERK_WIZARD_ARCHMAGES_POWER))
+  if (has_arcane_perk(ch, PERK_WIZARD_ARCHMAGES_POWER))
     max_reduction -= 1;
 
   /* Only consume a use if we're actually going to reduce cost */
@@ -25434,8 +26422,8 @@ bool can_use_metamagic_reduction(struct char_data *ch)
     return FALSE;
 
   /* Must have at least one perk */
-  if (!has_perk(ch, PERK_WIZARD_METAMAGIC_MASTER_I) &&
-      !has_perk(ch, PERK_WIZARD_METAMAGIC_MASTER_II) && !has_perk(ch, PERK_WIZARD_ARCHMAGES_POWER))
+  if (!has_arcane_perk(ch, PERK_WIZARD_METAMAGIC_MASTER_I) &&
+      !has_arcane_perk(ch, PERK_WIZARD_METAMAGIC_MASTER_II) && !has_arcane_perk(ch, PERK_WIZARD_ARCHMAGES_POWER))
     return FALSE;
 
   /* Regenerate charges if needed */
@@ -25467,8 +26455,8 @@ void use_metamagic_reduction(struct char_data *ch)
   if (!ch || IS_NPC(ch))
     return;
 
-  if (!has_perk(ch, PERK_WIZARD_METAMAGIC_MASTER_I) &&
-      !has_perk(ch, PERK_WIZARD_METAMAGIC_MASTER_II) && !has_perk(ch, PERK_WIZARD_ARCHMAGES_POWER))
+  if (!has_arcane_perk(ch, PERK_WIZARD_METAMAGIC_MASTER_I) &&
+      !has_arcane_perk(ch, PERK_WIZARD_METAMAGIC_MASTER_II) && !has_arcane_perk(ch, PERK_WIZARD_ARCHMAGES_POWER))
     return;
 
   if (ch->player_specials->saved.metamagic_reduction_uses <= 0)
@@ -25500,7 +26488,7 @@ int get_arcane_supremacy_dc_bonus(struct char_data *ch)
   if (!ch || IS_NPC(ch))
     return 0;
 
-  if (has_perk(ch, PERK_WIZARD_ARCANE_SUPREMACY))
+  if (has_arcane_perk(ch, PERK_WIZARD_ARCANE_SUPREMACY))
     return 2;
 
   return 0;
@@ -25517,7 +26505,7 @@ int get_arcane_supremacy_caster_level_bonus(struct char_data *ch)
   if (!ch || IS_NPC(ch))
     return 0;
 
-  if (has_perk(ch, PERK_WIZARD_ARCANE_SUPREMACY))
+  if (has_arcane_perk(ch, PERK_WIZARD_ARCANE_SUPREMACY))
     return 2;
 
   return 0;
@@ -25534,7 +26522,7 @@ int get_arcane_supremacy_damage_bonus(struct char_data *ch)
   if (!ch || IS_NPC(ch))
     return 0;
 
-  if (has_perk(ch, PERK_WIZARD_ARCANE_SUPREMACY))
+  if (has_arcane_perk(ch, PERK_WIZARD_ARCANE_SUPREMACY))
     return 2;
 
   return 0;
@@ -30609,7 +31597,7 @@ int class_to_perk_class(int class_type, int which_perk)
   case CLASS_BERSERKER:
     return CLASS_BERSERKER;
   case CLASS_SORCERER:
-    return CLASS_WIZARD;
+    return CLASS_SORCERER;
   case CLASS_PALADIN:
     return CLASS_PALADIN;
   case CLASS_RANGER:

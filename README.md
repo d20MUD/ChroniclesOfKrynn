@@ -174,6 +174,18 @@ autoreconf -fi
 make
 ```
 
+If `make` reports `./config.status: No such file or directory`, recreate the
+local configuration before building:
+
+```bash
+./configure
+make
+make install
+```
+
+Pass any custom options you normally use to `./configure`. The `--recheck`
+command above requires an existing `config.status` file.
+
 For detailed installation instructions including system requirements, dependencies, database setup, and configuration, please see the **[Setup and Build Guide](docs/guides/SETUP_AND_BUILD_GUIDE.md)**.
 
 Windows users (WSL): See the "Auto-WSL integration (Windows)" section in the Setup and Build Guide for targeting a specific WSL distro and for temporarily disabling or re-enabling the Auto-WSL behavior.

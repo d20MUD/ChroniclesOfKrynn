@@ -6818,6 +6818,11 @@ int enter_player_game(struct descriptor_data *d)
                  minimum_exp);
   }
 
+  if (!d->character->player_specials->saved.sorcerer_perks_migrated)
+  {
+    migrate_sorcerer_perks(d->character);
+    needs_save = TRUE;
+  }
   if (reconcile_legacy_perk_progress(d->character, &perk_points_granted))
   {
     needs_save = TRUE;

@@ -1153,8 +1153,8 @@ bool known_spells_add(struct char_data *ch, int ch_class, int spellnum, bool loa
         return FALSE;
       break;
     case CLASS_SORCERER:
-      /* Sorcerers use spell slots as their known spell limit */
-      if (compute_slots_by_circle(ch, ch_class, circle) -
+      /* Spell selections use the known-spell progression, not casting slots. */
+      if (compute_sorcerer_known_limit(ch, circle) -
               count_known_spells_by_circle(ch, ch_class, circle) <=
           0)
         return FALSE;
@@ -1527,7 +1527,7 @@ int count_circle_collection(struct char_data *ch, int class, int circle)
  * - Other classes: Simple count of spells at that circle
  *
  * Each spontaneous caster class has different limits:
- * - Sorcerers: Use spell slots as their limit
+ * - Sorcerers: Use compute_sorcerer_known_limit() for their selection limit
  * - Bards/Summoners/Inquisitors: Use specific "spells known" tables
  *
  * Returns: Number of non-bonus spells known at that circle
@@ -1545,6 +1545,10 @@ int count_known_spells_by_circle(struct char_data *ch, int class, int circle)
   for (; current; current = next)
   {
     next = current->next;
+
+    /* Ignore stale selections of racial signature abilities from older builds. */
+    if (current->spell == SPELL_AURAK_ENERGY_RAY || current->spell == SPELL_AURAK_BREATH)
+      continue;
 
     switch (class)
     {
@@ -2945,6 +2949,21 @@ bool is_min_level_for_spell(struct char_data *ch, int class, int spellnum)
   return TRUE;
 }
 
+/* Sorcerer spell selections and casting slots use separate progression tables.
+ * Preserve ability-score and bonus-spell additions to the selection limit. */
+int compute_sorcerer_known_limit(struct char_data *ch, int circle)
+{
+  int level, limit;
+
+  if (!ch || circle < 1 || circle > TOP_CIRCLE ||
+      get_class_highest_circle(ch, CLASS_SORCERER) < circle)
+    return 0;
+
+  level = CLASS_LEVEL(ch, CLASS_SORCERER) + BONUS_CASTER_LEVEL(ch, CLASS_SORCERER);
+  limit = compute_slots_by_circle(ch, CLASS_SORCERER, circle);
+  return MAX(0, limit - sorcerer_slots[level][circle] + sorcerer_known[level][circle]);
+}
+
 /* TODO: convert to feat system, construction directly below this
      function */
 /* in: character, respective class to check
@@ -2995,7 +3014,7 @@ int compute_slots_by_circle(struct char_data *ch, int class, int circle)
     break;
   case CLASS_SORCERER:
     spell_slots += spell_bonus[GET_CHA(ch)][circle];
-    spell_slots += sorcerer_known[class_level][circle];
+    spell_slots += sorcerer_slots[class_level][circle];
     if (circle != 0 && HAS_REAL_FEAT(ch, FEAT_NEW_ARCANA))
     {
       for (i = 0; i < 4; i++)
@@ -4442,6 +4461,13 @@ int compute_spells_prep_time(struct char_data *ch, int class, int circle, int do
   if (class == CLASS_WIZARD && !IS_NPC(ch))
   {
     int rank = get_perk_rank(ch, PERK_WIZARD_ARCANE_AUGMENTATION, CLASS_WIZARD);
+    prep_time *= (100 - 5 * MIN(5, MAX(0, rank))) / 100.0f;
+  }
+
+  /* The copied sorcerer perk reduces spontaneous slot recovery instead. */
+  if (class == CLASS_SORCERER && !IS_NPC(ch))
+  {
+    int rank = get_perk_rank(ch, PERK_SORCERER_ARCANE_AUGMENTATION, CLASS_SORCERER);
     prep_time *= (100 - 5 * MIN(5, MAX(0, rank))) / 100.0f;
   }
 

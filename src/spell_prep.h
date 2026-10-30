@@ -790,6 +790,9 @@ bool is_min_level_for_spell(struct char_data *ch, int class, int spellnum);
      */
 int compute_slots_by_circle(struct char_data *ch, int class, int circle);
 
+/* Maximum chosen sorcerer spells; excludes automatic bloodline spells. */
+int compute_sorcerer_known_limit(struct char_data *ch, int circle);
+
 /**
      * compute_powers_circle - Calculate psionic power circle
      * @class: Must be CLASS_PSIONICIST

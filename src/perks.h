@@ -21,6 +21,10 @@ int class_to_perk_class(int class_type, int which_perk);
 /* Perk definition functions */
 void define_fighter_perks(void);
 void define_wizard_perks(void);
+void define_sorcerer_perks(void);
+void migrate_sorcerer_perks(struct char_data *ch);
+bool has_arcane_perk(struct char_data *ch, int wizard_perk_id);
+int get_arcane_perk_ranks(struct char_data *ch, int wizard_perk_id);
 void define_cleric_perks(void);
 void define_rogue_perks(void);
 void define_ranger_perks(void);
