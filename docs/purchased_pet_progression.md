@@ -6,7 +6,8 @@ Permanent purchased pets, animal companions, familiars, class mounts, dragon mou
 
 Stored pets leave no corpse and generate no random loot. The pet's identity, level, XP, training investments, base combat stats, worn gear, inventory, container contents and held gold are saved before the live body is removed. Equipment records retain wear positions. Companion saves run in a database transaction; failed nested-item saves abort the transaction. If death storage fails, the pet is kept alive with its gear rather than being lost.
 
-- `pets` lists active followers, purchased-pet XP and companion training progress.
+- `pets` lists active followers, purchased-pet XP and companion training progress. It also shows the XP remaining to the next level or training rank.
+- `group` shows owners the correct advancement TNL for their companions: `7500 TNL` for purchased-pet levels or `4800 Training TNL` for companion training. Capped companions show `Level cap` or `Training cap`. Temporary summons and companions owned by another group member show `-- TNL`.
 - `pets fallen` lists stored pet IDs and revival prices.
 - `pets revive <ID>` costs 500 carried gold per pet level and returns the same pet at full health with its equipment and inventory restored. Requires follower space and being outside combat.
 - `pets discard <ID> CONFIRM` returns stored worn gear and inventory to the owner's inventory, and returns held gold and permanently deletes that pet, including XP and training. No gold fee. Requires enough inventory capacity and being outside combat.

@@ -1,0 +1,217 @@
+-- Install or refresh the player-facing INFUSE command help.
+-- Matches lib/text/help/infuse.hlp; safe to apply more than once.
+START TRANSACTION;
+INSERT INTO help_entries(tag, category, entry, min_level, max_level, auto_generated)
+VALUES ('infuse', 'general', REPLACE('INFUSE - Dragonmetal Awakening
+
+Use infuse to awaken equipment, choose its legendary bonuses, and activate
+its powers. You must be level 30 to purchase an awakening or upgrade.
+
+Quick start:
+  1. Type infuse materials to check your infusion XP and materials.
+  2. Type infuse next <item> to see the next step and its exact cost.
+  3. Visit an infusion smith, out of combat, to request the suggested change.
+  4. Review the quote, then type infuse confirm <quote-id> to accept it.
+     Type infuse cancel to discard it without paying.
+  5. Repeat infuse next <item> for the next rank or bonus selection.
+
+Quote names containing spaces, for example: infuse next "silver greatsword".
+Use infuse inspect <item> to review the item and infuse loadout to review
+which equipped bonuses and powers are active. Infuse with no arguments
+shows a short start prompt; infuse help lists every command.
+
+Dragonmetal Awakening permanently binds level 20-30 equipment to its level
+30 owner. Infusion XP comes from eligible normal XP awards at level 30.
+Materials are personal; spending them does not restore daily allowances.
+
+Start anywhere:
+  infuse inspect <item> [primary|supporting]
+  infuse materials
+  infuse paths <item> [primary|supporting]
+  infuse choices <item> [primary|supporting]
+  infuse loadout
+  infuse use <power-ID|quoted name> [target]
+  infuse track
+
+For changes, visit a dragonmetal infusion smith while out of combat:
+  infuse awaken <item> [primary] <path>
+  infuse awaken <item> supporting <assault|guard|focus> <path>
+  infuse advance <item> [primary|supporting]
+
+Each channel has five independently purchased ranks. A two-handed weapon
+must actually be wielded with both hands and have no occupied offhand to
+configure its supporting channel. Advancing one channel leaves the other
+unchanged. Supporting assault uses weapon choices, guard shield choices,
+and focus held choices. Each channel pays the full normal rank costs.
+
+Choose bonuses after buying the required rank:
+  infuse select <item> <channel> foundation <Fxx> [subtype]
+  infuse select <item> <channel> technique <Txx>
+  infuse select <item> <channel> signature <Sxx>
+  infuse modify <item> <channel> technique|signature <modifier>
+
+Foundation unlocks at I, technique at II, signature at III, modifier at IV.
+V improves existing powers. First choices remain free across logout;
+changing an existing choice has a reshape cost. Use choices for stable
+IDs, descriptions and availability. F07 subtypes: str dex con int wis cha.
+F08 uses a listed trained skill number or quoted skill name. F12 subtypes:
+acid cold electricity fire sonic. F11 requires a spell/psionic class.
+Modifiers are Enduring, Ready, and "Distant aid"; compatibility varies.
+
+  infuse reshape <item> <channel> path <path>
+  infuse reshape <item> supporting family <assault|guard|focus>
+
+A path/family change clears choices that become invalid, allowing free
+replacements for those choices. Other choices remain. Binding cannot be
+transferred, refunded, or moved to a replacement item.
+
+Manage saved selections without a fee:
+  infuse prioritize <item> <channel> <position>
+  infuse attune <item> <channel> technique|signature
+  infuse unattune <item> <channel> technique|signature
+
+Priorities start at 1. The passive budget is 12 points. Only three major
+powers may be attuned. Unequipping one will not automatically enable a
+fourth. Loadout displays saved selections and character-wide cooldowns.
+
+Exchange personal materials:
+  infuse exchange essence <from> <to> <quantity>
+  infuse exchange catalyst <quantity>
+
+Each output essence costs three of another essence. One catalyst costs
+100 fragments and 20 essences. Outputs count against daily acquisition
+limits (200 fragments, 40 essences, 2 catalysts), shared with boss rewards.
+Materials shows remaining allowances and the next midnight UTC reset.
+
+Every change first displays an exact quote; nothing is spent until:
+  infuse confirm <quote-id>
+  infuse cancel
+
+Quotes last 60 seconds and invalidate if your inventory, equipment, gold,
+ledger, item, smith or other required conditions change. To choose the
+exact essence mix for a pending item purchase/change, specify six counts:
+  infuse mix <draconic> <martial> <arcane> <spiritual> <primal> <shadow>
+This replaces the quote ID. Counts must total the quoted cost and include
+the matching minimum (half for ranks; all 200 for path/family reshapes).
+Otherwise the quote spends the most abundant available essences first.
+
+Use unique keywords, quoted multiword names, or 2.sword to disambiguate.
+Example: infuse awaken "silver greatsword" primary Dragonbane
+
+Awakened items cannot be traded, sold, donated, dropped, sacrificed,
+salvaged, disenchanted or reforged. Bags and sheaths containing awakened
+items have the same restrictions. You may keep them in your carried bags
+or your personal housing chest. Only their owner may recover them, including
+from a corpse. Normal storage preserves the awakening on the original item.
+
+Inspect and loadout explain equipped active/dormant eligibility. A weapon
+on your back does not activate its weapon channel. A supporting channel
+requires an actual two-handed grip; equipping a shield or held item removes
+that eligibility. Losing a selected channel never enables a fourth major.
+Combat also locks the active passive allocation: removing gear does not
+activate previously dormant passives until combat ends.
+
+Foundation bonuses now affect gameplay while their channel and budget are
+valid. Values do not increase with rank. Loadout shows contribution values
+and normal-cap/typed-bonus supersession. Existing stronger deflection AC
+supersedes Warding; Aptitude and the pool/save bonuses obey ordinary caps.
+
+Raising maximum HP, movement or spell/psionic points does not fill them.
+Removing a bonus may clamp excess current points; re-equipping cannot
+restore them. Vitality and Endurance allow two copies under their stated
+ceilings. Resource-less characters cannot gain a resource pool from Reservoir.
+Elemental weave never raises its resistance above 75 percent. Expertise
+requires real trained roll skills and never grants skill ranks or crafting
+progress; language counters and unused/custom non-roll IDs are excluded.
+
+Implementation stage: purchases, ownership, loadout budgets and all sixteen
+foundations, all eighteen techniques (T01-T18) and all thirteen signatures
+(S01-S13) are implemented. True-lance powers require a registered dragonlance.
+Release controls may independently disable earning materials, purchases, or
+major-power activation; inspection remains available while those controls are
+off. An ordinary lance is not a registered dragonlance.
+Use infuse choices and inspect for exact rank/modifier values. Confirmation
+quotes show the modifier target and resulting values before payment.
+Rank IV has one modifier on either technique or signature, never both.
+Enduring adds six seconds to an eligible duration or preparation; it does not
+extend Renewing touch or Grounding lance''s six-second control. Recover footing
+can use Enduring only at rank V. Ready rounds its 15% individual cooldown
+reduction up to whole seconds; global/family timers stay unchanged. Distant aid
+substitutes one eligible ally only for supported self powers.
+Rank V upgrades existing values, without extra properties or attunement slots.
+Changing a modifier, path or family preserves cooldowns already running.
+Path/family-invalidated selections and modifiers may be replaced free once.
+Use infuse track to query your active Pursuit mark without activating again.
+
+Enabled powers require an equipped, eligible, attuned source. Friendly
+powers default to self; hostile powers default to your current opponent.
+Allied targets must be visible, willing group members in the same room.
+Invalid targets and unmet prerequisites cost nothing. A valid use that is
+resisted still spends its cooldown. Activation takes six seconds of recovery
+and shares a six-second legendary cooldown. Protection and Restorative
+families also share 60 seconds; Control shares 30 seconds.
+
+Damage, prevention, effective healing and resource savings have rolling
+limits. Logout, re-equipping and server restart do not reset a player''s
+cooldowns or spent allowance. Budget allowances are durable across crashes. An unavailable or damaged
+budget journal blocks benefits instead of resetting your allowance.
+Prepared effects end on source invalidation,
+death or disconnect and are never restored on login.
+
+Recover footing requires a genuine recorded knockdown, not voluntary sitting,
+and cannot bypass recovery, pinning, paralysis or stun. Resolve supports timed
+Fear/Dragonfear; permanent, scripted and explicitly locked conditions remain.
+Clean wound removes one supported nonmagical bleed, oldest first.
+
+Failed weave, Focused reserve and Runic economy require actual spell/psionic point expenditure.
+Prepared spell slots, scrolls, wands, free casts and cancelled casts do not
+provide legendary resource discounts/refunds. Refunds require a concentration
+failure before any effect; a resisted spell does not qualify. Trail stance
+uses the strongest legendary walking reduction and never refunds mounted
+movement. Veiled retreat improves Stealth without granting invisibility.
+
+Group signatures select you first, then up to two eligible allies in group-list
+order. Formation ward requires a group formation. Sure passage remains active
+when a recipient changes rooms, but ends when they leave your group. Walking
+reductions use the strongest effect and do not stack with each other.
+
+Renewing touch heals immediately, then at 6, 12 and 18 seconds. Leaving the
+room cancels later healing. Shared focus requires another group member; its
+temporary HP is a separate reserve, shown with infuse loadout. It expires with
+the effect and shares the legendary healing allowance. It never fills real HP.
+
+Hunter''s opening requires a designated enemy. Rallying strike requires a
+designated ally. Their next qualifying attack consumes the preparation even
+if it misses. Rallying strike''s ally must still be visible, grouped and present
+when the hit lands. Decoy stance consumes a charge on each ordinary weapon
+attempt against its recipient, including misses; ordinary dodge rules apply.
+
+Grounding lance needs a hit with the actual registered source lance against a
+dragon. Its Fortitude DC is always 25; Enduring extends preparation, not the
+six-second movement restriction. Registered hard-control-immune dragons take
+the limited damage fallback instead. It never blocks attacks, spells, staff
+teleports or scripted room transitions. Rider''s defiance requires your own
+living dragon mount; dismounting ends its protection for both rider and mount.
+Dragonward affects one actual dragon-breath packet, not an entire multi-packet
+breath attack. Both lance channels still require their independent rank costs.
+
+See also: EQUIPMENT, CRAFT, EXPERIENCE
+
+Additional item passive:
+  infuse select <item> primary passive <Pxx>
+  infuse choices <item> primary
+Each item has one extra passive alongside its foundation. Choices differ by
+wear slot and improve with legendary rank. First choice is free; replacements
+cost 20,000 gold and 100 fragments. Confirm the smith''s quote. A two-handed weapon
+inherits the same selection on its supporting track, scaled by that track''s
+independently paid rank. Outfit ceilings apply; no free pools or skill access.
+', CHAR(10), CONCAT(CHAR(13), CHAR(10))), 0, 1000, FALSE)
+ON DUPLICATE KEY UPDATE category=VALUES(category), entry=VALUES(entry),
+  min_level=VALUES(min_level), max_level=VALUES(max_level), auto_generated=VALUES(auto_generated);
+
+INSERT IGNORE INTO help_keywords(help_tag, keyword) VALUES
+('infuse', 'infuse'),
+('infuse', 'infusion'),
+('infuse', 'dragonmetal'),
+('infuse', 'awakening');
+COMMIT;

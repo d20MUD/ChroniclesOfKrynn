@@ -373,7 +373,7 @@ display_available_slots(ch, class)     // Shows remaining slots
 - Located in arrays like `wizard_slots[][]`, `cleric_slots[][]`, etc.
 - Sorcerer casting slots use `sorcerer_slots[][]`: first-circle base slots increase from 3 at level 1 to 4 at level 2, before ability-score bonuses.
 - Sorcerer spell selections use `compute_sorcerer_known_limit()` and `sorcerer_known[][]`, independently of casting slots. The existing ability-score and bonus-spell additions to selections remain in place.
-- Bloodline spells are automatically known, marked `B` in sorcerer study menus, and excluded from the selected-spell count. A character with three selected spells plus Mage Armor from the draconic bloodline therefore shows three selections.
+- Bloodline spells are automatically known, marked `+B` in sorcerer study menus, and excluded from the selected-spell count. A newly chosen bloodline takes effect during study before the level-up is saved. A character with three selected spells plus Mage Armor from the draconic bloodline therefore shows three selections.
 - Aurak racial magic does not override spells in the character's known or prepared class repertoire. Those spells use normal class resources even while recovering; racial-only casting does not consume a class slot.
 - Format: `[level][circle]` = number of slots/known
 - Bonus slots from high ability scores in `spell_bonus[][]`

@@ -2359,13 +2359,25 @@ bool is_sorc_bloodline_spell(int bloodline, int spellnum)
  */
 int get_sorc_bloodline(struct char_data *ch)
 {
-  if (HAS_FEAT(ch, FEAT_SORCERER_BLOODLINE_DRACONIC))
+  struct level_data *pending;
+
+  if (!ch)
+    return SORC_BLOODLINE_NONE;
+
+  /* Study stores a newly chosen bloodline here until its final save. */
+  pending = IS_NPC(ch) ? NULL : LEVELUP(ch);
+
+  if (HAS_FEAT(ch, FEAT_SORCERER_BLOODLINE_DRACONIC) ||
+      (pending && pending->feats[FEAT_SORCERER_BLOODLINE_DRACONIC] > 0))
     return SORC_BLOODLINE_DRACONIC;
-  if (HAS_FEAT(ch, FEAT_SORCERER_BLOODLINE_ARCANE))
+  if (HAS_FEAT(ch, FEAT_SORCERER_BLOODLINE_ARCANE) ||
+      (pending && pending->feats[FEAT_SORCERER_BLOODLINE_ARCANE] > 0))
     return SORC_BLOODLINE_ARCANE;
-  if (HAS_FEAT(ch, FEAT_SORCERER_BLOODLINE_FEY))
+  if (HAS_FEAT(ch, FEAT_SORCERER_BLOODLINE_FEY) ||
+      (pending && pending->feats[FEAT_SORCERER_BLOODLINE_FEY] > 0))
     return SORC_BLOODLINE_FEY;
-  if (HAS_FEAT(ch, FEAT_SORCERER_BLOODLINE_UNDEAD))
+  if (HAS_FEAT(ch, FEAT_SORCERER_BLOODLINE_UNDEAD) ||
+      (pending && pending->feats[FEAT_SORCERER_BLOODLINE_UNDEAD] > 0))
     return SORC_BLOODLINE_UNDEAD;
 
   return SORC_BLOODLINE_NONE;

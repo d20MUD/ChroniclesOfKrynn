@@ -86,6 +86,32 @@ int main(void) {
   assert(compute_slots_by_circle(&ch, CLASS_SORCERER, 2) == 0);
   assert(compute_sorcerer_known_limit(&ch, 2) == 0);
   assert(compute_sorcerer_known_limit(&ch, 0) == 0);
+  /* Newly chosen study bloodlines grant knowledge before saving the level-up. */
+  struct level_data pending = {0};
+  int bloodline_feats[] = {FEAT_SORCERER_BLOODLINE_DRACONIC, FEAT_SORCERER_BLOODLINE_ARCANE,
+                          FEAT_SORCERER_BLOODLINE_FEY, FEAT_SORCERER_BLOODLINE_UNDEAD};
+  int bloodline_spells[] = {SPELL_MAGE_ARMOR, SPELL_IDENTIFY, SPELL_CHARM, SPELL_CHILL_TOUCH};
+  ps.levelup = &pending;
+  assert(get_sorc_bloodline(&ch) == SORC_BLOODLINE_NONE);
+  for (int i = 0; i < 4; i++) {
+    pending.feats[bloodline_feats[i]] = 1;
+    assert(is_a_known_spell(&ch, CLASS_SORCERER, bloodline_spells[i]));
+    assert(count_known_spells_by_circle(&ch, CLASS_SORCERER, 1) == 0);
+    assert(compute_sorcerer_known_limit(&ch, 1) == first_known);
+    assert(KNOWN_SPELLS(&ch, CLASS_SORCERER) == NULL);
+    /* A spell selected before the bloodline was chosen stops using a selection. */
+    struct known_spell_data previously_selected = {0};
+    previously_selected.spell = bloodline_spells[i];
+    KNOWN_SPELLS(&ch, CLASS_SORCERER) = &previously_selected;
+    assert(count_known_spells_by_circle(&ch, CLASS_SORCERER, 1) == 0);
+    KNOWN_SPELLS(&ch, CLASS_SORCERER) = NULL;
+    pending.feats[bloodline_feats[i]] = 0;
+    assert(!is_a_known_spell(&ch, CLASS_SORCERER, bloodline_spells[i]));
+    SET_FEAT(&ch, bloodline_feats[i], 1);
+    assert(is_a_known_spell(&ch, CLASS_SORCERER, bloodline_spells[i]));
+    SET_FEAT(&ch, bloodline_feats[i], 0);
+  }
+  ps.levelup = NULL;
   /* Reproduce screenshot: four marked known spells include free Mage Armor. */
   SET_FEAT(&ch, FEAT_SORCERER_BLOODLINE_DRACONIC, 1);
   int ids[] = {SPELL_MAGIC_MISSILE, SPELL_MAGE_ARMOR, SPELL_NEGATIVE_ENERGY_RAY,

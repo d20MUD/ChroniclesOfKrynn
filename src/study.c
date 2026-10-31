@@ -1281,7 +1281,7 @@ void sorc_study_menu(struct descriptor_data *d, int circle)
                               DOMAIN_UNDEFINED) == circle)
     {
       if (is_sorc_bloodline_spell(get_sorc_bloodline(d->character), counter))
-        write_to_output(d, "%s%3d%s)%sB%-20.20s %s", grn, counter, nrm, cyn,
+        write_to_output(d, "%s%3d%s)%s+B%-19.19s %s", grn, counter, nrm, cyn,
                         spell_info[counter].name, !(++columns % 3) ? "\r\n" : "");
       else if (is_a_known_spell(d->character, CLASS_SORCERER, counter))
         write_to_output(d, "%s%3d%s)%s+%-20.20s %s", grn, counter, nrm, mgn,
@@ -1299,7 +1299,7 @@ void sorc_study_menu(struct descriptor_data *d, int circle)
   write_to_output(
       d,
       "\tCType the spell number followed by 'help' to see help on that spell.  Eg. 81 help\r\n\tn");
-  write_to_output(d, "%s+ = selected spell; B = free bloodline spell (does not count toward selections).\r\n", nrm);
+  write_to_output(d, "%s+ = selected spell; +B = automatically known bloodline spell (free).\r\n", nrm);
   write_to_output(d,
                   "%sEnter spell choice, to add or remove "
                   "(Q to exit to main menu) : ",

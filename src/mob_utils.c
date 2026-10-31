@@ -128,6 +128,33 @@ bool is_persistent_pet(struct char_data *pet)
          (pet->mob_specials.purchased_pet || companion_training_kind(pet) > 0);
 }
 
+/* Report advancement from the same XP banks used by the award functions.
+ * NPC kill-bounty XP is unrelated to companion advancement. */
+bool format_companion_tnl(struct char_data *owner, struct char_data *pet, char *buf, size_t size)
+{
+  if (!buf || !size)
+    return FALSE;
+  *buf = '\0';
+  if (!owner || IS_NPC(owner) || !pet || pet->master != owner || !is_persistent_pet(pet))
+    return FALSE;
+
+  if (pet->mob_specials.purchased_pet)
+  {
+    if (GET_LEVEL(pet) >= MIN(GET_LEVEL(owner), PURCHASED_PET_LEVEL_CAP))
+      snprintf(buf, size, "Level cap");
+    else
+      snprintf(buf, size, "%d TNL",
+               MAX(0, purchased_pet_level_cost(pet) - MAX(0, pet->mob_specials.pet_experience)));
+  }
+  else if (pet->mob_specials.pet_training_rank >= PET_TRAINING_RANK_CAP)
+    snprintf(buf, size, "Training cap");
+  else
+    snprintf(buf, size, "%d Training TNL",
+             MAX(0, 2000 * (pet->mob_specials.pet_training_rank + 1) -
+                        MAX(0, pet->mob_specials.pet_training_experience)));
+  return TRUE;
+}
+
 /* The main eidolon is a continuing bond, even when its summoned body is gone.
  * Temporary reflections never read or write that bond's training. */
 void remember_eidolon_training(struct char_data *pet)
@@ -249,9 +276,11 @@ void show_companion_training(struct char_data *owner, struct char_data *pet)
                  GET_NAME(pet), pet->mob_specials.pet_training_rank, PET_TRAINING_RANK_CAP,
                  companion_unspent_points(pet));
   else
-    send_to_char(owner, "%s: training rank %d/%d, XP %d/%d, unspent points %d.\r\n",
+    send_to_char(owner, "%s: training rank %d/%d, XP %d/%d (%d TNL), unspent points %d.\r\n",
                  GET_NAME(pet), pet->mob_specials.pet_training_rank, PET_TRAINING_RANK_CAP,
                  pet->mob_specials.pet_training_experience, 2000 * (pet->mob_specials.pet_training_rank + 1),
+                 MAX(0, 2000 * (pet->mob_specials.pet_training_rank + 1) -
+                            MAX(0, pet->mob_specials.pet_training_experience)),
                  companion_unspent_points(pet));
   send_to_char(owner, "  Skills (maximum 5 each): health %d, attack %d, damage %d, armor %d, saves %d.\r\n",
                pet->mob_specials.pet_training_skills[0], pet->mob_specials.pet_training_skills[1],

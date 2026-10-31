@@ -1,8 +1,22 @@
 INFUSE INFUSION DRAGONMETAL AWAKENING
 
-Start with infuse next <item> [primary|supporting]. It shows the immediate next
-choice and exact cost. Repeat it after confirming each step. Infuse with no
-arguments shows the short start prompt; infuse help lists every command.
+INFUSE - Dragonmetal Awakening
+
+Use infuse to awaken equipment, choose its legendary bonuses, and activate
+its powers. You must be level 30 to purchase an awakening or upgrade.
+
+Quick start:
+  1. Type infuse materials to check your infusion XP and materials.
+  2. Type infuse next <item> to see the next step and its exact cost.
+  3. Visit an infusion smith, out of combat, to request the suggested change.
+  4. Review the quote, then type infuse confirm <quote-id> to accept it.
+     Type infuse cancel to discard it without paying.
+  5. Repeat infuse next <item> for the next rank or bonus selection.
+
+Quote names containing spaces, for example: infuse next "silver greatsword".
+Use infuse inspect <item> to review the item and infuse loadout to review
+which equipped bonuses and powers are active. Infuse with no arguments
+shows a short start prompt; infuse help lists every command.
 
 Dragonmetal Awakening permanently binds level 20-30 equipment to its level
 30 owner. Infusion XP comes from eligible normal XP awards at level 30.

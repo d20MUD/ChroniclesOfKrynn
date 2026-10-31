@@ -11089,11 +11089,12 @@ ACMD(do_pets)
       if (IS_PET(pet))
         show_companion_training(ch, pet);
       if (IS_PET(pet) && pet->mob_specials.purchased_pet)
-        send_to_char(ch, "%s: level %d, pet XP %d/%d%s.\r\n", PERS(pet, ch), GET_LEVEL(pet),
-                     pet->mob_specials.pet_experience, purchased_pet_level_cost(pet),
-                     GET_LEVEL(pet) >= MIN(GET_LEVEL(ch), PURCHASED_PET_LEVEL_CAP)
-                         ? " (level cap reached)"
-                         : "");
+      {
+        char tnl[64];
+        if (format_companion_tnl(ch, pet, tnl, sizeof(tnl)))
+          send_to_char(ch, "%s: level %d, pet XP %d/%d, %s.\r\n", PERS(pet, ch), GET_LEVEL(pet),
+                       pet->mob_specials.pet_experience, purchased_pet_level_cost(pet), tnl);
+      }
     }
   }
 }

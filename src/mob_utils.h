@@ -29,6 +29,7 @@ void train_companion_skill(struct char_data *owner, struct char_data *pet, const
 void show_companion_training(struct char_data *owner, struct char_data *pet);
 void discard_fallen_pet(struct char_data *ch, const char *id_arg);
 int purchased_pet_level_cost(struct char_data *pet);
+bool format_companion_tnl(struct char_data *owner, struct char_data *pet, char *buf, size_t size);
 void purchased_pet_revival(struct char_data *ch, const char *id_arg);
 bool archive_fallen_pet(struct char_data *pet);
 void award_purchased_pet_exp(struct char_data *owner, struct char_data *victim, int reward);

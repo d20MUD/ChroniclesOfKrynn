@@ -7324,6 +7324,7 @@ static void print_group(struct char_data *ch)
 {
   struct char_data *k = NULL;
   const char *hp_clr = NULL, *psp_clr = NULL, *mv_clr = NULL;
+  char tnl[64];
   float hp_pct = 0.0, psp_pct = 0.0, mv_pct = 0.0;
 
   send_to_char(ch, "Your group consists of:\r\n");
@@ -7392,14 +7393,20 @@ static void print_group(struct char_data *ch)
     else
       psp_clr = CBFRED(ch, C_NRM);
 
+    if (!IS_NPC(k))
+      snprintf(tnl, sizeof(tnl), "%ld TNL",
+               (long)MAX(0, level_exp(k, GET_LEVEL(k) + 1) - GET_EXP(k)));
+    else if (!format_companion_tnl(ch, k, tnl, sizeof(tnl)))
+      snprintf(tnl, sizeof(tnl), "-- TNL");
+
     send_to_char(
-        ch, "%s%-*s: %s [%s] [%s%4d\tn/%-4d]H [%s%4d\tn/%-4d]P [%s%4d\tn/%-4d]V [%ld TNL]%s\r\n",
+        ch, "%s%-*s: %s [%s] [%s%4d\tn/%-4d]H [%s%4d\tn/%-4d]P [%s%4d\tn/%-4d]V [%s]%s\r\n",
         GROUP_LEADER(GROUP(ch)) == k ? "\tG*\tn" : " ", count_color_chars(PERS(k, ch)) + 30,
         PERS(k, ch), IN_ROOM(ch) == IN_ROOM(k) ? "\tYInRoom\tn" : "\tRAbsent\tn",
         formation_row_name(get_formation_row(k)), hp_clr,
         GET_HIT(k), GET_MAX_HIT(k), psp_clr, (GET_PSIONIC_LEVEL(k) <= 0) ? 0 : GET_PSP(k),
         (GET_PSIONIC_LEVEL(k) <= 0) ? 0 : GET_MAX_PSP(k), mv_clr, GET_MOVE(k), GET_MAX_MOVE(k),
-        (long)MAX(0, level_exp(k, GET_LEVEL(k) + 1) - GET_EXP(k)), CCNRM(ch, C_NRM));
+        tnl, CCNRM(ch, C_NRM));
   }
 }
 
