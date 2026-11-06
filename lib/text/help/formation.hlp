@@ -28,10 +28,12 @@ ROWS AND ATTACKS
   Middle : Reach weapons and ranged attacks.
   Back   : Ranged attacks only.
 
-Front-row ranged attacks take -4 without Point Blank Shot and another -4
-without Precise Shot. Improved Precise Shot also removes the second penalty.
-These penalties stack: lacking both feats gives -8. You can still shoot
-while being attacked in melee. Normal feat bonuses still apply.
+Point-Blank Shot grants +1 to ranged attack and damage rolls within 30 feet.
+Lacking the feat, standing in a front or middle row, or tanking does not
+impose a Point-Blank Shot penalty.
+Shooting a mob that is tanked by another player takes -4 without Precise
+Shot. Improved Precise Shot also removes that penalty and ignores partial
+concealment; total concealment still applies. Ranged attacks stay in one room.
 
 Reach must come from the weapon used for that attack. A reach weapon in
 one hand does not let an ordinary weapon in the other hand attack from

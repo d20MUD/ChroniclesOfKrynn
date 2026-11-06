@@ -430,6 +430,10 @@ int save_rooms(zone_rnum rzone)
 
       fprintf(sf, convert_from_tabs(buf2), 0);
 
+      /* Automatic sizes need no record, preserving existing world files. */
+      if (room->room_size > 0)
+        fprintf(sf, "R\n%d\n", room->room_size);
+
       /* Now you write out the exits for the room. */
       for (j = 0; j < DIR_COUNT; j++)
       {

@@ -670,7 +670,7 @@ CHECK_TABLE_SIZE(instrument_names, MAX_INSTRUMENTS + 1);
 // // CHECK_TABLE_SIZE(spec_armor_type, NUM_SPEC_ARMOR_TYPES + 1);
 
 /* ammo types */
-const char *ammo_types[] = {"Undefined", "arrow", "bolt", "sling bullet", "dart", "\n"};
+const char *ammo_types[] = {"Undefined", "arrow", "bolt", "sling bullet", "dart", "thrown weapon", "\n"};
 CHECK_TABLE_SIZE(ammo_types, NUM_AMMO_TYPES + 1);
 
 /* weapon head types */
@@ -1210,6 +1210,7 @@ const char *action_bits[] = {"<spec>", // 0
                              "Summon-Solar",
                              "Flightless",
                              "Legendary-Boss",
+                             "Ranged-Attack",
                              "\n"};
 CHECK_TABLE_SIZE(action_bits, NUM_MOB_FLAGS + 1);
 

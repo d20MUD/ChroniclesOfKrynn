@@ -411,3 +411,7 @@ unittests/CuTest/schedule_tests
 unittests/CuTest/test_waypoint_cache
 unittests/CuTest/vessel_tests
 unittests/CuTest/vessel_stress_test
+
+# Authored ranged combat help
+!lib/text/help/ranged_combat.hlp
+!lib/text/help/build_ranged.hlp

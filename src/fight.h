@@ -101,6 +101,17 @@ bool set_fighting(struct char_data *ch, struct char_data *victim);
 int skill_message(int dam, struct char_data *ch, struct char_data *vict, int attacktype,
                   int dualwield);
 void stop_fighting(struct char_data *ch);
+int point_blank_shot_bonus(struct char_data *ch, struct char_data *victim);
+int deadly_aim_step(struct char_data *ch);
+int ranged_range_penalty(struct char_data *ch, struct char_data *victim, struct obj_data *weapon);
+int ranged_concealment(struct char_data *ch, struct char_data *victim, int attack_type);
+int combat_distance(struct char_data *ch, struct char_data *victim);
+int combat_melee_range(struct char_data *ch, struct obj_data *weapon);
+struct obj_data *get_wielded(struct char_data *ch, int attack_type);
+bool combat_attack_in_range(struct char_data *ch, struct char_data *victim, int attack_type,
+                            struct obj_data *weapon);
+int advance_combat_distance(struct char_data *ch, struct char_data *victim, int desired);
+void clear_combat_distances(struct char_data *ch, bool departing);
 bool is_tanking(struct char_data *ch);
 void compute_barehand_dam_dice(struct char_data *ch, int *diceOne, int *diceTwo);
 int compute_hit_damage(struct char_data *ch, struct char_data *victim, int w_type, int diceroll,
@@ -114,6 +125,9 @@ int is_dual_wielding(struct char_data *ch);
 int get_initiative_modifier(struct char_data *ch);
 int get_monk_stunning_fist_dc(struct char_data *ch);
 
+
+/* Clear transient shot references before an object is freed. */
+void forget_ranged_projectile(struct obj_data *obj);
 
 /* Global variables */
 #ifndef __FIGHT_C__

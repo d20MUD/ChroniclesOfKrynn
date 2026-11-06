@@ -1452,6 +1452,9 @@ static void oedit_disp_val6_menu(struct descriptor_data *d)
   OLC_MODE(d) = OEDIT_VALUE_6;
   switch (GET_OBJ_TYPE(OLC_OBJ(d)))
   {
+  case ITEM_MISSILE:
+    write_to_output(d, "Minimum ammunition on load (1-65000): ");
+    break;
   case ITEM_TREASURE_CHEST:
     write_to_output(d, "Trap Type (0 for no trap):\r\n");
     column_list(d->character, 0, trap_effects, NUM_TRAP_SPECIAL_EFFECTS, TRUE);
@@ -1476,6 +1479,9 @@ static void oedit_disp_val7_menu(struct descriptor_data *d)
   OLC_MODE(d) = OEDIT_VALUE_7;
   switch (GET_OBJ_TYPE(OLC_OBJ(d)))
   {
+  case ITEM_MISSILE:
+    write_to_output(d, "Maximum ammunition on load (at least minimum): ");
+    break;
   case ITEM_GEAR_OUTFIT:
     get_char_colors(d->character);
     clear_screen(d);
@@ -1496,6 +1502,9 @@ static void oedit_disp_val8_menu(struct descriptor_data *d)
   OLC_MODE(d) = OEDIT_VALUE_8;
   switch (GET_OBJ_TYPE(OLC_OBJ(d)))
   {
+  case ITEM_MISSILE:
+    write_to_output(d, "Current ammunition (0 to maximum): ");
+    break;
   case ITEM_GEAR_OUTFIT:
     write_to_output(d, "HEAD apply modifier amount: ");
     break;
@@ -1511,6 +1520,10 @@ static void oedit_disp_val9_menu(struct descriptor_data *d)
   OLC_MODE(d) = OEDIT_VALUE_9;
   switch (GET_OBJ_TYPE(OLC_OBJ(d)))
   {
+  case ITEM_MISSILE:
+    column_list(d->character, 0, damtypes, NUM_DAM_TYPES, TRUE);
+    write_to_output(d, "Bonus damage type (0 none): ");
+    break;
   case ITEM_GEAR_OUTFIT:
     for (i = 0; i < NUM_BONUS_TYPES; i++)
     {
@@ -1531,6 +1544,9 @@ static void oedit_disp_val10_menu(struct descriptor_data *d)
   OLC_MODE(d) = OEDIT_VALUE_10;
   switch (GET_OBJ_TYPE(OLC_OBJ(d)))
   {
+  case ITEM_MISSILE:
+    write_to_output(d, "Bonus damage die size (0 none, e.g. 6 for +1d6): ");
+    break;
   case ITEM_GEAR_OUTFIT:
     get_char_colors(d->character);
     clear_screen(d);
@@ -1551,6 +1567,9 @@ static void oedit_disp_val11_menu(struct descriptor_data *d)
   OLC_MODE(d) = OEDIT_VALUE_11;
   switch (GET_OBJ_TYPE(OLC_OBJ(d)))
   {
+  case ITEM_MISSILE:
+    write_to_output(d, "Unlimited ammunition (0 no, 1 yes): ");
+    break;
   case ITEM_GEAR_OUTFIT:
     write_to_output(d, "ARMS apply modifier amount: ");
     break;
@@ -1566,6 +1585,12 @@ static void oedit_disp_val12_menu(struct descriptor_data *d)
   OLC_MODE(d) = OEDIT_VALUE_12;
   switch (GET_OBJ_TYPE(OLC_OBJ(d)))
   {
+  case ITEM_MISSILE:
+    for (i = 0; i < NUM_WEAPON_TYPES; i++)
+      if (IS_SET(weapon_list[i].weaponFlags, WEAPON_FLAG_THROWN))
+        write_to_output(d, "%3d) %s\r\n", i, weapon_list[i].name);
+    write_to_output(d, "Compatible thrown weapon type: ");
+    break;
   case ITEM_GEAR_OUTFIT:
     for (i = 0; i < NUM_BONUS_TYPES; i++)
     {
@@ -1586,6 +1611,9 @@ static void oedit_disp_val13_menu(struct descriptor_data *d)
   OLC_MODE(d) = OEDIT_VALUE_13;
   switch (GET_OBJ_TYPE(OLC_OBJ(d)))
   {
+  case ITEM_MISSILE:
+    write_to_output(d, "Returning ammunition (0 no, 1 unlimited-style returning): ");
+    break;
   case ITEM_GEAR_OUTFIT:
     get_char_colors(d->character);
     clear_screen(d);
@@ -2944,8 +2972,8 @@ void oedit_parse(struct descriptor_data *d, char *arg)
       break;
 
     case ITEM_MISSILE:
-      GET_OBJ_VAL(OLC_OBJ(d), 0) = LIMIT(atoi(arg), 1, NUM_AMMO_TYPES - 1);
-      /* jump to break probability */
+      GET_OBJ_VAL(OLC_OBJ(d), 0) = LIMIT(atoi(arg), AMMO_TYPE_ARROW, NUM_AMMO_TYPES - 1);
+      /* Preserve legacy imbue/breakage fields; edit supply values after enhancement. */
       oedit_disp_val3_menu(d);
       return;
 
@@ -3249,9 +3277,9 @@ void oedit_parse(struct descriptor_data *d, char *arg)
       oedit_disp_val6_menu(d);
       return;
     case ITEM_MISSILE:
-      min_val = 0;
-      max_val = 10;
-      break;
+      GET_OBJ_VAL(OLC_OBJ(d), 4) = LIMIT(number, 0, 10);
+      oedit_disp_val6_menu(d);
+      return;
     case ITEM_WEAPON:
       min_val = 0;
       max_val = 10;
@@ -3273,6 +3301,10 @@ void oedit_parse(struct descriptor_data *d, char *arg)
     number = atoi(arg);
     switch (GET_OBJ_TYPE(OLC_OBJ(d)))
     {
+    case ITEM_MISSILE:
+      GET_OBJ_VAL(OLC_OBJ(d), 5) = LIMIT(number, 1, 65000);
+      oedit_disp_val7_menu(d);
+      return;
     case ITEM_TREASURE_CHEST:
       if (number < 0 || number > NUM_TRAP_SPECIAL_EFFECTS)
       {
@@ -3302,6 +3334,10 @@ void oedit_parse(struct descriptor_data *d, char *arg)
     number = atoi(arg);
     switch (GET_OBJ_TYPE(OLC_OBJ(d)))
     {
+    case ITEM_MISSILE:
+      GET_OBJ_VAL(OLC_OBJ(d), 6) = LIMIT(number, MAX(1, GET_OBJ_VAL(OLC_OBJ(d), AMMO_VAL_MIN)), 65000);
+      oedit_disp_val8_menu(d);
+      return;
     case ITEM_GEAR_OUTFIT:
       number--;
       min_val = 0;
@@ -3332,6 +3368,10 @@ void oedit_parse(struct descriptor_data *d, char *arg)
     number = atoi(arg);
     switch (GET_OBJ_TYPE(OLC_OBJ(d)))
     {
+    case ITEM_MISSILE:
+      GET_OBJ_VAL(OLC_OBJ(d), 7) = LIMIT(number, 0, GET_OBJ_VAL(OLC_OBJ(d), AMMO_VAL_MAX));
+      oedit_disp_val9_menu(d);
+      return;
     case ITEM_GEAR_OUTFIT:
       GET_OBJ_VAL(OLC_OBJ(d), OUTFIT_VAL_HEAD_APPLY_MOD) = number;
       oedit_disp_val9_menu(d);
@@ -3348,6 +3388,10 @@ void oedit_parse(struct descriptor_data *d, char *arg)
     number = atoi(arg);
     switch (GET_OBJ_TYPE(OLC_OBJ(d)))
     {
+    case ITEM_MISSILE:
+      GET_OBJ_VAL(OLC_OBJ(d), 8) = LIMIT(number, 0, NUM_DAM_TYPES - 1);
+      oedit_disp_val10_menu(d);
+      return;
     case ITEM_GEAR_OUTFIT:
       min_val = 0;
       max_val = NUM_BONUS_TYPES - 1;
@@ -3366,6 +3410,10 @@ void oedit_parse(struct descriptor_data *d, char *arg)
     number = atoi(arg);
     switch (GET_OBJ_TYPE(OLC_OBJ(d)))
     {
+    case ITEM_MISSILE:
+      GET_OBJ_VAL(OLC_OBJ(d), 9) = LIMIT(number, 0, 100);
+      oedit_disp_val11_menu(d);
+      return;
     case ITEM_GEAR_OUTFIT:
       number--;
       min_val = 0;
@@ -3396,6 +3444,17 @@ void oedit_parse(struct descriptor_data *d, char *arg)
     number = atoi(arg);
     switch (GET_OBJ_TYPE(OLC_OBJ(d)))
     {
+    case ITEM_MISSILE:
+      GET_OBJ_VAL(OLC_OBJ(d), 10) = LIMIT(number, 0, 1);
+      if (GET_OBJ_VAL(OLC_OBJ(d), 0) == AMMO_TYPE_THROWN)
+        oedit_disp_val12_menu(d);
+      else
+      {
+        GET_OBJ_VAL(OLC_OBJ(d), AMMO_VAL_WEAPON_TYPE) = 0;
+        GET_OBJ_VAL(OLC_OBJ(d), AMMO_VAL_RETURNING) = 0;
+        oedit_disp_menu(d);
+      }
+      return;
     case ITEM_GEAR_OUTFIT:
       GET_OBJ_VAL(OLC_OBJ(d), OUTFIT_VAL_ARMS_APPLY_MOD) = number;
       oedit_disp_val12_menu(d);
@@ -3412,6 +3471,16 @@ void oedit_parse(struct descriptor_data *d, char *arg)
     number = atoi(arg);
     switch (GET_OBJ_TYPE(OLC_OBJ(d)))
     {
+    case ITEM_MISSILE:
+      if (number < 0 || number >= NUM_WEAPON_TYPES ||
+          !IS_SET(weapon_list[number].weaponFlags, WEAPON_FLAG_THROWN))
+      {
+        write_to_output(d, "Choose a listed thrown weapon type: ");
+        return;
+      }
+      GET_OBJ_VAL(OLC_OBJ(d), AMMO_VAL_WEAPON_TYPE) = number;
+      oedit_disp_val13_menu(d);
+      return;
     case ITEM_GEAR_OUTFIT:
       min_val = 0;
       max_val = NUM_BONUS_TYPES - 1;
@@ -3430,6 +3499,10 @@ void oedit_parse(struct descriptor_data *d, char *arg)
     number = atoi(arg);
     switch (GET_OBJ_TYPE(OLC_OBJ(d)))
     {
+    case ITEM_MISSILE:
+      GET_OBJ_VAL(OLC_OBJ(d), AMMO_VAL_RETURNING) = LIMIT(number, 0, 1);
+      oedit_disp_menu(d);
+      return;
     case ITEM_GEAR_OUTFIT:
       number--;
       min_val = 0;

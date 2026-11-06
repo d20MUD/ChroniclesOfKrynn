@@ -1505,6 +1505,7 @@ void mag_loops(int level, struct char_data *ch, struct char_data *victim, struct
   case SPELL_SCORCHING_RAY:
     num_times = MIN(3, 1 + ((level - 3) / 4));
     dam = true;
+    needs_touch = true;
     break;
   case SPELL_FLAME_ARROW:
     num_times = (level - 2) / 3;
@@ -1754,7 +1755,7 @@ int mag_damage(int level, struct char_data *ch, struct char_data *victim, struct
       \*******************************************/
 
   case PSIONIC_CRYSTAL_SHARD: /* 1st circle */
-    if (!attack_roll(ch, victim, ATTACK_TYPE_PSIONICS, TRUE, 0))
+    if (attack_roll(ch, victim, ATTACK_TYPE_PSIONICS, TRUE, 0) < 0)
     {
       act("A crystal shard fired by $n at $N goes wide.", FALSE, ch, 0, victim, TO_NOTVICT);
       act("A crystal shard fired by $n at YOU goes wide.", FALSE, ch, 0, victim, TO_VICT);
@@ -1826,7 +1827,7 @@ int mag_damage(int level, struct char_data *ch, struct char_data *victim, struct
     if (energy_type == DAM_ELECTRIC || energy_type == DAM_SOUND)
       GET_TEMP_ATTACK_ROLL_BONUS(ch) = 4;
   }
-    if (!attack_roll(ch, victim, ATTACK_TYPE_PSIONICS, TRUE, 0))
+    if (attack_roll(ch, victim, ATTACK_TYPE_PSIONICS, TRUE, 0) < 0)
     {
       int energy_type = IS_NPC(ch) ? DAM_MENTAL : GET_PSIONIC_ENERGY_TYPE(ch);
       snprintf(desc, sizeof(desc), "$n fires a ray of %s at $N, but it goes wide.",
@@ -2079,7 +2080,7 @@ int mag_damage(int level, struct char_data *ch, struct char_data *victim, struct
     break;
 
   case PSIONIC_DISINTEGRATION: /* 6th circle Psi */
-    if (!attack_roll(ch, victim, ATTACK_TYPE_PSIONICS, TRUE, 0))
+    if (attack_roll(ch, victim, ATTACK_TYPE_PSIONICS, TRUE, 0) < 0)
     {
       act("$n fires a ray of disintigration at $N, but it goes wide.", FALSE, ch, 0, victim,
           TO_NOTVICT);
@@ -2124,7 +2125,7 @@ int mag_damage(int level, struct char_data *ch, struct char_data *victim, struct
     break;
 
   case PSIONIC_ASSIMILATE: /* 9th circle Psi */
-    if (!attack_roll(ch, victim, ATTACK_TYPE_PSIONICS, TRUE, 0))
+    if (attack_roll(ch, victim, ATTACK_TYPE_PSIONICS, TRUE, 0) < 0)
     {
       act("You attempt to assimilate $N, but $E dodges your attack.", FALSE, ch, 0, victim,
           TO_CHAR);
@@ -3403,6 +3404,27 @@ int mag_damage(int level, struct char_data *ch, struct char_data *victim, struct
     dam *= 1.5;
   }
 
+  switch (spellnum)
+  {
+  case SPELL_BLINDING_RAY:
+  case SPELL_AURAK_ENERGY_RAY:
+  case SPELL_SCORCHING_RAY:
+  case PSIONIC_CRYSTAL_SHARD:
+  case PSIONIC_ENERGY_RAY:
+  case PSIONIC_DISINTEGRATION:
+  case PSIONIC_ASSIMILATE:
+    dam += point_blank_shot_bonus(ch, victim);
+    break;
+  case WARLOCK_ELDRITCH_BLAST:
+  case WARLOCK_CRITICAL_ELDRITCH_BLAST:
+    if (GET_ELDRITCH_SHAPE(ch) != WARLOCK_HIDEOUS_BLOW)
+      dam += point_blank_shot_bonus(ch, victim) *
+             (spellnum == WARLOCK_CRITICAL_ELDRITCH_BLAST ? 2 : 1);
+    break;
+  default:
+    break;
+  }
+
   /* Store initial dice damage for Hunter's Precision reroll */
   int base_spell_dice_damage = dam;
 
@@ -3871,7 +3893,7 @@ int mag_damage(int level, struct char_data *ch, struct char_data *victim, struct
     if (spellnum == PSIONIC_CRYSTAL_SHARD &&
         should_add_extra_shard_projectile(ch, GET_AUGMENT_PSP(ch)))
     {
-      if (attack_roll(ch, victim, ATTACK_TYPE_PSIONICS, TRUE, 0))
+      if (attack_roll(ch, victim, ATTACK_TYPE_PSIONICS, TRUE, 0) >= 0)
       {
         int extra_dam = min_dice(num_dice, size_dice, min_dice_roll) + bonus;
         damage(ch, victim, extra_dam, spellnum, element, FALSE);
@@ -3895,7 +3917,7 @@ int mag_damage(int level, struct char_data *ch, struct char_data *victim, struct
         /* Skip charmed, sleeping, or dead targets */
         if (AFF_FLAGGED(tch_aoe, AFF_CHARM) || !AWAKE(tch_aoe) || GET_POS(tch_aoe) <= POS_DEAD)
           continue;
-        if (attack_roll(ch, tch_aoe, ATTACK_TYPE_PSIONICS, TRUE, 0))
+        if (attack_roll(ch, tch_aoe, ATTACK_TYPE_PSIONICS, TRUE, 0) >= 0)
         {
           int aoe_dam = dice(num_dice, size_dice) + bonus;
           damage(ch, tch_aoe, aoe_dam, spellnum, element, FALSE);

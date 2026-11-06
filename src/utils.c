@@ -56,6 +56,87 @@
    Functions directly related to utils.h needs
  */
 
+/* Zero is an explicit "automatic" setting so terrain changes also update size. */
+int default_room_size(int sector)
+{
+  switch (sector)
+  {
+  case SECT_FIELD:
+  case SECT_DESERT:
+  case SECT_OCEAN:
+  case SECT_TUNDRA:
+  case SECT_BEACH:
+    return 50;
+  case SECT_FLYING:
+    return 40;
+  case SECT_HILLS:
+  case SECT_UNDERWATER:
+  case SECT_ROAD_NS:
+  case SECT_ROAD_EW:
+  case SECT_ROAD_INT:
+  case SECT_PLANES: /* SECT_OUTTER_PLANES is an alias. */
+  case SECT_D_ROAD_NS:
+  case SECT_D_ROAD_EW:
+  case SECT_D_ROAD_INT:
+    return 30;
+  case SECT_FOREST:
+  case SECT_MOUNTAIN:
+  case SECT_MARSHLAND:
+  case SECT_UD_WILD:
+  case SECT_LAVA:
+  case SECT_TAIGA:
+  case SECT_SEAPORT:
+    return 20;
+  case SECT_INSIDE:
+  case SECT_CITY:
+  case SECT_WATER_SWIM:
+  case SECT_WATER_NOSWIM:
+  case SECT_ZONE_START:
+  case SECT_HIGH_MOUNTAIN:
+  case SECT_UD_CITY:
+  case SECT_UD_INSIDE:
+  case SECT_UD_WATER:
+  case SECT_UD_NOSWIM: /* SECT_UD_WATER_NOSWIM is an alias. */
+  case SECT_UD_NOGROUND:
+  case SECT_CAVE:
+  case SECT_JUNGLE:
+  case SECT_INSIDE_ROOM:
+  case SECT_RIVER:
+  default:
+    return 10;
+  }
+}
+
+int get_room_size(const struct room_data *room)
+{
+  if (!room)
+    return default_room_size(SECT_INSIDE);
+  return room->room_size > 0 ? room->room_size : default_room_size(room->sector_type);
+}
+
+/* Shared by the world loader and room editor; reject overflow and trailing junk. */
+bool parse_room_size(const char *text, int *size)
+{
+  char *end;
+  long value;
+  if (!text || !size)
+    return FALSE;
+  while (isspace((unsigned char)*text))
+    text++;
+  if (!isdigit((unsigned char)*text))
+    return FALSE;
+  errno = 0;
+  value = strtol(text, &end, 10);
+  if (errno == ERANGE || value > INT_MAX)
+    return FALSE;
+  while (isspace((unsigned char)*end))
+    end++;
+  if (*end)
+    return FALSE;
+  *size = (int)value;
+  return TRUE;
+}
+
 /* MSDP GUI Wrappers */
 void gui_combat_wrap_open(struct char_data *ch)
 {

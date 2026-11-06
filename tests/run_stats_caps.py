@@ -52,7 +52,7 @@ struct mud_event_data *char_has_mud_event(struct char_data *ch,event_id id) {
 int compute_attack_bonus(struct char_data *ch,struct char_data *vict,int kind) {
   return kind==ATTACK_TYPE_RANGED ? 25 : 30;
 }
-int formation_ranged_penalty(struct char_data *ch) { return -8; }
+int formation_ranged_penalty(struct char_data *ch, struct char_data *victim) { return -8; }
 int compute_armor_class(struct char_data *attacker,struct char_data *ch,int touch,int mode) { return 35; }
 int compute_mag_saves(struct char_data *ch,int type,int modifier) {
   return modifier==MAX_GOLD ? 8 : MIN(99,8+GET_SAVE(ch,type));

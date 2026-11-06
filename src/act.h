@@ -555,6 +555,7 @@ ACMD_DECL(do_bullrush);
 /* Functions without subcommands */
 ACMD_DECL(do_cexchange);
 ACMD_DECL(do_fire);
+ACMD_DECL(do_throw);
 ACMD_DECL(do_aura_of_vengeance);
 ACMD_DECL(do_aura_of_justice);
 ACMD_DECL(do_reload);
@@ -1126,6 +1127,7 @@ ACMD_DECL(do_settestchar);
 ACMD_DECL(do_settestkit);
 ACMD_DECL(do_hlqlist);
 ACMD_DECL(do_advance);
+ACMD_DECL(do_combat_advance);
 ACMD_DECL(do_objlist);
 ACMD_DECL(do_singlefile);
 ACMD_DECL(do_at);

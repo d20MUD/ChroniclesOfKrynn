@@ -29,6 +29,7 @@ static int precise, craftsman, savant, equipped_family=WEAPON_FAMILY_RANGED;
 static int selected_family=WEAPON_FAMILY_RANGED;
 static bool has_focus, has_greater, has_superior;
 static struct { int weaponFamily; } weapon_list[NUM_WEAPON_TYPES];
+static bool is_throwing_weapon(struct char_data *ch,struct obj_data *weapon) {return false;}
 static int owned(int feat) {
   if(feat==FEAT_WEAPON_FOCUS) return has_focus;
   if(feat==FEAT_GREATER_WEAPON_FOCUS) return has_greater;

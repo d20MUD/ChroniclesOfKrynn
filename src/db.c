@@ -1994,6 +1994,7 @@ void parse_room(FILE *fl, int virtual_nr, const char *filename)
     }
   world[room_nr].zone = zone;
   world[room_nr].number = virtual_nr;
+  world[room_nr].room_size = 0; /* Legacy rooms use their terrain default. */
   world[room_nr].name = fread_string(fl, buf2);
   world[room_nr].description = fread_string(fl, buf2);
 
@@ -2131,6 +2132,13 @@ void parse_room(FILE *fl, int virtual_nr, const char *filename)
     }
     switch (*line)
     {
+    case 'R': /* Optional maximum distance override; 0 restores terrain default. */
+      if (!get_line(fl, line) || !parse_room_size(line, &world[room_nr].room_size))
+      {
+        log("SYSERR: Invalid room size for room #%d", virtual_nr);
+        exit(1);
+      }
+      break;
     case 'C': /* Coordinates. */
       get_line(fl, line);
       sscanf(line, "%d %d", world[room_nr].coords, world[room_nr].coords + 1);
@@ -4995,6 +5003,13 @@ struct obj_data *read_object(obj_vnum nr, int type) /* and obj_rnum */
     /* Put the new node on the list. */
     specab_list->next = obj->special_abilities;
     obj->special_abilities = specab_list;
+  }
+
+  if (GET_OBJ_TYPE(obj) == ITEM_MISSILE && GET_OBJ_VAL(obj, AMMO_VAL_MAX) > 0)
+  {
+    int maximum = MIN(65000, GET_OBJ_VAL(obj, AMMO_VAL_MAX));
+    int minimum = MIN(maximum, MAX(1, GET_OBJ_VAL(obj, AMMO_VAL_MIN)));
+    GET_OBJ_VAL(obj, AMMO_VAL_QUANTITY) = rand_number(minimum, maximum);
   }
 
   /* going to put some caps here -zusuk */

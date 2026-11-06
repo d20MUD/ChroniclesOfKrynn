@@ -783,6 +783,17 @@ static int resolve_call_magic(struct char_data *caster, struct char_data *cvict,
   if (spellnum < 1 || spellnum > TOP_SPELL_DEFINE)
     return (0);
 
+  if (cvict && (SINFO.violent || IS_SET(SINFO.routines, MAG_DAMAGE)) &&
+      (IN_ROOM(caster) == NOWHERE || IN_ROOM(caster) != IN_ROOM(cvict)))
+  {
+    send_to_char(caster, "Your target must be in the same room.\r\n");
+    return 0;
+  }
+
+  if (cvict && IS_NPC(caster) && (SINFO.violent || IS_SET(SINFO.routines, MAG_DAMAGE)) &&
+      !combat_attack_in_range(caster, cvict, ATTACK_TYPE_RANGED, NULL))
+    return 0;
+
   level = apply_arcane_supremacy_caster_level(caster, spellnum, casttype, level);
 
   // Message for debugging

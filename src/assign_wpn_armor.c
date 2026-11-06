@@ -566,6 +566,30 @@ bool weapon_is_loaded(struct char_data *ch, struct obj_data *wielded, bool silen
 }
 
 /* this function will check to make sure ammo is ready for firing */
+bool is_throwing_weapon(struct char_data *ch, struct obj_data *weapon)
+{
+  int type;
+  if (!weapon || GET_OBJ_TYPE(weapon) != ITEM_WEAPON)
+    return FALSE;
+  type = GET_OBJ_VAL(weapon, 0);
+  return type >= 0 && type < NUM_WEAPON_TYPES &&
+         IS_SET(weapon_list[type].weaponFlags, WEAPON_FLAG_THROWN) &&
+         (THROWING(ch) || IS_SET(weapon_list[type].weaponFlags, WEAPON_FLAG_RANGED) ||
+          MOB_FLAGGED(ch, MOB_RANGED_ATTACK));
+}
+
+bool ammunition_is_unlimited(struct obj_data *ammo, struct obj_data *weapon)
+{
+  if (!ammo)
+    return FALSE;
+  if (GET_OBJ_VAL(ammo, AMMO_VAL_UNLIMITED))
+    return TRUE;
+  if (GET_OBJ_VAL(ammo, 0) != AMMO_TYPE_THROWN && GET_OBJ_VAL(ammo, 0) != AMMO_TYPE_DART)
+    return FALSE;
+  return GET_OBJ_VAL(ammo, AMMO_VAL_RETURNING) ||
+         (weapon && obj_has_special_ability(weapon, WEAPON_SPECAB_RETURNING));
+}
+
 bool has_ammo_in_pouch(struct char_data *ch, struct obj_data *wielded, bool silent)
 {
   struct obj_data *ammo_pouch = GET_EQ(ch, WEAR_AMMO_POUCH);
@@ -598,6 +622,16 @@ bool has_ammo_in_pouch(struct char_data *ch, struct obj_data *wielded, bool sile
   {
     if (!silent)
       send_to_char(ch, "Your ammo pouch needs to be filled with only ammo!\r\n");
+    FIRING(ch) = FALSE;
+    return FALSE;
+  }
+
+  if (GET_OBJ_VAL(ammo_pouch->contains, AMMO_VAL_MAX) > 0 &&
+      !ammunition_is_unlimited(ammo_pouch->contains, wielded) &&
+      GET_OBJ_VAL(ammo_pouch->contains, AMMO_VAL_QUANTITY) <= 0)
+  {
+    if (!silent)
+      send_to_char(ch, "Your ammunition is exhausted!\r\n");
     FIRING(ch) = FALSE;
     return FALSE;
   }
@@ -653,6 +687,17 @@ bool has_ammo_in_pouch(struct char_data *ch, struct obj_data *wielded, bool sile
     default:
       if (!silent)
         act("Your $p requires a sling.", FALSE, ch, ammo_pouch->contains, NULL, TO_CHAR);
+      FIRING(ch) = FALSE;
+      return FALSE;
+    }
+    break;
+
+  case AMMO_TYPE_THROWN:
+    if (!is_throwing_weapon(ch, wielded) ||
+        GET_OBJ_VAL(ammo_pouch->contains, AMMO_VAL_WEAPON_TYPE) != GET_OBJ_VAL(wielded, 0))
+    {
+      if (!silent)
+        send_to_char(ch, "Your throwing ammunition does not match your wielded weapon.\r\n");
       FIRING(ch) = FALSE;
       return FALSE;
     }
@@ -741,7 +786,8 @@ struct obj_data *is_using_ranged_weapon(struct char_data *ch, bool silent_mode)
     return NULL;
   }
 
-  if (IS_SET(weapon_list[GET_OBJ_VAL(wielded, 0)].weaponFlags, WEAPON_FLAG_RANGED))
+  if (IS_SET(weapon_list[GET_OBJ_VAL(wielded, 0)].weaponFlags, WEAPON_FLAG_RANGED) ||
+      is_throwing_weapon(ch, wielded))
     return wielded;
 
   if (!silent_mode)
@@ -2862,4 +2908,43 @@ int get_wear_location_by_armor_type(int type)
     return ITEM_WEAR_LEGS;
   }
   return ITEM_WEAR_TAKE;
+}
+
+/* A fired projectile has its own identity. Never move or duplicate the supply itself. */
+struct obj_data *take_ammo_projectile(struct obj_data *ammo, struct obj_data *weapon)
+{
+  struct obj_data *shot;
+  bool unlimited = ammunition_is_unlimited(ammo, weapon);
+  if (!unlimited &&
+      (GET_OBJ_VAL(ammo, AMMO_VAL_MAX) <= 0 ||
+       GET_OBJ_VAL(ammo, AMMO_VAL_QUANTITY) <= 1))
+  {
+    obj_from_obj(ammo);
+    GET_OBJ_VAL(ammo, AMMO_VAL_MIN) = 0;
+    GET_OBJ_VAL(ammo, AMMO_VAL_MAX) = 0;
+    GET_OBJ_VAL(ammo, AMMO_VAL_QUANTITY) = 0;
+    return ammo;
+  }
+
+  shot = create_obj();
+  shot->name = strdup(ammo->name ? ammo->name : "ammo");
+  shot->short_description = strdup(ammo->short_description ? ammo->short_description : "ammunition");
+  shot->description = strdup(ammo->description ? ammo->description : "A projectile lies here.");
+  shot->obj_flags = ammo->obj_flags;
+  memcpy(shot->affected, ammo->affected, sizeof(shot->affected));
+  shot->weapon_poison = ammo->weapon_poison;
+  /* Copies emitted by unlimited supplies are spent and cannot be collected for profit. */
+  if (unlimited)
+  {
+    GET_OBJ_VAL(shot, 2) = 100;
+    GET_OBJ_COST(shot) = 0;
+  }
+  else
+    GET_OBJ_VAL(ammo, AMMO_VAL_QUANTITY)--;
+  GET_OBJ_VAL(shot, AMMO_VAL_MIN) = 0;
+  GET_OBJ_VAL(shot, AMMO_VAL_MAX) = 0;
+  GET_OBJ_VAL(shot, AMMO_VAL_QUANTITY) = 0;
+  GET_OBJ_VAL(shot, AMMO_VAL_UNLIMITED) = 0;
+  GET_OBJ_VAL(shot, AMMO_VAL_RETURNING) = 0;
+  return shot;
 }

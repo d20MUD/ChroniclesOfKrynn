@@ -1429,12 +1429,10 @@ void assign_feats(void)
         "limited by your (BAB) base attack bonus.");
   feat_prereq_attribute(FEAT_POWER_ATTACK, AB_STR, 13);
   feato(FEAT_DEADLY_AIM, "deadly aim", TRUE, TRUE, FALSE, FEAT_TYPE_COMBAT,
-        "subtract a number from hit and add x2 that number to dam.",
-        "When active, take a value specified as penalty to attack roll and gain that "
-        "value x2 as damage bonus for ranged weapons only.  Usage: deadlyaim VALUE, to turn off, "
-        "just type deadlyaim with no argument.  VALUE must be between 1-5 and is also "
-        "limited by your (BAB) base attack bonus.");
+        "trade ranged accuracy for twice as much weapon damage",
+        "Toggle deadlyaim. Take -1 attack for +2 ranged weapon damage, increasing by -1/+2 at BAB +4 and each +4 thereafter. Does not add damage to touch attacks or spells.");
   feat_prereq_attribute(FEAT_DEADLY_AIM, AB_DEX, 13);
+  feat_prereq_bab(FEAT_DEADLY_AIM, 1);
   feato(FEAT_COMBAT_EXPERTISE, "combat expertise", TRUE, TRUE, FALSE, FEAT_TYPE_COMBAT,
         "subtract a number from attack roll and add it to AC",
         "When active, take a value specified as penalty to attack roll and gain that "
@@ -1640,40 +1638,38 @@ void assign_feats(void)
   /* feat-number | name | in game? | learnable? | stackable? | feat-type | short-descrip | long descrip */
   /* ranged attack feats */
   feato(FEAT_POINT_BLANK_SHOT, "point blank shot", TRUE, TRUE, FALSE, FEAT_TYPE_COMBAT,
-        "+1 to hit and dam rolls with ranged weapons in the same room",
-        "+1 to hit and dam rolls with ranged weapons in the same room, can fight "
-        "in close quarters with ranged weapon");
+        "+1 ranged attack and damage within 30 feet",
+        "Gain +1 on ranged attack and damage rolls against targets within 30 feet.");
   feato(FEAT_FAR_SHOT, "far shot", TRUE, TRUE, FALSE, FEAT_TYPE_COMBAT,
-        "allows firing outside room",
-        "When the 'far shot' feat is taken you are able to fire in any direction at "
-        "a target in the next room.");
-  feat_prereq_attribute(FEAT_FAR_SHOT, AB_DEX, 15);
+        "range increment penalties are -1 instead of -2",
+        "Reduce the penalty per additional weapon range increment to -1. Targets must remain in the same room.");
   feat_prereq_feat(FEAT_FAR_SHOT, FEAT_POINT_BLANK_SHOT, 1);
   feato(FEAT_RAPID_SHOT, "rapid shot", TRUE, TRUE, FALSE, FEAT_TYPE_COMBAT,
-        "extra attack ranged weapon at -2 to all attacks",
-        "can make extra attack per round with ranged weapon at -2 to all attacks");
+        "one extra ranged full-attack shot at -2 to all attacks",
+        "Rapidshot mode adds one attack at your highest bonus during a full attack, with -2 on every attack. Thrown volleys require Quick Draw.");
   feat_prereq_attribute(FEAT_RAPID_SHOT, AB_DEX, 13);
   feat_prereq_feat(FEAT_RAPID_SHOT, FEAT_POINT_BLANK_SHOT, 1);
   feato(FEAT_MANYSHOT, "manyshot", TRUE, TRUE, FALSE, FEAT_TYPE_COMBAT,
-        "extra ranged attack when rapid shot turned on",
-        "extra ranged attack when rapid shot turned on");
-  feat_prereq_attribute(FEAT_MANYSHOT, AB_DEX, 15);
+        "first bow attack of a full attack fires two arrows",
+        "The first bow attack in a full attack fires two arrows using one attack roll. Precision damage and critical damage apply only once. Requires two arrows.");
+  feat_prereq_attribute(FEAT_MANYSHOT, AB_DEX, 17);
+  feat_prereq_feat(FEAT_MANYSHOT, FEAT_POINT_BLANK_SHOT, 1);
   feat_prereq_feat(FEAT_MANYSHOT, FEAT_RAPID_SHOT, 1);
+  feat_prereq_bab(FEAT_MANYSHOT, 6);
   feato(FEAT_PRECISE_SHOT, "precise shot", TRUE, TRUE, FALSE, FEAT_TYPE_COMBAT,
-        "You may shoot in melee without the standard -4 to hit penalty",
-        "You may shoot in melee without the standard -4 to hit penalty");
-  feat_prereq_attribute(FEAT_PRECISE_SHOT, AB_DEX, 13);
+        "remove the -4 firing-into-melee penalty",
+        "Remove the ranged attack penalty when another player is tanking your target mob.");
+  feat_prereq_feat(FEAT_PRECISE_SHOT, FEAT_POINT_BLANK_SHOT, 1);
   feato(FEAT_IMPROVED_PRECISE_SHOT, "improved precise shot", TRUE, TRUE, FALSE, FEAT_TYPE_COMBAT,
-        "+4 to hit on all close ranged attacks", "+4 to hit on all close ranged attacks");
+        "ignore partial ranged concealment",
+        "Ranged attacks ignore concealment below 50 percent. Total concealment still applies. Includes Precise Shot's melee accuracy benefit.");
+  feat_prereq_attribute(FEAT_IMPROVED_PRECISE_SHOT, AB_DEX, 19);
+  feat_prereq_feat(FEAT_IMPROVED_PRECISE_SHOT, FEAT_POINT_BLANK_SHOT, 1);
   feat_prereq_feat(FEAT_IMPROVED_PRECISE_SHOT, FEAT_PRECISE_SHOT, 1);
-  feat_prereq_bab(FEAT_IMPROVED_PRECISE_SHOT, 12);
+  feat_prereq_bab(FEAT_IMPROVED_PRECISE_SHOT, 11);
   feato(FEAT_RAPID_RELOAD, "rapid reload", TRUE, TRUE, FALSE, FEAT_TYPE_COMBAT,
-        "can load crossbows and slings rapidly",
-        "The time required for you to reload your chosen type of weapon is reduced "
-        "to a free action (for a hand or light crossbow), a move action (for heavy "
-        "crossbow or one-handed firearm). If you have selected this feat for a hand "
-        "crossbow or light crossbow, you may fire that weapon as many times in a "
-        "full-attack action as you could attack if you were using a bow.");
+        "reload hand/light crossbows freely and heavy crossbows as a move action",
+        "Reduce hand and light crossbow reloads to free actions, heavy crossbows to move actions. This game's feat also retains sling and repeating crossbow support.");
   feato(FEAT_DEFLECT_ARROWS, "deflect arrows", TRUE, TRUE, FALSE, FEAT_TYPE_COMBAT,
         "can deflect one ranged attack per round",
         "You must have at least one hand free to use this feat. "
@@ -5515,8 +5511,10 @@ void assign_feats(void)
   /* feat-number | name | in game? | learnable? | stackable? | feat-type | short-descrip | long descrip */
   feato(FEAT_IMPROVED_OVERRUN, "improved overrun", FALSE, FALSE, FALSE, FEAT_TYPE_COMBAT,
         "ask staff", "ask staff");
-  feato(FEAT_QUICK_DRAW, "quick draw", FALSE, FALSE, FALSE, FEAT_TYPE_COMBAT, "ask staff",
-        "ask staff");
+  feato(FEAT_QUICK_DRAW, "quick draw", TRUE, TRUE, FALSE, FEAT_TYPE_COMBAT,
+        "throw weapons at your normal full attack rate",
+        "Draw throwing ammunition freely, allowing your normal full attack rate instead of one throw per round.");
+  feat_prereq_bab(FEAT_QUICK_DRAW, 1);
   feato(FEAT_SHOT_ON_THE_RUN, "shot on the run", FALSE, FALSE, FALSE, FEAT_TYPE_COMBAT, "ask staff",
         "ask staff");
   feato(FEAT_COMBAT_CHALLENGE, "combat challenge", FALSE, TRUE, FALSE, FEAT_TYPE_COMBAT,

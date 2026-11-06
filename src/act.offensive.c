@@ -4802,6 +4802,12 @@ ACMD(do_hit)
 
   PREREQ_CAN_FIGHT();
 
+  if (THROWING(ch))
+  {
+    THROWING(ch) = FALSE;
+    FIRING(ch) = FALSE;
+  }
+
   /* temporary solution */
   if (is_using_ranged_weapon(ch, TRUE))
   {
@@ -5283,6 +5289,56 @@ ACMD(do_order)
   /* all done! */
 }
 
+/* Keep the existing staff level command available outside combat. */
+ACMD(do_combat_advance)
+{
+  struct char_data *victim;
+  struct obj_data *weapon;
+  char target[MAX_INPUT_LENGTH] = {'\0'};
+  int desired, moved;
+
+  if (!IS_NPC(ch) && GET_LEVEL(ch) >= LVL_GRSTAFF && !FIGHTING(ch))
+  {
+    do_advance(ch, argument, cmd, subcmd);
+    return;
+  }
+  if (IS_NPC(ch) || !FIGHTING(ch))
+  {
+    send_to_char(ch, "You must be in battle to advance.\r\n");
+    return;
+  }
+  one_argument(argument, target, sizeof(target));
+  victim = *target ? get_char_vis(ch, target, NULL, FIND_CHAR_ROOM) : FIGHTING(ch);
+  if (!victim || !IS_NPC(victim) || IN_ROOM(victim) != IN_ROOM(ch) ||
+      (FIGHTING(ch) != victim && FIGHTING(victim) != ch))
+  {
+    send_to_char(ch, "Advance toward a mob you are fighting in this room.\r\n");
+    return;
+  }
+  weapon = get_wielded(ch, ATTACK_TYPE_PRIMARY);
+  if (IS_WILDSHAPED(ch) || IS_MORPHED(ch))
+    weapon = NULL;
+  desired = combat_melee_range(ch, weapon);
+  if (combat_distance(ch, victim) <= desired)
+  {
+    send_to_char(ch, "You are already within %d feet of that opponent.\r\n", desired);
+    return;
+  }
+  if (!is_action_available(ch, atMOVE, TRUE))
+    return;
+  moved = advance_combat_distance(ch, victim, desired);
+  if (!moved)
+  {
+    send_to_char(ch, "You cannot advance right now.\r\n");
+    return;
+  }
+  USE_MOVE_ACTION(ch);
+  send_to_char(ch, "You advance %d feet toward %s (%d feet away).\r\n",
+               moved, PERS(victim, ch), combat_distance(ch, victim));
+  act("$n advances toward $N.", FALSE, ch, NULL, victim, TO_NOTVICT);
+  act("$n advances toward you.", FALSE, ch, NULL, victim, TO_VICT);
+}
+
 ACMD(do_flee)
 {
   char arg[MAX_INPUT_LENGTH] = {'\0'};
@@ -5690,6 +5746,9 @@ ACMDCHECK(can_manyshot)
                         "You have to be using a ranged weapon with ammo ready to "
                         "fire in your ammo pouch to do this!\r\n");
 
+  ACMDCHECK_TEMPFAIL_IF(GET_OBJ_VAL(GET_EQ(ch, WEAR_AMMO_POUCH)->contains, 0) != AMMO_TYPE_ARROW,
+                        "Manyshot requires a bow and arrows.\r\n");
+
   return CAN_CMD;
 }
 
@@ -5697,6 +5756,12 @@ ACMD(do_manyshot)
 {
   char arg[MAX_INPUT_LENGTH] = {'\0'};
   struct char_data *vict = NULL;
+
+  if (HAS_FEAT(ch, FEAT_MANYSHOT) && !has_perk(ch, PERK_RANGER_MANYSHOT))
+  {
+    send_to_char(ch, "Manyshot automatically fires two arrows on the first attack of a full bow attack.\r\n");
+    return;
+  }
 
   PREREQ_CAN_FIGHT();
   PREREQ_CHECK(can_manyshot);
@@ -5714,20 +5779,6 @@ ACMD(do_manyshot)
     send_to_char(ch, "Use manyshot on who?\r\n");
     return;
   }
-
-  /* Point Blank restriction: too close without Point Blank Shot feat */
-  if (is_tanking(ch) && !IS_NPC(ch) && !HAS_FEAT(ch, FEAT_POINT_BLANK_SHOT))
-  {
-    send_to_char(
-        ch,
-        "You are too close to your foe to effectively use Manyshot without Point Blank Shot!\r\n");
-    return;
-  }
-
-  /* TODO: Extended range validation
-   * For future: allow specifying distant targets (e.g., in adjacent wilderness rooms) and
-   * validate maximum weapon range bands; currently restricted to same-room target.
-   */
 
   act("$n unleashes a rapid volley of arrows!", FALSE, ch, 0, 0, TO_ROOM);
   send_to_char(ch, "You unleash a rapid volley of arrows!\r\n");
@@ -5867,19 +5918,13 @@ ACMD(do_blast)
   struct char_data *vict = NULL, *tch = NULL;
   char arg1[MAX_INPUT_LENGTH] = {'\0'};
   char arg2[MAX_INPUT_LENGTH] = {'\0'};
-  room_rnum room = NOWHERE;
-  int direction = -1, original_loc = NOWHERE;
+  room_rnum room = IN_ROOM(ch);
 
   PREREQ_NOT_NPC();
   PREREQ_NOT_PEACEFUL_ROOM();
   PREREQ_CHECK(can_eldritch_blast);
 
-  if (FIGHTING(ch) && GET_ELDRITCH_SHAPE(ch) == WARLOCK_ELDRITCH_SPEAR)
-  {
-    send_to_char(ch, "You are too busy fighting to try and fire right now!\r\n");
-    return;
-  }
-  else if (GET_ELDRITCH_SHAPE(ch) == WARLOCK_HIDEOUS_BLOW)
+  if (GET_ELDRITCH_SHAPE(ch) == WARLOCK_HIDEOUS_BLOW)
   {
     send_to_char(ch, "Just hit them!\r\n");
     BLASTING(ch) = TRUE;
@@ -5888,76 +5933,17 @@ ACMD(do_blast)
 
   two_arguments(argument, arg1, sizeof(arg1), arg2, sizeof(arg2));
 
-  /* no 2nd argument?  target room has to be same room */
-  if (!*arg2)
+  if (*arg2)
   {
-    room = IN_ROOM(ch);
+    send_to_char(ch, "Ranged attacks can only target enemies in your current room.\r\n");
+    return;
   }
-  else
-  {
-    if (!IS_NPC(ch) && GET_ELDRITCH_SHAPE(ch) != WARLOCK_ELDRITCH_SPEAR)
-    {
-      send_to_char(ch, "You need the 'eldritch spear' shape to shoot outside of your"
-                       " immediate area!\r\n");
-      return;
-    }
-
-    /* try to find target room */
-    direction = search_block(arg2, dirs, FALSE);
-    if (direction < 0)
-    {
-      send_to_char(ch, "That is not a direction!\r\n");
-      return;
-    }
-    if (!CAN_GO(ch, direction))
-    {
-      send_to_char(ch, "You can't fire in that direction!\r\n");
-      return;
-    }
-    room = EXIT(ch, direction)->to_room;
-  }
-
-  /* since we could possible no longer be in room, check if combat is ok
-   in new room */
   if (ROOM_FLAGGED(room, ROOM_PEACEFUL))
   {
-    send_to_char(ch, "This room just has such a peaceful, easy feeling...\r\n");
+    send_to_char(ch, "This room is too peaceful for that attack.\r\n");
     return;
   }
-
-  /* no arguments?  no go! */
-  if (!*arg1)
-  {
-    send_to_char(ch, "You need to select a target!\r\n");
-    return;
-  }
-
-  /* a location has been found. */
-  original_loc = IN_ROOM(ch);
-  char_from_room(ch);
-
-  if (ZONE_FLAGGED(GET_ROOM_ZONE(room), ZONE_WILDERNESS))
-  {
-    X_LOC(ch) = world[room].coords[0];
-    Y_LOC(ch) = world[room].coords[1];
-  }
-
-  char_to_room(ch, room);
   vict = get_char_room_vis(ch, arg1, NULL);
-
-  /* check if the char is still there */
-  if (IN_ROOM(ch) == room)
-  {
-    char_from_room(ch);
-
-    if (ZONE_FLAGGED(GET_ROOM_ZONE(original_loc), ZONE_WILDERNESS))
-    {
-      X_LOC(ch) = world[original_loc].coords[0];
-      Y_LOC(ch) = world[original_loc].coords[1];
-    }
-
-    char_to_room(ch, original_loc);
-  }
 
   if (!vict)
   {
@@ -5996,23 +5982,13 @@ ACMD(do_blast)
   if (vict && IS_PET(vict) && vict->master == ch && room == IN_ROOM(ch))
     vict = FIGHTING(vict);
 
-  if (ch && vict && IN_ROOM(ch) != IN_ROOM(vict))
+  if (!vict || IN_ROOM(vict) != IN_ROOM(ch))
   {
-    cast_spell(ch, vict, NULL, WARLOCK_ELDRITCH_BLAST, 0);
-    /* don't forget to remove the fight event! */
-    if (char_has_mud_event(ch, eCOMBAT_ROUND))
-    {
-      event_cancel_specific(ch, eCOMBAT_ROUND);
-    }
-
-    stop_fighting(ch);
-    USE_STANDARD_ACTION(ch);
+    send_to_char(ch, "There is no opponent here to blast.\r\n");
+    return;
   }
-  else
-  {
-    cast_spell(ch, vict, NULL, WARLOCK_ELDRITCH_BLAST, 0);
-    BLASTING(ch) = TRUE;
-  }
+  cast_spell(ch, vict, NULL, WARLOCK_ELDRITCH_BLAST, 0);
+  BLASTING(ch) = TRUE;
 }
 
 ACMDCHECK(can_dazzling_display)
@@ -9730,8 +9706,7 @@ ACMD(do_icerabbit)
   char arg1[MAX_INPUT_LENGTH] = {'\0'};
   char arg2[MAX_INPUT_LENGTH] = {'\0'};
   struct char_data *vict = NULL, *tch = NULL;
-  room_rnum room = NOWHERE;
-  int direction = -1, original_loc = NOWHERE;
+  room_rnum room = IN_ROOM(ch);
 
   PREREQ_NOT_NPC();
   PREREQ_CHECK(can_icerabbit);
@@ -9746,68 +9721,17 @@ ACMD(do_icerabbit)
 
   two_arguments(argument, arg1, sizeof(arg1), arg2, sizeof(arg2));
 
-  /* no 2nd argument? target room has to be same room */
-  if (!*arg2)
+  if (*arg2)
   {
-    room = IN_ROOM(ch);
+    send_to_char(ch, "Ranged attacks can only target enemies in your current room.\r\n");
+    return;
   }
-  else
-  {
-    /* try to find target room */
-    direction = search_block(arg2, dirs, FALSE);
-    if (direction < 0)
-    {
-      send_to_char(ch, "That is not a direction!\r\n");
-      return;
-    }
-    if (!CAN_GO(ch, direction))
-    {
-      send_to_char(ch, "You can't send the ice rabbits in that direction!\r\n");
-      return;
-    }
-    room = EXIT(ch, direction)->to_room;
-  }
-
-  /* check if combat is ok in target room */
   if (ROOM_FLAGGED(room, ROOM_PEACEFUL))
   {
-    send_to_char(ch, "This room just has such a peaceful, easy feeling...\r\n");
+    send_to_char(ch, "This room is too peaceful for that attack.\r\n");
     return;
   }
-
-  /* no arguments? no go! */
-  if (!*arg1)
-  {
-    send_to_char(ch, "You need to select a target!\r\n");
-    return;
-  }
-
-  /* a location has been found - temporarily move to target room to find victim */
-  original_loc = IN_ROOM(ch);
-  char_from_room(ch);
-
-  if (ZONE_FLAGGED(GET_ROOM_ZONE(room), ZONE_WILDERNESS))
-  {
-    X_LOC(ch) = world[room].coords[0];
-    Y_LOC(ch) = world[room].coords[1];
-  }
-
-  char_to_room(ch, room);
   vict = get_char_room_vis(ch, arg1, NULL);
-
-  /* move character back to original room */
-  if (IN_ROOM(ch) == room)
-  {
-    char_from_room(ch);
-
-    if (ZONE_FLAGGED(GET_ROOM_ZONE(original_loc), ZONE_WILDERNESS))
-    {
-      X_LOC(ch) = world[original_loc].coords[0];
-      Y_LOC(ch) = world[original_loc].coords[1];
-    }
-
-    char_to_room(ch, original_loc);
-  }
 
   if (!vict)
   {
@@ -9841,6 +9765,12 @@ ACMD(do_icerabbit)
   /* maybe its your pet? so assist */
   if (vict && IS_PET(vict) && vict->master == ch && room == IN_ROOM(ch))
     vict = FIGHTING(vict);
+
+  if (!vict || IN_ROOM(vict) != IN_ROOM(ch))
+  {
+    send_to_char(ch, "There is no opponent here to target.\r\n");
+    return;
+  }
 
   if (ROOM_FLAGGED(IN_ROOM(ch), ROOM_SINGLEFILE) && room == IN_ROOM(ch) &&
       ch->next_in_room != vict && vict->next_in_room != ch)
@@ -12064,109 +11994,94 @@ ACMD(do_reload)
 /* ranged-weapons combat, archery
  * fire command, fires single arrow - checks can_fire_ammo()
  */
+ACMD(do_throw)
+{
+  struct obj_data *weapon = get_wielded(ch, ATTACK_TYPE_PRIMARY);
+  struct char_data *victim;
+  char target[MAX_INPUT_LENGTH] = {'\0'};
+  bool was_throwing = THROWING(ch);
+
+  PREREQ_NOT_NPC();
+  PREREQ_CAN_FIGHT();
+  PREREQ_NOT_PEACEFUL_ROOM();
+  one_argument(argument, target, sizeof(target));
+  if (!strcmp(target, "off"))
+  {
+    THROWING(ch) = FALSE;
+    FIRING(ch) = FALSE;
+    send_to_char(ch, "You return to melee use of your weapon.\r\n");
+    return;
+  }
+  THROWING(ch) = TRUE;
+  if (!is_throwing_weapon(ch, weapon))
+  {
+    THROWING(ch) = was_throwing;
+    send_to_char(ch, "Wield a weapon designed for throwing first.\r\n");
+    return;
+  }
+  victim = *target ? get_char_vis(ch, target, NULL, FIND_CHAR_ROOM) : FIGHTING(ch);
+  if (!victim || victim == ch || IN_ROOM(victim) != IN_ROOM(ch))
+  {
+    THROWING(ch) = was_throwing;
+    send_to_char(ch, "Throw at whom in this room?\r\n");
+    return;
+  }
+  if (!can_fire_ammo(ch, FALSE))
+  {
+    THROWING(ch) = was_throwing;
+    return;
+  }
+  if (FIGHTING(ch))
+  {
+    if (FIGHTING(ch) != victim)
+    {
+      THROWING(ch) = was_throwing;
+      send_to_char(ch, "Finish with your current opponent first.\r\n");
+      return;
+    }
+    FIRING(ch) = TRUE;
+    send_to_char(ch, "You prepare to throw your weapon using ammunition.\r\n");
+    return;
+  }
+  if (!is_action_available(ch, atSTANDARD, TRUE))
+  {
+    THROWING(ch) = was_throwing;
+    return;
+  }
+  hit(ch, victim, TYPE_UNDEFINED, DAM_RESERVED_DBC, 0, ATTACK_TYPE_RANGED);
+  FIRING(ch) = FIGHTING(ch) && can_fire_ammo(ch, TRUE);
+  USE_STANDARD_ACTION(ch);
+}
+
 ACMD(do_fire)
 {
   struct char_data *vict = NULL, *tch = NULL;
-  char arg1[MAX_INPUT_LENGTH] = {'\0'};
-  char arg2[MAX_INPUT_LENGTH] = {'\0'};
-  room_rnum room = NOWHERE;
-  int direction = -1, original_loc = NOWHERE;
+  char arg1[MAX_INPUT_LENGTH] = {'\0'}, arg2[MAX_INPUT_LENGTH] = {'\0'};
+  room_rnum room = IN_ROOM(ch);
 
   PREREQ_NOT_NPC();
-
   PREREQ_NOT_PEACEFUL_ROOM();
-
   if (FIGHTING(ch) || FIRING(ch))
   {
     send_to_char(ch, "You are too busy fighting to try and fire right now!\r\n");
     return;
   }
-
   two_arguments(argument, arg1, sizeof(arg1), arg2, sizeof(arg2));
-
-  /* no 2nd argument?  target room has to be same room */
-  if (!*arg2)
+  if (*arg2)
   {
-    room = IN_ROOM(ch);
-  }
-  else
-  {
-    if (!IS_NPC(ch) && !HAS_FEAT(ch, FEAT_FAR_SHOT) && !has_perk(ch, PERK_RANGER_LONGSHOT))
-    {
-      send_to_char(ch, "You need the 'far shot' feat or 'long shot' perk to shoot outside of your "
-                       "immediate area!\r\n");
-      return;
-    }
-
-    /* try to find target room */
-    direction = search_block(arg2, dirs, FALSE);
-    if (direction < 0)
-    {
-      send_to_char(ch, "That is not a direction!\r\n");
-      return;
-    }
-    if (!CAN_GO(ch, direction))
-    {
-      send_to_char(ch, "You can't fire in that direction!\r\n");
-      return;
-    }
-    room = EXIT(ch, direction)->to_room;
-  }
-
-  /* since we could possible no longer be in room, check if combat is ok
-   in new room */
-  if (ROOM_FLAGGED(room, ROOM_PEACEFUL))
-  {
-    send_to_char(ch, "This room just has such a peaceful, easy feeling...\r\n");
+    send_to_char(ch, "You can only fire at targets in your current room.\r\n");
     return;
   }
-
-  /* no arguments?  no go! */
-  if (!*arg1)
-  {
-    send_to_char(ch, "You need to select a target!\r\n");
-    return;
-  }
-
-  /* a location has been found. */
-  original_loc = IN_ROOM(ch);
-  char_from_room(ch);
-
-  if (ZONE_FLAGGED(GET_ROOM_ZONE(room), ZONE_WILDERNESS))
-  {
-    X_LOC(ch) = world[room].coords[0];
-    Y_LOC(ch) = world[room].coords[1];
-  }
-
-  char_to_room(ch, room);
-  vict = get_char_room_vis(ch, arg1, NULL);
-
-  /* check if the char is still there */
-  if (IN_ROOM(ch) == room)
-  {
-    char_from_room(ch);
-
-    if (ZONE_FLAGGED(GET_ROOM_ZONE(original_loc), ZONE_WILDERNESS))
-    {
-      X_LOC(ch) = world[original_loc].coords[0];
-      Y_LOC(ch) = world[original_loc].coords[1];
-    }
-
-    char_to_room(ch, original_loc);
-  }
-
-  if (!vict)
+  if (!*arg1 || !(vict = get_char_room_vis(ch, arg1, NULL)))
   {
     send_to_char(ch, "Fire at who?\r\n");
     return;
   }
-
   if (vict == ch)
   {
-    send_to_char(ch, "Aren't we funny today...\r\n");
+    send_to_char(ch, "You cannot fire at yourself.\r\n");
     return;
   }
-
   /* if target is group member, we presume you meant to assist */
   if (GROUP(ch) && room == IN_ROOM(ch))
   {
@@ -12192,60 +12107,26 @@ ACMD(do_fire)
   if (vict && IS_PET(vict) && vict->master == ch && room == IN_ROOM(ch))
     vict = FIGHTING(vict);
 
-  if (can_fire_ammo(ch, FALSE))
+  if (!vict || IN_ROOM(vict) != IN_ROOM(ch))
   {
-    if (ch && vict && IN_ROOM(ch) != IN_ROOM(vict))
+    send_to_char(ch, "There is no opponent here to fire at.\r\n");
+    return;
+  }
+  if (!can_fire_ammo(ch, FALSE))
+    return;
+  hit(ch, vict, TYPE_UNDEFINED, DAM_RESERVED_DBC, 0, ATTACK_TYPE_RANGED);
+  if (FIGHTING(ch) && has_perk(ch, PERK_RANGER_QUICK_DRAW) &&
+      (!is_throwing_weapon(ch, is_using_ranged_weapon(ch, TRUE)) || HAS_FEAT(ch, FEAT_QUICK_DRAW)))
+  {
+    int qd_chance = get_ranger_quick_draw_proc_chance(ch);
+    if (qd_chance > 0 && rand_number(1, 100) <= qd_chance && can_fire_ammo(ch, TRUE))
     {
-      /* Combined bonus: if player has Far Shot feat AND Longshot perk, +3 to attack when firing outside their room */
-      if (!IS_NPC(ch) && HAS_FEAT(ch, FEAT_FAR_SHOT) && has_perk(ch, PERK_RANGER_LONGSHOT))
-      {
-        GET_TEMP_ATTACK_ROLL_BONUS(ch) += 3;
-      }
-
-      hit(ch, vict, TYPE_UNDEFINED, DAM_RESERVED_DBC, 0, 2); // 2 in last arg indicates ranged
-      /* Quick Draw: flat 5% chance to immediately fire an extra shot */
-      if (!IS_NPC(ch) && has_perk(ch, PERK_RANGER_QUICK_DRAW))
-      {
-        int qd_chance = get_ranger_quick_draw_proc_chance(ch);
-        if (qd_chance > 0 && rand_number(1, 100) <= qd_chance && can_fire_ammo(ch, TRUE))
-        {
-          send_to_char(ch, "Your Quick Draw lets you snap off an extra shot!\r\n");
-          act("$n snaps off an extra shot with lightning speed!", FALSE, ch, 0, 0, TO_ROOM);
-          hit(ch, vict, TYPE_UNDEFINED, DAM_RESERVED_DBC, 0, 2);
-        }
-      }
-      /* don't forget to remove the fight event! */
-      if (char_has_mud_event(ch, eCOMBAT_ROUND))
-      {
-        event_cancel_specific(ch, eCOMBAT_ROUND);
-      }
-
-      stop_fighting(ch);
-      USE_STANDARD_ACTION(ch);
-    }
-    else
-    {
-      if (FIGHTING(ch))
-        USE_MOVE_ACTION(ch);
-      hit(ch, vict, TYPE_UNDEFINED, DAM_RESERVED_DBC, 0, 2); // 2 in last arg indicates ranged
-      /* Quick Draw: flat 5% chance to immediately fire an extra shot */
-      if (!IS_NPC(ch) && has_perk(ch, PERK_RANGER_QUICK_DRAW))
-      {
-        int qd_chance = get_ranger_quick_draw_proc_chance(ch);
-        if (qd_chance > 0 && rand_number(1, 100) <= qd_chance && can_fire_ammo(ch, TRUE))
-        {
-          send_to_char(ch, "Your Quick Draw lets you snap off an extra shot!\r\n");
-          act("$n snaps off an extra shot with lightning speed!", FALSE, ch, 0, 0, TO_ROOM);
-          hit(ch, vict, TYPE_UNDEFINED, DAM_RESERVED_DBC, 0, 2);
-        }
-      }
-      FIRING(ch) = TRUE;
+      send_to_char(ch, "Your Quick Draw lets you snap off an extra shot!\r\n");
+      act("$n snaps off an extra shot with lightning speed!", FALSE, ch, 0, 0, TO_ROOM);
+      hit(ch, FIGHTING(ch), TYPE_UNDEFINED, DAM_RESERVED_DBC, 0, ATTACK_TYPE_RANGED);
     }
   }
-  else
-  {
-    /* arrived here?  can't fire, silent-mode from can-fire sent a message why */
-  }
+  FIRING(ch) = FIGHTING(ch) && can_fire_ammo(ch, TRUE);
 }
 
 /* primarily useful for those with eldritch blast,

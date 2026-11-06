@@ -1312,7 +1312,8 @@ enum zone_terrain_type {
   106 // Flightless mobs cannot fly even if they could under normal, non magical circumstances
 #define MOB_LEGENDARY_BOSS 107 /**< Marks an eligible endgame source of legendary boss materials. */
 /**********************/
-#define NUM_MOB_FLAGS 108
+#define MOB_RANGED_ATTACK 108 /**< May attack beyond 5 feet while still auto advancing. */
+#define NUM_MOB_FLAGS 109
 /**********************/
 /**********************/
 
@@ -5759,8 +5760,20 @@ enum zone_terrain_type {
 #define AMMO_TYPE_BOLT 2
 #define AMMO_TYPE_STONE 3
 #define AMMO_TYPE_DART 4
+#define AMMO_TYPE_THROWN 5
 /**/
-#define NUM_AMMO_TYPES 5
+/* Missile values 0-4 retain their legacy meanings. Zero maximum means a legacy single shot. */
+#define AMMO_TYPE_BULLET AMMO_TYPE_STONE
+#define AMMO_VAL_MIN 5
+#define AMMO_VAL_MAX 6
+#define AMMO_VAL_QUANTITY 7
+#define AMMO_VAL_DAMAGE_TYPE 8
+#define AMMO_VAL_DAMAGE_DIE 9
+#define AMMO_VAL_UNLIMITED 10
+#define AMMO_VAL_WEAPON_TYPE 11
+#define AMMO_VAL_RETURNING 12
+
+#define NUM_AMMO_TYPES 6
 /*************************/
 
 /* Weapon damage types, used in the weapon definitions
@@ -6559,6 +6572,7 @@ struct room_data
   zone_rnum zone;                                      /**< Room zone (for resetting) */
   int coords[2];                                       /**< Room coordinates (for wilderness) */
   int sector_type;                                     /**< sector type (move/hide) */
+  int room_size;                                       /**< Maximum distance; 0 uses terrain default */
   int room_flags[RF_ARRAY_MAX];                        /**< INDOORS, DARK, etc */
   long room_affections;                                /* bitvector for spells/skills */
   char *name;                                          /**< Room name */
@@ -6836,6 +6850,9 @@ struct char_special_data
   int totalDefense;           /* how many totaldefense attempts left in the round */
   struct char_data *guarding; /* target for 'guard' ability */
   bool firing;                /* is char firing missile weapon? */
+  bool throwing;              /* use a wielded throwable weapon with ammunition */
+  bool manyshot_pending;      /* first bow attack of a full attack */
+  bool ranged_touch_roll;     /* do not borrow equipped weapon/ammo bonuses for rays */
   bool blasting;              /* is char eldritch blasting? */
   int mounted_blocks_left;    /* how many mounted combat blocks left in the round */
   int deflect_arrows_left;    /* deflect arrows left */

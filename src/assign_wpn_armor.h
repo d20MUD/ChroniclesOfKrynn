@@ -123,6 +123,10 @@ extern "C"
 {
 #endif
 
+bool is_throwing_weapon(struct char_data *ch, struct obj_data *weapon);
+bool ammunition_is_unlimited(struct obj_data *ammo, struct obj_data *weapon);
+struct obj_data *take_ammo_projectile(struct obj_data *ammo, struct obj_data *weapon);
+
 #ifdef __cplusplus
 }
 #endif

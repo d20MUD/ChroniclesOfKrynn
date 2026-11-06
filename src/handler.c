@@ -820,7 +820,7 @@ void compute_char_cap(struct char_data *ch, int mode)
       attack_type = ATTACK_TYPE_RANGED;
     show_stat_limit(ch, attack_type == ATTACK_TYPE_RANGED ? "Attack bonus (ranged)" : "Attack bonus (melee)",
                     compute_attack_bonus(ch, opponent, attack_type),
-                    attack_cap + (attack_type == ATTACK_TYPE_RANGED ? formation_ranged_penalty(ch) : 0));
+                    attack_cap + (attack_type == ATTACK_TYPE_RANGED ? formation_ranged_penalty(ch, opponent) : 0));
     show_stat_limit(ch, "Armor class", compute_armor_class(NULL, ch, FALSE, MODE_ARMOR_CLASS_NORMAL),
                     CONFIG_PLAYER_AC_CAP);
     show_stat_limit(ch, "Hitroll (stat)", GET_HITROLL(ch), hit_cap);
@@ -1602,6 +1602,7 @@ void char_from_room(struct char_data *ch)
     exit(1);
   }
 
+  clear_combat_distances(ch, TRUE);
   legendary_effects_depart(ch);
 
   if (FIGHTING(ch) != NULL)
@@ -2639,6 +2640,7 @@ void object_list_new_owner(struct obj_data *list, struct char_data *ch)
 /* Extract an object from the world */
 void extract_obj(struct obj_data *obj)
 {
+  forget_ranged_projectile(obj);
   legendary_object_unload(obj);
   housing_object_extracted(obj);
   struct descriptor_data *d = NULL;
@@ -3754,14 +3756,18 @@ bool formation_allows_attack(struct char_data *ch, int attack_type, struct obj_d
   return ranged;
 }
 
-int formation_ranged_penalty(struct char_data *ch)
+int formation_ranged_penalty(struct char_data *ch, struct char_data *victim)
 {
+  struct char_data *tank = victim ? FIGHTING(victim) : NULL;
   int penalty = 0;
-  if (!ch || !GROUP(ch) || get_formation_row(ch) != FORMATION_FRONT)
+
+  if (!ch || IN_ROOM(ch) == NOWHERE)
     return 0;
-  if (!HAS_FEAT(ch, FEAT_POINT_BLANK_SHOT))
-    penalty -= 4;
-  if (!HAS_FEAT(ch, FEAT_PRECISE_SHOT) && !HAS_FEAT(ch, FEAT_IMPROVED_PRECISE_SHOT))
+  if (victim && IS_NPC(victim) && tank && tank != ch && !IS_NPC(tank) &&
+      IN_ROOM(tank) == IN_ROOM(ch) &&
+      (MOB_FLAGGED(victim, MOB_RANGED_ATTACK) || formation_can_melee_target(victim, tank)) &&
+      combat_attack_in_range(victim, tank, ATTACK_TYPE_PRIMARY, NULL) &&
+      !HAS_FEAT(ch, FEAT_PRECISE_SHOT) && !HAS_FEAT(ch, FEAT_IMPROVED_PRECISE_SHOT))
     penalty -= 4;
   return penalty;
 }
@@ -3839,6 +3845,12 @@ bool formation_melee_skill_allowed(struct char_data *ch, struct char_data *victi
     weapon = GET_EQ(ch, WEAR_WIELD_1);
     if (!weapon)
       weapon = GET_EQ(ch, WEAR_WIELD_2H);
+  }
+  if (!combat_attack_in_range(ch, victim, armed ? ATTACK_TYPE_PRIMARY : ATTACK_TYPE_UNARMED, weapon))
+  {
+    if (!IS_NPC(ch))
+      send_to_char(ch, "You are too far away for that melee action. Use advance.\r\n");
+    return FALSE;
   }
   if (formation_allows_attack(ch, armed ? ATTACK_TYPE_PRIMARY : ATTACK_TYPE_UNARMED, weapon) &&
       formation_can_melee_target(ch, victim))

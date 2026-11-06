@@ -712,6 +712,10 @@ static void redit_disp_menu(struct descriptor_data *d)
                   room->name, grn, nrm, nrm, room->description, grn, nrm, cyn, buf1, grn, nrm, cyn,
                   buf2);
 
+  write_to_output(d, "%sH%s) Room size   : %s%d%s (%s)\r\n",
+                  grn, nrm, cyn, get_room_size(room), nrm,
+                  room->room_size > 0 ? "custom" : "terrain default");
+
   if (!CONFIG_DIAGONAL_DIRS)
   {
     write_to_output(d,
@@ -923,6 +927,12 @@ void redit_parse(struct descriptor_data *d, char *arg)
     case '3':
       redit_disp_flag_menu(d);
       break;
+    case 'h':
+    case 'H':
+      write_to_output(d, "Enter maximum distance (positive integer, 0 for terrain default %d): ",
+                      default_room_size(OLC_ROOM(d)->sector_type));
+      OLC_MODE(d) = REDIT_ROOM_SIZE;
+      return;
     case '4':
       redit_disp_sector_menu(d);
       break;
@@ -1089,6 +1099,14 @@ void redit_parse(struct descriptor_data *d, char *arg)
       redit_disp_flag_menu(d);
     }
     return;
+
+  case REDIT_ROOM_SIZE:
+    if (!parse_room_size(arg, &OLC_ROOM(d)->room_size))
+    {
+      write_to_output(d, "Enter a non-negative integer (0 uses the terrain default): ");
+      return;
+    }
+    break;
 
   case REDIT_SECTOR:
     number = atoi(arg) - 1;

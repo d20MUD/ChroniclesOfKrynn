@@ -72,7 +72,7 @@ struct combat_mode_data combat_mode_info[] = {
     {"counterspell", AFF_COUNTERSPELL, FEAT_UNDEFINED, FALSE, MODE_GROUP_NONE},
     {"defensive casting", AFF_DEFENSIVE_CASTING, FEAT_UNDEFINED, FALSE, MODE_GROUP_NONE},
     {"whirlwind attack", AFF_WHIRLWIND_ATTACK, FEAT_WHIRLWIND_ATTACK, FALSE, MODE_GROUP_NONE},
-    {"deadly aim", AFF_DEADLY_AIM, FEAT_DEADLY_AIM, TRUE, MODE_GROUP_NONE}};
+    {"deadly aim", AFF_DEADLY_AIM, FEAT_DEADLY_AIM, FALSE, MODE_GROUP_NONE}};
 
 /* Unified combat mode management */
 bool is_mode_enabled(const struct char_data *ch, const int mode)

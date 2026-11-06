@@ -333,6 +333,7 @@ i added this trying to debug issues with qedit-copy -zusuk
 #define REDIT_EXIT_TRAP_DETECT_DC 26
 #define REDIT_EXIT_TRAP_DISARM_DC 27
 #define REDIT_EXIT_TRAP_SAVE_DC 28
+#define REDIT_ROOM_SIZE 29
 
 /* Submodes of ZEDIT connectedness. */
 #define ZEDIT_MAIN_MENU 0

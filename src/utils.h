@@ -916,6 +916,12 @@ void char_from_furniture(struct char_data *ch);
 #define GET_PC_ADJECTIVE_2(ch) (ch->player_specials->saved.sdesc_adjective_2)
 
 /* room utils */
+int default_room_size(int sector);
+int get_room_size(const struct room_data *room);
+bool parse_room_size(const char *text, int *size);
+
+/** Effective maximum distance, including terrain defaults for uncustomized rooms. */
+#define ROOM_SIZE(room) get_room_size(VALID_ROOM_RNUM(room) ? &world[(room)] : NULL)
 
 /** Return the sector type for the room. If there is no sector type, return
  * SECT_INSIDE. */
@@ -1244,6 +1250,7 @@ void reconcile_alter_self(struct char_data *ch);
 #define GUARDING(ch) ((ch)->char_specials.guarding)
 /** Is ch firing a missile weapon? */
 #define FIRING(ch) ((ch)->char_specials.firing)
+#define THROWING(ch) ((ch)->char_specials.throwing)
 /** is ch auto-eldritch-blasting? */
 #define BLASTING(ch) ((ch)->char_specials.blasting)
 /** Condensed Combat */

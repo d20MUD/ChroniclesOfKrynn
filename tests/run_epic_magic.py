@@ -116,7 +116,7 @@ int get_monk_dr_bypass(struct char_data *ch) { return 0; }
 const char *get_wearoff(int spell) { return ""; }
 void send_combat_roll_info(struct char_data *ch,const char *format,...) {}
 int get_attack_bonus_cap(struct char_data *ch) { return MAX_BAB; }
-int formation_ranged_penalty(struct char_data *ch) { return -8; }
+int formation_ranged_penalty(struct char_data *ch, struct char_data *victim) { return -8; }
 void draw_line(struct char_data *ch,int length,char left,char right) {}
 int compute_arcane_level(struct char_data *ch) { return CLASS_LEVEL(ch,CLASS_WIZARD); }
 int compute_divine_level(struct char_data *ch) { return 0; }
@@ -167,7 +167,7 @@ code += function('fight.c', 'int apply_damage_reduction(')
 a = fight.index('  int maximum_bab = get_attack_bonus_cap(ch);', fight.index('int compute_attack_bonus_full('))
 b = fight.index('\n}', a) + 2
 code += '''int capped_attack(struct char_data *ch,int attack_type) {
-int calc_bab=80, formation_penalty=0; bool display=FALSE;
+int calc_bab=80, formation_penalty=0; bool display=FALSE; struct char_data *victim=NULL;
 '''
 code += fight[a:b] + '\n'
 parser = (src / 'spell_parser.c').read_text()

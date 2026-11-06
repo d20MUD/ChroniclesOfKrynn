@@ -81,6 +81,243 @@
 /* local global */
 struct obj_data *last_missile = NULL;
 
+/* Stack-scoped shot context keeps the final arrow's bonuses available after it
+ * leaves the pouch, and isolates nested attacks triggered by combat procs. */
+struct ranged_shot_context
+{
+  struct char_data *attacker;
+  struct obj_data *projectile;
+  bool unlimited;
+  struct ranged_shot_context *previous;
+  struct obj_data *extra_projectile;
+  bool extra_unlimited, manyshot, resolving_extra;
+};
+static struct ranged_shot_context *current_shot = NULL;
+
+void forget_ranged_projectile(struct obj_data *obj)
+{
+  struct ranged_shot_context *context;
+  for (context = current_shot; context; context = context->previous)
+  {
+    if (context->projectile == obj)
+      context->projectile = NULL;
+    if (context->extra_projectile == obj)
+      context->extra_projectile = NULL;
+  }
+  if (last_missile == obj)
+    last_missile = NULL;
+}
+
+static struct obj_data *ranged_ammunition(struct char_data *ch)
+{
+  if (current_shot && current_shot->attacker == ch)
+  {
+    if (current_shot->resolving_extra && current_shot->extra_projectile)
+      return current_shot->extra_projectile;
+    if (current_shot->projectile)
+      return current_shot->projectile;
+  }
+  if (can_fire_ammo(ch, TRUE))
+    return GET_EQ(ch, WEAR_AMMO_POUCH)->contains;
+  return NULL;
+}
+
+static bool manyshot_ready(struct char_data *ch, struct obj_data *weapon)
+{
+  struct obj_data *ammo, *next;
+  if (!HAS_FEAT(ch, FEAT_MANYSHOT) || !weapon || is_throwing_weapon(ch, weapon) ||
+      !GET_EQ(ch, WEAR_AMMO_POUCH) || !has_ammo_in_pouch(ch, weapon, TRUE))
+    return FALSE;
+  ammo = GET_EQ(ch, WEAR_AMMO_POUCH)->contains;
+  if (!ammo || GET_OBJ_TYPE(ammo) != ITEM_MISSILE || GET_OBJ_VAL(ammo, 0) != AMMO_TYPE_ARROW)
+    return FALSE;
+  if (ammunition_is_unlimited(ammo, weapon) ||
+      (GET_OBJ_VAL(ammo, AMMO_VAL_MAX) > 0 && GET_OBJ_VAL(ammo, AMMO_VAL_QUANTITY) >= 2))
+    return TRUE;
+  next = ammo->next_content;
+  return next && GET_OBJ_TYPE(next) == ITEM_MISSILE && GET_OBJ_VAL(next, 0) == AMMO_TYPE_ARROW &&
+         (GET_OBJ_VAL(next, AMMO_VAL_MAX) <= 0 || GET_OBJ_VAL(next, AMMO_VAL_QUANTITY) > 0 ||
+          ammunition_is_unlimited(next, weapon));
+}
+
+/* Distances are symmetric and per opponent: each mob closes independently. */
+struct combat_distance_data
+{
+  struct char_data *first, *second;
+  room_rnum room;
+  int distance;
+  struct combat_distance_data *next;
+};
+static struct combat_distance_data *combat_distances = NULL;
+
+static struct combat_distance_data *find_combat_distance(struct char_data *ch,
+                                                         struct char_data *victim)
+{
+  struct combat_distance_data *entry;
+  for (entry = combat_distances; entry; entry = entry->next)
+    if (entry->room == IN_ROOM(ch) &&
+        ((entry->first == ch && entry->second == victim) ||
+         (entry->first == victim && entry->second == ch)))
+      return entry;
+  return NULL;
+}
+
+int combat_distance(struct char_data *ch, struct char_data *victim)
+{
+  struct combat_distance_data *entry;
+  if (!ch || !victim || IN_ROOM(ch) == NOWHERE || IN_ROOM(ch) != IN_ROOM(victim))
+    return -1;
+  if (ch == victim)
+    return 0;
+  entry = find_combat_distance(ch, victim);
+  if (entry)
+    return MIN(entry->distance, ROOM_SIZE(IN_ROOM(ch)));
+  return (is_using_ranged_weapon(ch, TRUE) || is_using_ranged_weapon(victim, TRUE))
+             ? ROOM_SIZE(IN_ROOM(ch)) : 0;
+}
+
+static void start_combat_distance(struct char_data *ch, struct char_data *victim)
+{
+  struct combat_distance_data *entry;
+  if (!ch || !victim || ch == victim || IN_ROOM(ch) == NOWHERE || IN_ROOM(ch) != IN_ROOM(victim) ||
+      find_combat_distance(ch, victim))
+    return;
+  CREATE(entry, struct combat_distance_data, 1);
+  entry->distance = combat_distance(ch, victim);
+  entry->first = ch;
+  entry->second = victim;
+  entry->room = IN_ROOM(ch);
+  entry->next = combat_distances;
+  combat_distances = entry;
+}
+
+/* Departure/extraction clears all pairs; ending combat preserves pairs with
+ * opponents who are still fighting this character. */
+void clear_combat_distances(struct char_data *ch, bool departing)
+{
+  struct combat_distance_data **link = &combat_distances, *entry;
+  while ((entry = *link) != NULL)
+  {
+    if ((entry->first == ch || entry->second == ch) &&
+        (departing || (FIGHTING(entry->first) != entry->second &&
+                       FIGHTING(entry->second) != entry->first)))
+    {
+      *link = entry->next;
+      free(entry);
+    }
+    else
+      link = &entry->next;
+  }
+}
+
+int point_blank_shot_bonus(struct char_data *ch, struct char_data *victim)
+{
+  int distance = combat_distance(ch, victim);
+  return ch && HAS_FEAT(ch, FEAT_POINT_BLANK_SHOT) && distance >= 0 && distance <= 30 ? 1 : 0;
+}
+
+int deadly_aim_step(struct char_data *ch)
+{
+  return ch && HAS_FEAT(ch, FEAT_DEADLY_AIM) && AFF_FLAGGED(ch, AFF_DEADLY_AIM)
+             ? 1 + MAX(0, BAB(ch)) / 4 : 0;
+}
+
+int ranged_range_penalty(struct char_data *ch, struct char_data *victim, struct obj_data *weapon)
+{
+  int type, increment, distance = combat_distance(ch, victim);
+  if (!weapon || GET_OBJ_TYPE(weapon) != ITEM_WEAPON || distance <= 0)
+    return 0;
+  type = GET_OBJ_VAL(weapon, 0);
+  if (type < 0 || type >= NUM_WEAPON_TYPES)
+    return 0;
+  increment = weapon_list[type].range;
+  if (increment <= 0)
+    return 0;
+  return -((distance - 1) / increment) * (HAS_FEAT(ch, FEAT_FAR_SHOT) ? 1 : 2);
+}
+
+int combat_melee_range(struct char_data *ch, struct obj_data *weapon)
+{
+  int type;
+  if (IS_NPC(ch))
+    return 5;
+  if (weapon && GET_OBJ_TYPE(weapon) == ITEM_WEAPON)
+  {
+    type = GET_OBJ_VAL(weapon, 0);
+    if (type >= 0 && type < NUM_WEAPON_TYPES &&
+        IS_SET(weapon_list[type].weaponFlags, WEAPON_FLAG_REACH))
+      return 10;
+  }
+  return 5;
+}
+
+bool combat_attack_in_range(struct char_data *ch, struct char_data *victim, int attack_type,
+                            struct obj_data *weapon)
+{
+  int distance = combat_distance(ch, victim);
+  if (distance < 0)
+    return FALSE;
+  if (IS_NPC(ch) && !MOB_FLAGGED(ch, MOB_RANGED_ATTACK))
+    return distance <= 5;
+  if (IS_NPC(ch) && attack_type != ATTACK_TYPE_RANGED)
+    return TRUE;
+  if (attack_type == ATTACK_TYPE_RANGED)
+  {
+    if (weapon && GET_OBJ_TYPE(weapon) == ITEM_WEAPON)
+    {
+      int type = GET_OBJ_VAL(weapon, 0);
+      if (type >= 0 && type < NUM_WEAPON_TYPES && weapon_list[type].range > 0)
+        return (long)distance <= (long)weapon_list[type].range *
+                                (is_throwing_weapon(ch, weapon) ? 5 : 10);
+    }
+    return TRUE;
+  }
+  if (attack_type == ATTACK_TYPE_PSIONICS || attack_type == ATTACK_TYPE_ELDRITCH_BLAST)
+    return TRUE;
+  if (attack_type == ATTACK_TYPE_UNARMED || attack_type >= ATTACK_TYPE_PRIMARY_EVO_BITE)
+    weapon = NULL;
+  return distance <= combat_melee_range(ch, weapon);
+}
+
+/* Movement changes only this opponent's separation, by at most one speed. */
+int advance_combat_distance(struct char_data *ch, struct char_data *victim, int desired)
+{
+  struct combat_distance_data *entry;
+  int distance, speed;
+  if (!ch || !victim || GET_POS(ch) < POS_FIGHTING ||
+      AFF_FLAGGED(ch, AFF_STUN) || AFF_FLAGGED(ch, AFF_DAZED) ||
+      AFF_FLAGGED(ch, AFF_PARALYZED) || char_has_mud_event(ch, eSTUNNED) ||
+      AFF_FLAGGED(ch, AFF_GRAPPLED) || AFF_FLAGGED(ch, AFF_ENTANGLED) || legendary_grounded(ch))
+    return 0;
+  distance = combat_distance(ch, victim);
+  if (distance < 0 || distance <= desired)
+    return 0;
+  speed = MAX(0, get_speed(ch, FALSE));
+  if (!speed)
+    return 0;
+  start_combat_distance(ch, victim);
+  entry = find_combat_distance(ch, victim);
+  if (!entry)
+    return 0;
+  entry->distance = MAX(desired, distance - speed);
+  return distance - entry->distance;
+}
+
+static void auto_advance_mob(struct char_data *ch, int phase)
+{
+  struct char_data *victim = FIGHTING(ch);
+  int moved;
+  if (!IS_NPC(ch) || phase != 1 || !victim)
+    return;
+  moved = advance_combat_distance(ch, victim, 5);
+  if (moved)
+  {
+    act("$n advances toward $N.", FALSE, ch, NULL, victim, TO_NOTVICT);
+    send_to_char(victim, "%s advances %d feet toward you (%d feet away).\r\n",
+                 PERS(ch, victim), moved, combat_distance(ch, victim));
+  }
+}
+
 /* head of l-list of fighting chars */
 struct char_data *combat_list = NULL;
 
@@ -487,7 +724,9 @@ bool is_tanking(struct char_data *ch)
   struct char_data *vict;
   for (vict = world[ch->in_room].people; vict; vict = vict->next_in_room)
   {
-    if (FIGHTING(vict) == ch && formation_can_melee_target(vict, ch))
+    if (FIGHTING(vict) == ch &&
+        (MOB_FLAGGED(vict, MOB_RANGED_ATTACK) || formation_can_melee_target(vict, ch)) &&
+        combat_attack_in_range(vict, ch, ATTACK_TYPE_PRIMARY, NULL))
       return TRUE;
   }
 
@@ -2114,6 +2353,9 @@ bool set_fighting(struct char_data *ch, struct char_data *vict)
 
   legendary_loadout_combat_start(ch);
   FIGHTING(ch) = vict;
+  start_combat_distance(ch, vict);
+  if (!IS_NPC(ch))
+    send_to_char(ch, "You engage %s at %d feet.\r\n", PERS(vict, ch), combat_distance(ch, vict));
 
   if (!CONFIG_PK_ALLOWED)
     check_killer(ch, vict);
@@ -2199,6 +2441,7 @@ void stop_fighting(struct char_data *ch)
   REMOVE_FROM_LIST(ch, combat_list, next_fighting);
   ch->next_fighting = NULL;
   FIGHTING(ch) = NULL;
+  clear_combat_distances(ch, FALSE);
   FIRING(ch) = FALSE;
   if (GET_POS(ch) == POS_FIGHTING) /* in case they are position fighting */
     change_position(ch, POS_STANDING);
@@ -3670,10 +3913,10 @@ int skill_message(int dam, struct char_data *ch, struct char_data *vict, int att
     attacktype = TYPE_CLAW;
 
   /* ranged weapon - general check and we want the missile to serve as our weapon */
-  if (can_fire_ammo(ch, TRUE) && (dualing == 2))
+  if ((dualing == ATTACK_TYPE_RANGED) && ranged_ammunition(ch))
   {
     is_ranged = TRUE;
-    weap = GET_EQ(ch, WEAR_AMMO_POUCH)->contains; /* top missile */
+    weap = ranged_ammunition(ch);
   }
 
   /* defender weapon for parry message */
@@ -5461,6 +5704,16 @@ int compute_concealment(struct char_data *ch, struct char_data *attacker)
   return (concealment_cap);
 }
 
+int ranged_concealment(struct char_data *ch, struct char_data *victim, int attack_type)
+{
+  int concealment = compute_concealment(victim, ch);
+  if (concealment < 50 && ch && HAS_FEAT(ch, FEAT_IMPROVED_PRECISE_SHOT) &&
+      (attack_type == ATTACK_TYPE_RANGED || attack_type == ATTACK_TYPE_PSIONICS ||
+       attack_type == ATTACK_TYPE_ELDRITCH_BLAST))
+    return 0;
+  return concealment;
+}
+
 /* this function lets damage_handling know that the given attacktype
    is VALID for being handled, otherwise ignore this attack */
 bool ok_damage_handling(int attacktype)
@@ -5529,7 +5782,7 @@ int damage_handling(struct char_data *ch, struct char_data *victim, int dam, int
     }
 
     /* handle concealment */
-    int concealment = compute_concealment(victim, ch);
+    int concealment = ranged_concealment(ch, victim, attack_type);
     /* seeking weapons (ranged weapons only) bypass concealment always */
     if (weapon && OBJ_FLAGGED(weapon, ITEM_SEEKING))
       concealment = 0;
@@ -7420,6 +7673,7 @@ static int resolve_damage(struct char_data *ch,struct char_data *victim,int dam,
 int compute_damage_bonus(struct char_data *ch, struct char_data *vict, struct obj_data *wielded,
                          int w_type, int mod, int mode, int attack_type)
 {
+  struct obj_data *ammo = attack_type == ATTACK_TYPE_RANGED ? ranged_ammunition(ch) : NULL;
   int dambonus = mod;
   legendary_foundations_refresh(ch);
   bool display_mode = FALSE;
@@ -7800,69 +8054,78 @@ int compute_damage_bonus(struct char_data *ch, struct char_data *vict, struct ob
 
   case ATTACK_TYPE_RANGED:
 
-    /* strength penalties DO apply to ranged weapons */
-    if (str_bonus <= 0)
+    if (is_throwing_weapon(ch, wielded))
     {
       dambonus += str_bonus;
       if (display_mode)
-        send_to_char(ch, "ranged strength penalty: \tR%d\tn\r\n", GET_STR_BONUS(ch));
+        send_to_char(ch, "Thrown weapon strength bonus: %d\r\n", str_bonus);
     }
     else
     {
-      /* some ranged weapons get various strength bonus */
-      if (wielded)
+      /* strength penalties DO apply to ranged weapons */
+      if (str_bonus <= 0)
       {
-        if (OBJ_FLAGGED(wielded, ITEM_ADAPTIVE))
-          dambonus += str_bonus;
-        else
+        dambonus += str_bonus;
+        if (display_mode)
+          send_to_char(ch, "ranged strength penalty: \tR%d\tn\r\n", GET_STR_BONUS(ch));
+      }
+      else
+      {
+        /* some ranged weapons get various strength bonus */
+        if (wielded)
         {
-          switch (GET_OBJ_VAL(wielded, 0))
-          {
-          case WEAPON_TYPE_COMPOSITE_SHORTBOW:
-          case WEAPON_TYPE_COMPOSITE_LONGBOW:
-            if (display_mode)
-              send_to_char(ch, "Comp bow (1) bonus: \tR%d\tn\r\n", MIN(1, str_bonus));
-            dambonus += MIN(1, str_bonus);
-            break;
-          case WEAPON_TYPE_COMPOSITE_LONGBOW_2:
-          case WEAPON_TYPE_COMPOSITE_SHORTBOW_2:
-            if (display_mode)
-              send_to_char(ch, "Comp bow (2) bonus: \tR%d\tn\r\n", MIN(2, str_bonus));
-            dambonus += MIN(2, str_bonus);
-            break;
-          case WEAPON_TYPE_COMPOSITE_LONGBOW_3:
-          case WEAPON_TYPE_COMPOSITE_SHORTBOW_3:
-            if (display_mode)
-              send_to_char(ch, "Comp bow (3) bonus: \tR%d\tn\r\n", MIN(3, str_bonus));
-            dambonus += MIN(3, str_bonus);
-            break;
-          case WEAPON_TYPE_COMPOSITE_LONGBOW_4:
-          case WEAPON_TYPE_COMPOSITE_SHORTBOW_4:
-            if (display_mode)
-              send_to_char(ch, "Comp bow (4) bonus: \tR%d\tn\r\n", MIN(4, str_bonus));
-            dambonus += MIN(4, str_bonus);
-            break;
-          case WEAPON_TYPE_COMPOSITE_LONGBOW_5:
-          case WEAPON_TYPE_COMPOSITE_SHORTBOW_5:
-            if (display_mode)
-              send_to_char(ch, "Comp bow (5) bonus: \tR%d\tn\r\n", MIN(5, str_bonus));
-            dambonus += MIN(5, str_bonus);
-            break;
-          case WEAPON_TYPE_SLING:
-            if (display_mode)
-              send_to_char(ch, "Sling strength bonus: \tR%d\tn\r\n", str_bonus);
+          if (OBJ_FLAGGED(wielded, ITEM_ADAPTIVE))
             dambonus += str_bonus;
-            break;
-          default:
-            break; /* nope, no bonus */
+          else
+          {
+            switch (GET_OBJ_VAL(wielded, 0))
+            {
+            case WEAPON_TYPE_COMPOSITE_SHORTBOW:
+            case WEAPON_TYPE_COMPOSITE_LONGBOW:
+              if (display_mode)
+                send_to_char(ch, "Comp bow (1) bonus: \tR%d\tn\r\n", MIN(1, str_bonus));
+              dambonus += MIN(1, str_bonus);
+              break;
+            case WEAPON_TYPE_COMPOSITE_LONGBOW_2:
+            case WEAPON_TYPE_COMPOSITE_SHORTBOW_2:
+              if (display_mode)
+                send_to_char(ch, "Comp bow (2) bonus: \tR%d\tn\r\n", MIN(2, str_bonus));
+              dambonus += MIN(2, str_bonus);
+              break;
+            case WEAPON_TYPE_COMPOSITE_LONGBOW_3:
+            case WEAPON_TYPE_COMPOSITE_SHORTBOW_3:
+              if (display_mode)
+                send_to_char(ch, "Comp bow (3) bonus: \tR%d\tn\r\n", MIN(3, str_bonus));
+              dambonus += MIN(3, str_bonus);
+              break;
+            case WEAPON_TYPE_COMPOSITE_LONGBOW_4:
+            case WEAPON_TYPE_COMPOSITE_SHORTBOW_4:
+              if (display_mode)
+                send_to_char(ch, "Comp bow (4) bonus: \tR%d\tn\r\n", MIN(4, str_bonus));
+              dambonus += MIN(4, str_bonus);
+              break;
+            case WEAPON_TYPE_COMPOSITE_LONGBOW_5:
+            case WEAPON_TYPE_COMPOSITE_SHORTBOW_5:
+              if (display_mode)
+                send_to_char(ch, "Comp bow (5) bonus: \tR%d\tn\r\n", MIN(5, str_bonus));
+              dambonus += MIN(5, str_bonus);
+              break;
+            case WEAPON_TYPE_SLING:
+              if (display_mode)
+                send_to_char(ch, "Sling strength bonus: \tR%d\tn\r\n", str_bonus);
+              dambonus += str_bonus;
+              break;
+            default:
+              break; /* nope, no bonus */
+            }
           }
         }
       }
     }
 
-    if (vict && IN_ROOM(ch) == IN_ROOM(vict))
+    if (vict)
     {
-      if (!IS_NPC(ch) && HAS_FEAT(ch, FEAT_POINT_BLANK_SHOT))
+      if (point_blank_shot_bonus(ch, vict))
       {
         if (display_mode)
           send_to_char(ch, "Point Blank Shot bonus: \tR1\tn\r\n");
@@ -8239,12 +8502,15 @@ int compute_damage_bonus(struct char_data *ch, struct char_data *vict, struct ob
   }
 
   /* ranged includes arrow enhancement bonus + special ranged bonus to favored enemies with the epic favored enemy feat */
-  if (can_fire_ammo(ch, TRUE))
+  if (ammo)
   {
     if (display_mode)
       send_to_char(ch, "Ammo enhancement bonus: \tR%d\tn\r\n",
-                   GET_ENHANCEMENT_BONUS(GET_EQ(ch, WEAR_AMMO_POUCH)->contains));
-    dambonus += GET_ENHANCEMENT_BONUS(GET_EQ(ch, WEAR_AMMO_POUCH)->contains);
+                   GET_ENHANCEMENT_BONUS(ammo));
+    dambonus += MAX(0, GET_ENHANCEMENT_BONUS(ammo) -
+        MAX(wielded ? GET_ENHANCEMENT_BONUS(wielded) : 0,
+            affected_by_spell(ch, SPELL_GREATER_MAGIC_WEAPON)
+                ? get_char_affect_modifier(ch, SPELL_GREATER_MAGIC_WEAPON, APPLY_SPECIAL) : 0));
 
     if (HAS_FEAT(ch, FEAT_ENHANCE_ARROW_MAGIC) && display_mode)
       send_to_char(ch, "Enhance ammo magic bonus: \tR%d\tn\r\n",
@@ -8434,9 +8700,9 @@ int compute_damage_bonus(struct char_data *ch, struct char_data *vict, struct ob
   }
   else if (AFF_FLAGGED(ch, AFF_DEADLY_AIM) && attack_type == ATTACK_TYPE_RANGED)
   {
-    dambonus += COMBAT_MODE_VALUE(ch) * 2;
+    dambonus += deadly_aim_step(ch) * 2;
     if (display_mode)
-      send_to_char(ch, "deadly aim bonus: \tR%d\tn\r\n", COMBAT_MODE_VALUE(ch) * 2);
+      send_to_char(ch, "deadly aim bonus: \tR%d\tn\r\n", deadly_aim_step(ch) * 2);
   }
 
   if (HAS_FEAT(ch, FEAT_BG_HERMIT) && get_party_size_same_room(ch))
@@ -9163,7 +9429,7 @@ int compute_dam_dice(struct char_data *ch, struct char_data *victim, struct obj_
 
   /* going to check if we are in a state ready to use ranged weapon
      before anything else */
-  if (can_fire_ammo(ch, TRUE))
+  if (ranged_ammunition(ch) != NULL)
   {
     is_ranged = TRUE;
     /* this -has- to be a weapon, can_fire_ammo() already verified this */
@@ -11130,6 +11396,7 @@ int compute_attack_bonus_full(struct char_data *ch,     /* Attacker */
                               int attack_type,          /* Type of attack  */
                               bool display) // whether to show info on the attack bonus breakdown
 {
+  struct obj_data *ammo = attack_type == ATTACK_TYPE_RANGED && !ch->char_specials.ranged_touch_roll ? ranged_ammunition(ch) : NULL;
   int i = 0, formation_penalty = 0;
   int bonuses[NUM_BONUS_TYPES];
   int calc_bab = BAB(ch); /* Start with base attack bonus */
@@ -11140,7 +11407,8 @@ int compute_attack_bonus_full(struct char_data *ch,     /* Attacker */
 
   /* redundancy necessary due to sometimes arriving here without going through
    * hit()*/
-  if (attack_type == ATTACK_TYPE_UNARMED || attack_type == ATTACK_TYPE_ELDRITCH_BLAST)
+  if (attack_type == ATTACK_TYPE_UNARMED || attack_type == ATTACK_TYPE_ELDRITCH_BLAST ||
+      ch->char_specials.ranged_touch_roll)
     wielded = NULL;
   else
     wielded = get_wielded(ch, attack_type);
@@ -11247,22 +11515,24 @@ int compute_attack_bonus_full(struct char_data *ch,     /* Attacker */
     calc_bab += GET_DEX_BONUS(ch);
     if (display)
       send_to_char(ch, "%2d: %-50s\r\n", GET_DEX_BONUS(ch), "Ranged Dex");
-    /* Ranged focus applies to every ranged attack, including bombs, regardless
-     * of the weapon currently equipped. The generic focus checks below skip
-     * these attacks to avoid counting the same bonus twice. */
-    if (HAS_COMBAT_FEAT(ch, feat_to_cfeat(FEAT_WEAPON_FOCUS), WEAPON_FAMILY_RANGED))
+    {
+    int focus_family = wielded && is_throwing_weapon(ch, wielded)
+                           ? weapon_list[GET_OBJ_VAL(wielded, 0)].weaponFamily : WEAPON_FAMILY_RANGED;
+    /* Thrown weapons retain their own focus family. Other ranged attacks use
+     * ranged focus; generic focus checks below skip these to avoid duplication. */
+    if (HAS_COMBAT_FEAT(ch, feat_to_cfeat(FEAT_WEAPON_FOCUS), focus_family))
     {
       calc_bab += 1;
       if (display)
         send_to_char(ch, " 1: %-50s\r\n", "Weapon Focus (Ranged)");
     }
-    if (HAS_COMBAT_FEAT(ch, feat_to_cfeat(FEAT_SUPERIOR_WEAPON_FOCUS), WEAPON_FAMILY_RANGED))
+    if (HAS_COMBAT_FEAT(ch, feat_to_cfeat(FEAT_SUPERIOR_WEAPON_FOCUS), focus_family))
     {
       calc_bab += 1;
       if (display)
         send_to_char(ch, " 1: %-50s\r\n", "Superior Weapon Focus (Ranged)");
     }
-    if (HAS_COMBAT_FEAT(ch, feat_to_cfeat(FEAT_GREATER_WEAPON_FOCUS), WEAPON_FAMILY_RANGED))
+    if (HAS_COMBAT_FEAT(ch, feat_to_cfeat(FEAT_GREATER_WEAPON_FOCUS), focus_family))
     {
       calc_bab += 1;
       if (display)
@@ -11290,6 +11560,7 @@ int compute_attack_bonus_full(struct char_data *ch,     /* Attacker */
         send_to_char(ch, "%2d: %-50s\r\n", savant_bonus, "Bombardier Savant");
     }
     break;
+    }
   case ATTACK_TYPE_UNARMED:
     /* Unarmed strikes count as light weapons, so Weapon Finesse applies to them
        for any character with the feat - no monk unarmed-strike class ability is
@@ -11595,12 +11866,12 @@ int compute_attack_bonus_full(struct char_data *ch,     /* Attacker */
   }
 
   /* ranged includes arrow, what a hack */ /* why is that a hack again? */
-  if (can_fire_ammo(ch, TRUE))
+  if (ammo)
   {
-    bonuses[BONUS_TYPE_ENHANCEMENT] += GET_ENHANCEMENT_BONUS(GET_EQ(ch, WEAR_AMMO_POUCH)->contains);
-    if (display && GET_ENHANCEMENT_BONUS(GET_EQ(ch, WEAR_AMMO_POUCH)->contains) > 0)
+    bonuses[BONUS_TYPE_ENHANCEMENT] = MAX(bonuses[BONUS_TYPE_ENHANCEMENT], GET_ENHANCEMENT_BONUS(ammo));
+    if (display && GET_ENHANCEMENT_BONUS(ammo) > 0)
       send_to_char(ch, "%2d: %-50s\r\n",
-                   GET_ENHANCEMENT_BONUS(GET_EQ(ch, WEAR_AMMO_POUCH)->contains),
+                   GET_ENHANCEMENT_BONUS(ammo),
                    "Ammo Enhancement");
   }
   if (IS_WILDSHAPED(ch) || IS_MORPHED(ch))
@@ -11773,8 +12044,7 @@ int compute_attack_bonus_full(struct char_data *ch,     /* Attacker */
       send_to_char(ch, "-2: %-50s\r\n", "Entangled/Grappled");
   }
   /* Modify this to store a player-chosen number for power attack and expertise */
-  if (AFF_FLAGGED(ch, AFF_POWER_ATTACK) || AFF_FLAGGED(ch, AFF_EXPERTISE) ||
-      AFF_FLAGGED(ch, AFF_DEADLY_AIM))
+  if (AFF_FLAGGED(ch, AFF_POWER_ATTACK) || AFF_FLAGGED(ch, AFF_EXPERTISE))
   {
     int penalty = COMBAT_MODE_VALUE(ch);
 
@@ -11790,6 +12060,10 @@ int compute_attack_bonus_full(struct char_data *ch,     /* Attacker */
     if (display)
       send_to_char(ch, "-%2d: %-50s\r\n", penalty, "Power Attack/Expertise/Deadly Aim");
   }
+  if (attack_type == ATTACK_TYPE_RANGED || attack_type == ATTACK_TYPE_PSIONICS ||
+      attack_type == ATTACK_TYPE_ELDRITCH_BLAST)
+    bonuses[BONUS_TYPE_UNDEFINED] -= deadly_aim_step(ch);
+
   /* spellbattle */
   if (char_has_mud_event(ch, eSPELLBATTLE) && SPELLBATTLE(ch) > 0)
   {
@@ -11917,9 +12191,9 @@ int compute_attack_bonus_full(struct char_data *ch,     /* Attacker */
         send_to_char(ch, " 2: %-50s\r\n", "Blink vs. No See Invis");
     }
 
-    /* point blank shot will give +1 bonus to hitroll if you are using a ranged
-     * attack in the same room as victim */
-    if (!IS_NPC(ch) && HAS_FEAT(ch, FEAT_POINT_BLANK_SHOT) && IN_ROOM(ch) == IN_ROOM(victim))
+    /* Point-Blank Shot is a 30-foot ranged bonus, not a melee feat tax. */
+    if ((attack_type == ATTACK_TYPE_RANGED || attack_type == ATTACK_TYPE_PSIONICS ||
+         attack_type == ATTACK_TYPE_ELDRITCH_BLAST) && point_blank_shot_bonus(ch, victim))
     {
       bonuses[BONUS_TYPE_UNDEFINED]++;
       if (display)
@@ -12411,6 +12685,14 @@ int compute_attack_bonus_full(struct char_data *ch,     /* Attacker */
     if (display && accuracy) send_to_char(ch, "%2d: %-50s\r\n", accuracy, "Legendary Accuracy (subject to attack cap)");
   }
 
+  if (attack_type == ATTACK_TYPE_RANGED && ammo)
+  {
+    int range_penalty = ranged_range_penalty(ch, victim, wielded);
+    bonuses[BONUS_TYPE_UNDEFINED] += range_penalty;
+    if (display && range_penalty)
+      send_to_char(ch, "%2d: %-50s\r\n", range_penalty, "Weapon range increments");
+  }
+
   /* Add up all the bonuses */
   for (i = 0; i < NUM_BONUS_TYPES; i++)
     calc_bab += bonuses[i];
@@ -12424,10 +12706,11 @@ int compute_attack_bonus_full(struct char_data *ch,     /* Attacker */
       send_to_char(ch, "-4: %-50s\r\n", "Mummy dread");
   }
 
-  if (attack_type == ATTACK_TYPE_RANGED)
-    formation_penalty = formation_ranged_penalty(ch);
+  if (attack_type == ATTACK_TYPE_RANGED || attack_type == ATTACK_TYPE_PSIONICS ||
+      attack_type == ATTACK_TYPE_ELDRITCH_BLAST)
+    formation_penalty = formation_ranged_penalty(ch, victim);
   if (display && formation_penalty)
-    send_to_char(ch, "%2d: %-50s\r\n", formation_penalty, "Front-row ranged penalties");
+    send_to_char(ch, "%2d: %-50s\r\n", formation_penalty, "Ranged formation penalties");
 
   if (display)
   {
@@ -12696,6 +12979,18 @@ static int perform_attack_roll(struct char_data *ch,     /* Attacker */
                 int is_touch,             /* TRUE/FALSE this is a touch attack? */
                 int attack_number, int extra_bonus, bool show_roll)
 {
+  if (!ch || !victim || IN_ROOM(ch) == NOWHERE || IN_ROOM(ch) != IN_ROOM(victim))
+    return -1;
+
+  if (!combat_attack_in_range(ch, victim, attack_type,
+                              is_touch ? NULL : get_wielded(ch, attack_type)))
+    return -1;
+
+  if (is_touch && (attack_type == ATTACK_TYPE_RANGED || attack_type == ATTACK_TYPE_PSIONICS ||
+                   attack_type == ATTACK_TYPE_ELDRITCH_BLAST) &&
+      rand_number(1, 100) <= ranged_concealment(ch, victim, attack_type))
+    return -1;
+
   //  struct obj_data *wielded = get_wielded(ch, attack_type);
 
   // protection from evil prevents evil summons from being able to attack you
@@ -12728,7 +13023,13 @@ static int perform_attack_roll(struct char_data *ch,     /* Attacker */
     }
   }
 
-  int attack_bonus = compute_attack_bonus(ch, victim, attack_type);
+  bool previous_touch_roll = ch->char_specials.ranged_touch_roll;
+  int attack_bonus;
+  ch->char_specials.ranged_touch_roll = is_touch &&
+      (attack_type == ATTACK_TYPE_RANGED || attack_type == ATTACK_TYPE_PSIONICS ||
+       attack_type == ATTACK_TYPE_ELDRITCH_BLAST);
+  attack_bonus = compute_attack_bonus(ch, victim, attack_type);
+  ch->char_specials.ranged_touch_roll = previous_touch_roll;
   int victim_ac = compute_armor_class(ch, victim, is_touch, MODE_ARMOR_CLASS_NORMAL);
 
   if (victim && IS_NPC(ch) && MOB_FLAGGED(ch, MOB_GOLEM) && ch->master && !IS_NPC(ch->master) &&
@@ -12834,9 +13135,27 @@ int attack_roll_with_critical(struct char_data *ch,     /* Attacker */
                               int attack_number,        /* Attack number, determines penalty. */
                               int critical_threshold)   /* Minimum roll # required to crit */
 {
+  if (!ch || !victim || IN_ROOM(ch) == NOWHERE || IN_ROOM(ch) != IN_ROOM(victim))
+    return -1;
+
+  if (!combat_attack_in_range(ch, victim, attack_type,
+                              is_touch ? NULL : get_wielded(ch, attack_type)))
+    return -1;
+
+  if (is_touch && (attack_type == ATTACK_TYPE_RANGED || attack_type == ATTACK_TYPE_PSIONICS ||
+                   attack_type == ATTACK_TYPE_ELDRITCH_BLAST) &&
+      rand_number(1, 100) <= ranged_concealment(ch, victim, attack_type))
+    return -1;
+
   //  struct obj_data *wielded = get_wielded(ch, attack_type);
 
-  int attack_bonus = compute_attack_bonus(ch, victim, attack_type);
+  bool previous_touch_roll = ch->char_specials.ranged_touch_roll;
+  int attack_bonus;
+  ch->char_specials.ranged_touch_roll = is_touch &&
+      (attack_type == ATTACK_TYPE_RANGED || attack_type == ATTACK_TYPE_PSIONICS ||
+       attack_type == ATTACK_TYPE_ELDRITCH_BLAST);
+  attack_bonus = compute_attack_bonus(ch, victim, attack_type);
+  ch->char_specials.ranged_touch_roll = previous_touch_roll;
   int victim_ac = compute_armor_class(ch, victim, is_touch, MODE_ARMOR_CLASS_NORMAL);
 
   if (victim && IS_NPC(ch) && MOB_FLAGGED(ch, MOB_GOLEM) && ch->master && !IS_NPC(ch->master) &&
@@ -13193,10 +13512,8 @@ int determine_weapon_type(struct obj_data *wielded) {
 /* arrow imbued with spell will now activate */
 void imbued_arrow(struct char_data *ch, struct char_data *vict, struct obj_data *missile)
 {
-  int original_loc = NOWHERE;
-
   /* start with the usual dummy checks */
-  if (!ch || !vict || !missile)
+  if (!ch || !vict || !missile || IN_ROOM(ch) == NOWHERE || IN_ROOM(ch) != IN_ROOM(vict))
     return;
 
   /* imbued? */
@@ -13211,42 +13528,7 @@ void imbued_arrow(struct char_data *ch, struct char_data *vict, struct obj_data 
   act("..$p ignites with magical energy as $n launches it at $N!", FALSE, ch, missile, vict,
       TO_NOTVICT);
 
-  if (IN_ROOM(ch) != IN_ROOM(vict))
-  {
-    /* a location has been found. */
-    original_loc = IN_ROOM(ch);
-    char_from_room(ch);
-
-    if (ZONE_FLAGGED(GET_ROOM_ZONE(IN_ROOM(vict)), ZONE_WILDERNESS))
-    {
-      X_LOC(ch) = world[IN_ROOM(vict)].coords[0];
-      Y_LOC(ch) = world[IN_ROOM(vict)].coords[1];
-    }
-
-    char_to_room(ch, IN_ROOM(vict));
-
-    /* time to call the magic! */
-    call_magic(ch, vict, missile, GET_OBJ_VAL(missile, 1), 0, MAGIC_LEVEL(ch), CAST_SPELL);
-
-    /* check if the char is still there */
-    if (IN_ROOM(ch) == IN_ROOM(vict))
-    {
-      char_from_room(ch);
-
-      if (ZONE_FLAGGED(GET_ROOM_ZONE(original_loc), ZONE_WILDERNESS))
-      {
-        X_LOC(ch) = world[original_loc].coords[0];
-        Y_LOC(ch) = world[original_loc].coords[1];
-      }
-
-      char_to_room(ch, original_loc);
-    }
-  }
-  else
-  {
-    /* time to call the magic! */
-    call_magic(ch, vict, missile, GET_OBJ_VAL(missile, 1), 0, MAGIC_LEVEL(ch), CAST_SPELL);
-  }
+  call_magic(ch, vict, missile, GET_OBJ_VAL(missile, 1), 0, MAGIC_LEVEL(ch), CAST_SPELL);
 
   /* clear the imbued spell on the arrow */
   GET_OBJ_VAL(missile, 1) = 0;
@@ -13468,12 +13750,47 @@ static int fist_air_callback(struct char_data *ch, struct char_data *tch, void *
   return 1;
 }
 
+/* Manyshot uses the first attack roll. It never repeats critical or precision
+ * damage, and each arrow resolves its own damage reduction and resistance. */
+static bool resolve_manyshot_arrow(struct char_data *ch, struct char_data *victim,
+                                  struct obj_data *weapon, int w_type, int dam_type)
+{
+  struct obj_data *arrow;
+  int amount, elemental_type, elemental_die;
+  long victim_id = GET_ID(victim);
+  if (!current_shot || !(arrow = current_shot->extra_projectile))
+    return FALSE;
+  elemental_type = GET_OBJ_VAL(arrow, AMMO_VAL_DAMAGE_TYPE);
+  elemental_die = GET_OBJ_VAL(arrow, AMMO_VAL_DAMAGE_DIE);
+  current_shot->resolving_extra = TRUE;
+  amount = compute_hit_damage(ch, victim, w_type, 10, 0, FALSE, ATTACK_TYPE_RANGED, dam_type);
+  current_shot->resolving_extra = FALSE;
+  amount = handle_warding(ch, victim, amount);
+  if (amount < 0)
+    return FALSE;
+  amount = apply_damage_reduction(ch, victim, weapon, amount, FALSE, ATTACK_TYPE_RANGED);
+  if (amount < 0)
+    return FALSE;
+  obj_to_char(arrow, victim);
+  if (damage(ch, victim, amount, w_type, dam_type, ATTACK_TYPE_RANGED) < 0)
+    return TRUE;
+  if (elemental_type > 0 && elemental_type < NUM_DAM_TYPES && elemental_die > 0 &&
+      damage(ch, victim, dice(1, MIN(100, elemental_die)), w_type,
+             elemental_type, ATTACK_TYPE_RANGED) < 0)
+    return TRUE;
+  if (weapon)
+    process_weapon_abilities(weapon, ch, victim, ACTMTD_ON_HIT, NULL);
+  return find_char(victim_id) != victim || GET_POS(victim) <= POS_DEAD;
+}
+
 /* called from hit() */
 int handle_successful_attack(struct char_data *ch, struct char_data *victim,
                              struct obj_data *wielded, int dam, int w_type, int type, int diceroll,
                              int is_critical, int attack_type, int dam_type,
                              struct obj_data *missile, struct legendary_attack *technique)
 {
+  int ammo_damage_type = missile ? GET_OBJ_VAL(missile, AMMO_VAL_DAMAGE_TYPE) : 0;
+  int ammo_damage_die = missile ? GET_OBJ_VAL(missile, AMMO_VAL_DAMAGE_DIE) : 0;
   struct affected_type af = {0}; /* for crippling strike */
   struct affected_type *af2;     // for hostile juxtaposition
   /* This is a bit of cruft from homeland code - It is used to activate a weapon 'special'
@@ -13945,7 +14262,7 @@ int handle_successful_attack(struct char_data *ch, struct char_data *victim,
     int deatharrow_dc =
         10 + CLASS_LEVEL(ch, CLASS_ARCANE_ARCHER) + MAX(GET_CHA_BONUS(ch), GET_INT_BONUS(ch));
     (void)deatharrow_dc; /* DC computed for future use or debugging */
-    if (can_fire_ammo(ch, TRUE))
+    if (attack_type == ATTACK_TYPE_RANGED && missile)
     {
       if (!IS_NPC(ch) && PRF_FLAGGED(ch, PRF_CONDENSED))
       {
@@ -13973,12 +14290,12 @@ int handle_successful_attack(struct char_data *ch, struct char_data *victim,
       {
         /*GRAND SLAM!*/
         act("$N \tRstops suddenly, then keels over\tn as soon as $p makes contact!", FALSE, ch,
-            GET_EQ(ch, WEAR_AMMO_POUCH)->contains, victim, TO_CHAR);
+            missile, victim, TO_CHAR);
         act("You feel your body \tRshut down as you keel over\tn as $p shot from $n makes contact!",
-            FALSE, ch, GET_EQ(ch, WEAR_AMMO_POUCH)->contains, victim, TO_VICT | TO_SLEEP);
+            FALSE, ch, missile, victim, TO_VICT | TO_SLEEP);
         act("You watch as $N \tRstops suddenly then keels over\tn as $p shot from $n makes "
             "contact!",
-            FALSE, ch, GET_EQ(ch, WEAR_AMMO_POUCH)->contains, victim, TO_NOTVICT);
+            FALSE, ch, missile, victim, TO_NOTVICT);
         dam_killed_vict(ch, victim);
         /* ok, now remove death arrow */
         affect_from_char(ch, SKILL_DEATH_ARROW);
@@ -14629,6 +14946,18 @@ int handle_successful_attack(struct char_data *ch, struct char_data *victim,
       if (resolve_damage(ch, victim, dam, w_type, dam_type, attack_type, LEG_ORIGIN_NORMAL, technique) < 0)
         victim_is_dead = TRUE;
 
+      if (!victim_is_dead && attack_type == ATTACK_TYPE_RANGED &&
+          ammo_damage_type > 0 && ammo_damage_type < NUM_DAM_TYPES && ammo_damage_die > 0)
+      {
+        if (damage(ch, victim, dice(1, MIN(100, ammo_damage_die)),
+                   w_type, ammo_damage_type, ATTACK_TYPE_RANGED) < 0)
+          victim_is_dead = TRUE;
+      }
+
+      if (!victim_is_dead && current_shot && current_shot->extra_projectile &&
+          resolve_manyshot_arrow(ch, victim, wielded, w_type, dam_type))
+        victim_is_dead = TRUE;
+
       /* Blackguard: Ravaging Smite - apply bleed on smite good hit */
       if (!victim_is_dead && dam > 0 && !IS_NPC(ch) && has_blackguard_ravaging_smite(ch) &&
           affected_by_spell(ch, SKILL_SMITE_GOOD) && IS_GOOD(victim))
@@ -15098,7 +15427,35 @@ int damage_shield_check(struct char_data *ch, struct char_data *victim, int atta
     #define ATTACK_TYPE_OFFHAND_SNEAK   7  //impromptu sneak attack
    Attack queue will determine what kind of hit this is. */
 #define DAM_MES_LENGTH 20
+static int resolve_weapon_hit(struct char_data *ch, struct char_data *victim, int type,
+                              int dam_type, int penalty, int attack_type);
+
 int hit(struct char_data *ch, struct char_data *victim, int type, int dam_type, int penalty,
+        int attack_type)
+{
+  struct ranged_shot_context context = {ch, NULL, FALSE, current_shot};
+  int result;
+  if (!ch || !victim || IN_ROOM(ch) == NOWHERE || IN_ROOM(ch) != IN_ROOM(victim))
+    return HIT_MISS;
+  context.manyshot = attack_type == ATTACK_TYPE_RANGED && ch->char_specials.manyshot_pending &&
+                     manyshot_ready(ch, get_wielded(ch, ATTACK_TYPE_RANGED));
+  ch->char_specials.manyshot_pending = FALSE;
+  current_shot = &context;
+  result = resolve_weapon_hit(ch, victim, type, dam_type, penalty, attack_type);
+  if (context.projectile && (context.unlimited ||
+      (!context.projectile->carried_by && !context.projectile->in_obj &&
+       !context.projectile->worn_by && IN_ROOM(context.projectile) == NOWHERE)))
+    extract_obj(context.projectile);
+  if (context.extra_projectile && (context.extra_unlimited ||
+      (!context.extra_projectile->carried_by && !context.extra_projectile->in_obj &&
+       !context.extra_projectile->worn_by && IN_ROOM(context.extra_projectile) == NOWHERE)))
+    extract_obj(context.extra_projectile);
+  current_shot = context.previous;
+  last_missile = current_shot ? current_shot->projectile : NULL;
+  return result;
+}
+
+static int resolve_weapon_hit(struct char_data *ch, struct char_data *victim, int type, int dam_type, int penalty,
         int attack_type)
 {
   int w_type = 0,                             /* Weapon type? */
@@ -15122,11 +15479,16 @@ int hit(struct char_data *ch, struct char_data *victim, int type, int dam_type, 
   struct obj_data *ammo_pouch = GET_EQ(ch, WEAR_AMMO_POUCH); /* For ranged combat. */
   struct obj_data *missile = NULL;                           /* For ranged combat. */
 
-  if (!ch || !victim)
-    return (HIT_MISS); /* ch and victim exist? */
+  if (!ch || !victim || IN_ROOM(ch) == NOWHERE || IN_ROOM(ch) != IN_ROOM(victim))
+    return (HIT_MISS); /* All attacks require a target in the same room. */
 
   if (AFF_FLAGGED(ch, AFF_STAGGERED) && GET_ATTACKS_THIS_ROUND(ch) >= 1)
     return (HIT_MISS);
+
+  if (attack_type == ATTACK_TYPE_RANGED &&
+      is_throwing_weapon(ch, get_wielded(ch, ATTACK_TYPE_RANGED)) &&
+      !HAS_FEAT(ch, FEAT_QUICK_DRAW) && GET_ATTACKS_THIS_ROUND(ch) >= 1)
+    return HIT_MISS;
 
   GET_ATTACKS_THIS_ROUND(ch)++;
 
@@ -15156,7 +15518,8 @@ int hit(struct char_data *ch, struct char_data *victim, int type, int dam_type, 
   }
 
   /* Enforce formation before consuming ammo, rolling attacks or starting combat. */
-  if (!formation_allows_attack(ch, attack_type, wielded))
+  if (!formation_allows_attack(ch, IS_NPC(ch) && MOB_FLAGGED(ch, MOB_RANGED_ATTACK)
+                                      ? ATTACK_TYPE_RANGED : attack_type, wielded))
   {
     if (!IS_NPC(ch) && GET_ATTACKS_THIS_ROUND(ch) == 1)
       send_to_char(ch, "You cannot use that attack from the %s row.\r\n",
@@ -15165,7 +15528,7 @@ int hit(struct char_data *ch, struct char_data *victim, int type, int dam_type, 
   }
   if (attack_type != ATTACK_TYPE_RANGED &&
       attack_type != ATTACK_TYPE_PSIONICS && attack_type != ATTACK_TYPE_ELDRITCH_BLAST &&
-      IS_NPC(ch) && !formation_can_melee_target(ch, victim))
+      IS_NPC(ch) && !MOB_FLAGGED(ch, MOB_RANGED_ATTACK) && !formation_can_melee_target(ch, victim))
   {
     struct char_data *target;
     /* An opportunity attack cannot be redirected onto a different ally. */
@@ -15209,7 +15572,7 @@ int hit(struct char_data *ch, struct char_data *victim, int type, int dam_type, 
        *  this function, then we might have a bit of an issue with the design.
        * Set the current missile to the first missile in the ammo pouch. */
       last_missile = missile = ammo_pouch->contains;
-    if (!missile)
+    if (!missile || !has_ammo_in_pouch(ch, wielded, FALSE))
     { /* no ammo = miss for ranged attacks*/
       send_to_char(ch, "You have no ammo!\r\n");
       return (HIT_MISS);
@@ -15317,6 +15680,14 @@ int hit(struct char_data *ch, struct char_data *victim, int type, int dam_type, 
     }
   }
 
+  if (!combat_attack_in_range(ch, victim, attack_type, wielded))
+  {
+    if (!IS_NPC(ch) && GET_ATTACKS_THIS_ROUND(ch) == 1)
+      send_to_char(ch, "Your opponent is %d feet away. Use advance to close the distance.\r\n",
+                   combat_distance(ch, victim));
+    return HIT_MISS;
+  }
+
   if (attack_type != ATTACK_TYPE_RANGED && AFF_FLAGGED(victim, AFF_REPULSION))
   {
     if (find_in_list(ch, victim->char_specials.repulse_blacklist) == NULL)
@@ -15352,12 +15723,20 @@ int hit(struct char_data *ch, struct char_data *victim, int type, int dam_type, 
   /* some ranged attack handling */
   if (attack_type == ATTACK_TYPE_RANGED)
   {
-    // tag missile so that only this char collects it.
+    current_shot->unlimited = ammunition_is_unlimited(missile, wielded);
+    missile = take_ammo_projectile(missile, wielded);
     MISSILE_ID(missile) = GET_IDNUM(ch);
-    /* Remove the missile from the ammo_pouch. */
-    obj_from_obj(missile);
+    current_shot->projectile = missile;
+    last_missile = missile;
+    if (current_shot->manyshot)
+    {
+      struct obj_data *extra = ammo_pouch->contains;
+      current_shot->extra_unlimited = ammunition_is_unlimited(extra, wielded);
+      current_shot->extra_projectile = take_ammo_projectile(extra, wielded);
+      MISSILE_ID(current_shot->extra_projectile) = GET_IDNUM(ch);
+    }
     /* if this was a weapon that was loaded, unload */
-    if (wielded && GET_OBJ_VAL(wielded, 5) > 0)
+    if (wielded && is_reloading_weapon(ch, wielded, TRUE) && GET_OBJ_VAL(wielded, 5) > 0)
       GET_OBJ_VAL(wielded, 5)
     --;
 
@@ -15678,6 +16057,8 @@ int hit(struct char_data *ch, struct char_data *victim, int type, int dam_type, 
   {
     /* So if we have actually hit, then dam > 0. This is how we process a miss. */
     handle_missed_attack(ch, victim, type, w_type, dam_type, attack_type, missile);
+    if (current_shot && current_shot->extra_projectile)
+      handle_missed_attack(ch, victim, type, w_type, dam_type, attack_type, current_shot->extra_projectile);
   }
   else
   {
@@ -16218,8 +16599,6 @@ static int perform_staggered_attack(struct char_data *ch, int mode, int phase)
     if (!IS_NPC(ch) && PRF_FLAGGED(ch, PRF_AUTOBLAST) && HAS_FEAT(ch, FEAT_ELDRITCH_BLAST) &&
         GET_ELDRITCH_SHAPE(ch) != WARLOCK_HIDEOUS_BLOW)
     {
-      if (is_tanking(ch))
-        penalty -= 4;
       if (RIDING(ch) && !HAS_FEAT(ch, FEAT_MOUNTED_ARCHERY))
         penalty -= 4;
 
@@ -16265,25 +16644,6 @@ static int perform_staggered_attack(struct char_data *ch, int mode, int phase)
 
   if (can_fire_ammo(ch, TRUE) && FIRING(ch))
   {
-    if (is_tanking(ch) && !IS_NPC(ch) && !HAS_FEAT(ch, FEAT_POINT_BLANK_SHOT) &&
-        (!GROUP(ch) || get_formation_row(ch) != FORMATION_FRONT))
-    {
-      send_to_char(ch, "You are too close to use your ranged weapon.\r\n");
-      stop_fighting(ch);
-      FIRING(ch) = FALSE;
-      return 0;
-    }
-
-    if (is_tanking(ch) && (!GROUP(ch) || get_formation_row(ch) != FORMATION_FRONT))
-    {
-      if (!IS_NPC(ch) && HAS_FEAT(ch, FEAT_IMPROVED_PRECISE_SHOT))
-        penalty += 4;
-      else if (!IS_NPC(ch) && HAS_FEAT(ch, FEAT_PRECISE_SHOT))
-        ;  /* no penalty/bonus */
-      else
-        penalty -= 4;
-    }
-
     if (RIDING(ch) && !IS_NPC(ch) && !HAS_FEAT(ch, FEAT_MOUNTED_ARCHERY))
       penalty -= 4;
 
@@ -16450,11 +16810,6 @@ int perform_attacks(struct char_data *ch, int mode, int phase)
       GET_ELDRITCH_SHAPE(ch) != WARLOCK_HIDEOUS_BLOW)
   {
     ranged_attacks += bonus_mainhand_attacks;
-    if (is_tanking(ch))
-    {
-      penalty -= 4;
-    }
-
     /* mounted archery requires a feat or you receive 4 penalty to attack rolls */
     if (RIDING(ch) && !IS_NPC(ch))
     {
@@ -16542,7 +16897,8 @@ int perform_attacks(struct char_data *ch, int mode, int phase)
     struct obj_data *formation_weapon = get_wielded(ch, formation_attack);
     if (IS_WILDSHAPED(ch) || IS_MORPHED(ch))
       formation_weapon = NULL;
-    if (!formation_allows_attack(ch, formation_attack, formation_weapon))
+    if (!formation_allows_attack(ch, IS_NPC(ch) && MOB_FLAGGED(ch, MOB_RANGED_ATTACK)
+                                        ? ATTACK_TYPE_RANGED : formation_attack, formation_weapon))
     {
       if (!IS_NPC(ch) && (phase == PHASE_1 || phase == 0))
         send_to_char(ch, "You cannot use that attack from the %s row.\r\n",
@@ -16555,21 +16911,8 @@ int perform_attacks(struct char_data *ch, int mode, int phase)
    * whether ch is in combat or not ------ */
   if (can_fire_ammo(ch, TRUE))
   {
-    /* Early Exits from ranged combat? */
-
-    /* if we don't have point blank shot, unceremoniously dump out of function */
-    if (is_tanking(ch) && !IS_NPC(ch) && !HAS_FEAT(ch, FEAT_POINT_BLANK_SHOT) &&
-        (!GROUP(ch) || get_formation_row(ch) != FORMATION_FRONT))
-    {
-      send_to_char(ch, "You are too close to use your ranged weapon.\r\n");
-      stop_fighting(ch);
-      FIRING(ch) = FALSE;
-      return 0;
-    }
-
-    /* END Early exits from ranged combat! */
-
-    if (mode == NORMAL_ATTACK_ROUTINE && !IS_NPC(ch))
+    if (mode == NORMAL_ATTACK_ROUTINE && !IS_NPC(ch) &&
+        (!is_throwing_weapon(ch, is_using_ranged_weapon(ch, TRUE)) || HAS_FEAT(ch, FEAT_QUICK_DRAW)))
     {
       int quick_draw_speed_bonus = get_ranger_attack_speed_bonus(ch);
       if (quick_draw_speed_bonus > 0 && rand_number(1, 100) <= quick_draw_speed_bonus)
@@ -16583,19 +16926,14 @@ int perform_attacks(struct char_data *ch, int mode, int phase)
     ranged_attacks += bonus_mainhand_attacks;
 
     /* Rapidshot mode gives an extra attack, but with a penalty to all attacks. */
-    if (AFF_FLAGGED(ch, AFF_RAPID_SHOT))
+    if (AFF_FLAGGED(ch, AFF_RAPID_SHOT) && HAS_FEAT(ch, FEAT_RAPID_SHOT) &&
+        is_action_available(ch, atMOVE, FALSE) && !AFF_FLAGGED(ch, AFF_STAGGERED) &&
+        (!is_throwing_weapon(ch, is_using_ranged_weapon(ch, TRUE)) || HAS_FEAT(ch, FEAT_QUICK_DRAW)))
     {
       penalty -= 2;
       ranged_attacks++;
       attacks_at_max_bab++; /* we have to drop this if this isn't a ranged attack! */
       drop_an_attack_at_max_bab++;
-
-      if (!IS_NPC(ch) && HAS_FEAT(ch, FEAT_MANYSHOT))
-      {
-        ranged_attacks++;
-        attacks_at_max_bab++; /* we have to drop this if this isn't a ranged attack! */
-        drop_an_attack_at_max_bab++;
-      }
 
       if (!IS_NPC(ch) && HAS_FEAT(ch, FEAT_EPIC_MANYSHOT))
       {
@@ -16605,6 +16943,9 @@ int perform_attacks(struct char_data *ch, int mode, int phase)
       }
     }
   }
+  if (is_throwing_weapon(ch, is_using_ranged_weapon(ch, TRUE)) && !HAS_FEAT(ch, FEAT_QUICK_DRAW))
+    ranged_attacks = 1;
+
   /* -- finished processing base number of attacks and BAB for ranged -- */
 
   /* Ranged attacker, lets process some penalties, etc. then start *processing*
@@ -16612,16 +16953,6 @@ int perform_attacks(struct char_data *ch, int mode, int phase)
    * combat are included here as opposed to above calculations */
   if (can_fire_ammo(ch, TRUE) && FIRING(ch) && mode == NORMAL_ATTACK_ROUTINE)
   {
-    if (is_tanking(ch) && (!GROUP(ch) || get_formation_row(ch) != FORMATION_FRONT))
-    {
-      if (!IS_NPC(ch) && HAS_FEAT(ch, FEAT_IMPROVED_PRECISE_SHOT))
-        penalty += 4;
-      else if (!IS_NPC(ch) && HAS_FEAT(ch, FEAT_PRECISE_SHOT))
-        ;  /* no penalty/bonus */
-      else /* not skilled with close combat archery */
-        penalty -= 4;
-    }
-
     /* mounted archery requires a feat or you receive 4 penalty to attack rolls */
     if (RIDING(ch) && !IS_NPC(ch))
     {
@@ -16674,6 +17005,9 @@ int perform_attacks(struct char_data *ch, int mode, int phase)
       { /* correct phase for this attack? */
         if (can_fire_ammo(ch, FALSE) && FIGHTING(ch))
         {
+          ch->char_specials.manyshot_pending = i == 1 &&
+              (phase == PHASE_0 || phase == PHASE_1) &&
+              is_action_available(ch, atMOVE, FALSE) && !AFF_FLAGGED(ch, AFF_STAGGERED);
           /* FIRE! PEW-PEW!! */
           wpn_reload_status =
               hit(ch, FIGHTING(ch), TYPE_UNDEFINED, DAM_RESERVED_DBC, penalty, ATTACK_TYPE_RANGED);
@@ -16683,6 +17017,7 @@ int perform_attacks(struct char_data *ch, int mode, int phase)
           {
             int qd_chance = get_ranger_quick_draw_proc_chance(ch);
             if (!AFF_FLAGGED(ch, AFF_STAGGERED) && qd_chance > 0 &&
+                (!is_throwing_weapon(ch, is_using_ranged_weapon(ch, TRUE)) || HAS_FEAT(ch, FEAT_QUICK_DRAW)) &&
                 rand_number(1, 100) <= qd_chance && can_fire_ammo(ch, TRUE))
             {
               send_to_char(ch, "Your Quick Draw lets you snap off an extra shot!\r\n");
@@ -16691,11 +17026,6 @@ int perform_attacks(struct char_data *ch, int mode, int phase)
               hit(ch, FIGHTING(ch), TYPE_UNDEFINED, DAM_RESERVED_DBC, penalty, ATTACK_TYPE_RANGED);
             }
           }
-
-          if (attacks_at_max_bab > 0)
-            attacks_at_max_bab--;
-          else
-            penalty -= 5; /* cummulative penalty */
 
           /* here is our auto-reload system for xbows, etc */
           if (!IS_NPC(ch) && PRF_FLAGGED(ch, PRF_AUTORELOAD))
@@ -16716,6 +17046,14 @@ int perform_attacks(struct char_data *ch, int mode, int phase)
           FIRING(ch) = FALSE;
           return 0;
         }
+      }
+      /* Walk skipped phases too, so each attack keeps its proper iterative bonus. */
+      if (i > 0)
+      {
+        if (attacks_at_max_bab > 0)
+          attacks_at_max_bab--;
+        else
+          penalty -= 5;
       }
     }
 
@@ -17668,14 +18006,19 @@ void perform_violence(struct char_data *ch, int phase)
 
   ch->char_specials.energy_retort_used = false;
   remove_fear_affects(ch, TRUE);
-  if (phase == 1 && !epic_summon_combat_turn(ch))
-    return;
 
   if (FIGHTING(ch) == NULL || IN_ROOM(ch) != IN_ROOM(FIGHTING(ch)))
   {
     stop_fighting(ch);
     return;
   }
+
+  auto_advance_mob(ch, phase);
+  if (IS_NPC(ch) && !MOB_FLAGGED(ch, MOB_RANGED_ATTACK) &&
+      combat_distance(ch, FIGHTING(ch)) > 5)
+    return;
+  if (phase == 1 && !epic_summon_combat_turn(ch))
+    return;
 
   if (phase == 1 || phase == 0)
   { /* make sure this doesn't happen more than once a round */

@@ -20,7 +20,7 @@ def function(text, name):
 constants = "\n".join(line for line in (src / "structs.h").read_text().splitlines()
                       if re.match(r"#define (FORMATION_\w+|NUM_FORMATION_ROWS|SIZE_\w+|POS_\w+|"
                                   r"ATTACK_TYPE_\w+|WEAPON_FLAG_(REACH|RANGED)|NUM_WEAPON_TYPES|"
-                                  r"ITEM_WEAPON|GROUP_NPC|FEAT_(POINT_BLANK_SHOT|PRECISE_SHOT|IMPROVED_PRECISE_SHOT))\s", line))
+                                  r"ITEM_WEAPON|GROUP_NPC|MOB_RANGED_ATTACK|FEAT_(POINT_BLANK_SHOT|PRECISE_SHOT|IMPROVED_PRECISE_SHOT))\s", line))
 constants += "\n" + next(line for line in (src / "spells.h").read_text().splitlines()
                           if line.startswith("#define TYPE_ATTACK_OF_OPPORTUNITY "))
 constants += "\n" + next(line for line in fight.splitlines() if line.startswith("#define HIT_MISS "))
@@ -31,8 +31,8 @@ a = fight.index("  /* Enforce formation before consuming ammo")
 b = fight.index("  /* hitting pets:", a)
 hit_hook = "static struct char_data *prepare_hit(struct char_data *ch, struct char_data *victim, int type, int attack_type, struct obj_data *wielded) {\n" + fight[a:b] + "return victim;\n}\n"
 
-a = fight.index("  if (attack_type == ATTACK_TYPE_RANGED || attack_type == ATTACK_TYPE_BOMB_TOSS)\n    formation_penalty")
-bonus_hook = "static int formation_bonus_hook(struct char_data *ch, int attack_type, bool display, int calc_bab, int maximum_bab) { int formation_penalty=0;\n" + fight[a:fight.index("\n}", a)] + "\n}\n"
+a = fight.index("  if (attack_type == ATTACK_TYPE_RANGED || attack_type == ATTACK_TYPE_PSIONICS ||\n      attack_type == ATTACK_TYPE_ELDRITCH_BLAST)\n    formation_penalty")
+bonus_hook = "static int formation_bonus_hook(struct char_data *ch, int attack_type, bool display, int calc_bab, int maximum_bab) { struct char_data *victim=FIGHTING(ch); int formation_penalty=0;\n" + fight[a:fight.index("\n}", a)] + "\n}\n"
 stubs = r'''
 #include <assert.h>
 #include <ctype.h>
@@ -42,6 +42,9 @@ stubs = r'''
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+#define PERS(ch, viewer) ((ch)->name)
+#define legendary_grounded(ch) false
+#define send_identity_to_group(ch,g,target,fmt,...) send_to_group(ch,g,fmt,##__VA_ARGS__)
 #define TRUE true
 #define FALSE false
 #define NOWHERE (-1)
@@ -54,6 +57,7 @@ stubs = r'''
 #define GROUP_FLAGS(group) ((group)->group_flags)
 #define GROUP_LEADER(group) ((group)->leader)
 #define IS_NPC(ch) ((ch)->npc)
+#define MOB_FLAGGED(ch,f) ((ch)->npc && (ch)->ranged_mob)
 #define IN_ROOM(ch) ((ch)->in_room)
 #define GET_POS(ch) ((ch)->pos)
 #define GET_HIT(ch) ((ch)->hp)
@@ -83,7 +87,7 @@ struct char_data {
   struct group_data *group;
   int formation_row, in_room, pos, hp, size, attacks;
   const char *name;
-  bool npc, visible, firing, transformed, move_ready, preserve_organs_procced;
+  bool npc, visible, firing, transformed, move_ready, preserve_organs_procced, ranged_mob;
   bool point_blank, precise, improved_precise;
   struct char_data *fighting, *next_in_room;
   struct obj_data *equipment[2];
@@ -139,6 +143,7 @@ static struct char_data *get_char_room_vis(struct char_data *ch,char *name,int *
   return NULL;
 }
 static struct obj_data *is_using_ranged_weapon(struct char_data *ch,bool silent) { return ch->equipment[0]; }
+static bool combat_attack_in_range(struct char_data *ch, struct char_data *victim,int type,struct obj_data *weapon) { return true; }
 static bool has_ammo_in_pouch(struct char_data *ch,struct obj_data *weapon,bool silent) { ammo_checks++;return true; }
 '''
 
@@ -170,16 +175,31 @@ int main(void) {
   front.formation_row=FORMATION_FRONT;
   for(int feats=0;feats<8;feats++) {
     front.point_blank=feats&1;front.precise=feats&2;front.improved_precise=feats&4;
-    int expected=(front.point_blank?0:-4)+(front.precise || front.improved_precise?0:-4);
-    assert(formation_ranged_penalty(&front)==expected);
+    front.fighting=&npc; npc.size=SIZE_HUGE; npc.fighting=&middle;
+    int expected=(front.precise || front.improved_precise?0:-4);
+    assert(formation_ranged_penalty(&front,&npc)==expected);
     assert(formation_bonus_hook(&front,ATTACK_TYPE_RANGED,false,40,30)==30+expected);
     assert(formation_bonus_hook(&front,ATTACK_TYPE_BOMB_TOSS,true,40,30)==30+expected);
+    assert(formation_bonus_hook(&front,ATTACK_TYPE_PSIONICS,true,40,30)==30+expected);
+    assert(formation_bonus_hook(&front,ATTACK_TYPE_ELDRITCH_BLAST,true,40,30)==30+expected);
     assert(formation_bonus_hook(&front,ATTACK_TYPE_PRIMARY,false,40,30)==30);
-    middle.point_blank=front.point_blank;middle.precise=front.precise;
-    assert(formation_ranged_penalty(&middle)==0 && formation_ranged_penalty(&back)==0);
+    npc.fighting=NULL;
+    assert(formation_ranged_penalty(&front,&npc)==0);
   }
-  assert(formation_ranged_penalty(&outsider)==0);
   front.point_blank=false;front.precise=false;front.improved_precise=false;
+  front.fighting=NULL;
+  assert(formation_ranged_penalty(&outsider,&npc)==0);
+  assert(formation_ranged_penalty(&middle,&npc)==0);
+  assert(formation_ranged_penalty(&back,&npc)==0);
+  npc.size=SIZE_HUGE; npc.fighting=&back;
+  assert(formation_ranged_penalty(&back,&npc)==0);
+  npc.fighting=&front;
+  assert(formation_ranged_penalty(&back,&npc)==-4);
+  npc.fighting=&middle;
+  assert(formation_ranged_penalty(&front,&npc)==-4);
+  middle.npc=true;
+  assert(formation_ranged_penalty(&front,&npc)==0);
+  middle.npc=false; npc.fighting=NULL;
   for(int size=SIZE_FINE;size<=SIZE_COLOSSAL;size++) {
     npc.size=size;
     assert(formation_can_melee_target(&npc,&front));
@@ -239,7 +259,7 @@ int main(void) {
   puts("PASS: formation weapon/size matrices, screening, collapse, NPC retarget/AOO, ammo, skills, permissions, move actions and lifecycle.");
 }
 '''
-code = constants + "\n" + stubs + rules
+code = constants + "\n" + stubs + "\nbool is_tanking(struct char_data *ch);\nbool formation_can_melee_target(struct char_data *, struct char_data *);\n" + rules
 code += function(handler, "void join_group(") + "\n" + function(handler, "void leave_group(")
 code += "\n" + function(fight, "bool is_tanking(") + "\n" + commands + "\n" + hit_hook
 code += "\n" + function(weapons, "bool can_fire_ammo(") + "\n" + bonus_hook + "\n" + checks

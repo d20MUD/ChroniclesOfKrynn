@@ -2159,6 +2159,36 @@ void display_item_object_values(struct char_data *ch, struct obj_data *item, int
                    ammo_types[GET_OBJ_VAL(item, 0)], GET_OBJ_VAL(item, 4), GET_OBJ_VAL(item, 1),
                    GET_OBJ_TIMER(item), GET_OBJ_VAL(item, 2));
 
+    if (mode == ITEM_STAT_MODE_G_LORE)
+      send_to_group(NULL, GROUP(ch), "Ammunition: %d remaining; load %d-%d; unlimited: %s\r\n"
+                    "Bonus damage: +1d%d %s\r\n",
+                    GET_OBJ_VAL(item, AMMO_VAL_MAX) > 0 ? GET_OBJ_VAL(item, AMMO_VAL_QUANTITY) : 1,
+                    GET_OBJ_VAL(item, AMMO_VAL_MIN), GET_OBJ_VAL(item, AMMO_VAL_MAX),
+                    GET_OBJ_VAL(item, AMMO_VAL_UNLIMITED) ? "yes" : "no",
+                    MAX(0, GET_OBJ_VAL(item, AMMO_VAL_DAMAGE_DIE)),
+                    damtypes[MIN(NUM_DAM_TYPES - 1, MAX(0, GET_OBJ_VAL(item, AMMO_VAL_DAMAGE_TYPE)))]);
+    else
+      send_to_char(ch, "Ammunition: %d remaining; load %d-%d; unlimited: %s\r\n"
+                   "Bonus damage: +1d%d %s\r\n",
+                   GET_OBJ_VAL(item, AMMO_VAL_MAX) > 0 ? GET_OBJ_VAL(item, AMMO_VAL_QUANTITY) : 1,
+                   GET_OBJ_VAL(item, AMMO_VAL_MIN), GET_OBJ_VAL(item, AMMO_VAL_MAX),
+                   GET_OBJ_VAL(item, AMMO_VAL_UNLIMITED) ? "yes" : "no",
+                   MAX(0, GET_OBJ_VAL(item, AMMO_VAL_DAMAGE_DIE)),
+                   damtypes[MIN(NUM_DAM_TYPES - 1, MAX(0, GET_OBJ_VAL(item, AMMO_VAL_DAMAGE_TYPE)))]);
+
+    if (GET_OBJ_VAL(item, 0) == AMMO_TYPE_THROWN)
+    {
+      int weapon_type = GET_OBJ_VAL(item, AMMO_VAL_WEAPON_TYPE);
+      const char *weapon_name = weapon_type >= 0 && weapon_type < NUM_WEAPON_TYPES
+                                   ? weapon_list[weapon_type].name : "invalid";
+      if (mode == ITEM_STAT_MODE_G_LORE)
+        send_to_group(NULL, GROUP(ch), "Throwing weapon: %s; Returning: %s\r\n", weapon_name,
+                      GET_OBJ_VAL(item, AMMO_VAL_RETURNING) ? "yes" : "no");
+      else
+        send_to_char(ch, "Throwing weapon: %s; Returning: %s\r\n", weapon_name,
+                     GET_OBJ_VAL(item, AMMO_VAL_RETURNING) ? "yes" : "no");
+    }
+
     if (mode == ITEM_STAT_MODE_IMMORTAL)
     {
       send_to_char(ch, "Missile belongs to: %ld\r\n", MISSILE_ID(item));
