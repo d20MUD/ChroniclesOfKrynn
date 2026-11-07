@@ -5230,6 +5230,7 @@ cpp_extern const struct command_info cmd_info[] = {
     /* {"command", "sort_as", minimum_position, *command_pointer, minimum_level, subcmd, ignore_wait, actions_required, {action_cooldowns}, *command_check_pointer},*/
 
     {"zreset", "zreset", POS_DEAD, do_zreset, LVL_BUILDER, 0, TRUE, ACTION_NONE, {0, 0}, NULL},
+    {"zpromote", "zpromote", POS_DEAD, do_zpromote, LVL_GRSTAFF, 0, TRUE, ACTION_NONE, {0, 0}, NULL},
     {"zedit", "zedit", POS_DEAD, do_oasis_zedit, LVL_BUILDER, 0, TRUE, ACTION_NONE, {0, 0}, NULL},
     {"zlist",
      "zlist",

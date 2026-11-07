@@ -710,7 +710,7 @@ int housing_command(struct char_data *ch, const char *argument)
   {
     send_to_char(
         ch, "House: list, buy <name>, enter <id>, leave, info, guest <player>, build <direction>, "
-            "title <text>, description <text>, extra <keyword> <text>, chest <command>.\r\n");
+            "name <text>, title <text>, description <text>, extra <keyword> <text>, chest <command>.\r\n");
     return TRUE;
   }
   res = estate_select("SELECT neighborhood_id,house_price FROM housing_neighborhoods WHERE "
@@ -857,6 +857,27 @@ int housing_command(struct char_data *ch, const char *argument)
   if (!owns(ch, r->house))
   {
     send_to_char(ch, "Only the owner can change this house.\r\n");
+    return TRUE;
+  }
+  if (!str_cmp(verb, "name") || !str_cmp(verb, "rename"))
+  {
+    char *q;
+    if (!*text || strlen(text) > 100)
+    {
+      send_to_char(ch, "Usage: house name <name of 1 to 100 characters>\r\n");
+      return TRUE;
+    }
+    q = estate_quote(text);
+    if (!q)
+    {
+      send_to_char(ch, "The house could not be renamed. Please try again.\r\n");
+      return TRUE;
+    }
+    if (estate_query("UPDATE housing_houses SET name='%s' WHERE house_id=%ld", q, r->house))
+      send_to_char(ch, "Your house is now named %s.\r\n", text);
+    else
+      send_to_char(ch, "The house could not be renamed. Please try again.\r\n");
+    free(q);
     return TRUE;
   }
   if (!str_cmp(verb, "guest"))

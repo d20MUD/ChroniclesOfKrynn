@@ -312,6 +312,11 @@ src/constants.c: $(filter-out src/constants.c,$(circle_SOURCES))
 
 # Extra files to distribute
 EXTRA_DIST = \
+	lib/misc/zone_promote.py \
+	lib/text/help/zpromote.hlp \
+	docs/zone-promotion.md \
+	sql/20261107_zone_promotion_help.sql \
+	tests/run_zone_promote.py \
 	src/epic_magic.h \
 	src/housing.h \
 	src/estate.h \

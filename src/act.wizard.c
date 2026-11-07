@@ -33,6 +33,8 @@
 #include "genolc.h"
 #include <sys/stat.h>
 #include <unistd.h>
+#include <signal.h>
+#include <sys/wait.h>
 #include "genobj.h"
 #include "race.h"
 #include "fight.h"
@@ -3299,6 +3301,152 @@ ACMDU(do_wiznet)
 
   if (PRF_FLAGGED(ch, PRF_NOREPEAT))
     send_to_char(ch, "%s", CONFIG_OK);
+}
+
+/* Promote saved files only. The helper snapshots live files and indexes before
+ * replacing anything, and validates the configured dev/live world directory. */
+ACMD(do_zpromote)
+{
+  char number[MAX_INPUT_LENGTH], option[MAX_INPUT_LENGTH], extra[MAX_INPUT_LENGTH];
+  char backup_id[MAX_INPUT_LENGTH] = {0}, tail[MAX_INPUT_LENGTH];
+  char zone_arg[32], line[1024];
+  const char *rest;
+  char *end;
+  long zone;
+  int pipefd[2], status, check, restore, list;
+  size_t length;
+  pid_t child, waited;
+  sigset_t child_signals, old_signals;
+  FILE *output;
+  struct save_list_data *pending;
+
+  if (IS_NPC(ch) || GET_LEVEL(ch) < LVL_GRSTAFF)
+  {
+    send_to_char(ch, "Only senior staff may promote zones.\r\n");
+    return;
+  }
+  rest = one_argument(argument, number, sizeof(number));
+  rest = one_argument(rest, option, sizeof(option));
+  restore = !str_cmp(option, "restore");
+  list = !str_cmp(option, "backups");
+  check = !str_cmp(option, "check");
+  if (restore)
+  {
+    /* Backup IDs are case-sensitive; one_argument lowercases its result. */
+    while (isspace((unsigned char)*rest))
+      rest++;
+    for (end = (char *)rest; *end && !isspace((unsigned char)*end); end++)
+      ;
+    length = end - rest;
+    if (length > 128)
+      length = 0;
+    memcpy(backup_id, rest, length);
+    backup_id[length] = '\0';
+    rest = one_argument(end, tail, sizeof(tail));
+    check = !str_cmp(tail, "check");
+  }
+  one_argument(rest, extra, sizeof(extra));
+  for (end = number; *end && isdigit((unsigned char)*end); end++)
+    ;
+  if (!*number || *end || *extra ||
+      (restore ? !*backup_id || (*tail && !check) : *option && !check && !list))
+  {
+    send_to_char(ch, "Usage: zpromote <zone> [check|backups]\r\n"
+                     "       zpromote <zone> restore <backup ID> [check]\r\n");
+    return;
+  }
+  errno = 0;
+  zone = strtol(number, &end, 10);
+  if (errno || zone > INT_MAX || (!restore && !list && real_zone((zone_vnum)zone) == NOWHERE))
+  {
+    send_to_char(ch, "Choose an existing dev zone number.\r\n");
+    return;
+  }
+  for (pending = save_list; pending; pending = pending->next)
+    if (!restore && !list && pending->zone == zone && pending->type != SL_CFG)
+    {
+      send_to_char(ch, "Save this zone's pending OLC changes before promoting it.\r\n");
+      return;
+    }
+  snprintf(zone_arg, sizeof(zone_arg), "%ld", zone);
+  if (access("misc/zone_promote.py", R_OK) != 0 || pipe(pipefd) != 0)
+  {
+    send_to_char(ch, "Zone promotion helper is unavailable; check its installation.\r\n");
+    return;
+  }
+  /* The main server's SIGCHLD handler reaps arbitrary children. Keep it from
+   * stealing this helper's exit status while we collect its output. */
+  sigemptyset(&child_signals);
+  sigaddset(&child_signals, SIGCHLD);
+  if (sigprocmask(SIG_BLOCK, &child_signals, &old_signals) != 0)
+  {
+    close(pipefd[0]);
+    close(pipefd[1]);
+    send_to_char(ch, "Unable to prepare zone promotion.\r\n");
+    return;
+  }
+  child = fork();
+  if (child == 0)
+  {
+    char *helper_args[14];
+    int count = 0;
+    close(pipefd[0]);
+    if (dup2(pipefd[1], STDOUT_FILENO) < 0 || dup2(pipefd[1], STDERR_FILENO) < 0)
+      _exit(126);
+    close(pipefd[1]);
+    sigprocmask(SIG_SETMASK, &old_signals, NULL);
+    /* Separate argv entries: staff text is never interpreted by a shell. */
+    helper_args[count++] = "python3";
+    helper_args[count++] = "misc/zone_promote.py";
+    helper_args[count++] = "--zone";
+    helper_args[count++] = zone_arg;
+    helper_args[count++] = "--actor";
+    helper_args[count++] = GET_NAME(ch);
+    helper_args[count++] = "--from-world";
+    helper_args[count++] = "world";
+    if (restore)
+    {
+      helper_args[count++] = "--restore";
+      helper_args[count++] = backup_id;
+    }
+    if (list)
+      helper_args[count++] = "--list-backups";
+    if (check)
+      helper_args[count++] = "--check";
+    helper_args[count] = NULL;
+    execvp("python3", helper_args);
+    _exit(127);
+  }
+  close(pipefd[1]);
+  if (child < 0)
+  {
+    close(pipefd[0]);
+    sigprocmask(SIG_SETMASK, &old_signals, NULL);
+    send_to_char(ch, "Unable to start zone promotion.\r\n");
+    return;
+  }
+  output = fdopen(pipefd[0], "r");
+  if (output)
+  {
+    while (fgets(line, sizeof(line), output))
+    {
+      line[strcspn(line, "\r\n")] = '\0';
+      send_to_char(ch, "%s\r\n", line);
+    }
+    fclose(output);
+  }
+  else
+    close(pipefd[0]);
+  do
+    waited = waitpid(child, &status, 0);
+  while (waited < 0 && errno == EINTR);
+  sigprocmask(SIG_SETMASK, &old_signals, NULL);
+  if (waited < 0 || !WIFEXITED(status) || WEXITSTATUS(status) != 0)
+    send_to_char(ch, "Zone promotion did not complete. Review the error above.\r\n");
+  mudlog(BRF, MAX(LVL_GRSTAFF, GET_INVIS_LEV(ch)), TRUE,
+         "%s ran zpromote %ld %s%s%s%s: %s", GET_NAME(ch), zone, option,
+         *backup_id ? " " : "", backup_id, check ? " [check]" : "",
+         waited >= 0 && WIFEXITED(status) && WEXITSTATUS(status) == 0 ? "success" : "failed");
 }
 
 ACMD(do_zreset)

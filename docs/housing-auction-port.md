@@ -51,6 +51,7 @@ Inside a neighbourhood house:
 
 ```text
 house info
+house name The Rosewood Retreat
 house guest <player-name>
 house build north
 house title A Comfortable Sitting Room
@@ -58,6 +59,10 @@ house description Sunlight falls across comfortable chairs and a low table.
 house extra painting A bright landscape hangs on the wall.
 house leave
 ```
+
+`name` (also `rename`) changes the house's name for free from inside the house.
+Names must be 1–100 characters and appear in `house info` and `house list`.
+This is separate from `title`, which changes the current room's title.
 
 `guest` toggles access. Guests may enter and explore, but only the owner or
 high-level staff can modify the house or use chest storage. Room creation adds

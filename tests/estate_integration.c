@@ -827,6 +827,32 @@ int main(int argc, char **argv)
   assert(IN_ROOM(&buyer) == 1);
   house(&seller, "enter 1");
   assert(housing_is_room(GET_ROOM_VNUM(IN_ROOM(&seller))));
+  {
+    char command[128];
+    long gold = GET_GOLD(&seller);
+    house(&seller, "name");
+    assert(strstr(output, "Usage:"));
+    house(&seller, "name    ");
+    assert(strstr(output, "Usage:"));
+    assert(scalar("SELECT COUNT(*) FROM housing_houses WHERE name='Test Home'") == 1);
+    strcpy(command, "name ");
+    memset(command + 5, 'x', 100);
+    command[105] = '\0';
+    house(&seller, command);
+    assert(scalar("SELECT LENGTH(name) FROM housing_houses WHERE house_id=1") == 100);
+    command[105] = 'x';
+    command[106] = '\0';
+    house(&seller, command);
+    assert(strstr(output, "Usage:"));
+    assert(scalar("SELECT LENGTH(name) FROM housing_houses WHERE house_id=1") == 100);
+    house(&seller, "rename Rose's Retreat");
+    assert(strstr(output, "now named Rose's Retreat"));
+    assert(scalar("SELECT COUNT(*) FROM housing_houses WHERE name='Rose''s Retreat'") == 1);
+    house(&seller, "info");
+    assert(strstr(output, "Rose's Retreat"));
+    assert(!strcmp(world[IN_ROOM(&seller)].name, "An Unfinished Room"));
+    assert(GET_GOLD(&seller) == gold);
+  }
   house(&seller, "build north");
   assert(scalar("SELECT COUNT(*) FROM housing_rooms") == 2);
   assert(scalar("SELECT COUNT(*) FROM housing_room_exits") == 2);
@@ -839,6 +865,9 @@ int main(int argc, char **argv)
   house(&seller, "guest guest");
   house(&guest, "enter 1");
   assert(IN_ROOM(&guest) == IN_ROOM(&seller));
+  house(&guest, "name Stolen Home");
+  assert(strstr(output, "Only the owner"));
+  assert(scalar("SELECT COUNT(*) FROM housing_houses WHERE name='Rose''s Retreat'") == 1);
   house(&seller, "chest buy");
   chest = world[IN_ROOM(&seller)].contents;
   assert(chest);
@@ -874,7 +903,13 @@ int main(int argc, char **argv)
   house(&guest, "leave");
   housing_save_all();
   assert(top_of_world == 1);
+  house(&seller, "name Outside Home");
+  assert(strstr(output, "inside a neighborhood house"));
+  house(&seller, "list");
+  assert(strstr(output, "Rose's Retreat"));
   house(&seller, "enter 1");
+  house(&seller, "info");
+  assert(strstr(output, "Rose's Retreat"));
   assert(!strcmp(world[IN_ROOM(&seller)].name, "A Fine Hall"));
   assert(world[IN_ROOM(&seller)].ex_description);
   house(&seller, "leave");
