@@ -752,8 +752,8 @@ bool compute_has_school_feat(struct char_data *ch, int sfeat, int school)
 
 bool compute_has_skill_feat(struct char_data *ch, int ability, int skfeat)
 {
-  if (!ch || !ch->player_specials || ability < 0 || ability > MAX_ABILITIES ||
-      skfeat < 0 || skfeat >= NUM_SKFEATS)
+  if (!ch || !ch->player_specials || ability < 0 || ability > MAX_ABILITIES || skfeat < 0 ||
+      skfeat >= NUM_SKFEATS)
     return false;
   return ch->player_specials->saved.skill_focus[ability][skfeat] ||
          has_item_typed_feat(ch, skfeat, ability, feat_to_skfeat);
@@ -2591,7 +2591,7 @@ int skill_roll(struct char_data *ch, int skillnum)
 
   roll += compute_ability(ch, skillnum);
   /* Static Stealth is already in compute_ability; only Coordinate consumes here. */
-  roll += legendary_technique_skill(ch,skillnum,true);
+  roll += legendary_technique_skill(ch, skillnum, true);
 
   /* Beast Master: Natural Empathy perk - +2 per rank to Animal Handling and Animal Empathy */
   if (!IS_NPC(ch))
@@ -4276,7 +4276,8 @@ void die_follower(struct char_data *ch)
  * @param leader The character to be followed. */
 void add_follower(struct char_data *ch, struct char_data *leader)
 {
-  if (IS_NPC(ch)) ch->legendary_owned_instance = true;
+  if (IS_NPC(ch))
+    ch->legendary_owned_instance = true;
   struct follow_type *k;
 
   if (ch->master)
@@ -4944,13 +4945,20 @@ const char *buff_stat_name(int stat)
 {
   switch (stat)
   {
-    case APPLY_STR: return "strength";
-    case APPLY_CON: return "constitution";
-    case APPLY_DEX: return "dexterity";
-    case APPLY_INT: return "intelligence";
-    case APPLY_WIS: return "wisdom";
-    case APPLY_CHA: return "charisma";
-    default: return NULL;
+  case APPLY_STR:
+    return "strength";
+  case APPLY_CON:
+    return "constitution";
+  case APPLY_DEX:
+    return "dexterity";
+  case APPLY_INT:
+    return "intelligence";
+  case APPLY_WIS:
+    return "wisdom";
+  case APPLY_CHA:
+    return "charisma";
+  default:
+    return NULL;
   }
 }
 
@@ -5677,7 +5685,8 @@ void new_affect(struct affected_type *af)
   af->location = APPLY_NONE;
   af->bonus_type = BONUS_TYPE_ENHANCEMENT;
   af->specific = 0;
-  af->legendary_flags=0;af->legendary_expiry=0;
+  af->legendary_flags = 0;
+  af->legendary_expiry = 0;
   af->next = NULL; /* CRITICAL: Must initialize next pointer to prevent heap corruption */
 
   for (i = 0; i < AF_ARRAY_MAX; i++)
@@ -9284,6 +9293,13 @@ void calculate_max_hp(struct char_data *ch, bool display)
       send_to_char(ch, "%-40s = +%d\r\n", "Vampire Racial Hit Point Bonus", GET_LEVEL(ch) * 4);
   }
 
+  if (HAS_FEAT(ch, FEAT_BG_OUTLANDER))
+  {
+    max_hp += 20;
+    if (display)
+      send_to_char(ch, "%-40s = +%d\r\n", "Outlander Background Bonus", 20);
+  }
+
   // perks
   int perk_hp_bonus = get_perk_hp_bonus(ch);
   if (perk_hp_bonus != 0)
@@ -9330,8 +9346,9 @@ void calculate_max_hp(struct char_data *ch, bool display)
 
   GET_REAL_MAX_HIT(ch) = max_hp;
   legendary_foundation_hp(ch, max_hp);
-  if (display) send_to_char(ch, "Legendary Vitality: +%d (effective maximum %d)\r\n",
-      legendary_foundation_value(ch, LEG_F09, 0), GET_MAX_HIT(ch));
+  if (display)
+    send_to_char(ch, "Legendary Vitality: +%d (effective maximum %d)\r\n",
+                 legendary_foundation_value(ch, LEG_F09, 0), GET_MAX_HIT(ch));
 }
 
 void dismiss_all_followers(struct char_data *ch)
@@ -10411,14 +10428,15 @@ bool can_cast_epic_spell(struct char_data *ch, bool display)
     seconds = seconds_left % 60;
 
     if (minutes > 0)
-      send_to_char(ch,
-                   "You have no epic spell casts available. You will recover one in %d minute%s and "
-                   "%d second%s.\r\n",
-                   minutes, (minutes != 1 ? "s" : ""), seconds, (seconds != 1 ? "s" : ""));
+      send_to_char(
+          ch,
+          "You have no epic spell casts available. You will recover one in %d minute%s and "
+          "%d second%s.\r\n",
+          minutes, (minutes != 1 ? "s" : ""), seconds, (seconds != 1 ? "s" : ""));
     else
-      send_to_char(ch,
-                   "You have no epic spell casts available. You will recover one in %d second%s.\r\n",
-                   seconds, (seconds != 1 ? "s" : ""));
+      send_to_char(
+          ch, "You have no epic spell casts available. You will recover one in %d second%s.\r\n",
+          seconds, (seconds != 1 ? "s" : ""));
   }
 
   return false;
@@ -11636,8 +11654,7 @@ bool is_road_room(room_rnum room, int type)
   {
     if (ZONE_FLAGGED(GET_ROOM_ZONE(room), ZONE_CLOSED))
       return false;
-    if (world[room].sector_type == SECT_ROAD_EW ||
-        world[room].sector_type == SECT_ROAD_INT ||
+    if (world[room].sector_type == SECT_ROAD_EW || world[room].sector_type == SECT_ROAD_INT ||
         world[room].sector_type == SECT_ROAD_NS)
       return true;
   }

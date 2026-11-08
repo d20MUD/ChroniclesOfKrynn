@@ -12072,7 +12072,28 @@ ACMD(do_fire)
     send_to_char(ch, "You can only fire at targets in your current room.\r\n");
     return;
   }
-  if (!*arg1 || !(vict = get_char_room_vis(ch, arg1, NULL)))
+  if (!*arg1 && PRF_FLAGGED(ch, PRF_AUTOHIT))
+  {
+    /* Match auto-hit's eligible mobs without looking the chosen mob up again
+     * by name: multiple mobs in the room may share the same keywords. */
+    if (room == NOWHERE)
+      return;
+    for (vict = world[room].people; vict; vict = vict->next_in_room)
+    {
+      if (!IS_NPC(vict) || AFF_FLAGGED(vict, AFF_CHARM) || vict->master == ch)
+        continue;
+      if (!CAN_SEE(ch, vict) && !can_blindsense_creature(ch, vict))
+        continue;
+      break;
+    }
+    if (!vict)
+    {
+      send_to_char(ch,
+                   "There are no eligible mobs here. Please specify your target instead.\r\n");
+      return;
+    }
+  }
+  else if (!*arg1 || !(vict = get_char_room_vis(ch, arg1, NULL)))
   {
     send_to_char(ch, "Fire at who?\r\n");
     return;
