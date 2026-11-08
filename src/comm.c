@@ -1253,19 +1253,26 @@ void game_loop(socket_t local_mother_desc)
         }
         d->has_prompt = FALSE;
 
-        if (d->showstr_count) /* Reading something w/ pager */
-          show_string(d, comm);
-        else if (d->str) /* Writing boards, mail, etc. */
-          string_add(d, comm);
-        else if (STATE(d) != CON_PLAYING) /* In menus, etc. */
-          nanny(d, comm);
-        else
-        {                         /* else: we're playing normally. */
-          if (aliased)            /* To prevent recursive aliases. */
-            d->has_prompt = TRUE; /* To get newline before next cmd output. */
-          else if (perform_alias(d, comm, sizeof(comm))) /* Run it through aliasing system */
-            get_from_q(&d->input, comm, &aliased);
-          command_interpreter(d->character, comm); /* Send it to interpreter */
+        {
+          struct output_capture creation_capture = {0};
+          bool web_creating = web_creation_begin(d, comm, &creation_capture);
+          if (web_creating && web_creation_back(d, comm))
+            ; /* Back navigation was handled without applying a nanny choice. */
+          else if (d->showstr_count) /* Reading something w/ pager */
+            show_string(d, comm);
+          else if (d->str) /* Writing boards, mail, etc. */
+            string_add(d, comm);
+          else if (STATE(d) != CON_PLAYING) /* In menus, etc. */
+            nanny(d, comm);
+          else
+          {                         /* else: we're playing normally. */
+            if (aliased)            /* To prevent recursive aliases. */
+              d->has_prompt = TRUE; /* To get newline before next cmd output. */
+            else if (perform_alias(d, comm, sizeof(comm))) /* Run it through aliasing system */
+              get_from_q(&d->input, comm, &aliased);
+            command_interpreter(d->character, comm); /* Send it to interpreter */
+          }
+          if (web_creating) web_creation_finish(d, &creation_capture);
         }
       }
       else if (d->character && STATE(d) == CON_PLAYING && pending_actions(d->character) &&

@@ -513,6 +513,7 @@ typedef enum
   eMSDP_TITLE,           /**< Character title */
   eMSDP_HELP_INFO,       /**< On-demand web help response as JSON */
   eMSDP_LORE_INFO,      /**< On-demand lore results as JSON */
+  eMSDP_CHARACTER_CREATION, /**< Server-authoritative character creation step */
   eMSDP_ROOM_CONTENTS, /**< Visible people and objects in the current room */
   eMSDP_ROOM_QUESTS,    /**< Eligible quests offered in the current room */
   eMSDP_QUEST_ACCEPTED,  /**< Quest acceptance event as JSON string */

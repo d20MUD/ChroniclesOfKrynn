@@ -15,6 +15,7 @@
 #include "mysql.h"
 #include "lists.h"
 #include "help.h"
+#include "handler.h"
 #include "feats.h"
 #include "spellhelp.h"
 #include "spells.h" /* need this for class.h NUM_ABILITIES */
@@ -115,8 +116,9 @@ static struct help_entry_list *search_help_table(const char *argument, int level
       continue;
     }
 
-    /* Case-insensitive prefix match */
-    if (strn_cmp(argument, help_table[i].keywords, strlen(argument)) == 0)
+    /* Match aliases anywhere in the keyword list, including CLASS-* aliases. */
+    if (strn_cmp(argument, help_table[i].keywords, strlen(argument)) == 0 ||
+        is_name(argument, help_table[i].keywords))
     {
       /* Found a match - convert to help_entry_list format */
       new_entry = alloc_help_entry();
@@ -846,6 +848,7 @@ void perform_help(struct descriptor_data *d, const char *argument)
   {
     tmp = entry;
     entry = entry->next;
+    free_help_entry_single(tmp);
     free(tmp);
   }
 }

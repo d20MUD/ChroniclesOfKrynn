@@ -24,6 +24,8 @@
 #include "player_shop.h"
 #include "utils.h"
 #include "comm.h"
+#include "protocol.h"
+#include <json-c/json.h>
 #include "interpreter.h"
 #include "db.h"
 #include "spells.h"
@@ -6926,6 +6928,168 @@ EVENTFUNC(get_protocols)
 }
 
 /* deal with newcomers and other non-playing sockets */
+/* The existing nanny/string editor remains the only creation implementation.
+ * Capture its response and expose only choices this authenticated account may use. */
+bool web_creation_begin(struct descriptor_data *d, const char *input, struct output_capture *capture)
+{
+#if defined(CAMPAIGN_DL)
+  if (!d || !d->account || !d->pProtocol || !d->pProtocol->bMSDP || d->output_capture ||
+      !d->pProtocol->pVariables[eMSDP_CHARACTER_CREATION]->bReport) return FALSE;
+  if (!d->web_character_creation && STATE(d) == CON_ACCOUNT_MENU && input && !str_cmp(input, "c"))
+    d->web_character_creation = TRUE;
+  if (d->web_character_creation) { d->output_capture = capture; return TRUE; }
+#endif
+  return FALSE;
+}
+
+static bool web_creation_can_back(struct descriptor_data *d)
+{
+  if (d->str) return FALSE;
+  switch (STATE(d))
+  {
+    case CON_NAME_CNFRM: case CON_QSEX: case CON_QRACE: case CON_QRACE_HELP:
+    case CON_QCLASS: case CON_QCLASS_HELP: case CON_CONFIRM_PREMADE: case CON_QALIGN:
+    case CON_CHAR_RP_MENU: case CON_GEN_DESCS_INTRO: case CON_GEN_DESCS_DESCRIPTORS_1:
+    case CON_GEN_DESCS_DESCRIPTORS_2: case CON_GEN_DESCS_ADJECTIVES_1: case CON_GEN_DESCS_ADJECTIVES_2:
+    case CON_GEN_DESCS_MENU: case CON_GEN_DESCS_MENU_PARSE: case CON_BACKGROUND_ARCHTYPE:
+    case CON_BACKGROUND_ARCHTYPE_CONFIRM: case CON_CHARACTER_AGE_SELECT: case CON_CHARACTER_FACTION_SELECT:
+    case CON_CHARACTER_HOMETOWN_SELECT: case CON_CHARACTER_DEITY_SELECT: case CON_CHARACTER_DEITY_CONFIRM:
+    case CON_CHARACTER_GOALS_IDEAS: case CON_CHARACTER_PERSONALITY_IDEAS: case CON_CHARACTER_IDEALS_IDEAS:
+    case CON_CHARACTER_BONDS_IDEAS: case CON_CHARACTER_FLAWS_IDEAS: case CON_QREGION: case CON_QREGION_HELP:
+      return TRUE;
+    default: return FALSE;
+  }
+}
+
+bool web_creation_back(struct descriptor_data *d, const char *input)
+{
+  int state;
+  if (!d->web_character_creation || strcmp(input,"@creation-back")) return FALSE;
+  if (!web_creation_can_back(d))
+  { write_to_output(d,"This step cannot go back. Save or cancel any active text editor first.\r\n"); return TRUE; }
+  state = STATE(d);
+  switch (state)
+  {
+    case CON_NAME_CNFRM: case CON_QSEX:
+      free(d->character->player.name); d->character->player.name = NULL;
+      STATE(d) = CON_GET_NAME; write_to_output(d,"What will your character be called?\r\n"); break;
+    case CON_QRACE:
+      STATE(d) = CON_QSEX; write_to_output(d,"Choose your gender.\r\n"); break;
+    case CON_QRACE_HELP: case CON_QCLASS:
+      GET_PREMADE_BUILD_CLASS(d->character) = -1;
+      STATE(d) = CON_QRACE; write_to_output(d,"Choose your race.\r\n"); break;
+    case CON_QCLASS_HELP: case CON_CONFIRM_PREMADE:
+      GET_PREMADE_BUILD_CLASS(d->character) = -1;
+      STATE(d) = CON_QCLASS; write_to_output(d,"Choose your class.\r\n"); break;
+    case CON_QALIGN:
+      GET_PREMADE_BUILD_CLASS(d->character) = -1;
+      STATE(d) = CON_CONFIRM_PREMADE; write_to_output(d,"Choose a premade or custom build.\r\n"); break;
+    case CON_CHARACTER_DEITY_CONFIRM: case CON_BACKGROUND_ARCHTYPE_CONFIRM:
+    {
+      char reject[] = "n";
+      nanny(d, reject); /* Preserve each existing confirmation's cleanup. */
+      break;
+    }
+    case CON_CHAR_RP_MENU:
+      STATE(d) = CON_MENU; write_to_output(d,"%s",CONFIG_MENU); break;
+    default:
+      STATE(d) = CON_CHAR_RP_MENU; show_character_rp_menu(d); break;
+  }
+  return TRUE;
+}
+
+static void creation_choice(struct json_object *choices, const char *value, const char *label, const char *description)
+{
+  struct json_object *choice = json_object_new_object();
+  json_object_object_add(choice, "value", json_object_new_string(value));
+  json_object_object_add(choice, "label", json_object_new_string(label ? label : value));
+  json_object_object_add(choice, "description", json_object_new_string(description ? description : ""));
+  json_object_array_add(choices, choice);
+}
+
+void web_creation_finish(struct descriptor_data *d, struct output_capture *capture)
+{
+  struct json_object *event = json_object_new_object(), *choices = json_object_new_array();
+  int state = STATE(d), i, pos;
+  const char *step = "options", *title = "Character creation", *serialized;
+  char value[32], id[64];
+  static unsigned long sequence;
+  bool active = state != CON_PLAYING && state != CON_ACCOUNT_MENU && state != CON_CLOSE && state != CON_DISCONNECT;
+  d->output_capture = NULL;
+  switch (state)
+  {
+    case CON_GET_NAME: step = "name"; title = "Choose your name"; break;
+    case CON_NAME_CNFRM: step = "confirm"; title = "Confirm your name"; break;
+    case CON_QSEX:
+      step = "gender"; title = "Choose your gender";
+      creation_choice(choices,"m","Male",""); creation_choice(choices,"f","Female",""); break;
+    case CON_QRACE:
+      step = "race"; title = "Choose your race";
+      for (pos = 0; pos < NUM_EXTENDED_RACES; pos++)
+      {
+        i = race_sort_info[pos];
+        if (race_list[i].is_pc && (!is_locked_race(i) || has_unlocked_race(d->character,i)))
+          creation_choice(choices,race_list[i].name,race_list[i].type,race_list[i].descrip);
+      }
+      break;
+    case CON_QCLASS:
+      step = "class"; title = "Choose your class";
+      for (i = 0; i < NUM_CLASSES; i++)
+        if (class_list[i].in_game && !class_list[i].prestige_class &&
+            (!CLSLIST_LOCK(i) || has_unlocked_class(d->character,i)) &&
+            valid_class_race_alignment(i,GET_REAL_RACE(d->character)))
+          creation_choice(choices,CLSLIST_NAME(i),CLSLIST_NAME(i),class_short_descriptions[i]);
+      break;
+    case CON_QRACE_HELP: step = "confirm"; title = "Confirm your race"; break;
+    case CON_QCLASS_HELP: step = "confirm"; title = "Confirm your class"; break;
+    case CON_CONFIRM_PREMADE:
+      title = "Choose your build";
+      creation_choice(choices,"premade","Premade build","Recommended for new players; chooses skills, feats and ability scores as you level.");
+      creation_choice(choices,"custom","Custom build","Choose your own skills, feats and ability scores."); break;
+    case CON_QALIGN:
+      title = "Choose your alignment";
+      for (i = 0; i < NUM_ALIGNMENTS; i++)
+        if (valid_align_by_class(i,GET_CLASS(d->character)) && valid_align_by_race(i,GET_REAL_RACE(d->character)))
+        { snprintf(value,sizeof(value),"%d",i); creation_choice(choices,value,alignment_names[i],""); }
+      break;
+    case CON_SETPREFS: step = "confirm"; title = "Recommended preferences"; break;
+    case CON_RMOTD: step = "continue"; title = "Welcome to Krynn"; break;
+    case CON_MENU: title = "Finish preparing your character"; break;
+    case CON_CHARACTER_AGE_SELECT: title = "Choose your age"; break;
+    case CON_CHARACTER_FACTION_SELECT: title = "Choose your faction"; break;
+    case CON_CHARACTER_HOMETOWN_SELECT: title = "Choose your hometown"; break;
+    case CON_CHARACTER_DEITY_SELECT: title = "Choose your deity"; break;
+    case CON_CHARACTER_DEITY_CONFIRM: step = "confirm"; title = "Confirm your deity"; break;
+    case CON_CHAR_RP_DECIDE:
+      step = "roleplay"; title = "Choose your roleplay status";
+      creation_choice(choices,"1","Non-role-player","Enter the game as a non-role-player.");
+      creation_choice(choices,"2","Role-player","Enter additional character and roleplay information.");
+      creation_choice(choices,"3","Decide later","Enter the game and choose your roleplay status later.");
+      break;
+    case CON_BACKGROUND_ARCHTYPE_CONFIRM: step = "confirm"; title = "Confirm your background"; break;
+  }
+  if (!strcmp(step,"confirm")) { creation_choice(choices,"y","Yes","");creation_choice(choices,"n","No",""); }
+  if (!strcmp(step,"continue")) creation_choice(choices,"","Continue","");
+  if (d->str) { step = "editor";title = "Write your character details"; }
+  snprintf(id,sizeof(id),"%ld:%lu",(long)time(NULL),++sequence);
+  json_object_object_add(event,"id",json_object_new_string(id));
+  json_object_object_add(event,"active",json_object_new_boolean(active));
+  json_object_object_add(event,"canBack",json_object_new_boolean(active && web_creation_can_back(d)));
+  json_object_object_add(event,"step",json_object_new_string(step));
+  json_object_object_add(event,"title",json_object_new_string(title));
+  json_object_object_add(event,"state",json_object_new_int(state));
+  json_object_object_add(event,"name",json_object_new_string(d->character && d->character->player.name ? d->character->player.name : ""));
+  json_object_object_add(event,"body",json_object_new_string(capture->text ? capture->text : ""));
+  json_object_object_add(event,"truncated",json_object_new_boolean(capture->truncated));
+  json_object_object_add(event,"choices",choices);
+  serialized = json_object_to_json_string_ext(event,JSON_C_TO_STRING_PLAIN);
+  MSDPSetString(d,eMSDP_CHARACTER_CREATION,serialized);
+  d->pProtocol->pVariables[eMSDP_CHARACTER_CREATION]->bDirty = true;
+  MSDPFlush(d,eMSDP_CHARACTER_CREATION);
+  d->web_character_creation = active;
+  json_object_put(event); free(capture->text);
+}
+
 void nanny(struct descriptor_data *d, char *arg)
 {
   int load_result = 0; /* Overloaded variable */
@@ -8137,6 +8301,11 @@ void nanny(struct descriptor_data *d, char *arg)
       write_to_output(d, "\r\nThat's not a class.\r\nClass: ");
       return;
     }
+    else if (!class_list[load_result].in_game)
+    {
+      write_to_output(d,"That class is not available.\r\nClass: ");
+      return;
+    }
     else if (CLSLIST_LOCK(load_result) && !has_unlocked_class(d->character, load_result))
     {
       write_to_output(d, "\r\nLocked/prestige classes cannot be taken at 1st level.\r\nClass: ");
@@ -8341,6 +8510,7 @@ void nanny(struct descriptor_data *d, char *arg)
     }
     else if (is_abbrev(arg, "custom"))
     {
+      GET_PREMADE_BUILD_CLASS(d->character) = -1;
       write_to_output(d, "\r\nCustom Build Confirmed!\r\n");
     }
     else

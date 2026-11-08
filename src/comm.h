@@ -77,6 +77,10 @@ struct output_capture
   bool truncated;
 };
 
+bool web_creation_begin(struct descriptor_data *d, const char *input, struct output_capture *capture);
+bool web_creation_back(struct descriptor_data *d, const char *input);
+void web_creation_finish(struct descriptor_data *d, struct output_capture *capture);
+
 /* I/O functions */
 void write_to_q(const char *txt, struct txt_q *queue, int aliased);
 int write_to_descriptor(socket_t desc, const char *txt);

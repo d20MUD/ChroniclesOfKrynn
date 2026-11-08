@@ -8116,6 +8116,7 @@ struct descriptor_data
   int connected;                     /**< mode of 'connectedness'		*/
   int desc_num;                      /**< unique num assigned to desc		*/
   time_t login_time;                 /**< when the person connected		*/
+  bool web_character_creation; /**< Active server-driven web creation session */
   struct output_capture *output_capture; /**< Scoped structured-output capture; normally NULL */
   char *showstr_head;                /**< for keeping track of an internal str	*/
   char **showstr_vector;             /**< for paging through texts		*/
