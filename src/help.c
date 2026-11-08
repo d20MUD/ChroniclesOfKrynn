@@ -27,6 +27,8 @@
 #include "evolutions.h"
 #include "backgrounds.h"
 #include "perks.h"
+#include "protocol.h"
+#include <json-c/json.h>
 
 /* Help cache system - stores recent help queries to reduce database load */
 #define HELP_CACHE_SIZE 50 /* Number of cached help entries */
@@ -1114,7 +1116,10 @@ int handle_database_help(struct char_data *ch, const char *argument, const char 
            line_string(GET_SCREEN_WIDTH(ch), '-', '-'), (IS_IMMORTAL(ch) ? immo_data_buffer : ""),
            entries->keywords, entries->last_updated, line_string(GET_SCREEN_WIDTH(ch), '-', '-'),
            entries->entry, line_string(GET_SCREEN_WIDTH(ch), '-', '-'));
-  page_string(ch->desc, help_entry_buffer, 1);
+  if (ch->desc && ch->desc->output_capture)
+    write_to_output(ch->desc, "%s\r\n", entries->entry ? entries->entry : "");
+  else
+    page_string(ch->desc, help_entry_buffer, 1);
 
   /* Clean up allocated memory */
   while (entries != NULL)
@@ -1515,7 +1520,7 @@ int handle_soundex_suggestions(struct char_data *ch, const char *argument, const
  * The handler chain processes help requests in priority order,
  * with each handler responsible for one type of help content.
  */
-ACMDU(do_help)
+ACMDU(do_help_text)
 {
   struct help_handler *handler;
   struct help_context ctx = {0}; /* Initialize context with zeros */
@@ -1583,6 +1588,47 @@ ACMDU(do_help)
   send_to_char(ch, "Help system error: no handlers available.\r\n");
   mudlog(NRM, LVL_IMPL, TRUE, "SYSERR: Help handler chain is broken!");
   free(raw_argument);
+}
+
+/* REPORT HELP_INFO is an explicit opt-in; ordinary telnet clients keep the
+ * existing command and pager. Reuse every help handler and its access checks. */
+ACMDU(do_help)
+{
+  struct descriptor_data *d = ch ? ch->desc : NULL;
+  struct output_capture capture = {0};
+  struct json_object *response;
+  const char *serialized;
+  struct timeval now;
+  static unsigned long sequence;
+  char response_id[96];
+  char topic[MAX_INPUT_LENGTH];
+
+  if (!d || !d->pProtocol || !d->pProtocol->bMSDP || d->output_capture ||
+      !d->pProtocol->pVariables[eMSDP_HELP_INFO]->bReport)
+  {
+    do_help_text(ch, argument, cmd, subcmd);
+    return;
+  }
+  strlcpy(topic, argument ? argument : "", sizeof(topic));
+  d->output_capture = &capture;
+  do_help_text(ch, argument, cmd, subcmd);
+  d->output_capture = NULL;
+
+  gettimeofday(&now, NULL);
+  snprintf(response_id, sizeof(response_id), "%ld:%ld:%lu", (long)now.tv_sec,
+           (long)now.tv_usec, ++sequence);
+  response = json_object_new_object();
+  json_object_object_add(response, "id", json_object_new_string(response_id));
+  json_object_object_add(response, "topic", json_object_new_string(topic));
+  json_object_object_add(response, "body", json_object_new_string(capture.text ? capture.text : ""));
+  json_object_object_add(response, "truncated", json_object_new_boolean(capture.truncated));
+  serialized = json_object_to_json_string_ext(response, JSON_C_TO_STRING_PLAIN);
+  MSDPSetString(d, eMSDP_HELP_INFO, serialized);
+  /* Each command is an event, including repeated requests for the same topic. */
+  d->pProtocol->pVariables[eMSDP_HELP_INFO]->bDirty = true;
+  MSDPFlush(d, eMSDP_HELP_INFO);
+  json_object_put(response);
+  free(capture.text);
 }
 
 //  send_to_char(ch, "\tDYou can also check the help index, type 'hindex <keyword>'\tn\r\n");

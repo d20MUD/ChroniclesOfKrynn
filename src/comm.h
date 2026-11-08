@@ -67,11 +67,22 @@ void perform_act(const char *orig, struct char_data *ch, struct obj_data *obj, v
 const char *act(const char *str, int hide_invisible, struct char_data *ch, struct obj_data *obj,
                 void *vict_obj, int type);
 
+/* A scoped output sink used by web help; text is bounded before JSON escaping. */
+#define OUTPUT_CAPTURE_LIMIT (128 * 1024)
+struct output_capture
+{
+  char *text;
+  size_t length;
+  size_t capacity;
+  bool truncated;
+};
+
 /* I/O functions */
 void write_to_q(const char *txt, struct txt_q *queue, int aliased);
 int write_to_descriptor(socket_t desc, const char *txt);
 size_t write_to_output(struct descriptor_data *d, const char *txt, ...)
     __attribute__((format(printf, 2, 3)));
+bool write_protocol_packet(struct descriptor_data *d, const char *packet);
 size_t vwrite_to_output(struct descriptor_data *d, const char *format, va_list args);
 
 typedef RETSIGTYPE sigfunc(int);

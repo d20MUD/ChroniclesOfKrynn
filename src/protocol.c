@@ -29,7 +29,7 @@ const char *RGBone = "F022";
 const char *RGBtwo = "F055";
 const char *RGBthree = "F555";
 
-static void Write(descriptor_t *apDescriptor, const char *apData)
+static bool Write(descriptor_t *apDescriptor, const char *apData)
 {
   if (apDescriptor != NULL && apDescriptor->has_prompt)
   {
@@ -39,7 +39,10 @@ static void Write(descriptor_t *apDescriptor, const char *apData)
     }
   }
 
-  write_to_output(apDescriptor, "%s", apData);
+  if ((unsigned char)apData[0] == IAC && (unsigned char)apData[1] == SB)
+    return write_protocol_packet(apDescriptor, apData);
+  else
+    return write_to_output(apDescriptor, "%s", apData) > 0;
 }
 
 static void ReportBug(const char *apText)
@@ -163,6 +166,7 @@ static variable_name_t VariableNameTable[eMSDP_MAX + 1] = {
     {eMSDP_GROUP, "GROUP", STRING_READ_ONLY},
     {eMSDP_POSITION, "POSITION", STRING_READ_ONLY},
     {eMSDP_TITLE, "TITLE", STRING_READ_ONLY},
+    {eMSDP_HELP_INFO, "HELP_INFO", STRING_READ_ONLY},
     {eMSDP_QUEST_INFO, "QUEST_INFO", STRING_READ_ONLY},
 
     /* Combat */
@@ -1329,8 +1333,8 @@ void MSDPUpdate(descriptor_t *apDescriptor)
     {
       if (pProtocol->pVariables[i]->bDirty)
       {
-        MSDPSend(apDescriptor, (variable_t)i);
-        pProtocol->pVariables[i]->bDirty = false;
+        if (MSDPSend(apDescriptor, (variable_t)i))
+          pProtocol->pVariables[i]->bDirty = false;
       }
     }
   }
@@ -1346,16 +1350,17 @@ void MSDPFlush(descriptor_t *apDescriptor, variable_t aMSDP)
     {
       if (pProtocol->pVariables[aMSDP]->bDirty)
       {
-        MSDPSend(apDescriptor, aMSDP);
-        pProtocol->pVariables[aMSDP]->bDirty = false;
+        if (MSDPSend(apDescriptor, aMSDP))
+          pProtocol->pVariables[aMSDP]->bDirty = false;
       }
     }
   }
 }
 
-void MSDPSend(descriptor_t *apDescriptor, variable_t aMSDP)
+bool_t MSDPSend(descriptor_t *apDescriptor, variable_t aMSDP)
 {
-  char MSDPBuffer[MAX_VARIABLE_LENGTH + 1] = {'\0'};
+  static char MSDPBuffer[MAX_VARIABLE_LENGTH + 1];
+  MSDPBuffer[0] = '\0';
 
   if (aMSDP > eMSDP_NONE && aMSDP < eMSDP_MAX)
   {
@@ -1383,7 +1388,7 @@ void MSDPSend(descriptor_t *apDescriptor, variable_t aMSDP)
         if (ret >= MAX_VARIABLE_LENGTH + 1)
         {
           ReportBug("MSDPSend: Buffer overflow prevented");
-          return;
+          return false;
         }
       }
       else if (pProtocol->bGMCP)
@@ -1394,7 +1399,7 @@ void MSDPSend(descriptor_t *apDescriptor, variable_t aMSDP)
         if (ret >= MAX_VARIABLE_LENGTH + 1)
         {
           ReportBug("MSDPSend: Buffer overflow prevented for GMCP string variable");
-          return;
+          return false;
         }
       }
     }
@@ -1408,7 +1413,7 @@ void MSDPSend(descriptor_t *apDescriptor, variable_t aMSDP)
         if (ret >= MAX_VARIABLE_LENGTH + 1)
         {
           ReportBug("MSDPSend: Buffer overflow prevented for MSDP integer variable");
-          return;
+          return false;
         }
       }
       else if (pProtocol->bGMCP)
@@ -1419,15 +1424,16 @@ void MSDPSend(descriptor_t *apDescriptor, variable_t aMSDP)
         if (ret >= MAX_VARIABLE_LENGTH + 1)
         {
           ReportBug("MSDPSend: Buffer overflow prevented for GMCP integer variable");
-          return;
+          return false;
         }
       }
     }
 
     /* Just in case someone calls this function without checking MSDP/GMCP */
     if (MSDPBuffer[0] != '\0')
-      Write(apDescriptor, MSDPBuffer);
+      return Write(apDescriptor, MSDPBuffer);
   }
+  return false;
 }
 
 ACMD(do_msdpvalue)
@@ -1531,7 +1537,8 @@ ACMD(do_msdplist)
 
 void MSDPSendPair(descriptor_t *apDescriptor, const char *apVariable, const char *apValue)
 {
-  char MSDPBuffer[MAX_VARIABLE_LENGTH + 1] = {'\0'};
+  static char MSDPBuffer[MAX_VARIABLE_LENGTH + 1];
+  MSDPBuffer[0] = '\0';
 
   if (apVariable != NULL && apValue != NULL)
   {
@@ -1588,7 +1595,8 @@ void MSDPSendPair(descriptor_t *apDescriptor, const char *apVariable, const char
 
 void MSDPSendList(descriptor_t *apDescriptor, const char *apVariable, const char *apValue)
 {
-  char MSDPBuffer[MAX_VARIABLE_LENGTH + 1] = {'\0'};
+  static char MSDPBuffer[MAX_VARIABLE_LENGTH + 1];
+  MSDPBuffer[0] = '\0';
 
   if (apVariable != NULL && apValue != NULL)
   {
@@ -3411,7 +3419,8 @@ static void ParseGMCP(descriptor_t *apDescriptor, const char *apData)
 
 static void SendGMCP(descriptor_t *apDescriptor, const char *apVariable, const char *apValue)
 {
-  char GMCPBuffer[MAX_VARIABLE_LENGTH + 1] = {'\0'};
+  static char GMCPBuffer[MAX_VARIABLE_LENGTH + 1];
+  GMCPBuffer[0] = '\0';
 
   log("DEBUG: SendGMCP called with variable='%s', value='%s'", apVariable, apValue);
 

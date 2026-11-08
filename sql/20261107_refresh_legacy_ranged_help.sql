@@ -1,0 +1,193 @@
+-- Replace the legacy directions-based help entry shown as tag "blast".
+-- Text is mirrored in lib/text/help/ranged_combat.hlp.
+-- Apply to the intended port's help database. Existing aliases are preserved.
+START TRANSACTION;
+
+SET @ranged_help = REPLACE('RANGED COMBAT AND AMMUNITION
+
+Usage: fire <target>
+       reload
+       collect
+       autoreload
+       autocollect
+       throw <target>
+       throw off
+
+Bows, crossbows, and slings let you attack enemies before they close into
+melee. Your target must be in the same room as you. You cannot shoot into
+an adjacent room, even with Far Shot or another long-range ability.
+
+GETTING READY
+  Bows use arrows.
+  Crossbows use bolts.
+  Slings use bullets.
+
+Wield your weapon, wear an ammo pouch or quiver, and put matching ammunition
+inside it. A pouch cannot be worn together with a weapon sheath.
+Carrying ammunition in your inventory is not enough. Your weapon
+uses the first ammunition in your pouch, so keep the kind you want to fire
+at the top. If the wrong kind is first, take it out of the pouch.
+
+For example, using the keywords on your own equipment:
+  wield bow
+  wear quiver
+  put arrows quiver
+  fire goblin
+
+Use fire <target> to begin shooting. Crossbows and slings also need to be
+loaded: use reload before firing and whenever the weapon needs reloading.
+The autoreload setting can help keep these weapons ready during combat.
+Bows do not need reload. Filling a pouch and reloading a weapon are separate
+steps. Autoreload and autocollect toggle their respective settings.
+
+Fire starts shooting and subsequent attacks continue through combat rounds;
+you do not need to repeat it for every shot. You cannot start fire while
+already fighting. If you target a group member or your own pet, fire tries
+to assist by shooting that character''s current opponent in the same room.
+
+AMMUNITION
+A bundle may hold many shots. Each shot uses one piece of ammunition,
+including a miss or a shot that is deflected. When the bundle runs out,
+you need another supply of the correct ammunition. Keep spare matching
+bundles in your pouch; after one is used up, the next supplies your shots.
+If no usable ammunition remains, ranged attacks stop. Resupply and, once
+you are no longer fighting, use fire <target> to begin again.
+
+Enchanted ammunition can improve accuracy and damage. Some ammunition also
+adds damage such as fire or cold when it hits. A foe''s resistances still
+matter. The extra elemental damage is not multiplied on a critical hit.
+Weapon and ammunition enhancement use the higher bonus, not their sum.
+Rare supplies may never run out; they still require the correct worn pouch
+and do not remove crossbow or sling reload requirements.
+
+Some fired ammunition can be recovered with collect. Your ammo pouch must
+have room, and broken ammunition cannot be recovered. Autocollect can help
+retrieve your ammunition after combat. Recovery does not refill an old
+bundle: recovered shots are separate ammunition.
+
+Ordinary spells and abilities do not spend weapon ammunition merely because
+they make a ranged attack roll.
+
+DISTANCE AND ADVANCING
+If either opponent wields a ranged weapon when battle begins, the fight
+starts at the room''s maximum distance. Otherwise, it starts at 0 feet.
+Wide fields generally allow more distance than a small interior. Switching
+weapons during a fight does not reset your distance from an opponent.
+
+Mobs, including companions, close the distance at their movement speed
+once per round. Most must reach 5 feet before they can attack. Some enemies
+can attack from a distance and will continue advancing while doing so.
+
+If you change to a melee weapon while your enemy is still far away, use:
+  advance
+  advance <opponent>
+
+Advancing spends one move action and moves you toward a mob you are fighting.
+Ordinary melee attacks need you to be within 5 feet. Reach weapons, such as
+polearms, can strike from 10 feet. Your advance stops at your weapon''s reach.
+Unarmed attacks cannot borrow the reach of a polearm you are carrying.
+
+THROWING WEAPONS
+Wield a throwable weapon, such as a dagger or shuriken, and put matching
+throwing ammunition in your worn pouch. Then use:
+  throw goblin
+
+The wielded weapon stays in your hand and supplies the attack''s weapon
+properties. Each throw spends matching ammunition from your pouch. Daggers
+need dagger ammunition; shuriken need shuriken ammunition. Enhancement bonuses
+on the weapon and ammunition use the better bonus rather than adding together.
+Thrown attacks use Dexterity to hit and Strength for damage.
+
+Without Quick Draw, you can throw once per round. With Quick Draw, you can
+throw at your normal full attack rate, including eligible Rapid Shot attacks.
+Throwing mode continues during combat. Use throw off, or use hit, to return
+to melee use of a weapon that supports melee. You may need to advance first.
+
+Returning on your weapon OR throwing ammunition works like unlimited ammo:
+you can keep throwing without spending the supply. There is no delay or
+per-round supply limit from Returning. You still need matching ammunition
+in your worn pouch. Returning does not grant Quick Draw or extra attacks.
+
+WEAPON RANGE
+Weapons have their own range increments. Beyond the first increment, each
+additional increment gives -2 to hit; Far Shot reduces this to -1. Thrown
+weapons can reach up to five increments, other ranged weapons up to ten.
+The room also limits distance, and you can never shoot through an exit.
+For example, a dagger''s increment is 10 feet and a javelin''s is 30 feet.
+
+POSITION AND FEATS
+Point-Blank Shot grants +1 to ranged attack and damage rolls within 30 feet.
+There is no penalty simply for lacking this feat, being in the front or
+middle row, or being the enemy''s target.
+
+Precise Shot prevents a separate -4 penalty when another player is tanking
+the mob you are shooting. A companion or other mob tank does not cause this
+penalty. Improved Precise Shot also prevents it and ignores partial
+concealment. Total concealment still applies.
+
+Rapid Shot adds one attack at your highest bonus during a full weapon attack,
+with -2 on all attacks in that volley. Use rapidshot to toggle it. A thrown
+volley requires Quick Draw. Rapid Shot does not add spell attacks.
+
+Manyshot automatically fires two arrows on the first bow attack of a full
+attack, using one attack roll. Both arrows are spent. Critical and precision
+damage apply only once; each arrow faces damage reduction separately. This
+feat does not give extra dagger, shuriken, sling, or crossbow attacks.
+
+Deadly Aim trades accuracy for weapon damage. Use deadlyaim to toggle it.
+It starts at -1 to hit for +2 damage, increasing by -1/+2 at base attack
+bonus +4 and every +4 thereafter. Its damage bonus does not apply to touch
+attacks or spells. You do not choose the penalty with a number.
+
+Rapid Reload makes hand and light crossbow reloads free actions, and heavy
+crossbow reloads move actions. Sling and repeating crossbow support is also
+retained. It does not supply ammunition.
+
+In a group, formation back lets a ranged attacker stay behind the front
+line. Melee and reach attacks must still obey formation rules after you
+advance. Point-Blank Shot does not change which rows permit melee attacks.
+
+IF YOU CANNOT FIRE
+Check that you are wielding a ranged weapon, wearing your ammo pouch, and
+have the correct ammunition first in the pouch. Check that your supply is
+not exhausted and that a crossbow or sling has been reloaded. Your target
+must be present in your room, and combat must be permitted there.
+
+See also: FORMATION, ADVANCE, FIRE, RELOAD, COLLECT, AUTORELOAD, AUTOCOLLECT
+#0
+$
+', CHAR(10), CONCAT(CHAR(13), CHAR(10)));
+
+INSERT INTO help_entries(tag, category, entry, min_level, max_level, auto_generated)
+VALUES ('blast', 'combat', @ranged_help, 1, 1000, FALSE)
+ON DUPLICATE KEY UPDATE category=VALUES(category), entry=VALUES(entry),
+  auto_generated=FALSE;
+
+-- Refresh the newer tag too if an earlier ranged-help migration created it.
+UPDATE help_entries SET entry=@ranged_help, category='combat', auto_generated=FALSE
+WHERE LOWER(tag)='ranged_combat';
+
+INSERT IGNORE INTO help_keywords(help_tag, keyword) VALUES
+('blast', 'blast'),
+('blast', 'ranged'),
+('blast', 'ranged_combat'),
+('blast', 'ammo'),
+('blast', 'ammunition'),
+('blast', 'archery'),
+('blast', 'bows'),
+('blast', 'fire-weapons'),
+('blast', 'missiles'),
+('blast', 'quivers'),
+('blast', 'ranged-weapons'),
+('blast', 'shoot'),
+('blast', 'fire'),
+('blast', 'reload'),
+('blast', 'collect'),
+('blast', 'autoreload'),
+('blast', 'autocollect'),
+('blast', 'throw'),
+('blast', 'throwing'),
+('blast', 'returning'),
+('blast', 'ranged_feats');
+
+COMMIT;

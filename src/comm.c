@@ -15,6 +15,7 @@
 #include "legendary_effects.h"
 #include "legendary_techniques.h"
 #include "legendary_earnings.h"
+#include <json-c/json.h>
 #include <stdarg.h>
 #include <time.h>
 
@@ -2337,12 +2338,99 @@ size_t write_to_output(struct descriptor_data *t, const char *txt, ...)
 }
 
 /* Add a new string to a player's output queue. */
+/* Queue a complete telnet packet verbatim. Formatting/color conversion can corrupt
+ * structured data, and the ordinary text scratch buffer is deliberately smaller.
+ * Check capacity before copying so a client never receives half a packet. */
+bool write_protocol_packet(struct descriptor_data *t, const char *packet)
+{
+  size_t length;
+  if (!t || !packet)
+    return false;
+  length = strlen(packet);
+  if (length + 1 > LARGE_BUFSIZE)
+  {
+    log("SYSERR: Protocol packet exceeds descriptor output queue limit");
+    return false;
+  }
+  /* A busy queue is normal backpressure; reported variables retry next pulse. */
+  if (t->bufspace == 0 || length + t->bufptr + 1 > LARGE_BUFSIZE)
+    return false;
+  if ((size_t)t->bufspace <= length)
+  {
+    if (!t->large_outbuf)
+    {
+      if (bufpool)
+      {
+        t->large_outbuf = bufpool;
+        bufpool = bufpool->next;
+      }
+      else
+      {
+        CREATE(t->large_outbuf, struct txt_block, 1);
+        CREATE(t->large_outbuf->text, char, LARGE_BUFSIZE);
+        buf_largecount++;
+      }
+      memcpy(t->large_outbuf->text, t->output, t->bufptr + 1);
+      t->output = t->large_outbuf->text;
+    }
+    t->bufspace = LARGE_BUFSIZE - 1 - t->bufptr;
+  }
+  memcpy(t->output + t->bufptr, packet, length + 1);
+  t->bufptr += length;
+  t->bufspace -= length;
+  if (t->pProtocol && t->pProtocol->WriteOOB > 0)
+    --t->pProtocol->WriteOOB;
+  return true;
+}
+
+/* Capture before ordinary text formatting/color conversion, preserving full
+ * pages and leaving the descriptor's normal output queue/pager untouched. */
+static void capture_output_printf(struct output_capture *capture, const char *format, va_list args)
+{
+  va_list copy;
+  int wanted;
+  size_t count, required, capacity;
+  char *buffer;
+  va_copy(copy, args);
+  wanted = vsnprintf(NULL, 0, format, copy);
+  va_end(copy);
+  if (wanted < 0)
+  {
+    capture->truncated = true;
+    return;
+  }
+  count = MIN((size_t)wanted, OUTPUT_CAPTURE_LIMIT - capture->length);
+  if (count < (size_t)wanted)
+    capture->truncated = true;
+  required = capture->length + count + 1;
+  if (required > capture->capacity)
+  {
+    capacity = MIN(OUTPUT_CAPTURE_LIMIT + 1, MAX(required, MAX(256, capture->capacity * 2)));
+    buffer = realloc(capture->text, capacity);
+    if (!buffer)
+    {
+      capture->truncated = true;
+      return;
+    }
+    capture->text = buffer;
+    capture->capacity = capacity;
+  }
+  vsnprintf(capture->text + capture->length, count + 1, format, args);
+  capture->length += count;
+}
+
 size_t vwrite_to_output(struct descriptor_data *t, const char *format, va_list args)
 {
   const char *text_overflow = "\r\nOVERFLOW\r\n";
   static char txt[MAX_STRING_LENGTH] = {'\0'};
   size_t wantsize = 0;
   int size = 0;
+
+  if (t->output_capture)
+  {
+    capture_output_printf(t->output_capture, format, args);
+    return t->bufspace;
+  }
 
   /* if we're in the overflow state already, ignore this new output */
   if (t->bufspace == 0)
@@ -2770,7 +2858,7 @@ static int process_output(struct descriptor_data *t)
   else
   {
     /* Not all data in buffer sent.  result < output buffersize. */
-    strcpy(t->output, t->output + result); /* strcpy: OK (overlap) */
+    memmove(t->output, t->output + result, t->bufptr - result + 1);
     t->bufptr -= result;
     t->bufspace += result;
   }
@@ -4755,8 +4843,8 @@ static void send_room_change_msdp_variables(struct descriptor_data *d)
         !should_force_room_change_msdp_variable((variable_t)variable))
       continue;
 
-    MSDPSend(d, (variable_t)variable);
-    d->pProtocol->pVariables[variable]->bDirty = false;
+    if (MSDPSend(d, (variable_t)variable))
+      d->pProtocol->pVariables[variable]->bDirty = false;
   }
 }
 
@@ -4905,92 +4993,27 @@ void update_msdp_all(struct char_data *ch)
   update_msdp_descriptor(ch->desc, ch);
 }
 
-static void msdp_json_escape(const char *src, char *dst, size_t dst_size)
+/* Build structured JSON before serializing so long text cannot leave partial JSON. */
+static void append_msdp_quest_target(struct json_object *targets, int target_id,
+                                     const char *target_name)
 {
-  size_t out = 0;
-
-  if (!dst || dst_size == 0)
-    return;
-
-  dst[0] = '\0';
-
-  if (!src)
-    return;
-
-  while (*src && out + 1 < dst_size)
-  {
-    const char *replacement = NULL;
-    char ch = *src;
-
-    switch (ch)
-    {
-    case '\\':
-      replacement = "\\\\";
-      break;
-    case '"':
-      replacement = "\\\"";
-      break;
-    case '\n':
-      replacement = "\\n";
-      break;
-    case '\r':
-      replacement = "\\r";
-      break;
-    case '\t':
-      replacement = "\\t";
-      break;
-    default:
-      break;
-    }
-
-    if (replacement)
-    {
-      size_t repl_len = strlen(replacement);
-      if (out + repl_len >= dst_size)
-        break;
-      memcpy(dst + out, replacement, repl_len);
-      out += repl_len;
-    }
-    else
-    {
-      unsigned char uch = (unsigned char)ch;
-      if (uch < 32)
-        ch = '?';
-      dst[out++] = ch;
-    }
-
-    src++;
-  }
-
-  dst[out] = '\0';
-}
-
-static void append_msdp_quest_target(char *targets_json, size_t targets_size, int *first_target,
-                                     int target_id, const char *target_name)
-{
-  char escaped_name[MAX_STRING_LENGTH] = {'\0'};
-  char entry[MAX_STRING_LENGTH + 64] = {'\0'};
-
-  if (!targets_json || !first_target)
-    return;
-
-  msdp_json_escape(target_name ? target_name : "Unknown", escaped_name, sizeof(escaped_name));
-  snprintf(entry, sizeof(entry), "%s{\"id\":%d,\"name\":\"%s\"}",
-           *first_target ? "" : ",", target_id, escaped_name);
-  strlcat(targets_json, entry, targets_size);
-  *first_target = 0;
+  struct json_object *target = json_object_new_object();
+  json_object_object_add(target, "id", json_object_new_int(target_id));
+  json_object_object_add(target, "name",
+                         json_object_new_string(target_name ? target_name : "Unknown"));
+  json_object_array_add(targets, target);
 }
 
 static void update_msdp_quest_info(struct descriptor_data *d, struct char_data *ch)
 {
   int index;
-  int first_quest = 1;
-  char quest_info[MAX_VARIABLE_LENGTH + 1] = {'\0'};
+  struct json_object *quests;
+  const char *quest_info;
 
   if (!d || !ch)
     return;
 
-  strlcat(quest_info, "[", sizeof(quest_info));
+  quests = json_object_new_array();
 
   for (index = 0; index < MAX_CURRENT_QUESTS; index++)
   {
@@ -4999,11 +5022,7 @@ static void update_msdp_quest_info(struct descriptor_data *d, struct char_data *
     int remaining;
     int completed;
     int time_remaining;
-    char quest_name_escaped[MAX_STRING_LENGTH] = {'\0'};
-    char quest_type_escaped[MAX_STRING_LENGTH] = {'\0'};
-    char targets_json[MAX_STRING_LENGTH] = {'\0'};
-    char quest_entry[3 * MAX_STRING_LENGTH + 256] = {'\0'};
-    int first_target = 1;
+    struct json_object *entry, *progress, *targets, *commands;
     const char *type_name = "Unknown";
 
     if (GET_QUEST(ch, index) == NOTHING)
@@ -5029,11 +5048,7 @@ static void update_msdp_quest_info(struct descriptor_data *d, struct char_data *
     if (QST_TYPE(rnum) >= 0 && QST_TYPE(rnum) < NUM_AQ_TYPES)
       type_name = quest_types[QST_TYPE(rnum)];
 
-    msdp_json_escape(QST_NAME(rnum) ? QST_NAME(rnum) : "Unknown", quest_name_escaped,
-                     sizeof(quest_name_escaped));
-    msdp_json_escape(type_name, quest_type_escaped, sizeof(quest_type_escaped));
-
-    strlcat(targets_json, "[", sizeof(targets_json));
+    targets = json_object_new_array();
     switch (QST_TYPE(rnum))
     {
     case AQ_OBJ_FIND:
@@ -5043,7 +5058,7 @@ static void update_msdp_quest_info(struct descriptor_data *d, struct char_data *
       const char *target_name = (target_obj != NOTHING)
                                     ? obj_proto[target_obj].short_description
                                     : "Unknown Object";
-      append_msdp_quest_target(targets_json, sizeof(targets_json), &first_target,
+      append_msdp_quest_target(targets,
                                QST_TARGET(rnum), target_name);
       break;
     }
@@ -5053,7 +5068,7 @@ static void update_msdp_quest_info(struct descriptor_data *d, struct char_data *
       room_rnum target_room = real_room(QST_TARGET(rnum));
       const char *target_name =
           (target_room != NOWHERE) ? world[target_room].name : "Unknown Room";
-      append_msdp_quest_target(targets_json, sizeof(targets_json), &first_target,
+      append_msdp_quest_target(targets,
                                QST_TARGET(rnum), target_name);
       break;
     }
@@ -5066,7 +5081,7 @@ static void update_msdp_quest_info(struct descriptor_data *d, struct char_data *
       const char *target_name = (target_mob != NOBODY)
                                     ? mob_proto[target_mob].player.short_descr
                                     : "Unknown Mob";
-      append_msdp_quest_target(targets_json, sizeof(targets_json), &first_target,
+      append_msdp_quest_target(targets,
                                QST_TARGET(rnum), target_name);
       break;
     }
@@ -5086,7 +5101,7 @@ static void update_msdp_quest_info(struct descriptor_data *d, struct char_data *
           const char *target_name = (target_mob != NOBODY)
                                         ? mob_proto[target_mob].player.short_descr
                                         : "Unknown Mob";
-          append_msdp_quest_target(targets_json, sizeof(targets_json), &first_target, mvnum,
+          append_msdp_quest_target(targets, mvnum,
                                    target_name);
           mob_vnum_str = strtok(NULL, ",");
         }
@@ -5098,7 +5113,7 @@ static void update_msdp_quest_info(struct descriptor_data *d, struct char_data *
       char coord_target[64] = {'\0'};
       snprintf(coord_target, sizeof(coord_target), "X:%d Y:%d", QST_COORD_X(rnum),
                QST_COORD_Y(rnum));
-      append_msdp_quest_target(targets_json, sizeof(targets_json), &first_target,
+      append_msdp_quest_target(targets,
                                QST_TARGET(rnum), coord_target);
       break;
     }
@@ -5106,7 +5121,7 @@ static void update_msdp_quest_info(struct descriptor_data *d, struct char_data *
     {
       char gold_target[64] = {'\0'};
       snprintf(gold_target, sizeof(gold_target), "%d gold", QST_TARGET(rnum));
-      append_msdp_quest_target(targets_json, sizeof(targets_json), &first_target,
+      append_msdp_quest_target(targets,
                                QST_TARGET(rnum), gold_target);
       break;
     }
@@ -5114,26 +5129,50 @@ static void update_msdp_quest_info(struct descriptor_data *d, struct char_data *
     {
       char numeric_target[64] = {'\0'};
       snprintf(numeric_target, sizeof(numeric_target), "Target %d", QST_TARGET(rnum));
-      append_msdp_quest_target(targets_json, sizeof(targets_json), &first_target,
+      append_msdp_quest_target(targets,
                                QST_TARGET(rnum), numeric_target);
       break;
     }
     }
 
-    strlcat(targets_json, "]", sizeof(targets_json));
-
-    snprintf(quest_entry, sizeof(quest_entry),
-             "%s{\"slot\":%d,\"vnum\":%d,\"name\":\"%s\",\"type\":\"%s\","
-             "\"progress\":{\"remaining\":%d,\"required\":%d,\"completed\":%d},"
-             "\"time_remaining\":%d,\"targets\":%s}",
-             first_quest ? "" : ",", index, QST_NUM(rnum), quest_name_escaped, quest_type_escaped,
-             remaining, required, completed, time_remaining, targets_json);
-    strlcat(quest_info, quest_entry, sizeof(quest_info));
-    first_quest = 0;
+    entry = json_object_new_object();
+    json_object_object_add(entry, "slot", json_object_new_int(index));
+    json_object_object_add(entry, "vnum", json_object_new_int(QST_NUM(rnum)));
+    json_object_object_add(entry, "name",
+                           json_object_new_string(QST_NAME(rnum) ? QST_NAME(rnum) : "Unknown"));
+    json_object_object_add(entry, "type", json_object_new_string(type_name));
+    json_object_object_add(entry, "description",
+                           json_object_new_string(QST_DESC(rnum) ? QST_DESC(rnum) : ""));
+    json_object_object_add(entry, "info",
+                           json_object_new_string(QST_INFO(rnum) ? QST_INFO(rnum) : ""));
+    progress = json_object_new_object();
+    json_object_object_add(progress, "remaining", json_object_new_int(remaining));
+    json_object_object_add(progress, "required", json_object_new_int(required));
+    json_object_object_add(progress, "completed", json_object_new_int(completed));
+    json_object_object_add(entry, "progress", progress);
+    json_object_object_add(entry, "time_remaining", json_object_new_int(time_remaining));
+    json_object_object_add(entry, "targets", targets);
+    commands = json_object_new_array();
+    if (QST_TYPE(rnum) == AQ_DIALOGUE)
+    {
+      if (aquest_table[rnum].diplomacy_dc > 0)
+        json_object_array_add(commands, json_object_new_string("convince"));
+      if (aquest_table[rnum].intimidate_dc > 0)
+        json_object_array_add(commands, json_object_new_string("threaten"));
+      if (aquest_table[rnum].bluff_dc > 0)
+        json_object_array_add(commands, json_object_new_string("beguile"));
+    }
+    json_object_object_add(entry, "dialogue_commands", commands);
+    json_object_array_add(quests, entry);
   }
 
-  strlcat(quest_info, "]", sizeof(quest_info));
-  MSDPSetString(d, eMSDP_QUEST_INFO, quest_info);
+  quest_info = json_object_to_json_string_ext(quests, JSON_C_TO_STRING_PLAIN);
+  /* Leave room for the variable name and telnet framing; never send broken JSON. */
+  if (strlen(quest_info) + 64 < MAX_VARIABLE_LENGTH)
+    MSDPSetString(d, eMSDP_QUEST_INFO, quest_info);
+  else
+    log("SYSERR: QUEST_INFO exceeds MSDP payload limit for %s", GET_NAME(ch));
+  json_object_put(quests);
 }
 
 /* KaVir's plugin*/

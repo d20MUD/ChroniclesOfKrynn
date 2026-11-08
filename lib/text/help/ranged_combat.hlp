@@ -1,6 +1,14 @@
-RANGED RANGED_COMBAT AMMO AMMUNITION THROW THROWING RETURNING RANGED_FEATS
+BLAST RANGED RANGED_COMBAT AMMO AMMUNITION ARCHERY BOWS FIRE-WEAPONS MISSILES QUIVERS RANGED-WEAPONS SHOOT FIRE RELOAD COLLECT AUTORELOAD AUTOCOLLECT THROW THROWING RETURNING RANGED_FEATS
 
 RANGED COMBAT AND AMMUNITION
+
+Usage: fire <target>
+       reload
+       collect
+       autoreload
+       autocollect
+       throw <target>
+       throw off
 
 Bows, crossbows, and slings let you attack enemies before they close into
 melee. Your target must be in the same room as you. You cannot shoot into
@@ -26,16 +34,28 @@ For example, using the keywords on your own equipment:
 Use fire <target> to begin shooting. Crossbows and slings also need to be
 loaded: use reload before firing and whenever the weapon needs reloading.
 The autoreload setting can help keep these weapons ready during combat.
+Bows do not need reload. Filling a pouch and reloading a weapon are separate
+steps. Autoreload and autocollect toggle their respective settings.
+
+Fire starts shooting and subsequent attacks continue through combat rounds;
+you do not need to repeat it for every shot. You cannot start fire while
+already fighting. If you target a group member or your own pet, fire tries
+to assist by shooting that character's current opponent in the same room.
 
 AMMUNITION
 A bundle may hold many shots. Each shot uses one piece of ammunition,
 including a miss or a shot that is deflected. When the bundle runs out,
-you need another supply of the correct ammunition.
+you need another supply of the correct ammunition. Keep spare matching
+bundles in your pouch; after one is used up, the next supplies your shots.
+If no usable ammunition remains, ranged attacks stop. Resupply and, once
+you are no longer fighting, use fire <target> to begin again.
 
 Enchanted ammunition can improve accuracy and damage. Some ammunition also
 adds damage such as fire or cold when it hits. A foe's resistances still
 matter. The extra elemental damage is not multiplied on a critical hit.
-Rare supplies may never run out.
+Weapon and ammunition enhancement use the higher bonus, not their sum.
+Rare supplies may never run out; they still require the correct worn pouch
+and do not remove crossbow or sling reload requirements.
 
 Some fired ammunition can be recovered with collect. Your ammo pouch must
 have room, and broken ammunition cannot be recovered. Autocollect can help

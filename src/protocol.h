@@ -236,7 +236,7 @@ typedef struct descriptor_data descriptor_t;
  * while allowing for complex protocol data exchange.
  */
 #define MAX_PROTOCOL_BUFFER (12 * 1024) /**< Main protocol buffer (matches MAX_RAW_INPUT_LENGTH) */
-#define MAX_VARIABLE_LENGTH 16384       /**< Maximum length for MSDP variable values */
+#define MAX_VARIABLE_LENGTH (1024 * 1024)       /**< Maximum length for MSDP variable values */
 #define MAX_OUTPUT_BUFFER LARGE_BUFSIZE /**< Output buffer for processed protocol data */
 #define MAX_MSSP_BUFFER 4096            /**< Buffer for MSSP server status data */
 
@@ -511,6 +511,7 @@ typedef enum
   eMSDP_GROUP,           /**< Group members data (array) */
   eMSDP_POSITION,        /**< Current position (standing/sitting/etc) */
   eMSDP_TITLE,           /**< Character title */
+  eMSDP_HELP_INFO,       /**< On-demand web help response as JSON */
   eMSDP_QUEST_INFO,      /**< Active quest info as JSON string */
 
   /* Real-time combat information */
@@ -1314,7 +1315,7 @@ void MSDPFlush(descriptor_t *apDescriptor, variable_t aMSDP);
  * @note Bypasses efficiency mechanisms (report checking, dirty flags)
  * @see MSDPUpdate(), MSDPFlush()
  */
-void MSDPSend(descriptor_t *apDescriptor, variable_t aMSDP);
+bool_t MSDPSend(descriptor_t *apDescriptor, variable_t aMSDP);
 
 /**
  * Send a custom MSDP variable/value pair

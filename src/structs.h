@@ -6049,7 +6049,7 @@ enum zone_terrain_type {
 // how often to reset the new crafting system harvest materials
 #define PULSE_RESET_HARVEST_MATS (30 * 60 RL_SEC)
 /* Variables for the output buffering system */
-#define MAX_SOCK_BUF (24 * 1024) /**< Size of kernel's sock buf   */
+#define MAX_SOCK_BUF (2 * 1024 * 1024) /**< Size of kernel's sock buf   */
 #define MAX_PROMPT_LENGTH 400    /**< Max length of prompt        */
 #define GARBAGE_SPACE 32         /**< Space for **OVERFLOW** etc  */
 #define SMALL_BUFSIZE 1024       /**< Static output buffer size   */
@@ -8116,6 +8116,7 @@ struct descriptor_data
   int connected;                     /**< mode of 'connectedness'		*/
   int desc_num;                      /**< unique num assigned to desc		*/
   time_t login_time;                 /**< when the person connected		*/
+  struct output_capture *output_capture; /**< Scoped structured-output capture; normally NULL */
   char *showstr_head;                /**< for keeping track of an internal str	*/
   char **showstr_vector;             /**< for paging through texts		*/
   int showstr_count;                 /**< number of pages to page through	*/
