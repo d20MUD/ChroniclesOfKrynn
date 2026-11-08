@@ -497,7 +497,7 @@ bool process_load_weapon(struct char_data *ch, struct obj_data *weapon, bool sil
   }
 
   /* success! */
-  send_to_char(ch, "You reload %s.\r\n", weapon->short_description);
+  send_to_char(ch, "You reload %s.\r\n", object_short_description(weapon));
   if (FIGHTING(ch))
     FIRING(ch) = TRUE;
   return TRUE;
@@ -588,6 +588,27 @@ bool ammunition_is_unlimited(struct obj_data *ammo, struct obj_data *weapon)
     return FALSE;
   return GET_OBJ_VAL(ammo, AMMO_VAL_RETURNING) ||
          (weapon && obj_has_special_ability(weapon, WEAPON_SPECAB_RETURNING));
+}
+
+/* Zero maximum is the legacy single-projectile format, not an empty bundle. */
+int ammunition_remaining(struct obj_data *ammo)
+{
+  if (!ammo || GET_OBJ_TYPE(ammo) != ITEM_MISSILE)
+    return 0;
+  return GET_OBJ_VAL(ammo, AMMO_VAL_MAX) > 0 ? MAX(0, GET_OBJ_VAL(ammo, AMMO_VAL_QUANTITY)) : 1;
+}
+
+void format_ammunition_quantity(struct obj_data *ammo, char *buffer, size_t size)
+{
+  if (!buffer || !size)
+    return;
+  buffer[0] = '\0';
+  if (!ammo || GET_OBJ_TYPE(ammo) != ITEM_MISSILE)
+    return;
+  if (ammunition_is_unlimited(ammo, NULL))
+    snprintf(buffer, size, " (unlimited)");
+  else
+    snprintf(buffer, size, " (%d)", ammunition_remaining(ammo));
 }
 
 bool has_ammo_in_pouch(struct char_data *ch, struct obj_data *wielded, bool silent)
@@ -2933,7 +2954,7 @@ struct obj_data *take_ammo_projectile(struct obj_data *ammo, struct obj_data *we
   shot->obj_flags = ammo->obj_flags;
   memcpy(shot->affected, ammo->affected, sizeof(shot->affected));
   shot->weapon_poison = ammo->weapon_poison;
-  /* Copies emitted by unlimited supplies are spent and cannot be collected for profit. */
+  /* All emitted shots are transient and destroyed after attack resolution. */
   if (unlimited)
   {
     GET_OBJ_VAL(shot, 2) = 100;

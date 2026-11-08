@@ -1467,7 +1467,7 @@ enum zone_terrain_type {
 #define PRF_COMBATROLL 42  /**< extra info during combat */
 #define PRF_GUI_MODE 43    /**< add special tags to code for MSDP GUI */
 #define PRF_NOHINT 44      /**< show in-game hints to newer players */
-#define PRF_AUTOCOLLECT 45 /**< collect ammo after combat automatically */
+#define PRF_AUTOCOLLECT 45 /**< Reserved legacy bit; ammunition recovery removed. */
 #define PRF_RP 46          /**< Interested in Role-Playing! */
 #define PRF_AOE_BOMBS 47   /** Bombs will use splash damage instead of single target */
 #define PRF_FRIGHTENED 48  /* If set, victims of fear affects will flee */

@@ -476,7 +476,7 @@ static void qedit_disp_menu(struct descriptor_data *d)
       quest->prereq == NOTHING ? ""
       : real_object(quest->prereq) == NOTHING
           ? "an unknown object"
-          : obj_proto[real_object(quest->prereq)].short_description,
+          : object_short_description(&obj_proto[real_object(quest->prereq)]),
       quest->value[4], quest->next_quest == NOTHING ? -1 : quest->next_quest,
       real_quest(quest->next_quest) == NOTHING ? "" : QST_DESC(real_quest(quest->next_quest)),
       quest->prev_quest == NOTHING ? -1 : quest->prev_quest,

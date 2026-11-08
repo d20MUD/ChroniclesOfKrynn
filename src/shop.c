@@ -15,6 +15,7 @@
 #include "legendary_equipment.h"
 #include "structs.h"
 #include "utils.h"
+#include "assign_wpn_armor.h"
 #include "comm.h"
 #include "handler.h"
 #include "db.h"
@@ -101,6 +102,7 @@ static int find_oper_num(char token);
 static int evaluate_expression(struct obj_data *obj, char *expr);
 static int trade_with(struct obj_data *item, int shop_nr);
 static int same_obj(struct obj_data *obj1, struct obj_data *obj2);
+static int same_shop_item(struct obj_data *obj1, struct obj_data *obj2);
 static int shop_producing(struct obj_data *item, int shop_nr);
 static int transaction_amt(char *arg);
 static char *times_message(struct obj_data *obj, char *name, int num);
@@ -393,6 +395,16 @@ static int same_obj(struct obj_data *obj1, struct obj_data *obj2)
   return (TRUE);
 }
 
+static int same_shop_item(struct obj_data *obj1, struct obj_data *obj2)
+{
+  if (!same_obj(obj1, obj2))
+    return FALSE;
+  if (!obj1 || !obj2 || GET_OBJ_TYPE(obj1) != ITEM_MISSILE)
+    return TRUE;
+  return ammunition_remaining(obj1) == ammunition_remaining(obj2) &&
+         ammunition_is_unlimited(obj1, NULL) == ammunition_is_unlimited(obj2, NULL);
+}
+
 static int shop_producing(struct obj_data *item, int shop_nr)
 {
   int counter;
@@ -429,7 +441,7 @@ static char *times_message(struct obj_data *obj, char *name, int num)
   char *ptr;
 
   if (obj)
-    len = strlcpy(buf, obj->short_description, sizeof(buf));
+    len = strlcpy(buf, object_short_description(obj), sizeof(buf));
   else
   {
     if ((ptr = strchr(name, '.')) == NULL)
@@ -459,7 +471,7 @@ static struct obj_data *get_slide_obj_vis(struct char_data *ch, char *name, stru
 
   for (i = list, j = 1; i && (j <= number); i = i->next_content)
     if (isname(tmp, i->name))
-      if (CAN_SEE_OBJ(ch, i) && !same_obj(last_match, i))
+      if (CAN_SEE_OBJ(ch, i) && !same_shop_item(last_match, i))
       {
         if (j == number)
           return (i);
@@ -483,7 +495,7 @@ static struct obj_data *get_hash_obj_vis(struct char_data *ch, char *name, struc
 
   for (loop = list; loop; loop = loop->next_content)
     if (CAN_SEE_OBJ(ch, loop) && GET_OBJ_COST(loop) > 0)
-      if (!same_obj(last_obj, loop))
+      if (!same_shop_item(last_obj, loop))
       {
         if (--qindex == 0)
           return (loop);
@@ -730,7 +742,7 @@ static void shopping_buy(char *arg, struct char_data *ch, struct char_data *keep
 
       last_obj = obj;
       obj = get_purchase_obj(ch, arg, keeper, shop_nr, FALSE);
-      if (!same_obj(obj, last_obj))
+      if (!same_shop_item(obj, last_obj))
         break;
     }
   }
@@ -768,7 +780,7 @@ static void shopping_buy(char *arg, struct char_data *ch, struct char_data *keep
 
       last_obj = obj;
       obj = get_purchase_obj(ch, arg, keeper, shop_nr, FALSE);
-      if (!same_obj(obj, last_obj))
+      if (!same_shop_item(obj, last_obj))
         break;
     }
   }
@@ -806,7 +818,7 @@ static void shopping_buy(char *arg, struct char_data *ch, struct char_data *keep
 
       last_obj = obj;
       obj = get_purchase_obj(ch, arg, keeper, shop_nr, FALSE);
-      if (!same_obj(obj, last_obj))
+      if (!same_shop_item(obj, last_obj))
         break;
     }
   }
@@ -853,7 +865,7 @@ static void shopping_buy(char *arg, struct char_data *ch, struct char_data *keep
 
       obj = get_purchase_obj(ch, arg, keeper, shop_nr, FALSE);
 
-      if (!same_obj(obj, last_obj))
+      if (!same_shop_item(obj, last_obj))
         break;
     }
   }
@@ -863,7 +875,7 @@ static void shopping_buy(char *arg, struct char_data *ch, struct char_data *keep
   {
     char buf[MAX_INPUT_LENGTH] = {'\0'};
 
-    if (!obj || !same_obj(last_obj, obj))
+    if (!obj || !same_shop_item(last_obj, obj))
       snprintf(buf, sizeof(buf), "%s I only have %d to sell you.", GET_NAME(ch), bought);
     else if (!OBJ_FLAGGED(obj, ITEM_QUEST) && !OBJ_FLAGGED(obj, ITEM_ACCOUNT_EXP) && !OBJ_FLAGGED(obj, ITEM_ARTISANPOINTS) &&
              GET_GOLD(ch) < buy_price(obj, shop_nr, keeper, ch))
@@ -998,7 +1010,7 @@ static struct obj_data *slide_obj(struct obj_data *obj, struct char_data *keeper
   keeper->carrying = loop;
   while (loop)
   {
-    if (same_obj(obj, loop))
+    if (same_shop_item(obj, loop))
     {
       obj->next_content = loop->next_content;
       loop->next_content = obj;
@@ -1068,7 +1080,7 @@ static void shopping_sell(char *arg, struct char_data *ch, struct char_data *kee
   if (!(obj = get_selling_obj(ch, name, keeper, shop_nr, TRUE)))
     return;
 
-  snprintf(objname, sizeof(objname), "%s", obj->short_description);
+  snprintf(objname, sizeof(objname), "%s", object_short_description(obj));
 
   if (/*!IS_SET(SHOP_BITVECTOR(shop_nr), HAS_UNLIMITED_CASH) &&*/ GET_GOLD(keeper) +
           SHOP_BANK(shop_nr) <
@@ -1179,8 +1191,8 @@ static void shopping_value(char *arg, struct char_data *ch, struct char_data *ke
 static char *list_object(struct obj_data *obj, int cnt, int aindex, int shop_nr,
                          struct char_data *keeper, struct char_data *ch)
 {
-  static char result[MEDIUM_STRING] = {'\0'};
-  char itemname[128], quantity[16]; /* "Unlimited" or "%d" */
+  static char result[MAX_STRING_LENGTH + 128] = {'\0'};
+  char itemname[MAX_STRING_LENGTH + 32], quantity[16]; /* "Unlimited" or "%d" */
 
   if (shop_producing(obj, shop_nr))
     strlcpy(quantity, "Unlimited", sizeof(quantity)); /* strcpy: OK (for 'quantity >= 10') */
@@ -1192,20 +1204,20 @@ static char *list_object(struct obj_data *obj, int cnt, int aindex, int shop_nr,
   {
   case ITEM_DRINKCON:
     if (GET_OBJ_VAL(obj, 1))
-      snprintf(itemname, sizeof(itemname), "%s of %s", obj->short_description,
+      snprintf(itemname, sizeof(itemname), "%s of %s", object_short_description(obj),
                drinks[GET_OBJ_VAL(obj, 2)]);
     else
-      strlcpy(itemname, obj->short_description, sizeof(itemname));
+      strlcpy(itemname, object_short_description(obj), sizeof(itemname));
     break;
 
   case ITEM_WAND:
   case ITEM_STAFF:
-    snprintf(itemname, sizeof(itemname), "%s%s", obj->short_description,
+    snprintf(itemname, sizeof(itemname), "%s%s", object_short_description(obj),
              GET_OBJ_VAL(obj, 2) < GET_OBJ_VAL(obj, 1) ? " (partially used)" : "");
     break;
 
   default:
-    strlcpy(itemname, obj->short_description, sizeof(itemname));
+    strlcpy(itemname, object_short_description(obj), sizeof(itemname));
     break;
   }
   CAP(itemname);
@@ -1249,7 +1261,7 @@ static void shopping_list(char *arg, struct char_data *ch, struct char_data *kee
           last_obj = obj;
           cnt = 1;
         }
-        else if (same_obj(last_obj, obj))
+        else if (same_shop_item(last_obj, obj))
           cnt++;
         else
         {
@@ -1848,7 +1860,7 @@ static void list_detailed_shop(struct char_data *ch, int shop_nr)
       column += 2;
     }
     linelen = snprintf(buf1, sizeof(buf1), "%s (#%d)",
-                       obj_proto[SHOP_PRODUCT(shop_nr, sindex)].short_description,
+                       object_short_description(&obj_proto[SHOP_PRODUCT(shop_nr, sindex)]),
                        obj_index[SHOP_PRODUCT(shop_nr, sindex)].vnum);
 
     /* Implementing word-wrapping: assumes screen-size == 80 */
@@ -2012,7 +2024,7 @@ bool shopping_identify(char *arg, struct char_data *ch, struct char_data *keeper
   /* begin code for identifying items */
 
   /*
-  send_to_char(ch, "Name: %s\r\n", (obj->short_description) ? obj->short_description : "<None>");
+  send_to_char(ch, "Name: %s\r\n", object_short_description(obj));
   sprinttype(GET_OBJ_TYPE(obj), item_types, buf, sizeof (buf));
   send_to_char(ch, "Type: %s\r\n", buf);
   send_to_char(ch, "Weight: %d, Cost to Sell: %s%d%s, Cost to Buy: %s%d%s\r\n",

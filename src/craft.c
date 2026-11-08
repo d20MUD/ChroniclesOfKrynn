@@ -912,7 +912,7 @@ int augment(struct obj_data *kit, struct char_data *ch)
   GET_CRAFTING_TYPE(ch) = SCMD_AUGMENT;
   GET_CRAFTING_TICKS(ch) = 10 - fast_craft_bonus;
   GET_CRAFTING_OBJ(ch) = essence_one;
-  send_to_char(ch, "You begin to augment %s.\r\n", essence_one->short_description);
+  send_to_char(ch, "You begin to augment %s.\r\n", object_short_description(essence_one));
   act("$n begins to augment $p.", FALSE, ch, essence_one, 0, TO_ROOM);
 
   /* get rid of the items in the kit */
@@ -960,7 +960,7 @@ int convert(struct obj_data *kit, struct char_data *ch)
           send_to_char(ch,
                        "%s is a bundled item, which must first be unbundled before you can use it "
                        "to craft.\r\n",
-                       obj->short_description);
+                       object_short_description(obj));
           return 1;
         }
         if (material == -1)
@@ -1189,7 +1189,7 @@ int restring(char *argument, struct obj_data *kit, struct char_data *ch)
   send_to_char(ch,
                "You put the item into the crafting kit and wait for it "
                "to transform into %s.\r\n",
-               obj->short_description);
+               object_short_description(obj));
 
   obj_from_obj(obj);
 
@@ -1313,7 +1313,7 @@ int redesc(char *argument, struct obj_data *kit, struct char_data *ch)
   GET_GOLD(ch) -= cost;
   send_to_char(ch,
                "You put the item into the crafting kit and wait for it to transform into %s.\r\n",
-               obj->short_description);
+               object_short_description(obj));
 
   obj_from_obj(obj);
 
@@ -1366,7 +1366,7 @@ int autocraft(struct obj_data *kit, struct char_data *ch)
           send_to_char(ch,
                        "%s is a bundled item, which must first be unbundled before you can use it "
                        "to craft.\r\n",
-                       obj->short_description);
+                       object_short_description(obj));
           return 1;
         }
         if (GET_OBJ_MATERIAL(obj) != material)
@@ -1518,7 +1518,7 @@ int resize(char *argument, struct obj_data *kit, struct char_data *ch)
     send_to_char(ch, "It cost you %d coins to resize this item.\r\n", cost);
     GET_GOLD(ch) -= cost;
   }
-  send_to_char(ch, "You begin to resize %s from %s to %s.\r\n", obj->short_description,
+  send_to_char(ch, "You begin to resize %s from %s to %s.\r\n", object_short_description(obj),
                size_names[GET_OBJ_SIZE(obj)], size_names[newsize]);
   act("$n begins resizing $p.", FALSE, ch, obj, 0, TO_ROOM);
   obj_from_obj(obj);
@@ -1630,7 +1630,7 @@ int bonearmor(char *argument, struct obj_data *kit, struct char_data *ch)
     free(obj->description);
   obj->description = strdup(buf);
 
-  send_to_char(ch, "You begin to convert %s into bone.\r\n", obj->short_description);
+  send_to_char(ch, "You begin to convert %s into bone.\r\n", object_short_description(obj));
   act("$n begins convetring $p to bone.", FALSE, ch, obj, 0, TO_ROOM);
   obj_from_obj(obj);
 
@@ -1816,7 +1816,7 @@ int reforge(char *argument, struct obj_data *kit, struct char_data *ch)
     GET_GOLD(ch) -= cost;
   }
 
-  send_to_char(ch, "You begin to reforge %s into %s %s.\r\n", obj->short_description,
+  send_to_char(ch, "You begin to reforge %s into %s %s.\r\n", object_short_description(obj),
                (GET_OBJ_TYPE(obj) == ITEM_WEAPON) ? AN(weapon_list[GET_OBJ_VAL(obj, 0)].name)
                                                   : AN(armor_list[GET_OBJ_VAL(obj, 1)].name),
                (GET_OBJ_TYPE(obj) == ITEM_WEAPON) ? weapon_list[GET_OBJ_VAL(obj, 0)].name
@@ -1945,7 +1945,7 @@ int disenchant(struct obj_data *kit, struct char_data *ch)
   GET_CRAFTING_TICKS(ch) = MAX(2, 11 - fast_craft_bonus);
   GET_CRAFTING_OBJ(ch) = NULL;
 
-  send_to_char(ch, "You begin to disenchant %s.\r\n", obj->short_description);
+  send_to_char(ch, "You begin to disenchant %s.\r\n", object_short_description(obj));
   act("$n begins to disenchant $p.", FALSE, ch, obj, 0, TO_ROOM);
 
   /* clear item that got disenchanted */
@@ -2078,7 +2078,7 @@ int create(char *argument, struct obj_data *kit, struct char_data *ch, int mode)
           send_to_char(ch,
                        "%s is a bundled item, which must first be unbundled before you can use it "
                        "to craft.\r\n",
-                       obj->short_description);
+                       object_short_description(obj));
           return 1;
         }
         if (!material)
@@ -2415,7 +2415,7 @@ int create(char *argument, struct obj_data *kit, struct char_data *ch, int mode)
       free(mold->name);
     mold->name = strdup(argument); /*keywords, leave last*/
 
-    send_to_char(ch, "You begin to craft %s.\r\n", mold->short_description);
+    send_to_char(ch, "You begin to craft %s.\r\n", object_short_description(mold));
     act("$n begins to craft $p.", FALSE, ch, mold, 0, TO_ROOM);
 
     GET_CRAFTING_OBJ(ch) = mold;

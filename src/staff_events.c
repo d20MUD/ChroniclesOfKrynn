@@ -277,11 +277,11 @@ void check_event_drops(struct char_data *killer, struct char_data *victim)
       /* Provide visual feedback about the drop - with enhanced safety checks */
       if (killer && obj && obj->short_description)
       {
-        send_to_char(killer, "\tYYou have found \tn%s\tn\tY!\tn\r\n", obj->short_description);
+        send_to_char(killer, "\tYYou have found \tn%s\tn\tY!\tn\r\n", object_short_description(obj));
 
         /* Show other players in the room what was found - with buffer overflow protection */
         int ret =
-            snprintf(buf, sizeof(buf), "$n \tYhas found \tn%s\tn\tY!\tn", obj->short_description);
+            snprintf(buf, sizeof(buf), "$n \tYhas found \tn%s\tn\tY!\tn", object_short_description(obj));
         if (ret >= sizeof(buf))
         {
           log("SYSERR: Message truncated in check_event_drops for jackalope hide");
@@ -318,11 +318,11 @@ void check_event_drops(struct char_data *killer, struct char_data *victim)
           /* Provide visual feedback for the rare drop - with enhanced safety checks */
           if (killer && obj && obj->short_description)
           {
-            send_to_char(killer, "\tYYou have found \tn%s\tn\tY!\tn\r\n", obj->short_description);
+            send_to_char(killer, "\tYYou have found \tn%s\tn\tY!\tn\r\n", object_short_description(obj));
 
             /* Announce rare drop to other players in room - with buffer overflow protection */
             int ret = snprintf(buf, sizeof(buf), "$n \tYhas found \tn%s\tn\tY!\tn",
-                               obj->short_description);
+                               object_short_description(obj));
             if (ret >= sizeof(buf))
             {
               log("SYSERR: Message truncated in check_event_drops for pristine horn");

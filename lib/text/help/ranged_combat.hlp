@@ -1,12 +1,10 @@
-BLAST RANGED RANGED_COMBAT AMMO AMMUNITION ARCHERY BOWS FIRE-WEAPONS MISSILES QUIVERS RANGED-WEAPONS SHOOT FIRE RELOAD COLLECT AUTORELOAD AUTOCOLLECT THROW THROWING RETURNING RANGED_FEATS
+BLAST RANGED RANGED_COMBAT AMMO AMMUNITION ARCHERY BOWS FIRE-WEAPONS MISSILES QUIVERS RANGED-WEAPONS SHOOT FIRE RELOAD AUTORELOAD THROW THROWING RETURNING RANGED_FEATS
 
 RANGED COMBAT AND AMMUNITION
 
 Usage: fire <target>
        reload
-       collect
        autoreload
-       autocollect
        throw <target>
        throw off
 
@@ -35,7 +33,7 @@ Use fire <target> to begin shooting. Crossbows and slings also need to be
 loaded: use reload before firing and whenever the weapon needs reloading.
 The autoreload setting can help keep these weapons ready during combat.
 Bows do not need reload. Filling a pouch and reloading a weapon are separate
-steps. Autoreload and autocollect toggle their respective settings.
+steps. Autoreload toggles automatic weapon reloading.
 
 Fire starts shooting and subsequent attacks continue through combat rounds;
 you do not need to repeat it for every shot. You cannot start fire while
@@ -57,10 +55,16 @@ Weapon and ammunition enhancement use the higher bonus, not their sum.
 Rare supplies may never run out; they still require the correct worn pouch
 and do not remove crossbow or sling reload requirements.
 
-Some fired ammunition can be recovered with collect. Your ammo pouch must
-have room, and broken ammunition cannot be recovered. Autocollect can help
-retrieve your ammunition after combat. Recovery does not refill an old
-bundle: recovered shots are separate ammunition.
+Fired ammunition is permanently spent. It never goes into an enemy's
+inventory, a corpse, or the room, even after a miss, deflection, or catch.
+Collect and autocollect have been removed. Unlimited and Returning supplies
+remain available without losing quantity; their emitted shots also vanish.
+
+Ammo listings in inventory, rooms, and ammo pouches show the remaining
+quantity: a bundle of simple arrows (40) has 40 arrows left in that item.
+A legacy single projectile shows (1), an empty bundle (0), and an unlimited
+or Returning supply (unlimited). Different remaining counts are listed
+separately rather than combined into a misleading single line.
 
 Ordinary spells and abilities do not spend weapon ammunition merely because
 they make a ranged attack roll.
@@ -150,6 +154,6 @@ have the correct ammunition first in the pouch. Check that your supply is
 not exhausted and that a crossbow or sling has been reloaded. Your target
 must be present in your room, and combat must be permitted there.
 
-See also: FORMATION, ADVANCE, FIRE, RELOAD, COLLECT, AUTORELOAD, AUTOCOLLECT
+See also: FORMATION, ADVANCE, FIRE, RELOAD,, AUTORELOAD,
 #0
 $

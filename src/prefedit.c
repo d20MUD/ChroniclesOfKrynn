@@ -435,7 +435,7 @@ static void prefedit_disp_toggles_menu(struct descriptor_data *d)
       "%s+%s) SweepStrike  %s[%s%3s%s] %s(Auto-trip on first flurry attack, requires perk)%s\r\n"
       "                             - More Toggles -                   \r\n"
       "%s6%s) Autosplit    %s[%s%3s%s]    %sS%s) AutoScan   %s[%s%3s%s]\r\n"
-      "%s0%s) Hint Display %s[%s%3s%s]    %sW%s) AutoCollect %s[%s%3s%s]\r\n",
+      "%s0%s) Hint Display %s[%s%3s%s]\r\n",
       /* Line 1 - autoexits and gossip */
       CBYEL(d->character, C_NRM), CCNRM(d->character, C_NRM), CCCYN(d->character, C_NRM),
       PREFEDIT_FLAGGED(PRF_AUTOEXIT) ? CBGRN(d->character, C_NRM) : CBRED(d->character, C_NRM),
@@ -489,13 +489,10 @@ static void prefedit_disp_toggles_menu(struct descriptor_data *d)
       CBYEL(d->character, C_NRM), CCNRM(d->character, C_NRM), CCCYN(d->character, C_NRM),
       PREFEDIT_FLAGGED(PRF_AUTOSCAN) ? CBRED(d->character, C_NRM) : CBGRN(d->character, C_NRM),
       ONOFF(!PREFEDIT_FLAGGED(PRF_AUTOSCAN)), CCCYN(d->character, C_NRM),
-      /* Line 7 - nohint and auto-collect */
+      /* Line 7 - hint display */
       CBYEL(d->character, C_NRM), CCNRM(d->character, C_NRM), CCCYN(d->character, C_NRM),
       PREFEDIT_FLAGGED(PRF_NOHINT) ? CBRED(d->character, C_NRM) : CBGRN(d->character, C_NRM),
-      ONOFF(!PREFEDIT_FLAGGED(PRF_NOHINT)), CCCYN(d->character, C_NRM), CBYEL(d->character, C_NRM),
-      CCNRM(d->character, C_NRM), CCCYN(d->character, C_NRM),
-      PREFEDIT_FLAGGED(PRF_AUTOCOLLECT) ? CBRED(d->character, C_NRM) : CBGRN(d->character, C_NRM),
-      ONOFF(PREFEDIT_FLAGGED(PRF_AUTOCOLLECT)), CCCYN(d->character, C_NRM)
+      ONOFF(!PREFEDIT_FLAGGED(PRF_NOHINT)), CCCYN(d->character, C_NRM)
       /*end*/);
 
   send_to_char(
@@ -1113,12 +1110,6 @@ void prefedit_parse(struct descriptor_data *d, char *arg)
       TOGGLE_BIT_AR(PREFEDIT_GET_FLAGS, PRF_NOHINT);
       break;
 
-      /*w*/
-    case 'w':
-    case 'W':
-      TOGGLE_BIT_AR(PREFEDIT_GET_FLAGS, PRF_AUTOCOLLECT);
-      break;
-
       /* do not use X - reserved for exiting this menu */
 
     case 'y':
@@ -1597,10 +1588,6 @@ void prefedit_Restore_Defaults(struct descriptor_data *d)
   /* PRF_AUTOLOOT   - On */
   if (!PREFEDIT_FLAGGED(PRF_AUTOLOOT))
     SET_BIT_AR(PREFEDIT_GET_FLAGS, PRF_AUTOLOOT);
-
-  /* PRF_AUTOCOLLECT   - On */
-  if (!PREFEDIT_FLAGGED(PRF_AUTOCOLLECT))
-    SET_BIT_AR(PREFEDIT_GET_FLAGS, PRF_AUTOCOLLECT);
 
   /* PRF_AUTORELOAD   - On */
   if (!PREFEDIT_FLAGGED(PRF_AUTORELOAD))

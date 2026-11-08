@@ -94,6 +94,18 @@ struct ranged_shot_context
 };
 static struct ranged_shot_context *current_shot = NULL;
 
+/* Transient shots use plain names in combat; their supply keeps its count. */
+bool is_ranged_projectile(const struct obj_data *obj)
+{
+  struct ranged_shot_context *context;
+  if (!obj)
+    return FALSE;
+  for (context = current_shot; context; context = context->previous)
+    if (context->projectile == obj || context->extra_projectile == obj)
+      return TRUE;
+  return FALSE;
+}
+
 void forget_ranged_projectile(struct obj_data *obj)
 {
   struct ranged_shot_context *context;
@@ -6295,7 +6307,6 @@ int dam_killed_vict(struct char_data *ch, struct char_data *victim)
   long local_gold = 0, happy_gold = 0;
   struct char_data *tmp_char = NULL, *tch = NULL;
   struct obj_data *corpse_obj;
-  room_rnum rnum = NOWHERE;
   bool stored_pet_death = is_persistent_pet(victim);
 
   if (!ok_damage_shopkeeper(ch, victim) || MOB_FLAGGED(victim, MOB_NOKILL) ||
@@ -6454,9 +6465,6 @@ int dam_killed_vict(struct char_data *ch, struct char_data *victim)
     snprintf(local_buf, sizeof(local_buf), "%ld", (long)local_gold);
   }
 
-  /* grab room number of victim before we extract him for corpse making */
-  rnum = IN_ROOM(victim);
-
   /* corpse should be made here */
   die(victim, ch);
 
@@ -6464,33 +6472,6 @@ int dam_killed_vict(struct char_data *ch, struct char_data *victim)
 
   if (!stored_pet_death)
   {
-    /* we make everyone in the room with auto-collect search for ammo here before
-       any of the autolooting, etc */
-    for (tch = world[rnum].people; tch; tch = tch->next_in_room)
-    {
-      if (!tch)
-        continue;
-
-      if (IS_NPC(tch))
-      {
-        if (tch->master && !IS_NPC(tch->master) && PRF_FLAGGED(tch->master, PRF_AUTOCOLLECT))
-        {
-          perform_collect(tch->master, FALSE);
-          // attach_mud_event(new_mud_event(eCOLLECT_DELAY, ch, NULL), 1);
-        }
-        else
-        {
-          continue;
-        }
-      }
-
-      if (!IS_NPC(tch) && PRF_FLAGGED(tch, PRF_AUTOCOLLECT))
-      {
-        perform_collect(tch, FALSE);
-        // attach_mud_event(new_mud_event(eCOLLECT_DELAY, ch, NULL), 1);
-      }
-    }
-
     // handle dead mob and PRF_
 
     /* auto split / auto gold */
@@ -11019,7 +11000,7 @@ void weapon_poison(struct char_data *ch, struct char_data *victim, struct obj_da
     if (wielded->weapon_poison.poison_hits <= 0)
     {
       send_to_char(ch, "The final bits of applied \tgpoison\tn wear off %s!\r\n",
-                   wielded->short_description);
+                   object_short_description(wielded));
       wielded->weapon_poison.poison_hits = 0;
       wielded->weapon_poison.poison = 0;
       wielded->weapon_poison.poison_level = 0;
@@ -11158,7 +11139,7 @@ void weapon_spells(struct char_data *ch, struct char_data *vict, struct obj_data
         if (GET_WEAPON_CHANNEL_SPELL_USES(wpn, i) <= 0)
         {
           send_to_char(ch, "\tMYour channelled spell '\tW%s\tn' on %s has expired.\r\n\tn",
-                       spell_info[GET_WEAPON_CHANNEL_SPELL(wpn, i)].name, wpn->short_description);
+                       spell_info[GET_WEAPON_CHANNEL_SPELL(wpn, i)].name, object_short_description(wpn));
           GET_WEAPON_CHANNEL_SPELL(wpn, i) = 0;
           wpn->channel_spells[i].level = 0;
           GET_WEAPON_CHANNEL_SPELL_PCT(wpn, i) = 0;
@@ -13625,22 +13606,7 @@ void handle_missed_attack(struct char_data *ch, struct char_data *victim, int ty
   {
     /* set off imbued arrow! */
     imbued_arrow(ch, victim, missile);
-    /* breakage chance! */
-    if (GET_OBJ_VAL(missile, 2) >= dice(1, 100))
-    { /*broke!*/
-      act("\tnThe $o\tn you fire at $N\tn misses badly and ends up breaking!", FALSE, ch, missile,
-          victim, TO_CHAR);
-      act("\tnThe $o\tn that $n\tn fired at you misses and ends up breaking!", FALSE, ch, missile,
-          victim, TO_VICT | TO_SLEEP);
-      act("\tnThe $o\tn that $n\tn fires at $N\tn misses badly and ends up breaking!", FALSE, ch,
-          missile, victim, TO_NOTVICT);
-      extract_obj(missile);
-    }
-    else
-    { /* Drop the ammo to the ground.*/
-
-      obj_to_room(missile, IN_ROOM(victim));
-    }
+    /* The shot is spent. hit() destroys its transient object after resolution. */
   }
 
   return;
@@ -13771,7 +13737,6 @@ static bool resolve_manyshot_arrow(struct char_data *ch, struct char_data *victi
   amount = apply_damage_reduction(ch, victim, weapon, amount, FALSE, ATTACK_TYPE_RANGED);
   if (amount < 0)
     return FALSE;
-  obj_to_char(arrow, victim);
   if (damage(ch, victim, amount, w_type, dam_type, ATTACK_TYPE_RANGED) < 0)
     return TRUE;
   if (elemental_type > 0 && elemental_type < NUM_DAM_TYPES && elemental_die > 0 &&
@@ -14861,13 +14826,12 @@ int handle_successful_attack(struct char_data *ch, struct char_data *victim,
     }
   }
 
-  /* We hit with a ranged weapon, victim gets a new arrow, stuck neatly in his butt. */
+  /* Resolve ammunition effects while its transient projectile remains valid. */
   if (attack_type == ATTACK_TYPE_RANGED)
   {
     /* set off imbued arrow! */
     imbued_arrow(ch, victim, missile);
-    /* the victim gets to inherit the bullet, right in the bum! */
-    obj_to_char(missile, victim); /* note bullet will be in inventory, not in the bum eq-slot */
+    /* Keep the projectile transient; never put spent ammo into victim loot. */
   }
 
   /* Melee warding modifies damage. */
@@ -15442,13 +15406,11 @@ int hit(struct char_data *ch, struct char_data *victim, int type, int dam_type, 
   ch->char_specials.manyshot_pending = FALSE;
   current_shot = &context;
   result = resolve_weapon_hit(ch, victim, type, dam_type, penalty, attack_type);
-  if (context.projectile && (context.unlimited ||
-      (!context.projectile->carried_by && !context.projectile->in_obj &&
-       !context.projectile->worn_by && IN_ROOM(context.projectile) == NOWHERE)))
+  /* All fired projectiles are spent, including misses, deflections and Manyshot.
+   * Unlimited/Returning preserve the supply, not a collectible shot object. */
+  if (context.projectile)
     extract_obj(context.projectile);
-  if (context.extra_projectile && (context.extra_unlimited ||
-      (!context.extra_projectile->carried_by && !context.extra_projectile->in_obj &&
-       !context.extra_projectile->worn_by && IN_ROOM(context.extra_projectile) == NOWHERE)))
+  if (context.extra_projectile)
     extract_obj(context.extra_projectile);
   current_shot = context.previous;
   last_missile = current_shot ? current_shot->projectile : NULL;
@@ -15725,7 +15687,6 @@ static int resolve_weapon_hit(struct char_data *ch, struct char_data *victim, in
   {
     current_shot->unlimited = ammunition_is_unlimited(missile, wielded);
     missile = take_ammo_projectile(missile, wielded);
-    MISSILE_ID(missile) = GET_IDNUM(ch);
     current_shot->projectile = missile;
     last_missile = missile;
     if (current_shot->manyshot)
@@ -15733,7 +15694,6 @@ static int resolve_weapon_hit(struct char_data *ch, struct char_data *victim, in
       struct obj_data *extra = ammo_pouch->contains;
       current_shot->extra_unlimited = ammunition_is_unlimited(extra, wielded);
       current_shot->extra_projectile = take_ammo_projectile(extra, wielded);
-      MISSILE_ID(current_shot->extra_projectile) = GET_IDNUM(ch);
     }
     /* if this was a weapon that was loaded, unload */
     if (wielded && is_reloading_weapon(ch, wielded, TRUE) && GET_OBJ_VAL(wielded, 5) > 0)
@@ -16011,7 +15971,6 @@ static int resolve_weapon_hit(struct char_data *ch, struct char_data *victim, in
           victim, missile, ch, TO_VICT | TO_SLEEP);
       act("\tnWith inhuman dexterity $n snatches out of the air $o that $N fired!", FALSE, victim,
           missile, ch, TO_NOTVICT);
-      obj_to_char(missile, victim);
     }
     else
     {
@@ -16021,7 +15980,6 @@ static int resolve_weapon_hit(struct char_data *ch, struct char_data *victim, in
           TO_VICT | TO_SLEEP);
       act("\tn$n deftly deflects $o out of the air, that was fired by $N!", FALSE, victim, missile,
           ch, TO_NOTVICT);
-      obj_to_room(missile, IN_ROOM(victim));
     }
     DEFLECT_ARROWS_LEFT(victim)
     --;

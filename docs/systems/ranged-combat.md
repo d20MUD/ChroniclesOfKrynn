@@ -21,7 +21,7 @@ ammo ID is retained as the bullet ID; legacy dart items remain readable.
 | --- | --- |
 | 0 | Ammo type: 1 arrow, 2 bolt, 3 bullet, 4 legacy dart, 5 thrown weapon |
 | 1 | Existing imbued spell ID |
-| 2 | Existing projectile breakage chance |
+| 2 | Unused legacy breakage field |
 | 3 | Reserved legacy field |
 | 4 | Enhancement bonus, added to attack and weapon damage |
 | 5 | Minimum quantity when a new object loads |
@@ -44,6 +44,25 @@ final unit uses the supply object as its projectile. Earlier shots receive
 separate objects and retain enhancement, elemental damage, and poison. Fired
 projectiles never become new stacks or unlimited supplies. Unlimited supplies
 remain equipped, and their projectiles are removed after attack resolution.
+
+Every fired projectile is extracted after attack resolution, including finite
+shots, Manyshot arrows, misses, deflections and catches. Projectiles are never
+transferred to the room or target inventory, so they cannot enter corpse loot.
+The collect/autocollect commands and recovery preferences have been removed;
+legacy preference/event numeric IDs remain reserved for saved-data compatibility.
+
+Player-facing short descriptions use `object_short_description()` (also exposed
+through `GET_OBJ_SHORT` and `OBJS`) to append remaining quantity, such as `(40)`.
+This includes inventory, pouches, shops, transaction/action messages, inspection
+and MSDP inventory labels; room descriptions retain their quantity suffix.
+Legacy single missiles display `(1)`, empty bundles `(0)`, and inexhaustible
+supplies `(unlimited)`. Bundles with different quantities do not collapse into
+one object-list row. Shop stock grouping likewise distinguishes remaining
+counts while prototype/product matching still recognizes replenishable stock.
+Fired projectile names omit quantity during combat, including Manyshot and
+nested attacks; the ammo supply still displays its remaining quantity.
+Base names in saved objects and prototypes remain unchanged; labels reflect the
+current instance quantity whenever rendered.
 
 Bonus damage uses its own damage type and resistance handling. It is applied
 once on a successful weapon hit and is not multiplied by critical hits. Spell

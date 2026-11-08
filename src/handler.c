@@ -3257,6 +3257,19 @@ struct char_data *get_char_room_no_vis(struct char_data *ch, char *name, int *nu
   return (NULL);
 }
 
+/* Exact web-room targets still go through the ordinary local visibility and
+ * command checks. IDs prevent duplicate names or stale clicks selecting others. */
+static bool room_entity_matches(const char *name, char kind, long id)
+{
+  char *end;
+  long parsed;
+  if (!name || name[0] != '}' || name[1] != kind ||
+      name[2] < '0' || name[2] > '9') return FALSE;
+  errno = 0;
+  parsed = strtol(name + 2, &end, 10);
+  return errno != ERANGE && !*end && parsed > 0 && parsed == id;
+}
+
 struct char_data *get_char_room_vis(struct char_data *ch, char *name, int *number)
 {
   struct char_data *i;
@@ -3280,7 +3293,7 @@ struct char_data *get_char_room_vis(struct char_data *ch, char *name, int *numbe
   {
     if (!(CAN_SEE(ch, i) || CAN_INFRA(ch, i) || can_blindsense_creature(ch, i)))
       continue;
-    if (identity_matches(ch, i, name) && --(*number) == 0)
+    if ((room_entity_matches(name, 'c', GET_ID(i)) || identity_matches(ch, i, name)) && --(*number) == 0)
       return i;
   }
 
@@ -3436,7 +3449,7 @@ struct obj_data *get_obj_in_list_vis(struct char_data *ch, char *name, int *numb
     return (NULL);
 
   for (i = list; i && *number; i = i->next_content)
-    if (isname(name, i->name))
+    if (room_entity_matches(name, 'o', GET_ID(i)) || isname(name, i->name))
       if (CAN_SEE_OBJ(ch, i) || can_see_inv)
         if (--(*number) == 0)
           return (i);

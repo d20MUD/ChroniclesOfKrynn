@@ -46,11 +46,14 @@ static int resolve_weapon_hit(struct char_data *ch,struct char_data *victim,
   current_shot->projectile=shot;last_missile=shot;
   current_shot->unlimited=(mode==1);
   ready=false;
+  assert(is_ranged_projectile(shot) && !is_ranged_projectile(&source));
   assert(ranged_ammunition(ch)==shot); /* Bonuses survive the final shot. */
+  if(mode==4) shot->carried_by=victim; /* Cleanup must never preserve a spent shot. */
+  if(mode==5) { current_shot->extra_projectile=&projectile[1]; assert(is_ranged_projectile(&projectile[1])); }
   if(mode==2) { forget_ranged_projectile(shot); }
   else if(mode==3 && level==0) {
     assert(hit(ch,victim,type,dam_type,penalty,attack_type)==9);
-    assert(current_shot->projectile==shot && last_missile==shot);
+    assert(current_shot->projectile==shot && last_missile==shot && is_ranged_projectile(shot));
   }
   depth--;
   return 9;
@@ -73,13 +76,14 @@ int main(void) {
   IN_ROOM(&ch)=1;IN_ROOM(&victim)=2;
   assert(hit(&ch,&victim,0,0,0,ATTACK_TYPE_RANGED)==HIT_MISS && !resolved);
   IN_ROOM(&victim)=1;
-  for(mode=0;mode<4;mode++) {
+  for(mode=0;mode<6;mode++) {
     memset(projectile,0,sizeof(projectile));
     for(int i=0;i<2;i++) IN_ROOM(&projectile[i])=mode==1 ? 1 : NOWHERE;
     removed=resolved=0;
     assert(hit(&ch,&victim,0,0,0,ATTACK_TYPE_RANGED)==9);
     assert(!current_shot && !last_missile);
-    assert(removed==(mode==2?0:mode==3?2:1));
+    assert(!is_ranged_projectile(&projectile[0]) && !is_ranged_projectile(&projectile[1]));
+    assert(removed==(mode==2?0:(mode==3 || mode==5)?2:1));
     assert(resolved==(mode==3?2:1));
   }
   for(int type=1;type<NUM_DAM_TYPES;type++) {

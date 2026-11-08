@@ -244,8 +244,7 @@ EVENTFUNC(event_countdown)
     extract_char(ch);
     break;
 
-  case eCOLLECT_DELAY:
-    perform_collect(ch, FALSE);
+  case eCOLLECT_DELAY: /* Reserved legacy event: ammunition recovery removed. */
     break;
 
   case eBLUR_ATTACK_DELAY:

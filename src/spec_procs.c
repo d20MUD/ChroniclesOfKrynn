@@ -2243,7 +2243,7 @@ SPECIAL(player_owned_shops)
       if (valid_player_shop_item(ch, i))
       {
         send_to_char(ch, "%3d)   %-*s %11d\r\n", num++,
-                     count_color_chars(i->short_description) + 44, i->short_description,
+                     count_color_chars(object_short_description(i)) + 44, object_short_description(i),
                      GET_OBJ_COST(i));
       }
     }
@@ -2265,7 +2265,7 @@ SPECIAL(player_owned_shops)
     }
 
 #ifdef PLAYER_SHOP_DEBUG
-    send_to_char(ch, "player_shops: found %s (cost: %d)\r\n", i->short_description,
+    send_to_char(ch, "player_shops: found %s (cost: %d)\r\n", object_short_description(i),
                  GET_OBJ_COST(i));
 #endif
 
@@ -2293,7 +2293,7 @@ SPECIAL(player_owned_shops)
 
     /* Let everyone know what's happening */
     send_to_char(ch, "%s hands you %s, and takes your payment.\r\n",
-                 CAP(GET_NAME((struct char_data *)me)), i->short_description);
+                 CAP(GET_NAME((struct char_data *)me)), object_short_description(i));
     act("$n buys $p from $N.", FALSE, ch, i, (struct char_data *)me, TO_ROOM);
     send_to_char(ch, "%s thanks you for your business, 'please come again!'\r\n", shop_owner);
 
@@ -11225,7 +11225,7 @@ SPECIAL(buyarmor)
 
   GET_GOLD(ch) -= cost;
   obj_to_char(obj, ch);
-  send_to_char(ch, "You purchase %s for %d gold coins.\r\n", obj->short_description, cost);
+  send_to_char(ch, "You purchase %s for %d gold coins.\r\n", object_short_description(obj), cost);
 
   return 1;
 }
@@ -11385,7 +11385,7 @@ SPECIAL(buyweapons)
 
   GET_GOLD(ch) -= cost;
   obj_to_char(obj, ch);
-  send_to_char(ch, "You purchase %s for %d gold coins.\r\n", obj->short_description, cost);
+  send_to_char(ch, "You purchase %s for %d gold coins.\r\n", object_short_description(obj), cost);
 
   return 1;
 }
@@ -11455,7 +11455,7 @@ void create_crafting_mold(struct char_data *ch, int selection, int type)
     obj->description = strdup(buf);
     obj_to_char(obj, ch);
     GET_GOLD(ch) -= MOLD_OBJ_COST;
-    send_to_char(ch, "You purchase %s for %d gold coins.\r\n", obj->short_description,
+    send_to_char(ch, "You purchase %s for %d gold coins.\r\n", object_short_description(obj),
                  MOLD_OBJ_COST);
     GET_OBJ_COST(obj) = 0;
     return;
@@ -11480,7 +11480,7 @@ void create_crafting_mold(struct char_data *ch, int selection, int type)
     obj->description = strdup(buf);
     obj_to_char(obj, ch);
     GET_GOLD(ch) -= MOLD_OBJ_COST;
-    send_to_char(ch, "You purchase %s for %d gold coins.\r\n", obj->short_description,
+    send_to_char(ch, "You purchase %s for %d gold coins.\r\n", object_short_description(obj),
                  MOLD_OBJ_COST);
     GET_OBJ_COST(obj) = 0;
     return;
@@ -11523,7 +11523,7 @@ void create_crafting_mold(struct char_data *ch, int selection, int type)
     obj->description = strdup(buf);
     obj_to_char(obj, ch);
     GET_GOLD(ch) -= MOLD_OBJ_COST;
-    send_to_char(ch, "You purchase %s for %d gold coins.\r\n", obj->short_description,
+    send_to_char(ch, "You purchase %s for %d gold coins.\r\n", object_short_description(obj),
                  MOLD_OBJ_COST);
     GET_OBJ_COST(obj) = 0;
     return;
@@ -11964,7 +11964,7 @@ SPECIAL(replace_quest_item)
           if (obj)
           {
             send_to_char(ch, "\tg%5d\tn) \tc%-52.52s\tn \ty%s\tn\r\n", QST_NUM(rnum),
-                         QST_DESC(rnum), obj->short_description);
+                         QST_DESC(rnum), object_short_description(obj));
           }
         }
       }
@@ -11996,7 +11996,7 @@ SPECIAL(replace_quest_item)
               counter++;
               obj_to_char(obj, ch);
               send_to_char(ch, "You have had your quest item '%s' replaced.\r\n",
-                           obj->short_description);
+                           object_short_description(obj));
               return 1;
             }
           }

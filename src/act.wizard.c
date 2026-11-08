@@ -914,7 +914,7 @@ static void list_zone_commands_room(struct char_data *ch, room_vnum rvnum)
         break;
       case 'L':
         send_to_char(ch, "%sPut random treasure in %s [%s%d%s] (%d%%)",
-                     ZOCMD.if_flag ? " then " : "", obj_proto[ZOCMD.arg1].short_description, cyn,
+                     ZOCMD.if_flag ? " then " : "", object_short_description(&obj_proto[ZOCMD.arg1]), cyn,
                      obj_index[ZOCMD.arg1].vnum, yel, ZOCMD.arg2);
         break;
       case 'M':
@@ -924,28 +924,28 @@ static void list_zone_commands_room(struct char_data *ch, room_vnum rvnum)
         break;
       case 'G':
         send_to_char(ch, "%sGive it %s [%s%d%s], Max : %d\r\n", ZOCMD.if_flag ? " then " : "",
-                     obj_proto[ZOCMD.arg1].short_description, cyn, obj_index[ZOCMD.arg1].vnum, yel,
+                     object_short_description(&obj_proto[ZOCMD.arg1]), cyn, obj_index[ZOCMD.arg1].vnum, yel,
                      ZOCMD.arg2);
         break;
       case 'O':
         send_to_char(ch, "%sLoad %s [%s%d%s], Max : %d\r\n", ZOCMD.if_flag ? " then " : "",
-                     obj_proto[ZOCMD.arg1].short_description, cyn, obj_index[ZOCMD.arg1].vnum, yel,
+                     object_short_description(&obj_proto[ZOCMD.arg1]), cyn, obj_index[ZOCMD.arg1].vnum, yel,
                      ZOCMD.arg2);
         break;
       case 'E':
         send_to_char(ch, "%sEquip with %s [%s%d%s], %s, Max : %d\r\n",
-                     ZOCMD.if_flag ? " then " : "", obj_proto[ZOCMD.arg1].short_description, cyn,
+                     ZOCMD.if_flag ? " then " : "", object_short_description(&obj_proto[ZOCMD.arg1]), cyn,
                      obj_index[ZOCMD.arg1].vnum, yel, equipment_types[ZOCMD.arg3], ZOCMD.arg2);
         break;
       case 'P':
         send_to_char(ch, "%sPut %s [%s%d%s] in %s [%s%d%s], Max : %d\r\n",
-                     ZOCMD.if_flag ? " then " : "", obj_proto[ZOCMD.arg1].short_description, cyn,
-                     obj_index[ZOCMD.arg1].vnum, yel, obj_proto[ZOCMD.arg3].short_description, cyn,
+                     ZOCMD.if_flag ? " then " : "", object_short_description(&obj_proto[ZOCMD.arg1]), cyn,
+                     obj_index[ZOCMD.arg1].vnum, yel, object_short_description(&obj_proto[ZOCMD.arg3]), cyn,
                      obj_index[ZOCMD.arg3].vnum, yel, ZOCMD.arg2);
         break;
       case 'R':
         send_to_char(ch, "%sRemove %s [%s%d%s] from room.\r\n", ZOCMD.if_flag ? " then " : "",
-                     obj_proto[ZOCMD.arg2].short_description, cyn, obj_index[ZOCMD.arg2].vnum, yel);
+                     object_short_description(&obj_proto[ZOCMD.arg2]), cyn, obj_index[ZOCMD.arg2].vnum, yel);
         break;
       case 'D':
         send_to_char(ch, "%sSet door %s as %s.\r\n", ZOCMD.if_flag ? " then " : "",
@@ -1050,7 +1050,7 @@ static void do_stat_room(struct char_data *ch, struct room_data *rm)
       if (!CAN_SEE_OBJ(ch, j))
         continue;
 
-      column += send_to_char(ch, "%s %s", found++ ? "," : "", j->short_description);
+      column += send_to_char(ch, "%s %s", found++ ? "," : "", object_short_description(j));
       if (column >= 62)
       {
         send_to_char(ch, "%s\r\n", j->next_content ? "," : "");
@@ -6343,7 +6343,7 @@ ACMD(do_zcheck)
       /* Additional object checks. */
       if (found)
       {
-        send_to_char(ch, "[%5d] %-30s: \r\n", GET_OBJ_VNUM(obj), obj->short_description);
+        send_to_char(ch, "[%5d] %-30s: \r\n", GET_OBJ_VNUM(obj), object_short_description(obj));
         send_to_char(ch, "%s", buf);
       }
       strlcpy(buf, "", sizeof(buf));
@@ -6489,7 +6489,7 @@ static void obj_checkload(struct char_data *ch, obj_vnum ovnum)
     return;
   }
 
-  send_to_char(ch, "Checking load info for the obj %s...\r\n", obj_proto[ornum].short_description);
+  send_to_char(ch, "Checking load info for the obj %s...\r\n", object_short_description(&obj_proto[ornum]));
 
   for (zone = 0; zone <= top_of_zone_table; zone++)
   {
@@ -6603,7 +6603,7 @@ static void trg_checkload(struct char_data *ch, trig_vnum tvnum)
         else if (ZCMD2.arg1 == OBJ_TRIGGER)
         {
           send_to_char(ch, "obj [%5d] %-60s  (zedit room %d)\r\n", obj_index[lastobj_r].vnum,
-                       obj_proto[lastobj_r].short_description, lastroom_v);
+                       object_short_description(&obj_proto[lastobj_r]), lastroom_v);
           found = 1;
         }
         else if (ZCMD2.arg1 == WLD_TRIGGER)
@@ -6637,7 +6637,7 @@ static void trg_checkload(struct char_data *ch, trig_vnum tvnum)
     for (tpl = obj_proto[j].proto_script; tpl; tpl = tpl->next)
       if (tpl->vnum == tvnum)
       {
-        send_to_char(ch, "obj [%5d] %s\r\n", obj_index[j].vnum, obj_proto[j].short_description);
+        send_to_char(ch, "obj [%5d] %s\r\n", obj_index[j].vnum, object_short_description(&obj_proto[j]));
         found = 1;
       }
   }
@@ -8736,7 +8736,7 @@ ACMD(do_objlist)
 
       quest = is_object_in_a_quest(obj);
 
-      snprintf(tmp_buf, sizeof(tmp_buf), "[%5d] %s   %s\r\n", i, obj->short_description,
+      snprintf(tmp_buf, sizeof(tmp_buf), "[%5d] %s   %s\r\n", i, object_short_description(obj),
                (quest ? "(\tcUsed in Quests\tn)" : ""));
       strlcat(buf, tmp_buf, sizeof(buf));
       switch (GET_OBJ_TYPE(obj))
@@ -9937,7 +9937,7 @@ ACMD(do_eqrating)
      description */
     tmp_len =
         snprintf(buf + len, sizeof(buf) - len, "%7ld | %5d | %-45s | ", (long int)obj_index[a].vnum,
-                 get_eq_score(a), obj_proto[a].short_description);
+                 get_eq_score(a), object_short_description(&obj_proto[a]));
     len += tmp_len;
 
     /* now, if we have a weapon, display dice */
@@ -10108,7 +10108,7 @@ ACMD(do_findmagic)
                        skill_name(spellnum));
         send_to_char(ch, "%4d %s[%s%5d%s]%s %s%s\r\n", hits, CCCYN(ch, C_NRM), CCYEL(ch, C_NRM),
                      obj_index[num].vnum, CCCYN(ch, C_NRM), CCNRM(ch, C_NRM),
-                     obj->short_description, CCNRM(ch, C_NRM));
+                     object_short_description(obj), CCNRM(ch, C_NRM));
       }
     }
     if (((obj_proto[num].obj_flags.type_flag == ITEM_WAND) && (!strcmp(objname, "wand"))) ||
@@ -10122,7 +10122,7 @@ ACMD(do_findmagic)
         if (hits == 1)
           send_to_char(ch, "Num  VNUM   Name\r\n");
         send_to_char(ch, "%4d %6d %s (%d charges)\r\n", hits, obj_index[num].vnum,
-                     obj->short_description, obj_proto[num].obj_flags.value[1]);
+                     object_short_description(obj), obj_proto[num].obj_flags.value[1]);
       }
     }
   }
@@ -10216,7 +10216,7 @@ ACMD(do_unbind)
   if (!legendary_tree_check(ch, obj, LEG_ROUTE_TRANSFORM)) return;
   if (GET_OBJ_BOUND_ID(obj) == NOBODY)
   {
-    send_to_char(ch, "But, the %s@n is not bound to anyone!\r\n", obj->short_description);
+    send_to_char(ch, "But, the %s@n is not bound to anyone!\r\n", object_short_description(obj));
     return;
   }
 
@@ -10227,7 +10227,7 @@ ACMD(do_unbind)
     GET_OBJ_BOUND_ID(obj) = NOBODY;
     return;
   }
-  snprintf(obj_name, sizeof(obj_name), "%s", obj->short_description);
+  snprintf(obj_name, sizeof(obj_name), "%s", object_short_description(obj));
   send_to_char(ch, "%s%s was bound to %s\r\n", CAP(obj_name), CCNRM(ch, C_NRM),
                get_name_by_id(GET_OBJ_BOUND_ID(obj)));
   send_to_char(ch, "This item has now been unbound!\r\n");
@@ -10256,7 +10256,7 @@ ACMD(do_obind)
 
   if (!*char_name)
   {
-    send_to_char(ch, "To whom would you like to bind %s?\r\n", obj->short_description);
+    send_to_char(ch, "To whom would you like to bind %s?\r\n", object_short_description(obj));
     return;
   }
 
@@ -10282,7 +10282,7 @@ ACMD(do_obind)
     }
   }
   GET_OBJ_BOUND_ID(obj) = GET_IDNUM(vict);
-  send_to_char(ch, "%s is now bound to %s.", obj->short_description, GET_NAME(vict));
+  send_to_char(ch, "%s is now bound to %s.", object_short_description(obj), GET_NAME(vict));
 }
 
 /*
@@ -10450,7 +10450,7 @@ ACMD(do_finddoor)
   {
     len = snprintf(buf, sizeof(buf), "Doors unlocked by key %s[%s%d%s]%s %s%s are:\r\n",
                    CCCYN(ch, C_NRM), CCYEL(ch, C_NRM), vnum, CCCYN(ch, C_NRM), CCNRM(ch, C_NRM),
-                   obj->short_description, CCNRM(ch, C_NRM));
+                   object_short_description(obj), CCNRM(ch, C_NRM));
     for (i = 0; i <= top_of_world; i++)
     {
       for (d = 0; d < NUM_OF_DIRS; d++)
@@ -10469,7 +10469,7 @@ ACMD(do_finddoor)
     if (num > 0)
       page_string(ch->desc, buf, 1);
     else
-      send_to_char(ch, "No doors were found for key [%d] %s.\r\n", vnum, obj->short_description);
+      send_to_char(ch, "No doors were found for key [%d] %s.\r\n", vnum, object_short_description(obj));
   }
 }
 
@@ -11297,7 +11297,7 @@ ACMD(do_objcheck)
       errors++;
       snprintf(buf, sizeof(buf), "ERROR: Object %d (%s) - Index count: %d, Actual count: %d\r\n",
                obj_index[i].vnum,
-               obj_proto[i].short_description ? obj_proto[i].short_description : "UNDEFINED",
+               object_short_description(&obj_proto[i]) ? object_short_description(&obj_proto[i]) : "UNDEFINED",
                obj_index[i].number, actual_count[i]);
       send_to_char(ch, "%s", buf);
 

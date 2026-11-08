@@ -451,7 +451,7 @@ int housing_contents(struct char_data *ch, struct obj_data *container)
     send_to_char(ch, "Storage is unavailable.\r\n");
     return TRUE;
   }
-  send_to_char(ch, "%s contains:\r\n", container->short_description);
+  send_to_char(ch, "%s contains:\r\n", object_short_description(container));
   while ((row = mysql_fetch_row(res)))
   {
     send_to_char(ch, "  [%s] %s\r\n", row[0], row[1]);

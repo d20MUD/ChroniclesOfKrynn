@@ -4287,7 +4287,7 @@ bool create_craft_skill_check(struct char_data *ch, struct obj_data *obj, int sk
 
   if ((20 + skill_mod) < dc)
   {
-    send_to_char(ch, "You don't have the skill to craft %s.\r\n", obj->short_description);
+    send_to_char(ch, "You don't have the skill to craft %s.\r\n", object_short_description(obj));
     return FALSE;
   }
 
@@ -4783,7 +4783,7 @@ void create_craft_weapon(struct char_data *ch)
   /* Return any materials saved by efficient crafting talent */
   return_efficient_saved_materials(ch);
 
-  send_to_char(ch, "You've created %s!\r\n", obj->short_description);
+  send_to_char(ch, "You've created %s!\r\n", object_short_description(obj));
   obj_to_char(obj, ch);
   reset_current_craft(ch, NULL, FALSE, FALSE);
 }
@@ -4864,7 +4864,7 @@ void create_craft_armor(struct char_data *ch)
   /* Return any materials saved by efficient crafting talent */
   return_efficient_saved_materials(ch);
 
-  send_to_char(ch, "You've created %s!\r\n", obj->short_description);
+  send_to_char(ch, "You've created %s!\r\n", object_short_description(obj));
   obj_to_char(obj, ch);
   reset_current_craft(ch, NULL, FALSE, FALSE);
 }
@@ -5003,7 +5003,7 @@ void create_craft_instrument(struct char_data *ch)
   /* Return any materials saved by efficient crafting talent */
   return_efficient_saved_materials(ch);
 
-  send_to_char(ch, "You've created %s!\r\n", obj->short_description);
+  send_to_char(ch, "You've created %s!\r\n", object_short_description(obj));
   obj_to_char(obj, ch);
   reset_current_craft(ch, NULL, FALSE, FALSE);
 }
@@ -5135,7 +5135,7 @@ void create_craft_misc(struct char_data *ch)
   /* Return any materials saved by efficient crafting talent */
   return_efficient_saved_materials(ch);
 
-  send_to_char(ch, "You've created %s!\r\n", obj->short_description);
+  send_to_char(ch, "You've created %s!\r\n", object_short_description(obj));
   obj_to_char(obj, ch);
   reset_current_craft(ch, NULL, FALSE, FALSE);
 }
@@ -8930,7 +8930,7 @@ void craft_resize_complete(struct char_data *ch)
   if (!legendary_tree_check(ch, obj, LEG_ROUTE_TRANSFORM)) return;
   size = GET_CRAFT(ch).new_size;
 
-  send_to_char(ch, "You've resized %s to %s!\r\n", obj->short_description, sizes[size]);
+  send_to_char(ch, "You've resized %s to %s!\r\n", object_short_description(obj), sizes[size]);
   GET_OBJ_SIZE(obj) = size;
   reset_crafting_obj(ch);
   GET_CRAFT(ch).new_size = 0;
@@ -9504,7 +9504,7 @@ void newcraft_resize(struct char_data *ch, const char *argument)
       return;
     }
 
-    send_to_char(ch, "You cancel your resizing of %s.\r\n", obj->short_description);
+    send_to_char(ch, "You cancel your resizing of %s.\r\n", object_short_description(obj));
     GET_CRAFT(ch).new_size = 0;
     reset_crafting_obj(ch);
     return;
@@ -9521,7 +9521,7 @@ void newcraft_resize(struct char_data *ch, const char *argument)
       send_to_char(ch, "\tc");
       text_line(ch, "RESIZING", 80, '-', '-');
       send_to_char(ch, "\tn");
-      send_to_char(ch, "-- Resize Object : %s\r\n", obj->short_description);
+      send_to_char(ch, "-- Resize Object : %s\r\n", object_short_description(obj));
       send_to_char(ch, "-- Existing Size : %s\r\n", sizes[GET_OBJ_SIZE(obj)]);
       send_to_char(ch, "-- New Size      : %s\r\n",
                    GET_CRAFT(ch).new_size ? sizes[GET_CRAFT(ch).new_size] : "Not Set");
@@ -9545,7 +9545,7 @@ void newcraft_resize(struct char_data *ch, const char *argument)
     }
     GET_CRAFT(ch).crafting_method = SCMD_NEWCRAFT_RESIZE;
     GET_CRAFT(ch).craft_duration = 10;
-    send_to_char(ch, "You begin resizing %s to %s.\r\n", obj->short_description,
+    send_to_char(ch, "You begin resizing %s to %s.\r\n", object_short_description(obj),
                  sizes[GET_CRAFT(ch).new_size]);
     return;
   }
@@ -9554,7 +9554,7 @@ void newcraft_resize(struct char_data *ch, const char *argument)
     if ((obj = find_obj_rnum_in_inventory(ch, GET_CRAFT(ch).craft_obj_rnum)))
     {
       send_to_char(ch, "You have already assigned an object to resize: %s\r\n",
-                   obj->short_description);
+                   object_short_description(obj));
       send_to_char(ch, NEWCRAFT_RESIZE_SYNTAX);
       return;
     }
@@ -9570,7 +9570,7 @@ void newcraft_resize(struct char_data *ch, const char *argument)
     if (!*arg2)
     {
       send_to_char(ch, "Please specify the size you would like to change %s to.\r\n",
-                   obj->short_description);
+                   object_short_description(obj));
       return;
     }
 
@@ -9605,7 +9605,7 @@ void newcraft_resize(struct char_data *ch, const char *argument)
 
     GET_CRAFT(ch).craft_obj_rnum = GET_OBJ_RNUM(obj);
 
-    send_to_char(ch, "You've set %s to be resized from %s to %s.\r\n", obj->short_description,
+    send_to_char(ch, "You've set %s to be resized from %s to %s.\r\n", object_short_description(obj),
                  size_names[GET_OBJ_SIZE(obj)], size_names[size]);
     send_to_char(ch, "Type: resize begin to execute.\r\n");
     GET_CRAFT(ch).new_size = size;
@@ -12088,7 +12088,7 @@ void show_craft_equipment(struct char_data *ch)
 
     if (obj)
     {
-      send_to_char(ch, "\tc%-35s\tn : %s\r\n", get_craft_tool_name(slot), obj->short_description);
+      send_to_char(ch, "\tc%-35s\tn : %s\r\n", get_craft_tool_name(slot), object_short_description(obj));
       has_equipment = 1;
     }
     else
@@ -12151,7 +12151,7 @@ void newcraft_show_tools(struct char_data *ch, const char *argument)
           strip_colors(where_string);
           send_to_char(ch, "%-20s %-22s %3s \tc%-15s\tn\r\n", ability_names[ability], where_string,
                        bonus_string,
-                       tool->short_description ? tool->short_description : "a crafting tool");
+                       object_short_description(tool) ? object_short_description(tool) : "a crafting tool");
           tool_found = TRUE;
           found_tools++;
           break; // Found the tool for this ability, move to next ability
@@ -14925,7 +14925,7 @@ static void impl_do_reforge_new_(struct char_data *ch, char *argument,
   }
 
   /* Prepare messages */
-  send_to_char(ch, "You begin to reforge %s into %s %s.\r\n", obj->short_description,
+  send_to_char(ch, "You begin to reforge %s into %s %s.\r\n", object_short_description(obj),
                (GET_OBJ_TYPE(obj) == ITEM_WEAPON) ? AN(weapon_list[GET_OBJ_VAL(obj, 0)].name)
                                                   : AN(armor_list[GET_OBJ_VAL(obj, 1)].name),
                (GET_OBJ_TYPE(obj) == ITEM_WEAPON) ? weapon_list[GET_OBJ_VAL(obj, 0)].name

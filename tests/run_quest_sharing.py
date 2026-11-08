@@ -25,7 +25,9 @@ code = r'''
 #include <string.h>
 #include <stdarg.h>
 #include <time.h>
+#include <sys/time.h>
 #include <ctype.h>
+#include <json-c/json.h>
 #define TRUE true
 #define FALSE false
 #define NOTHING -1
@@ -45,17 +47,28 @@ code = r'''
 #define TOGGLE_BIT(v,b) ((v)^=(b))
 struct obj_data { int rnum; char *short_description; struct obj_data *next; };
 struct aq_data {
-  int vnum,type,prereq,prev_quest,dialogue_alternative_quest;
+  int vnum,type,prereq,prev_quest,dialogue_alternative_quest,qm;
   long flags;
   int value[7], diplomacy_dc,intimidate_dc,bluff_dc;
   char *name,*desc,*info;
 };
-struct descriptor_data { bool playing; struct aq_data *quest; };
+struct output_capture { char *text; };
+struct variable { bool bReport,bDirty; };
+struct protocol { bool bMSDP; struct variable **pVariables; };
+struct descriptor_data { bool playing; struct aq_data *quest; struct protocol *pProtocol; struct output_capture *output_capture; };
+#define eMSDP_ROOM_QUESTS 0
+#define eMSDP_QUEST_ACCEPTED 1
+#define MAX_VARIABLE_LENGTH 524288
+static char *room_payload;
+static int flushes;
+static void MSDPSetString(struct descriptor_data *d,int var,const char *s) { free(room_payload); room_payload=strdup(s); }
+static void MSDPFlush(struct descriptor_data *d,int var) { flushes++; }
+
 struct char_data {
   long id; char *name; bool npc; int level,room; void *group;
   int quests[4],counter[4],timer[4]; bool completed[4],failed[4];
   struct obj_data *carrying,*eq[2]; struct descriptor_data *desc;
-  struct char_data *next;
+  struct char_data *next,*next_in_room; bool hidden;
   long quest_share_from_id; int quest_share_vnum; time_t quest_share_expires;
 };
 typedef int qst_vnum;
@@ -64,6 +77,12 @@ typedef int obj_rnum;
 struct aq_data aquest_table[4];
 struct obj_data obj_proto[2]={{.rnum=0,.short_description="required token"}};
 struct char_data *character_list;
+static struct { struct char_data *people; } world[10];
+static int total_quests=4;
+#define VALID_ROOM_RNUM(r) ((r)>=0 && (r)<10)
+#define GET_ROOM_VNUM(r) ((r)+1000)
+#define CAN_SEE(ch,mob) (!(mob)->hidden)
+
 #define IS_NPC(ch) ((ch)->npc)
 #define GET_LEVEL(ch) ((ch)->level)
 #define GET_NAME(ch) ((ch)->name)
@@ -83,6 +102,7 @@ struct char_data *character_list;
 static char output[65536];
 static int saves;
 void send_to_char(struct char_data *ch,const char *fmt,...) {
+  if(ch->desc && ch->desc->output_capture) return;
   va_list ap; va_start(ap,fmt); vsnprintf(output+strlen(output),sizeof(output)-strlen(output),fmt,ap); va_end(ap);
 }
 void save_char(struct char_data *ch,int unused) { saves++; }
@@ -119,8 +139,9 @@ a = quest.index('static const char *quest_cmd[]')
 b = quest.index('/*--------------------------------------------------------------------------*/', a)
 code += quest[a:b]
 for signature in [
-    'void set_quest(', 'static bool quest_join_eligible(', 'static void quest_begin(',
-    'void quest_join(', 'static void quest_share_clear(', 'static bool quest_share_party(',
+    'void set_quest(', 'static bool quest_join_eligible(', 'void send_quest_acceptance(', 'static void quest_begin(',
+    'void quest_join(', 'static bool room_quest_eligible(', 'static struct char_data *room_quest_giver(',
+    'void update_msdp_room_quests(', 'static void quest_web_join(', 'static void quest_share_clear(', 'static bool quest_share_party(',
     'static bool quest_share_active(', 'static void quest_share_offer(',
     'static void quest_share_respond(', 'ACMD(do_quest)']:
     code += function(quest, signature)
@@ -223,6 +244,35 @@ int main(void) {
   { char join_arg[MAX_INPUT_LENGTH]="1"; quest_join(&recipient,&other,join_arg); }
   assert(recipient.quests[0]==100 && saves==1); /* flag only prevents sharing */
   setup(); recipient.level=LVL_IMMORT; assert(quest_join_eligible(&recipient,0,&slot,true));
+  /* Room discovery shares eligibility and never emits failure text. */
+  setup();
+  struct variable roomvar={.bReport=true}; struct variable acceptedvar={0}; struct variable *vars[]={&roomvar,&acceptedvar};
+  struct protocol proto={.bMSDP=true,.pVariables=vars}; dr.pProtocol=&proto;
+  other.npc=true; other.name="Quest giver"; world[5].people=&other;
+  for(int i=0;i<4;i++) aquest_table[i].qm=123;
+  update_msdp_room_quests(&recipient);
+  assert(!*output && !dr.output_capture);
+  struct json_object *payload=json_tokener_parse(room_payload), *list, *roomfield;
+  assert(json_object_object_get_ex(payload,"quests",&list) && json_object_array_length(list)==4);
+  assert(json_object_object_get_ex(payload,"room",&roomfield) && json_object_get_int(roomfield)==1005);
+  json_object_put(payload);
+  recipient.level=1; update_msdp_room_quests(&recipient);
+  payload=json_tokener_parse(room_payload); json_object_object_get_ex(payload,"quests",&list);
+  assert(json_object_array_length(list)==0 && !*output); json_object_put(payload);
+  recipient.level=10; other.hidden=true; update_msdp_room_quests(&recipient);
+  payload=json_tokener_parse(room_payload); json_object_object_get_ex(payload,"quests",&list);
+  assert(json_object_array_length(list)==0); json_object_put(payload); other.hidden=false;
+  /* Direct IDs and room tokens reject stale clicks, missing givers and prerequisites. */
+  do_quest(&recipient,"webjoin 1006 100",0,0); assert(saves==0);
+  world[5].people=NULL; do_quest(&recipient,"webjoin 1005 100",0,0); assert(saves==0);
+  world[5].people=&other; aquest_table[0].prev_quest=101;
+  do_quest(&recipient,"webjoin 1005 100",0,0); assert(saves==0);
+  recipient.completed[1]=true; do_quest(&recipient,"webjoin 1005 100",0,0);
+  assert(saves==1 && recipient.quests[0]==100 && flushes>=4);
+  do_quest(&recipient,"webjoin 1005 100",0,0); assert(saves==1);
+  do_quest(&recipient,"webjoin 1005 102 extra",0,0); assert(saves==1);
+  roomvar.bReport=false; free(room_payload); room_payload=NULL;
+  update_msdp_room_quests(&recipient); assert(!room_payload); dr.pProtocol=NULL;
   /* QEDIT uses independent bit masks for menu options, including NO-SHARE. */
   setup(); struct descriptor_data editor={.quest=&aquest_table[0]};
   toggle_flag(&editor,1); assert(aquest_table[0].flags==AQ_REPEATABLE);
@@ -230,10 +280,10 @@ int main(void) {
   toggle_flag(&editor,2); assert(aquest_table[0].flags==(AQ_REPEATABLE|AQ_NO_SHARE|2));
   toggle_flag(&editor,3); assert(aquest_table[0].flags==(AQ_REPEATABLE|2));
   toggle_flag(&editor,4); assert(aquest_table[0].flags==(AQ_REPEATABLE|2));
-  puts("Quest sharing: consent, prerequisites, party restrictions, revalidation, fresh progress, normal joining, and QEDIT flags passed.");
+  puts("Quest sharing: consent, prerequisites, party restrictions, revalidation, fresh progress, normal joining, room discovery/join revalidation, and QEDIT flags passed.");
 }
 '''
 with tempfile.TemporaryDirectory(prefix='quest-sharing-') as tmp:
     c=Path(tmp)/'sharing.c'; c.write_text(code); exe=Path(tmp)/'sharing'
-    subprocess.run(['cc','-std=gnu99','-Wall','-Wextra','-Wno-unused-parameter','-fsanitize=address,undefined',str(c),'-o',str(exe)],check=True)
+    subprocess.run(['cc','-std=gnu99','-Wall','-Wextra','-Wno-unused-parameter','-fsanitize=address,undefined',str(c),'-ljson-c','-o',str(exe)],check=True)
     subprocess.run([str(exe)],check=True)

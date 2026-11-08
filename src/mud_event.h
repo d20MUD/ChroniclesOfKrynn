@@ -131,7 +131,7 @@ typedef enum
   ePREPARATION,                   /* new spell preparation system */
   /*100*/ eCRAFT,                 /* NewCraft */
   eCOPYOVER,                      /* copyover event */
-  eCOLLECT_DELAY,                 /* autocollect event */
+  eCOLLECT_DELAY,                 /* reserved legacy ammo recovery event */
   eARCANEADEPT,                   // Sorcerer metamagic adept feat uses
   eARMOR_SPECAB_BLINDING,         /* cooldown event for blinding armor special ability */
                                   /*105*/

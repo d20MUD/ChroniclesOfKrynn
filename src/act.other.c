@@ -68,6 +68,8 @@
 #include "crafting_new.h" /* For golem repair functions */
 #include "genolc.h"
 #include <time.h>
+#include "protocol.h"
+#include <json-c/json.h>
 
 /* some defines for gain/respec */
 #define MODE_CLASSLIST_NORMAL 0
@@ -1466,10 +1468,10 @@ ACMD(do_applypoison)
       TRLX_PSN_HIT(ch) = GET_OBJ_VAL(poison, 3);
       snprintf(buf1, sizeof(buf1),
                "\tnYou carefully apply the contents of %s \tnonto your claws\tn...",
-               poison->short_description);
+               object_short_description(poison));
       snprintf(buf2, sizeof(buf2),
                "$n \tncarefully applies the contents of %s \tnonto $s claws\tn...",
-               poison->short_description);
+               object_short_description(poison));
     }
     else if (is_abbrev(arg1, "kapak") && HAS_FEAT(ch, FEAT_KAPAK_SALIVA))
     {
@@ -1493,9 +1495,9 @@ ACMD(do_applypoison)
       weapon->weapon_poison.poison_level =
           (int)MIN(30, GET_OBJ_VAL(poison, 1) * (HAS_FEAT(ch, FEAT_POISON_USE) ? 1.5 : 1));
       snprintf(buf1, sizeof(buf1), "\tnYou carefully apply the contents of %s \tnonto $p\tn...",
-               poison->short_description);
+               object_short_description(poison));
       snprintf(buf2, sizeof(buf2), "$n \tncarefully applies the contents of %s \tnonto $p\tn...",
-               poison->short_description);
+               object_short_description(poison));
     }
 
     act(buf1, FALSE, ch, weapon, 0, TO_CHAR);
@@ -5828,7 +5830,7 @@ int can_lore_target(struct char_data *ch, struct char_data *target_ch, struct ob
 }
 
 /* ability lore, functions like identify */
-ACMD(do_lore)
+static void do_lore_text(struct char_data *ch, const char *argument)
 {
   char arg[MAX_INPUT_LENGTH] = {'\0'};
   struct char_data *tch = NULL;
@@ -5912,6 +5914,45 @@ ACMD(do_lore)
       }
     }
   }
+}
+
+/* Capture only the requesting player's output. The original lore handler keeps
+ * all target checks, rolls, action costs and identification effects. */
+ACMD(do_lore)
+{
+  struct descriptor_data *d = ch ? ch->desc : NULL;
+  struct output_capture capture = {0};
+  struct json_object *response;
+  struct timeval now;
+  static unsigned long sequence;
+  char id[96];
+  char topic[MAX_INPUT_LENGTH];
+  if (!d || !d->pProtocol || !d->pProtocol->bMSDP || d->output_capture ||
+      !d->pProtocol->pVariables[eMSDP_LORE_INFO]->bReport)
+  {
+    do_lore_text(ch, argument);
+    return;
+  }
+  strlcpy(topic, argument ? argument : "", sizeof(topic));
+  d->output_capture = &capture;
+  do_lore_text(ch, argument);
+  d->output_capture = NULL;
+  /* NPC calls and other silent paths do not open an empty dialog. */
+  if (capture.length)
+  {
+    gettimeofday(&now, NULL);
+    snprintf(id, sizeof(id), "%ld:%ld:%lu", (long)now.tv_sec, (long)now.tv_usec, ++sequence);
+    response = json_object_new_object();
+    json_object_object_add(response, "id", json_object_new_string(id));
+    json_object_object_add(response, "topic", json_object_new_string(topic));
+    json_object_object_add(response, "body", json_object_new_string(capture.text));
+    json_object_object_add(response, "truncated", json_object_new_boolean(capture.truncated));
+    MSDPSetString(d, eMSDP_LORE_INFO, json_object_to_json_string_ext(response, JSON_C_TO_STRING_PLAIN));
+    d->pProtocol->pVariables[eMSDP_LORE_INFO]->bDirty = true;
+    MSDPFlush(d, eMSDP_LORE_INFO);
+    json_object_put(response);
+  }
+  free(capture.text);
 }
 
 /* ability group lore, functions like identify for all items in bag */
@@ -6041,7 +6082,7 @@ ACMD(do_truelore)
   if (target && tobj)
   {
     SET_BIT_AR(GET_OBJ_EXTRA(tobj), ITEM_IDENTIFIED);
-    send_to_char(ch, "Every magical property of %s is laid bare to you.\r\n", tobj->short_description);
+    send_to_char(ch, "Every magical property of %s is laid bare to you.\r\n", object_short_description(tobj));
     do_stat_object(ch, tobj, ITEM_STAT_MODE_LORE_SKILL);
     return;
   }
@@ -7487,7 +7528,7 @@ void update_msdp_inventory(struct char_data *ch)
                    "%c",
                    (char)MSDP_VAL, (char)MSDP_TABLE_OPEN, (char)MSDP_VAR, "LOCATION",
                    (char)MSDP_VAL, equipment_types[i], (char)MSDP_VAR, "NAME", (char)MSDP_VAL,
-                   obj->short_description, (char)MSDP_TABLE_CLOSE);
+                   object_short_description(obj), (char)MSDP_TABLE_CLOSE);
           strlcat(msdp_buffer, buf, sizeof(msdp_buffer));
         }
       }
@@ -7505,7 +7546,7 @@ void update_msdp_inventory(struct char_data *ch)
                  "%c%s%c%s"
                  "%c",
                  (char)MSDP_VAL, (char)MSDP_TABLE_OPEN, (char)MSDP_VAR, "LOCATION", (char)MSDP_VAL,
-                 "Inventory", (char)MSDP_VAR, "NAME", (char)MSDP_VAL, obj->short_description,
+                 "Inventory", (char)MSDP_VAR, "NAME", (char)MSDP_VAL, object_short_description(obj),
                  (char)MSDP_TABLE_CLOSE);
         strlcat(msdp_buffer, buf, sizeof(msdp_buffer));
       }
@@ -8775,8 +8816,7 @@ ACMD(do_gen_tog)
       {"You will now see approximately every 5 minutes a in-game hint.\r\n",
        "You will no longer see in-game hints.\r\n"},
       /*39*/
-      {"You will no longer automatically collect your ammo after combat.\r\n",
-       "You will now automatically collect your ammo after combat.\r\n"},
+      {"", ""}, /* Reserved legacy toggle index 39. */
       /*40*/
       {"You will no longer display to others that you would like to Role-play.\r\n",
        "You will now display to others that you would like to Role-play.\r\n"},
@@ -9078,9 +9118,6 @@ ACMD(do_gen_tog)
     break;
   case SCMD_NOHINT:
     result = PRF_TOG_CHK(ch, PRF_NOHINT);
-    break;
-  case SCMD_AUTOCOLLECT:
-    result = PRF_TOG_CHK(ch, PRF_AUTOCOLLECT);
     break;
   case SCMD_NOGRATZ:
     result = PRF_TOG_CHK(ch, PRF_NOGRATZ);
@@ -9896,12 +9933,10 @@ static const char *const hints[] = {
     "  [use nohint or prefedit to deactivate this]\tn\r\n",
     /*29*/
     "\tR[HINT]:\tn \ty"
-    "Archery is a great way to rain death from afar!  Archery automatically "
-    "gets a bonus attack, and has a huge variety of feats to put her on par "
-    "with melee attacks.  To initiate combat with a ranged weapon use the "
-    "FIRE command.  To gather your ammo and make sure it does not get mixed "
-    "up with other archers, just type COLLECT.  You can even toggle AUTOCOLLECT "
-    "to make sure you automatically collect your ammo after each battle."
+    "To use a ranged weapon, wield it, wear an ammo pouch with matching ammo, "
+    "and use FIRE against a target in the same room. Each shot permanently "
+    "spends ammunition unless its supply is unlimited or Returning. Ammo "
+    "listings show the remaining quantity in parentheses."
     "  [use nohint or prefedit to deactivate this]\tn\r\n",
     /*30*/
     "\tR[HINT]:\tn \ty"
@@ -11298,7 +11333,7 @@ ACMDU(do_borrow)
       obj_to_char(obj, ch);
       snprintf(buf, sizeof(buf),
                "\tY$N seems to have misplaced %s\tn\tY! Lucky for them that you found it!\tn\r\n",
-               obj->short_description);
+               object_short_description(obj));
       act(buf, TRUE, ch, 0, vict, TO_CHAR);
     }
     else

@@ -13338,3 +13338,26 @@ int max_artificer_spell_circle(int artificer_level)
 }
 
 /* EoF */
+
+/* Only rendered ammo labels use scratch storage. Names in prototypes, saves,
+ * editor fields and identity comparisons remain untouched. Several slots allow
+ * multiple item names in the same message without overwriting one another. */
+char *object_short_description(const struct obj_data *obj)
+{
+  static char labels[16][MAX_STRING_LENGTH + 32];
+  static unsigned int next_label;
+  char suffix[32];
+  char *label;
+  if (!obj)
+    return "something";
+  /* Prototypes describe a kind of object, not a loaded ammunition supply. */
+  if (GET_OBJ_TYPE(obj) != ITEM_MISSILE || is_ranged_projectile(obj) ||
+      (obj_proto && GET_OBJ_RNUM(obj) >= 0 && GET_OBJ_RNUM(obj) <= top_of_objt &&
+       obj == &obj_proto[GET_OBJ_RNUM(obj)]))
+    return obj->short_description ? obj->short_description : "an object";
+  format_ammunition_quantity((struct obj_data *)obj, suffix, sizeof(suffix));
+  label = labels[next_label++ % 16];
+  snprintf(label, sizeof(labels[0]), "%s%s",
+           obj->short_description ? obj->short_description : "ammunition", suffix);
+  return label;
+}

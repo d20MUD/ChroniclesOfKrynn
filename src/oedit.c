@@ -1302,8 +1302,8 @@ static void oedit_disp_val3_menu(struct descriptor_data *d)
     write_to_output(d, "Breaking probability : ");
     break;
   case ITEM_MISSILE:
-    write_to_output(d, "Breaking probability : ");
-    break;
+    oedit_disp_val5_menu(d);
+    return;
   case ITEM_CONTAINER:
   case ITEM_AMMO_POUCH:
     write_to_output(d, "Vnum of key to open container (-1 for no key) : ");
@@ -2002,7 +2002,7 @@ static void oedit_disp_menu(struct descriptor_data *d)
 
       cyn, OLC_NUM(d), nrm, grn, nrm, yel, (obj->name && *obj->name) ? obj->name : "undefined", grn,
       nrm, yel,
-      (obj->short_description && *obj->short_description) ? obj->short_description : "undefined",
+      (object_short_description(obj) && *object_short_description(obj)) ? object_short_description(obj) : "undefined",
       grn, nrm, yel, (obj->description && *obj->description) ? obj->description : "undefined", grn,
       nrm, yel,
       (obj->action_description && *obj->action_description) ? obj->action_description
@@ -2973,8 +2973,8 @@ void oedit_parse(struct descriptor_data *d, char *arg)
 
     case ITEM_MISSILE:
       GET_OBJ_VAL(OLC_OBJ(d), 0) = LIMIT(atoi(arg), AMMO_TYPE_ARROW, NUM_AMMO_TYPES - 1);
-      /* Preserve legacy imbue/breakage fields; edit supply values after enhancement. */
-      oedit_disp_val3_menu(d);
+      /* Skip unused legacy imbue/breakage slots without changing stored values. */
+      oedit_disp_val5_menu(d);
       return;
 
     case ITEM_CONTAINER:
@@ -3070,11 +3070,8 @@ void oedit_parse(struct descriptor_data *d, char *arg)
       oedit_disp_val3_menu(d);
       break;
     case ITEM_MISSILE:
-      // GET_OBJ_VAL(OLC_OBJ(d), 1) = LIMIT(number, 1, MAX_WEAPON_SDICE);
-      /*  Skip to enhancement menu. */
-      // oedit_disp_val5_menu(d);
-      // return;
-      break;
+      oedit_disp_val5_menu(d);
+      return;
     case ITEM_CLANARMOR:
       GET_OBJ_VAL(OLC_OBJ(d), 1) = LIMIT(number, 1, num_of_clans);
       oedit_disp_val3_menu(d);
@@ -3139,12 +3136,7 @@ void oedit_parse(struct descriptor_data *d, char *arg)
       max_val = 98;
       break;
     case ITEM_MISSILE:
-      /* break probability */
-      min_val = 2;
-      max_val = 98;
-      GET_OBJ_VAL(OLC_OBJ(d), 2) = LIMIT(number, min_val, max_val);
-
-      /* jump to enhancement bonus */
+      /* Legacy editor state: skip the retired field without modifying it. */
       oedit_disp_val5_menu(d);
       return;
     case ITEM_WAND:

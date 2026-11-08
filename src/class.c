@@ -10210,136 +10210,136 @@ bool is_class_req_object(struct char_data *ch, struct obj_data *obj, bool output
   if (!(IS_WIZARD(ch)) && (OBJ_FLAGGED(obj, ITEM_REQ_WIZARD)))
   {
     if (output)
-      send_to_char(ch, "You must have levels as a wizard to use %s.\r\n", obj->short_description);
+      send_to_char(ch, "You must have levels as a wizard to use %s.\r\n", object_short_description(obj));
     return false;
   }
   if (!(IS_CLERIC(ch)) && (OBJ_FLAGGED(obj, ITEM_REQ_CLERIC)))
   {
     if (output)
-      send_to_char(ch, "You must have levels as a cleric to use %s.\r\n", obj->short_description);
+      send_to_char(ch, "You must have levels as a cleric to use %s.\r\n", object_short_description(obj));
     return false;
   }
   if (!(IS_RANGER(ch)) && (OBJ_FLAGGED(obj, ITEM_REQ_RANGER)))
   {
     if (output)
-      send_to_char(ch, "You must have levels as a ranger to use %s.\r\n", obj->short_description);
+      send_to_char(ch, "You must have levels as a ranger to use %s.\r\n", object_short_description(obj));
     return false;
   }
   if (!(IS_PALADIN(ch)) && (OBJ_FLAGGED(obj, ITEM_REQ_PALADIN)))
   {
     if (output)
-      send_to_char(ch, "You must have levels as a paladin to use %s.\r\n", obj->short_description);
+      send_to_char(ch, "You must have levels as a paladin to use %s.\r\n", object_short_description(obj));
     return false;
   }
   if (!(IS_ROGUE(ch)) && (OBJ_FLAGGED(obj, ITEM_REQ_ROGUE)))
   {
     if (output)
-      send_to_char(ch, "You must have levels as a rogue to use %s.\r\n", obj->short_description);
+      send_to_char(ch, "You must have levels as a rogue to use %s.\r\n", object_short_description(obj));
     return false;
   }
   if (!(IS_MONK(ch)) && (OBJ_FLAGGED(obj, ITEM_REQ_MONK)))
   {
     if (output)
-      send_to_char(ch, "You must have levels as a monk to use %s.\r\n", obj->short_description);
+      send_to_char(ch, "You must have levels as a monk to use %s.\r\n", object_short_description(obj));
     return false;
   }
   if (!(IS_DRUID(ch)) && (OBJ_FLAGGED(obj, ITEM_REQ_DRUID)))
   {
     if (output)
-      send_to_char(ch, "You must have levels as a druid to use %s.\r\n", obj->short_description);
+      send_to_char(ch, "You must have levels as a druid to use %s.\r\n", object_short_description(obj));
     return false;
   }
   if (!(IS_BERSERKER(ch)) && (OBJ_FLAGGED(obj, ITEM_REQ_BERSERKER)))
   {
     if (output)
       send_to_char(ch, "You must have levels as a berserker to use %s.\r\n",
-                   obj->short_description);
+                   object_short_description(obj));
     return false;
   }
   if (!(IS_SORCERER(ch)) && (OBJ_FLAGGED(obj, ITEM_REQ_SORCERER)))
   {
     if (output)
-      send_to_char(ch, "You must have levels as a sorcerer to use %s.\r\n", obj->short_description);
+      send_to_char(ch, "You must have levels as a sorcerer to use %s.\r\n", object_short_description(obj));
     return false;
   }
   if (!(IS_BARD(ch)) && (OBJ_FLAGGED(obj, ITEM_REQ_BARD)))
   {
     if (output)
-      send_to_char(ch, "You must have levels as a bard to use %s.\r\n", obj->short_description);
+      send_to_char(ch, "You must have levels as a bard to use %s.\r\n", object_short_description(obj));
     return false;
   }
   if (!(IS_WARRIOR(ch)) && (OBJ_FLAGGED(obj, ITEM_REQ_WARRIOR)))
   {
     if (output)
-      send_to_char(ch, "You must have levels as a warrior to use %s.\r\n", obj->short_description);
+      send_to_char(ch, "You must have levels as a warrior to use %s.\r\n", object_short_description(obj));
     return false;
   }
   if (!(IS_WEAPONMASTER(ch)) && (OBJ_FLAGGED(obj, ITEM_REQ_WEAPONMASTER)))
   {
     if (output)
       send_to_char(ch, "You must have levels as a weapon master to use %s.\r\n",
-                   obj->short_description);
+                   object_short_description(obj));
     return false;
   }
   if (!(IS_ARCANE_ARCHER(ch)) && (OBJ_FLAGGED(obj, ITEM_REQ_ARCANE_ARCHER)))
   {
     if (output)
       send_to_char(ch, "You must have levels as an arcane archer to use %s.\r\n",
-                   obj->short_description);
+                   object_short_description(obj));
     return false;
   }
   if (!(IS_STALWARTDEFENDER(ch)) && (OBJ_FLAGGED(obj, ITEM_REQ_STALWART_DEFENDER)))
   {
     if (output)
       send_to_char(ch, "You must have levels as a stalwart defender to use %s.\r\n",
-                   obj->short_description);
+                   object_short_description(obj));
     return false;
   }
   if (!(IS_SHIFTER(ch)) && (OBJ_FLAGGED(obj, ITEM_REQ_SHIFTER)))
   {
     if (output)
-      send_to_char(ch, "You must have levels as a shifter to use %s.\r\n", obj->short_description);
+      send_to_char(ch, "You must have levels as a shifter to use %s.\r\n", object_short_description(obj));
     return false;
   }
   if (!(IS_DUELIST(ch)) && (OBJ_FLAGGED(obj, ITEM_REQ_DUELIST)))
   {
     if (output)
-      send_to_char(ch, "You must have levels as a duelist to use %s.\r\n", obj->short_description);
+      send_to_char(ch, "You must have levels as a duelist to use %s.\r\n", object_short_description(obj));
     return false;
   }
   if (!(IS_MYSTICTHEURGE(ch)) && (OBJ_FLAGGED(obj, ITEM_REQ_MYSTIC_THEURGE)))
   {
     if (output)
       send_to_char(ch, "You must have levels as a mystic theurge to use %s.\r\n",
-                   obj->short_description);
+                   object_short_description(obj));
     return false;
   }
   if (!(IS_ALCHEMIST(ch)) && (OBJ_FLAGGED(obj, ITEM_REQ_ALCHEMIST)))
   {
     if (output)
       send_to_char(ch, "You must have levels as an alchemist to use %s.\r\n",
-                   obj->short_description);
+                   object_short_description(obj));
     return false;
   }
   if (!(IS_ARCANE_SHADOW(ch)) && (OBJ_FLAGGED(obj, ITEM_REQ_ARCANE_SHADOW)))
   {
     if (output)
       send_to_char(ch, "You must have levels as an arcane shadow to use %s.\r\n",
-                   obj->short_description);
+                   object_short_description(obj));
     return false;
   }
   if (!(IS_SACRED_FIST(ch)) && (OBJ_FLAGGED(obj, ITEM_REQ_SACRED_FIST)))
   {
     if (output)
       send_to_char(ch, "You must have levels as a sacred fist to use %s.\r\n",
-                   obj->short_description);
+                   object_short_description(obj));
     return false;
   }
   if (!(IS_ELDRITCH_KNIGHT(ch)) && (OBJ_FLAGGED(obj, ITEM_REQ_ELDRITCH_KNIGHT)))
   {
     if (output)
       send_to_char(ch, "You must have levels as an eldritch knight to use %s.\r\n",
-                   obj->short_description);
+                   object_short_description(obj));
     return false;
   }
 

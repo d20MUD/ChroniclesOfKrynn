@@ -494,7 +494,7 @@ void list_all_crafts(struct char_data *ch)
       send_to_char(ch, "\t2%-4d)\t3 %-22s -> \t1[\t2%-4d\t1] [\t2%s\t1]\tn\r\n", CRAFT_ID(craft),
                    CRAFT_NAME(craft), CRAFT_OBJVNUM(craft),
                    (vnum = real_object(CRAFT_OBJVNUM(craft))) != NOWHERE
-                       ? obj_proto[vnum].short_description
+                       ? object_short_description(&obj_proto[vnum])
                        : "MISSING OBJECT");
     }
   }
@@ -558,7 +558,7 @@ void show_craft(struct char_data *ch, struct craft_data *craft, int mode)
                     rnum == NOTHING ? "Nothing" : obj_proto[rnum].short_description);
     else
       send_to_char(ch, "Makes: %s!\r\n",
-                   rnum == NOTHING ? "Nothing" : obj_proto[rnum].short_description);
+                   rnum == NOTHING ? "Nothing" : object_short_description(&obj_proto[rnum]));
 
     if (mode == ITEM_STAT_MODE_G_LORE)
       send_to_group(NULL, GROUP(ch), "Time: %d\r\n", CRAFT_TIMER(craft));
@@ -587,7 +587,7 @@ void show_craft(struct char_data *ch, struct craft_data *craft, int mode)
                         req->req_amount,
                         IS_SET(req->req_flags, REQ_FLAG_IN_ROOM) ? "In Room" : "In Inventory");
         else
-          send_to_char(ch, "Req: %-14s (%-2d) %s ", obj_proto[rnum].short_description,
+          send_to_char(ch, "Req: %-14s (%-2d) %s ", object_short_description(&obj_proto[rnum]),
                        req->req_amount,
                        IS_SET(req->req_flags, REQ_FLAG_IN_ROOM) ? "In Room" : "In Inventory");
       }
@@ -616,7 +616,7 @@ void show_craft(struct char_data *ch, struct craft_data *craft, int mode)
                     rnum == NOTHING ? "Nothing" : obj_proto[rnum].short_description);
     else
       send_to_char(ch, "These prints display in detail the how-to of creating %s.\r\n",
-                   rnum == NOTHING ? "Nothing" : obj_proto[rnum].short_description);
+                   rnum == NOTHING ? "Nothing" : object_short_description(&obj_proto[rnum]));
 
     if (mode == ITEM_STAT_MODE_G_LORE)
       send_to_group(NULL, GROUP(ch),
@@ -656,7 +656,7 @@ void show_craft(struct char_data *ch, struct craft_data *craft, int mode)
                         IS_SET(req->req_flags, REQ_FLAG_IN_ROOM) ? "in the room"
                                                                  : "in your possession");
         else
-          send_to_char(ch, "  %d, %s %s.\r\n", req->req_amount, obj_proto[rnum].short_description,
+          send_to_char(ch, "  %d, %s %s.\r\n", req->req_amount, object_short_description(&obj_proto[rnum]),
                        IS_SET(req->req_flags, REQ_FLAG_IN_ROOM) ? "in the room"
                                                                 : "in your possession");
       }
@@ -716,7 +716,7 @@ EVENTFUNC(event_craft)
     obj_to_char(obj, ch);
 
     if (!CRAFT_MSG_SELF(craft))
-      send_to_char(ch, "You have created %s.\r\n", obj->short_description);
+      send_to_char(ch, "You have created %s.\r\n", object_short_description(obj));
     else
       act(CRAFT_MSG_SELF(craft), TRUE, ch, obj, 0, TO_CHAR);
 
@@ -1043,7 +1043,7 @@ static void craftedit_requirement_menu(struct descriptor_data *d)
       sprintbit(r->req_flags, requirement_flags, buf, sizeof(buf));
       write_to_output(
           d, "  \t2[\t3%-5d\t2]\t1)\t3 %d, %s \t2[\t3%s\t2]\tn\r\n", r->req_vnum, r->req_amount,
-          ((vnum = real_object(r->req_vnum)) != NOTHING) ? obj_proto[vnum].short_description
+          ((vnum = real_object(r->req_vnum)) != NOTHING) ? object_short_description(&obj_proto[vnum])
                                                          : "None",
           buf);
     }
@@ -1070,7 +1070,7 @@ static void craftedit_disp_menu(struct descriptor_data *d)
                   "\t25\t3) Craft Room Msg : \t1\"\tn%s\t1\"\tn\r\n",
                   CRAFT_ID(c), CRAFT_NAME(c), CRAFT_TIMER(c),
                   ((vnum = real_object(CRAFT_OBJVNUM(c))) != NOTHING)
-                      ? obj_proto[vnum].short_description
+                      ? object_short_description(&obj_proto[vnum])
                       : "None",
                   CRAFT_MSG_SELF(c), CRAFT_MSG_ROOM(c));
 
@@ -1097,7 +1097,7 @@ static void craftedit_disp_menu(struct descriptor_data *d)
       write_to_output(d, "   \t2[\t3%-4d\t2] \t1%-2d, \t1\"\tn%s\t1\"\tn \t2[\t3%s\t2]\tn\r\n",
                       r->req_vnum, r->req_amount,
                       ((vnum = real_object(r->req_vnum)) != NOTHING)
-                          ? obj_proto[vnum].short_description
+                          ? object_short_description(&obj_proto[vnum])
                           : "None",
                       buf);
     }

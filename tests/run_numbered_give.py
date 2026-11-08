@@ -18,6 +18,8 @@ code = r'''
 #include <string.h>
 #include <strings.h>
 #include <ctype.h>
+#include <errno.h>
+#define FALSE false
 #define MAX_INPUT_LENGTH 256
 #define MAX_STRING_LENGTH 1024
 #define FIND_CHAR_ROOM 0
@@ -28,6 +30,7 @@ code = r'''
 #define CONFIG_NOPERSON "No such person."
 #define AN(arg) "a"
 #define IN_ROOM(ch) 0
+#define GET_ID(ch) ((ch)->id)
 #define CAN_SEE(ch,i) 1
 #define CAN_INFRA(ch,i) 0
 #define CAN_SEE_OBJ(ch,obj) 1
@@ -35,7 +38,7 @@ code = r'''
 #define str_cmp strcasecmp
 #define LOWER(c) tolower((unsigned char)(c))
 struct obj_data { char *name; struct obj_data *next_content; };
-struct char_data { char *name; int given, gold; struct obj_data *carrying; struct char_data *next_in_room; };
+struct char_data { long id; char *name; int given, gold; struct obj_data *carrying; struct char_data *next_in_room; };
 struct { struct char_data *people; } world[1];
 static int errors;
 void skip_spaces(char **arg) { while (**arg && isspace((unsigned char)**arg)) ++*arg; }
@@ -66,6 +69,7 @@ for file, signature in [
     ('helpers.c','char *one_argument_u(char *argument, char *first_arg)'),
     ('helpers.c','const char *one_argument(const char *argument, char *first_arg, size_t n)'),
     ('handler.c','int get_number(char **name)'),
+    ('handler.c','static bool room_entity_matches(const char *name, char kind, long id)'),
     ('handler.c','struct char_data *get_char_room_vis(struct char_data *ch, char *name, int *number)'),
     ('handler.c','struct char_data *get_char_vis(struct char_data *ch, char *name, int *number, int where)'),
     ('act.item.c','static struct char_data *give_find_vict(struct char_data *ch, char *arg)'),

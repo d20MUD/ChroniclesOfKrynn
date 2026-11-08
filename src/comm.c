@@ -4848,6 +4848,57 @@ static void send_room_change_msdp_variables(struct descriptor_data *d)
   }
 }
 
+/* Only publish visible room entities. Display names remain viewer-aware, so
+ * disguises and unknown player identities follow the normal room presentation. */
+static void update_msdp_room_contents(struct char_data *ch)
+{
+  struct descriptor_data *d = ch ? ch->desc : NULL;
+  struct json_object *report, *entries, *entry;
+  struct char_data *person;
+  struct obj_data *obj;
+  char id[64];
+  const char *serialized;
+  bool valid;
+  if (!d || !d->pProtocol || !d->pProtocol->bMSDP ||
+      !d->pProtocol->pVariables[eMSDP_ROOM_CONTENTS]->bReport) return;
+  valid = IN_ROOM(ch) != NOWHERE && VALID_ROOM_RNUM(IN_ROOM(ch));
+  report = json_object_new_object();
+  entries = json_object_new_array();
+  json_object_object_add(report, "room", json_object_new_int(valid ? GET_ROOM_VNUM(IN_ROOM(ch)) : NOWHERE));
+  if (valid)
+  {
+    for (person = world[IN_ROOM(ch)].people; person; person = person->next_in_room)
+    {
+      if (person == ch || !CAN_SEE(ch, person)) continue;
+      entry = json_object_new_object();
+      snprintf(id, sizeof(id), "}c%ld", GET_ID(person));
+      json_object_object_add(entry, "target", json_object_new_string(id));
+      json_object_object_add(entry, "kind", json_object_new_string(IS_NPC(person) ? "mob" : "player"));
+      json_object_object_add(entry, "name", json_object_new_string(PERS(person, ch)));
+      json_object_array_add(entries, entry);
+    }
+    for (obj = world[IN_ROOM(ch)].contents; obj; obj = obj->next_content)
+    {
+      if (!CAN_SEE_OBJ(ch, obj) ||
+          (obj->description && *obj->description == '.' && !PRF_FLAGGED(ch, PRF_HOLYLIGHT))) continue;
+      entry = json_object_new_object();
+      snprintf(id, sizeof(id), "}o%ld", GET_ID(obj));
+      json_object_object_add(entry, "target", json_object_new_string(id));
+      json_object_object_add(entry, "kind", json_object_new_string("object"));
+      json_object_object_add(entry, "name", json_object_new_string(GET_OBJ_SHORT(obj)));
+      json_object_object_add(entry, "takeable", json_object_new_boolean(CAN_WEAR(obj, ITEM_WEAR_TAKE)));
+      json_object_array_add(entries, entry);
+    }
+  }
+  json_object_object_add(report, "entries", entries);
+  serialized = json_object_to_json_string_ext(report, JSON_C_TO_STRING_PLAIN);
+  if (strlen(serialized) + 64 < MAX_VARIABLE_LENGTH)
+    MSDPSetString(d, eMSDP_ROOM_CONTENTS, serialized);
+  else
+    MSDPSetString(d, eMSDP_ROOM_CONTENTS, "{\"room\":-1,\"entries\":[]}");
+  json_object_put(report);
+}
+
 static void update_msdp_descriptor(struct descriptor_data *d, struct char_data *ch)
 {
   const char MsdpVar = (char)MSDP_VAR;
@@ -4899,6 +4950,8 @@ static void update_msdp_descriptor(struct descriptor_data *d, struct char_data *
   update_msdp_group(ch);
   update_msdp_inventory(ch);
   update_msdp_quest_info(d, ch);
+  update_msdp_room_quests(ch);
+  update_msdp_room_contents(ch);
 
   update_msdp_room(ch);
   update_msdp_automap(d, ch);

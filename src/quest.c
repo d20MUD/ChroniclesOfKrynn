@@ -32,6 +32,8 @@
 #include "dg_scripts.h" /* for load_mtrigger() */
 #include "modify.h"
 #include "graph.h"
+#include "protocol.h"
+#include <json-c/json.h>
 
 /*-------------------------------------------------------------------*/
 /* External data */
@@ -589,6 +591,79 @@ static qst_vnum quest_completion_next(struct char_data *ch, qst_rnum rnum)
   return next;
 }
 
+/* Questmaster/shared joins, automatic stages, and dialogue failure branches
+ * use the same event when assigning their acceptance instructions. */
+void send_quest_acceptance(struct char_data *ch, qst_rnum rnum)
+{
+  struct descriptor_data *d = ch->desc;
+  struct json_object *event, *commands;
+  struct timeval now;
+  static unsigned long sequence;
+  char id[96];
+  if (!d || !d->pProtocol || !d->pProtocol->bMSDP ||
+      !d->pProtocol->pVariables[eMSDP_QUEST_ACCEPTED]->bReport)
+    return;
+  gettimeofday(&now, NULL);
+  snprintf(id, sizeof(id), "%ld:%ld:%lu", (long)now.tv_sec, (long)now.tv_usec, ++sequence);
+  event = json_object_new_object();
+  commands = json_object_new_array();
+  json_object_object_add(event, "id", json_object_new_string(id));
+  json_object_object_add(event, "questId", json_object_new_int(QST_NUM(rnum)));
+  json_object_object_add(event, "name", json_object_new_string(QST_NAME(rnum) ? QST_NAME(rnum) : "Quest"));
+  json_object_object_add(event, "body", json_object_new_string(QST_INFO(rnum) ? QST_INFO(rnum) : ""));
+  json_object_object_add(event, "time", json_object_new_int(QST_TIME(rnum)));
+  if (QST_TYPE(rnum) == AQ_DIALOGUE)
+  {
+    if (aquest_table[rnum].diplomacy_dc > 0)
+      json_object_array_add(commands, json_object_new_string("convince"));
+    if (aquest_table[rnum].intimidate_dc > 0)
+      json_object_array_add(commands, json_object_new_string("threaten"));
+    if (aquest_table[rnum].bluff_dc > 0)
+      json_object_array_add(commands, json_object_new_string("beguile"));
+  }
+  json_object_object_add(event, "commands", commands);
+  MSDPSetString(d, eMSDP_QUEST_ACCEPTED, json_object_to_json_string_ext(event, JSON_C_TO_STRING_PLAIN));
+  d->pProtocol->pVariables[eMSDP_QUEST_ACCEPTED]->bDirty = true;
+  MSDPFlush(d, eMSDP_QUEST_ACCEPTED);
+  json_object_put(event);
+}
+
+/* Completion is an event: flush immediately so multiple completions in one
+ * pulse cannot overwrite each other. Only subscribed clients receive it. */
+static void send_quest_completion(struct char_data *ch, qst_rnum rnum,
+                                  int points, int gold, int experience,
+                                  const char *item, const char *follower)
+{
+  struct descriptor_data *d = ch->desc;
+  struct json_object *event, *rewards;
+  struct timeval now;
+  static unsigned long sequence;
+  char id[96];
+  if (!d || !d->pProtocol || !d->pProtocol->bMSDP ||
+      !d->pProtocol->pVariables[eMSDP_QUEST_COMPLETE]->bReport)
+    return;
+  gettimeofday(&now, NULL);
+  snprintf(id, sizeof(id), "%ld:%ld:%lu", (long)now.tv_sec, (long)now.tv_usec, ++sequence);
+  event = json_object_new_object();
+  rewards = json_object_new_object();
+  json_object_object_add(event, "id", json_object_new_string(id));
+  json_object_object_add(event, "questId", json_object_new_int(QST_NUM(rnum)));
+  json_object_object_add(event, "name", json_object_new_string(QST_NAME(rnum) ? QST_NAME(rnum) : "Quest"));
+  json_object_object_add(event, "body", json_object_new_string(QST_DONE(rnum) ? QST_DONE(rnum) : ""));
+  json_object_object_add(rewards, "Quest points", json_object_new_int(points));
+  if (QST_GOLD(rnum)) json_object_object_add(rewards, "Gold coins", json_object_new_int(gold));
+  if (QST_EXP(rnum)) json_object_object_add(rewards, "Experience", json_object_new_int(experience));
+  if (item) json_object_object_add(rewards, "Item", json_object_new_string(item));
+  if (follower) json_object_object_add(rewards, "Follower", json_object_new_string(follower));
+  if (QST_RACE(rnum) == RACE_VAMPIRE || QST_RACE(rnum) == RACE_LICH)
+    json_object_object_add(rewards, "New race", json_object_new_string(QST_RACE(rnum) == RACE_VAMPIRE ? "Vampire" : "Lich"));
+  json_object_object_add(event, "rewards", rewards);
+  MSDPSetString(d, eMSDP_QUEST_COMPLETE, json_object_to_json_string_ext(event, JSON_C_TO_STRING_PLAIN));
+  d->pProtocol->pVariables[eMSDP_QUEST_COMPLETE]->bDirty = true;
+  MSDPFlush(d, eMSDP_QUEST_COMPLETE);
+  json_object_put(event);
+}
+
 /* called when a quest is completed! */
 void complete_quest(struct char_data *ch, int index)
 {
@@ -599,6 +674,8 @@ void complete_quest(struct char_data *ch, int index)
   int happy_qp = 0, happy_gold = 0, happy_exp = 0;
   struct descriptor_data *pt = NULL;
   struct char_data *mob = NULL;
+  char reward_item[MAX_STRING_LENGTH] = "";
+  char reward_follower[MAX_STRING_LENGTH] = "";
 
   /* dummy check */
   if (GET_QUEST(ch, index) == NOTHING)
@@ -698,6 +775,7 @@ void complete_quest(struct char_data *ch, int index)
       if ((new_obj = read_object((QST_OBJ(rnum)), VIRTUAL)) != NULL)
       {
         obj_to_char(new_obj, ch);
+        strlcpy(reward_item, GET_OBJ_SHORT(new_obj), sizeof(reward_item));
         send_to_char(ch, "You have been presented with %s%s for your service.\r\n\r\n",
                      GET_OBJ_SHORT(new_obj), CCNRM(ch, C_NRM));
       }
@@ -805,11 +883,16 @@ void complete_quest(struct char_data *ch, int index)
     act("You approach $n and quickly fall into line.", FALSE, ch, 0, mob, TO_VICT);
     act("$N approaches $n and quickly falls into line.", FALSE, ch, 0, mob, TO_ROOM);
 
+    strlcpy(reward_follower, GET_NAME(mob), sizeof(reward_follower));
     load_mtrigger(mob);
     add_follower(mob, ch);
     if (!GROUP(mob) && GROUP(ch) && GROUP_LEADER(GROUP(ch)) == ch)
       join_group(mob, GROUP(ch));
   }
+
+  send_quest_completion(ch, rnum, happy_qp, happy_gold, happy_exp,
+                        *reward_item ? reward_item : NULL,
+                        *reward_follower ? reward_follower : NULL);
 
   /* end rewards */
 
@@ -831,6 +914,7 @@ void complete_quest(struct char_data *ch, int index)
     /* we will just use the slot we completed to insert this quest */
     set_quest(ch, rnum, index);
     send_to_char(ch, "\tW***The next stage of your quest awaits:\tn\r\n\r\n%s\r\n", QST_INFO(rnum));
+    send_quest_acceptance(ch, rnum);
   }
 
   save_char(ch, 0);
@@ -1466,6 +1550,7 @@ static void quest_begin(struct char_data *ch, qst_rnum rnum, int index)
   }
   send_to_char(ch, "%s", buf);
   save_char(ch, 0);
+  send_quest_acceptance(ch, rnum);
 }
 
 void quest_join(struct char_data *ch, struct char_data *qm, char argument[MAX_INPUT_LENGTH])
@@ -1487,6 +1572,91 @@ void quest_join(struct char_data *ch, struct char_data *qm, char argument[MAX_IN
   }
   if (quest_join_eligible(ch, rnum, &slot, TRUE))
     quest_begin(ch, rnum, slot);
+}
+
+/* Query the same requirements as joining, suppressing explanatory failures. */
+static bool room_quest_eligible(struct char_data *ch, qst_rnum rnum)
+{
+  struct output_capture capture = {0};
+  bool eligible;
+  int slot;
+  if (!ch->desc || ch->desc->output_capture) return FALSE;
+  ch->desc->output_capture = &capture;
+  eligible = quest_join_eligible(ch, rnum, &slot, FALSE);
+  ch->desc->output_capture = NULL;
+  free(capture.text);
+  return eligible;
+}
+
+static struct char_data *room_quest_giver(struct char_data *ch, qst_rnum rnum)
+{
+  struct char_data *mob;
+  if (IN_ROOM(ch) == NOWHERE || !VALID_ROOM_RNUM(IN_ROOM(ch))) return NULL;
+  for (mob = world[IN_ROOM(ch)].people; mob; mob = mob->next_in_room)
+    if (IS_NPC(mob) && GET_MOB_VNUM(mob) == QST_MASTER(rnum) && CAN_SEE(ch, mob))
+      return mob;
+  return NULL;
+}
+
+void update_msdp_room_quests(struct char_data *ch)
+{
+  struct descriptor_data *d = ch ? ch->desc : NULL;
+  struct json_object *response, *quests, *entry;
+  struct char_data *giver;
+  qst_rnum rnum;
+  const char *serialized;
+  if (!d || IS_NPC(ch) || !d->pProtocol || !d->pProtocol->bMSDP ||
+      !d->pProtocol->pVariables[eMSDP_ROOM_QUESTS]->bReport) return;
+  response = json_object_new_object();
+  quests = json_object_new_array();
+  json_object_object_add(response, "room", json_object_new_int(
+      IN_ROOM(ch) != NOWHERE && VALID_ROOM_RNUM(IN_ROOM(ch)) ? GET_ROOM_VNUM(IN_ROOM(ch)) : NOWHERE));
+  for (rnum = 0; rnum < total_quests; rnum++)
+  {
+    giver = room_quest_giver(ch, rnum);
+    if (!giver || !room_quest_eligible(ch, rnum)) continue;
+    entry = json_object_new_object();
+    json_object_object_add(entry, "id", json_object_new_int(QST_NUM(rnum)));
+    json_object_object_add(entry, "name", json_object_new_string(QST_NAME(rnum) ? QST_NAME(rnum) : "Quest"));
+    json_object_object_add(entry, "description", json_object_new_string(QST_DESC(rnum) ? QST_DESC(rnum) : ""));
+    json_object_object_add(entry, "info", json_object_new_string(QST_INFO(rnum) ? QST_INFO(rnum) : ""));
+    json_object_object_add(entry, "giver", json_object_new_string(GET_NAME(giver)));
+    json_object_object_add(entry, "minLevel", json_object_new_int(QST_MINLEVEL(rnum)));
+    json_object_object_add(entry, "maxLevel", json_object_new_int(QST_MAXLEVEL(rnum)));
+    json_object_object_add(entry, "time", json_object_new_int(QST_TIME(rnum)));
+    json_object_array_add(quests, entry);
+  }
+  json_object_object_add(response, "quests", quests);
+  serialized = json_object_to_json_string_ext(response, JSON_C_TO_STRING_PLAIN);
+  if (strlen(serialized) + 64 < MAX_VARIABLE_LENGTH)
+    MSDPSetString(d, eMSDP_ROOM_QUESTS, serialized);
+  else
+    /* Clear stale availability rather than publishing partial JSON. */
+    MSDPSetString(d, eMSDP_ROOM_QUESTS, "{\"room\":-1,\"quests\":[]}");
+  json_object_put(response);
+}
+
+/* Explicit quest IDs avoid ambiguity when several quest givers share a room.
+ * The room token rejects a click from a dialog opened before moving. */
+static void quest_web_join(struct char_data *ch, const char *argument)
+{
+  int room, vnum, slot;
+  char extra;
+  qst_rnum rnum;
+  if (sscanf(argument, "%d %d %c", &room, &vnum, &extra) != 2 ||
+      IN_ROOM(ch) == NOWHERE || !VALID_ROOM_RNUM(IN_ROOM(ch)) ||
+      room != GET_ROOM_VNUM(IN_ROOM(ch)) || (rnum = real_quest(vnum)) == NOTHING ||
+      !room_quest_giver(ch, rnum))
+    send_to_char(ch, "That quest is no longer offered here.\r\n");
+  else if (quest_join_eligible(ch, rnum, &slot, FALSE))
+    quest_begin(ch, rnum, slot);
+  update_msdp_room_quests(ch);
+  if (ch->desc && ch->desc->pProtocol &&
+      ch->desc->pProtocol->pVariables[eMSDP_ROOM_QUESTS]->bReport)
+  {
+    ch->desc->pProtocol->pVariables[eMSDP_ROOM_QUESTS]->bDirty = true;
+    MSDPFlush(ch->desc, eMSDP_ROOM_QUESTS);
+  }
 }
 
 /* lists available quests, can also accept vnum or list-number to view
@@ -1641,7 +1811,7 @@ void quest_progress(struct char_data *ch, char argument[MAX_STRING_LENGTH])
     {
       obj_rnum obj_rnum = real_object(QST_TARGET(rnum));
       if (obj_rnum != NOTHING)
-        send_to_char(ch, "\tcQuest Target:\tn %s\r\n", obj_proto[obj_rnum].short_description);
+        send_to_char(ch, "\tcQuest Target:\tn %s\r\n", object_short_description(&obj_proto[obj_rnum]));
       break;
     }
     case AQ_ROOM_FIND: /* Find Room */
@@ -1671,7 +1841,7 @@ void quest_progress(struct char_data *ch, char argument[MAX_STRING_LENGTH])
     {
       obj_rnum obj_rnum = real_object(QST_TARGET(rnum));
       if (obj_rnum != NOTHING)
-        send_to_char(ch, "\tcQuest Target:\tn %s\r\n", obj_proto[obj_rnum].short_description);
+        send_to_char(ch, "\tcQuest Target:\tn %s\r\n", object_short_description(&obj_proto[obj_rnum]));
       break;
     }
     case AQ_ROOM_CLEAR: /* Clear Room */
@@ -1973,7 +2143,7 @@ void quest_stat(struct char_data *ch, char argument[MAX_STRING_LENGTH])
                    QST_PREREQ(rnum) == NOTHING ? ""
                    : real_object(QST_PREREQ(rnum)) == NOTHING
                        ? "an unknown object"
-                       : obj_proto[real_object(QST_PREREQ(rnum))].short_description);
+                       : object_short_description(&obj_proto[real_object(QST_PREREQ(rnum))]));
     if (QST_TYPE(rnum) == AQ_OBJ_RETURN || QST_TYPE(rnum) == AQ_GIVE_GOLD)
       send_to_char(ch, "Mob   : [\ty%5d\tn] \ty%s\tn\r\n", QST_RETURNMOB(rnum),
                    real_mobile(QST_RETURNMOB(rnum)) == NOBODY
@@ -2725,6 +2895,11 @@ ACMD(do_quest)
   argument = one_argument(argument, arg1, sizeof(arg1));
   skip_spaces_c(&argument);
   strlcpy(arg2, argument, sizeof(arg2));
+  if (!strcmp(arg1, "webjoin"))
+  {
+    quest_web_join(ch, argument);
+    return;
+  }
   if (!*arg1)
     send_to_char(ch, "%s\r\n", GET_LEVEL(ch) < LVL_IMMORT ? quest_mort_usage : quest_imm_usage);
   else if (((tp = search_block(arg1, quest_cmd, FALSE)) == -1))
@@ -3692,7 +3867,7 @@ ACMD(do_aqref)
     {
       found = TRUE;
       send_to_char(ch, "(%d) \tCREWARD\tn %s (\tW%d\tn) from %s (\tW%d\tn)\r\n", QST_NUM(i),
-                   obj_proto[real_num].short_description, vnum,
+                   object_short_description(&obj_proto[real_num]), vnum,
                    mob_proto[real_mobile(QST_MASTER(i))].player.short_descr, QST_MASTER(i));
     }
 
@@ -3700,7 +3875,7 @@ ACMD(do_aqref)
     {
       found = TRUE;
       send_to_char(ch, "(%d) \tCFIND\tn %s (\tW%d\tn) for %s (\tW%d\tn)\r\n", QST_NUM(i),
-                   obj_proto[real_num].short_description, vnum,
+                   object_short_description(&obj_proto[real_num]), vnum,
                    mob_proto[real_mobile(QST_MASTER(i))].player.short_descr, QST_MASTER(i));
     }
 
@@ -3708,7 +3883,7 @@ ACMD(do_aqref)
     {
       found = TRUE;
       send_to_char(ch, "(%d) \tCRETURN\tn %s (\tW%d\tn) to %s (\tW%d\tn)\r\n", QST_NUM(i),
-                   obj_proto[real_num].short_description, vnum,
+                   object_short_description(&obj_proto[real_num]), vnum,
                    mob_proto[real_mobile(QST_MASTER(i))].player.short_descr, QST_MASTER(i));
     }
   }

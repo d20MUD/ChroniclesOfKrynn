@@ -2036,8 +2036,9 @@ int ACTUAL_BAB(struct char_data *ch);
 /** Can the obj be worn on body part? */
 #define CAN_WEAR(obj, part) OBJWEAR_FLAGGED((obj), (part))
 
-/** Return short description of obj. */
-#define GET_OBJ_SHORT(obj) ((obj)->short_description)
+/** Player-facing description; raw short_description remains the saved/editor name. */
+char *object_short_description(const struct obj_data *obj);
+#define GET_OBJ_SHORT(obj) object_short_description(obj)
 
 /* Compound utilities and other macros. */
 /** Used to compute version. To see if the code running is newer than 3.0pl13,
@@ -2168,7 +2169,7 @@ int ACTUAL_BAB(struct char_data *ch);
 
 /** If vict can see obj, return obj short description, else return
  * "something". */
-#define OBJS(obj, vict) (CAN_SEE_OBJ((vict), (obj)) ? (obj)->short_description : "something")
+#define OBJS(obj, vict) (CAN_SEE_OBJ((vict), (obj)) ? object_short_description(obj) : "something")
 
 /** If vict can see obj, return obj name, else return "something". */
 #define OBJN(obj, vict) (CAN_SEE_OBJ((vict), (obj)) ? fname((obj)->name) : "something")

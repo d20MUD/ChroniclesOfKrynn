@@ -1587,7 +1587,7 @@ void display_item_object_values(struct char_data *ch, struct obj_data *item, int
                                               : obj_proto[target_obj].short_description);
       else
         send_to_char(ch, "Target Object: %s\r\n",
-                     (target_obj == NOTHING) ? "Nothing" : obj_proto[target_obj].short_description);
+                     (target_obj == NOTHING) ? "Nothing" : object_short_description(&obj_proto[target_obj]));
       break;
     }
 
@@ -2860,9 +2860,9 @@ void do_stat_object(struct char_data *ch, struct obj_data *j, int mode)
 
   if (mode == ITEM_STAT_MODE_G_LORE)
     send_to_group(NULL, GROUP(ch), "Name: '%s'\r\n",
-                  j->short_description ? j->short_description : "<None>");
+                  object_short_description(j));
   else
-    send_to_char(ch, "Name: '%s'\r\n", j->short_description ? j->short_description : "<None>");
+    send_to_char(ch, "Name: '%s'\r\n", object_short_description(j) ? object_short_description(j) : "<None>");
 
   if (mode == ITEM_STAT_MODE_G_LORE)
     send_to_group(NULL, GROUP(ch), "Keywords: %s\r\n", j->name);
@@ -3087,7 +3087,7 @@ void do_stat_object(struct char_data *ch, struct obj_data *j, int mode)
                  IN_ROOM(j) == NOWHERE ? "Nowhere" : world[IN_ROOM(j)].name);
     /* In order to make it this far, we must already be able to see the character
      * holding the object. Therefore, we do not need CAN_SEE(). */
-    send_to_char(ch, "In object: %s, ", j->in_obj ? j->in_obj->short_description : "None");
+    send_to_char(ch, "In object: %s, ", j->in_obj ? object_short_description(j->in_obj) : "None");
     send_to_char(ch, "Carried by: %s, ", j->carried_by ? GET_NAME(j->carried_by) : "Nobody");
     send_to_char(ch, "Worn by: %s\r\n", j->worn_by ? GET_NAME(j->worn_by) : "Nobody");
   }
@@ -3105,7 +3105,7 @@ void do_stat_object(struct char_data *ch, struct obj_data *j, int mode)
 
       for (found = 0, j2 = j->contains; j2; j2 = j2->next_content)
       {
-        column += send_to_char(ch, "%s %s", found++ ? "," : "", j2->short_description);
+        column += send_to_char(ch, "%s %s", found++ ? "," : "", object_short_description(j2));
         if (column >= 79)
         {
           send_to_char(ch, "%s\r\n", j2->next_content ? "," : "");
@@ -3269,7 +3269,7 @@ void damage_object(struct char_data *ch, struct char_data *victim) {
         GET_OBJ_VAL(object, VAL_WEAPON_HEALTH) = GET_OBJ_VAL(object, VAL_WEAPON_HEALTH) - dnum;
         if (GET_OBJ_VAL(object, VAL_WEAPON_HEALTH) < 0) {
           TOGGLE_BIT_AR(GET_OBJ_EXTRA(object), ITEM_BROKEN);
-          send_to_char(ch, "@CYour %s has broken beyond use!@n\r\n", object->short_description);
+          send_to_char(ch, "@CYour %s has broken beyond use!@n\r\n", object_short_description(object));
           perform_remove(ch, WEAR_WIELD1);
         }
       }
@@ -3290,7 +3290,7 @@ void damage_object(struct char_data *ch, struct char_data *victim) {
         GET_OBJ_VAL(object, VAL_WEAPON_HEALTH) = GET_OBJ_VAL(object, VAL_WEAPON_HEALTH) - dnum;
         if (GET_OBJ_VAL(object, VAL_WEAPON_HEALTH) < 0) {
           TOGGLE_BIT_AR(GET_OBJ_EXTRA(object), ITEM_BROKEN);
-          send_to_char(ch, "@CYour %s has broken beyond use!@n\r\n", object->short_description);
+          send_to_char(ch, "@CYour %s has broken beyond use!@n\r\n", object_short_description(object));
           perform_remove(ch, WEAR_WIELD1);
         }
       }
@@ -3312,7 +3312,7 @@ void damage_object(struct char_data *ch, struct char_data *victim) {
           GET_OBJ_VAL(object, VAL_ARMOR_HEALTH) = GET_OBJ_VAL(object, VAL_ARMOR_HEALTH) - dnum;
           if (GET_OBJ_VAL(object, VAL_ARMOR_HEALTH) < 0) {
             TOGGLE_BIT_AR(GET_OBJ_EXTRA(object), ITEM_BROKEN);
-            send_to_char(victim, "Your %s has broken beyond use!\r\n", object->short_description);
+            send_to_char(victim, "Your %s has broken beyond use!\r\n", object_short_description(object));
             perform_remove(victim, WEAR_BODY);
           }
         }
@@ -3333,7 +3333,7 @@ void damage_object(struct char_data *ch, struct char_data *victim) {
         GET_OBJ_VAL(object, VAL_ALL_HEALTH) = GET_OBJ_VAL(object, VAL_ALL_HEALTH) - dnum;
         if (GET_OBJ_VAL(object, VAL_ALL_HEALTH) < 0) {
           TOGGLE_BIT_AR(GET_OBJ_EXTRA(object), ITEM_BROKEN);
-          send_to_char(victim, "Your %s has broken beyond use!\r\n", object->short_description);
+          send_to_char(victim, "Your %s has broken beyond use!\r\n", object_short_description(object));
           perform_remove(victim, wnum);
         }
       }
@@ -3354,7 +3354,7 @@ void damage_object(struct char_data *ch, struct char_data *victim) {
           GET_OBJ_VAL(object, VAL_ARMOR_HEALTH) = GET_OBJ_VAL(object, VAL_ARMOR_HEALTH) - dnum;
           if (GET_OBJ_VAL(object, VAL_ARMOR_HEALTH) < 0) {
             TOGGLE_BIT_AR(GET_OBJ_EXTRA(object), ITEM_BROKEN);
-            send_to_char(victim, "Your %s has broken beyond use!\r\n", object->short_description);
+            send_to_char(victim, "Your %s has broken beyond use!\r\n", object_short_description(object));
             perform_remove(victim, WEAR_SHIELD);
           }
         }
@@ -3765,7 +3765,7 @@ static void perform_get_from_container(struct char_data *ch, struct obj_data *ob
           continue;
         if (tch->char_specials.post_combat_messages && GET_OBJ_TYPE(obj) == ITEM_MONEY)
           continue;
-        snprintf(buf, sizeof(buf), "$n gets $p from %s.", cont->short_description);
+        snprintf(buf, sizeof(buf), "$n gets $p from %s.", object_short_description(cont));
         act(buf, TRUE, ch, obj, tch, TO_VICT);
       }
       /* Check if it's money before calling get_check_money */
@@ -4759,7 +4759,7 @@ ACMDU(do_drink)
       af[i].specific = obj->affected[i].specific;
       af[i].duration = GET_OBJ_VAL(obj, 0);
       send_to_char(ch, "You gain +%d to %s from drinking %s.\r\n", af[i].modifier,
-                   apply_types_lowercase(af[i].location), obj->short_description);
+                   apply_types_lowercase(af[i].location), object_short_description(obj));
       affect_join(ch, af + i, FALSE, FALSE, FALSE, FALSE);
       found = true;
     }
@@ -4823,7 +4823,7 @@ ACMDU(do_eat)
       af[i].specific = obj->affected[i].specific;
       af[i].duration = GET_OBJ_VAL(obj, 0);
       send_to_char(ch, "You gain +%d to %s from eating %s.\r\n", af[i].modifier,
-                   apply_types_lowercase(af[i].location), obj->short_description);
+                   apply_types_lowercase(af[i].location), object_short_description(obj));
       affect_join(ch, af + i, FALSE, FALSE, FALSE, FALSE);
       found = true;
     }
@@ -6839,7 +6839,7 @@ void start_auction(struct char_data *ch, struct obj_data *obj, int bid)
 
   /* Tell th character where his item went */
   sprintf(auction_buf, "%s magic flies away from your hands to be auctioned!\r\n",
-          obj_selling->short_description);
+          object_short_description(obj_selling));
   CAP(auction_buf);
   send_to_char(ch_selling, "%s", auction_buf);
 
@@ -6892,7 +6892,7 @@ void check_auction(void)
       auc_send_to_all(auction_buf, false);
 
       sprintf(auction_buf, "%s flies out the sky and into your hands.\r\n",
-              obj_selling->short_description);
+              object_short_description(obj_selling));
       CAP(auction_buf);
       send_to_char(ch_selling, "%s", auction_buf);
       obj_to_char(obj_selling, ch_selling);
@@ -6913,12 +6913,12 @@ void check_auction(void)
       /* Give the object to the buyer */
       obj_to_char(obj_selling, ch_buying);
       sprintf(auction_buf, "%s flies out the sky and into your hands, what a steal!\r\n",
-              obj_selling->short_description);
+              object_short_description(obj_selling));
       CAP(auction_buf);
       send_to_char(ch_buying, "%s", auction_buf);
 
       sprintf(auction_buf, "Congrats! You have sold %s for %d gold coins!\r\n",
-              obj_selling->short_description, curbid);
+              object_short_description(obj_selling), curbid);
       send_to_char(ch_selling, "%s", auction_buf);
 
       /* Give selling char the money for his stuff */
@@ -7003,7 +7003,7 @@ ACMD(do_auction)
   {
     char auction_buf[MAX_STRING_LENGTH] = {'\0'};
     sprintf(auction_buf, "Sorry, but %s is already auctioning %s at %d gold coins!\r\n",
-            GET_NAME(ch_selling), obj_selling->short_description, bid);
+            GET_NAME(ch_selling), object_short_description(obj_selling), bid);
     send_to_char(ch, "%s", auction_buf);
     return;
   }
@@ -7123,7 +7123,7 @@ void stop_auction(int type, struct char_data *ch)
   if (type != AUC_WIZ_CANCEL)
   {
     sprintf(auction_buf, "%s flies out the sky and into your hands.\r\n",
-            obj_selling->short_description);
+            object_short_description(obj_selling));
     CAP(auction_buf);
     send_to_char(ch_selling, "%s", auction_buf);
     obj_to_char(obj_selling, ch_selling);
@@ -7131,7 +7131,7 @@ void stop_auction(int type, struct char_data *ch)
   else
   {
     sprintf(auction_buf, "%s flies out the sky and into your hands.\r\n",
-            obj_selling->short_description);
+            object_short_description(obj_selling));
     CAP(auction_buf);
     send_to_char(ch, "%s", auction_buf);
     obj_to_char(obj_selling, ch);
@@ -7261,13 +7261,13 @@ ACMD(do_applyoil)
 
   if (GET_OBJ_TYPE(weapon) != ITEM_WEAPON)
   {
-    send_to_char(ch, "%s is not a weapon.\r\n", weapon->short_description);
+    send_to_char(ch, "%s is not a weapon.\r\n", object_short_description(weapon));
     return;
   }
 
   if (GET_OBJ_TYPE(oil) != ITEM_WEAPON_OIL)
   {
-    send_to_char(ch, "%s is not a vial of weapon oil.\r\n", oil->short_description);
+    send_to_char(ch, "%s is not a vial of weapon oil.\r\n", object_short_description(oil));
     return;
   }
 
@@ -7373,7 +7373,7 @@ ACMD(do_applyoil)
       special_ability_info[specab_type].activation_method;
   weapon->special_abilities->command_word = get_weapon_specab_default_command_word(specab_type);
 
-  send_to_char(ch, "You upgrade %s with the '%s' affect.\r\n", weapon->short_description,
+  send_to_char(ch, "You upgrade %s with the '%s' affect.\r\n", object_short_description(weapon),
                special_ability_info[specab_type].name);
   if (weapon->special_abilities->command_word != NULL)
   {
@@ -7585,7 +7585,7 @@ ACMD(do_channelspell)
       {
         found = true;
         send_to_char(ch, "You remove '%s' from %s.\r\n",
-                     spell_info[GET_WEAPON_CHANNEL_SPELL(obj, i)].name, obj->short_description);
+                     spell_info[GET_WEAPON_CHANNEL_SPELL(obj, i)].name, object_short_description(obj));
         GET_WEAPON_CHANNEL_SPELL(obj, i) = 0;
       }
     }
@@ -7668,7 +7668,7 @@ ACMD(do_channelspell)
   GET_WEAPON_CHANNEL_SPELL_USES(obj, i) = 5 + (HAS_FEAT(ch, FEAT_GREATER_CHANNELLING) * 5);
   spell_prep_gen_extract(ch, spellnum, 0);
   send_to_char(ch, "You channel the spell '%s' into %s.\r\n", spell_info[spellnum].name,
-               obj->short_description);
+               object_short_description(obj));
 
   if (!IS_NPC(ch))
     start_daily_use_cooldown(ch, FEAT_CHANNEL_SPELL);
@@ -7981,7 +7981,7 @@ ACMD(do_store)
         else
         {
           /* Use the original object name */
-          snprintf(name_buf, sizeof(name_buf), "%s", obj->short_description ? obj->short_description : obj->name);
+          snprintf(name_buf, sizeof(name_buf), "%s", object_short_description(obj) ? object_short_description(obj) : obj->name);
         }
         
         /* Strip color codes from the name */
@@ -8320,7 +8320,7 @@ ACMDU(do_unstore)
     STORED_POTIONS(ch, spellnum)
     --;
 
-    send_to_char(ch, "You have retrieved %s from your potion storage.\r\n", obj->short_description);
+    send_to_char(ch, "You have retrieved %s from your potion storage.\r\n", object_short_description(obj));
     return;
   }
   else if (is_abbrev(arg1, "scroll"))
@@ -8390,7 +8390,7 @@ ACMDU(do_unstore)
     STORED_SCROLLS(ch, spellnum)
     --;
 
-    send_to_char(ch, "You have retrieved %s from your scroll storage.\r\n", obj->short_description);
+    send_to_char(ch, "You have retrieved %s from your scroll storage.\r\n", object_short_description(obj));
     return;
   }
   else if (is_abbrev(arg1, "wand"))
@@ -8463,7 +8463,7 @@ ACMDU(do_unstore)
 
     STORED_WANDS(ch, spellnum) -= charges;
 
-    send_to_char(ch, "You have retrieved %s from your wand storage.\r\n", obj->short_description);
+    send_to_char(ch, "You have retrieved %s from your wand storage.\r\n", object_short_description(obj));
     return;
   }
   else if (is_abbrev(arg1, "staff"))
@@ -8536,7 +8536,7 @@ ACMDU(do_unstore)
 
     STORED_STAVES(ch, spellnum) -= charges;
 
-    send_to_char(ch, "You have retrieved %s from your staff storage.\r\n", obj->short_description);
+    send_to_char(ch, "You have retrieved %s from your staff storage.\r\n", object_short_description(obj));
     return;
   }
   else
@@ -9343,7 +9343,7 @@ void perform_outfit_show(struct char_data *ch)
                "Outfit Description  : %s\r\n"
                "Outfit Confirm Code : %s\r\n"
                "\r\n",
-               GET_OUTFIT_OBJ(ch) ? GET_OUTFIT_OBJ(ch)->short_description : "Not Set",
+               GET_OUTFIT_OBJ(ch) ? object_short_description(GET_OUTFIT_OBJ(ch)) : "Not Set",
                GET_OUTFIT_TYPE(ch)
                    ? (GET_OUTFIT_OBJ(ch) ? (GET_OBJ_VAL(GET_OUTFIT_OBJ(ch), OUTFIT_VAL_TYPE) ==
                                                     OUTFIT_TYPE_ARMOR_SET
@@ -9699,7 +9699,7 @@ ACMDU(do_outfit)
       return;
     }
     GET_OUTFIT_OBJ(ch) = obj;
-    send_to_char(ch, "You set your outfit object to: %s\r\n", obj->short_description);
+    send_to_char(ch, "You set your outfit object to: %s\r\n", object_short_description(obj));
     return;
   }
   else if (is_abbrev(arg1, "list"))
@@ -9899,8 +9899,8 @@ ACMDU(do_outfit)
           return;
         }
         resize_obj_to_char(itemA, ch);
-        send_to_char(ch, "You retrieve %s from your %s.\r\n", itemA->short_description,
-                     GET_OUTFIT_OBJ(ch)->short_description);
+        send_to_char(ch, "You retrieve %s from your %s.\r\n", object_short_description(itemA),
+                     object_short_description(GET_OUTFIT_OBJ(ch)));
         extract_obj(GET_OUTFIT_OBJ(ch));
         clear_outfit_info(ch);
         return;
@@ -9923,8 +9923,8 @@ ACMDU(do_outfit)
           return;
         }
         resize_obj_to_char(itemA, ch);
-        send_to_char(ch, "You retrieve %s from your %s.\r\n", itemA->short_description,
-                     GET_OUTFIT_OBJ(ch)->short_description);
+        send_to_char(ch, "You retrieve %s from your %s.\r\n", object_short_description(itemA),
+                     object_short_description(GET_OUTFIT_OBJ(ch)));
 
         // head piece
         itemB = read_object(OUTFIT_ARMOR_PROTO, VIRTUAL);
@@ -9942,8 +9942,8 @@ ACMDU(do_outfit)
           return;
         }
         resize_obj_to_char(itemB, ch);
-        send_to_char(ch, "You retrieve %s from your %s.\r\n", itemB->short_description,
-                     GET_OUTFIT_OBJ(ch)->short_description);
+        send_to_char(ch, "You retrieve %s from your %s.\r\n", object_short_description(itemB),
+                     object_short_description(GET_OUTFIT_OBJ(ch)));
 
         // arms piece
         itemC = read_object(OUTFIT_ARMOR_PROTO, VIRTUAL);
@@ -9961,8 +9961,8 @@ ACMDU(do_outfit)
           return;
         }
         resize_obj_to_char(itemC, ch);
-        send_to_char(ch, "You retrieve %s from your %s.\r\n", itemC->short_description,
-                     GET_OUTFIT_OBJ(ch)->short_description);
+        send_to_char(ch, "You retrieve %s from your %s.\r\n", object_short_description(itemC),
+                     object_short_description(GET_OUTFIT_OBJ(ch)));
 
         // legs piece
         itemD = read_object(OUTFIT_ARMOR_PROTO, VIRTUAL);
@@ -9980,8 +9980,8 @@ ACMDU(do_outfit)
           return;
         }
         resize_obj_to_char(itemD, ch);
-        send_to_char(ch, "You retrieve %s from your %s.\r\n", itemD->short_description,
-                     GET_OUTFIT_OBJ(ch)->short_description);
+        send_to_char(ch, "You retrieve %s from your %s.\r\n", object_short_description(itemD),
+                     object_short_description(GET_OUTFIT_OBJ(ch)));
         extract_obj(GET_OUTFIT_OBJ(ch));
         clear_outfit_info(ch);
         return;
@@ -10005,8 +10005,8 @@ ACMDU(do_outfit)
         return;
       }
       obj_to_char(itemA, ch);
-      send_to_char(ch, "You retrieve %s from your %s.\r\n", itemA->short_description,
-                   GET_OUTFIT_OBJ(ch)->short_description);
+      send_to_char(ch, "You retrieve %s from your %s.\r\n", object_short_description(itemA),
+                   object_short_description(GET_OUTFIT_OBJ(ch)));
       extract_obj(GET_OUTFIT_OBJ(ch));
       clear_outfit_info(ch);
       return;
@@ -10086,7 +10086,7 @@ ACMDU(do_tinker)
 #endif
 
   send_to_char(ch, "You have successfully tinkered with %s, improving it.\r\n",
-               obj->short_description);
+               object_short_description(obj));
   if (GET_OBJ_TYPE(obj) == ITEM_WEAPON)
     send_to_char(ch, "This weapon will now get a +1 to attack roll and +1 to damage, or +2 to "
                      "damage if wielded two handed.\r\n");
@@ -10124,7 +10124,7 @@ void sort_object_bag(struct char_data *ch, char *objname, int subcmd, int bagnum
         obj_from_char(obj);
         GET_OBJ_SORT(obj) = bagnum;
         obj_to_bag(ch, obj, bagnum);
-        send_to_char(ch, "You move '%s' to bag %d.\r\n", obj->short_description, bagnum);
+        send_to_char(ch, "You move '%s' to bag %d.\r\n", object_short_description(obj), bagnum);
       }
       send_to_char(ch, "You finish moving everything from your inventory to bag %d.\r\n", bagnum);
       return;
@@ -10174,7 +10174,7 @@ void sort_object_bag(struct char_data *ch, char *objname, int subcmd, int bagnum
         obj_from_bag(ch, obj, bagnum);
         GET_OBJ_SORT(obj) = 0;
         obj_to_char(obj, ch);
-        send_to_char(ch, "You move '%s' to your main inventory.\r\n", obj->short_description);
+        send_to_char(ch, "You move '%s' to your main inventory.\r\n", object_short_description(obj));
       }
       send_to_char(ch, "You finish moving everything from bag %d to your inventory.\r\n", bagnum);
       return;
@@ -10195,7 +10195,7 @@ void sort_object_bag(struct char_data *ch, char *objname, int subcmd, int bagnum
 
   if (GET_OBJ_SORT(obj) == bagnum && subcmd == SCMD_SORTTO)
   {
-    send_to_char(ch, "The item '%s' is already in bag %d %s.\r\n", obj->short_description, bagnum,
+    send_to_char(ch, "The item '%s' is already in bag %d %s.\r\n", object_short_description(obj), bagnum,
                  bagname);
     return;
   }
@@ -10209,7 +10209,7 @@ void sort_object_bag(struct char_data *ch, char *objname, int subcmd, int bagnum
     obj_from_char(obj);
     GET_OBJ_SORT(obj) = bagnum;
     obj_to_bag(ch, obj, bagnum);
-    send_to_char(ch, "You move '%s' to bag %d (%s).\r\n", obj->short_description, bagnum,
+    send_to_char(ch, "You move '%s' to bag %d (%s).\r\n", object_short_description(obj), bagnum,
                  bagnames[bagnum - 1]);
   }
   else
@@ -10217,7 +10217,7 @@ void sort_object_bag(struct char_data *ch, char *objname, int subcmd, int bagnum
     obj_from_bag(ch, obj, bagnum);
     GET_OBJ_SORT(obj) = 0;
     obj_to_char(obj, ch);
-    send_to_char(ch, "You move '%s' to your main inventory.\r\n", obj->short_description);
+    send_to_char(ch, "You move '%s' to your main inventory.\r\n", object_short_description(obj));
   }
 }
 
@@ -10868,7 +10868,7 @@ ACMD(do_downgrade)
   downgrade_item(ch, obj, level);
   SET_BIT_AR(GET_OBJ_EXTRA(obj), ITEM_DOWNGRADED);
   do_stat_object(ch, obj, ITEM_STAT_MODE_LORE_SKILL);
-  send_to_char(ch, "\tMYou downgrade %s to level %d.\tn\r\n", obj->short_description, level);
+  send_to_char(ch, "\tMYou downgrade %s to level %d.\tn\r\n", object_short_description(obj), level);
   send_to_char(ch, "It cost you %d coins to downgrade this item.\tn\r\n", cost);
   ch->player_specials->downgrade_confirm = NULL;
 }

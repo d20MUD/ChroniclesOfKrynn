@@ -18,6 +18,7 @@
 #include "utils.h"
 #include "spells.h"
 #include "handler.h"
+#include "act.h"
 #include "mail.h"
 #include "screen.h"
 #include "oasis.h"
@@ -983,6 +984,13 @@ ACMD(do_read_board)
   struct obj_data *board_obj;
   char arg[MAX_INPUT_LENGTH];
   int post_id;
+
+  /* A room-contents click targets this object, even with a board nearby. */
+  if (argument && argument[0] == '}' && argument[1] == 'o')
+  {
+    do_look(ch, argument, cmd, SCMD_READ);
+    return;
+  }
 
   /* Check if player has access to a board object */
   board_obj = find_board_obj_in_room(ch);

@@ -609,7 +609,7 @@ static void zedit_disp_menu(struct descriptor_data *d)
     case 'L':
       write_to_output(d, "%sPut random treasure in %s [%s%d%s] (%d%%)",
                       buf1, // MYCMD.if_flag ? " then " : "",
-                      obj_proto[MYCMD.arg1].short_description, cyn, obj_index[MYCMD.arg1].vnum, yel,
+                      object_short_description(&obj_proto[MYCMD.arg1]), cyn, obj_index[MYCMD.arg1].vnum, yel,
                       MYCMD.arg2);
       break;
     case 'J':
@@ -629,32 +629,32 @@ static void zedit_disp_menu(struct descriptor_data *d)
     case 'G':
       write_to_output(d, "%sGive it %s [%s%d%s], Max : %d (%d%%)",
                       buf1, // MYCMD.if_flag ? " then " : "",
-                      obj_proto[MYCMD.arg1].short_description, cyn, obj_index[MYCMD.arg1].vnum, yel,
+                      object_short_description(&obj_proto[MYCMD.arg1]), cyn, obj_index[MYCMD.arg1].vnum, yel,
                       MYCMD.arg2, MYCMD.arg3);
       break;
     case 'O':
       write_to_output(d, "%sLoad %s [%s%d%s], Max : %d (%d%%)",
                       buf1, // MYCMD.if_flag ? " then " : "",
-                      obj_proto[MYCMD.arg1].short_description, cyn, obj_index[MYCMD.arg1].vnum, yel,
+                      object_short_description(&obj_proto[MYCMD.arg1]), cyn, obj_index[MYCMD.arg1].vnum, yel,
                       MYCMD.arg2, MYCMD.arg4);
       break;
     case 'E':
       write_to_output(d, "%sEquip with %s [%s%d%s], %s, Max : %d (%d%%)",
                       buf1, // MYCMD.if_flag ? " then " : "",
-                      obj_proto[MYCMD.arg1].short_description, cyn, obj_index[MYCMD.arg1].vnum, yel,
+                      object_short_description(&obj_proto[MYCMD.arg1]), cyn, obj_index[MYCMD.arg1].vnum, yel,
                       equipment_types[MYCMD.arg3], MYCMD.arg2, MYCMD.arg4);
       break;
     case 'P':
       write_to_output(d, "%sPut %s [%s%d%s] in %s [%s%d%s], Max : %d (%d%%)",
                       buf1, // MYCMD.if_flag ? " then " : "",
-                      obj_proto[MYCMD.arg1].short_description, cyn, obj_index[MYCMD.arg1].vnum, yel,
-                      obj_proto[MYCMD.arg3].short_description, cyn, obj_index[MYCMD.arg3].vnum, yel,
+                      object_short_description(&obj_proto[MYCMD.arg1]), cyn, obj_index[MYCMD.arg1].vnum, yel,
+                      object_short_description(&obj_proto[MYCMD.arg3]), cyn, obj_index[MYCMD.arg3].vnum, yel,
                       MYCMD.arg2, MYCMD.arg4);
       break;
     case 'R':
       write_to_output(d, "%sRemove %s [%s%d%s] from room.",
                       buf1, // MYCMD.if_flag ? " then " : "",
-                      obj_proto[MYCMD.arg2].short_description, cyn, obj_index[MYCMD.arg2].vnum,
+                      object_short_description(&obj_proto[MYCMD.arg2]), cyn, obj_index[MYCMD.arg2].vnum,
                       yel);
       break;
     case 'D':

@@ -49,8 +49,6 @@ minimum level, and a cost for the WHOLE supply. It does not need a wield flag.
 In C) Values, the editor asks for:
   Ammo type: 1 arrows, 2 bolts, 3 sling bullets, or 5 thrown weapons.
     Type 4 is retained for legacy dart ammunition.
-  Breaking probability: chance a missed projectile breaks; 30 is a useful
-    ordinary value. This does not change the number consumed per shot.
   Enhancement bonus: 0 for mundane ammunition, up to 10 in the editor.
   Minimum ammunition on load: the smallest quantity a new supply contains.
   Maximum ammunition on load: the largest quantity; at least the minimum.
@@ -60,18 +58,22 @@ In C) Values, the editor asks for:
   Unlimited ammunition: 0 for a finite supply; 1 for a supply that never
     empties.
 
+The editor skips the unused legacy breakage value; ammo type goes directly
+to enhancement. Existing saved values are retained for compatibility.
+
 Newly loaded supplies receive a quantity between their minimum and maximum.
 Use the same number for both to make a fixed-size bundle. Set the current
 quantity too when preparing an item for immediate use. A zero current quantity
 makes a finite supply with a positive maximum unusable.
 
 Example: a bundle of +2 flaming arrows
-  Type: arrows; breaking probability: 30; enhancement: 2.
+  Type: arrows; enhancement: 2.
   Minimum: 20; maximum: 20; current: 20.
   Bonus damage type: fire; die size: 6; unlimited: 0.
 
-Every fresh copy contains 20 arrows. Each committed shot consumes one,
-including misses and deflections. A hit can add +1d6 fire, subject to the
+Every fresh copy displays its remaining count, such as (20). Each committed shot consumes one,
+including misses and deflections. Spent shots never enter rooms, inventories,
+or corpses. Collection commands have been removed. A hit can add +1d6 fire, subject to the
 foe's resistance. Elemental bonus damage is not multiplied by critical hits.
 
 Useful bonus damage choices include fire (1), cold (2), acid (5), electricity
@@ -84,7 +86,7 @@ they do not become free permanent ammunition for players to collect.
 
 For checking the main menu's value display, positions start at zero:
   0 ammo type                 1 existing imbued spell
-  2 breaking probability      3 reserved
+  2 unused legacy breakage    3 reserved
   4 enhancement               5 minimum quantity on load
   6 maximum quantity on load  7 current quantity
   8 bonus damage type         9 bonus damage die size

@@ -550,7 +550,7 @@ void show_obj_to_char(struct obj_data *obj, struct char_data *ch, int mode, int 
       if (found)
       {
         send_to_char(ch, "You are %s upon %s.", GET_POS(ch) == POS_SITTING ? "sitting" : "resting",
-                     obj->short_description);
+                     object_short_description(obj));
         goto end;
       }
     }
@@ -575,7 +575,15 @@ void show_obj_to_char(struct obj_data *obj, struct char_data *ch, int mode, int 
       }
     }
     send_to_char(ch, "%s", CCGRN(ch, C_NRM));
-    send_to_char(ch, "%s", obj->description);
+    if (GET_OBJ_TYPE(obj) == ITEM_MISSILE)
+    {
+      size_t length = strlen(obj->description);
+      while (length && (obj->description[length - 1] == '\r' || obj->description[length - 1] == '\n'))
+        length--;
+      send_to_char(ch, "%.*s", (int)length, obj->description);
+    }
+    else
+      send_to_char(ch, "%s", obj->description);
     break;
 
   case SHOW_OBJ_SHORT:
@@ -645,16 +653,16 @@ void show_obj_to_char(struct obj_data *obj, struct char_data *ch, int mode, int 
                      "\t<send href='%s %s|drop %s|eat %s|hold %s|lore %s' hint='use/equip %s|drop "
                      "%s|eat %s|hold %s|lore %s'>%s\t</send>",
                      sendcmd, keyword, keyword, keyword, keyword, keyword, keyword, keyword,
-                     keyword, keyword, keyword, obj->short_description);
+                     keyword, keyword, keyword, object_short_description(obj));
         break;
       case 2: // equipment
-        send_to_char(ch, "\t<send href='remove %s'>%s\t</send>", keyword, obj->short_description);
+        send_to_char(ch, "\t<send href='remove %s'>%s\t</send>", keyword, object_short_description(obj));
         break;
       }
     }
     else
     {
-      send_to_char(ch, "%s", obj->short_description);
+      send_to_char(ch, "%s", object_short_description(obj));
     }
     break;
 
@@ -706,6 +714,12 @@ void show_obj_to_char(struct obj_data *obj, struct char_data *ch, int mode, int 
     return;
   }
 end:
+  if (mode == SHOW_OBJ_LONG && GET_OBJ_TYPE(obj) == ITEM_MISSILE)
+  {
+    char quantity[32];
+    format_ammunition_quantity(obj, quantity, sizeof(quantity));
+    send_to_char(ch, "%s", quantity);
+  }
   show_obj_modifiers(obj, ch);
   send_to_char(ch, "\r\n");
 }
@@ -755,6 +769,19 @@ void list_obj_to_char(struct obj_data *list, struct char_data *ch, int mode, int
   list_obj_to_char_full(list, ch, mode, show, mxp_type, false);
 }
 
+/* Bundles with different displayed quantities must not collapse into one row. */
+static bool same_listed_object(struct obj_data *a, struct obj_data *b)
+{
+  char a_quantity[32], b_quantity[32];
+  if (strcmp(a->short_description, b->short_description) || strcmp(a->name, b->name))
+    return FALSE;
+  if (GET_OBJ_TYPE(a) != GET_OBJ_TYPE(b))
+    return FALSE;
+  format_ammunition_quantity(a, a_quantity, sizeof(a_quantity));
+  format_ammunition_quantity(b, b_quantity, sizeof(b_quantity));
+  return !strcmp(a_quantity, b_quantity);
+}
+
 void list_obj_to_char_full(struct obj_data *list, struct char_data *ch, int mode, int show,
                            int mxp_type, bool can_see_always)
 {
@@ -769,8 +796,7 @@ void list_obj_to_char_full(struct obj_data *list, struct char_data *ch, int mode
 
     /* Check the list to see if we've already counted this object */
     for (j = list; j != i; j = j->next_content)
-      if ((j->short_description == i->short_description && j->name == i->name) ||
-          (!strcmp(j->short_description, i->short_description) && !strcmp(j->name, i->name)))
+      if (same_listed_object(j, i))
         break; /* found a matching object */
     if (j != i)
       continue; /* we counted object i earlier in the list */
@@ -780,8 +806,7 @@ void list_obj_to_char_full(struct obj_data *list, struct char_data *ch, int mode
       /* Count matching objects, including this one */
       for (display = j = i; j; j = j->next_content)
         /* This if-clause should be exactly the same as the one in the loop above */
-        if ((j->short_description == i->short_description && j->name == i->name) ||
-            (!strcmp(j->short_description, i->short_description) && !strcmp(j->name, i->name)))
+        if (same_listed_object(j, i))
           if (CAN_SEE_OBJ(ch, j) ||
               can_see_always /*|| (!AFF_FLAGGED(ch, AFF_BLIND) && OBJ_FLAGGED(j, ITEM_GLOW))*/)
           {
@@ -2087,7 +2112,7 @@ static void perform_mortal_where(struct char_data *ch, char *arg)
 static void print_object_location(int num, struct obj_data *obj, struct char_data *ch, int recur)
 {
   if (num > 0)
-    send_to_char(ch, "O%3d. %-25s%s - ", num, obj->short_description, QNRM);
+    send_to_char(ch, "O%3d. %-25s%s - ", num, object_short_description(obj), QNRM);
   else
     send_to_char(ch, "%33s", " - ");
 
@@ -2107,7 +2132,7 @@ static void print_object_location(int num, struct obj_data *obj, struct char_dat
     send_to_char(ch, "worn by %s%s\r\n", PERS(obj->worn_by, ch), QNRM);
   else if (obj->in_obj)
   {
-    send_to_char(ch, "inside %s%s%s\r\n", obj->in_obj->short_description, QNRM,
+    send_to_char(ch, "inside %s%s%s\r\n", object_short_description(obj->in_obj), QNRM,
                  (recur ? ", which is" : " "));
     if (recur)
       print_object_location(0, obj->in_obj, ch, recur);
@@ -2210,6 +2235,32 @@ static void look_at_target(struct char_data *ch, char *arg)
     return;
   }
 
+  /* An exact room-object target must read that object's extra description,
+   * rather than searching a similarly named item in equipment or inventory. */
+  if (arg[0] == '}' && arg[1] == 'o' && found_obj)
+  {
+    const char *keywords = found_obj->name;
+    char keyword[MAX_INPUT_LENGTH];
+    desc = NULL;
+    while (keywords && *keywords && !desc)
+    {
+      keywords = one_argument(keywords, keyword, sizeof(keyword));
+      if (*keyword) desc = find_exdesc(keyword, found_obj->ex_description);
+    }
+    if (desc)
+    {
+      show_obj_info(found_obj, ch);
+      send_to_char(ch, "\r\n");
+      page_string(ch->desc, desc, FALSE);
+      show_obj_modifiers(found_obj, ch);
+    }
+    else
+      show_obj_to_char(found_obj, ch, SHOW_OBJ_ACTION, 0);
+    if (GET_OBJ_ARCANE_MARK(found_obj))
+      send_to_char(ch, "\tCIt bears an arcane mark reading \"%s\"\tn.\r\n", GET_OBJ_ARCANE_MARK(found_obj));
+    return;
+  }
+
   /* Strip off "number." from 2.foo and friends. */
   if (!(fnum = get_number(&arg)))
   {
@@ -2256,10 +2307,10 @@ static void look_at_target(struct char_data *ch, char *arg)
             send_to_char(ch, "It contains:\r\n");
 
             if (GET_EQ(ch, j)->sheath_primary)
-              send_to_char(ch, "  %s\r\n", GET_EQ(ch, j)->sheath_primary->short_description);
+              send_to_char(ch, "  %s\r\n", object_short_description(GET_EQ(ch, j)->sheath_primary));
 
             if (GET_EQ(ch, j)->sheath_secondary)
-              send_to_char(ch, "  %s\r\n", GET_EQ(ch, j)->sheath_secondary->short_description);
+              send_to_char(ch, "  %s\r\n", object_short_description(GET_EQ(ch, j)->sheath_secondary));
           }
           else
           {
@@ -2305,10 +2356,10 @@ static void look_at_target(struct char_data *ch, char *arg)
             send_to_char(ch, "It contains:\r\n");
 
             if (obj->sheath_primary)
-              send_to_char(ch, "  %s\r\n", obj->sheath_primary->short_description);
+              send_to_char(ch, "  %s\r\n", object_short_description(obj->sheath_primary));
 
             if (obj->sheath_secondary)
-              send_to_char(ch, "  %s\r\n", obj->sheath_secondary->short_description);
+              send_to_char(ch, "  %s\r\n", object_short_description(obj->sheath_secondary));
           }
           else
           {
@@ -2355,10 +2406,10 @@ static void look_at_target(struct char_data *ch, char *arg)
             send_to_char(ch, "It contains:\r\n");
 
             if (obj->sheath_primary)
-              send_to_char(ch, "  %s\r\n", obj->sheath_primary->short_description);
+              send_to_char(ch, "  %s\r\n", object_short_description(obj->sheath_primary));
 
             if (obj->sheath_secondary)
-              send_to_char(ch, "  %s\r\n", obj->sheath_secondary->short_description);
+              send_to_char(ch, "  %s\r\n", object_short_description(obj->sheath_secondary));
           }
           else
           {
@@ -4876,7 +4927,7 @@ ACMD(do_score)
       struct obj_data *furniture = SITTING(ch);
       if (furniture && furniture->short_description)
       {
-        send_to_char(ch, "Sitting upon %s.\r\n", furniture->short_description);
+        send_to_char(ch, "Sitting upon %s.\r\n", object_short_description(furniture));
       }
       else
       {
@@ -6065,7 +6116,7 @@ static void display_combat_section(struct char_data *ch, int line_length)
   if (wielded)
   {
     send_to_char(ch, "\tc|\tn \tcWeapon:\tn %-30s \tc|\tn \tcDamage:\tn %dd%d%s%d \tc|\tn\r\n",
-                 wielded->short_description, GET_OBJ_VAL(wielded, 1), GET_OBJ_VAL(wielded, 2),
+                 object_short_description(wielded), GET_OBJ_VAL(wielded, 1), GET_OBJ_VAL(wielded, 2),
                  GET_DAMROLL(ch) >= 0 ? "+" : "", GET_DAMROLL(ch));
   }
   else
@@ -6204,7 +6255,7 @@ static void display_equipment_section(struct char_data *ch, int line_length)
   if (GET_EQ(ch, WEAR_WIELD_1))
   {
     struct obj_data *weapon = GET_EQ(ch, WEAR_WIELD_1);
-    send_to_char(ch, "\tc|\tn \tcMain Weapon:\tn %-45s \tc|\tn\r\n", weapon->short_description);
+    send_to_char(ch, "\tc|\tn \tcMain Weapon:\tn %-45s \tc|\tn\r\n", object_short_description(weapon));
   }
   else
   {
@@ -6215,7 +6266,7 @@ static void display_equipment_section(struct char_data *ch, int line_length)
   if (GET_EQ(ch, WEAR_BODY))
   {
     struct obj_data *armor = GET_EQ(ch, WEAR_BODY);
-    send_to_char(ch, "\tc|\tn \tcBody Armor:\tn %-46s \tc|\tn\r\n", armor->short_description);
+    send_to_char(ch, "\tc|\tn \tcBody Armor:\tn %-46s \tc|\tn\r\n", object_short_description(armor));
   }
   else
   {
@@ -6226,7 +6277,7 @@ static void display_equipment_section(struct char_data *ch, int line_length)
   if (GET_EQ(ch, WEAR_SHIELD))
   {
     struct obj_data *shield = GET_EQ(ch, WEAR_SHIELD);
-    send_to_char(ch, "\tc|\tn \tcShield:\tn %-50s \tc|\tn\r\n", shield->short_description);
+    send_to_char(ch, "\tc|\tn \tcShield:\tn %-50s \tc|\tn\r\n", object_short_description(shield));
   }
   else
   {
@@ -6472,7 +6523,7 @@ ACMD(do_skore)
                        "---------------------------------------------------------+\tn\r\n");
       if (wielded)
       {
-        send_to_char(ch, "\tc|\tn \tcWeapon:\tn %-54s \tc|\tn\r\n", wielded->short_description);
+        send_to_char(ch, "\tc|\tn \tcWeapon:\tn %-54s \tc|\tn\r\n", object_short_description(wielded));
         send_to_char(ch,
                      "\tc|\tn \tcDamage:\tn %dd%d%s%d                                              "
                      "       \tc|\tn\r\n",
@@ -8653,9 +8704,7 @@ ACMD(do_toggle)
        "You will now see approximately every 5 minutes a in-game hint.\r\n",
        "You will no longer see in-game hints.\r\n"},
       /*39*/
-      {"autocollect", PRF_AUTOCOLLECT, 0,
-       "You will no longer automatically collect your ammo after combat.\r\n",
-       "You will now automatically collect your ammo after combat.\r\n"},
+      {"", 0, 0, "", ""}, /* Reserved toggle index 39. */
       /*40*/
       {"rp", PRF_RP, 0,
        "You will no longer display to others that you would like to Role-play.\r\n",
@@ -8801,7 +8850,6 @@ ACMD(do_toggle)
         "       GUI Mode: %-3s\r\n"
 
         "        NoHints: %-3s    "
-        "   Auto Collect: %-3s    "
         "   Role-Playing: %-3s\r\n"
 
         "*NOTE: The PREFEDIT command is preferred method of optimizing your toggle switches.\r\n",
@@ -8839,7 +8887,7 @@ ACMD(do_toggle)
 
         ONOFF(PRF_FLAGGED(ch, PRF_AUTORELOAD)), ONOFF(PRF_FLAGGED(ch, PRF_COMBATROLL)),
         ONOFF(PRF_FLAGGED(ch, PRF_GUI_MODE)), ONOFF(PRF_FLAGGED(ch, PRF_NOHINT)),
-        ONOFF(PRF_FLAGGED(ch, PRF_AUTOCOLLECT)), ONOFF(PRF_FLAGGED(ch, PRF_RP))
+        ONOFF(PRF_FLAGGED(ch, PRF_RP))
         /*end*/);
     return;
   }
@@ -11485,7 +11533,7 @@ void list_item_activate_abilities(struct char_data *ch)
           obj->activate_spell[ACT_SPELL_CURRENT_USES] = obj->activate_spell[ACT_SPELL_MAX_USES];
         remaining = obj->activate_spell[ACT_SPELL_CURRENT_USES];
         total = obj->activate_spell[ACT_SPELL_MAX_USES];
-        snprintf(obj_desc, sizeof(obj_desc), "%s", obj->short_description);
+        snprintf(obj_desc, sizeof(obj_desc), "%s", object_short_description(obj));
         strip_colors(obj_desc);
         send_to_char(ch, "%-30.30s \tc%-20s\tn %s%2d\tn/%-2d uses remaining\r\n", obj_desc,
                      spell_info[obj->activate_spell[ACT_SPELL_SPELLNUM]].name,
@@ -11520,7 +11568,7 @@ void list_item_activate_ability_cooldowns(struct char_data *ch)
           obj->activate_spell[ACT_SPELL_CURRENT_USES] = obj->activate_spell[ACT_SPELL_MAX_USES];
         if (obj->activate_spell[ACT_SPELL_COOLDOWN] <= 0)
           continue;
-        snprintf(obj_desc, sizeof(obj_desc), "%s", obj->short_description);
+        snprintf(obj_desc, sizeof(obj_desc), "%s", object_short_description(obj));
         strip_colors(obj_desc);
         send_to_char(ch, "%-30.30s \tc%-20s\tn %d mins for +1 use\r\n", obj_desc,
                      spell_info[obj->activate_spell[ACT_SPELL_SPELLNUM]].name,

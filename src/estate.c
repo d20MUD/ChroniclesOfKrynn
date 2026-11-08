@@ -510,7 +510,7 @@ void estate_recover(struct char_data *ch)
             GET_IDNUM(ch)))
       goto pending;
     if (fresh)
-      send_to_char(ch, "You receive %s from persistent storage.\r\n", obj->short_description);
+      send_to_char(ch, "You receive %s from persistent storage.\r\n", object_short_description(obj));
     continue;
   pending:
     /* Keep an unacknowledged item in the journal, out of reach of give/drop/sell.

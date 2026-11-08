@@ -1945,14 +1945,14 @@ ASPELL(spell_locate_object)
     {
       found = TRUE;
 
-      send_to_char(ch, "%c%s", UPPER(*i->short_description), i->short_description + 1);
+      send_to_char(ch, "%c%s", UPPER(*object_short_description(i)), object_short_description(i) + 1);
 
       if (i->carried_by)
         send_to_char(ch, " is being carried by %s.\r\n", PERS(i->carried_by, ch));
       else if (IN_ROOM(i) != NOWHERE)
         send_to_char(ch, " is in %s.\r\n", world[IN_ROOM(i)].name);
       else if (i->in_obj)
-        send_to_char(ch, " is in %s.\r\n", i->in_obj->short_description);
+        send_to_char(ch, " is in %s.\r\n", object_short_description(i->in_obj));
       else if (i->worn_by)
         send_to_char(ch, " is being worn by %s.\r\n", PERS(i->worn_by, ch));
       else
@@ -2787,7 +2787,7 @@ ASPELL(spell_spellstaff)
         GET_OBJ_VAL(staff, 0) = GET_LEVEL(ch); // new staff only cast at caster's level
         GET_OBJ_VAL(staff, 2) = 1;             // only good for 1 charge
         GET_OBJ_VAL(staff, 3) = spellnum;
-        send_to_char(ch, "You enchant %s with the %s spell.\r\n", staff->short_description,
+        send_to_char(ch, "You enchant %s with the %s spell.\r\n", object_short_description(staff),
                      spell_info[spellnum].name);
         act("$n concentrates on enhancing the power of $p.", FALSE, ch, staff, 0, TO_ROOM);
       }
@@ -4293,7 +4293,7 @@ ASPELL(spell_augury)
         break;
       case 'L':
         send_to_char(ch, "%sMay have random treasure in %s [%s%d%s] (%d%%)",
-                     ZOCMD.if_flag ? " then " : "", obj_proto[ZOCMD.arg1].short_description, cyn,
+                     ZOCMD.if_flag ? " then " : "", object_short_description(&obj_proto[ZOCMD.arg1]), cyn,
                      obj_index[ZOCMD.arg1].vnum, yel, ZOCMD.arg2);
         break;
       case 'M':
@@ -4302,20 +4302,20 @@ ASPELL(spell_augury)
         break;
       case 'G':
         send_to_char(ch, "%sthey may possess %s [%s%d%s].\r\n", ZOCMD.if_flag ? " then " : "",
-                     obj_proto[ZOCMD.arg1].short_description, cyn, obj_index[ZOCMD.arg1].vnum, yel);
+                     object_short_description(&obj_proto[ZOCMD.arg1]), cyn, obj_index[ZOCMD.arg1].vnum, yel);
         break;
       case 'O':
         send_to_char(ch, "%s%s may be found here. [%s%d%s]\r\n", ZOCMD.if_flag ? " then " : "",
-                     obj_proto[ZOCMD.arg1].short_description, cyn, obj_index[ZOCMD.arg1].vnum, yel);
+                     object_short_description(&obj_proto[ZOCMD.arg1]), cyn, obj_index[ZOCMD.arg1].vnum, yel);
         break;
       case 'E':
         send_to_char(ch, "%s they may equip %s  [%s%d%s].\r\n", ZOCMD.if_flag ? " then " : "",
-                     obj_proto[ZOCMD.arg1].short_description, cyn, obj_index[ZOCMD.arg1].vnum, yel);
+                     object_short_description(&obj_proto[ZOCMD.arg1]), cyn, obj_index[ZOCMD.arg1].vnum, yel);
         break;
       case 'P':
         send_to_char(ch, "%s%s [%s%d%s] may be inside %s.\r\n", ZOCMD.if_flag ? " then " : "",
-                     obj_proto[ZOCMD.arg1].short_description, cyn, obj_index[ZOCMD.arg1].vnum, yel,
-                     obj_proto[ZOCMD.arg3].short_description);
+                     object_short_description(&obj_proto[ZOCMD.arg1]), cyn, obj_index[ZOCMD.arg1].vnum, yel,
+                     object_short_description(&obj_proto[ZOCMD.arg3]));
         break;
       default:
         break;

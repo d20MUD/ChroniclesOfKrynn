@@ -107,7 +107,7 @@ void show_quest_to_player(struct char_data *ch, struct quest_entry *quest)
             break;
           }
           snprintf(buf, sizeof(buf), "\tCGIVE\tn %s (%d)\r\n",
-                   obj_proto[real_object(qcom->value)].short_description, qcom->value);
+                   object_short_description(&obj_proto[real_object(qcom->value)]), qcom->value);
           send_to_char(ch, "%s", buf);
           break;
         case QUEST_COMMAND_COINS:
@@ -128,7 +128,7 @@ void show_quest_to_player(struct char_data *ch, struct quest_entry *quest)
           break;
         }
         snprintf(buf, sizeof(buf), "\tcRECEIVE\tn %s (%d)\r\n",
-                 obj_proto[real_object(qcom->value)].short_description, qcom->value);
+                 object_short_description(&obj_proto[real_object(qcom->value)]), qcom->value);
         send_to_char(ch, "%s", buf);
         break;
       case QUEST_COMMAND_COINS:
@@ -147,7 +147,7 @@ void show_quest_to_player(struct char_data *ch, struct quest_entry *quest)
           break;
         }
         snprintf(buf, sizeof(buf), "\tcLOADOBJECT\tn %s in %s\r\n",
-                 obj_proto[real_object(qcom->value)].short_description,
+                 object_short_description(&obj_proto[real_object(qcom->value)]),
                  (qcom->location == 0 ? "CurrentRoom" : world[real_room(qcom->location)].name));
         send_to_char(ch, "%s", buf);
         break;
@@ -1055,7 +1055,7 @@ ACMD(do_qinfo)
                 if (qcmd->type == QUEST_GIVE)
                 {
                   snprintf(buf2, sizeof(buf2), " give %s (%d)",
-                           obj_proto[real_object(qcmd->value)].short_description, qcmd->value);
+                           object_short_description(&obj_proto[real_object(qcmd->value)]), qcmd->value);
                   strlcat(buf, buf2, sizeof(buf));
                 }
                 else if (qcmd->type == QUEST_COMMAND_COINS)
@@ -1076,7 +1076,7 @@ ACMD(do_qinfo)
                 if (qcmd->type == QUEST_GIVE)
                 {
                   snprintf(buf2, sizeof(buf2), " and you receive %s (%d)",
-                           obj_proto[real_object(qcmd->value)].short_description, qcmd->value);
+                           object_short_description(&obj_proto[real_object(qcmd->value)]), qcmd->value);
                   strlcat(buf, buf2, sizeof(buf));
                 }
                 else if (qcmd->type == QUEST_COMMAND_DISAPPEAR)
@@ -1090,7 +1090,7 @@ ACMD(do_qinfo)
                 else if (qcmd->type == QUEST_COMMAND_LOAD_OBJECT_INROOM)
                 {
                   snprintf(buf2, sizeof(buf2), " and the mob loads %s in %s(%d)",
-                           obj_proto[real_object(qcmd->value)].short_description,
+                           object_short_description(&obj_proto[real_object(qcmd->value)]),
                            (qcmd->location == -1 ? "CurrentRoom"
                                                  : world[real_room(qcmd->location)].name),
                            qcmd->location);
@@ -1333,7 +1333,7 @@ ACMD(do_qref)
           if (qcom && qcom->value == vnum && qcom->type == QUEST_COMMAND_ITEM)
           {
             snprintf(buf, sizeof(buf), "\tCGIVE\tn %s to %s(\tW%d\tn)\r\n",
-                     obj_proto[real_num].short_description, mob_proto[i].player.short_descr,
+                     object_short_description(&obj_proto[real_num]), mob_proto[i].player.short_descr,
                      mob_index[i].vnum);
             send_to_char(ch, "%s", buf);
             count++;
@@ -1349,14 +1349,14 @@ ACMD(do_qref)
             {
             case QUEST_COMMAND_ITEM:
               snprintf(buf, sizeof(buf), "\tCRECEIVE\tn %s from %s(\tW%d\tn)\r\n",
-                       obj_proto[real_num].short_description, mob_proto[i].player.short_descr,
+                       object_short_description(&obj_proto[real_num]), mob_proto[i].player.short_descr,
                        mob_index[i].vnum);
               send_to_char(ch, "%s", buf);
               count++;
               break;
             case QUEST_COMMAND_LOAD_OBJECT_INROOM:
               snprintf(buf, sizeof(buf), "\tcLOADOBJECT\tn %s in quest for %s (\tW%d\tn)\r\n",
-                       obj_proto[real_num].short_description, mob_proto[i].player.short_descr,
+                       object_short_description(&obj_proto[real_num]), mob_proto[i].player.short_descr,
                        mob_index[i].vnum);
               send_to_char(ch, "%s", buf);
               count++;

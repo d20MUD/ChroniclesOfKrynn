@@ -127,6 +127,7 @@ int get_monk_stunning_fist_dc(struct char_data *ch);
 
 
 /* Clear transient shot references before an object is freed. */
+bool is_ranged_projectile(const struct obj_data *obj);
 void forget_ranged_projectile(struct obj_data *obj);
 
 /* Global variables */

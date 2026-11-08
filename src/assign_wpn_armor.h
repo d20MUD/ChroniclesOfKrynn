@@ -124,6 +124,8 @@ extern "C"
 #endif
 
 bool is_throwing_weapon(struct char_data *ch, struct obj_data *weapon);
+int ammunition_remaining(struct obj_data *ammo);
+void format_ammunition_quantity(struct obj_data *ammo, char *buffer, size_t size);
 bool ammunition_is_unlimited(struct obj_data *ammo, struct obj_data *weapon);
 struct obj_data *take_ammo_projectile(struct obj_data *ammo, struct obj_data *weapon);
 

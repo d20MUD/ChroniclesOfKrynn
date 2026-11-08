@@ -404,7 +404,7 @@ ACMD(do_scribe)
     snprintf(buf, sizeof(buf), "a scroll of '%s'", spell_info[spellnum].name);
     obj->short_description = strdup(buf);
     send_to_char(ch, "You scribe the spell '%s' onto %s.\r\n", spell_info[spellnum].name,
-                 obj->short_description);
+                 object_short_description(obj));
   }
   else
   {

@@ -152,6 +152,7 @@ void parse_quest(FILE *quest_f, int nr);
 int count_quests(qst_vnum low, qst_vnum high);
 void list_quests(struct char_data *ch, zone_rnum zone, qst_vnum vmin, qst_vnum vmax);
 void set_quest(struct char_data *ch, qst_rnum rnum, int index);
+void send_quest_acceptance(struct char_data *ch, qst_rnum rnum);
 void clear_quest(struct char_data *ch, int index);
 void complete_quest(struct char_data *ch, int index);
 void generic_complete_quest(struct char_data *ch, int index);
@@ -239,6 +240,8 @@ void remove_duplicate_quests(struct char_data *ch);
 extern const char *aq_flags[];    /* names for quest flags (quest.c) */
 extern const char *quest_types[]; /* named for quest types (quest.c) */
 #endif                            /* __QUEST_C__ */
+
+void update_msdp_room_quests(struct char_data *ch);
 
 #endif /* _QUEST_H_ */
 

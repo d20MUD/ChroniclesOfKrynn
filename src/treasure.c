@@ -226,14 +226,14 @@ void say_treasure(struct char_data *ch, struct obj_data *obj)
       send_to_char(
           ch,
           "\tYSomeone seems to have misplaced %s\tn\tY! Lucky for them that you found it!\tn\r\n",
-          obj->short_description);
+          object_short_description(obj));
     }
   }
   else if (ch->char_specials.which_treasure_message == CUSTOM_TREASURE_MESSAGE_SWINDLE)
   {
     if (ch && obj && obj->short_description)
     {
-      send_to_char(ch, "\tYYour con also awards you with %s!\tn\r\n", obj->short_description);
+      send_to_char(ch, "\tYYour con also awards you with %s!\tn\r\n", object_short_description(obj));
     }
   }
   else if (ch->char_specials.which_treasure_message == CUSTOM_TREASURE_MESSAGE_PERFORM)
@@ -241,7 +241,7 @@ void say_treasure(struct char_data *ch, struct obj_data *obj)
     if (ch && obj && obj->short_description)
     {
       send_to_char(ch, "\tYYour performance also awards you with %s!\tn\r\n",
-                   obj->short_description);
+                   object_short_description(obj));
     }
   }
   else if (ch->char_specials.which_treasure_message == CUSTOM_TREASURE_MESSAGE_TRIBUTE)
@@ -250,7 +250,7 @@ void say_treasure(struct char_data *ch, struct obj_data *obj)
     {
       send_to_char(
           ch, "\tYYour famous local accolades award you with an additonal tribute of %s!\tn\r\n",
-          obj->short_description);
+          object_short_description(obj));
     }
   }
   else if (ch->char_specials.which_treasure_message == CUSTOM_TREASURE_MESSAGE_EXTORTION)
@@ -258,7 +258,7 @@ void say_treasure(struct char_data *ch, struct obj_data *obj)
     if (ch && obj && obj->short_description)
     {
       send_to_char(ch, "\tYYour extortion victim also hands you %s!\tn\r\n",
-                   obj->short_description);
+                   object_short_description(obj));
     }
   }
   else if (ch->char_specials.which_treasure_message == CUSTOM_TREASURE_MESSAGE_SCROUNGE)
@@ -266,13 +266,13 @@ void say_treasure(struct char_data *ch, struct obj_data *obj)
     if (ch && obj && obj->short_description)
     {
       send_to_char(ch, "\tYYou scrounge the area for useful items and come across %s!\tn\r\n",
-                   obj->short_description);
+                   object_short_description(obj));
     }
   }
   else if (ch && obj && obj->short_description)
   {
     send_to_char(ch, "\tYYou have found %s\tn\tY in a nearby lair (random treasure drop)!\tn\r\n",
-                 obj->short_description);
+                 object_short_description(obj));
 
     snprintf(buf, MAX_STRING_LENGTH,
              "$n \tYhas found %s\tn\tY in a nearby lair (random treasure drop)!\tn",

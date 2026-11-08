@@ -11935,7 +11935,7 @@ ACMD(do_reload)
       }
       else
       {
-        send_to_char(ch, "Reloading %s requires a move-action\r\n", wielded->short_description);
+        send_to_char(ch, "Reloading %s requires a move-action\r\n", object_short_description(wielded));
         return;
       }
     }
@@ -11952,7 +11952,7 @@ ACMD(do_reload)
     }
     else
     {
-      send_to_char(ch, "Reloading %s requires a full-round-action\r\n", wielded->short_description);
+      send_to_char(ch, "Reloading %s requires a full-round-action\r\n", object_short_description(wielded));
       return;
     }
 
@@ -11975,17 +11975,17 @@ ACMD(do_reload)
     }
     else
     {
-      send_to_char(ch, "Reloading %s requires a move-action\r\n", wielded->short_description);
+      send_to_char(ch, "Reloading %s requires a move-action\r\n", object_short_description(wielded));
       return;
     }
 
     break;
   default:
-    send_to_char(ch, "%s does not require reloading!\r\n", wielded->short_description);
+    send_to_char(ch, "%s does not require reloading!\r\n", object_short_description(wielded));
     return;
   }
 
-  send_to_char(ch, "You reload %s.\r\n", wielded->short_description);
+  send_to_char(ch, "You reload %s.\r\n", object_short_description(wielded));
   if (FIGHTING(ch))
     FIRING(ch) = TRUE;
   return;
@@ -12303,102 +12303,6 @@ ACMD(do_autofire)
 }
 
 /* function used to gather up all the ammo in the room/corpses-in-room */
-int perform_collect(struct char_data *ch, bool silent)
-{
-  struct obj_data *ammo_pouch = GET_EQ(ch, WEAR_AMMO_POUCH);
-  struct obj_data *obj = NULL;
-  struct obj_data *nobj = NULL;
-  struct obj_data *cobj = NULL;
-  struct obj_data *next_obj = NULL;
-  int ammo = 0;
-  bool fit = TRUE;
-  char buf[MAX_INPUT_LENGTH] = {'\0'};
-
-  if (!ammo_pouch)
-  {
-    return 0;
-  }
-
-  for (obj = world[ch->in_room].contents; obj; obj = nobj)
-  {
-    nobj = obj->next_content;
-
-    /*debug*/
-    // act("$p", FALSE, ch, obj, 0, TO_CHAR);
-
-    /* checking corpse for ammo first */
-    if (IS_CORPSE(obj))
-    {
-      for (cobj = obj->contains; cobj; cobj = next_obj)
-      {
-        next_obj = cobj->next_content;
-        if (GET_OBJ_TYPE(cobj) == ITEM_MISSILE && MISSILE_ID(cobj) == GET_IDNUM(ch))
-        {
-          if (num_obj_in_obj(ammo_pouch) < GET_OBJ_VAL(ammo_pouch, 0))
-          {
-            obj_from_obj(cobj);
-            obj_to_obj(cobj, ammo_pouch);
-            ammo++;
-            if (!silent)
-              act("You get $p.", FALSE, ch, cobj, 0, TO_CHAR);
-          }
-          else
-          {
-            fit = FALSE;
-            break;
-          }
-        }
-      }
-    }
-    /* checking room for ammo */
-    else if (GET_OBJ_TYPE(obj) == ITEM_MISSILE && MISSILE_ID(obj) == GET_IDNUM(ch))
-    {
-      if (num_obj_in_obj(ammo_pouch) < GET_OBJ_VAL(ammo_pouch, 0))
-      {
-        obj_from_room(obj);
-        obj_to_obj(obj, ammo_pouch);
-        ammo++;
-        if (!silent)
-          act("You get $p.", FALSE, ch, obj, 0, TO_CHAR);
-      }
-      else
-      {
-        fit = FALSE;
-        break;
-      }
-    }
-
-  } /*for loop*/
-
-  if (ammo && !silent)
-  {
-    snprintf(buf, sizeof(buf), "You collected ammo:  %d.\r\n", ammo);
-    send_to_char(ch, "%s", buf);
-    act("$n gathers $s ammunition.", FALSE, ch, 0, 0, TO_ROOM);
-  }
-
-  if (!fit && !silent)
-    send_to_char(ch, "There are still some of your ammunition laying around that does not fit into "
-                     "your currently"
-                     " equipped ammo pouch.\r\n");
-
-  return ammo;
-}
-
-/* function used to gather up all the ammo in the room/corpses-in-room */
-ACMD(do_collect)
-{
-  struct obj_data *ammo_pouch = GET_EQ(ch, WEAR_AMMO_POUCH);
-
-  if (!ammo_pouch)
-  {
-    send_to_char(ch, "But you don't have an ammo pouch to collect to.\r\n");
-    return;
-  }
-
-  perform_collect(ch, FALSE);
-}
-
 /*
 Feinting is a standard action. To feint, make a Bluff skill check. The DC of
 this check is equal to 10 + your opponent's base attack bonus + your opponent's

@@ -112,7 +112,6 @@ In **C) Values**, answer the prompts in this order:
 | Prompt | Enter | Meaning |
 | --- | --- | --- |
 | Ammunition type | `1` | Arrows for the bow |
-| Breaking probability | `30` | Breakage chance for a missed projectile; unrelated to quantity consumed |
 | Enhancement | `0` | Mundane ammunition |
 | Minimum quantity on load | `20` | Minimum arrows in a fresh copy |
 | Maximum quantity on load | `20` | Maximum arrows in a fresh copy |
@@ -125,7 +124,7 @@ Every freshly loaded copy now contains exactly **20 arrows**. Using different mi
 
 Set a positive maximum to enable bundle behavior. Legacy ammunition with a maximum of zero acts as a single projectile. A finite bundle with a positive maximum and current quantity zero is empty.
 
-The normal arrow editor does not ask for an imbued spell or the reserved legacy field. Leave both at zero; do not insert extra answers for them into the prompt sequence.
+The normal arrow editor skips the retired breakage prompt, the imbued spell, and the reserved legacy field. Ammo type goes directly to enhancement. Leave both at zero; do not insert extra answers for them into the prompt sequence.
 
 Quit, confirm the save, and persist the edited objects:
 
@@ -201,13 +200,15 @@ Without extra attacks or Manyshot, 20 arrows support 20 committed shots. Misses 
 
 When the final arrow is fired, its bundle disappears from the pouch. Another matching bundle can supply the next shot. If no usable ammunition remains, the ranged combat loop stops firing. Resupply before battle or once combat ends; when no longer marked as fighting, start again with `fire <target>`.
 
-To recover surviving ammunition after battle:
+Fired shots are gone permanently: they never enter the room, enemy inventory,
+or corpse. `collect` and `autocollect` have been removed. Unlimited and Returning
+supplies remain inexhaustible, but their emitted projectiles also disappear.
 
-```text
-collect
-```
-
-Your worn pouch needs room. Broken ammunition cannot be recovered. Recovered arrows are separate ammunition objects: collecting them does not refill an existing bundle. `autocollect` toggles automatic collection.
+Inventory, room, pouch and shop listings, item messages, and other short-description
+displays show the supply's remaining quantity:
+`a bundle of sample arrows (20)`. A finite empty bundle shows `(0)`, legacy single
+ammo `(1)`, and an inexhaustible supply `(unlimited)`. Separate bundles with
+different quantities stay on separate listing lines.
 
 ## 6. Optional: make +2 flaming arrows
 
@@ -216,7 +217,6 @@ Create a separate Missile/ammo prototype with distinct keywords such as `samplef
 | Prompt | Enter |
 | --- | --- |
 | Ammunition type | `1` |
-| Breaking probability | `30` |
 | Enhancement | `2` |
 | Minimum quantity | `20` |
 | Maximum quantity | `20` |
@@ -280,7 +280,7 @@ The main editor's object-value display uses zero-based positions. This is a refe
 | --- | --- | --- |
 | 0 | Ammunition type | 1 |
 | 1 | Existing imbued spell ID | 0 |
-| 2 | Breakage probability | 30 |
+| 2 | Unused legacy breakage value | 30 |
 | 3 | Reserved legacy field | 0 |
 | 4 | Enhancement | 0 |
 | 5 | Minimum fresh quantity | 20 |
@@ -301,6 +301,6 @@ Leave remaining unused values at zero. For the flaming-arrow variant, change val
 - [Player ranged help](../../lib/text/help/ranged_combat.hlp)
 - [Object editor and value prompts](../../src/oedit.c)
 - [Equipment and ammo pouches](../../src/act.item.c)
-- [Firing, throwing, reloading, and collection commands](../../src/act.offensive.c)
+- [Firing, throwing, and reloading commands](../../src/act.offensive.c)
 - [Combat rounds and ammunition resolution](../../src/fight.c)
 - [Object and weapon type constants](../../src/structs.h)

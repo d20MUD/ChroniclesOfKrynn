@@ -4623,7 +4623,7 @@ int vnum_object(char *searchname, struct char_data *ch)
   for (nr = 0; nr <= top_of_objt; nr++)
     if (isname(searchname, obj_proto[nr].name))
       send_to_char(ch, "%3d. [%5d] %-40s %s\r\n", ++found, obj_index[nr].vnum,
-                   obj_proto[nr].short_description, obj_proto[nr].proto_script ? "[TRIG]" : "");
+                   object_short_description(&obj_proto[nr]), obj_proto[nr].proto_script ? "[TRIG]" : "");
 
   return (found);
 }

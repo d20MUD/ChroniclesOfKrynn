@@ -837,7 +837,7 @@ void list_hunt_rewards(struct char_data *ch, int type)
         continue;
       obj = read_object(get_hunt_armor_drop_vnum(i), VIRTUAL);
       if (obj)
-        send_to_char(ch, "%-30s - %s\r\n", obj->short_description,
+        send_to_char(ch, "%-30s - %s\r\n", object_short_description(obj),
                      affected_bits[hunts_special_armor_type(i)]);
     }
     send_to_char(ch, "%-30s - %s\r\n", "dragon bone", "crafting material");
@@ -856,7 +856,7 @@ void list_hunt_rewards(struct char_data *ch, int type)
         continue;
       obj = read_object(get_hunt_weapon_drop_vnum(i), VIRTUAL);
       if (obj)
-        send_to_char(ch, "%-30s - %s\r\n", obj->short_description,
+        send_to_char(ch, "%-30s - %s\r\n", object_short_description(obj),
                      special_ability_info[hunts_special_weapon_type(i)].name);
     }
   }
@@ -990,7 +990,7 @@ SPECIAL(huntsmaster)
     if (count < 10)
     {
       send_to_char(ch, "You need at least 10 of '%s' in your inventory to make the exchange.\r\n",
-                   obj1->short_description);
+                   object_short_description(obj1));
       return 1;
     }
     if (GET_OBJ_VAL(obj1, 0) == 0)
@@ -1121,8 +1121,8 @@ SPECIAL(huntsmaster)
       return 1;
     }
     obj_to_char(obj2, ch);
-    send_to_char(ch, "You exchange 10x %s for your reward.\r\n", obj1->short_description);
-    send_to_char(ch, "You receive %s as a reward for your hunts.\r\n", obj2->short_description);
+    send_to_char(ch, "You exchange 10x %s for your reward.\r\n", object_short_description(obj1));
+    send_to_char(ch, "You receive %s as a reward for your hunts.\r\n", object_short_description(obj2));
     // let's extract the hunt items now
     count = 0;
     for (obj3 = ch->carrying; obj3; obj3 = next_obj)

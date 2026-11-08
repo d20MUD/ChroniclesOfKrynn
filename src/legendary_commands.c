@@ -273,7 +273,7 @@ static bool quote_item(struct char_data *ch,struct obj_data *obj,struct legendar
   if(r&&!layout) {
     const struct legendary_channel_record *c=&r->channels[channel];
     send_to_char(ch,"Proposed: %s %s, rank %s, %s path, %s family; F%02d subtype %d, T%02d, S%02d, modifier %s on %s.\r\n",
-      obj->short_description,channels[channel],legendary_rank_names[c->rank],legendary_path(c->path)->name,
+      object_short_description(obj),channels[channel],legendary_rank_names[c->rank],legendary_path(c->path)->name,
       legendary_family_names[c->family],c->foundation,c->subtype,c->technique?c->technique-100:0,
       c->signature?c->signature-200:0,legendary_modifier_names[c->modifier],
       c->modifier_target==1?"technique":c->modifier_target==2?"signature":"none");
@@ -342,7 +342,7 @@ static void next_step(struct char_data *ch,struct obj_data *obj,const struct leg
   const struct legendary_channel_record *c=&r->channels[channel];struct legendary_cost cost;
   const struct legendary_loadout *view;int i;bool attuned=false;
   const char *side=channels[channel];
-  send_to_char(ch,"Next step for %s (%s):\r\n",obj->short_description,side);
+  send_to_char(ch,"Next step for %s (%s):\r\n",object_short_description(obj),side);
   if(!c->present){
     cost=legendary_rank_costs[1];
     send_to_char(ch,"Choose a path with infuse paths <item> %s, then ask the infusion smith to infuse awaken <item> %s %s<path>.\r\n",side,side,channel?"<assault|guard|focus> ":"");
@@ -371,7 +371,7 @@ static void inspect(struct char_data *ch,struct obj_data *obj,struct legendary_i
 {
   const struct legendary_channel_record *c=&r->channels[channel];const struct legendary_foundation_def *f;
   const struct legendary_power_def *t,*s;struct legendary_cost cost;
-  send_to_char(ch,"%s: %s channel%s\r\n",obj->short_description,channels[channel],*r->uuid?", permanently bound":" (ordinary item)");
+  send_to_char(ch,"%s: %s channel%s\r\n",object_short_description(obj),channels[channel],*r->uuid?", permanently bound":" (ordinary item)");
   if(!c->present){next_step(ch,obj,r,channel);return;}
   {
     const struct legendary_item_passive_def *ip=legendary_item_passive(r->channels[0].item_passive);

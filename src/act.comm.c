@@ -1415,6 +1415,7 @@ ACMD(do_dialogue_quest)
     quest = real_quest(next_quest);
     set_quest(ch, quest, quest_slot);
     send_to_char(ch, "\tC%s\r\n\tn", QST_INFO(quest));
+    send_quest_acceptance(ch, quest);
     save_char(ch, 0);
   }
 }

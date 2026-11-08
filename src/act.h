@@ -530,7 +530,6 @@ bool perform_dirtkick(struct char_data *ch, struct char_data *vict);
 void perform_assist(struct char_data *ch, struct char_data *helpee);
 void perform_springleap(struct char_data *ch, struct char_data *vict);
 bool perform_backstab(struct char_data *ch, struct char_data *vict);
-int perform_collect(struct char_data *ch, bool silent);
 void apply_blackguard_cruelty(struct char_data *ch, struct char_data *vict, char *cruelty);
 void throw_hedging_weapon(struct char_data *ch);
 void perform_true_judgement(struct char_data *ch);
@@ -561,7 +560,6 @@ ACMD_DECL(do_aura_of_justice);
 ACMD_DECL(do_reload);
 ACMD_DECL(do_assistblast);
 ACMD_DECL(do_autofire);
-ACMD_DECL(do_collect);
 ACMD_DECL(do_hitall);
 ACMDCHECK(can_hitall);
 ACMD_DECL(do_guard);
@@ -917,7 +915,7 @@ ACMD_DECL(do_buildwalk);
 #define SCMD_COMBATROLL 36
 #define SCMD_GUI_MODE 37
 #define SCMD_NOHINT 38
-#define SCMD_AUTOCOLLECT 39
+#define SCMD_AUTOCOLLECT 39 /* Reserved legacy ID; ammo collection removed. */
 #define SCMD_RP 40
 #define SCMD_AOE_BOMBS 41
 #define SCMD_AUTOCONSIDER 42
