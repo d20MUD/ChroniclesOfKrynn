@@ -134,6 +134,18 @@ Manyshot automatically fires two arrows on the first bow attack of a full
 attack, using one attack roll. Both arrows are spent. Critical and precision
 damage apply only once; each arrow faces damage reduction separately. This
 feat does not give extra dagger, shuriken, sling, or crossbow attacks.
+With only the feat, manyshot <target> performs a full bow attack immediately
+and uses both your standard and move actions. It still applies automatically
+to the first bow attack of normal full attack rounds. Fire automatically
+uses this full-attack opening when you have the actions and two arrows;
+otherwise it fires a single shot.
+
+The ranger Manyshot perk uses manyshot <target> for a separate active volley:
+three bow attacks and a 120-second cooldown, or five attacks and 60 seconds
+with Improved Manyshot. This volley uses a standard action and ammunition.
+Fire automatically uses the perk volley when its cooldown is ready.
+If you own both, the command uses the perk; the feat still applies during
+normal full bow attack rounds.
 
 Deadly Aim trades accuracy for weapon damage. Use deadlyaim to toggle it.
 It starts at -1 to hit for +2 damage, increasing by -1/+2 at base attack

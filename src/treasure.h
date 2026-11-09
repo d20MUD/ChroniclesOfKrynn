@@ -248,6 +248,8 @@ ACMD_DECL(do_loadmagic);
 ACMD_DECL(do_loadmagicspecific);
 // ACMD_DECL(do_bazaar);
 
+void web_notify_corpse_loot(struct char_data *recipient, struct char_data *mob, struct obj_data *corpse);
+
 /* special procedures */
 SPECIAL_DECL(bazaar);
 

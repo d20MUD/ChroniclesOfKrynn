@@ -65,6 +65,7 @@ static void MSDPSetString(struct descriptor_data *d,int var,const char *s) { fre
 static void MSDPFlush(struct descriptor_data *d,int var) { flushes++; }
 
 struct char_data {
+  struct {bool pending;} dialogue_checks[MAX_CURRENT_QUESTS];
   long id; char *name; bool npc; int level,room; void *group;
   int quests[4],counter[4],timer[4]; bool completed[4],failed[4];
   struct obj_data *carrying,*eq[2]; struct descriptor_data *desc;
@@ -101,6 +102,7 @@ static int total_quests=4;
 ''' + constants + r'''
 static char output[65536];
 static int saves;
+static void append_dialogue_quest_check(struct char_data *ch,qst_rnum rnum,struct json_object *event) {}
 void send_to_char(struct char_data *ch,const char *fmt,...) {
   if(ch->desc && ch->desc->output_capture) return;
   va_list ap; va_start(ap,fmt); vsnprintf(output+strlen(output),sizeof(output)-strlen(output),fmt,ap); va_end(ap);
@@ -138,6 +140,7 @@ void quest_assign(struct char_data *ch,char *arg) {}
 a = quest.index('static const char *quest_cmd[]')
 b = quest.index('/*--------------------------------------------------------------------------*/', a)
 code += quest[a:b]
+code += "\nstatic void quest_web_history(struct char_data *ch,const char *argument,bool details) {}\n"
 for signature in [
     'void set_quest(', 'static bool quest_join_eligible(', 'void send_quest_acceptance(', 'static void quest_begin(',
     'void quest_join(', 'static bool room_quest_eligible(', 'static struct char_data *room_quest_giver(',

@@ -6,6 +6,8 @@ import tempfile
 root=Path(__file__).resolve().parents[1]
 def function(file,signature):
     s=(root/file).read_text();i=s.index(signature);return s[i:s.index('\n}',i)+2]
+periodic=(root/'src/comm.c').read_text().split('static void msdp_update(void)\n{',1)[1]
+assert 'update_msdp_room_contents(ch);' in periodic
 code=r'''
 #include <assert.h>
 #include <stdbool.h>
@@ -24,7 +26,7 @@ code=r'''
 struct variable { bool bReport; };
 struct protocol { bool bMSDP;struct variable **pVariables; };
 struct descriptor_data { struct protocol *pProtocol; };
-struct char_data { long id;int room;bool visible,npc;const char *name;struct char_data *next_in_room;struct descriptor_data *desc;struct obj_data *carrying; };
+struct char_data { long id;int room;bool visible,npc,dead,extracting;const char *name;struct char_data *next_in_room;struct descriptor_data *desc;struct obj_data *carrying; };
 struct obj_data { long id;bool visible,takeable;const char *name,*description;struct obj_data *next_content; };
 static struct { int vnum;struct char_data *people;struct obj_data *contents; } world[2];
 #define GET_ID(x) ((x)->id)
@@ -37,6 +39,12 @@ static struct { int vnum;struct char_data *people;struct obj_data *contents; } w
 #define CAN_WEAR(o,f) ((o)->takeable)
 #define PRF_FLAGGED(ch,f) false
 #define IS_NPC(ch) ((ch)->npc)
+#define POS_DEAD 0
+#define GET_POS(ch) ((ch)->dead ? 0 : 1)
+#define MOB_NOTDEADYET 1
+#define PLR_NOTDEADYET 1
+#define MOB_FLAGGED(ch,f) ((ch)->npc && (ch)->extracting)
+#define PLR_FLAGGED(ch,f) (!(ch)->npc && (ch)->extracting)
 #define PERS(p,ch) ((p)->name)
 #define GET_OBJ_SHORT(o) ((o)->name)
 static char *response;
@@ -87,7 +95,19 @@ int main(void) {
   assert(!get_obj_in_list_vis(&player,objstale,NULL,world[0].contents));
   assert(!room_entity_matches("}c101\nkill",'c',101));
   assert(!room_entity_matches("}c999999999999999999999999999999999",'c',101));
-  variable.bReport=false;update_msdp_room_contents(&player);assert(writes==1);
+  /* Regular refreshes remove departed, dead and pending-extraction entities. */
+  update_msdp_room_contents(&player);
+  report=json_tokener_parse(response);entries=field(report,"entries");
+  assert(json_object_array_length(entries)==4);assert(!strstr(response,"}c101"));json_object_put(report);
+  mob1.dead=true;other.extracting=true;
+  update_msdp_room_contents(&player);
+  report=json_tokener_parse(response);entries=field(report,"entries");
+  assert(json_object_array_length(entries)==2 && !strstr(response,"}c100") && !strstr(response,"}c103"));json_object_put(report);
+  mob1.dead=false;mob1.extracting=true;other.extracting=false;
+  update_msdp_room_contents(&player);assert(!strstr(response,"}c100") && strstr(response,"}c103"));
+  mob1.extracting=false;
+  update_msdp_room_contents(&player);assert(strstr(response,"}c100"));
+  variable.bReport=false;update_msdp_room_contents(&player);assert(writes==5);
   variable.bReport=true;player.room=NOWHERE;update_msdp_room_contents(&player);
   report=json_tokener_parse(response);assert(json_object_array_length(field(report,"entries"))==0);json_object_put(report);
   free(response);puts("Room contents: visibility, short descriptions, takeable flags, duplicates, stale IDs and opt-in passed");

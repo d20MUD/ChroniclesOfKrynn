@@ -134,12 +134,13 @@ static struct obj_data *ranged_ammunition(struct char_data *ch)
   return NULL;
 }
 
-static bool manyshot_ready(struct char_data *ch, struct obj_data *weapon)
+bool manyshot_ready(struct char_data *ch, struct obj_data *weapon)
 {
   struct obj_data *ammo;
   int available = 0;
   if (!HAS_FEAT(ch, FEAT_MANYSHOT) || !weapon || is_throwing_weapon(ch, weapon) ||
-      !GET_EQ(ch, WEAR_AMMO_POUCH) || !has_ammo_in_pouch(ch, weapon, TRUE))
+      !GET_EQ(ch, WEAR_AMMO_POUCH) || !has_ammo_in_pouch(ch, weapon, TRUE) ||
+      GET_OBJ_VAL(GET_EQ(ch, WEAR_AMMO_POUCH)->contains, 0) != AMMO_TYPE_ARROW)
     return FALSE;
   for (ammo = GET_EQ(ch, WEAR_AMMO_POUCH)->contains; ammo; ammo = ammo->next_content)
   {
@@ -674,7 +675,7 @@ struct obj_data *get_wielded(struct char_data *ch, int attack_type);
 static void perform_group_gain(struct char_data *ch, int base, struct char_data *victim);
 static void dam_message(int dam, struct char_data *ch, struct char_data *victim, int w_type,
                         int offhand);
-static void make_corpse(struct char_data *ch);
+static void make_corpse(struct char_data *ch, struct char_data *killer);
 #if !defined(CAMPAIGN_FR) && !defined(CAMPAIGN_DL)
 static void change_alignment(struct char_data *ch, struct char_data *victim);
 #endif
@@ -2632,7 +2633,7 @@ static void make_pc_corpse(struct char_data *ch)
 }
 
 /* NPC:  function for creating corpses, ch just died */
-static void make_corpse(struct char_data *ch)
+static void make_corpse(struct char_data *ch, struct char_data *killer)
 {
   char buf2[MAX_NAME_LENGTH + 64] = {'\0'};
   struct obj_data *corpse = NULL, *o = NULL;
@@ -2773,6 +2774,8 @@ static void make_corpse(struct char_data *ch)
 
   /* place filled corpse in room */
   obj_to_room(corpse, IN_ROOM(ch));
+  if (killer && IS_NPC(ch))
+    web_notify_corpse_loot(find_treasure_recipient(killer), ch, corpse);
 }
 
 #if !defined(CAMPAIGN_FR) && !defined(CAMPAIGN_DL)
@@ -3143,14 +3146,14 @@ void raw_kill(struct char_data *ch, struct char_data *killer)
       prisoner_heads = -2;
       /*****/
 
-      make_corpse(ch);
+      make_corpse(ch, killer);
       /* extraction!  *SLURRRRRRRRRRRRRP* */
       extract_char(ch);
 
       break;
 
     default:
-      make_corpse(ch);
+      make_corpse(ch, killer);
       /* extraction!  *SLURRRRRRRRRRRRRP* */
       extract_char(ch);
       break;
@@ -15393,6 +15396,25 @@ int damage_shield_check(struct char_data *ch, struct char_data *victim, int atta
 static int resolve_weapon_hit(struct char_data *ch, struct char_data *victim, int type,
                               int dam_type, int penalty, int attack_type);
 
+/* Drop every shot-local reference before extraction can run callbacks. The
+ * final preferred stack becomes the projectile, so it must live through damage
+ * resolution, but never remain referenced after that attack has finished. */
+static void release_ranged_shot(struct ranged_shot_context *context)
+{
+  struct obj_data *projectile = context->projectile;
+  struct obj_data *extra;
+  context->projectile = NULL;
+  if (context->extra_projectile == projectile) context->extra_projectile = NULL;
+  if (last_missile == projectile) last_missile = NULL;
+  if (projectile) extract_obj(projectile);
+  /* Extraction callbacks may already have removed the second arrow. Keep its
+   * reference tracked until then so forget_ranged_projectile can invalidate it. */
+  extra = context->extra_projectile;
+  context->extra_projectile = NULL;
+  if (last_missile == extra) last_missile = NULL;
+  if (extra) extract_obj(extra);
+}
+
 int hit(struct char_data *ch, struct char_data *victim, int type, int dam_type, int penalty,
         int attack_type)
 {
@@ -15407,10 +15429,7 @@ int hit(struct char_data *ch, struct char_data *victim, int type, int dam_type, 
   result = resolve_weapon_hit(ch, victim, type, dam_type, penalty, attack_type);
   /* All fired projectiles are spent, including misses, deflections and Manyshot.
    * Unlimited/Returning preserve the supply, not a collectible shot object. */
-  if (context.projectile)
-    extract_obj(context.projectile);
-  if (context.extra_projectile)
-    extract_obj(context.extra_projectile);
+  release_ranged_shot(&context);
   current_shot = context.previous;
   last_missile = current_shot ? current_shot->projectile : NULL;
   return result;
@@ -15697,6 +15716,11 @@ static int resolve_weapon_hit(struct char_data *ch, struct char_data *victim, in
       struct obj_data *extra = ammo_pouch->contains;
       current_shot->extra_unlimited = ammunition_is_unlimited(extra, wielded);
       current_shot->extra_projectile = take_ammo_projectile(extra, wielded);
+      if (current_shot->extra_projectile)
+      {
+        send_to_char(ch, "Manyshot: you fire two arrows with your first bow attack!\r\n");
+        act("$n fires two arrows at once!", FALSE, ch, wielded, victim, TO_ROOM);
+      }
     }
     /* if this was a weapon that was loaded, unload */
     if (wielded && is_reloading_weapon(ch, wielded, TRUE) && GET_OBJ_VAL(wielded, 5) > 0)

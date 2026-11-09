@@ -1,0 +1,65 @@
+-- Preferred ammunition help; safe to reapply.
+START TRANSACTION;
+INSERT INTO help_entries(tag,category,entry,min_level,max_level,auto_generated)
+VALUES ('AMMOPREF','combat',REPLACE('AMMOPREF - PREFERRED AMMUNITION
+
+Usage: ammopref
+       ammopref <ammo keywords>
+       ammopref none
+       ammopref auto
+
+Choose which ammunition to use first when your equipped ammo pouch holds
+multiple kinds. With no arguments, ammopref shows your current preference
+and the command syntax. None or auto clears the preference and restores
+automatic ammunition selection.
+
+SETTING A PREFERENCE
+Equip your ammo pouch or quiver and put the ammunition inside it first.
+Use the ammunition''s keywords, as you would when looking at or getting it.
+You can only select visible ammunition currently in your equipped pouch;
+ammo in your inventory, another container, or on the ground cannot be
+selected.
+
+Examples:
+  ammopref arrow
+    Prefer the matching arrows in your equipped pouch.
+  ammopref bolt
+    Prefer the matching bolts in your equipped pouch.
+  ammopref
+    Show the current selection.
+  ammopref none
+    Return to automatic selection. Ammopref auto does the same thing.
+
+HOW SELECTION WORKS
+Preferred ammunition must still fit your wielded weapon and have shots
+remaining. An arrow preference does not let a crossbow fire arrows, and
+throwing ammunition must match your throwing weapon.
+
+If compatible preferred ammunition is available, it is used first. If it
+runs out, is removed, or does not fit your current weapon, another usable
+ammunition stack in the pouch is selected automatically. Your saved
+preference remains set, so matching replacement ammunition can be preferred
+again later. It persists between logins and does not move or reload ammo
+from other containers for you.
+
+The preference follows the selected base item, rather than one individual
+bundle. Bundles generated from the same base item can share a preference
+even when their materials, enhancements, or elemental damage differ. This
+command does not currently guarantee selection of a specific enchantment
+among such bundles. With no arguments, the displayed name may therefore
+be the base item name rather than the customized bundle name.
+
+Ammo pouch capacity counts stack objects. A full 50-use bundle and a
+partially used bundle each occupy one slot.
+
+See also: CRAFTAMMO, RANGED, AMMUNITION',CHAR(10),CONCAT(CHAR(13),CHAR(10))),0,1000,FALSE)
+ON DUPLICATE KEY UPDATE category=VALUES(category),entry=VALUES(entry),min_level=VALUES(min_level),max_level=VALUES(max_level),auto_generated=FALSE;
+INSERT IGNORE INTO help_keywords(help_tag,keyword) VALUES
+('AMMOPREF','ammopref'),
+('AMMOPREF','ammo-preference'),
+('AMMOPREF','ammo preference'),
+('AMMOPREF','preferred-ammo'),
+('AMMOPREF','preferred ammo'),
+('AMMOPREF','preferred ammunition'),
+('AMMOPREF','preferred-ammunition');
+COMMIT;

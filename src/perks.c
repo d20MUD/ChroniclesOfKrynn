@@ -12176,7 +12176,7 @@ void define_ranger_perks(void)
   perk->id = PERK_RANGER_MANYSHOT;
   perk->name = strdup("Manyshot");
   perk->description = strdup(
-      "Once per combat, fire an additional arrow at your target (does not consume ammunition)");
+      "Use manyshot to fire three arrows at your target as a standard action (120-second cooldown; consumes ammunition)");
   perk->associated_class = CLASS_RANGER;
   perk->perk_category = PERK_CATEGORY_HUNTER;
   perk->cost = 2;
@@ -12186,7 +12186,7 @@ void define_ranger_perks(void)
   perk->effect_type = PERK_EFFECT_SPECIAL;
   perk->effect_value = 1;
   perk->effect_modifier = 0;
-  perk->special_description = strdup("Special ranged attack ability usable once per combat");
+  perk->special_description = strdup("Manyshot command: three bow attacks, 120-second cooldown; Improved Manyshot grants five attacks and a 60-second cooldown");
 
   /* Hunter's Mark */
   perk = &perk_list[PERK_RANGER_HUNTERS_MARK];

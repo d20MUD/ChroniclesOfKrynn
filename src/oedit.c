@@ -1084,8 +1084,10 @@ static void oedit_disp_val1_menu(struct descriptor_data *d)
     oedit_disp_val2_menu(d);
     break;
   case ITEM_CONTAINER:
-  case ITEM_AMMO_POUCH:
     write_to_output(d, "Max weight to contain (-1 for unlimited) : ");
+    break;
+  case ITEM_AMMO_POUCH:
+    write_to_output(d, "Max ammo stacks to contain (-1 for unlimited) : ");
     break;
   case ITEM_DRINKCON:
   case ITEM_FOUNTAIN:

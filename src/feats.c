@@ -9679,6 +9679,9 @@ bool display_feat_info(struct char_data *ch, const char *featname)
     return FALSE;
   }
 
+  web_info_field(ch, "Feat", "Name", "%s", feat_list[feat].name);
+  web_info_field(ch, "Feat", "Type", "%s", feat_types[feat_list[feat].feat_type]);
+
   /* We found the feat, and the feat number is stored in 'feat'. */
   /* Display the feat info, formatted. */
   send_to_char(ch, "\tC\r\n");
@@ -9695,6 +9698,7 @@ bool display_feat_info(struct char_data *ch, const char *featname)
   /*  Here display the prerequisites */
   if (feat_list[feat].prerequisite_list == NULL && IS_EPIC_FEAT(feat) == FALSE)
   {
+    web_info_field(ch, "Prerequisites", "", "%s", "None");
     snprintf(buf, sizeof(buf), "\tCPrerequisites : \tnnone\r\n");
   }
   else
@@ -9712,23 +9716,26 @@ bool display_feat_info(struct char_data *ch, const char *featname)
 
     for (prereq = feat_list[feat].prerequisite_list; prereq != NULL; prereq = prereq->next)
     {
+      bool meets = meets_prerequisite(ch, prereq, w_type);
+      web_info_field(ch, "Prerequisites", prereq->description, "%s", meets ? "Met" : "\trNot met\tn");
       if (first)
       {
         first = FALSE;
         snprintf(buf, sizeof(buf), "\tcPrerequisites : %s%s%s",
-                 (meets_prerequisite(ch, prereq, w_type) ? "\tn" : "\tr"), prereq->description,
+                 (meets ? "\tn" : "\tr"), prereq->description,
                  "\tn");
       }
       else
       {
         snprintf(buf2, sizeof(buf2), ", %s%s%s",
-                 (meets_prerequisite(ch, prereq, w_type) ? "\tn" : "\tr"), prereq->description,
+                 (meets ? "\tn" : "\tr"), prereq->description,
                  "\tn");
         strlcat(buf, buf2, sizeof(buf));
       }
     }
     if (IS_EPIC_FEAT(feat))
     {
+      web_info_field(ch, "Prerequisites", "Level 21+", "%s", GET_LEVEL(ch) >= 21 ? "Met" : "\trNot met\tn");
       snprintf(buf2, sizeof(buf2), "%s%s%s\tn", first ? "\tcPrerequisites : " : ", ",
                GET_LEVEL(ch) >= 21 ? "\tn" : "\tr", "level 21+");
       strlcat(buf, buf2, sizeof(buf));
@@ -9738,6 +9745,8 @@ bool display_feat_info(struct char_data *ch, const char *featname)
 
   send_to_char(ch, "\tC");
   draw_line(ch, line_length, '-', '-');
+
+  web_info_field(ch, "Description", "", "%s", feat_list[feat].description);
 
   /* This we will need to buffer and wrap so that it will fit in the space provided. */
   snprintf(buf, sizeof(buf), "\tcDescription : \tn%s\r\n", feat_list[feat].description);
@@ -9763,6 +9772,7 @@ bool display_feat_info(struct char_data *ch, const char *featname)
         continue;
       if (prereq->values[0] != feat)
         continue;
+      web_info_field(ch, "Prerequisite for", "", "%s", feat_list[i].name);
       if (first)
       {
         first = FALSE;
@@ -9796,6 +9806,7 @@ bool display_feat_info(struct char_data *ch, const char *featname)
     {
       if (level_feats[j][1] == i && level_feats[j][4] == feat && race_list[i].name != NULL)
       {
+        web_info_field(ch, "Obtained by races", "", "%s", race_list[i].name);
         if (first)
         {
           first = FALSE;
@@ -9833,6 +9844,7 @@ bool display_feat_info(struct char_data *ch, const char *featname)
       {
         if (feat_assign->level_received > 0 && feat_assign->feat_num == feat)
         {
+          web_info_field(ch, "Obtained by class", class_list[i].name, "Level %d", feat_assign->level_received);
           if (first)
           {
             first = FALSE;
@@ -9872,6 +9884,7 @@ bool display_feat_info(struct char_data *ch, const char *featname)
       {
         if (feat_assign->level_received == -1 && feat_assign->feat_num == feat)
         {
+          web_info_field(ch, "Class feat for", "", "%s", class_list[i].name);
           if (first)
           {
             first = FALSE;

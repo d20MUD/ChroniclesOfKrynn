@@ -1284,7 +1284,7 @@ ACMD(do_dialogue_quest)
   // quest, anbd if so, requires both dialogue and dialogue fail quests to be completed
   // use find_quest_by_qmnum
 
-  int roll_for = 0, skill_for = 0;
+  int roll_for = 0, skill_for = 0, dialogue_skill = -1;
   int skill_dc = -1;
   int index = -1, quest_slot = -1, next_quest = 0;
   qst_rnum rnum = NOTHING, quest = NOTHING;
@@ -1334,7 +1334,8 @@ ACMD(do_dialogue_quest)
       send_to_char(ch, "You cannot use diplomacy to complete this quest.\r\n");
       return;
     }
-    skill_for = compute_ability(ch, ABILITY_DIPLOMACY);
+    dialogue_skill = ABILITY_DIPLOMACY;
+    skill_for = compute_ability(ch, dialogue_skill);
     snprintf(buf, sizeof(buf),
              "You attempt to convince $N to do your will.\r\n"
              "You roll %d + %d for a total diplomacy skill of %d vs. DC %d.",
@@ -1347,7 +1348,8 @@ ACMD(do_dialogue_quest)
       send_to_char(ch, "You cannot use intimidate to complete this quest.\r\n");
       return;
     }
-    skill_for = compute_ability(ch, ABILITY_INTIMIDATE);
+    dialogue_skill = ABILITY_INTIMIDATE;
+    skill_for = compute_ability(ch, dialogue_skill);
     snprintf(buf, sizeof(buf),
              "You attempt to threaten $N into doing your will.\r\n"
              "You roll %d + %d for a total intimidate skill of %d vs. DC %d.",
@@ -1360,7 +1362,8 @@ ACMD(do_dialogue_quest)
       send_to_char(ch, "You cannot use bluff to complete this quest.\r\n");
       return;
     }
-    skill_for = compute_ability(ch, ABILITY_BLUFF);
+    dialogue_skill = ABILITY_BLUFF;
+    skill_for = compute_ability(ch, dialogue_skill);
     snprintf(buf, sizeof(buf),
              "You attempt to beguile $N into doing your will.\r\n"
              "You roll %d + %d for a total bluff skill of %d vs. DC %d.",
@@ -1369,6 +1372,7 @@ ACMD(do_dialogue_quest)
     break;
   }
 
+  if (dialogue_skill < 0) return;
   next_quest = aquest_table[quest].dialogue_alternative_quest;
 
   // success
@@ -1387,6 +1391,7 @@ ACMD(do_dialogue_quest)
       break;
     }
     set_dialogue_quest_succeeded(ch, aquest_table[quest].vnum);
+    set_dialogue_quest_check(ch, quest, dialogue_skill, roll_for, skill_for, skill_dc);
     generic_complete_quest(ch, quest_slot);
   }
   // failure
@@ -1407,6 +1412,8 @@ ACMD(do_dialogue_quest)
     if (next_quest == NOTHING || real_quest(next_quest) == NOTHING)
     {
       send_to_char(ch, "You will need to try again.\r\n");
+      set_dialogue_quest_check(ch, quest, dialogue_skill, roll_for, skill_for, skill_dc);
+      send_quest_acceptance(ch, quest);
       return;
     }
     set_dialogue_quest_failed(ch, aquest_table[quest].vnum);
@@ -1415,6 +1422,7 @@ ACMD(do_dialogue_quest)
     quest = real_quest(next_quest);
     set_quest(ch, quest, quest_slot);
     send_to_char(ch, "\tC%s\r\n\tn", QST_INFO(quest));
+    set_dialogue_quest_check(ch, quest, dialogue_skill, roll_for, skill_for, skill_dc);
     send_quest_acceptance(ch, quest);
     save_char(ch, 0);
   }

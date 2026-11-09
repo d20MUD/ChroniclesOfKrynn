@@ -43,6 +43,7 @@
 #include "evolutions.h"
 #include "perks.h"
 #include "hunts.h"
+#include "dg_scripts.h"
 
 /* externs */
 extern char cast_arg2[MAX_INPUT_LENGTH];
@@ -5738,7 +5739,7 @@ ACMDCHECK(can_manyshot)
   }
 
   /* cooldown check */
-  ACMDCHECK_TEMPFAIL_IF(char_has_mud_event(ch, eMANYSHOT),
+  ACMDCHECK_TEMPFAIL_IF(has_perk(ch, PERK_RANGER_MANYSHOT) && char_has_mud_event(ch, eMANYSHOT),
                         "You must wait longer before you can use manyshot again.\r\n");
 
   /* ranged attack requirement */
@@ -5752,16 +5753,64 @@ ACMDCHECK(can_manyshot)
   return CAN_CMD;
 }
 
+static bool perform_manyshot_attack(struct char_data *ch, struct char_data *vict)
+{
+  if (vict == ch || GET_POS(vict) <= POS_DEAD)
+  { send_to_char(ch, "Choose a living opponent other than yourself.\r\n"); return FALSE; }
+
+  if (!has_perk(ch, PERK_RANGER_MANYSHOT))
+  {
+    if (!is_action_available(ch, atSTANDARD, TRUE) || !is_action_available(ch, atMOVE, TRUE)) return FALSE;
+    if (AFF_FLAGGED(ch, AFF_STAGGERED))
+    { send_to_char(ch, "You cannot make a full bow attack while staggered.\r\n"); return FALSE; }
+    if (!manyshot_ready(ch, get_wielded(ch, ATTACK_TYPE_RANGED)))
+    { send_to_char(ch, "Manyshot requires at least two usable arrows.\r\n"); return FALSE; }
+    if (FIGHTING(ch) && FIGHTING(ch) != vict)
+    { send_to_char(ch, "Finish fighting your current opponent first.\r\n"); return FALSE; }
+    if (!FIGHTING(ch) && !set_fighting(ch, vict)) return FALSE;
+    FIRING(ch) = TRUE;
+    /* Execute all phases now; the full-round cooldown prevents another routine. */
+    perform_attacks(ch, 0, 0);
+    USE_FULL_ROUND_ACTION(ch);
+    return TRUE;
+  }
+
+  act("$n unleashes a rapid volley of arrows!", FALSE, ch, 0, 0, TO_ROOM);
+  send_to_char(ch, "You unleash a rapid volley of arrows!\r\n");
+
+  /* Base three rapid shots; Improved Manyshot adds +2 */
+  int max_shots = 3;
+  if (!IS_NPC(ch) && has_perk(ch, PERK_RANGER_IMPROVED_MANYSHOT))
+    max_shots += 2;
+
+  {
+    int shots;
+    long target_id = GET_ID(vict);
+    for (shots = 0; shots < max_shots; shots++)
+    {
+      if (find_char(target_id) != vict || GET_POS(vict) <= POS_DEAD ||
+          IN_ROOM(vict) != IN_ROOM(ch) || !can_fire_ammo(ch, TRUE))
+        break;
+      hit(ch, vict, TYPE_UNDEFINED, DAM_RESERVED_DBC, 0, ATTACK_TYPE_RANGED);
+    }
+  }
+
+  /* Cooldown: 2 minutes base; 1 minute with Improved Manyshot */
+  int cooldown_secs = 120;
+  if (!IS_NPC(ch) && has_perk(ch, PERK_RANGER_IMPROVED_MANYSHOT))
+    cooldown_secs = 60;
+  attach_mud_event(new_mud_event(eMANYSHOT, ch, NULL), cooldown_secs * PASSES_PER_SEC);
+
+  /* Consume a standard action */
+  USE_STANDARD_ACTION(ch);
+  return TRUE;
+}
+
+
 ACMD(do_manyshot)
 {
   char arg[MAX_INPUT_LENGTH] = {'\0'};
   struct char_data *vict = NULL;
-
-  if (HAS_FEAT(ch, FEAT_MANYSHOT) && !has_perk(ch, PERK_RANGER_MANYSHOT))
-  {
-    send_to_char(ch, "Manyshot automatically fires two arrows on the first attack of a full bow attack.\r\n");
-    return;
-  }
 
   PREREQ_CAN_FIGHT();
   PREREQ_CHECK(can_manyshot);
@@ -5780,32 +5829,7 @@ ACMD(do_manyshot)
     return;
   }
 
-  act("$n unleashes a rapid volley of arrows!", FALSE, ch, 0, 0, TO_ROOM);
-  send_to_char(ch, "You unleash a rapid volley of arrows!\r\n");
-
-  /* Base three rapid shots; Improved Manyshot adds +2 */
-  int max_shots = 3;
-  if (!IS_NPC(ch) && has_perk(ch, PERK_RANGER_IMPROVED_MANYSHOT))
-    max_shots += 2;
-
-  {
-    int shots;
-    for (shots = 0; shots < max_shots; shots++)
-    {
-      if (!can_fire_ammo(ch, TRUE))
-        break;
-      hit(ch, vict, TYPE_UNDEFINED, DAM_RESERVED_DBC, 0, ATTACK_TYPE_RANGED);
-    }
-  }
-
-  /* Cooldown: 2 minutes base; 1 minute with Improved Manyshot */
-  int cooldown_secs = 120;
-  if (!IS_NPC(ch) && has_perk(ch, PERK_RANGER_IMPROVED_MANYSHOT))
-    cooldown_secs = 60;
-  attach_mud_event(new_mud_event(eMANYSHOT, ch, NULL), cooldown_secs * PASSES_PER_SEC);
-
-  /* Consume a standard action */
-  USE_STANDARD_ACTION(ch);
+  perform_manyshot_attack(ch, vict);
 }
 
 /* Callback for arrow swarm AoE */
@@ -12093,6 +12117,20 @@ ACMD(do_ammopref)
   send_to_char(ch, "Preferred ammunition: %s.\r\n", ammo->short_description);
 }
 
+/* Fire is the normal entry to ranged combat: use an eligible Manyshot opening
+ * on the already-selected target, then fall back to the ordinary single shot. */
+static bool try_opening_manyshot(struct char_data *ch, struct char_data *vict)
+{
+  if (AFF_FLAGGED(ch, AFF_STAGGERED) || !is_action_available(ch, atSTANDARD, FALSE) ||
+      can_manyshot(ch, FALSE) != CAN_CMD)
+    return FALSE;
+  if (!has_perk(ch, PERK_RANGER_MANYSHOT) &&
+      (!is_action_available(ch, atMOVE, FALSE) ||
+       !manyshot_ready(ch, get_wielded(ch, ATTACK_TYPE_RANGED))))
+    return FALSE;
+  return perform_manyshot_attack(ch, vict);
+}
+
 ACMD(do_fire)
 {
   struct char_data *vict = NULL, *tch = NULL;
@@ -12175,6 +12213,11 @@ ACMD(do_fire)
   }
   if (!can_fire_ammo(ch, FALSE))
     return;
+  if (try_opening_manyshot(ch, vict))
+  {
+    FIRING(ch) = FIGHTING(ch) && can_fire_ammo(ch, TRUE);
+    return;
+  }
   hit(ch, vict, TYPE_UNDEFINED, DAM_RESERVED_DBC, 0, ATTACK_TYPE_RANGED);
   if (FIGHTING(ch) && has_perk(ch, PERK_RANGER_QUICK_DRAW) &&
       (!is_throwing_weapon(ch, is_using_ranged_weapon(ch, TRUE)) || HAS_FEAT(ch, FEAT_QUICK_DRAW)))

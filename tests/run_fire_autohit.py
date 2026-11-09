@@ -41,7 +41,7 @@ typedef int room_rnum;
 struct group_data { void *members; };
 struct char_data { bool npc, pet, autohit, charmed, visible, sensed, firing; int room; struct char_data *master, *next_in_room, *fighting; struct group_data *group; };
 static struct { struct char_data *people; } world[2];
-static bool peaceful, ammunition;
+static bool peaceful, ammunition, opening_manyshot;
 static int shots, lookups;
 static char output[512];
 static struct char_data *last_target, *explicit_target;
@@ -59,6 +59,10 @@ static int get_ranger_quick_draw_proc_chance(struct char_data *ch) { return 0; }
 static int rand_number(int low, int high) { return high; }
 static void act(const char *text, bool hide, struct char_data *ch, int obj, int vict, int room) {}
 #define TO_ROOM 1
+static bool try_opening_manyshot(struct char_data *ch,struct char_data *vict) {
+  if(!opening_manyshot)return false;
+  last_target=vict;ch->fighting=vict;return true;
+}
 ''' + command + r'''
 static void reset(struct char_data *ch) { ch->fighting=NULL; ch->firing=false; shots=lookups=0; last_target=NULL; output[0]=0; }
 int main(void) {
@@ -66,6 +70,9 @@ int main(void) {
   world[0].people=&player; player.next_in_room=&charm; charm.next_in_room=&pet; pet.next_in_room=&hidden; hidden.next_in_room=&first; first.next_in_room=&second;
   ammunition=true;
   do_fire(&ch,"",0,0); assert(shots==1 && last_target==&first && !lookups && ch.firing);
+  reset(&ch);opening_manyshot=true;
+  do_fire(&ch,"",0,0);assert(!shots && last_target==&first && !lookups && ch.firing);
+  opening_manyshot=false;reset(&ch);
   reset(&ch); hidden.sensed=true;
   do_fire(&ch,"",0,0); assert(shots==1 && last_target==&hidden); hidden.sensed=false;
   reset(&ch); ch.autohit=false;

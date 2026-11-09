@@ -273,6 +273,7 @@ void check_event_drops(struct char_data *killer, struct char_data *victim)
       }
 
       obj_to_char(obj, killer); /* Deliver object to killer's inventory */
+      web_info_field(killer, "Event rewards received", "Item", "%s", object_short_description(obj));
 
       /* Provide visual feedback about the drop - with enhanced safety checks */
       if (killer && obj && obj->short_description)
@@ -314,6 +315,7 @@ void check_event_drops(struct char_data *killer, struct char_data *victim)
         else
         {
           obj_to_char(obj, killer); /* Deliver rare object to killer */
+          web_info_field(killer, "Event rewards received", "Item", "%s", object_short_description(obj));
 
           /* Provide visual feedback for the rare drop - with enhanced safety checks */
           if (killer && obj && obj->short_description)

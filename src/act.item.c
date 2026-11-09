@@ -2013,10 +2013,10 @@ void display_item_object_values(struct char_data *ch, struct obj_data *item, int
 
     if (mode == ITEM_STAT_MODE_G_LORE)
       send_to_group(NULL, GROUP(ch),
-                    "Weight capacity: %d, Lock Type: %s, Key Num: %d, Corpse?: %s\r\n",
+                    "Ammo stack capacity: %d, Lock Type: %s, Key Num: %d, Corpse?: %s\r\n",
                     GET_OBJ_VAL(item, 0), buf, GET_OBJ_VAL(item, 2), YESNO(GET_OBJ_VAL(item, 3)));
     else
-      send_to_char(ch, "Weight capacity: %d, Lock Type: %s, Key Num: %d, Corpse?: %s\r\n",
+      send_to_char(ch, "Ammo stack capacity: %d, Lock Type: %s, Key Num: %d, Corpse?: %s\r\n",
                    GET_OBJ_VAL(item, 0), buf, GET_OBJ_VAL(item, 2), YESNO(GET_OBJ_VAL(item, 3)));
     break;
 
@@ -2844,6 +2844,12 @@ void do_stat_object(struct char_data *ch, struct obj_data *j, int mode)
     web_info_field(ch, "Properties", "Wear locations", "%s", buf);
     sprintbitarray(GET_OBJ_AFFECT(j), affected_bits, AF_ARRAY_MAX, buf);
     web_info_field(ch, "Properties", "Effects", "%s", buf);
+    if (GET_OBJ_TYPE(j) == ITEM_AMMO_POUCH)
+    {
+      if (GET_OBJ_VAL(j, 0) < 0) web_info_field(ch, "Ammo pouch", "Stack capacity", "%s", "Unlimited");
+      else web_info_field(ch, "Ammo pouch", "Stack capacity", "%d", GET_OBJ_VAL(j, 0));
+      web_info_field(ch, "Ammo pouch", "Stacks stored", "%d", num_obj_in_obj(j->contains));
+    }
     if (GET_OBJ_TYPE(j) == ITEM_MISSILE)
     {
       web_info_field(ch, "Ammunition", "Type", "%s", ammo_types[GET_OBJ_VAL(j, 0)]);
@@ -3470,9 +3476,10 @@ static void perform_put(struct char_data *ch, struct obj_data *obj, struct obj_d
     return;
   }
 
-  if (GET_OBJ_TYPE(cont) == ITEM_AMMO_POUCH && GET_OBJ_VAL(cont, 0) <= num_obj_in_obj(cont))
+  if (GET_OBJ_TYPE(cont) == ITEM_AMMO_POUCH && GET_OBJ_VAL(cont, 0) >= 0 &&
+      GET_OBJ_VAL(cont, 0) <= num_obj_in_obj(cont->contains))
   {
-    snprintf(buf, sizeof(buf), "You can only fit %d $p into $P.", GET_OBJ_VAL(cont, 0));
+    snprintf(buf, sizeof(buf), "$P can hold at most %d ammo stacks.", GET_OBJ_VAL(cont, 0));
     act(buf, FALSE, ch, obj, cont, TO_CHAR);
     return;
   }
@@ -3493,7 +3500,7 @@ static void perform_put(struct char_data *ch, struct obj_data *obj, struct obj_d
   }
 #endif
 
-  if ((GET_OBJ_VAL(cont, 0) > 0) &&
+  if (GET_OBJ_TYPE(cont) != ITEM_AMMO_POUCH && (GET_OBJ_VAL(cont, 0) > 0) &&
       (GET_OBJ_WEIGHT(cont) + GET_OBJ_WEIGHT(obj) > GET_OBJ_VAL(cont, 0)))
     act("$p won't fit in $P.", FALSE, ch, obj, cont, TO_CHAR);
   else if (OBJ_FLAGGED(obj, ITEM_NODROP) && IN_ROOM(cont) != NOWHERE)

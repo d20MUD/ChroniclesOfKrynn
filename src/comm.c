@@ -2425,9 +2425,14 @@ void web_info_finish(struct char_data *ch, int variable, struct output_capture *
 {
   static unsigned long sequence;
   struct descriptor_data *d = ch->desc;
+  struct json_object *fields = NULL, *players = NULL;
   char id[80];
+  bool has_fields = json_object_object_get_ex(capture->web_data, "fields", &fields) && json_object_array_length(fields) > 0;
+  bool has_players = json_object_object_get_ex(capture->web_data, "players", &players);
   d->output_capture = NULL;
-  if (capture->length)
+  /* Native results are sufficient, including a valid empty who list. Do not
+   * depend on terminal output being enabled by the player's score settings. */
+  if (capture->length || has_fields || has_players)
   {
     snprintf(id, sizeof(id), "%ld:%lu", (long)time(NULL), ++sequence);
     json_object_object_add(capture->web_data, "id", json_object_new_string(id));
@@ -4925,7 +4930,9 @@ static void update_msdp_room_contents(struct char_data *ch)
   {
     for (person = world[IN_ROOM(ch)].people; person; person = person->next_in_room)
     {
-      if (person == ch || !CAN_SEE(ch, person)) continue;
+      if (person == ch || GET_POS(person) == POS_DEAD ||
+          MOB_FLAGGED(person, MOB_NOTDEADYET) || PLR_FLAGGED(person, PLR_NOTDEADYET) ||
+          !CAN_SEE(ch, person)) continue;
       entry = json_object_new_object();
       snprintf(id, sizeof(id), "}c%ld", GET_ID(person));
       json_object_object_add(entry, "target", json_object_new_string(id));
@@ -5472,6 +5479,9 @@ static void msdp_update(void)
 
       /* Quests */
       update_msdp_quest_info(d, ch);
+
+      /* Room contents can change while this player stays in place. */
+      update_msdp_room_contents(ch);
 
       /* Room */
       update_msdp_room(ch);

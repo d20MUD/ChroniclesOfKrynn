@@ -11,6 +11,7 @@
 
 #include "conf.h"
 #include <limits.h>
+#include <limits.h>
 #include "account.h"
 #include "sysdep.h"
 #include "legendary_earnings.h"
@@ -22,6 +23,8 @@
 #include "comm.h"
 #include "screen.h"
 #include "quest.h"
+#include "constants.h"
+#include "spells.h"
 #include "act.h" /* for do_tell */
 #include "mudlim.h"
 #include "mud_event.h"
@@ -492,6 +495,7 @@ void assign_the_quests(void)
 /* assign a quest to given ch */
 void set_quest(struct char_data *ch, qst_rnum rnum, int index)
 {
+  ch->dialogue_checks[index].pending = FALSE;
   GET_QUEST(ch, index) = QST_NUM(rnum);
   GET_QUEST_TIME(ch, index) = QST_TIME(rnum);
   GET_QUEST_COUNTER(ch, index) = QST_QUANTITY(rnum);
@@ -502,6 +506,7 @@ void set_quest(struct char_data *ch, qst_rnum rnum, int index)
 /* clear a ch of his [index] quest */
 void clear_quest(struct char_data *ch, int index)
 {
+  ch->dialogue_checks[index].pending = FALSE;
   GET_QUEST(ch, index) = NOTHING;
   GET_QUEST_TIME(ch, index) = -1;
   GET_QUEST_COUNTER(ch, index) = 0;
@@ -591,6 +596,39 @@ static qst_vnum quest_completion_next(struct char_data *ch, qst_rnum rnum)
   return next;
 }
 
+void set_dialogue_quest_check(struct char_data *ch, qst_rnum rnum, int skill, int roll, int modifier, int dc)
+{
+  int i;
+  for (i = 0; i < MAX_CURRENT_QUESTS; i++)
+    if (GET_QUEST(ch, i) == QST_NUM(rnum))
+    {
+      ch->dialogue_checks[i] = (struct dialogue_quest_check){QST_NUM(rnum), skill, roll, modifier, dc, TRUE};
+      return;
+    }
+}
+
+static void append_dialogue_quest_check(struct char_data *ch, qst_rnum rnum, struct json_object *event)
+{
+  int i;
+  for (i = 0; i < MAX_CURRENT_QUESTS; i++)
+  {
+    struct dialogue_quest_check *check = &ch->dialogue_checks[i];
+    struct json_object *result;
+    if (!check->pending || check->quest_vnum != QST_NUM(rnum)) continue;
+    check->pending = FALSE;
+    if (check->skill < 0 || check->skill >= NUM_ABILITIES) return;
+    result = json_object_new_object();
+    json_object_object_add(result, "skill", json_object_new_string(ability_names[check->skill]));
+    json_object_object_add(result, "roll", json_object_new_int(check->roll));
+    json_object_object_add(result, "modifier", json_object_new_int(check->modifier));
+    json_object_object_add(result, "total", json_object_new_int(check->roll + check->modifier));
+    json_object_object_add(result, "dc", json_object_new_int(check->dc));
+    json_object_object_add(result, "success", json_object_new_boolean(check->roll + check->modifier >= check->dc));
+    json_object_object_add(event, "dialogueCheck", result);
+    return;
+  }
+}
+
 /* Questmaster/shared joins, automatic stages, and dialogue failure branches
  * use the same event when assigning their acceptance instructions. */
 void send_quest_acceptance(struct char_data *ch, qst_rnum rnum)
@@ -622,6 +660,7 @@ void send_quest_acceptance(struct char_data *ch, qst_rnum rnum)
       json_object_array_add(commands, json_object_new_string("beguile"));
   }
   json_object_object_add(event, "commands", commands);
+  append_dialogue_quest_check(ch, rnum, event);
   MSDPSetString(d, eMSDP_QUEST_ACCEPTED, json_object_to_json_string_ext(event, JSON_C_TO_STRING_PLAIN));
   d->pProtocol->pVariables[eMSDP_QUEST_ACCEPTED]->bDirty = true;
   MSDPFlush(d, eMSDP_QUEST_ACCEPTED);
@@ -658,6 +697,7 @@ static void send_quest_completion(struct char_data *ch, qst_rnum rnum,
   if (QST_RACE(rnum) == RACE_VAMPIRE || QST_RACE(rnum) == RACE_LICH)
     json_object_object_add(rewards, "New race", json_object_new_string(QST_RACE(rnum) == RACE_VAMPIRE ? "Vampire" : "Lich"));
   json_object_object_add(event, "rewards", rewards);
+  append_dialogue_quest_check(ch, rnum, event);
   MSDPSetString(d, eMSDP_QUEST_COMPLETE, json_object_to_json_string_ext(event, JSON_C_TO_STRING_PLAIN));
   d->pProtocol->pVariables[eMSDP_QUEST_COMPLETE]->bDirty = true;
   MSDPFlush(d, eMSDP_QUEST_COMPLETE);
@@ -2885,6 +2925,84 @@ static void quest_share_respond(struct char_data *ch, bool accept)
   quest_begin(ch, rnum, slot);
 }
 
+#define WEB_QUEST_HISTORY_PAGE_SIZE 50
+
+static void quest_web_history(struct char_data *ch, const char *argument, bool details)
+{
+  struct descriptor_data *d = ch->desc;
+  struct json_object *event, *entries;
+  struct timeval now;
+  static unsigned long sequence;
+  char id[96], *end;
+  long requested = 0;
+  int total, page = 0, pages, i, first;
+  qst_rnum rnum = NOTHING;
+  if (!d || !d->pProtocol || !d->pProtocol->bMSDP ||
+      !d->pProtocol->pVariables[eMSDP_QUEST_HISTORY]->bReport) return;
+  event = json_object_new_object();
+  gettimeofday(&now, NULL);
+  snprintf(id, sizeof(id), "%ld:%ld:%lu", (long)now.tv_sec, (long)now.tv_usec, ++sequence);
+  json_object_object_add(event, "id", json_object_new_string(id));
+  json_object_object_add(event, "kind", json_object_new_string(details ? "detail" : "list"));
+  total = ch->player_specials->saved.completed_quests ? MAX(0, MIN(MAX_COMPLETED_QUESTS, GET_NUM_QUESTS(ch))) : 0;
+  if (*argument)
+  {
+    errno = 0;
+    requested = strtol(argument, &end, 10);
+    while (isspace((unsigned char)*end)) end++;
+    if (end == argument || *end || errno == ERANGE || requested < 0 || requested > INT_MAX)
+    { json_object_object_add(event, "error", json_object_new_string("Invalid quest history request.")); goto send; }
+  }
+  else if (details)
+  { json_object_object_add(event, "error", json_object_new_string("Choose a completed quest.")); goto send; }
+  if (details)
+  {
+    bool completed = FALSE;
+    for (i = 0; i < total; i++)
+      if (ch->player_specials->saved.completed_quests[i] == requested) { completed = TRUE; break; }
+    if (!completed || (rnum = real_quest(requested)) == NOTHING)
+    { json_object_object_add(event, "error", json_object_new_string("That completed quest is no longer available.")); goto send; }
+    json_object_object_add(event, "questId", json_object_new_int(requested));
+    json_object_object_add(event, "name", json_object_new_string(QST_NAME(rnum) ? QST_NAME(rnum) : "Quest"));
+    json_object_object_add(event, "description", json_object_new_string(QST_DESC(rnum) ? QST_DESC(rnum) : ""));
+    json_object_object_add(event, "info", json_object_new_string(QST_INFO(rnum) ? QST_INFO(rnum) : ""));
+    json_object_object_add(event, "completion", json_object_new_string(QST_DONE(rnum) ? QST_DONE(rnum) : ""));
+  }
+  else
+  {
+    pages = MAX(1, (total + WEB_QUEST_HISTORY_PAGE_SIZE - 1) / WEB_QUEST_HISTORY_PAGE_SIZE);
+    page = MIN(requested, pages - 1);
+    first = page * WEB_QUEST_HISTORY_PAGE_SIZE;
+    entries = json_object_new_array();
+    for (i = first; i < MIN(total, first + WEB_QUEST_HISTORY_PAGE_SIZE); i++)
+    {
+      struct json_object *entry = json_object_new_object();
+      int vnum = ch->player_specials->saved.completed_quests[i];
+      rnum = real_quest(vnum);
+      json_object_object_add(entry, "questId", json_object_new_int(vnum));
+      json_object_object_add(entry, "name", json_object_new_string(rnum != NOTHING && QST_NAME(rnum) ? QST_NAME(rnum) : "Unavailable quest"));
+      json_object_object_add(entry, "available", json_object_new_boolean(rnum != NOTHING));
+      json_object_array_add(entries, entry);
+    }
+    json_object_object_add(event, "entries", entries);
+    json_object_object_add(event, "total", json_object_new_int(total));
+    json_object_object_add(event, "page", json_object_new_int(page));
+    json_object_object_add(event, "pages", json_object_new_int(pages));
+  }
+send:
+  if (strlen(json_object_to_json_string_ext(event, JSON_C_TO_STRING_PLAIN)) + 64 >= MAX_VARIABLE_LENGTH)
+  {
+    json_object_object_del(event, "entries");
+    json_object_object_del(event, "name"); json_object_object_del(event, "description");
+    json_object_object_del(event, "info"); json_object_object_del(event, "completion");
+    json_object_object_add(event, "error", json_object_new_string("This quest's details exceed the display limit."));
+  }
+  MSDPSetString(d, eMSDP_QUEST_HISTORY, json_object_to_json_string_ext(event, JSON_C_TO_STRING_PLAIN));
+  d->pProtocol->pVariables[eMSDP_QUEST_HISTORY]->bDirty = TRUE;
+  MSDPFlush(d, eMSDP_QUEST_HISTORY);
+  json_object_put(event);
+}
+
 ACMD(do_quest)
 {
   char arg1[MAX_INPUT_LENGTH] = {'\0'}, arg2[MAX_STRING_LENGTH] = {'\0'};
@@ -2895,6 +3013,11 @@ ACMD(do_quest)
   argument = one_argument(argument, arg1, sizeof(arg1));
   skip_spaces_c(&argument);
   strlcpy(arg2, argument, sizeof(arg2));
+  if (!strcmp(arg1, "webhistory") || !strcmp(arg1, "webhistorydetail"))
+  {
+    quest_web_history(ch, argument, !strcmp(arg1, "webhistorydetail"));
+    return;
+  }
   if (!strcmp(arg1, "webjoin"))
   {
     quest_web_join(ch, argument);

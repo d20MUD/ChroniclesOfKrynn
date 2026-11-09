@@ -86,6 +86,7 @@ int materials_sort_info[NUM_CRAFT_MATS];
 #define NEWCRAFT_CREATE_NOARG1                                                                     \
   "See HELP CRAFTING for more information on how to craft new items.\r\n"                          \
   "Options are:\r\n"                                                                               \
+  "craft ammo (finite arrows, bolts and bullets; type craft ammo for recipes)\r\n" \
   "craft tutorial\r\n"                                                                             \
   "craft itemtype (weapon|armor|jewelry|instrument|misc)\r\n"                                      \
   "craft specifictype (type)\r\n"                                                                  \
@@ -5201,6 +5202,351 @@ static bool craft_has_pending_noncreate_project(struct char_data *ch)
   return FALSE;
 }
 
+/* Ammunition batches are consumables: explicit recipes and bounded magical
+ * properties, never copies of player-supplied objects or unlimited supplies. */
+#define CRAFT_AMMO_BATCH_SIZE 50
+#define FLETCHING_KIT_VNUM 40448
+#define AMMO_SETTINGS(ch) ((ch)->player_specials->saved.ammo_craft_settings)
+struct ammo_craft_recipe
+{
+  const char *name;
+  int type, skill, material, batch_size;
+  int materials[3][2];
+};
+static const struct ammo_craft_recipe ammo_craft_recipes[] = {
+  {"arrows", AMMO_TYPE_ARROW, ABILITY_CRAFT_WOODWORKING, MATERIAL_WOOD, CRAFT_AMMO_BATCH_SIZE,
+   {{CRAFT_MAT_ASH_WOOD, 2}, {CRAFT_MAT_IRON, 1}, {CRAFT_MAT_HEMP, 1}}},
+  {"bolts", AMMO_TYPE_BOLT, ABILITY_CRAFT_WOODWORKING, MATERIAL_WOOD, CRAFT_AMMO_BATCH_SIZE,
+   {{CRAFT_MAT_ASH_WOOD, 1}, {CRAFT_MAT_IRON, 2}, {CRAFT_MAT_HEMP, 1}}},
+  {"bullets", AMMO_TYPE_BULLET, ABILITY_CRAFT_WEAPONSMITHING, MATERIAL_STONE, CRAFT_AMMO_BATCH_SIZE,
+   {{CRAFT_MAT_STONE, 3}, {CRAFT_MAT_IRON, 1}, {CRAFT_MAT_HEMP, 1}}}
+};
+struct ammo_craft_element { const char *name; int damage, mote; };
+static const struct ammo_craft_element ammo_craft_elements[] = {
+  {"none", 0, CRAFTING_MOTE_NONE}, {"fire", DAM_FIRE, CRAFTING_MOTE_FIRE},
+  {"cold", DAM_COLD, CRAFTING_MOTE_ICE}, {"acid", DAM_ACID, CRAFTING_MOTE_WATER},
+  {"electricity", DAM_ELECTRIC, CRAFTING_MOTE_LIGHTNING}, {"sonic", DAM_SOUND, CRAFTING_MOTE_AIR}
+};
+struct ammo_craft_plan
+{
+  const struct ammo_craft_recipe *recipe;
+  const struct ammo_craft_element *element;
+  int slots[3], materials[3][2];
+  int requested_enhancement, enhancement, quality_bonus, quality_points;
+  int damage_die, level, dc, motes[NUM_CRAFT_MOTES];
+};
+
+static int ammo_recipe_index(const char *name)
+{
+  int i, found = -1;
+  for (i = 0; i < 3; i++) if (is_abbrev(name, ammo_craft_recipes[i].name))
+  { if (found >= 0) return -1; found = i; }
+  return found;
+}
+
+static int ammo_material_by_name(const char *name)
+{
+  int i, found = CRAFT_MAT_NONE;
+  const char *wood_names[] = {"ash", "maple", "mahogany"};
+  int woods[] = {CRAFT_MAT_ASH_WOOD, CRAFT_MAT_MAPLE_WOOD, CRAFT_MAT_MAHAGONY_WOOD};
+  if (!str_cmp(name, "adamantine")) return CRAFT_MAT_ADAMANTINE;
+  for (i = 0; i < 3; i++) if (!str_cmp(name, wood_names[i])) return woods[i];
+  for (i = 1; i < NUM_CRAFT_MATS; i++)
+    if (!str_cmp(name, crafting_materials[i])) return i;
+  for (i = 1; i < NUM_CRAFT_MATS; i++) if (is_abbrev(name, crafting_materials[i]))
+  { if (found != CRAFT_MAT_NONE) return CRAFT_MAT_NONE; found = i; }
+  return found;
+}
+
+static bool ammo_material_valid(const struct ammo_craft_recipe *recipe, int slot, int material)
+{
+  int group;
+  if (material <= CRAFT_MAT_NONE || material >= NUM_CRAFT_MATS || material_grade(material) < 1) return FALSE;
+  group = craft_group_by_material(material);
+  if (slot == 2) return group == CRAFT_GROUP_CLOTH;
+  if (slot == 0 && recipe->type != AMMO_TYPE_BULLET) return group == CRAFT_GROUP_WOOD;
+  return group == CRAFT_GROUP_HARD_METALS || group == CRAFT_GROUP_SOFT_METALS ||
+         (slot == 0 && recipe->type == AMMO_TYPE_BULLET && group == CRAFT_GROUP_STONE);
+}
+
+/* Keep logical slots separate from consolidated resource costs. Two slots can
+ * use the same metal, but their combined cost must be checked before spending. */
+static bool finish_ammo_plan(struct ammo_craft_plan *plan)
+{
+  int i, j, grade_sum = 0;
+  memset(plan->materials, 0, sizeof(plan->materials));
+  memset(plan->motes, 0, sizeof(plan->motes));
+  plan->quality_points = 0;
+  for (i = 0; i < 3; i++)
+  {
+    if (!ammo_material_valid(plan->recipe, i, plan->slots[i])) return FALSE;
+    grade_sum += material_grade(plan->slots[i]);
+    plan->quality_points += material_grade(plan->slots[i]) - 1;
+    for (j = 0; j < 3; j++)
+      if (!plan->materials[j][1] || plan->materials[j][0] == plan->slots[i])
+      {
+        plan->materials[j][0] = plan->slots[i];
+        plan->materials[j][1] += plan->recipe->materials[i][1];
+        break;
+      }
+  }
+  plan->quality_bonus = grade_sum / 3 - 1;
+  plan->enhancement = MAX(plan->requested_enhancement, plan->quality_bonus);
+  plan->level = MAX(1, get_level_adjustment_by_enhancement_bonus(plan->enhancement) + plan->damage_die);
+  if (plan->level > 30) return FALSE;
+  plan->dc = MAX(5, CREATE_BASE_DC + 1 - plan->quality_points) +
+    get_level_adjustment_by_enhancement_bonus(MAX(0, plan->enhancement - plan->quality_bonus)) +
+    plan->damage_die;
+  if (plan->enhancement > plan->quality_bonus)
+    plan->motes[CRAFTING_MOTE_FIRE] += MAX(1, craft_motes_required(0, 0, 0, plan->enhancement) -
+      (plan->quality_bonus ? craft_motes_required(0, 0, 0, plan->quality_bonus) : 0));
+  if (plan->damage_die)
+    plan->motes[plan->element->mote] += craft_motes_required(0, 0, 0, plan->damage_die / 2);
+  return TRUE;
+}
+
+/* Legacy one-line recipes remain available; the numbered subcommands use the
+ * same planner after applying the character's saved three-slot selections. */
+static bool plan_ammo_craft(const char *argument, struct ammo_craft_plan *plan)
+{
+  char tokens[7][32], *end;
+  const char *enhancement = "0", *element = "none", *die = "6", *stock = NULL;
+  long value; int count, i, recipe;
+  memset(plan, 0, sizeof(*plan));
+  count = sscanf(argument, "%31s %31s %31s %31s %31s %31s %31s", tokens[0], tokens[1], tokens[2], tokens[3], tokens[4], tokens[5], tokens[6]);
+  if (count < 1 || count > 6) return FALSE;
+  for (i = 1; i < count; i++) if (!str_cmp(tokens[i], "material"))
+  { if (i + 2 != count) return FALSE; stock = tokens[i + 1]; count = i; break; }
+  if (count > 4 || (recipe = ammo_recipe_index(tokens[0])) < 0) return FALSE;
+  plan->recipe = &ammo_craft_recipes[recipe];
+  if (count > 1) enhancement = tokens[1];
+  if (count > 2) element = tokens[2];
+  if (count > 3) die = tokens[3];
+  for (i = 0; i < 6; i++) if (!str_cmp(element, ammo_craft_elements[i].name)) plan->element = &ammo_craft_elements[i];
+  if (!plan->element) return FALSE;
+  for (i = 0; i < 3; i++) plan->slots[i] = plan->recipe->materials[i][0];
+  if (stock) plan->slots[0] = ammo_material_by_name(stock);
+  value = strtol(enhancement, &end, 10);
+  if (!*enhancement || *end || value < 0 || value > 8) return FALSE;
+  plan->requested_enhancement = value;
+  if (plan->element->damage)
+  {
+    value = strtol(die, &end, 10);
+    if (!*die || *end || (value != 4 && value != 6 && value != 8 && value != 10 && value != 12)) return FALSE;
+    plan->damage_die = value;
+  }
+  else if (count >= 4) return FALSE;
+  return finish_ammo_plan(plan);
+}
+
+static bool saved_ammo_plan(struct char_data *ch, struct ammo_craft_plan *plan)
+{
+  int *settings = AMMO_SETTINGS(ch), i;
+  char argument[128];
+  if (settings[0] < 0 || settings[0] > 2 || settings[4] < 0 || settings[4] > 8 || settings[5] < 0 || settings[5] > 5) return FALSE;
+  snprintf(argument, sizeof(argument), "%s %d %s%s%d", ammo_craft_recipes[settings[0]].name,
+           settings[4], ammo_craft_elements[settings[5]].name, settings[5] ? " " : "", settings[5] ? (settings[6] ? settings[6] : 6) : 0);
+  /* No die token is allowed for unenchanted damage. */
+  if (!settings[5]) snprintf(argument, sizeof(argument), "%s %d none", ammo_craft_recipes[settings[0]].name, settings[4]);
+  if (!plan_ammo_craft(argument, plan)) return FALSE;
+  for (i = 0; i < 3; i++) if (settings[i + 1]) plan->slots[i] = settings[i + 1];
+  return finish_ammo_plan(plan);
+}
+
+static bool has_portable_fletching_kit(struct char_data *ch)
+{
+  struct obj_data *obj; int i;
+  for (obj = ch->carrying; obj; obj = obj->next_content)
+    if (GET_OBJ_TYPE(obj) == ITEM_CRAFTING_TOOL && GET_OBJ_VNUM(obj) == FLETCHING_KIT_VNUM) return TRUE;
+  for (i = 0; i < NUM_WEARS; i++)
+    if ((obj = GET_EQ(ch, i)) && GET_OBJ_TYPE(obj) == ITEM_CRAFTING_TOOL && GET_OBJ_VNUM(obj) == FLETCHING_KIT_VNUM) return TRUE;
+  return FALSE;
+}
+
+static void show_ammo_plan(struct char_data *ch, const struct ammo_craft_plan *plan)
+{
+  int i;
+  send_to_char(ch, "Batch: %d %s; material bonus +%d; final enhancement +%d; level %d; DC %d.\r\n",
+    plan->recipe->batch_size, plan->recipe->name, plan->quality_bonus, plan->enhancement, plan->level, plan->dc);
+  send_to_char(ch, "Material quality discount: %d; base DC floor 5, before magical upgrades.\r\n", plan->quality_points);
+  for (i = 0; i < 3; i++)
+    send_to_char(ch, "  Slot %d: %d %s (grade %d, DC -%d).\r\n", i + 1, plan->recipe->materials[i][1],
+      crafting_materials[plan->slots[i]], material_grade(plan->slots[i]), material_grade(plan->slots[i]) - 1);
+  if (plan->damage_die) send_to_char(ch, "  Bonus damage: +1d%d %s.\r\n", plan->damage_die, plan->element->name);
+  for (i = 0; i < 3; i++) if (plan->materials[i][1])
+    send_to_char(ch, "  Cost: %d %s (stored: %d).\r\n", plan->materials[i][1], crafting_materials[plan->materials[i][0]], GET_CRAFT_MAT(ch, plan->materials[i][0]));
+  for (i = 1; i < NUM_CRAFT_MOTES; i++) if (plan->motes[i])
+    send_to_char(ch, "  Cost: %d %s motes (stored: %d).\r\n", plan->motes[i], crafting_motes[i], GET_CRAFT_MOTES(ch, i));
+}
+
+static struct obj_data *create_crafted_ammo(const struct ammo_craft_plan *plan)
+{
+  struct obj_data *obj = read_object(AMMO_PROTO, VIRTUAL);
+  char bonus[16] = "", name[256], description[256];
+  if (!obj) return NULL;
+  /* A template must never smuggle infinite/returning flags or properties into
+   * crafted ammunition. All ammunition values and effects start clean. */
+  memset(&obj->obj_flags, 0, sizeof(obj->obj_flags));
+  memset(obj->affected, 0, sizeof(obj->affected));
+  memset(&obj->weapon_poison, 0, sizeof(obj->weapon_poison));
+  free_obj_special_abilities(obj->special_abilities); obj->special_abilities = NULL;
+  GET_OBJ_TYPE(obj) = ITEM_MISSILE;
+  GET_OBJ_SIZE(obj) = SIZE_TINY;
+  GET_OBJ_MATERIAL(obj) = craft_material_to_obj_material(plan->slots[plan->recipe->type == AMMO_TYPE_BULLET ? 0 : 1]);
+  GET_OBJ_WEIGHT(obj) = 1;
+  GET_OBJ_COST(obj) = plan->recipe->batch_size + plan->enhancement * plan->enhancement * 100 + plan->damage_die * plan->damage_die * 25;
+  GET_OBJ_LEVEL(obj) = plan->level;
+  SET_BIT_AR(GET_OBJ_WEAR(obj), ITEM_WEAR_TAKE);
+  SET_BIT_AR(GET_OBJ_EXTRA(obj), ITEM_IDENTIFIED);
+  if (plan->enhancement || plan->damage_die) SET_BIT_AR(GET_OBJ_EXTRA(obj), ITEM_MAGIC);
+  GET_OBJ_VAL(obj, 0) = plan->recipe->type;
+  GET_OBJ_VAL(obj, 2) = 100;
+  GET_OBJ_VAL(obj, 4) = plan->enhancement;
+  GET_OBJ_VAL(obj, AMMO_VAL_MIN) = plan->recipe->batch_size;
+  GET_OBJ_VAL(obj, AMMO_VAL_MAX) = plan->recipe->batch_size;
+  GET_OBJ_VAL(obj, AMMO_VAL_QUANTITY) = plan->recipe->batch_size;
+  GET_OBJ_VAL(obj, AMMO_VAL_DAMAGE_TYPE) = plan->element->damage;
+  GET_OBJ_VAL(obj, AMMO_VAL_DAMAGE_DIE) = plan->damage_die;
+  GET_OBJ_VAL(obj, AMMO_VAL_UNLIMITED) = 0;
+  GET_OBJ_VAL(obj, AMMO_VAL_RETURNING) = 0;
+  if (plan->enhancement) snprintf(bonus, sizeof(bonus), "+%d ", plan->enhancement);
+  snprintf(name, sizeof(name), "crafted ammo ammunition %s %s %s", crafting_materials[plan->slots[0]], plan->recipe->name, plan->element->damage ? plan->element->name : "ordinary");
+  obj->name = strdup(name);
+  snprintf(description, sizeof(description), "a bundle of %s%s%s%s %s", bonus,
+           plan->element->damage ? plan->element->name : "", plan->element->damage ? " " : "", crafting_materials[plan->slots[0]], plan->recipe->name);
+  obj->short_description = strdup(description);
+  snprintf(name, sizeof(name), "%s lies here.", CAP(description));
+  obj->description = strdup(name);
+  return obj;
+}
+
+static void craft_ammunition(struct char_data *ch, const char *argument)
+{
+  struct ammo_craft_plan plan;
+  struct obj_data *obj;
+  int i, skill_mod, old_type, index, value;
+  bool success, making_kit = FALSE;
+  char command[MAX_INPUT_LENGTH], rest[MAX_INPUT_LENGTH], token[MAX_INPUT_LENGTH], tail[MAX_INPUT_LENGTH], *end;
+  half_chop_c(argument, command, sizeof(command), rest, sizeof(rest));
+  if (!*command)
+  {
+    send_to_char(ch, "Ammo crafting: each batch has 50 finite uses.\r\n"
+      "  craft ammo type <arrows|bolts|bullets>\r\n"
+      "  craft ammo material <1|2|3> <material name>\r\n"
+      "  Slot 1: wood shafts, or stone/metal bullet bodies.\r\n"
+      "  Slot 2: metal heads/cores. Slot 3: cloth binding.\r\n"
+      "  craft ammo enhancement <0-8>\r\n"
+      "  craft ammo damage <none|fire|cold|acid|electricity|sonic> [4|6|8|10|12]\r\n"
+      "  craft ammo show | cost | begin | reset\r\n"
+      "  craft ammo kit: make a portable fletching kit (2 ash wood, 2 iron, 2 hemp; DC 15).\r\n"
+      "Carry a fletching kit directly, or use an equipped tool and matching station.\r\n"
+      "Selections are saved. Better grades improve quality and reduce DC.\r\n");
+    if (saved_ammo_plan(ch, &plan)) show_ammo_plan(ch, &plan);
+    return;
+  }
+  if (!str_cmp(command, "reset") && !*rest)
+  { memset(AMMO_SETTINGS(ch), 0, sizeof(ch->player_specials->saved.ammo_craft_settings)); save_char(ch, 0); send_to_char(ch, "Ammo settings reset.\r\n"); return; }
+  if (!str_cmp(command, "type"))
+  {
+    if ((index = ammo_recipe_index(rest)) < 0) goto invalid;
+    AMMO_SETTINGS(ch)[0] = index;
+    memset(&AMMO_SETTINGS(ch)[1], 0, 3 * sizeof(int));
+    goto changed;
+  }
+  if (!str_cmp(command, "material"))
+  {
+    half_chop_c(rest, token, sizeof(token), tail, sizeof(tail));
+    long slot = strtol(token, &end, 10);
+    if (!*token || *end || slot < 1 || slot > 3 || !*tail) goto invalid;
+    index = ammo_material_by_name(tail);
+    if (!ammo_material_valid(&ammo_craft_recipes[AMMO_SETTINGS(ch)[0]], slot - 1, index))
+    { send_to_char(ch, "That material is not suitable for this slot. Use wood for shafts, stone/metal for bullet bodies, metal for heads/cores, and cloth for binding.\r\n"); return; }
+    AMMO_SETTINGS(ch)[slot] = index;
+    goto changed;
+  }
+  if (!str_cmp(command, "enhancement"))
+  {
+    long bonus = strtol(rest, &end, 10);
+    if (!*rest || *end || bonus < 0 || bonus > 8) goto invalid;
+    AMMO_SETTINGS(ch)[4] = bonus; goto changed;
+  }
+  if (!str_cmp(command, "damage"))
+  {
+    half_chop_c(rest, token, sizeof(token), tail, sizeof(tail));
+    for (index = 0; index < 6; index++) if (!str_cmp(token, ammo_craft_elements[index].name)) break;
+    if (index == 6 || (!index && *tail)) goto invalid;
+    value = 6;
+    if (*tail)
+    { long die = strtol(tail, &end, 10); if (*end || (die != 4 && die != 6 && die != 8 && die != 10 && die != 12)) goto invalid; value = die; }
+    AMMO_SETTINGS(ch)[5] = index; AMMO_SETTINGS(ch)[6] = index ? value : 0;
+    goto changed;
+  }
+  if ((!str_cmp(command, "show") || !str_cmp(command, "cost")) && !*rest)
+  { if (!saved_ammo_plan(ch, &plan)) goto invalid; show_ammo_plan(ch, &plan); return; }
+  if (!str_cmp(command, "cost"))
+  { if (!plan_ammo_craft(rest, &plan)) goto invalid; show_ammo_plan(ch, &plan); return; }
+  if (!str_cmp(command, "begin") && !*rest)
+  { if (!saved_ammo_plan(ch, &plan)) goto invalid; }
+  else if (!str_cmp(command, "kit") && !*rest)
+  {
+    if (!plan_ammo_craft("arrows", &plan)) goto invalid;
+    making_kit = TRUE; plan.dc = 15; plan.level = 1;
+    memset(plan.motes, 0, sizeof(plan.motes));
+    for (i = 0; i < 3; i++) plan.materials[i][1] = 2;
+  }
+  else if (!plan_ammo_craft(argument, &plan)) goto invalid;
+  if (ch->trade || FIGHTING(ch) || GET_POS(ch) < POS_RESTING || player_has_supply_order(ch) ||
+      GET_CRAFT(ch).crafting_item_type != CRAFT_TYPE_NONE || GET_CRAFT(ch).craft_duration > 0 || craft_has_pending_noncreate_project(ch))
+  { send_to_char(ch, "Finish your current project, trade or combat before crafting ammunition.\r\n"); return; }
+  if ((making_kit || !has_portable_fletching_kit(ch)) &&
+      (!is_wearing_tool_for_crafting_ability(ch, plan.recipe->skill) || !has_crafting_station_in_room(ch, plan.recipe->skill)))
+  { send_to_char(ch, "You need the proper %s tool and %s station.\r\n", ability_names[plan.recipe->skill], get_crafting_station_name(plan.recipe->skill)); return; }
+  skill_mod = get_craft_skill_value(ch, plan.recipe->skill) + get_proficient_talent_bonus(ch, plan.recipe->skill) + get_elbow_grease_bonus(ch) + get_jack_of_all_trades_bonus(ch);
+  if ((!making_kit && HAS_FEAT(ch, FEAT_CRAFT_MAGICAL_ARMS_AND_ARMOR)) ||
+      (making_kit && HAS_FEAT(ch, FEAT_CRAFT_WONDEROUS_ITEM))) skill_mod += 5;
+  if (artificer_efficient_crafter_applies(ch)) skill_mod += 2;
+  if (20 + skill_mod < plan.dc)
+  { send_to_char(ch, "You do not yet have enough crafting skill for that batch.\r\n"); return; }
+  if (IS_CARRYING_N(ch) >= CAN_CARRY_N(ch) || IS_CARRYING_W(ch) + (making_kit ? 3 : 1) > CAN_CARRY_W(ch))
+  { send_to_char(ch, "You cannot carry another ammunition bundle.\r\n"); return; }
+  for (i = 0; i < 3; i++) if (plan.materials[i][1] && plan.materials[i][1] > GET_CRAFT_MAT(ch, plan.materials[i][0]))
+  { send_to_char(ch, "You need %d %s for that batch.\r\n", plan.materials[i][1], crafting_materials[plan.materials[i][0]]); return; }
+  for (i = 1; i < NUM_CRAFT_MOTES; i++) if (plan.motes[i] > GET_CRAFT_MOTES(ch, i))
+  { send_to_char(ch, "You need %d %s motes for that batch.\r\n", plan.motes[i], crafting_motes[i]); return; }
+  obj = making_kit ? read_object(FLETCHING_KIT_VNUM, VIRTUAL) : create_crafted_ammo(&plan);
+  if (!obj) { send_to_char(ch, "The crafting template is unavailable; nothing was spent.\r\n"); return; }
+  for (i = 0; i < 3; i++) if (plan.materials[i][1]) GET_CRAFT_MAT(ch, plan.materials[i][0]) -= plan.materials[i][1];
+  for (i = 1; i < NUM_CRAFT_MOTES; i++) GET_CRAFT_MOTES(ch, i) -= plan.motes[i];
+  /* Reuse native crafting rolls, feat/talent bonuses and critical failures,
+   * with no existing project to overwrite or reimburse. */
+  old_type = GET_CRAFT(ch).crafting_item_type;
+  GET_CRAFT(ch).crafting_item_type = making_kit ? CRAFT_TYPE_MISC : CRAFT_TYPE_WEAPON;
+  success = create_craft_skill_check(ch, obj, plan.recipe->skill, "ammunition crafting", CREATE_BASE_EXP / 5, plan.dc);
+  GET_CRAFT(ch).crafting_item_type = old_type;
+  WAIT_STATE(ch, PULSE_VIOLENCE);
+  if (success)
+  {
+    gain_craft_exp(ch, MAX(1, CREATE_BASE_EXP / 5) * plan.level, plan.recipe->skill, TRUE);
+    obj_to_char(obj, ch);
+    send_to_char(ch, "You've crafted %s.\r\n", object_short_description(obj));
+    Crash_crashsave(ch);
+  }
+  else
+  {
+    extract_obj(obj);
+    send_to_char(ch, "The batch failed; its materials and motes were consumed.\r\n");
+  }
+  save_char(ch, 0);
+  return;
+changed:
+  save_char(ch, 0);
+  if (saved_ammo_plan(ch, &plan)) show_ammo_plan(ch, &plan);
+  else send_to_char(ch, "Settings saved, but this combination exceeds the level 30 cap. Reduce enhancement or damage before crafting.\r\n");
+  return;
+invalid:
+  send_to_char(ch, "Invalid ammunition recipe or settings. Type 'craft ammo' for syntax.\r\n");
+}
+
 static bool obj_has_catalyst_target(struct obj_data *obj)
 {
   int i;
@@ -5978,6 +6324,11 @@ void newcraft_create(struct char_data *ch, const char *argument)
   if (!*arg1)
   {
     send_to_char(ch, "%s", NEWCRAFT_CREATE_NOARG1);
+    return;
+  }
+  else if (!str_cmp(arg1, "ammo") || !str_cmp(arg1, "ammunition"))
+  {
+    craft_ammunition(ch, arg2);
     return;
   }
   else if (is_abbrev(arg1, "tutorial"))

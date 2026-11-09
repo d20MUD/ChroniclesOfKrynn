@@ -1593,13 +1593,133 @@ ACMDU(do_help_text)
   free(raw_argument);
 }
 
+/* Resolve references through the same access-controlled help sources, discarding
+ * probe output. Never invoke the suggestions handler for missing references. */
+static bool web_help_reference_exists(struct char_data *ch, const char *topic)
+{
+  struct help_entry_list *entries, *entry;
+  struct help_keyword_list *keyword;
+  struct help_handler *handler;
+  struct help_context ctx = {0};
+  struct output_capture probe = {0}, *previous = ch->desc->output_capture;
+  char normalized[MAX_INPUT_LENGTH], keywords[MAX_STRING_LENGTH], *token, *save;
+  bool found = FALSE;
+  strlcpy(normalized, topic, sizeof(normalized));
+  space_to_minus(normalized);
+  entries = search_help(normalized, GET_LEVEL(ch));
+  for (entry = entries; entry && !found; entry = entry->next)
+  {
+    if (entry->tag && (!strcasecmp(entry->tag, normalized) || !strcasecmp(entry->tag, topic))) found = TRUE;
+    for (keyword = entry->keyword_list; keyword && !found; keyword = keyword->next)
+      if (!strcasecmp(keyword->keyword, normalized) || !strcasecmp(keyword->keyword, topic)) found = TRUE;
+    if (entry->keywords)
+    {
+      strlcpy(keywords, entry->keywords, sizeof(keywords));
+      for (token = strtok_r(keywords, entry->last_updated && !strcmp(entry->last_updated, "File-based") ? " \t" : ",", &save); token && !found; token = strtok_r(NULL, entry->last_updated && !strcmp(entry->last_updated, "File-based") ? " \t" : ",", &save))
+      {
+        char *end;
+        while (isspace((unsigned char)*token)) token++;
+        end = token + strlen(token);
+        while (end > token && isspace((unsigned char)end[-1])) *--end = '\0';
+        if (!strcasecmp(token, normalized) || !strcasecmp(token, topic)) found = TRUE;
+      }
+    }
+  }
+  free_help_entry_list(entries);
+  if (found) return TRUE;
+  probe.web_data = json_object_new_object();
+  json_object_object_add(probe.web_data, "fields", json_object_new_array());
+  ch->desc->output_capture = &probe;
+  found = spellhelp_try_show(ch, topic);
+  if (!help_handler_chain) init_help_handlers();
+  for (handler = help_handler_chain; handler && !found; handler = handler->next)
+    if (strcmp(handler->name, "database") && strcmp(handler->name, "soundex"))
+      found = handler->handler(ch, normalized, topic, &ctx) != 0;
+  ch->desc->output_capture = previous;
+  json_object_put(probe.web_data);
+  free(probe.text);
+  return found;
+}
+
+/* Strip display codes only in a temporary parsing copy; retain the original
+ * colored help body for both terminal output and the modal. */
+static void web_help_plain_line(const char *start, const char *end, char *out, size_t size)
+{
+  size_t used = 0;
+  while (start < end && used + 1 < size)
+  {
+    if ((unsigned char)*start == 27 && start + 1 < end && start[1] == '[')
+    {
+      start += 2;
+      while (start < end && !(*start >= '@' && *start <= '~')) start++;
+      if (start < end) start++;
+    }
+    else if ((*start == '\t' || *start == '@') && start + 1 < end && !isspace((unsigned char)start[1]))
+    { start += 2; }
+    else if (*start == '\r') start++;
+    else out[used++] = *start++;
+  }
+  out[used] = '\0';
+}
+
+static struct json_object *web_help_see_also(struct char_data *ch, const char *body)
+{
+  const char *line = body, *end, *section_start = NULL, *section_end = NULL;
+  char plain[MAX_STRING_LENGTH], references[MAX_STRING_LENGTH] = "", *text, *token, *save;
+  size_t used = 0;
+  struct json_object *section, *entries;
+  if (!body) return NULL;
+  while (*line)
+  {
+    end = strchr(line, '\n');
+    if (!end) end = line + strlen(line);
+    web_help_plain_line(line, end, plain, sizeof(plain));
+    text = plain;
+    while (isspace((unsigned char)*text)) text++;
+    if (!section_start)
+    {
+      if (strncasecmp(text, "see also", 8)) { line = *end ? end + 1 : end; continue; }
+      text += 8;
+      while (isspace((unsigned char)*text)) text++;
+      if (*text != ':') { line = *end ? end + 1 : end; continue; }
+      text++;
+      section_start = line;
+    }
+    else if ((!*text && used) || strchr(text, ':')) break;
+    if (used && used + 1 < sizeof(references)) references[used++] = ' ';
+    used += strlcpy(references + used, text, sizeof(references) - used);
+    if (used >= sizeof(references)) return NULL;
+    section_end = *end ? end + 1 : end;
+    line = section_end;
+  }
+  if (!section_start || !section_end) return NULL;
+  section = json_object_new_object(); entries = json_object_new_array();
+  for (token = strtok_r(references, ",;|", &save); token && json_object_array_length(entries) < 32; token = strtok_r(NULL, ",;|", &save))
+  {
+    struct json_object *entry;
+    char *tail;
+    while (isspace((unsigned char)*token) || *token == '\'' || *token == '"') token++;
+    tail = token + strlen(token);
+    while (tail > token && (isspace((unsigned char)tail[-1]) || tail[-1] == '.' || tail[-1] == '\'' || tail[-1] == '"')) *--tail = '\0';
+    if (!*token || strlen(token) >= MAX_INPUT_LENGTH || strchr(token, '\r') || strchr(token, '\n')) continue;
+    entry = json_object_new_object();
+    json_object_object_add(entry, "label", json_object_new_string(token));
+    if (web_help_reference_exists(ch, token)) json_object_object_add(entry, "topic", json_object_new_string(token));
+    json_object_array_add(entries, entry);
+  }
+  if (token || !json_object_array_length(entries)) { json_object_put(section); json_object_put(entries); return NULL; }
+  json_object_object_add(section, "text", json_object_new_string_len(section_start, section_end - section_start));
+  json_object_object_add(section, "entries", entries);
+  return section;
+}
+
 /* REPORT HELP_INFO is an explicit opt-in; ordinary telnet clients keep the
  * existing command and pager. Reuse every help handler and its access checks. */
 ACMDU(do_help)
 {
   struct descriptor_data *d = ch ? ch->desc : NULL;
   struct output_capture capture = {0};
-  struct json_object *response;
+  struct json_object *response, *fields, *see_also;
   const char *serialized;
   struct timeval now;
   static unsigned long sequence;
@@ -1613,6 +1733,8 @@ ACMDU(do_help)
     return;
   }
   strlcpy(topic, argument ? argument : "", sizeof(topic));
+  capture.web_data = json_object_new_object();
+  json_object_object_add(capture.web_data, "fields", json_object_new_array());
   d->output_capture = &capture;
   do_help_text(ch, argument, cmd, subcmd);
   d->output_capture = NULL;
@@ -1625,12 +1747,17 @@ ACMDU(do_help)
   json_object_object_add(response, "topic", json_object_new_string(topic));
   json_object_object_add(response, "body", json_object_new_string(capture.text ? capture.text : ""));
   json_object_object_add(response, "truncated", json_object_new_boolean(capture.truncated));
+  if (json_object_object_get_ex(capture.web_data, "fields", &fields) && json_object_array_length(fields))
+    json_object_object_add(response, "fields", json_object_get(fields));
+  see_also = web_help_see_also(ch, capture.text);
+  if (see_also) json_object_object_add(response, "seeAlso", see_also);
   serialized = json_object_to_json_string_ext(response, JSON_C_TO_STRING_PLAIN);
   MSDPSetString(d, eMSDP_HELP_INFO, serialized);
   /* Each command is an event, including repeated requests for the same topic. */
   d->pProtocol->pVariables[eMSDP_HELP_INFO]->bDirty = true;
   MSDPFlush(d, eMSDP_HELP_INFO);
   json_object_put(response);
+  json_object_put(capture.web_data);
   free(capture.text);
 }
 

@@ -47,6 +47,7 @@ void paginate_string(char *str,struct descriptor_data *d) { pager_calls++; }
 void show_string(struct descriptor_data *d,char *input) { pager_calls++; }
 '''
 code += '\n' + function('src/comm.c', 'static void capture_output_printf(')
+code += '\n' + function('src/comm.c', 'void web_info_field(')
 code += r'''
 size_t write_to_output(struct descriptor_data *d,const char *format,...) {
   va_list args;va_start(args,format);
@@ -59,6 +60,11 @@ code += '\n' + function('src/modify.c', 'void page_string(')
 code += r'''
 static void do_help_text(struct char_data *ch,const char *argument,int cmd,int subcmd) {
   if(ch->desc->output_capture) {
+    if(!strcmp(argument,"manyshot")) {
+      web_info_field(ch,"Feat","Name","%s","manyshot");
+      web_info_field(ch,"Prerequisites","BAB +6","%s","\trNot met\tn");
+      web_info_field(ch,"Description","","%s","Fire two arrows with one attack roll.");
+    }
     write_to_output(ch->desc,"Help for %s\n",argument);
     page_string(ch->desc,body,1);
   } else write_to_output(ch->desc,"Normal terminal help");
@@ -67,6 +73,7 @@ size_t strlcpy(char *dst,const char *src,size_t size) {
   size_t length=strlen(src);if(size){size_t n=length<size-1?length:size-1;memcpy(dst,src,n);dst[n]=0;}return length;
 }
 '''
+code += "\nstatic struct json_object *web_help_see_also(struct char_data *ch,const char *body) {return NULL;}\n"
 code += '\n' + function('src/help.c', 'ACMDU(do_help)\n{')
 code += r'''
 static struct json_object *field(struct json_object *o,const char *key) {
@@ -94,6 +101,14 @@ int main(void) {
   decoded=json_tokener_parse(response);assert(decoded);
   assert(strcmp(previous_id,json_object_get_string(field(decoded,"id"))));
   assert(!json_object_get_boolean(field(decoded,"truncated")));
+  assert(strstr(json_object_get_string(field(decoded,"body")),body));
+  assert(!descriptor.output_capture && !pager_calls);
+  json_object_put(decoded);
+  do_help(&character,"manyshot",0,0);
+  decoded=json_tokener_parse(response);assert(decoded);
+  struct json_object *fields=field(decoded,"fields");
+  assert(json_object_array_length(fields)==3);
+  assert(strstr(json_object_get_string(field(json_object_array_get_idx(fields,1),"value")),"\trNot met\tn"));
   assert(strstr(json_object_get_string(field(decoded,"body")),body));
   assert(!descriptor.output_capture && !pager_calls);
   json_object_put(decoded);free(previous_id);free(body);free(response);

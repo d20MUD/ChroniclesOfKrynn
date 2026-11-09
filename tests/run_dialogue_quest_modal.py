@@ -40,7 +40,8 @@ static struct { struct char_data *people; } world[1];
 #define CAN_SEE(ch,i) true
 #define QST_INFO(q) (aquest_table[q].info)
 static int roll=6,skill=-1,modals,saves,failed,completed,successes,generic_completed,assigned;
-static int notified_quest=-1;
+static int notified_quest=-1,check_calls,checked_skill,checked_roll,checked_modifier,checked_dc;
+static void set_dialogue_quest_check(struct char_data *ch,int quest,int ability,int die,int modifier,int dc) {check_calls++;checked_skill=ability;checked_roll=die;checked_modifier=modifier;checked_dc=dc;assert(ch->quests[0]==aquest_table[quest].vnum);}
 static char output[16384];
 static int real_quest(int vnum) { for(int i=0;i<2;i++) if(aquest_table[i].vnum==vnum)return i; return NOTHING; }
 static int d20(struct char_data *ch) { return roll; }
@@ -71,13 +72,15 @@ int main(void) {
     assert(modals==method && notified_quest==1 && assigned==method && saves==method);
     assert(failed==method && completed==method && !successes && !generic_completed);
     assert(strstr(output,"Go kill 10 wharf rats"));
+    assert(check_calls==method && checked_skill==method && checked_roll==6 && checked_modifier==-1 && checked_dc==15);
   }
   player.quests[0]=100;aquest_table[0].dialogue_alternative_quest=NOTHING;
   do_dialogue_quest(&player,"",0,SCMD_DIALOGUE_DIPLOMACY);
-  assert(modals==3 && assigned==3 && player.quests[0]==100);
+  assert(modals==4 && assigned==3 && player.quests[0]==100 && check_calls==4);
   roll=20;skill=5;
   do_dialogue_quest(&player,"",0,SCMD_DIALOGUE_DIPLOMACY);
-  assert(successes==1 && generic_completed==1 && modals==3);
+  assert(successes==1 && generic_completed==1 && modals==4);
+  assert(check_calls==5 && checked_skill==ABILITY_DIPLOMACY && checked_roll==20 && checked_modifier==5 && checked_dc==15);
   puts("Dialogue quest failure: diplomacy, intimidate, bluff, fallback assignment and modal event passed");
 }
 '''

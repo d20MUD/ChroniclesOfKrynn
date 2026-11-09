@@ -61,6 +61,7 @@ code += '\n' + function('src/modify.c', 'void page_string(')
 code += r'''
 static void do_lore_text(struct char_data *ch,const char *argument) {
   if (!strcmp(argument,"silent")) return;
+  if (!strcmp(argument,"native")) {web_info_field(ch,"Identity","Name","native");return;}
   if(ch->desc->output_capture) {
     write_to_output(ch->desc,"Help for %s\n",argument);
     web_info_field(ch,"Identity","Name","%s",argument);
@@ -102,9 +103,16 @@ int main(void) {
   assert(strstr(json_object_get_string(field(decoded,"body")),body));
   assert(!descriptor.output_capture && !pager_calls);
   json_object_put(decoded);free(previous_id);
-  /* A silent handler must not send an empty response or leave capture active. */
+  /* Native fields must still arrive when a handler has no terminal body. */
   free(body);body=strdup("");
   char *last_response=strdup(response);
+  do_lore(&character,"native",0,0);
+  assert(strcmp(last_response,response) && !descriptor.output_capture);
+  decoded=json_tokener_parse(response);assert(decoded);
+  assert(!*json_object_get_string(field(decoded,"body")));
+  assert(json_object_array_length(field(decoded,"fields"))==1);
+  json_object_put(decoded);
+  free(last_response);last_response=strdup(response);
   do_lore(&character,"silent",0,0);
   assert(!strcmp(last_response,response) && !descriptor.output_capture);
   free(last_response);free(body);free(response);

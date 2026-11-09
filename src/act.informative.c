@@ -7763,6 +7763,29 @@ ACMD(do_weather)
   "[-s] [-z]\r\n"
 
 /* Written by Rhade */
+static void web_who_staff_title(struct json_object *player, struct char_data *tch, bool anonymous)
+{
+  if (!anonymous && GET_LEVEL(tch) >= LVL_IMMORT && GET_IMM_TITLE(tch) && *GET_IMM_TITLE(tch))
+    json_object_object_add(player, "staffTitle", json_object_new_string(GET_IMM_TITLE(tch)));
+}
+
+static void web_who_happyhour(struct char_data *ch)
+{
+  const char *labels[] = {"Experience", "Gold", "Quest points", "Treasure drops", "Crafting experience",
+    "Harvesting experience", "Materials harvested", "Mote drop chance", "Motes obtained"};
+  int rates[] = {HAPPY_EXP, HAPPY_GOLD, HAPPY_QP, HAPPY_TREASURE, HAPPY_CRAFTING_EXP,
+    HAPPY_HARVESTING_EXP, HAPPY_HARVESTING_MATERIALS, HAPPY_HARVESTING_MOTES_CHANCE, HAPPY_HARVESTING_MOTES_OBTAINED};
+  int i, seconds;
+  bool active = FALSE;
+  if (HAPPY_TIME <= 0) return;
+  for (i = 0; i < 9; i++) if (rates[i] > 0) active = TRUE;
+  if (!active) return;
+  seconds = MAX(0, (HAPPY_TIME - 1) * SECS_PER_MUD_HOUR + next_tick);
+  web_info_field(ch, "Happy hour", "Time remaining", "%dh %dm %ds", seconds / 3600, (seconds % 3600) / 60, seconds % 60);
+  for (i = 0; i < 9; i++) if (rates[i] > 0)
+    web_info_field(ch, "Happy hour", labels[i], "+%d%%", rates[i]);
+}
+
 ACMD(do_who_text)
 {
   struct descriptor_data *d;
@@ -8033,6 +8056,7 @@ ACMD(do_who_text)
           player = json_object_new_object();
           json_object_object_add(player, "name", json_object_new_string(anonymous ? PERS(tch, ch) : (*GET_TITLE(tch) ? GET_TITLE(tch) : GET_NAME(tch))));
           json_object_object_add(player, "role", json_object_new_string(GET_LEVEL(tch) >= LVL_IMMORT ? "Staff" : "Player"));
+          web_who_staff_title(player, tch, anonymous);
           if (!anonymous && GET_LEVEL(tch) < LVL_IMMORT)
           {
             json_object_object_add(player, "level", json_object_new_int(GET_LEVEL(tch)));
@@ -8304,6 +8328,7 @@ ACMD(do_who)
   { do_who_text(ch, argument, cmd, subcmd); return; }
   json_object_object_add(capture.web_data, "players", json_object_new_array());
   do_who_text(ch, argument, cmd, subcmd);
+  web_who_happyhour(ch);
   web_info_finish(ch, eMSDP_WHO_INFO, &capture, "Who is online");
 }
 

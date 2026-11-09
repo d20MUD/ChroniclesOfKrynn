@@ -152,6 +152,7 @@ void parse_quest(FILE *quest_f, int nr);
 int count_quests(qst_vnum low, qst_vnum high);
 void list_quests(struct char_data *ch, zone_rnum zone, qst_vnum vmin, qst_vnum vmax);
 void set_quest(struct char_data *ch, qst_rnum rnum, int index);
+void set_dialogue_quest_check(struct char_data *ch, qst_rnum rnum, int skill, int roll, int modifier, int dc);
 void send_quest_acceptance(struct char_data *ch, qst_rnum rnum);
 void clear_quest(struct char_data *ch, int index);
 void complete_quest(struct char_data *ch, int index);

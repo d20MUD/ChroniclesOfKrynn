@@ -129,6 +129,7 @@ static void load_buff_lists(FILE *fl, struct char_data *ch);
 static void load_languages(FILE *fl, struct char_data *ch);
 static void load_craft_affects(FILE *fl, struct char_data *ch);
 static void load_craft_materials(FILE *fl, struct char_data *ch);
+static void load_ammo_craft_settings(struct char_data *ch, const char *line);
 static void load_craft_motes(FILE *fl, struct char_data *ch);
 static void load_perks(FILE *fl, struct char_data *ch);
 static void load_perk_points(FILE *fl, struct char_data *ch);
@@ -416,6 +417,7 @@ int load_char(const char *name, struct char_data *ch)
     /* Character initializations. Necessary to keep some things straight. */
     ch->affected = NULL;
     GET_PREFERRED_AMMO(ch) = 0;
+    memset(ch->player_specials->saved.ammo_craft_settings, 0, sizeof(ch->player_specials->saved.ammo_craft_settings));
     for (i = 0; i < MAX_CLASSES; i++)
     {
       CLASS_LEVEL(ch, i) = 0;
@@ -802,6 +804,7 @@ int load_char(const char *name, struct char_data *ch)
       switch (*tag)
       {
       case 'A':
+        if (!strcmp(tag, "AmCf")) load_ammo_craft_settings(ch, line);
         if (!strcmp(tag, "AmPr")) GET_PREFERRED_AMMO(ch) = MAX(0, atoi(line));
         if (!strcmp(tag, "AiAu"))
         {
@@ -3226,6 +3229,10 @@ bool save_char_checked(struct char_data *ch, int mode)
     BUFFER_WRITE("UTF8: %d\n", ch->desc->pProtocol->pVariables[eMSDP_UTF_8]->ValueInt);
   }
   BUFFER_WRITE("AmPr: %d\n", GET_PREFERRED_AMMO(ch));
+  {
+    const int *ammo = ch->player_specials->saved.ammo_craft_settings;
+    BUFFER_WRITE("AmCf: %d %d %d %d %d %d %d\n", ammo[0], ammo[1], ammo[2], ammo[3], ammo[4], ammo[5], ammo[6]);
+  }
   BUFFER_WRITE("XTrm: %d\n", ch->player_specials->saved.color_256);
 
   if (GET_PREMADE_BUILD_CLASS(ch) != PFDEF_PREMADE_BUILD)
@@ -4627,6 +4634,28 @@ static void load_craft_affects(FILE *fl, struct char_data *ch)
       GET_CRAFT(ch).affected[num].specific = num5;
     }
   } while (num != -1);
+}
+
+static void load_ammo_craft_settings(struct char_data *ch, const char *line)
+{
+  int values[7], i;
+  char *end;
+  long value;
+  for (i = 0; i < 7; i++)
+  {
+    while (isspace((unsigned char)*line)) line++;
+    errno = 0;
+    value = strtol(line, &end, 10);
+    if (end == line || errno == ERANGE || value < 0 || value > INT_MAX) return;
+    values[i] = value;
+    line = end;
+  }
+  while (isspace((unsigned char)*line)) line++;
+  if (*line) return;
+  if (values[0] > 2 || values[4] > 8 || values[5] > 5) return;
+  for (i = 1; i <= 3; i++) if (values[i] >= NUM_CRAFT_MATS) return;
+  if (values[6] != 0 && values[6] != 4 && values[6] != 6 && values[6] != 8 && values[6] != 10 && values[6] != 12) return;
+  memcpy(ch->player_specials->saved.ammo_craft_settings, values, sizeof(values));
 }
 
 static void load_craft_materials(FILE *fl, struct char_data *ch)

@@ -7461,6 +7461,7 @@ struct player_special_data_saved
   char *intro_list[MAX_INTROS]; // Stores names of characters known
 
   struct crafting_data_info craft_data; // New crafting system info
+  int ammo_craft_settings[7]; // recipe, three materials, enhancement, element, die
 
   int craft_mats_owned[NUM_CRAFT_MATS];
   int craft_motes_owned[NUM_CRAFT_MOTES];
@@ -8015,6 +8016,13 @@ struct oldNextMove
 struct trade_session_data;
 
 /** Master structure for PCs and NPCs. */
+/* Transient UI check results, kept until delayed quest completion is emitted. */
+struct dialogue_quest_check
+{
+  int quest_vnum, skill, roll, modifier, dc;
+  bool pending;
+};
+
 struct char_data
 {
   bool legendary_serializing; /* Temporary save-time gear removal is not unequip. */
@@ -8039,6 +8047,7 @@ struct char_data
   struct char_point_data points;               /**< Point/statistics */
   struct char_point_data real_points;          /**< Point/statistics */
   struct char_special_data char_specials;      /**< PC/NPC specials	  */
+  struct dialogue_quest_check dialogue_checks[MAX_CURRENT_QUESTS];
   struct player_special_data *player_specials; /**< PC specials		  */
   struct mob_special_data mob_specials;        /**< NPC specials		  */
 

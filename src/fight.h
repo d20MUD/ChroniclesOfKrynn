@@ -136,4 +136,7 @@ extern struct attack_hit_type attack_hit_text[];
 extern struct char_data *combat_list;
 #endif /* __FIGHT_C__ */
 
+/* Manyshot feat eligibility, including two usable bow arrows. */
+bool manyshot_ready(struct char_data *ch, struct obj_data *weapon);
+
 #endif /* _FIGHT_H_*/

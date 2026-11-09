@@ -11,6 +11,7 @@
 #include "conf.h"
 #include <limits.h>
 #include "account.h"
+#include "protocol.h"
 #include "sysdep.h"
 #include "legendary_equipment.h"
 #include "structs.h"
@@ -218,6 +219,8 @@ void say_bazaar(struct char_data *ch, struct obj_data *obj)
 void say_treasure(struct char_data *ch, struct obj_data *obj)
 {
   char buf[MAX_STRING_LENGTH] = {'\0'};
+
+  if (ch && obj) web_info_field(ch, "Received items", "Item", "%s", object_short_description(obj));
 
   if (ch->char_specials.which_treasure_message == CUSTOM_TREASURE_MESSAGE_BORROW)
   {
@@ -816,6 +819,7 @@ static void award_random_crafting_treasure(struct char_data *ch, struct char_dat
     if (material != CRAFT_MAT_NONE && GET_CRAFT_MAT(ch, material) < INT_MAX)
     {
       GET_CRAFT_MAT(ch, material)++;
+      web_info_field(ch, "Crafting materials received", crafting_materials[material], "%d", 1);
       snprintf(buf, sizeof(buf), "\tYYou find 1 unit of %s on $N's corpse!\tn",
                crafting_materials[material]);
       act(buf, FALSE, ch, NULL, mob, TO_CHAR);
@@ -828,6 +832,7 @@ static void award_random_crafting_treasure(struct char_data *ch, struct char_dat
     if (GET_CRAFT_MOTES(ch, mote) < INT_MAX)
     {
       GET_CRAFT_MOTES(ch, mote)++;
+      web_info_field(ch, "Motes received", crafting_motes[mote], "%d", 1);
       snprintf(buf, sizeof(buf), "\tYYou find 1 %s on $N's corpse!\tn", crafting_motes[mote]);
       act(buf, FALSE, ch, NULL, mob, TO_CHAR);
       awarded = TRUE;
@@ -837,10 +842,31 @@ static void award_random_crafting_treasure(struct char_data *ch, struct char_dat
     save_char(ch, 0);
 }
 
+/* Report only items the recipient can see on a completed NPC corpse.
+ * This includes zone reset G/E/I loads; do not claim they entered inventory. */
+void web_notify_corpse_loot(struct char_data *recipient, struct char_data *mob, struct obj_data *corpse)
+{
+  struct output_capture capture = {0};
+  struct obj_data *obj;
+  bool found = FALSE;
+  if (!recipient || !mob || !corpse || !IS_NPC(mob) ||
+      !web_info_begin(recipient, eMSDP_LOOT_INFO, &capture)) return;
+  for (obj = corpse->contains; obj; obj = obj->next_content)
+    if (GET_OBJ_TYPE(obj) != ITEM_MONEY && CAN_SEE_OBJ(recipient, obj))
+    {
+      found = TRUE;
+      web_info_field(recipient, "On the corpse (collect to receive)", "Item", "%s", object_short_description(obj));
+    }
+  if (found) web_info_field(recipient, "Source", "Defeated", "%s", PERS(mob, recipient));
+  web_info_finish(recipient, eMSDP_LOOT_INFO, &capture, "Corpse loot");
+}
+
 /* this function determines whether the character will get treasure or not
  *   for example, called before make_corpse() when killing a mobile */
 void determine_treasure(struct char_data *ch, struct char_data *mob)
 {
+  struct output_capture capture = {0};
+  bool captured;
   int gold = 0;
   int level = 0;
   char buf[MEDIUM_STRING] = {'\0'};
@@ -851,6 +877,8 @@ void determine_treasure(struct char_data *ch, struct char_data *mob)
 
   if (!IS_NPC(mob))
     return;
+
+  captured = web_info_begin(ch, eMSDP_LOOT_INFO, &capture);
 
   /* staff events drop items sometimes */
   if (IS_STAFF_EVENT)
@@ -883,7 +911,13 @@ void determine_treasure(struct char_data *ch, struct char_data *mob)
     snprintf(buf, MEDIUM_STRING, "$n \tYhas found %d coins hidden on $N's corpse!\tn", gold);
     act(buf, FALSE, ch, 0, mob, TO_NOTVICT);
     GET_GOLD(ch) += gold;
+    web_info_field(ch, "Coins received", "Gold", "%d", gold);
     /* does not split this gold, maybe change later */
+  }
+  if (captured)
+  {
+    if (capture.length) web_info_field(ch, "Source", "Defeated", "%s", PERS(mob, ch));
+    web_info_finish(ch, eMSDP_LOOT_INFO, &capture, "Kill rewards");
   }
 }
 
@@ -1976,20 +2010,39 @@ void cp_modify_object_applies(struct char_data *ch, struct obj_data *obj, int en
 }
  */
 
+/* Ammo power follows the treasure source, not the recipient or an unrelated
+ * equipment enchantment roll. Unknown sources use the treasure grade's tier. */
+static void set_random_ammo_bonuses(struct obj_data *obj, int grade, int source_level, int rare_grade)
+{
+  static const int damage_types[] = {DAM_FIRE, DAM_COLD, DAM_ACID, DAM_ELECTRIC, DAM_SOUND};
+  int level = source_level > 0 ? MIN(30, source_level) : MAX(1, MIN(6, grade)) * 5;
+  int tier = (level - 1) / 5;
+  int chance = rare_grade == RARE_GRADE_MYTHICAL ? 100 : rare_grade == RARE_GRADE_LEGENDARY ? 75 : 50;
+  GET_OBJ_VAL(obj, 4) = tier + 1;
+  GET_OBJ_VAL(obj, AMMO_VAL_DAMAGE_TYPE) = 0;
+  GET_OBJ_VAL(obj, AMMO_VAL_DAMAGE_DIE) = 0;
+  if (rare_grade > RARE_GRADE_NORMAL && rand_number(1, 100) <= chance)
+  {
+    GET_OBJ_VAL(obj, AMMO_VAL_DAMAGE_TYPE) = damage_types[rand_number(0, 4)];
+    GET_OBJ_VAL(obj, AMMO_VAL_DAMAGE_DIE) = MIN(12, 4 + tier * 2);
+  }
+}
+
 /* Give away random magic ammo */
 void award_magic_ammo(struct char_data *ch, int grade, int source_level)
 {
-  struct obj_data *obj = NULL, *obj2 = NULL, *obj3 = NULL, *obj4 = NULL;
+  struct obj_data *obj = NULL;
   int armor_desc_rollA = 0;
   int armor_desc_rollB = 0;
   int rare_grade = RARE_GRADE_NORMAL;
-  char desc[4 * MEDIUM_STRING] = {'\0'};
+  char desc[6 * MEDIUM_STRING] = {'\0'};
   char desc1[MEDIUM_STRING] = {'\0'};
   char desc2[MEDIUM_STRING] = {'\0'};
   char desc3[MEDIUM_STRING] = {'\0'};
   char desc4[MEDIUM_STRING] = {'\0'};
-  char desc5[4 * MEDIUM_STRING + sizeof(" is lying here.")] = {'\0'};
+  char desc5[6 * MEDIUM_STRING + sizeof(" is lying here.")] = {'\0'};
   char keywords[MEDIUM_STRING] = {'\0'};
+  char damage[80] = {'\0'};
 
   /* ok load blank object */
   if ((obj = read_object(AMMO_PROTO, VIRTUAL)) == NULL)
@@ -1997,9 +2050,6 @@ void award_magic_ammo(struct char_data *ch, int grade, int source_level)
     log("SYSERR: award_magic_ammo created NULL object");
     return;
   }
-  obj2 = read_object(AMMO_PROTO, VIRTUAL);
-  obj3 = read_object(AMMO_PROTO, VIRTUAL);
-  obj4 = read_object(AMMO_PROTO, VIRTUAL);
 
   /* determine if rare or not, start building string */
   rare_grade = determine_rare_grade();
@@ -2010,15 +2060,12 @@ void award_magic_ammo(struct char_data *ch, int grade, int source_level)
 
   /* now set up this new object */
   set_ammo_object(obj, armor_desc_rollA);
-  set_ammo_object(obj2, armor_desc_rollA);
-  set_ammo_object(obj3, armor_desc_rollA);
-  set_ammo_object(obj4, armor_desc_rollA);
+  set_random_ammo_bonuses(obj, grade, source_level, rare_grade);
 
   /* we should have a completely usable ammo now, just missing descrip/stats */
 
   /* set the object material, check for upgrade */
   GET_OBJ_MATERIAL(obj) = possible_material_upgrade(GET_OBJ_MATERIAL(obj), grade);
-  GET_OBJ_MATERIAL(obj2) = GET_OBJ_MATERIAL(obj3) = GET_OBJ_MATERIAL(obj4) = GET_OBJ_MATERIAL(obj);
 
   /* BEGIN DESCRIPTION SECTION */
 
@@ -2053,39 +2100,23 @@ void award_magic_ammo(struct char_data *ch, int grade, int source_level)
   snprintf(keywords, MEDIUM_STRING, "ammo %s %s %s %s", ammo_head_descs[armor_desc_rollB],
            material_name[GET_OBJ_MATERIAL(obj)], ammo_types[GET_OBJ_VAL(obj, 0)],
            ammo_descs[armor_desc_rollA]);
-  snprintf(desc, sizeof(desc), "%s %s %s %s", desc1, desc2, desc3, desc4);
+  if (GET_OBJ_VAL(obj, AMMO_VAL_DAMAGE_DIE))
+    snprintf(damage, sizeof(damage), ", +1d%d %s", GET_OBJ_VAL(obj, AMMO_VAL_DAMAGE_DIE), damtypes[GET_OBJ_VAL(obj, AMMO_VAL_DAMAGE_TYPE)]);
+  snprintf(desc, sizeof(desc), "%s %s %s %s (+%d%s)", desc1, desc2, desc3, desc4, GET_OBJ_VAL(obj, 4), damage);
 
   /* finished descrips, so lets assign them */
   obj->name = strdup(keywords);
-  obj2->name = strdup(keywords);
-  obj3->name = strdup(keywords);
-  obj4->name = strdup(keywords);
   obj->short_description = strdup(desc);
-  obj2->short_description = strdup(desc);
-  obj3->short_description = strdup(desc);
-  obj4->short_description = strdup(desc);
   desc[0] = toupper(desc[0]);
   snprintf(desc5, sizeof(desc5), "%s is lying here.", desc);
   desc5[0] = toupper(desc5[0]);
   obj->description = strdup(desc5);
-  obj2->description = strdup(desc5);
-  obj3->description = strdup(desc5);
-  obj4->description = strdup(desc5);
 
   /* END DESCRIPTION SECTION */
 
   /* BONUS SECTION */
   SET_BIT_AR(GET_OBJ_EXTRA(obj), ITEM_MAGIC);
-  SET_BIT_AR(GET_OBJ_EXTRA(obj2), ITEM_MAGIC);
-  SET_BIT_AR(GET_OBJ_EXTRA(obj3), ITEM_MAGIC);
-  SET_BIT_AR(GET_OBJ_EXTRA(obj4), ITEM_MAGIC);
-  cp_modify_object_applies(ch, obj, cp_convert_grade_enchantment(grade), CP_TYPE_AMMO, rare_grade,
-                           FALSE, source_level);
-  cp_modify_object_applies(ch, obj2, cp_convert_grade_enchantment(grade), CP_TYPE_AMMO, rare_grade,
-                           FALSE, source_level);
-  cp_modify_object_applies(ch, obj3, cp_convert_grade_enchantment(grade), CP_TYPE_AMMO, rare_grade,
-                           FALSE, source_level);
-  cp_modify_object_applies(ch, obj4, cp_convert_grade_enchantment(grade), CP_TYPE_AMMO, rare_grade,
+  cp_modify_object_applies(ch, obj, GET_OBJ_VAL(obj, 4), CP_TYPE_AMMO, rare_grade,
                            FALSE, source_level);
   /* END BONUS SECTION */
 }
@@ -2659,6 +2690,14 @@ void award_magic_armor_suit(struct char_data *ch, int grade, int source_level)
 void set_ammo_object(struct obj_data *obj, int type)
 {
   GET_OBJ_TYPE(obj) = ITEM_MISSILE;
+  /* Random rewards are one finite stack, not several legacy single shots.
+   * Never inherit unlimited/returning or old ammunition values from a template. */
+  memset(obj->obj_flags.value, 0, sizeof(obj->obj_flags.value));
+  GET_OBJ_VAL(obj, AMMO_VAL_MIN) = 50;
+  GET_OBJ_VAL(obj, AMMO_VAL_MAX) = 50;
+  GET_OBJ_VAL(obj, AMMO_VAL_QUANTITY) = 50;
+  if (type == AMMO_TYPE_THROWN)
+    GET_OBJ_VAL(obj, AMMO_VAL_WEAPON_TYPE) = WEAPON_TYPE_DAGGER;
 
   /* Ammo Type, 0 Value */
   GET_OBJ_VAL(obj, 0) = type;

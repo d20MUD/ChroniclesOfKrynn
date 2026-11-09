@@ -339,6 +339,7 @@ lib/text/help/*
 !lib/text/help/practiced_spellcaster.hlp
 !lib/text/help/stalls.hlp
 !lib/text/help/infuse.hlp
+!lib/text/help/craft_ammo.hlp
 
 ####################
 # Unit Tests
@@ -415,3 +416,9 @@ unittests/CuTest/vessel_stress_test
 # Authored ranged combat help
 !lib/text/help/ranged_combat.hlp
 !lib/text/help/build_ranged.hlp
+
+# Authored portable ammunition crafting kit
+!lib/world/obj/fletching_kit.obj
+
+# Preferred ammunition command help
+!lib/text/help/ammopref.hlp

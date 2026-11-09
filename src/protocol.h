@@ -514,12 +514,14 @@ typedef enum
   eMSDP_HELP_INFO,       /**< On-demand web help response as JSON */
   eMSDP_SCORE_INFO, /**< On-demand structured score */
   eMSDP_WHO_INFO, /**< On-demand visible player list */
+  eMSDP_LOOT_INFO, /**< Kill rewards and corpse loot notifications */
   eMSDP_LORE_INFO,      /**< On-demand lore results as JSON */
   eMSDP_CHARACTER_CREATION, /**< Server-authoritative character creation step */
   eMSDP_ROOM_CONTENTS, /**< Visible people and objects in the current room */
   eMSDP_ROOM_QUESTS,    /**< Eligible quests offered in the current room */
   eMSDP_QUEST_ACCEPTED,  /**< Quest acceptance event as JSON string */
   eMSDP_QUEST_COMPLETE,  /**< Quest completion event as JSON string */
+  eMSDP_QUEST_HISTORY,   /**< Requested completed quest list/details as JSON */
   eMSDP_QUEST_INFO,      /**< Active quest info as JSON string */
 
   /* Real-time combat information */

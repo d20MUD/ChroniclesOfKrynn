@@ -147,7 +147,10 @@ int main(void) {
   ammo.next_content=&extra;assert(manyshot_ready(&ch,&bow));
   struct obj_data wrong={0};GET_OBJ_TYPE(&wrong)=ITEM_MISSILE;GET_OBJ_VAL(&wrong,0)=AMMO_TYPE_BOLT;
   ammo.next_content=&wrong;wrong.next_content=&extra;assert(manyshot_ready(&ch,&bow));
-  ammo.next_content=NULL;
+  GET_OBJ_VAL(&bow,0)=WEAPON_TYPE_LIGHT_CROSSBOW;
+  assert(!manyshot_ready(&ch,&bow)); // Mixed pouch must never give a crossbow two arrows.
+  GET_OBJ_VAL(&bow,0)=WEAPON_TYPE_LONG_BOW;
+  pouch.contains=&ammo;ammo.next_content=NULL;wrong.next_content=NULL;
   GET_OBJ_VAL(&ammo,AMMO_VAL_QUANTITY)=3;
   GET_OBJ_VAL(&ammo,AMMO_VAL_DAMAGE_TYPE)=DAM_FIRE;GET_OBJ_VAL(&ammo,AMMO_VAL_DAMAGE_DIE)=6;
   struct ranged_shot_context context={0};context.attacker=&ch;context.manyshot=true;

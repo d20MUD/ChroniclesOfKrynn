@@ -11,12 +11,16 @@ craft=(root/'src/crafting_new.c').read_text()
 def function(source, signature):
     a=source.index(signature+'\n{'); return source[a:source.index('\n}',a)+2]
 a=treasure.index('#define TREASURE_MATERIAL_CHANCE')
-b=treasure.index('/* this function determines whether',a)
+b=treasure.index('/* Report only items',a)
 code=treasure[a:b]+function(craft,'int canonical_craft_material(int material)')+function(craft,'int material_grade(int material)')+function(treasure,'void determine_treasure(struct char_data *ch, struct char_data *mob)')
 headers='\n'.join('#include "'+name+'"' for name in
-                  ['conf.h','sysdep.h','structs.h','utils.h','comm.h','db.h','constants.h','treasure.h','crafting_new.h','account.h'])
+                  ['conf.h','sysdep.h','structs.h','utils.h','comm.h','db.h','constants.h','treasure.h','crafting_new.h','account.h','protocol.h'])
 stubs=r'''
 #include <assert.h>
+char *show_pers(struct char_data*c,struct char_data*v) {return "mob";}
+bool web_info_begin(struct char_data*c,int v,struct output_capture*p) {return false;}
+void web_info_finish(struct char_data*c,int v,struct output_capture*p,const char*t) {}
+void web_info_field(struct char_data*c,const char*s,const char*l,const char*f,...) {}
 #include <limits.h>
 struct happyhour happy_data;
 const char *crafting_materials[NUM_CRAFT_MATS];

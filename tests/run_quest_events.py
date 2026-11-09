@@ -38,7 +38,13 @@ static struct { int diplomacy_dc, intimidate_dc, bluff_dc; } aquest_table[1]={{1
 struct variable { bool bReport,bDirty; };
 struct protocol { bool bMSDP; struct variable **pVariables; };
 struct descriptor_data { struct protocol *pProtocol; };
-struct char_data { struct descriptor_data *desc; };
+#define MAX_CURRENT_QUESTS 3
+#define NUM_ABILITIES 4
+#define TRUE true
+#define FALSE false
+struct dialogue_quest_check { int quest_vnum,skill,roll,modifier,dc; bool pending; };
+static const char *ability_names[]={"unused","diplomacy","intimidate","bluff"};
+struct char_data { struct descriptor_data *desc; struct dialogue_quest_check dialogue_checks[3]; };
 static int writes,flushes,last_var;
 static char *response;
 static void MSDPSetString(struct descriptor_data *d,int var,const char *text) {
@@ -49,6 +55,7 @@ static void MSDPFlush(struct descriptor_data *d,int var) {
   d->pProtocol->pVariables[var]->bDirty=false;flushes++;
 }
 '''
+code += function('static void append_dialogue_quest_check(') + '\n'
 code += function('void send_quest_acceptance(') + '\n'
 code += function('static void send_quest_completion(') + '\n'
 code += r'''
@@ -93,6 +100,20 @@ int main(void) {
   protocol.bMSDP=false;
   send_quest_acceptance(&player,0);send_quest_completion(&player,0,0,0,0,NULL,NULL);
   assert(writes==4 && flushes==4);
+  protocol.bMSDP=true;
+  player.dialogue_checks[0]=(struct dialogue_quest_check){70001,1,6,-1,15,true};
+  send_quest_acceptance(&player,0);
+  event=json_tokener_parse(response);struct json_object *check=field(event,"dialogueCheck");
+  assert(!strcmp(json_object_get_string(field(check,"skill")),"diplomacy"));
+  assert(json_object_get_int(field(check,"roll"))==6 && json_object_get_int(field(check,"modifier"))==-1);
+  assert(json_object_get_int(field(check,"total"))==5 && json_object_get_int(field(check,"dc"))==15);
+  assert(!json_object_get_boolean(field(check,"success")) && !player.dialogue_checks[0].pending);json_object_put(event);
+  send_quest_acceptance(&player,0);event=json_tokener_parse(response);
+  assert(!json_object_object_get_ex(event,"dialogueCheck",&check));json_object_put(event);
+  player.dialogue_checks[1]=(struct dialogue_quest_check){70001,3,12,3,15,true};
+  send_quest_completion(&player,0,0,0,0,NULL,NULL);event=json_tokener_parse(response);check=field(event,"dialogueCheck");
+  assert(json_object_get_boolean(field(check,"success")) && json_object_get_int(field(check,"total"))==15);
+  assert(!strcmp(json_object_get_string(field(check,"skill")),"bluff") && !player.dialogue_checks[1].pending);json_object_put(event);
   free(response);
   puts("Quest acceptance/completion: opt-in, real rewards, JSON, unique IDs and immediate flushing passed");
 }
