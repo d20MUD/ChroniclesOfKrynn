@@ -33,13 +33,13 @@ its usual stock and prices after a sale.
 
 Newly purchased pets have a purchase marker. Existing saved followers cannot reliably be identified as old purchases and remain unmarked. Bought pets earn independent XP while alive, present and fighting enemies whose deaths reward their owner. This takes no XP from players. Charmed enemies, purchased pets, player kills and one-point rewards do not provide pet XP.
 
-Advancement costs 2,000 times the next level, with automatic advancement up to owner level or level 30. Growth adds 10 maximum HP and 1 AC per level, 1 attack/damage bonus at even levels, and 1 to saves at levels divisible by four. Growth does not heal existing damage. Purchased pets retain this system; class companions use training ranks instead of XP-based level increases.
+Advancement costs 100,000 times the next level (50× the original requirement), with automatic advancement up to owner level or level 30. Growth adds 10 maximum HP and 1 AC per level, 1 attack/damage bonus at even levels, and 1 to saves at levels divisible by four. Growth does not heal existing damage. Purchased pets retain this system; class companions use training ranks instead of XP-based level increases.
 
 ## Companion training
 
 Permanent companion types earn training XP from meaningful owner kill rewards before personal/happy-hour modifiers. Combat companions must be fighting that enemy; ridden mounts and present familiars can earn XP by supporting the owner. Temporary summons/reflections cannot earn training. Normal class-based companion level rules remain; training never changes their creature level.
 
-Maximum training rank is 10. Each rank requires 2,000 times that next rank in XP and grants one pet skill point. Rank 1 costs 2,000 XP, rank 2 another 4,000, through rank 10. XP cannot be banked above the cap. Each skill can be purchased five times; owners choose how to spend ten points across the following skills:
+Maximum training rank is 10. Each rank requires 100,000 times that next rank in XP (50× the original requirement) and grants one pet skill point. Rank 1 costs 100,000 XP, rank 2 another 200,000, through rank 10. XP cannot be banked above the cap. Each skill can be purchased five times; owners choose how to spend ten points across the following skills:
 
 | Command | Cost | Benefit per purchase |
 | --- | --- | --- |

@@ -33,7 +33,7 @@ void save_char_pets(struct char_data *ch);
 /* XP is spent on advancement, rather than becoming a bounty for killing a pet. */
 int purchased_pet_level_cost(struct char_data *pet)
 {
-  return 2000 * (GET_LEVEL(pet) + 1);
+  return PET_PROGRESSION_XP_PER_STEP * (GET_LEVEL(pet) + 1);
 }
 
 void award_purchased_pet_exp(struct char_data *owner, struct char_data *victim, int reward)
@@ -59,7 +59,7 @@ void award_purchased_pet_exp(struct char_data *owner, struct char_data *victim, 
 
     /* Bound the bank to the XP needed to reach the owner's level cap. */
     for (level = GET_LEVEL(pet) + 1; level <= cap; level++)
-      max_progress += 2000 * level;
+      max_progress += PET_PROGRESSION_XP_PER_STEP * level;
     pet->mob_specials.pet_experience = MAX(0, MIN(max_progress, pet->mob_specials.pet_experience));
     gain = MIN(reward, max_progress - pet->mob_specials.pet_experience);
     pet->mob_specials.pet_experience += gain;
@@ -150,7 +150,7 @@ bool format_companion_tnl(struct char_data *owner, struct char_data *pet, char *
     snprintf(buf, size, "Training cap");
   else
     snprintf(buf, size, "%d Training TNL",
-             MAX(0, 2000 * (pet->mob_specials.pet_training_rank + 1) -
+             MAX(0, PET_PROGRESSION_XP_PER_STEP * (pet->mob_specials.pet_training_rank + 1) -
                         MAX(0, pet->mob_specials.pet_training_experience)));
   return TRUE;
 }
@@ -248,16 +248,16 @@ void award_companion_training_exp(struct char_data *owner, struct char_data *vic
         pet->mob_specials.pet_training_rank >= PET_TRAINING_RANK_CAP)
       continue;
     for (rank = pet->mob_specials.pet_training_rank + 1; rank <= PET_TRAINING_RANK_CAP; rank++)
-      bank += 2000 * rank;
+      bank += PET_PROGRESSION_XP_PER_STEP * rank;
     pet->mob_specials.pet_training_experience = MAX(0, MIN(bank, pet->mob_specials.pet_training_experience));
     gain = MIN(reward, bank - pet->mob_specials.pet_training_experience);
     pet->mob_specials.pet_training_experience += gain;
     changed = TRUE;
     send_to_char(owner, "%s gains %d companion training XP.\r\n", GET_NAME(pet), gain);
     while (pet->mob_specials.pet_training_rank < PET_TRAINING_RANK_CAP &&
-           pet->mob_specials.pet_training_experience >= 2000 * (pet->mob_specials.pet_training_rank + 1))
+           pet->mob_specials.pet_training_experience >= PET_PROGRESSION_XP_PER_STEP * (pet->mob_specials.pet_training_rank + 1))
     {
-      pet->mob_specials.pet_training_experience -= 2000 * (pet->mob_specials.pet_training_rank + 1);
+      pet->mob_specials.pet_training_experience -= PET_PROGRESSION_XP_PER_STEP * (pet->mob_specials.pet_training_rank + 1);
       pet->mob_specials.pet_training_rank++;
       send_to_char(owner, "\tG%s reaches training rank %d and earns a skill point!\tn\r\n",
                    GET_NAME(pet), pet->mob_specials.pet_training_rank);
@@ -278,8 +278,8 @@ void show_companion_training(struct char_data *owner, struct char_data *pet)
   else
     send_to_char(owner, "%s: training rank %d/%d, XP %d/%d (%d TNL), unspent points %d.\r\n",
                  GET_NAME(pet), pet->mob_specials.pet_training_rank, PET_TRAINING_RANK_CAP,
-                 pet->mob_specials.pet_training_experience, 2000 * (pet->mob_specials.pet_training_rank + 1),
-                 MAX(0, 2000 * (pet->mob_specials.pet_training_rank + 1) -
+                 pet->mob_specials.pet_training_experience, PET_PROGRESSION_XP_PER_STEP * (pet->mob_specials.pet_training_rank + 1),
+                 MAX(0, PET_PROGRESSION_XP_PER_STEP * (pet->mob_specials.pet_training_rank + 1) -
                             MAX(0, pet->mob_specials.pet_training_experience)),
                  companion_unspent_points(pet));
   send_to_char(owner, "  Skills (maximum 5 each): health %d, attack %d, damage %d, armor %d, saves %d.\r\n",

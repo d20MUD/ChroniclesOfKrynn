@@ -1740,6 +1740,8 @@ void display_item_object_values(struct char_data *ch, struct obj_data *item, int
     {
       found = TRUE;
       sprintbit(specab->activation_method, activation_methods, actmtds, MAX_STRING_LENGTH);
+      if (mode == ITEM_STAT_MODE_LORE_SKILL)
+        web_info_field(ch, "Special abilities", special_ability_info[specab->ability].name, "Level %d; %s; command: %s", specab->level, actmtds, specab->command_word ? specab->command_word : "None");
 
       if (mode == ITEM_STAT_MODE_G_LORE)
         send_to_group(NULL, GROUP(ch),
@@ -2808,6 +2810,50 @@ void do_stat_object(struct char_data *ch, struct obj_data *j, int mode)
   char buf[MAX_STRING_LENGTH] = {'\0'};
   char buf2[MAX_STRING_LENGTH] = {'\0'};
   int line_length = 80;
+
+  if (mode == ITEM_STAT_MODE_LORE_SKILL)
+  {
+    web_info_field(ch, "Item", "Name", "%s", object_short_description(j));
+    web_info_field(ch, "Item", "Type", "%s", item_types[GET_OBJ_TYPE(j)]);
+    web_info_field(ch, "Item", "Keywords", "%s", j->name);
+    web_info_field(ch, "Properties", "Minimum level", "%d", GET_OBJ_LEVEL(j));
+    web_info_field(ch, "Properties", "Weight", "%d", GET_OBJ_WEIGHT(j));
+    web_info_field(ch, "Properties", "Value", "%d", GET_OBJ_COST(j));
+    web_info_field(ch, "Properties", "Size", "%s", size_names[compute_object_size(j)]);
+    web_info_field(ch, "Properties", "Material", "%s", material_name[GET_OBJ_MATERIAL(j)]);
+    for (i = 0; i < MAX_OBJ_AFFECT; i++) if (j->affected[i].modifier)
+    {
+      if (j->affected[i].location == APPLY_FEAT && j->affected[i].modifier > 0 && j->affected[i].modifier < NUM_FEATS)
+        web_info_field(ch, "Granted feats", feat_list[j->affected[i].modifier].name, "%s", "Granted");
+      else if (j->affected[i].location == APPLY_SKILL && j->affected[i].specific >= 0 && j->affected[i].specific < NUM_ABILITIES)
+        web_info_field(ch, "Skill bonuses", ability_names[j->affected[i].specific], "%+d (%s)", j->affected[i].modifier, bonus_types[j->affected[i].bonus_type]);
+      else web_info_field(ch, "Bonuses", apply_types[j->affected[i].location], "%+d (%s)", j->affected[i].modifier, bonus_types[j->affected[i].bonus_type]);
+    }
+    if (GET_OBJ_TYPE(j) == ITEM_WEAPON)
+    {
+      web_info_field(ch, "Weapon", "Type", "%s", weapon_list[GET_WEAPON_TYPE(j)].name);
+      web_info_field(ch, "Weapon", "Enhancement", "%+d", GET_ENHANCEMENT_BONUS(j));
+      web_info_field(ch, "Weapon", "Damage", "%dd%d", GET_OBJ_VAL(j, 1), GET_OBJ_VAL(j, 2));
+    }
+    if (GET_OBJ_TYPE(j) == ITEM_ARMOR)
+    {
+      web_info_field(ch, "Armor", "Armor bonus", "%.1f", (float)GET_OBJ_VAL(j, 0) / 10.0);
+      web_info_field(ch, "Armor", "Enhancement", "%+d", GET_ENHANCEMENT_BONUS(j));
+    }
+    sprintbitarray(GET_OBJ_WEAR(j), wear_bits, TW_ARRAY_MAX, buf);
+    web_info_field(ch, "Properties", "Wear locations", "%s", buf);
+    sprintbitarray(GET_OBJ_AFFECT(j), affected_bits, AF_ARRAY_MAX, buf);
+    web_info_field(ch, "Properties", "Effects", "%s", buf);
+    if (GET_OBJ_TYPE(j) == ITEM_MISSILE)
+    {
+      web_info_field(ch, "Ammunition", "Type", "%s", ammo_types[GET_OBJ_VAL(j, 0)]);
+      web_info_field(ch, "Ammunition", "Enhancement", "%+d", GET_OBJ_VAL(j, 4));
+      web_info_field(ch, "Ammunition", "Bonus damage type", "%s", damtypes[MIN(NUM_DAM_TYPES - 1, MAX(0, GET_OBJ_VAL(j, AMMO_VAL_DAMAGE_TYPE)))]);
+      if (ammunition_is_unlimited(j, NULL)) web_info_field(ch, "Ammunition", "Quantity", "%s", "Unlimited");
+      else web_info_field(ch, "Ammunition", "Quantity", "%d", ammunition_remaining(j));
+      web_info_field(ch, "Ammunition", "Damage die", "%d", GET_OBJ_VAL(j, AMMO_VAL_DAMAGE_DIE));
+    }
+  }
 
   if (mode == ITEM_STAT_MODE_G_LORE)
     ;

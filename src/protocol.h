@@ -512,6 +512,8 @@ typedef enum
   eMSDP_POSITION,        /**< Current position (standing/sitting/etc) */
   eMSDP_TITLE,           /**< Character title */
   eMSDP_HELP_INFO,       /**< On-demand web help response as JSON */
+  eMSDP_SCORE_INFO, /**< On-demand structured score */
+  eMSDP_WHO_INFO, /**< On-demand visible player list */
   eMSDP_LORE_INFO,      /**< On-demand lore results as JSON */
   eMSDP_CHARACTER_CREATION, /**< Server-authoritative character creation step */
   eMSDP_ROOM_CONTENTS, /**< Visible people and objects in the current room */

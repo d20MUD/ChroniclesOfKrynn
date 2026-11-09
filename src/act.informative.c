@@ -54,6 +54,7 @@
 #include "transport.h"
 #include "encounters.h"
 #include "protocol.h"
+#include <json-c/json.h>
 #include "deities.h"
 #include "treasure.h"
 #include "resource_depletion.h" /* Phase 6: Conservation system */
@@ -178,6 +179,25 @@ void lore_id_vict(struct char_data *ch, struct char_data *tch)
     send_to_char(ch, "%s\r\n", PERS(tch, ch));
     return;
   }
+  web_info_field(ch, "Identity", "Name", "%s", PERS(tch, ch));
+  web_info_field(ch, "Identity", "Race", "%s", IS_NPC(tch) ? race_family_types[GET_RACE(tch)] : race_list[perceived_race(tch, ch)].type);
+  if (!AFF_FLAGGED(tch, AFF_HIDE_ALIGNMENT)) web_info_field(ch, "Identity", "Alignment", "%s", get_align_by_num(GET_ALIGNMENT(tch)));
+  web_info_field(ch, "Identity", "Class", "%s", class_list[GET_CLASS(tch)].name);
+  web_info_field(ch, "Combat", "Level", "%d", GET_LEVEL(tch));
+  web_info_field(ch, "Combat", "Hit points", "%d / %d", GET_HIT(tch), GET_MAX_HIT(tch));
+  web_info_field(ch, "Combat", "PSP", "%d", GET_PSP(tch));
+  web_info_field(ch, "Combat", "Armor class", "%d", compute_armor_class(NULL, tch, FALSE, MODE_ARMOR_CLASS_NORMAL));
+  web_info_field(ch, "Combat", "Hit bonus", "%d", GET_HITROLL(tch));
+  web_info_field(ch, "Combat", "Damage bonus", "%d", GET_DAMROLL(tch));
+  web_info_field(ch, "Saving throws", "Fortitude", "%d", compute_mag_saves(tch, SAVING_FORT, 0));
+  web_info_field(ch, "Saving throws", "Reflex", "%d", compute_mag_saves(tch, SAVING_REFL, 0));
+  web_info_field(ch, "Saving throws", "Will", "%d", compute_mag_saves(tch, SAVING_WILL, 0));
+  web_info_field(ch, "Abilities", "Strength", "%d", GET_STR(tch));
+  web_info_field(ch, "Abilities", "Dexterity", "%d", GET_DEX(tch));
+  web_info_field(ch, "Abilities", "Constitution", "%d", GET_CON(tch));
+  web_info_field(ch, "Abilities", "Intelligence", "%d", GET_INT(tch));
+  web_info_field(ch, "Abilities", "Wisdom", "%d", GET_WIS(tch));
+  web_info_field(ch, "Abilities", "Charisma", "%d", GET_CHA(tch));
   if (IS_NPC(tch))
   {
     if (HAS_FEAT(ch, FEAT_BG_SAGE))
@@ -240,6 +260,7 @@ void lore_id_vict(struct char_data *ch, struct char_data *tch)
       send_to_char(ch, "     %-18s: %-4d%% (%-2d)         ", damtype_display[i + 1],
                    compute_damtype_reduction(tch, i + 1, NULL, TYPE_UNDEFINED),
                    compute_energy_absorb(tch, i + 1));
+      web_info_field(ch, "Damage resistance", damtype_display[i + 1], "%d%%; absorption %d", compute_damtype_reduction(tch, i + 1, NULL, TYPE_UNDEFINED), compute_energy_absorb(tch, i + 1));
       dcount++;
       if (dcount % 2)
         send_to_char(ch, "\r\n");
@@ -263,6 +284,7 @@ void lore_id_vict(struct char_data *ch, struct char_data *tch)
           found_feats = TRUE;
 
         send_to_char(ch, "  %-38s", feat_list[i].name);
+        web_info_field(ch, "Feats", feat_list[i].name, "%s", "Known");
         feat_count++;
         if (feat_count % 2 == 0)
           send_to_char(ch, "\r\n");
@@ -296,6 +318,7 @@ void lore_id_vict(struct char_data *ch, struct char_data *tch)
 
         send_to_char(ch, "  %-35s [%d/%d]\r\n", spell_info[i].name, slots_used, slots_max);
 
+        web_info_field(ch, "Assigned spells", spell_info[i].name, "%d / %d slots used", slots_used, slots_max);
         total_spells++;
         total_slots_used += slots_used;
         total_slots_max += slots_max;
@@ -326,6 +349,7 @@ void lore_id_vict(struct char_data *ch, struct char_data *tch)
 
       if (MOB_FLAGGED(tch, MOB_UNLIMITED_SPELL_SLOTS))
       {
+        web_info_field(ch, "Spell slots", "Availability", "%s", "Unlimited");
         send_to_char(ch, "  Unlimited spell slots (slot system disabled)\r\n");
       }
       else
@@ -337,6 +361,9 @@ void lore_id_vict(struct char_data *ch, struct char_data *tch)
             int current = tch->mob_specials.spell_slots[circle];
             int maximum = tch->mob_specials.max_spell_slots[circle];
             int used = maximum - current;
+            char circle_label[32];
+            snprintf(circle_label, sizeof(circle_label), "Circle %d", circle);
+            web_info_field(ch, "Spell slots", circle_label, "%d / %d remaining", current, maximum);
 
             send_to_char(ch, "  %d%s Circle: %d/%d used\r\n", circle, circle_suffix[circle], used,
                          maximum);
@@ -361,6 +388,8 @@ void lore_id_vict(struct char_data *ch, struct char_data *tch)
         if (!found_effects)
           found_effects = TRUE;
 
+        if (aff->duration > 0) web_info_field(ch, "Active effects", spell_info[aff->spell].name, "%d rounds", aff->duration);
+        else web_info_field(ch, "Active effects", spell_info[aff->spell].name, "%s", "Permanent");
         /* Show spell/effect name and duration */
         send_to_char(ch, "  %-30s", spell_info[aff->spell].name);
 
@@ -4611,7 +4640,7 @@ ACMD(do_defenses)
  * @param cmd The command number
  * @param subcmd Subcommand flags (unused)
  */
-ACMD(do_score)
+ACMD(do_score_text)
 {
   /* ========================================================================= */
   /* VARIABLE DECLARATIONS                                                     */
@@ -5346,6 +5375,51 @@ ACMD(do_score)
 
   /* End of score display */
 }
+
+ACMD(do_score)
+{
+  struct output_capture capture = {0}; int i;
+  if (!web_info_begin(ch, eMSDP_SCORE_INFO, &capture))
+  { do_score_text(ch, argument, cmd, subcmd); return; }
+  web_info_field(ch, "Identity", "Name", "%s", GET_NAME(ch));
+  web_info_field(ch, "Identity", "Title", "%s", GET_TITLE(ch) ? GET_TITLE(ch) : "");
+  web_info_field(ch, "Identity", "Race", "%s", race_list[GET_RACE(ch)].type);
+  web_info_field(ch, "Identity", "Level", "%d", GET_LEVEL(ch));
+  web_info_field(ch, "Identity", "Alignment", "%s", get_align_by_num(GET_ALIGNMENT(ch)));
+  for (i = 0; i < NUM_CLASSES; i++) if (CLASS_LEVEL(ch, i)) web_info_field(ch, "Classes", class_list[i].name, "%d", CLASS_LEVEL(ch, i));
+  web_info_field(ch, "Resources", "Hit points", "%d / %d", GET_HIT(ch), GET_MAX_HIT(ch));
+  web_info_field(ch, "Resources", "PSP", "%d / %d", GET_PSP(ch), GET_MAX_PSP(ch));
+  web_info_field(ch, "Resources", "Movement", "%d / %d", GET_MOVE(ch), GET_MAX_MOVE(ch));
+  web_info_field(ch, "Resources", "Speed", "%d", get_speed(ch, TRUE));
+  web_info_field(ch, "Combat", "Initiative", "%+d", get_initiative_modifier(ch));
+  web_info_field(ch, "Progress", "Experience to next level", "%ld", GET_LEVEL(ch) >= LVL_IMMORT ? 0L : MAX(0L, level_exp(ch, GET_LEVEL(ch) + 1) - GET_EXP(ch)));
+  web_info_field(ch, "Progress", "Available skill points", "%d", GET_PRACTICES(ch));
+  web_info_field(ch, "Magic", "Caster level", "%d", CASTER_LEVEL(ch));
+  web_info_field(ch, "Magic", "Divine level", "%d", DIVINE_LEVEL(ch));
+  web_info_field(ch, "Magic", "Arcane level", "%d", MAGIC_LEVEL(ch));
+  web_info_field(ch, "Status", "Position", "%s", position_types[GET_POS(ch)]);
+  web_info_field(ch, "Inventory", "Weight", "%d / %d", IS_CARRYING_W(ch), CAN_CARRY_W(ch));
+  web_info_field(ch, "Inventory", "Items", "%d / %d", IS_CARRYING_N(ch), CAN_CARRY_N(ch));
+  web_info_field(ch, "Progress", "Experience", "%ld", GET_EXP(ch));
+  web_info_field(ch, "Wealth", "Gold", "%d", GET_GOLD(ch));
+  web_info_field(ch, "Wealth", "Bank", "%d", GET_BANK_GOLD(ch));
+  web_info_field(ch, "Combat", "Base attack bonus", "%d", MIN(MAX_BAB, ACTUAL_BAB(ch)));
+  web_info_field(ch, "Combat", "Armor class", "%d", compute_armor_class(NULL, ch, FALSE, MODE_ARMOR_CLASS_NORMAL));
+  web_info_field(ch, "Combat", "Hit bonus", "%d", GET_HITROLL(ch));
+  web_info_field(ch, "Combat", "Damage bonus", "%d", GET_DAMROLL(ch));
+  web_info_field(ch, "Abilities", "Strength", "%d", GET_STR(ch));
+  web_info_field(ch, "Abilities", "Dexterity", "%d", GET_DEX(ch));
+  web_info_field(ch, "Abilities", "Constitution", "%d", GET_CON(ch));
+  web_info_field(ch, "Abilities", "Intelligence", "%d", GET_INT(ch));
+  web_info_field(ch, "Abilities", "Wisdom", "%d", GET_WIS(ch));
+  web_info_field(ch, "Abilities", "Charisma", "%d", GET_CHA(ch));
+  web_info_field(ch, "Saving throws", "Fortitude", "%d", compute_mag_saves(ch, SAVING_FORT, 0));
+  web_info_field(ch, "Saving throws", "Reflex", "%d", compute_mag_saves(ch, SAVING_REFL, 0));
+  web_info_field(ch, "Saving throws", "Will", "%d", compute_mag_saves(ch, SAVING_WILL, 0));
+  do_score_text(ch, argument, cmd, subcmd);
+  web_info_finish(ch, eMSDP_SCORE_INFO, &capture, "Score");
+}
+
 
 /* Enhanced score command implementing Phase 1 MVP features */
 
@@ -7689,7 +7763,7 @@ ACMD(do_weather)
   "[-s] [-z]\r\n"
 
 /* Written by Rhade */
-ACMD(do_who)
+ACMD(do_who_text)
 {
   struct descriptor_data *d;
   struct char_data *tch;
@@ -7948,6 +8022,30 @@ ACMD(do_who)
         continue;
       if (showleader && (!GROUP(tch) || GROUP_LEADER(GROUP(tch)) != tch))
         continue;
+      if (ch->desc && ch->desc->output_capture && ch->desc->output_capture->web_data)
+      {
+        struct json_object *data = ch->desc->output_capture->web_data, *players, *player;
+        bool anonymous = PRF_FLAGGED(tch, PRF_ANONYMOUS) && !identity_known(ch, tch);
+        if (!json_object_object_get_ex(data, "players", &players))
+        { players = json_object_new_array(); json_object_object_add(data, "players", players); }
+        if (json_object_array_length(players) < 256)
+        {
+          player = json_object_new_object();
+          json_object_object_add(player, "name", json_object_new_string(anonymous ? PERS(tch, ch) : (*GET_TITLE(tch) ? GET_TITLE(tch) : GET_NAME(tch))));
+          json_object_object_add(player, "role", json_object_new_string(GET_LEVEL(tch) >= LVL_IMMORT ? "Staff" : "Player"));
+          if (!anonymous && GET_LEVEL(tch) < LVL_IMMORT)
+          {
+            json_object_object_add(player, "level", json_object_new_int(GET_LEVEL(tch)));
+            json_object_object_add(player, "race", json_object_new_string(race_list[perceived_race(tch, ch)].type));
+            c_n = real_clan(GET_CLAN(tch));
+            json_object_object_add(player, "faction", json_object_new_string(c_n != NO_CLAN && GET_CLANRANK(tch) > 0 ? CLAN_NAME(c_n) : "Adventurer"));
+            json_object_object_add(player, "afk", json_object_new_boolean(PRF_FLAGGED(tch, PRF_AFK)));
+            json_object_object_add(player, "roleplay", json_object_new_boolean(PRF_FLAGGED(tch, PRF_RP)));
+          }
+          json_object_array_add(players, player);
+        }
+        else ch->desc->output_capture->truncated = TRUE;
+      }
       /* Only anonymous players require an introduction on the who list. */
       if (PRF_FLAGGED(tch, PRF_ANONYMOUS) && !identity_known(ch, tch))
       {
@@ -8198,6 +8296,17 @@ ACMD(do_who)
                      "current event info.\tn\r\n");
   }
 }
+
+ACMD(do_who)
+{
+  struct output_capture capture = {0};
+  if (!web_info_begin(ch, eMSDP_WHO_INFO, &capture))
+  { do_who_text(ch, argument, cmd, subcmd); return; }
+  json_object_object_add(capture.web_data, "players", json_object_new_array());
+  do_who_text(ch, argument, cmd, subcmd);
+  web_info_finish(ch, eMSDP_WHO_INFO, &capture, "Who is online");
+}
+
 
 #define USERS_FORMAT                                                                               \
   "format: users [-l minlevel[-maxlevel]] [-n name] [-h host] [-c classlist] [-o] [-p]\r\n"

@@ -35,6 +35,8 @@ code='#define _POSIX_C_SOURCE 200809L\n'+headers+r'''
 static bool move_ready=true,standard_ready=true;
 static int move_used,standard_used;
 struct weapon_table weapon_list[NUM_WEAPON_TYPES];
+struct index_data *obj_index;
+obj_rnum top_of_objt=-1;
 static int feats[NUM_FEATS], base_bab, distance, concealment;
 static struct obj_data *last_missile;
 static int computed, reduction_calls, packets, values[4], types[4], property_calls;
@@ -55,7 +57,7 @@ static void obj_to_char(struct obj_data *obj,struct char_data *ch) {obj->carried
 struct obj_data *create_obj(void) {struct obj_data *obj=calloc(1,sizeof(*obj));IN_ROOM(obj)=NOWHERE;return obj;}
 int dice(int number,int size) {return number*size;}
 '''
-for name in ['bool is_throwing_weapon(','bool ammunition_is_unlimited(','bool has_ammo_in_pouch(','struct obj_data *take_ammo_projectile(','bool reload_weapon(','bool ready_to_reload(']:
+for name in ['bool is_throwing_weapon(','bool ammunition_is_unlimited(','static bool usable_ammunition(','bool has_ammo_in_pouch(','struct obj_data *take_ammo_projectile(','bool reload_weapon(','bool ready_to_reload(']:
     code+='\n'+function(weapons,name)
 code+=r'''
 bool can_fire_ammo(struct char_data *ch,bool silent) {
@@ -142,7 +144,10 @@ int main(void) {
   GET_OBJ_VAL(&bow,0)=WEAPON_TYPE_LONG_BOW;
   GET_OBJ_VAL(&ammo,AMMO_VAL_QUANTITY)=1;assert(!manyshot_ready(&ch,&bow));
   GET_OBJ_TYPE(&extra)=ITEM_MISSILE;GET_OBJ_VAL(&extra,0)=AMMO_TYPE_ARROW;
-  ammo.next_content=&extra;assert(manyshot_ready(&ch,&bow));ammo.next_content=NULL;
+  ammo.next_content=&extra;assert(manyshot_ready(&ch,&bow));
+  struct obj_data wrong={0};GET_OBJ_TYPE(&wrong)=ITEM_MISSILE;GET_OBJ_VAL(&wrong,0)=AMMO_TYPE_BOLT;
+  ammo.next_content=&wrong;wrong.next_content=&extra;assert(manyshot_ready(&ch,&bow));
+  ammo.next_content=NULL;
   GET_OBJ_VAL(&ammo,AMMO_VAL_QUANTITY)=3;
   GET_OBJ_VAL(&ammo,AMMO_VAL_DAMAGE_TYPE)=DAM_FIRE;GET_OBJ_VAL(&ammo,AMMO_VAL_DAMAGE_DIE)=6;
   struct ranged_shot_context context={0};context.attacker=&ch;context.manyshot=true;

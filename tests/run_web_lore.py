@@ -46,6 +46,8 @@ static int count_pages(char *str,struct char_data *ch) { pager_calls++;return 1;
 void paginate_string(char *str,struct descriptor_data *d) { pager_calls++; }
 void show_string(struct descriptor_data *d,char *input) { pager_calls++; }
 '''
+for helper in ['bool web_info_begin(', 'void web_info_field(', 'void web_info_finish(']:
+    code += '\n' + function('src/comm.c', helper)
 code += '\n' + function('src/comm.c', 'static void capture_output_printf(')
 code += r'''
 size_t write_to_output(struct descriptor_data *d,const char *format,...) {
@@ -61,6 +63,7 @@ static void do_lore_text(struct char_data *ch,const char *argument) {
   if (!strcmp(argument,"silent")) return;
   if(ch->desc->output_capture) {
     write_to_output(ch->desc,"Help for %s\n",argument);
+    web_info_field(ch,"Identity","Name","%s",argument);
     page_string(ch->desc,body,1);
   } else write_to_output(ch->desc,"Normal terminal lore");
 }
@@ -85,6 +88,7 @@ int main(void) {
   assert(!descriptor.output_capture);assert(!pager_calls);assert(terminal_writes==1);
   assert(descriptor.showstr_count==7 && descriptor.showstr_page==3);
   assert(strlen(response)<MAX_VARIABLE_LENGTH);
+  assert(strstr(response,"Identity") && strstr(response,"fields"));
   struct json_object *decoded=json_tokener_parse(response);assert(decoded);
   assert(!strcmp(json_object_get_string(field(decoded,"topic")),"ranged"));
   assert(json_object_get_boolean(field(decoded,"truncated")));

@@ -136,20 +136,19 @@ static struct obj_data *ranged_ammunition(struct char_data *ch)
 
 static bool manyshot_ready(struct char_data *ch, struct obj_data *weapon)
 {
-  struct obj_data *ammo, *next;
+  struct obj_data *ammo;
+  int available = 0;
   if (!HAS_FEAT(ch, FEAT_MANYSHOT) || !weapon || is_throwing_weapon(ch, weapon) ||
       !GET_EQ(ch, WEAR_AMMO_POUCH) || !has_ammo_in_pouch(ch, weapon, TRUE))
     return FALSE;
-  ammo = GET_EQ(ch, WEAR_AMMO_POUCH)->contains;
-  if (!ammo || GET_OBJ_TYPE(ammo) != ITEM_MISSILE || GET_OBJ_VAL(ammo, 0) != AMMO_TYPE_ARROW)
-    return FALSE;
-  if (ammunition_is_unlimited(ammo, weapon) ||
-      (GET_OBJ_VAL(ammo, AMMO_VAL_MAX) > 0 && GET_OBJ_VAL(ammo, AMMO_VAL_QUANTITY) >= 2))
-    return TRUE;
-  next = ammo->next_content;
-  return next && GET_OBJ_TYPE(next) == ITEM_MISSILE && GET_OBJ_VAL(next, 0) == AMMO_TYPE_ARROW &&
-         (GET_OBJ_VAL(next, AMMO_VAL_MAX) <= 0 || GET_OBJ_VAL(next, AMMO_VAL_QUANTITY) > 0 ||
-          ammunition_is_unlimited(next, weapon));
+  for (ammo = GET_EQ(ch, WEAR_AMMO_POUCH)->contains; ammo; ammo = ammo->next_content)
+  {
+    if (GET_OBJ_TYPE(ammo) != ITEM_MISSILE || GET_OBJ_VAL(ammo, 0) != AMMO_TYPE_ARROW) continue;
+    if (ammunition_is_unlimited(ammo, weapon)) return TRUE;
+    available += GET_OBJ_VAL(ammo, AMMO_VAL_MAX) <= 0 ? 1 : MIN(2, MAX(0, GET_OBJ_VAL(ammo, AMMO_VAL_QUANTITY)));
+    if (available >= 2) return TRUE;
+  }
+  return FALSE;
 }
 
 /* Distances are symmetric and per opponent: each mob closes independently. */
@@ -15534,11 +15533,13 @@ static int resolve_weapon_hit(struct char_data *ch, struct char_data *victim, in
        *  this function, then we might have a bit of an issue with the design.
        * Set the current missile to the first missile in the ammo pouch. */
       last_missile = missile = ammo_pouch->contains;
-    if (!missile || !has_ammo_in_pouch(ch, wielded, FALSE))
+    if (!ammo_pouch || !has_ammo_in_pouch(ch, wielded, FALSE))
     { /* no ammo = miss for ranged attacks*/
       send_to_char(ch, "You have no ammo!\r\n");
       return (HIT_MISS);
     }
+
+    last_missile = missile = ammo_pouch->contains;
 
     /* reloading type of weapons, such as crossbows */
     if (is_reloading_weapon(ch, wielded, TRUE))
@@ -15689,6 +15690,8 @@ static int resolve_weapon_hit(struct char_data *ch, struct char_data *victim, in
     missile = take_ammo_projectile(missile, wielded);
     current_shot->projectile = missile;
     last_missile = missile;
+    if (current_shot->manyshot && !has_ammo_in_pouch(ch, wielded, TRUE))
+      current_shot->manyshot = FALSE;
     if (current_shot->manyshot)
     {
       struct obj_data *extra = ammo_pouch->contains;

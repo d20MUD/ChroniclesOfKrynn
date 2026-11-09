@@ -376,7 +376,7 @@ static void load_eidolon_training(struct char_data *ch, const char *line)
   if (sscanf(line, "%d %d %d %d %d %d %d", &rank, &xp,
              &skills[0], &skills[1], &skills[2], &skills[3], &skills[4]) != 7 ||
       rank < 0 || rank > PET_TRAINING_RANK_CAP || xp < 0 ||
-      (rank == PET_TRAINING_RANK_CAP ? xp != 0 : xp >= 2000 * (rank + 1)))
+      (rank == PET_TRAINING_RANK_CAP ? xp != 0 : xp >= PET_PROGRESSION_XP_PER_STEP * (rank + 1)))
     return;
   for (i = 0; i < PET_TRAINING_SKILLS; i++)
   {
@@ -415,6 +415,7 @@ int load_char(const char *name, struct char_data *ch)
 
     /* Character initializations. Necessary to keep some things straight. */
     ch->affected = NULL;
+    GET_PREFERRED_AMMO(ch) = 0;
     for (i = 0; i < MAX_CLASSES; i++)
     {
       CLASS_LEVEL(ch, i) = 0;
@@ -801,6 +802,7 @@ int load_char(const char *name, struct char_data *ch)
       switch (*tag)
       {
       case 'A':
+        if (!strcmp(tag, "AmPr")) GET_PREFERRED_AMMO(ch) = MAX(0, atoi(line));
         if (!strcmp(tag, "AiAu"))
         {
           long long ready;
@@ -3223,6 +3225,7 @@ bool save_char_checked(struct char_data *ch, int mode)
         ch->desc->pProtocol->pVariables[eMSDP_256_COLORS]->ValueInt;
     BUFFER_WRITE("UTF8: %d\n", ch->desc->pProtocol->pVariables[eMSDP_UTF_8]->ValueInt);
   }
+  BUFFER_WRITE("AmPr: %d\n", GET_PREFERRED_AMMO(ch));
   BUFFER_WRITE("XTrm: %d\n", ch->player_specials->saved.color_256);
 
   if (GET_PREMADE_BUILD_CLASS(ch) != PFDEF_PREMADE_BUILD)

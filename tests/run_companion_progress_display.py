@@ -43,16 +43,16 @@ int main(void) {
   SET_BIT_AR(MOB_FLAGS(&pet), MOB_ISNPC); SET_BIT_AR(AFF_FLAGS(&pet), AFF_CHARM);
   pet.master = &owner; pet.mob_specials.purchased_pet = true;
   pet.mob_specials.pet_experience = 2500; GET_EXP(&pet) = 987654321;
-  group_tnl(&owner, &pet, text); assert(!strcmp(text, "7500 TNL"));
+  group_tnl(&owner, &pet, text); assert(!strcmp(text, "497500 TNL"));
   group_tnl(&stranger, &pet, text); assert(!strcmp(text, "-- TNL"));
   group_tnl(&owner, &owner, text); assert(!strcmp(text, "10000 TNL"));
   /* Actual advancement XP, never the NPC's kill bounty, determines progress. */
   GET_EXP(&pet) = 0;
-  group_tnl(&owner, &pet, text); assert(!strcmp(text, "7500 TNL"));
-  pet.mob_specials.pet_experience = 11000;
+  group_tnl(&owner, &pet, text); assert(!strcmp(text, "497500 TNL"));
+  pet.mob_specials.pet_experience = 501000;
   group_tnl(&owner, &pet, text); assert(!strcmp(text, "0 TNL"));
   pet.mob_specials.pet_experience = -100;
-  group_tnl(&owner, &pet, text); assert(!strcmp(text, "10000 TNL"));
+  group_tnl(&owner, &pet, text); assert(!strcmp(text, "500000 TNL"));
   GET_LEVEL(&pet) = 20;
   group_tnl(&owner, &pet, text); assert(!strcmp(text, "Level cap"));
   GET_LEVEL(&owner) = 35; GET_LEVEL(&pet) = 30;
@@ -60,7 +60,7 @@ int main(void) {
   GET_LEVEL(&pet) = 4; pet.mob_specials.purchased_pet = false;
   SET_BIT_AR(MOB_FLAGS(&pet), MOB_C_ANIMAL);
   pet.mob_specials.pet_training_rank = 2; pet.mob_specials.pet_training_experience = 1200;
-  group_tnl(&owner, &pet, text); assert(!strcmp(text, "4800 Training TNL"));
+  group_tnl(&owner, &pet, text); assert(!strcmp(text, "298800 Training TNL"));
   pet.mob_specials.pet_training_rank = PET_TRAINING_RANK_CAP;
   group_tnl(&owner, &pet, text); assert(!strcmp(text, "Training cap"));
   temporary = true;

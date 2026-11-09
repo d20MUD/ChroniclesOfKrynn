@@ -266,11 +266,14 @@ int main(int argc,char **argv) {
   summon.player.long_descr="summon"; summon.player.description="summon";
   award_purchased_pet_exp(&owner,&victim,5999);
   assert(pet.mob_specials.pet_experience==5999 && GET_LEVEL(&pet)==2);
+  assert(purchased_pet_level_cost(&pet)==300000);
+  award_purchased_pet_exp(&owner,&victim,294000);
+  assert(pet.mob_specials.pet_experience==299999 && GET_LEVEL(&pet)==2);
   award_purchased_pet_exp(&owner,&victim,1001);
   assert(GET_LEVEL(&pet)==3 && pet.mob_specials.pet_experience==1000);
   assert(GET_REAL_MAX_HIT(&pet)==70 && GET_HIT(&pet)==20 && GET_REAL_AC(&pet)==190);
   assert(GET_EXP(&pet)==0 && GET_LEVEL(&summon)==1 && summon.mob_specials.pet_experience==0);
-  award_purchased_pet_exp(&owner,&victim,8000);
+  award_purchased_pet_exp(&owner,&victim,400000);
   assert(GET_LEVEL(&pet)==4 && pet.mob_specials.pet_experience==1000);
   assert(GET_REAL_HITROLL(&pet)==4 && GET_REAL_DAMROLL(&pet)==5);
   assert(GET_REAL_SAVE(&pet,SAVING_FORT)==1);
@@ -394,6 +397,7 @@ int main(int argc,char **argv) {
   GET_LEVEL(&pet)=12; GET_REAL_MAX_HIT(&pet)=100; GET_HIT(&pet)=20;
   GET_POS(&pet)=POS_FIGHTING; FIGHTING(&pet)=&victim; IN_ROOM(&pet)=IN_ROOM(&owner)=0;
   award_companion_training_exp(&owner,&victim,1999); assert(pet.mob_specials.pet_training_rank==0);
+  award_companion_training_exp(&owner,&victim,98000); assert(pet.mob_specials.pet_training_rank==0 && pet.mob_specials.pet_training_experience==99999);
   award_companion_training_exp(&owner,&victim,2);
   assert(GET_LEVEL(&pet)==12 && pet.mob_specials.pet_training_rank==1 && pet.mob_specials.pet_training_experience==1);
   FIGHTING(&pet)=NULL; train_companion_skill(&owner,&pet,"health");
@@ -442,6 +446,11 @@ int main(int argc,char **argv) {
     restore_eidolon_training(&other_owner,&fresh);
     assert(fresh.mob_specials.pet_training_rank==2 && fresh.mob_specials.pet_training_experience==1234);
     assert(GET_REAL_MAX_HIT(&fresh)==120);
+    load_eidolon_training(&other_owner,"2 250000 1 1 0 0 0");
+    restore_eidolon_training(&other_owner,&fresh);
+    assert(fresh.mob_specials.pet_training_experience==250000); /* valid on the 50x curve */
+    load_eidolon_training(&other_owner,"2 300000 1 1 0 0 0"); /* reject bank at the next-rank boundary */
+    assert(other_saved.saved.eidolon_training_experience==250000);
     load_eidolon_training(&other_owner,"1 0 5 0 0 0 0"); /* reject overspent record */
     assert(other_saved.saved.eidolon_training_rank==2);
     temporary_pet=&fresh;
@@ -485,12 +494,12 @@ int main(int argc,char **argv) {
   pet.mob_specials.pet_training_experience=0;
   memset(pet.mob_specials.pet_training_skills,0,sizeof(pet.mob_specials.pet_training_skills));
   REMOVE_BIT_AR(MOB_FLAGS(&pet),MOB_EIDOLON); SET_BIT_AR(MOB_FLAGS(&pet),MOB_C_FAMILIAR);
-  FIGHTING(&pet)=NULL; award_companion_training_exp(&owner,&victim,2000); assert(pet.mob_specials.pet_training_rank==1);
+  FIGHTING(&pet)=NULL; award_companion_training_exp(&owner,&victim,100000); assert(pet.mob_specials.pet_training_rank==1);
   pet.mob_specials.pet_training_rank=0; REMOVE_BIT_AR(MOB_FLAGS(&pet),MOB_C_FAMILIAR);
   SET_BIT_AR(MOB_FLAGS(&pet),MOB_C_MOUNT); RIDDEN_BY(&pet)=&owner;
-  award_companion_training_exp(&owner,&victim,2000); assert(pet.mob_specials.pet_training_rank==1);
+  award_companion_training_exp(&owner,&victim,100000); assert(pet.mob_specials.pet_training_rank==1);
   pet.mob_specials.pet_training_rank=0; temporary_pet=&pet;
-  award_companion_training_exp(&owner,&victim,2000); assert(pet.mob_specials.pet_training_rank==0 && !is_persistent_pet(&pet));
+  award_companion_training_exp(&owner,&victim,100000); assert(pet.mob_specials.pet_training_rank==0 && !is_persistent_pet(&pet));
   temporary_pet=NULL;
   sql("DROP TABLE pet_data"); upgrade_pet_schema(); upgrade_pet_schema();
   mysql_close(conn); return 0;

@@ -611,10 +611,116 @@ void format_ammunition_quantity(struct obj_data *ammo, char *buffer, size_t size
     snprintf(buffer, size, " (%d)", ammunition_remaining(ammo));
 }
 
+static bool usable_ammunition(struct char_data *ch, struct obj_data *wielded,
+                              struct obj_data *ammo, bool silent)
+{
+  if (GET_OBJ_TYPE(ammo) != ITEM_MISSILE)
+  {
+    if (!silent)
+      send_to_char(ch, "Your ammo pouch needs to be filled with only ammo!\r\n");
+    return FALSE;
+  }
+
+  if (GET_OBJ_VAL(ammo, AMMO_VAL_MAX) > 0 &&
+      !ammunition_is_unlimited(ammo, wielded) &&
+      GET_OBJ_VAL(ammo, AMMO_VAL_QUANTITY) <= 0)
+  {
+    if (!silent)
+      send_to_char(ch, "Your ammunition is exhausted!\r\n");
+    return FALSE;
+  }
+
+  switch (GET_OBJ_VAL(ammo, 0))
+  {
+  case AMMO_TYPE_ARROW:
+    switch (GET_OBJ_VAL(wielded, 0))
+    {
+    case WEAPON_TYPE_LONG_BOW:
+    case WEAPON_TYPE_SHORT_BOW:
+    case WEAPON_TYPE_COMPOSITE_LONGBOW:
+    case WEAPON_TYPE_COMPOSITE_LONGBOW_2:
+    case WEAPON_TYPE_COMPOSITE_LONGBOW_3:
+    case WEAPON_TYPE_COMPOSITE_LONGBOW_4:
+    case WEAPON_TYPE_COMPOSITE_LONGBOW_5:
+    case WEAPON_TYPE_COMPOSITE_SHORTBOW:
+    case WEAPON_TYPE_COMPOSITE_SHORTBOW_2:
+    case WEAPON_TYPE_COMPOSITE_SHORTBOW_3:
+    case WEAPON_TYPE_COMPOSITE_SHORTBOW_4:
+    case WEAPON_TYPE_COMPOSITE_SHORTBOW_5:
+      break;
+    default:
+      if (!silent)
+        act("Your $p requires a bow.", FALSE, ch, ammo, NULL, TO_CHAR);
+      return FALSE;
+    }
+    break;
+
+  case AMMO_TYPE_BOLT:
+    switch (GET_OBJ_VAL(wielded, 0))
+    {
+    case WEAPON_TYPE_HAND_CROSSBOW:
+    case WEAPON_TYPE_HEAVY_REP_XBOW:
+    case WEAPON_TYPE_LIGHT_REP_XBOW:
+    case WEAPON_TYPE_HEAVY_CROSSBOW:
+    case WEAPON_TYPE_LIGHT_CROSSBOW:
+      break;
+    default:
+      if (!silent)
+        act("Your $p requires a crossbow.", FALSE, ch, ammo, NULL, TO_CHAR);
+      return FALSE;
+    }
+    break;
+
+  case AMMO_TYPE_STONE:
+    switch (GET_OBJ_VAL(wielded, 0))
+    {
+    case WEAPON_TYPE_SLING:
+      break;
+    default:
+      if (!silent)
+        act("Your $p requires a sling.", FALSE, ch, ammo, NULL, TO_CHAR);
+      return FALSE;
+    }
+    break;
+
+  case AMMO_TYPE_THROWN:
+    if (!is_throwing_weapon(ch, wielded) ||
+        GET_OBJ_VAL(ammo, AMMO_VAL_WEAPON_TYPE) != GET_OBJ_VAL(wielded, 0))
+    {
+      if (!silent)
+        send_to_char(ch, "Your throwing ammunition does not match your wielded weapon.\r\n");
+      return FALSE;
+    }
+    break;
+
+  case AMMO_TYPE_DART:
+    switch (GET_OBJ_VAL(wielded, 0))
+    {
+    case WEAPON_TYPE_DART:
+      break;
+    default:
+      if (!silent)
+        act("Your $p requires a dart-gun.", FALSE, ch, ammo, NULL, TO_CHAR);
+      return FALSE;
+    }
+    break;
+
+  case AMMO_TYPE_UNDEFINED:
+  default:
+    if (!silent)
+      act("Your $p does not fit your weapon...", FALSE, ch, ammo, NULL, TO_CHAR);
+    return FALSE;
+  }
+
+  /* cleared all checks */
+  return TRUE;
+}
+
 bool has_ammo_in_pouch(struct char_data *ch, struct obj_data *wielded, bool silent)
 {
   struct obj_data *ammo_pouch = GET_EQ(ch, WEAR_AMMO_POUCH);
-
+  struct obj_data *ammo, *previous = NULL, *selected = NULL, *selected_previous = NULL;
+  int preference = IS_NPC(ch) ? 0 : GET_PREFERRED_AMMO(ch);
   if (!wielded)
   {
     if (!silent)
@@ -639,113 +745,28 @@ bool has_ammo_in_pouch(struct char_data *ch, struct obj_data *wielded, bool sile
     return FALSE;
   }
 
-  if (GET_OBJ_TYPE(ammo_pouch->contains) != ITEM_MISSILE)
+
+  for (ammo = ammo_pouch->contains; ammo; previous = ammo, ammo = ammo->next_content)
   {
-    if (!silent)
-      send_to_char(ch, "Your ammo pouch needs to be filled with only ammo!\r\n");
+    if (!usable_ammunition(ch, wielded, ammo, TRUE)) continue;
+    if (!selected) { selected = ammo; selected_previous = previous; }
+    if (preference > 0 && GET_OBJ_VNUM(ammo) == preference - 1)
+    { selected = ammo; selected_previous = previous; break; }
+  }
+  if (!selected)
+  {
+    usable_ammunition(ch, wielded, ammo_pouch->contains, silent);
     FIRING(ch) = FALSE;
     return FALSE;
   }
-
-  if (GET_OBJ_VAL(ammo_pouch->contains, AMMO_VAL_MAX) > 0 &&
-      !ammunition_is_unlimited(ammo_pouch->contains, wielded) &&
-      GET_OBJ_VAL(ammo_pouch->contains, AMMO_VAL_QUANTITY) <= 0)
+  /* Existing shot/Manyshot code consumes the head of the pouch. Reorder only
+   * its links; containment, weights and bundle quantities remain unchanged. */
+  if (selected_previous)
   {
-    if (!silent)
-      send_to_char(ch, "Your ammunition is exhausted!\r\n");
-    FIRING(ch) = FALSE;
-    return FALSE;
+    selected_previous->next_content = selected->next_content;
+    selected->next_content = ammo_pouch->contains;
+    ammo_pouch->contains = selected;
   }
-
-  switch (GET_OBJ_VAL(ammo_pouch->contains, 0))
-  {
-  case AMMO_TYPE_ARROW:
-    switch (GET_OBJ_VAL(wielded, 0))
-    {
-    case WEAPON_TYPE_LONG_BOW:
-    case WEAPON_TYPE_SHORT_BOW:
-    case WEAPON_TYPE_COMPOSITE_LONGBOW:
-    case WEAPON_TYPE_COMPOSITE_LONGBOW_2:
-    case WEAPON_TYPE_COMPOSITE_LONGBOW_3:
-    case WEAPON_TYPE_COMPOSITE_LONGBOW_4:
-    case WEAPON_TYPE_COMPOSITE_LONGBOW_5:
-    case WEAPON_TYPE_COMPOSITE_SHORTBOW:
-    case WEAPON_TYPE_COMPOSITE_SHORTBOW_2:
-    case WEAPON_TYPE_COMPOSITE_SHORTBOW_3:
-    case WEAPON_TYPE_COMPOSITE_SHORTBOW_4:
-    case WEAPON_TYPE_COMPOSITE_SHORTBOW_5:
-      break;
-    default:
-      if (!silent)
-        act("Your $p requires a bow.", FALSE, ch, ammo_pouch->contains, NULL, TO_CHAR);
-      FIRING(ch) = FALSE;
-      return FALSE;
-    }
-    break;
-
-  case AMMO_TYPE_BOLT:
-    switch (GET_OBJ_VAL(wielded, 0))
-    {
-    case WEAPON_TYPE_HAND_CROSSBOW:
-    case WEAPON_TYPE_HEAVY_REP_XBOW:
-    case WEAPON_TYPE_LIGHT_REP_XBOW:
-    case WEAPON_TYPE_HEAVY_CROSSBOW:
-    case WEAPON_TYPE_LIGHT_CROSSBOW:
-      break;
-    default:
-      if (!silent)
-        act("Your $p requires a crossbow.", FALSE, ch, ammo_pouch->contains, NULL, TO_CHAR);
-      FIRING(ch) = FALSE;
-      return FALSE;
-    }
-    break;
-
-  case AMMO_TYPE_STONE:
-    switch (GET_OBJ_VAL(wielded, 0))
-    {
-    case WEAPON_TYPE_SLING:
-      break;
-    default:
-      if (!silent)
-        act("Your $p requires a sling.", FALSE, ch, ammo_pouch->contains, NULL, TO_CHAR);
-      FIRING(ch) = FALSE;
-      return FALSE;
-    }
-    break;
-
-  case AMMO_TYPE_THROWN:
-    if (!is_throwing_weapon(ch, wielded) ||
-        GET_OBJ_VAL(ammo_pouch->contains, AMMO_VAL_WEAPON_TYPE) != GET_OBJ_VAL(wielded, 0))
-    {
-      if (!silent)
-        send_to_char(ch, "Your throwing ammunition does not match your wielded weapon.\r\n");
-      FIRING(ch) = FALSE;
-      return FALSE;
-    }
-    break;
-
-  case AMMO_TYPE_DART:
-    switch (GET_OBJ_VAL(wielded, 0))
-    {
-    case WEAPON_TYPE_DART:
-      break;
-    default:
-      if (!silent)
-        act("Your $p requires a dart-gun.", FALSE, ch, ammo_pouch->contains, NULL, TO_CHAR);
-      FIRING(ch) = FALSE;
-      return FALSE;
-    }
-    break;
-
-  case AMMO_TYPE_UNDEFINED:
-  default:
-    if (!silent)
-      act("Your $p does not fit your weapon...", FALSE, ch, ammo_pouch->contains, NULL, TO_CHAR);
-    FIRING(ch) = FALSE;
-    return FALSE;
-  }
-
-  /* cleared all checks */
   return TRUE;
 }
 

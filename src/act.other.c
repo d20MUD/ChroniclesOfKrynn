@@ -5920,39 +5920,11 @@ static void do_lore_text(struct char_data *ch, const char *argument)
  * all target checks, rolls, action costs and identification effects. */
 ACMD(do_lore)
 {
-  struct descriptor_data *d = ch ? ch->desc : NULL;
   struct output_capture capture = {0};
-  struct json_object *response;
-  struct timeval now;
-  static unsigned long sequence;
-  char id[96];
-  char topic[MAX_INPUT_LENGTH];
-  if (!d || !d->pProtocol || !d->pProtocol->bMSDP || d->output_capture ||
-      !d->pProtocol->pVariables[eMSDP_LORE_INFO]->bReport)
-  {
-    do_lore_text(ch, argument);
-    return;
-  }
-  strlcpy(topic, argument ? argument : "", sizeof(topic));
-  d->output_capture = &capture;
+  if (!web_info_begin(ch, eMSDP_LORE_INFO, &capture))
+  { do_lore_text(ch, argument); return; }
   do_lore_text(ch, argument);
-  d->output_capture = NULL;
-  /* NPC calls and other silent paths do not open an empty dialog. */
-  if (capture.length)
-  {
-    gettimeofday(&now, NULL);
-    snprintf(id, sizeof(id), "%ld:%ld:%lu", (long)now.tv_sec, (long)now.tv_usec, ++sequence);
-    response = json_object_new_object();
-    json_object_object_add(response, "id", json_object_new_string(id));
-    json_object_object_add(response, "topic", json_object_new_string(topic));
-    json_object_object_add(response, "body", json_object_new_string(capture.text));
-    json_object_object_add(response, "truncated", json_object_new_boolean(capture.truncated));
-    MSDPSetString(d, eMSDP_LORE_INFO, json_object_to_json_string_ext(response, JSON_C_TO_STRING_PLAIN));
-    d->pProtocol->pVariables[eMSDP_LORE_INFO]->bDirty = true;
-    MSDPFlush(d, eMSDP_LORE_INFO);
-    json_object_put(response);
-  }
-  free(capture.text);
+  web_info_finish(ch, eMSDP_LORE_INFO, &capture, argument);
 }
 
 /* ability group lore, functions like identify for all items in bag */

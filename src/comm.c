@@ -2392,6 +2392,55 @@ bool write_protocol_packet(struct descriptor_data *t, const char *packet)
 
 /* Capture before ordinary text formatting/color conversion, preserving full
  * pages and leaving the descriptor's normal output queue/pager untouched. */
+/* Native values accompany terminal fallback text; web clients never need to
+ * infer fields or player identities from formatted MUD output. */
+bool web_info_begin(struct char_data *ch, int variable, struct output_capture *capture)
+{
+  struct descriptor_data *d = ch ? ch->desc : NULL;
+  if (!d || IS_NPC(ch) || !d->pProtocol || !d->pProtocol->bMSDP || d->output_capture ||
+      !d->pProtocol->pVariables[variable]->bReport) return FALSE;
+  capture->web_data = json_object_new_object();
+  json_object_object_add(capture->web_data, "fields", json_object_new_array());
+  d->output_capture = capture;
+  return TRUE;
+}
+
+void web_info_field(struct char_data *ch, const char *section, const char *label, const char *format, ...)
+{
+  struct json_object *fields, *field;
+  struct output_capture *capture = ch && ch->desc ? ch->desc->output_capture : NULL;
+  char value[4096]; va_list args;
+  if (!capture || !capture->web_data) return;
+  if (!json_object_object_get_ex(capture->web_data, "fields", &fields) || json_object_array_length(fields) >= 512)
+  { capture->truncated = TRUE; return; }
+  va_start(args, format); vsnprintf(value, sizeof(value), format, args); va_end(args);
+  field = json_object_new_object();
+  json_object_object_add(field, "section", json_object_new_string(section));
+  json_object_object_add(field, "label", json_object_new_string(label));
+  json_object_object_add(field, "value", json_object_new_string(value));
+  json_object_array_add(fields, field);
+}
+
+void web_info_finish(struct char_data *ch, int variable, struct output_capture *capture, const char *topic)
+{
+  static unsigned long sequence;
+  struct descriptor_data *d = ch->desc;
+  char id[80];
+  d->output_capture = NULL;
+  if (capture->length)
+  {
+    snprintf(id, sizeof(id), "%ld:%lu", (long)time(NULL), ++sequence);
+    json_object_object_add(capture->web_data, "id", json_object_new_string(id));
+    json_object_object_add(capture->web_data, "topic", json_object_new_string(topic ? topic : ""));
+    json_object_object_add(capture->web_data, "body", json_object_new_string(capture->text ? capture->text : ""));
+    json_object_object_add(capture->web_data, "truncated", json_object_new_boolean(capture->truncated));
+    MSDPSetString(d, variable, json_object_to_json_string_ext(capture->web_data, JSON_C_TO_STRING_PLAIN));
+    d->pProtocol->pVariables[variable]->bDirty = TRUE;
+    MSDPFlush(d, variable);
+  }
+  json_object_put(capture->web_data); free(capture->text);
+}
+
 static void capture_output_printf(struct output_capture *capture, const char *format, va_list args)
 {
   va_list copy;

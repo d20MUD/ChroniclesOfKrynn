@@ -26,13 +26,14 @@ code = '''#define _POSIX_C_SOURCE 200809L
 #define act(...) ((void)0)
 #define send_to_char(...) ((void)0)
 struct weapon_table weapon_list[NUM_WEAPON_TYPES];
+struct index_data *obj_index;
 static bool main_returning;
 bool obj_has_special_ability(struct obj_data *obj,int ability) { return obj && main_returning && ability==WEAPON_SPECAB_RETURNING; }
 static int roll;
 int rand_number(int low, int high) { assert(low<=high); return roll ? high : low; }
 struct obj_data *create_obj(void) { return calloc(1,sizeof(struct obj_data)); }
 static void obj_from_obj(struct obj_data *o) { assert(o->in_obj); o->in_obj->contains=o->next_content; o->in_obj=NULL; o->next_content=NULL; }
-''' + function('bool is_throwing_weapon(') + '\n' + function('bool ammunition_is_unlimited(') + '\n' + function('int ammunition_remaining(') + '\n' + function('void format_ammunition_quantity(') + '\n' + function('bool has_ammo_in_pouch(') + '\n' + function('struct obj_data *take_ammo_projectile(')
+''' + function('bool is_throwing_weapon(') + '\n' + function('bool ammunition_is_unlimited(') + '\n' + function('int ammunition_remaining(') + '\n' + function('void format_ammunition_quantity(') + '\n' + function('static bool usable_ammunition(') + '\n' + function('bool has_ammo_in_pouch(') + '\n' + function('struct obj_data *take_ammo_projectile(')
 utils_source = (root/'src/utils.c').read_text()
 a_label = utils_source.index('char *object_short_description(')
 code += '\nstruct obj_data *obj_proto; obj_rnum top_of_objt = -1;\nstatic const struct obj_data *fired_projectile;\nbool is_ranged_projectile(const struct obj_data *obj) { return obj && obj==fired_projectile; }\n' + utils_source[a_label:utils_source.index('\n}', a_label)+2]
@@ -59,6 +60,7 @@ static void dispose(struct obj_data *shot) {
   free(shot->name);free(shot->short_description);free(shot->description);free(shot);
 }
 int main(void) {
+  struct player_special_data specials={0}; ch.player_specials=&specials;
   GET_EQ(&ch,WEAR_AMMO_POUCH)=&pouch;
   pouch.contains=&ammo;ammo.in_obj=&pouch;
   ammo.name="arrows";ammo.short_description="a bundle of arrows";ammo.description="Arrows.";
@@ -162,6 +164,29 @@ int main(void) {
   assert(!has_ammo_in_pouch(&ch,&weapon,true));
   main_returning=true;GET_OBJ_VAL(&ammo,0)=AMMO_TYPE_ARROW;
   assert(!ammunition_is_unlimited(&ammo,&weapon));
+  /* Prefer matching bundles, skip incompatible/exhausted ones, and fall back. */
+  THROWING(&ch)=false; main_returning=false;
+  struct index_data prototypes[3]={{0}}; obj_index=prototypes; top_of_objt=2;
+  prototypes[0].vnum=100;prototypes[1].vnum=200;prototypes[2].vnum=300;
+  struct obj_data normal={0}, preferred={0}, wrong={0};
+  GET_OBJ_TYPE(&normal)=GET_OBJ_TYPE(&preferred)=GET_OBJ_TYPE(&wrong)=ITEM_MISSILE;
+  GET_OBJ_RNUM(&normal)=0;GET_OBJ_RNUM(&preferred)=1;GET_OBJ_RNUM(&wrong)=2;
+  GET_OBJ_VAL(&normal,0)=GET_OBJ_VAL(&preferred,0)=AMMO_TYPE_ARROW;
+  GET_OBJ_VAL(&wrong,0)=AMMO_TYPE_BOLT;GET_OBJ_VAL(&weapon,0)=WEAPON_TYPE_LONG_BOW;
+  normal.next_content=&wrong;wrong.next_content=&preferred;pouch.contains=&normal;
+  normal.in_obj=wrong.in_obj=preferred.in_obj=&pouch;
+  GET_PREFERRED_AMMO(&ch)=201;
+  assert(has_ammo_in_pouch(&ch,&weapon,true));
+  assert(pouch.contains==&preferred && preferred.next_content==&normal && normal.next_content==&wrong && !wrong.next_content);
+  GET_OBJ_VAL(&preferred,AMMO_VAL_MAX)=10;GET_OBJ_VAL(&preferred,AMMO_VAL_QUANTITY)=0;
+  assert(has_ammo_in_pouch(&ch,&weapon,true) && pouch.contains==&normal);
+  GET_PREFERRED_AMMO(&ch)=301;
+  assert(has_ammo_in_pouch(&ch,&weapon,true) && pouch.contains==&normal);
+  GET_OBJ_VAL(&preferred,AMMO_VAL_QUANTITY)=5;GET_PREFERRED_AMMO(&ch)=201;
+  assert(has_ammo_in_pouch(&ch,&weapon,true) && pouch.contains==&preferred);
+  assert(GET_OBJ_VAL(&preferred,AMMO_VAL_QUANTITY)==5 && preferred.in_obj==&pouch);
+  GET_PREFERRED_AMMO(&ch)=0;
+  assert(has_ammo_in_pouch(&ch,&weapon,true) && pouch.contains==&preferred);
   puts("PASS: arrow/bolt/bullet matching, load bounds, finite and unlimited consumption, legacy ammo, thrown subtype matching, Returning from either source and shot bonuses.");
 }
 '''

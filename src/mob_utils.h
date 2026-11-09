@@ -12,6 +12,8 @@
 #define _MOB_UTILS_H_
 
 /* Bought pets gain levels up to their owner's level, with a mortal cap. */
+// Both leveling and training use the same 50x advancement XP scale.
+#define PET_PROGRESSION_XP_PER_STEP (2000 * 50)
 #define PURCHASED_PET_LEVEL_CAP 30
 #define PET_TRAINING_RANK_CAP 10
 #define PET_TRAINING_SKILL_CAP 5

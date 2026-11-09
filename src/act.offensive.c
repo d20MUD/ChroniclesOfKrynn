@@ -12053,6 +12053,46 @@ ACMD(do_throw)
   USE_STANDARD_ACTION(ch);
 }
 
+/* Select a prototype so replacement bundles retain the preference. */
+ACMD(do_ammopref)
+{
+  struct obj_data *pouch, *ammo;
+  char arg[MAX_INPUT_LENGTH];
+  obj_rnum preferred;
+  PREREQ_NOT_NPC();
+  skip_spaces_c(&argument);
+  if (!*argument)
+  {
+    if (GET_PREFERRED_AMMO(ch))
+    {
+      preferred = real_object(GET_PREFERRED_AMMO(ch) - 1);
+      send_to_char(ch, "Preferred ammunition: %s.\r\n", preferred != NOTHING ? obj_proto[preferred].short_description : "an unavailable ammunition type");
+    }
+    else send_to_char(ch, "Ammunition selection is automatic.\r\n");
+    send_to_char(ch, "Usage: ammopref <ammo keywords in your pouch> | ammopref none\r\n"
+                     "Preferred compatible ammo is used first; other usable ammo is used if it runs out.\r\n");
+    return;
+  }
+  if (!str_cmp(argument, "none") || !str_cmp(argument, "auto"))
+  {
+    GET_PREFERRED_AMMO(ch) = 0;
+    save_char(ch, 0);
+    send_to_char(ch, "Ammunition selection is now automatic.\r\n");
+    return;
+  }
+  pouch = GET_EQ(ch, WEAR_AMMO_POUCH);
+  strlcpy(arg, argument, sizeof(arg));
+  ammo = pouch ? get_obj_in_list_vis(ch, arg, NULL, pouch->contains) : NULL;
+  if (!ammo || GET_OBJ_TYPE(ammo) != ITEM_MISSILE || GET_OBJ_VNUM(ammo) < 0)
+  {
+    send_to_char(ch, "Choose ammunition currently in your equipped ammo pouch.\r\n");
+    return;
+  }
+  GET_PREFERRED_AMMO(ch) = GET_OBJ_VNUM(ammo) + 1;
+  save_char(ch, 0);
+  send_to_char(ch, "Preferred ammunition: %s.\r\n", ammo->short_description);
+}
+
 ACMD(do_fire)
 {
   struct char_data *vict = NULL, *tch = NULL;
