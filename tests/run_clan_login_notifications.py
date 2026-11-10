@@ -22,6 +22,9 @@ struct char_data *character_list=&online;
 static struct player_special_data online_saved;
 struct player_special_data dummy_mob;
 void basic_mud_log(const char *fmt,...) {}
+bool clan_persistence_access(struct char_data *ch) {return true;}
+bool clan_persistence_ready(void) {return true;}
+
 static int writes, loads, member_notices, allow_priv=1, last_rank;
 static int freed, approved_rank, approved_result, approved_pos;
 static char last_notice[512];
@@ -43,6 +46,8 @@ void save_char(struct char_data *ch,int mode) {
     member_notices++;strlcpy(member_text,ch->player_specials->saved.clan_login_notices->text,sizeof(member_text));
   }
 }
+bool save_char_checked(struct char_data *ch,int mode) {save_char(ch,mode);return true;}
+
 clan_rnum real_clan(clan_vnum id) {for(int i=0;i<2;i++)if(clans[i].vnum==id)return i;return NO_CLAN;}
 struct char_data *is_playing(char *name) {return !strcmp(name,"Online")?&online:NULL;}
 struct char_data *new_char(void) {struct char_data *ch=calloc(1,sizeof(*ch));ch->player_specials=calloc(1,sizeof(*ch->player_specials));return ch;}
@@ -82,7 +87,7 @@ int is_number(const char *s) {if(!*s)return 0;for(;*s;s++)if(!isdigit((unsigned 
 struct char_data *get_player_vis(struct char_data *ch,char *name,int *number,int where) {return !strcmp(name,"Online")?&online:NULL;}
 int count_clan_members(clan_rnum c) {return 1;}
 void mark_clan_modified(clan_rnum c) {}
-void save_single_clan(clan_rnum c) {}
+bool save_single_clan(clan_rnum c) {return true;}
 bool set_clan(struct char_data *ch,clan_vnum id) {GET_CLAN(ch)=id;save_char(ch,0);return TRUE;}
 '''
 for signature in ['static struct char_data *clan_online_player(const char *name)', 'void clan_restore_login_notice(struct char_data *ch, const char *text)', 'static void clan_queue_notice(struct char_data *ch, const char *color, const char *format, ...)', 'static void clan_notify_members(clan_rnum clan, const char *color, const char *format, ...)', 'static void clan_queue_application_result(struct char_data *ch, clan_rnum clan, bool approved)', 'static int clan_pending_applications(clan_rnum clan)', 'void clan_login_notifications(struct char_data *ch)']:

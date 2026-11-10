@@ -1521,7 +1521,9 @@ enum zone_terrain_type {
 /** Total number of available PRF flags */
 #define PRF_ANONYMOUS 91          /**< Hide identity from unintroduced viewers on who */
 
-#define NUM_PRF_FLAGS 92
+#define PRF_AUTOHARVEST 92        /**< Repeat harvesting until the current node is exhausted */
+
+#define NUM_PRF_FLAGS 93
 
 /* Score Color Theme constants */
 #define SCORE_THEME_ENHANCED 0     /**< Enhanced theme with rich colors */

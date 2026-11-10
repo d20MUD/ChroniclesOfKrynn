@@ -6058,8 +6058,8 @@ int is_empty(zone_rnum zone_nr)
 char *fread_string(FILE *fl, const char *error)
 {
   /* buf will store our complete final string (up to MAX_STRING_LENGTH)
-   * tmp is a smaller buffer for reading one line at a time (512 chars + null terminator) */
-  char buf[MAX_STRING_LENGTH] = {'\0'}, tmp[513] = {'\0'};
+   * tmp holds a 511-byte fgets chunk plus appended CRLF and the null terminator */
+  char buf[MAX_STRING_LENGTH] = {'\0'}, tmp[514] = {'\0'};
   char *point = NULL; /* pointer used to navigate through the tmp buffer */
   int done = 0;       /* flag: becomes 1 when we find the '~' terminator */
   int length = 0;     /* current total length of string we've built so far */
@@ -6069,7 +6069,7 @@ char *fread_string(FILE *fl, const char *error)
   do
   {
     /* Clear the temporary buffer to all zeros - ensures clean slate for each line */
-    memset(tmp, '\0', 513);
+    memset(tmp, '\0', sizeof(tmp));
 
     /* Read up to 512 characters (one line) from the file into tmp buffer
      * fgets() stops at newline or after 512 chars, whichever comes first */

@@ -5473,7 +5473,7 @@ static void craft_ammunition(struct char_data *ch, const char *argument)
       "  craft ammo enhancement <0-8>\r\n"
       "  craft ammo damage <none|fire|cold|acid|electricity|sonic> [4|6|8|10|12]\r\n"
       "  craft ammo show | cost | begin | reset\r\n"
-      "  craft ammo kit: make a portable fletching kit (2 ash wood, 2 iron, 2 hemp; DC 15).\r\n"
+      "  craft ammo kit: make a portable fletching kit (2 ash wood, 2 bronze, 2 hemp; DC 15).\r\n"
       "Carry a fletching kit directly, or use an equipped tool and matching station.\r\n"
       "Selections are saved. Better grades improve quality and reduce DC.\r\n");
     if (saved_ammo_plan(ch, &plan)) show_ammo_plan(ch, &plan);
@@ -5526,6 +5526,7 @@ static void craft_ammunition(struct char_data *ch, const char *argument)
   {
     if (!plan_ammo_craft("arrows", &plan)) goto invalid;
     making_kit = TRUE; plan.dc = 15; plan.level = 1;
+    plan.materials[1][0] = CRAFT_MAT_BRONZE;
     memset(plan.motes, 0, sizeof(plan.motes));
     for (i = 0; i < 3; i++) plan.materials[i][1] = 2;
   }
@@ -8270,6 +8271,32 @@ int craft_misc_type_by_wear_loc(int wear_loc)
   return CRAFT_TYPE_NONE;
 }
 
+/* Restart only a completed harvest, never a canceled or interrupted task. */
+static void complete_harvest_cycle(struct char_data *ch)
+{
+  room_rnum room = IN_ROOM(ch);
+  int material = world[room].harvest_material;
+  int skill = harvesting_skill_by_material(material);
+  bool can_repeat = skill > 0 &&
+      20 + get_craft_skill_value(ch, skill) + get_elbow_grease_bonus(ch) +
+          get_jack_of_all_trades_bonus(ch) + get_proficient_talent_bonus(ch, skill) >=
+          HARVEST_BASE_DC + MAX(1, material_grade(material) * 5);
+
+  /* Even early failures must leave no stale harvesting task behind. */
+  GET_CRAFT(ch).crafting_method = 0;
+  GET_CRAFT(ch).craft_duration = 0;
+  harvest_complete(ch);
+
+  if (!PRF_FLAGGED(ch, PRF_AUTOHARVEST) || !can_repeat || IN_ROOM(ch) != room ||
+      FIGHTING(ch) || GET_POS(ch) < POS_STANDING ||
+      world[room].harvest_material != material || material == CRAFT_MAT_NONE ||
+      world[room].harvest_material_amount <= 0)
+    return;
+
+  /* Reuse the normal survey/tool checks and talent-adjusted harvest timer. */
+  newcraft_harvest(ch, "");
+}
+
 void craft_update(void)
 {
   struct descriptor_data *d, *d_next;
@@ -8345,7 +8372,7 @@ void craft_update(void)
           }
           else
           {
-            harvest_complete(ch);
+            complete_harvest_cycle(ch);
           }
           break;
         case SCMD_NEWCRAFT_BUTCHER:

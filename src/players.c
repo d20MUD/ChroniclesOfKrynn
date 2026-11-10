@@ -37,6 +37,7 @@
 #include "spells.h"
 #include "char_descs.h"
 #include "clan.h"
+#include "clan_persistence.h"
 #include "mud_event.h"
 #include "dg_event.h"
 #include "craft.h" // crafting (auto craft quest inits)
@@ -2401,6 +2402,7 @@ int load_char(const char *name, struct char_data *ch)
   }
 
   fclose(fl);
+  clan_persistence_reconcile_player(ch);
   return (id);
 }
 
@@ -2450,6 +2452,7 @@ bool save_char_checked(struct char_data *ch, int mode)
 
   if (IS_NPC(ch) || GET_PFILEPOS(ch) < 0 || ch->legendary_serializing)
     return false;
+  if (!clan_persistence_before_player_save(ch)) return false;
 
 /* Direct helper writers and tagged fields share one ordered memory stream. */
 #define BUFFER_WRITE(...) do { if (fprintf(fl, __VA_ARGS__) < 0) goto restore_character; } while (0)

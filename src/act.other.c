@@ -8915,6 +8915,9 @@ ACMD(do_gen_tog)
       // 74
       {"Your name and title are now visible on who.\r\n",
        "You now appear anonymously on who to people who do not know you.\r\n"},
+      // 75
+      {"Autoharvest disabled. Your current harvest will finish without repeating.\r\n",
+       "Autoharvest enabled. Start harvesting to continue until the node is exhausted.\r\n"},
   };
 
   if (IS_NPC(ch))
@@ -9242,6 +9245,9 @@ ACMD(do_gen_tog)
     break;
   case SCMD_SURVEY_ROOMS_PROMPT:
     result = PRF_TOG_CHK(ch, PRF_SURVEY_ROOMS_PROMPT);
+    break;
+  case SCMD_AUTOHARVEST:
+    result = PRF_TOG_CHK(ch, PRF_AUTOHARVEST);
     break;
   case SCMD_AUTOLIGHT:
     result = PRF_TOG_CHK(ch, PRF_AUTOLIGHT);

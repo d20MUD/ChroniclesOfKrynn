@@ -433,6 +433,7 @@ cpp_extern const struct command_info cmd_info[] = {
      NULL},
     {"ammo", "ammo", POS_RESTING, do_ammo, 1, 0, TRUE, ACTION_NONE, {0, 0}, NULL},
     {"ammopref", "ammopref", POS_RESTING, do_ammopref, 1, 0, TRUE, ACTION_NONE, {0, 0}, NULL},
+    {"autoharvest", "autoharvest", POS_DEAD, do_gen_tog, 0, SCMD_AUTOHARVEST, TRUE, ACTION_NONE, {0, 0}, NULL},
     {"autohit", "autohit", POS_DEAD, do_gen_tog, 0, SCMD_AUTOHIT, TRUE, ACTION_NONE, {0, 0}, NULL},
     {"autokey", "autokey", POS_DEAD, do_gen_tog, 0, SCMD_AUTOKEY, TRUE, ACTION_NONE, {0, 0}, NULL},
     {"autolight",
@@ -5864,6 +5865,7 @@ void command_interpreter(struct char_data *ch, char *argument)
            !is_abbrev(complete_cmd_info[cmd].command, "score") &&
            !is_abbrev(complete_cmd_info[cmd].command, "craftscore") &&
            !is_abbrev(complete_cmd_info[cmd].command, "nocraftprogress") &&
+           !is_abbrev(complete_cmd_info[cmd].command, "autoharvest") &&
            !is_abbrev(complete_cmd_info[cmd].command, "materials") &&
            !is_abbrev(complete_cmd_info[cmd].command, "applies") &&
            !is_abbrev(complete_cmd_info[cmd].command, "bonuses") &&

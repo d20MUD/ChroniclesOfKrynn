@@ -23,6 +23,7 @@
 #include "improved-edit.h"
 #include "spells.h" /* find skill, etc */
 #include "clan.h"
+#include "clan_persistence.h"
 #include "clan_benefits.h"
 #include "mudlim.h"
 #include "oasis.h" /* for can_edit_zone */
@@ -536,6 +537,8 @@ void free_clan_list(void)
 /* set_clan - sets a player's clan (but not clan rank) */
 bool set_clan(struct char_data *ch, clan_vnum c_v)
 {
+  if (!clan_persistence_ready()) return FALSE;
+
   clan_rnum c_n;
   int p_i;
 
@@ -545,7 +548,7 @@ bool set_clan(struct char_data *ch, clan_vnum c_v)
     return FALSE;
 
   GET_CLAN(ch) = clan_list[c_n].vnum;
-  save_char(ch, 0);
+  if (!save_char_checked(ch, 0)) { log("CLAN: checked persistence failed"); return FALSE; }
   if ((p_i = get_ptable_by_name(GET_NAME(ch))) < 0)
   {
     log_clan_error(__func__,
@@ -764,7 +767,7 @@ bool auto_appoint_new_clan_leader(clan_rnum c_n)
   GET_CLANRANK(new_l) = 1;                  /* Set to top rank */
   clan_list[c_n].leader = GET_IDNUM(new_l); /* Set clan leader */
   mark_clan_modified(c_n);
-  save_single_clan(c_n);
+  if (!save_single_clan(c_n)) { log("CLAN: checked persistence failed"); return FALSE; }
 
   log("(CLAN) %s auto-appointed as new clan leader for '%s'", GET_NAME(new_l),
       clan_list[c_n].clan_name);
@@ -772,12 +775,12 @@ bool auto_appoint_new_clan_leader(clan_rnum c_n)
   strlcpy(leader_name, GET_NAME(new_l), sizeof(leader_name));
   if (loaded)
   {
-    save_char(new_l, 0);
+    if (!save_char_checked(new_l, 0)) { log("CLAN: checked persistence failed"); return FALSE; }
     free_char(new_l);
   }
   else
   {
-    save_char(new_l, 0);
+    if (!save_char_checked(new_l, 0)) { log("CLAN: checked persistence failed"); return FALSE; }
     send_to_char(new_l, "You have been promoted to Clan Leader!\r\n");
     send_to_char(new_l, "'%s' is now YOUR clan!\r\n", clan_list[c_n].clan_name);
   }
@@ -1135,7 +1138,7 @@ bool validate_all_clans(bool fix_errors)
 
   if (fix_errors && errors_fixed > 0)
   {
-    save_clans();
+    if (!save_clans()) { log("CLAN: checked persistence failed"); return FALSE; }
     log("Saved corrected clan data");
   }
 
@@ -1486,6 +1489,7 @@ void display_zone_benefits(struct char_data *ch)
 /* entry point for clans */
 ACMD(do_clan)
 {
+  if (!clan_persistence_access(ch)) return;
   clan_rnum clan;
   int rank, i;
   char clan_cmd[MAX_INPUT_LENGTH] = {'\0'};
@@ -1635,7 +1639,7 @@ static void clan_notify_members(clan_rnum clan, const char *color, const char *f
     if (GET_CLAN(member) == clan_list[clan].vnum && GET_CLANRANK(member) > NO_CLANRANK)
     {
       clan_queue_notice(member, color, "%s", body);
-      save_char(member, 0);
+      if (!save_char_checked(member, 0)) { log("CLAN: checked persistence failed"); return; }
     }
     if (loaded) free_char(member);
   }
@@ -1719,6 +1723,8 @@ void clan_login_notifications(struct char_data *ch)
 /* clan apply command */
 ACMD(do_clanapply)
 {
+  if (!clan_persistence_economy_available(ch)) return;
+  if (!clan_persistence_access(ch)) return;
   clan_rnum c_n;
 
   if (!argument || !(*argument))
@@ -1765,12 +1771,12 @@ ACMD(do_clanapply)
   decrease_gold(ch, clan_list[c_n].appfee);
   clan_list[c_n].treasure += clan_list[c_n].appfee;
   mark_clan_modified(c_n);
-  save_single_clan(c_n);
+  if (!save_single_clan(c_n)) { send_to_char(ch, "Clan changes could not be saved; the operation did not complete.\r\n"); return; }
 
   /* Set player as in the clan with no clan rank (pending) */
-  set_clan(ch, clan_list[c_n].vnum);
+  if (!set_clan(ch, clan_list[c_n].vnum)) { send_to_char(ch, "Clan membership could not be saved.\r\n"); return; }
   GET_CLANRANK(ch) = NO_CLANRANK;
-  save_char(ch, 0);
+  if (!save_char_checked(ch, 0)) { send_to_char(ch, "Clan changes could not be saved; the operation did not complete.\r\n"); return; }
 
   send_to_char(ch,
                "You've applied to clan '%s%s'\r\n"
@@ -1790,6 +1796,8 @@ ACMD(do_clanapply)
 /* clan award command */
 ACMD(do_clanaward)
 {
+  if (!clan_persistence_economy_available(ch)) return;
+  if (!clan_persistence_access(ch)) return;
   char plr[MAX_INPUT_LENGTH] = {'\0'}, ncp[MAX_INPUT_LENGTH] = {'\0'};
   struct char_data *l;
   long num_cp;
@@ -1851,7 +1859,7 @@ ACMD(do_clanaward)
   GET_CLANPOINTS(l) += num_cp;
   clan_queue_notice(l, "\tG", "You were awarded %ld clan points in %s by %s.",
                     num_cp, clan_list[c_r].clan_name, GET_NAME(ch));
-  save_char(l, 0);
+  if (!save_char_checked(l, 0)) { send_to_char(ch, "Clan changes could not be saved; the operation did not complete.\r\n"); return; }
   CLAN_BANK(c_r) -= (num_cp * 10);
 
   send_to_char(l, "%sCLAN: You have been awarded %s%ld%s clan points!%s\r\n", CCMAG(l, C_NRM),
@@ -1871,6 +1879,7 @@ ACMD(do_clanaward)
 /* clan claim command */
 ACMD(do_clanclaim)
 {
+  if (!clan_persistence_access(ch)) return;
   zone_vnum zv;
   zone_rnum zr;
   clan_rnum previous;
@@ -1928,7 +1937,7 @@ ACMD(do_clanclaim)
       clan_list[cr].total_zones_claimed++;
       clan_list[cr].current_zones_owned++;
       mark_clan_modified(cr);
-      save_single_clan(cr);
+      if (!save_single_clan(cr)) { send_to_char(ch, "Clan changes could not be saved; the operation did not complete.\r\n"); return; }
     }
 
     send_to_char(ch, "The locals rejoice and welcome your clans claim.\r\n");
@@ -1945,7 +1954,7 @@ ACMD(do_clanclaim)
     log_clan_activity(GET_CLAN(ch), "%s claimed zone %s [%d]", GET_NAME(ch),
                       zone_table[real_zone(zv)].name, zv);
 
-    save_claims();
+    if (!save_claims()) { send_to_char(ch, "Clan changes could not be saved; the operation did not complete.\r\n"); return; }
     clan_notify_members(cr, "\tG", "%s claimed %s for your clan.", GET_NAME(ch), zone_table[zr].name);
     if (previous != NO_CLAN && previous != cr)
       clan_notify_members(previous, "\tR", "Your clan lost its claim on %s to %s.", zone_table[zr].name, clan_list[cr].clan_name);
@@ -1964,6 +1973,12 @@ ACMD(do_clanclaim)
 /* clan create (IMP) command */
 ACMD(do_clancreate)
 {
+  if (clan_persistence_sql_authority()) {
+    send_to_char(ch, "SQL clan creation requires the incarnation lifecycle service.\r\n");
+    return;
+  }
+
+  if (!clan_persistence_access(ch)) return;
   char c_n[MAX_INPUT_LENGTH] = {'\0'}, c_l[MAX_INPUT_LENGTH] = {'\0'};
   struct char_data *l;
   struct clan_data new_clan;
@@ -2121,7 +2136,7 @@ ACMD(do_clancreate)
   if (add_clan(&new_clan))
   {
     send_to_char(ch, "Clan added successfully.\r\n");
-    save_clans(); /* Full save for new clan */
+    if (!save_clans()) { send_to_char(ch, "Clan changes could not be saved; the operation did not complete.\r\n"); return; } /* Full save for new clan */
     /* Now we need to set the clan data in the leaders pindex record */
     clan_queue_notice(l, "\tG", "Your clan %s was created; you are its leader.", c_n);
     GET_CLANRANK(l) = 1;
@@ -2142,6 +2157,7 @@ ACMD(do_clancreate)
 /* clan demote command - demote a clan member, even if they are offline */
 ACMD(do_clandemote)
 {
+  if (!clan_persistence_access(ch)) return;
   struct char_data *vict;
   char buf[MAX_INPUT_LENGTH] = {'\0'};
   bool immcom = FALSE;
@@ -2234,7 +2250,7 @@ ACMD(do_clandemote)
         GET_CLANRANK(vict) = GET_CLANRANK(vict) + 1;
         clan_queue_notice(vict, "\tY", "You were DEMOTED to %s in %s by %s.",
                           clan_list[c_n].rank_name[GET_CLANRANK(vict) - 1], clan_list[c_n].clan_name, GET_NAME(ch));
-        save_char(vict, 0);
+        if (!save_char_checked(vict, 0)) { send_to_char(ch, "Clan changes could not be saved; the operation did not complete.\r\n"); return; }
         send_to_char(vict, "You have been demoted to %s within your clan!\r\n",
                      clan_list[c_n].rank_name[(GET_CLANRANK(vict) - 1)]);
         send_to_char(ch, "%s has been demoted to %s!\r\n", PERS(vict, ch),
@@ -2307,7 +2323,7 @@ ACMD(do_clandemote)
         clan_queue_notice(vict, "\tY", "You were DEMOTED to %s in %s by %s.",
                           clan_list[c_n].rank_name[GET_CLANRANK(vict) - 1], clan_list[c_n].clan_name, GET_NAME(ch));
         GET_PFILEPOS(vict) = p_pos;
-        save_char(vict, 0);
+        if (!save_char_checked(vict, 0)) { send_to_char(ch, "Clan changes could not be saved; the operation did not complete.\r\n"); return; }
 
         send_to_char(ch, "%s has been demoted to %s!\r\n", PERS(vict, ch),
                      clan_list[c_n].rank_name[(GET_CLANRANK(vict) - 1)]);
@@ -2323,6 +2339,7 @@ ACMD(do_clandemote)
 /* clan balance command - balance of gold in clan's bank */
 ACMD(do_clanbalance)
 {
+  if (!clan_persistence_access(ch)) return;
   char buf[MAX_INPUT_LENGTH] = {'\0'};
   const char *buf2;
   bool immcom = FALSE;
@@ -2377,6 +2394,8 @@ ACMD(do_clanbalance)
 /* clan deposit command - deposit gold into the clan's bank */
 ACMD(do_clandeposit)
 {
+  if (!clan_persistence_economy_available(ch)) return;
+  if (!clan_persistence_access(ch)) return;
   char buf[MAX_INPUT_LENGTH] = {'\0'};
   const char *buf2;
   bool immcom = FALSE;
@@ -2516,9 +2535,9 @@ ACMD(do_clandeposit)
     return;
   }
 
-  save_char(ch, 0);
+  if (!save_char_checked(ch, 0)) { send_to_char(ch, "Clan changes could not be saved; the operation did not complete.\r\n"); return; }
   mark_clan_modified(c_n);
-  save_single_clan(c_n);
+  if (!save_single_clan(c_n)) { send_to_char(ch, "Clan changes could not be saved; the operation did not complete.\r\n"); return; }
 
   send_to_char(ch, "You have deposited %d coins into the clan bank.\r\n", amt);
 
@@ -2533,6 +2552,12 @@ ACMD(do_clandeposit)
 /* clan destroy (IMP) command */
 ACMD(do_clandestroy)
 {
+  if (clan_persistence_sql_authority()) {
+    send_to_char(ch, "SQL clan disbanding requires the retained-history lifecycle service.\r\n");
+    return;
+  }
+
+  if (!clan_persistence_access(ch)) return;
   struct char_data *vict;
   bool immcom = FALSE;
   clan_vnum c_v;
@@ -2596,7 +2621,7 @@ ACMD(do_clandestroy)
         clan_queue_notice(vict, "\tR", "Your clan %s has been DISBANDED.", clan_list[c_n].clan_name);
         GET_CLAN(vict) = 0;
         GET_CLANRANK(vict) = 0;
-        save_char(vict, 0);
+        if (!save_char_checked(vict, 0)) { send_to_char(ch, "Clan changes could not be saved; the operation did not complete.\r\n"); return; }
         if (vict != ch)
         {
           send_to_char(vict, "Your clan has been disbanded.  "
@@ -2619,7 +2644,7 @@ ACMD(do_clandestroy)
         GET_CLAN(vict) = 0;
         GET_CLANRANK(vict) = 0;
         GET_PFILEPOS(vict) = p_pos;
-        save_char(vict, 0);
+        if (!save_char_checked(vict, 0)) { send_to_char(ch, "Clan changes could not be saved; the operation did not complete.\r\n"); return; }
 
         free_char(vict);
       } /* End else (not playing) */
@@ -2652,6 +2677,7 @@ ACMD(do_clandestroy)
 
 ACMD(do_clanenrol)
 {
+  if (!clan_persistence_access(ch)) return;
   char arg[MAX_INPUT_LENGTH] = {'\0'};
   clan_rnum c_n = NO_CLAN;
   struct char_data *v = NULL;
@@ -2754,7 +2780,6 @@ ACMD(do_clanenrol)
 
   clan_queue_application_result(v, c_n, TRUE);
   GET_CLANRANK(v) = (clan_list[(c_n)].ranks); /* Set to lowest rank    */
-  set_clan(v, clan_list[(c_n)].vnum);         /* Set the clan and save */
 
   /* Update statistics */
   clan_list[c_n].total_members_joined++;
@@ -2765,7 +2790,8 @@ ACMD(do_clanenrol)
     clan_list[c_n].highest_member_count = current_count;
 
   mark_clan_modified(c_n);
-  save_single_clan(c_n);
+  if (!set_clan(v, clan_list[c_n].vnum)) { send_to_char(ch, "Clan membership could not be saved.\r\n"); goto cleanup; }
+  if (!save_single_clan(c_n)) { send_to_char(ch, "Clan changes could not be saved; the operation did not complete.\r\n"); goto cleanup; }
 
   send_to_char(ch, "%s is now a member of %s%s.\r\n", GET_NAME(v), clan_list[(c_n)].clan_name,
                QNRM);
@@ -2786,6 +2812,7 @@ cleanup:
 
 ACMDU(do_clanleave)
 {
+  if (!clan_persistence_access(ch)) return;
   clan_rnum c_n = NO_CLAN;
 
   c_n = real_clan(GET_CLAN(ch));
@@ -2818,7 +2845,6 @@ ACMDU(do_clanleave)
     clan_list[c_n].cache_timestamp = 0;
     clan_list[c_n].total_members_left++; /* Track members who left */
     mark_clan_modified(c_n);
-    save_single_clan(c_n);
 
     /* Log before clearing clan data */
     log_clan_activity(clan_list[c_n].vnum, "%s left the clan", GET_NAME(ch));
@@ -2827,7 +2853,6 @@ ACMDU(do_clanleave)
   GET_CLAN(ch) = 0;
   GET_CLANRANK(ch) = NO_CLANRANK;
   player_table[GET_PFILEPOS(ch)].clan = 0;
-  save_player_index(); /* Sync player table changes */
   if (ch->player_specials->clan_leave_code)
   {
     free(ch->player_specials->clan_leave_code);
@@ -2835,13 +2860,16 @@ ACMDU(do_clanleave)
   }
 
   clan_queue_notice(ch, "\tY", "You left %s.", clan_list[c_n].clan_name);
-  save_char(ch, 0);
+  if (!save_char_checked(ch, 0)) { send_to_char(ch, "Clan changes could not be saved; the operation did not complete.\r\n"); return; }
+  if (!save_single_clan(c_n)) { send_to_char(ch, "Clan statistics could not be saved.\r\n"); return; }
+  save_player_index();
   clan_notify_members(c_n, "\tC", "%s left %s.", GET_NAME(ch), clan_list[c_n].clan_name);
   send_to_char(ch, "You have left %s%s.\r\n", clan_list[c_n].clan_name, CCNRM(ch, C_NRM));
 }
 
 ACMD(do_clanexpel) /* Expel a member */
 {
+  if (!clan_persistence_access(ch)) return;
   char arg[MAX_INPUT_LENGTH] = {'\0'};
   clan_rnum c_n = NO_CLAN;
   struct char_data *v = NULL;
@@ -2904,7 +2932,6 @@ ACMD(do_clanexpel) /* Expel a member */
     clan_list[c_n].cache_timestamp = 0;
     clan_list[c_n].total_members_left++; /* Track members who left */
     mark_clan_modified(c_n);
-    save_single_clan(c_n);
 
     was_applicant = GET_CLANRANK(v) == NO_CLANRANK;
     if (was_applicant)
@@ -2914,6 +2941,8 @@ ACMD(do_clanexpel) /* Expel a member */
     GET_CLAN(v) = 0;
     GET_CLANRANK(v) = NO_CLANRANK;
     player_table[v_id].clan = 0;
+    if (!save_char_checked(v, 0)) { send_to_char(ch, "Clan changes could not be saved; the operation did not complete.\r\n"); return; }
+    if (!save_single_clan(c_n)) { send_to_char(ch, "Clan statistics could not be saved.\r\n"); return; }
 
     send_to_char(v, "You have been expelled from %s%s!\r\n", clan_list[(c_n)].clan_name,
                  CCNRM(v, C_NRM));
@@ -2926,7 +2955,6 @@ ACMD(do_clanexpel) /* Expel a member */
     log_clan_activity(clan_list[c_n].vnum, "%s expelled %s from the clan", GET_NAME(ch),
                       GET_NAME(v));
 
-    save_char(v, 0);
     save_player_index();
     if (!was_applicant)
       clan_notify_members(c_n, "\tY", "%s was removed from %s.", GET_NAME(v), clan_list[c_n].clan_name);
@@ -2945,7 +2973,6 @@ ACMD(do_clanexpel) /* Expel a member */
     clan_list[c_n].cache_timestamp = 0;
     clan_list[c_n].total_members_left++; /* Track members who left */
     mark_clan_modified(c_n);
-    save_single_clan(c_n);
 
     was_applicant = GET_CLANRANK(v) == NO_CLANRANK;
     if (was_applicant)
@@ -2956,6 +2983,8 @@ ACMD(do_clanexpel) /* Expel a member */
     GET_CLANRANK(v) = NO_CLANRANK;
     player_table[v_id].clan = 0;
     GET_PFILEPOS(v) = v_pos;
+    if (!save_char_checked(v, 0)) { send_to_char(ch, "Clan changes could not be saved; the operation did not complete.\r\n"); free_char(v); return; }
+    if (!save_single_clan(c_n)) { send_to_char(ch, "Clan statistics could not be saved.\r\n"); free_char(v); return; }
 
     send_to_char(v, "You have been expelled from %s%s!\r\n", clan_list[(c_n)].clan_name,
                  CCNRM(v, C_NRM));
@@ -2965,7 +2994,6 @@ ACMD(do_clanexpel) /* Expel a member */
     log("(CLAN) %s has expelled %s from %s!\r\n", GET_NAME(ch), GET_NAME(v),
         clan_list[(c_n)].clan_name);
 
-    save_char(v, 0);
     save_player_index();
     if (!was_applicant)
       clan_notify_members(c_n, "\tY", "%s was removed from %s.", GET_NAME(v), clan_list[c_n].clan_name);
@@ -2976,6 +3004,7 @@ ACMD(do_clanexpel) /* Expel a member */
 
 ACMD(do_claninfo) /* Information about clans */
 {
+  if (!clan_persistence_access(ch)) return;
   int i, j, count = 0, mems, pow, x, xcount = 0;
   char pr[4];
 
@@ -3230,6 +3259,7 @@ ACMD(do_claninfo) /* Information about clans */
 
 ACMD(do_clanlist) /* List of clan members */
 {
+  if (!clan_persistence_access(ch)) return;
   int i, rk_num;
   clan_rnum c;
   clan_vnum vc;
@@ -3342,6 +3372,7 @@ ACMD(do_clanlist) /* List of clan members */
 
 ACMD(do_clanowner)
 {
+  if (!clan_persistence_access(ch)) return;
   clan_rnum c_n;
   struct char_data *new_l;
   char buf[MAX_STRING_LENGTH] = {'\0'};
@@ -3399,10 +3430,10 @@ ACMD(do_clanowner)
   GET_CLANRANK(new_l) = 1; /* Set to top rank */
   clan_list[c_n].leader = GET_IDNUM(new_l);
   mark_clan_modified(c_n);
-  save_single_clan(c_n);
+  if (!save_single_clan(c_n)) { send_to_char(ch, "Clan changes could not be saved; the operation did not complete.\r\n"); return; }
 
-  save_char(ch, 0);
-  save_char(new_l, 0);
+  if (!save_char_checked(ch, 0)) { send_to_char(ch, "Clan changes could not be saved; the operation did not complete.\r\n"); return; }
+  if (!save_char_checked(new_l, 0)) { send_to_char(ch, "Clan changes could not be saved; the operation did not complete.\r\n"); return; }
   clan_notify_members(c_n, "\tC", "%s is now leader of %s.", GET_NAME(new_l), clan_list[c_n].clan_name);
   send_to_char(ch, "Ownership changed to %s.\r\n", PERS(new_l, ch));
   send_to_char(new_l, "You have been promoted to Clan Leader!\r\n");
@@ -3411,6 +3442,7 @@ ACMD(do_clanowner)
 
 ACMD(do_clanpromote)
 {
+  if (!clan_persistence_access(ch)) return;
   struct char_data *vict;
   char buf[MAX_INPUT_LENGTH] = {'\0'};
   bool immcom = FALSE;
@@ -3502,7 +3534,7 @@ ACMD(do_clanpromote)
         GET_CLANRANK(vict) = rk_num;
         clan_queue_notice(vict, "\tG", "You were PROMOTED to %s in %s by %s.",
                           clan_list[c_n].rank_name[GET_CLANRANK(vict) - 1], clan_list[c_n].clan_name, GET_NAME(ch));
-        save_char(vict, 0);
+        if (!save_char_checked(vict, 0)) { send_to_char(ch, "Clan changes could not be saved; the operation did not complete.\r\n"); return; }
         send_to_char(vict,
                      "You have been promoted to %s within your"
                      " clan!\r\n",
@@ -3576,7 +3608,7 @@ ACMD(do_clanpromote)
         clan_queue_notice(vict, "\tG", "You were PROMOTED to %s in %s by %s.",
                           clan_list[c_n].rank_name[GET_CLANRANK(vict) - 1], clan_list[c_n].clan_name, GET_NAME(ch));
         GET_PFILEPOS(vict) = p_pos;
-        save_char(vict, 0);
+        if (!save_char_checked(vict, 0)) { send_to_char(ch, "Clan changes could not be saved; the operation did not complete.\r\n"); return; }
 
         send_to_char(ch, "%s has been promoted to %s!\r\n", PERS(vict, ch),
                      clan_list[c_n].rank_name[(GET_CLANRANK(vict) - 1)]);
@@ -3590,6 +3622,7 @@ ACMD(do_clanpromote)
 
 ACMD(do_clanstatus)
 {
+  if (!clan_persistence_access(ch)) return;
   clan_rnum c_n;
   int c_r;
 
@@ -3640,6 +3673,7 @@ ACMD(do_clanstatus)
 
 ACMD(do_clanwhere)
 {
+  if (!clan_persistence_access(ch)) return;
   clan_rnum c;
   room_rnum r;
   zone_rnum z;
@@ -3702,6 +3736,8 @@ ACMD(do_clanwhere)
 
 ACMD(do_clanwithdraw)
 {
+  if (!clan_persistence_economy_available(ch)) return;
+  if (!clan_persistence_access(ch)) return;
   char buf[MAX_INPUT_LENGTH] = {'\0'};
   const char *buf2;
   bool immcom = FALSE;
@@ -3801,9 +3837,9 @@ ACMD(do_clanwithdraw)
   /* Update clan activity */
   update_clan_activity(clan_list[c_n].vnum);
 
-  save_char(ch, 0);
+  if (!save_char_checked(ch, 0)) { send_to_char(ch, "Clan changes could not be saved; the operation did not complete.\r\n"); return; }
   mark_clan_modified(c_n);
-  save_single_clan(c_n);
+  if (!save_single_clan(c_n)) { send_to_char(ch, "Clan changes could not be saved; the operation did not complete.\r\n"); return; }
 
   send_to_char(ch, "You have withdrawn %d coins from the clan bank.\r\n", amt);
 
@@ -3817,6 +3853,7 @@ ACMD(do_clanwithdraw)
 
 ACMD(do_clanunclaim)
 {
+  if (!clan_persistence_access(ch)) return;
   int z, zr;
   bool found = FALSE;
   struct claim_data *this_claim;
@@ -3862,7 +3899,7 @@ ACMD(do_clanunclaim)
       clan_notify_members(real_clan(CLAIM_CLAN(this_claim)), "\tY", "Your clan's claim on %s was removed by %s.", zone_table[zr].name, GET_NAME(ch));
       CLAIM_CLAN(this_claim) = NO_CLAN;
       CLAIM_CLAIMANT(this_claim) = 0L; /* same as (long int) 0 */
-      save_claims();
+      if (!save_claims()) { send_to_char(ch, "Clan changes could not be saved; the operation did not complete.\r\n"); return; }
       send_to_char(ch, "Claim removed from %s\r\n", zone_table[real_zone(z)].name);
     }
   }
@@ -3870,6 +3907,7 @@ ACMD(do_clanunclaim)
 
 ACMD(do_clanally)
 {
+  if (!clan_persistence_access(ch)) return;
   clan_rnum my_clan, target_clan;
   char arg[MAX_INPUT_LENGTH];
   int i;
@@ -3988,8 +4026,8 @@ ACMD(do_clanally)
     clan_list[target_clan].total_alliances_formed++;
     mark_clan_modified(my_clan);
     mark_clan_modified(target_clan);
-    save_single_clan(my_clan);
-    save_single_clan(target_clan);
+    if (!save_single_clan(my_clan)) { send_to_char(ch, "Clan changes could not be saved; the operation did not complete.\r\n"); return; }
+    if (!save_single_clan(target_clan)) { send_to_char(ch, "Clan changes could not be saved; the operation did not complete.\r\n"); return; }
 
     /* Log the alliance */
     log_clan_activity(clan_list[my_clan].vnum, "Formed alliance with %s (by %s)",
@@ -4025,13 +4063,14 @@ ACMD(do_clanally)
     if (i == my_clan || i == target_clan)
     {
       mark_clan_modified(i);
-      save_single_clan(i);
+      if (!save_single_clan(i)) { send_to_char(ch, "Clan changes could not be saved; the operation did not complete.\r\n"); return; }
     }
   }
 }
 
 ACMD(do_clanwar)
 {
+  if (!clan_persistence_access(ch)) return;
   clan_rnum my_clan, target_clan;
   char arg[MAX_INPUT_LENGTH];
   int i;
@@ -4185,13 +4224,14 @@ ACMD(do_clanwar)
     if (i == my_clan || i == target_clan)
     {
       mark_clan_modified(i);
-      save_single_clan(i);
+      if (!save_single_clan(i)) { send_to_char(ch, "Clan changes could not be saved; the operation did not complete.\r\n"); return; }
     }
   }
 }
 
 ACMD(do_clanlog)
 {
+  if (!clan_persistence_access(ch)) return;
   char arg[MAX_INPUT_LENGTH];
   char filename[256];
   char line[MAX_STRING_LENGTH];
@@ -4281,6 +4321,7 @@ ACMD(do_clanlog)
 
 ACMD(do_clanstats)
 {
+  if (!clan_persistence_access(ch)) return;
   clan_rnum c_n;
   char arg[MAX_INPUT_LENGTH];
   struct clan_data *clan;
@@ -4414,6 +4455,7 @@ ACMD(do_clanstats)
 /* Immortal command to check and fix clan data integrity */
 ACMD(do_clanfix)
 {
+  if (!clan_persistence_access(ch)) return;
   char arg[MAX_INPUT_LENGTH];
   bool fix = FALSE;
 
@@ -4483,6 +4525,7 @@ ACMD(do_clanfix)
 /* Display zone control benefits */
 ACMD(do_clanbenefits)
 {
+  if (!clan_persistence_access(ch)) return;
   display_zone_benefits(ch);
 }
 
@@ -4876,7 +4919,7 @@ void increase_popularity(zone_vnum zn, clan_vnum cn, float amt)
     } /* end for */
   } /* end if (exceed max allowed) */
 
-  save_claims();
+  if (!save_claims()) { log("CLAN: checked persistence failed"); return; }
 }
 
 void show_zone_popularities(struct char_data *ch, struct claim_data *this_claim)
@@ -5042,6 +5085,7 @@ void check_diplomacy(void)
 
 ACMD(do_clanset)
 {
+  if (!clan_persistence_access(ch)) return;
   char field[MAX_INPUT_LENGTH] = {'\0'}, name[MAX_INPUT_LENGTH] = {'\0'};
   char val_arg[MAX_INPUT_LENGTH] = {'\0'}, rankname[MAX_INPUT_LENGTH] = {'\0'},
        rankbuf[MAX_INPUT_LENGTH] = {'\0'};
@@ -5083,8 +5127,8 @@ ACMD(do_clanset)
   if (!strcmp(name, "save"))
   {
     /* save all the clan info back into the clan files */
-    save_clans();
-    save_claims();
+    if (!save_clans()) { send_to_char(ch, "Clan changes could not be saved; the operation did not complete.\r\n"); return; }
+    if (!save_claims()) { send_to_char(ch, "Clan changes could not be saved; the operation did not complete.\r\n"); return; }
     send_to_char(ch, "Clan and claims information saved!\r\n");
     return;
   }
@@ -5479,6 +5523,7 @@ ACMD(do_clanset)
  **************************************************************************/
 ACMD(do_clantalk)
 {
+  if (!clan_persistence_access(ch)) return;
   char buf[MAX_STRING_LENGTH] = {'\0'}, buf2[MAX_STRING_LENGTH + 256] = {'\0'},
        arg[MAX_INPUT_LENGTH] = {'\0'};
   const char *arg2;
@@ -5697,6 +5742,8 @@ clan_vnum get_owning_clan_by_char(struct char_data *ch)
 
 void do_clan_tax_losses(struct char_data *ch, int amount)
 {
+  if (!clan_persistence_economy_available(NULL)) return;
+
   int tax, loss;
   clan_rnum cn;
   zone_vnum zn;
@@ -5721,6 +5768,8 @@ void do_clan_tax_losses(struct char_data *ch, int amount)
 
 bool check_clanpriv(struct char_data *ch, int p)
 {
+  if (!clan_persistence_ready()) return FALSE;
+
   clan_rnum cr;
   int rk;
 
@@ -5782,6 +5831,8 @@ bool are_clans_at_war(int clanA, int clanB)
 /* Update clan-related timers and periodic tasks */
 void update_clans(void)
 {
+  if (!clan_persistence_ready()) return;
+
   int i, j;
   bool save_needed = FALSE;
   struct descriptor_data *d;
@@ -5842,7 +5893,7 @@ void update_clans(void)
     {
       if (clan_list[i].modified)
       {
-        save_single_clan(i);
+        if (!save_single_clan(i)) { log("CLAN: checked persistence failed"); return; }
       }
     }
   }
@@ -5856,7 +5907,7 @@ void update_clans(void)
     {
       if (clan_list[i].modified)
       {
-        save_single_clan(i);
+        if (!save_single_clan(i)) { log("CLAN: checked persistence failed"); return; }
       }
     }
   }

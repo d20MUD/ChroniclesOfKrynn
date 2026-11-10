@@ -56,6 +56,9 @@ circle_SOURCES = \
 	src/cedit.c \
 	src/char_descs.c \
 	src/clan.c \
+	src/clan_progression.c \
+	src/clan_repository.c \
+	src/clan_persistence.c \
 	src/clan_economy.c \
 	src/clan_edit.c \
 	src/clan_transactions.c \
@@ -312,6 +315,17 @@ src/constants.c: $(filter-out src/constants.c,$(circle_SOURCES))
 
 # Extra files to distribute
 EXTRA_DIST = \
+	src/clan_progression.h \
+	src/clan_repository.h \
+	src/clan_persistence.h \
+	src/clan_legacy_fields.h \
+	src/clan_repository_schema.inc \
+	sql/20261110_clan_progression_v001.sql \
+	sql/20261110_clan_progression_v002.sql \
+	scripts/generate_clan_schema_contract.py \
+	scripts/build_clan_repository_tool.py \
+	scripts/clan_legacy_import.py \
+	tools/clan_repository_tool.c \
 	lib/misc/zone_promote.py \
 	lib/text/help/zpromote.hlp \
 	docs/zone-promotion.md \

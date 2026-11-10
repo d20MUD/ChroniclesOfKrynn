@@ -18,6 +18,7 @@
 #include "handler.h"
 #include "interpreter.h"
 #include "clan.h"
+#include "clan_persistence.h"
 #include "shop.h"
 #include "constants.h"
 
@@ -136,6 +137,8 @@ int apply_clan_shop_discount(int price, struct char_data *ch, int shop_nr)
 /* Collect taxes on transactions */
 void collect_clan_transaction_tax(struct char_data *ch, int amount, int transaction_type)
 {
+  if (!clan_persistence_economy_available(NULL)) return;
+
   clan_rnum clan_r;
   int tax_amount;
 
@@ -172,6 +175,8 @@ void collect_clan_transaction_tax(struct char_data *ch, int amount, int transact
 /* Add new investment for a clan */
 bool add_clan_investment(clan_vnum clan_v, int type, long amount, int duration)
 {
+  if (!clan_persistence_economy_available(NULL)) return FALSE;
+
   struct clan_investment *new_invest;
   clan_rnum clan_r;
 
@@ -205,6 +210,8 @@ bool add_clan_investment(clan_vnum clan_v, int type, long amount, int duration)
 /* Process clan investments (called once per mud day) */
 void process_clan_investments(void)
 {
+  if (!clan_persistence_economy_available(NULL)) return;
+
   struct clan_investment *invest, *temp, *prev = NULL;
   clan_rnum clan_r;
   int return_amount, risk_roll;
@@ -279,6 +286,8 @@ void process_clan_investments(void)
 /* Command to manage clan investments */
 ACMD(do_claninvest)
 {
+  if (!clan_persistence_economy_available(ch)) return;
+
   char arg1[MAX_INPUT_LENGTH], arg2[MAX_INPUT_LENGTH], arg3[MAX_INPUT_LENGTH];
   int type, duration;
   long amount;
@@ -415,6 +424,8 @@ void shutdown_clan_economy(void)
 /* Save clan investments to file */
 void save_clan_investments(void)
 {
+  if (!clan_persistence_economy_available(NULL)) return;
+
   FILE *fl;
   struct clan_investment *invest;
 
@@ -437,6 +448,8 @@ void save_clan_investments(void)
 /* Load clan investments from file */
 void load_clan_investments(void)
 {
+  if (!clan_persistence_economy_available(NULL)) return;
+
   FILE *fl;
   struct clan_investment *invest;
   char line[256];

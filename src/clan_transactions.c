@@ -16,6 +16,7 @@
 #include "handler.h"
 #include "interpreter.h"
 #include "clan.h"
+#include "clan_persistence.h"
 
 /* Transaction types */
 #define TRANS_TREASURY_CHANGE 0
@@ -84,6 +85,11 @@ void update_player_index_clan(long player_id, clan_vnum clan, int rank);
 /* Create a new transaction */
 struct clan_transaction *begin_clan_transaction(struct char_data *ch, const char *description)
 {
+  if (clan_persistence_sql_authority()) {
+    if(ch) send_to_char(ch, "Legacy multi-store clan transactions require the durable receipt service.\r\n");
+    return NULL;
+  }
+
   struct clan_transaction *trans;
 
   if (!ch || !description)
@@ -201,6 +207,12 @@ bool commit_clan_transaction(struct clan_transaction *trans)
     return FALSE;
   }
 
+  if (clan_persistence_sql_authority()) {
+    remove_from_transaction_list(trans);
+    free_transaction(trans);
+    return FALSE;
+  }
+
   /* Execute all operations */
   for (i = 0; i < trans->num_operations && success; i++)
   {
@@ -213,24 +225,26 @@ bool commit_clan_transaction(struct clan_transaction *trans)
 
   if (success)
   {
-    trans->state = TRANS_STATE_COMMITTED;
-    log_transaction(trans, "COMMIT");
-
     /* Save affected clans */
     for (i = 0; i < trans->num_operations; i++)
     {
       if (trans->operations[i].clan >= 0 && trans->operations[i].clan < num_of_clans)
       {
         mark_clan_modified(trans->operations[i].clan);
-        save_single_clan(trans->operations[i].clan);
+        if (!save_single_clan(trans->operations[i].clan)) {
+          success = FALSE;
+          break;
+        }
       }
     }
   }
-  else
+  if (!success)
   {
-    /* Rollback on failure */
+    /* Rollback on execution or persistence failure. */
     rollback_clan_transaction(trans);
   }
+
+  if (success) { trans->state = TRANS_STATE_COMMITTED; log_transaction(trans, "COMMIT"); }
 
   /* Remove from active list and free */
   remove_from_transaction_list(trans);
@@ -271,7 +285,7 @@ bool rollback_clan_transaction(struct clan_transaction *trans)
     if (trans->operations[i].clan >= 0 && trans->operations[i].clan < num_of_clans)
     {
       mark_clan_modified(trans->operations[i].clan);
-      save_single_clan(trans->operations[i].clan);
+      if (!save_single_clan(trans->operations[i].clan)) return FALSE;
     }
   }
 

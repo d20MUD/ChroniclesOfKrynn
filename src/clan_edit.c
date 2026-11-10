@@ -28,10 +28,11 @@
 #include "modify.h"      /* string_write etc */
 #include "ibt.h"
 #include "clan.h"
+#include "clan_persistence.h"
 
 /* Static internal (only used in clan_edit.c) functions */
 static void clanedit_setup(struct descriptor_data *d); /* Initialize clan editor for a descriptor */
-static void clanedit_save(struct descriptor_data *d);  /* Save edited clan data to memory */
+static bool clanedit_save(struct descriptor_data *d);  /* Save edited clan data to memory */
 static void clanedit_disp_menu(struct descriptor_data *d);  /* Display main clan edit menu */
 static void clanedit_ranks_menu(struct descriptor_data *d); /* Display clan ranks editing menu */
 static void clanedit_priv_menu(struct descriptor_data *d);  /* Display clan privileges menu */
@@ -51,16 +52,18 @@ static void get_priv_string(struct descriptor_data *d, char *t,
  * It includes all clan properties, ranks, privileges, and statistics.
  * The file format is designed to be human-readable and editable.
  */
-void save_clans(void)
+bool save_clans(void)
 {
   FILE *fl;
   int i, j, x;
   char buf[MAX_STRING_LENGTH] = {'\0'};
 
+  if (clan_persistence_sql_authority()) return clan_persistence_save();
+
   if (!(fl = fopen(CLAN_FILE, "w")))
   {
     mudlog(CMP, LVL_IMPL, TRUE, "SYSERR: Unable to open clan file");
-    return;
+    return FALSE;
   }
   fprintf(fl, "* Clans File\n");
   fprintf(fl, "* Number of clans: %d\n", num_of_clans);
@@ -162,14 +165,16 @@ void save_clans(void)
     fprintf(fl, "~\n");
   }
   fprintf(fl, "$\n");
-  fclose(fl);
+  { int error=ferror(fl); if(fclose(fl)||error) return FALSE; }
 
   /* Clear all modified flags after successful save */
   for (i = 0; i < num_of_clans; i++)
   {
     clan_list[i].modified = FALSE;
   }
+  return TRUE;
 }
+
 
 /**
  * save_single_clan - Save a single clan without rewriting the entire file
@@ -183,7 +188,7 @@ void save_clans(void)
  *
  * This approach is more efficient than rewriting all clans when only one changes.
  */
-void save_single_clan(clan_rnum c)
+bool save_single_clan(clan_rnum c)
 {
   FILE *fl, *new_fl;
   char tmpname[256], backup[256];
@@ -194,11 +199,14 @@ void save_single_clan(clan_rnum c)
   if (c < 0 || c >= num_of_clans)
   {
     log("SYSERR: save_single_clan called with invalid clan rnum %d", c);
-    return;
+    return FALSE;
   }
 
+  if (clan_persistence_sql_authority() && !clan_persistence_ready()) return FALSE;
   if (!clan_list[c].modified)
-    return; /* No need to save if not modified */
+    return TRUE; /* No need to save if not modified */
+
+  if (clan_persistence_sql_authority()) return clan_persistence_save();
 
   /* Create temporary file name */
   snprintf(tmpname, sizeof(tmpname), "%s.tmp", CLAN_FILE);
@@ -208,8 +216,7 @@ void save_single_clan(clan_rnum c)
   if (!(fl = fopen(CLAN_FILE, "r")))
   {
     /* If original doesn't exist, do a full save */
-    save_clans();
-    return;
+    return save_clans();
   }
 
   /* Open temporary file for writing */
@@ -217,7 +224,7 @@ void save_single_clan(clan_rnum c)
   {
     fclose(fl);
     log("SYSERR: Unable to open temporary clan file for writing");
-    return;
+    return FALSE;
   }
 
   /* Copy header */
@@ -362,7 +369,7 @@ void save_single_clan(clan_rnum c)
   fprintf(new_fl, "$\n");
 
   fclose(fl);
-  fclose(new_fl);
+  { int error=ferror(new_fl); if(fclose(new_fl)||error) { remove(tmpname); return FALSE; } }
 
   /* Now replace the original file with the new one */
   /* First, backup the original */
@@ -375,13 +382,15 @@ void save_single_clan(clan_rnum c)
     log("SYSERR: Couldn't rename temporary clan file, restoring backup");
     rename(backup, CLAN_FILE);
     remove(tmpname);
-    return;
+    return FALSE;
   }
 
   /* Success - remove backup and clear modified flag */
   remove(backup);
   clan_list[c].modified = FALSE;
+  return TRUE;
 }
+
 
 /**
  * mark_clan_modified - Flag a clan as having unsaved changes
@@ -412,6 +421,11 @@ void mark_clan_modified(clan_rnum c)
  */
 void load_clans(void)
 {
+  if (clan_persistence_sql_authority()) {
+    log("CLAN MYSQL: explicit SQL boot hydration is required; refusing legacy load");
+    return;
+  }
+
   FILE *fl;
   int j, gl = 0, priv, lev;
   char tag[6], line[MAX_INPUT_LENGTH + 1], buf[MAX_STRING_LENGTH] = {'\0'};
@@ -425,7 +439,7 @@ void load_clans(void)
   if (!(fl = fopen(CLAN_FILE, "r")))
   {
     log("   Clan file '%s' does not exist. Will create a new one", CLAN_FILE);
-    save_clans();
+    if (!save_clans()) log("CLAN: failed to initialize legacy clan storage");
     return;
   }
   else
@@ -698,6 +712,8 @@ void load_clans(void)
  */
 bool save_claims(void)
 {
+  if (clan_persistence_sql_authority()) return clan_persistence_save();
+
   FILE *fl;
   int i;
   struct claim_data *this_claim;
@@ -727,7 +743,7 @@ bool save_claims(void)
     fprintf(fl, "~\n");
   }
   fprintf(fl, "$\n");
-  fclose(fl);
+  { int error=ferror(fl); if(fclose(fl)||error) return FALSE; }
   return TRUE;
 }
 
@@ -740,6 +756,11 @@ bool save_claims(void)
  */
 void load_claims(void)
 {
+  if (clan_persistence_sql_authority()) {
+    log("CLAN MYSQL: explicit SQL boot hydration is required; refusing legacy load");
+    return;
+  }
+
   FILE *fl;
   int i, j, gl = 0, cn;
   float pop;
@@ -1028,21 +1049,22 @@ static void clanedit_setup(struct descriptor_data *d)
  * This function copies the edited clan data from the OLC structure
  * back to the main clan list and marks it for saving to disk.
  */
-static void clanedit_save(struct descriptor_data *d)
+static bool clanedit_save(struct descriptor_data *d)
 {
   clan_rnum cr;
 
   if ((cr = real_clan(OLC_CLAN(d)->vnum)) == NO_CLAN)
   {
     log("SYSERR: clanedit_save: Invalid clan vnum (%d) in OLC struct", OLC_CLAN(d)->vnum);
-    return;
+    return FALSE;
   }
 
   /* Overwrite old clan's data */
   duplicate_clan_data(&(clan_list[cr]), OLC_CLAN(d));
 
   mark_clan_modified(cr);
-  save_single_clan(cr);
+  if (!save_single_clan(cr)) { log("CLAN: checked persistence failed"); return FALSE; }
+  return TRUE;
 }
 
 /**
@@ -1361,7 +1383,7 @@ void clanedit_parse(struct descriptor_data *d, char *arg)
     {
     case 'y':
     case 'Y':
-      clanedit_save(d);
+      if (!clanedit_save(d)) { write_to_output(d, "Clan save failed; changes remain unsaved.\r\n"); return; }
       write_to_output(d, "Clan saved.\r\n");
       mudlog(CMP, MAX(LVL_BUILDER, GET_INVIS_LEV(d->character)), TRUE, "OLC: %s edits clan %d.",
              GET_NAME(d->character), OLC_NUM(d));

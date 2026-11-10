@@ -70,7 +70,7 @@ bonus, damage, DC, material quantities, and mote costs before you spend.
 
 PORTABLE FLETCHING KIT
 Use craft ammo kit to make a reusable portable fletching kit. This requires
-2 ash wood, 2 iron, and 2 hemp; DC 15 woodworking; an equipped woodworking
+2 ash wood, 2 bronze, and 2 hemp; DC 15 woodworking; an equipped woodworking
 tool and a carpentry table. Materials are consumed even if the roll fails.
 
 Carry the finished kit directly in your inventory (take it out of any bag).

@@ -136,7 +136,14 @@ int main(void) {
  tool=station=false;craft_ammunition(&ch,"begin");assert(delivered);extract_obj(delivered);delivered=NULL;
  before=GET_CRAFT_MAT((&ch),CRAFT_MAT_ASH_WOOD);craft_ammunition(&ch,"kit");assert(!delivered && GET_CRAFT_MAT((&ch),CRAFT_MAT_ASH_WOOD)==before);
  kit.item_number=1;craft_ammunition(&ch,"begin");assert(!delivered);ch.carrying=NULL;
- tool=station=true;craft_ammunition(&ch,"kit");assert(delivered && GET_OBJ_TYPE(delivered)==ITEM_CRAFTING_TOOL);
+ tool=station=true;
+ int bronze_before=GET_CRAFT_MAT((&ch),CRAFT_MAT_BRONZE),iron_before=GET_CRAFT_MAT((&ch),CRAFT_MAT_IRON);
+ GET_CRAFT_MAT((&ch),CRAFT_MAT_BRONZE)=1;craft_ammunition(&ch,"kit");
+ assert(!delivered && GET_CRAFT_MAT((&ch),CRAFT_MAT_ASH_WOOD)==before && GET_CRAFT_MAT((&ch),CRAFT_MAT_IRON)==iron_before);
+ GET_CRAFT_MAT((&ch),CRAFT_MAT_BRONZE)=bronze_before;
+ craft_ammunition(&ch,"kit");assert(delivered && GET_OBJ_TYPE(delivered)==ITEM_CRAFTING_TOOL);
+ assert(GET_CRAFT_MAT((&ch),CRAFT_MAT_BRONZE)==bronze_before-2);
+ assert(GET_CRAFT_MAT((&ch),CRAFT_MAT_IRON)==iron_before);
  assert(GET_CRAFT_MAT((&ch),CRAFT_MAT_ASH_WOOD)==before-2);extract_obj(delivered);delivered=NULL;
  craft_ammunition(&ch,"reset");assert(!AMMO_SETTINGS(&ch)[0] && !AMMO_SETTINGS(&ch)[3] && !AMMO_SETTINGS(&ch)[5]);
  return 0;

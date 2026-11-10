@@ -495,6 +495,9 @@ set(SRC_C_FILES
     src/char_descs.c
     src/clan.c
     src/clan_economy.c
+    src/clan_progression.c
+    src/clan_repository.c
+    src/clan_persistence.c
     src/clan_edit.c
     src/clan_transactions.c
     src/class.c

@@ -23,7 +23,8 @@
 #include "act.h"
 #include "fight.h"
 #include "shop.h" /* shop keepers and mhunt */
-#include "clan.h" /* clan system */
+#include "clan.h"
+#include "clan_persistence.h" /* clan system */
 
 /* Local file scope functions. */
 static void mob_log(char_data *mob, const char *format, ...);
@@ -1428,6 +1429,7 @@ ACMD(do_mrecho)
 /* mclanset - Set a character's clan affiliation */
 ACMDU(do_mclanset)
 {
+  if (!clan_persistence_access(ch)) return;
   char arg1[MAX_INPUT_LENGTH] = {'\0'}, arg2[MAX_INPUT_LENGTH] = {'\0'};
   char_data *victim;
   clan_vnum clan_num;
@@ -1469,7 +1471,7 @@ ACMDU(do_mclanset)
     {
       GET_CLAN(victim) = NO_CLAN;
       GET_CLANRANK(victim) = NO_CLANRANK;
-      save_char(victim, 0);
+      if (!save_char_checked(victim, 0)) { mob_log(ch, "Clan membership save failed"); return; }
       mob_log(ch, "mclanset: removed %s from clan", GET_NAME(victim));
     }
     return;
@@ -1499,13 +1501,14 @@ ACMDU(do_mclanset)
 
   GET_CLAN(victim) = clan_num;
   GET_CLANRANK(victim) = clan_list[clan_r].ranks; /* Set to lowest rank */
-  save_char(victim, 0);
+  if (!save_char_checked(victim, 0)) { mob_log(ch, "Clan membership save failed"); return; }
   mob_log(ch, "mclanset: set %s to clan %s", GET_NAME(victim), clan_list[clan_r].clan_name);
 }
 
 /* mclanrank - Set a character's clan rank */
 ACMDU(do_mclanrank)
 {
+  if (!clan_persistence_access(ch)) return;
   char arg1[MAX_INPUT_LENGTH] = {'\0'}, arg2[MAX_INPUT_LENGTH] = {'\0'};
   char_data *victim;
   clan_rnum clan_r;
@@ -1561,7 +1564,7 @@ ACMDU(do_mclanrank)
   }
 
   GET_CLANRANK(victim) = rank;
-  save_char(victim, 0);
+  if (!save_char_checked(victim, 0)) { mob_log(ch, "Clan membership save failed"); return; }
   mob_log(ch, "mclanrank: set %s to rank %d (%s)", GET_NAME(victim), rank,
           clan_list[clan_r].rank_name[rank - 1]);
 }
@@ -1569,6 +1572,7 @@ ACMDU(do_mclanrank)
 /* mclangold - Add/remove gold from clan treasury */
 ACMDU(do_mclangold)
 {
+  if (!clan_persistence_access(ch)) return;
   char arg1[MAX_INPUT_LENGTH] = {'\0'}, arg2[MAX_INPUT_LENGTH] = {'\0'};
   clan_rnum clan_r;
   clan_vnum clan_num;
@@ -1626,6 +1630,7 @@ ACMDU(do_mclangold)
 
   clan_list[clan_r].treasure += amount;
   mark_clan_modified(clan_r);
+  if (clan_persistence_sql_authority() && !save_clans()) { mob_log(ch, "Clan SQL save failed"); return; }
   mob_log(ch, "mclangold: %s %d gold %s clan %s (new balance: %ld)",
           amount > 0 ? "added" : "removed", (amount > 0 ? amount : -amount),
           amount > 0 ? "to" : "from", clan_list[clan_r].clan_name, clan_list[clan_r].treasure);
@@ -1634,6 +1639,7 @@ ACMDU(do_mclangold)
 /* mclanwar - Set war status between clans */
 ACMDU(do_mclanwar)
 {
+  if (!clan_persistence_access(ch)) return;
   char arg1[MAX_INPUT_LENGTH] = {'\0'}, arg2[MAX_INPUT_LENGTH] = {'\0'},
        arg3[MAX_INPUT_LENGTH] = {'\0'};
   clan_rnum clan1_r, clan2_r;
@@ -1728,7 +1734,9 @@ ACMDU(do_mclanwar)
   }
 
   mark_clan_modified(clan1_r);
+  if (clan_persistence_sql_authority() && !save_clans()) { mob_log(ch, "Clan SQL save failed"); return; }
   mark_clan_modified(clan2_r);
+  if (clan_persistence_sql_authority() && !save_clans()) { mob_log(ch, "Clan SQL save failed"); return; }
 
   mob_log(ch, "mclanwar: %s war between %s and %s", status ? "declared" : "ended",
           clan_list[clan1_r].clan_name, clan_list[clan2_r].clan_name);
@@ -1737,6 +1745,7 @@ ACMDU(do_mclanwar)
 /* mclanally - Set alliance status between clans */
 ACMDU(do_mclanally)
 {
+  if (!clan_persistence_access(ch)) return;
   char arg1[MAX_INPUT_LENGTH] = {'\0'}, arg2[MAX_INPUT_LENGTH] = {'\0'},
        arg3[MAX_INPUT_LENGTH] = {'\0'};
   clan_rnum clan1_r, clan2_r;
@@ -1828,7 +1837,9 @@ ACMDU(do_mclanally)
   }
 
   mark_clan_modified(clan1_r);
+  if (clan_persistence_sql_authority() && !save_clans()) { mob_log(ch, "Clan SQL save failed"); return; }
   mark_clan_modified(clan2_r);
+  if (clan_persistence_sql_authority() && !save_clans()) { mob_log(ch, "Clan SQL save failed"); return; }
 
   mob_log(ch, "mclanally: %s alliance between %s and %s", status ? "formed" : "broke",
           clan_list[clan1_r].clan_name, clan_list[clan2_r].clan_name);
