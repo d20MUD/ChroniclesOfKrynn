@@ -56,6 +56,11 @@ extern const char *weapon_type[NUM_WEAPON_TYPES];
 extern struct armor_table armor_list[NUM_SPEC_ARMOR_TYPES];
 extern const char *armor_type[NUM_SPEC_ARMOR_TYPES];
 
+/* Composite bows are legacy-only; never renumber their stored type IDs. */
+bool is_legacy_composite_bow(int type);
+int current_weapon_type(int type);
+void retire_new_composite_bow(struct obj_data *obj);
+
 /* functions available through assign_wpn_armor.c */
 int compute_gear_max_dex(struct char_data *ch);
 int compute_gear_enhancement_bonus(struct char_data *ch);
@@ -123,11 +128,23 @@ extern "C"
 {
 #endif
 
+bool throwing_allows_full_attack(struct char_data *ch);
+int thrown_weapon_type(struct obj_data *obj);
+bool is_pure_thrown_weapon_type(int type);
+struct obj_data *get_throwing_source(struct char_data *ch);
+struct obj_data *make_thrown_weapon_profile(struct obj_data *source, struct obj_data *profile);
+struct obj_data *get_throwing_weapon(struct char_data *ch);
 bool is_throwing_weapon(struct char_data *ch, struct obj_data *weapon);
+bool usable_ammunition(struct char_data *ch, struct obj_data *wielded, struct obj_data *ammo, bool silent);
 int ammunition_remaining(struct obj_data *ammo);
 void format_ammunition_quantity(struct obj_data *ammo, char *buffer, size_t size);
 bool ammunition_is_unlimited(struct obj_data *ammo, struct obj_data *weapon);
 struct obj_data *take_ammo_projectile(struct obj_data *ammo, struct obj_data *weapon);
+
+bool hoopak_uses_ranged(struct char_data *ch, struct obj_data *weapon);
+
+/* Active melee type for an empty launcher or a melee-mode hoopak; zero otherwise. */
+int ranged_weapon_melee_type(struct char_data *ch, struct obj_data *weapon);
 
 #ifdef __cplusplus
 }

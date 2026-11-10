@@ -1614,17 +1614,19 @@ void quest_join(struct char_data *ch, struct char_data *qm, char argument[MAX_IN
     quest_begin(ch, rnum, slot);
 }
 
-/* Query the same requirements as joining, suppressing explanatory failures. */
-static bool room_quest_eligible(struct char_data *ch, qst_rnum rnum)
+/* Query normal join requirements without terminal output. The caller owns
+ * the captured explanation so blocked quests can explain their requirements. */
+static bool room_quest_eligible(struct char_data *ch, qst_rnum rnum, char **reason)
 {
   struct output_capture capture = {0};
   bool eligible;
   int slot;
+  *reason = NULL;
   if (!ch->desc || ch->desc->output_capture) return FALSE;
   ch->desc->output_capture = &capture;
   eligible = quest_join_eligible(ch, rnum, &slot, FALSE);
   ch->desc->output_capture = NULL;
-  free(capture.text);
+  *reason = capture.text;
   return eligible;
 }
 
@@ -1653,14 +1655,23 @@ void update_msdp_room_quests(struct char_data *ch)
       IN_ROOM(ch) != NOWHERE && VALID_ROOM_RNUM(IN_ROOM(ch)) ? GET_ROOM_VNUM(IN_ROOM(ch)) : NOWHERE));
   for (rnum = 0; rnum < total_quests; rnum++)
   {
+    char *reason = NULL;
+    bool eligible;
     giver = room_quest_giver(ch, rnum);
-    if (!giver || !room_quest_eligible(ch, rnum)) continue;
+    if (!giver || QST_TYPE(rnum) < 0 || QST_TYPE(rnum) >= NUM_AQ_TYPES ||
+        (is_complete(ch, QST_NUM(rnum)) && !IS_SET(QST_FLAGS(rnum), AQ_REPEATABLE))) continue;
+    eligible = room_quest_eligible(ch, rnum, &reason);
     entry = json_object_new_object();
     json_object_object_add(entry, "id", json_object_new_int(QST_NUM(rnum)));
     json_object_object_add(entry, "name", json_object_new_string(QST_NAME(rnum) ? QST_NAME(rnum) : "Quest"));
     json_object_object_add(entry, "description", json_object_new_string(QST_DESC(rnum) ? QST_DESC(rnum) : ""));
     json_object_object_add(entry, "info", json_object_new_string(QST_INFO(rnum) ? QST_INFO(rnum) : ""));
     json_object_object_add(entry, "giver", json_object_new_string(GET_NAME(giver)));
+    json_object_object_add(entry, "eligible", json_object_new_boolean(eligible));
+    if (!eligible)
+      json_object_object_add(entry, "unavailableReason", json_object_new_string(
+          reason && *reason ? reason : "You cannot take this quest right now."));
+    free(reason);
     json_object_object_add(entry, "minLevel", json_object_new_int(QST_MINLEVEL(rnum)));
     json_object_object_add(entry, "maxLevel", json_object_new_int(QST_MAXLEVEL(rnum)));
     json_object_object_add(entry, "time", json_object_new_int(QST_TIME(rnum)));

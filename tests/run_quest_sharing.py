@@ -104,7 +104,10 @@ static char output[65536];
 static int saves;
 static void append_dialogue_quest_check(struct char_data *ch,qst_rnum rnum,struct json_object *event) {}
 void send_to_char(struct char_data *ch,const char *fmt,...) {
-  if(ch->desc && ch->desc->output_capture) return;
+  if(ch->desc && ch->desc->output_capture) {
+    char reason[2048];va_list ap;va_start(ap,fmt);vsnprintf(reason,sizeof(reason),fmt,ap);va_end(ap);
+    free(ch->desc->output_capture->text);ch->desc->output_capture->text=strdup(reason);return;
+  }
   va_list ap; va_start(ap,fmt); vsnprintf(output+strlen(output),sizeof(output)-strlen(output),fmt,ap); va_end(ap);
 }
 void save_char(struct char_data *ch,int unused) { saves++; }
@@ -247,7 +250,7 @@ int main(void) {
   { char join_arg[MAX_INPUT_LENGTH]="1"; quest_join(&recipient,&other,join_arg); }
   assert(recipient.quests[0]==100 && saves==1); /* flag only prevents sharing */
   setup(); recipient.level=LVL_IMMORT; assert(quest_join_eligible(&recipient,0,&slot,true));
-  /* Room discovery shares eligibility and never emits failure text. */
+  /* Room discovery includes blocked unfinished quests without terminal spam. */
   setup();
   struct variable roomvar={.bReport=true}; struct variable acceptedvar={0}; struct variable *vars[]={&roomvar,&acceptedvar};
   struct protocol proto={.bMSDP=true,.pVariables=vars}; dr.pProtocol=&proto;
@@ -261,7 +264,17 @@ int main(void) {
   json_object_put(payload);
   recipient.level=1; update_msdp_room_quests(&recipient);
   payload=json_tokener_parse(room_payload); json_object_object_get_ex(payload,"quests",&list);
-  assert(json_object_array_length(list)==0 && !*output); json_object_put(payload);
+  assert(json_object_array_length(list)==4 && !*output);
+  struct json_object *entry=json_object_array_get_idx(list,0), *eligible, *reason;
+  assert(json_object_object_get_ex(entry,"eligible",&eligible) && !json_object_get_boolean(eligible));
+  assert(json_object_object_get_ex(entry,"unavailableReason",&reason) && strstr(json_object_get_string(reason),"not high enough level"));
+  json_object_put(payload);
+  recipient.completed[0]=true;update_msdp_room_quests(&recipient);
+  payload=json_tokener_parse(room_payload);json_object_object_get_ex(payload,"quests",&list);assert(json_object_array_length(list)==3);json_object_put(payload);
+  recipient.completed[0]=false;recipient.quests[0]=100;recipient.level=10;update_msdp_room_quests(&recipient);
+  payload=json_tokener_parse(room_payload);json_object_object_get_ex(payload,"quests",&list);assert(json_object_array_length(list)==4);
+  entry=json_object_array_get_idx(list,0);assert(json_object_object_get_ex(entry,"unavailableReason",&reason) && strstr(json_object_get_string(reason),"already have accepted"));json_object_put(payload);
+  recipient.quests[0]=NOTHING;
   recipient.level=10; other.hidden=true; update_msdp_room_quests(&recipient);
   payload=json_tokener_parse(room_payload); json_object_object_get_ex(payload,"quests",&list);
   assert(json_object_array_length(list)==0); json_object_put(payload); other.hidden=false;

@@ -175,6 +175,7 @@ void award_magic_ammo(struct char_data *ch, int grade, int source_level);
 int random_bonus_value(int apply_value, int grade, int mod);
 // take an object, and set its values to an appropriate weapon of 'type'
 void set_weapon_object(struct obj_data *obj, int type);
+void set_weapon_object_for_restore(struct obj_data *obj, int type);
 // take an object, and set its values to an appropriate armor of 'type'
 void set_armor_object(struct obj_data *obj, int type);
 // take an object, and set its values to an appropriate ammo of 'type'

@@ -1261,7 +1261,7 @@ void assign_feats(void)
   feato(FEAT_WEAPON_PROFICIENCY_ELF, "weapon proficiency - elves", TRUE, FALSE, FALSE,
         FEAT_TYPE_INNATE_ABILITY, "gain bonus weapon proficiency",
         "As part of your elf upbringing, you were trained in the usage of long swords, "
-        "rapiers, long bows, composite bows, short bows and composite short bows.");
+        "rapiers, long bows and short bows.");
   feato(FEAT_ULTRAVISION, "ultravision", TRUE, FALSE, FALSE, FEAT_TYPE_INNATE_ABILITY,
         "you can see perfectly even in complete dark",
         "you can see perfectly even in complete dark");

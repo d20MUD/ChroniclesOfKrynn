@@ -356,6 +356,8 @@ void clear_object(struct obj_data *obj);
 void free_obj(struct obj_data *obj);
 void free_obj_special_abilities(struct obj_special_ability *list);
 struct obj_data *read_object(obj_vnum nr, int type);
+/* Existing saved objects only: preserve retired weapon types during restore. */
+struct obj_data *read_object_for_restore(obj_vnum nr, int type);
 int vnum_object(char *searchname, struct char_data *ch);
 int vnum_room(char *, struct char_data *);
 int vnum_trig(char *, struct char_data *);

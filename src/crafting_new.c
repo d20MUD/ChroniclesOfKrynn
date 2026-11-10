@@ -20,6 +20,7 @@
 #include "spells.h"
 #include "mud_event.h"
 #include "modify.h" // for parse_at()
+#include "protocol.h" // COLOUR_CHAR
 #include "treasure.h"
 #include "mudlim.h"
 #include "spec_procs.h" /* For GET_ABILITY() */
@@ -1503,19 +1504,7 @@ void set_crafting_itemtype(struct char_data *ch, char *arg2)
 
 bool is_valid_craft_weapon(int weapon)
 {
-  switch (weapon)
-  {
-  case WEAPON_TYPE_COMPOSITE_LONGBOW:
-  case WEAPON_TYPE_COMPOSITE_LONGBOW_2:
-  case WEAPON_TYPE_COMPOSITE_LONGBOW_3:
-  case WEAPON_TYPE_COMPOSITE_LONGBOW_4:
-  case WEAPON_TYPE_COMPOSITE_SHORTBOW:
-  case WEAPON_TYPE_COMPOSITE_SHORTBOW_2:
-  case WEAPON_TYPE_COMPOSITE_SHORTBOW_3:
-  case WEAPON_TYPE_COMPOSITE_SHORTBOW_4:
-    return FALSE;
-  }
-  return TRUE;
+  return weapon > 0 && weapon < NUM_WEAPON_TYPES && !is_legacy_composite_bow(weapon);
 }
 
 void craft_show_weapon_types(struct char_data *ch)
@@ -1552,7 +1541,7 @@ void set_craft_weapon_type(struct char_data *ch, char *arg2)
       break;
   }
 
-  if (i >= NUM_WEAPON_TYPES)
+  if (i >= NUM_WEAPON_TYPES || !is_valid_craft_weapon(i))
   {
     send_to_char(ch, "That is not a valid weapon type.\r\n");
     craft_show_weapon_types(ch);
@@ -1689,6 +1678,54 @@ void set_craft_misc_type(struct char_data *ch, char *arg2)
   send_to_char(ch, "Crafting misc type set to: %s\r\n", crafting_misc_types[i]);
 }
 
+/* Convert player-entered @ colors for output without modifying saved text. */
+static void show_craft_description(struct char_data *ch, const char *label, const char *text)
+{
+  char *display = strdup(text ? text : "not set");
+  parse_at(display);
+  send_to_char(ch, "%s%s\tn\r\n", label, display);
+  free(display);
+}
+
+
+/* Validate visible words without changing the player's colored descriptions. */
+static bool crafting_description_has_required_words(struct char_data *ch, const char *text)
+{
+  char plain[MAX_INPUT_LENGTH];
+  size_t used = 0;
+  while (*text && used + 1 < sizeof(plain))
+  {
+    if ((unsigned char)*text == 27 && text[1] == '[')
+    {
+      text += 2;
+      while (*text && !(*text >= '@' && *text <= '~')) text++;
+      if (*text) text++;
+    }
+    else if ((*text == '\t' || *text == '@'
+#ifdef COLOUR_CHAR
+              || *text == COLOUR_CHAR
+#endif
+             ) && text[1])
+    {
+      if (text[1] == *text) { plain[used++] = *text; text += 2; }
+      else if (text[1] == '[' && (tolower((unsigned char)text[2]) == 'f' || tolower((unsigned char)text[2]) == 'b'))
+      {
+        const char *end = strchr(text + 3, ']');
+        if (!end) break;
+        text = end + 1;
+      }
+      else text += 2;
+    }
+    else plain[used++] = *text++;
+  }
+  plain[used] = '\0';
+  return strstr(plain, crafting_recipes[GET_CRAFT(ch).crafting_recipe]
+                          .variant_descriptions[GET_CRAFT(ch).craft_variant]) != NULL &&
+         strstr(plain, crafting_material_descriptions
+             [GET_CRAFT(ch).materials[crafting_recipes[GET_CRAFT(ch).crafting_recipe]
+                                          .materials[0][GET_CRAFT(ch).craft_variant][0]][0]]) != NULL;
+}
+
 void set_crafting_keywords(struct char_data *ch, const char *arg2)
 {
   if (!*arg2)
@@ -1720,12 +1757,7 @@ void set_crafting_keywords(struct char_data *ch, const char *arg2)
     send_to_char(ch, "You must add the primary material before you can set keywords.\r\n");
     return;
   }
-  if (!strstr(arg2, crafting_recipes[GET_CRAFT(ch).crafting_recipe]
-                        .variant_descriptions[GET_CRAFT(ch).craft_variant]) ||
-      !strstr(arg2,
-              crafting_material_descriptions
-                  [GET_CRAFT(ch).materials[crafting_recipes[GET_CRAFT(ch).crafting_recipe]
-                                               .materials[0][GET_CRAFT(ch).craft_variant][0]][0]]))
+  if (!crafting_description_has_required_words(ch, arg2))
   {
     send_to_char(
         ch,
@@ -1738,7 +1770,7 @@ void set_crafting_keywords(struct char_data *ch, const char *arg2)
     return;
   }
   GET_CRAFT(ch).keywords = strdup(arg2);
-  send_to_char(ch, "You have set the keywords for your crafting item to:\r\n-- %s\r\n", arg2);
+  show_craft_description(ch, "You have set the keywords for your crafting item to:\r\n-- ", arg2);
   return;
 }
 
@@ -1767,12 +1799,7 @@ void set_crafting_short_desc(struct char_data *ch, const char *arg2)
     send_to_char(ch, "You must add the primary material before you can set short description.\r\n");
     return;
   }
-  if (!strstr(arg2, crafting_recipes[GET_CRAFT(ch).crafting_recipe]
-                        .variant_descriptions[GET_CRAFT(ch).craft_variant]) ||
-      !strstr(arg2,
-              crafting_material_descriptions
-                  [GET_CRAFT(ch).materials[crafting_recipes[GET_CRAFT(ch).crafting_recipe]
-                                               .materials[0][GET_CRAFT(ch).craft_variant][0]][0]]))
+  if (!crafting_description_has_required_words(ch, arg2))
   {
     send_to_char(
         ch,
@@ -1786,8 +1813,7 @@ void set_crafting_short_desc(struct char_data *ch, const char *arg2)
     return;
   }
   GET_CRAFT(ch).short_description = strdup(arg2);
-  send_to_char(ch, "You have set the short description for your crafting item to:\r\n-- %s\r\n",
-               arg2);
+  show_craft_description(ch, "You have set the short description for your crafting item to:\r\n-- ", arg2);
   return;
 }
 
@@ -1819,12 +1845,7 @@ void set_crafting_room_desc(struct char_data *ch, const char *arg2)
         ch, "You must add the primary material before you can set the long/room description\r\n");
     return;
   }
-  if (!strstr(arg2, crafting_recipes[GET_CRAFT(ch).crafting_recipe]
-                        .variant_descriptions[GET_CRAFT(ch).craft_variant]) ||
-      !strstr(arg2,
-              crafting_material_descriptions
-                  [GET_CRAFT(ch).materials[crafting_recipes[GET_CRAFT(ch).crafting_recipe]
-                                               .materials[0][GET_CRAFT(ch).craft_variant][0]][0]]))
+  if (!crafting_description_has_required_words(ch, arg2))
   {
     send_to_char(
         ch,
@@ -1838,8 +1859,7 @@ void set_crafting_room_desc(struct char_data *ch, const char *arg2)
     return;
   }
   GET_CRAFT(ch).room_description = strdup(arg2);
-  send_to_char(ch, "You have set the room description for your crafting item to:\r\n-- %s\r\n",
-               arg2);
+  show_craft_description(ch, "You have set the room description for your crafting item to:\r\n-- ", arg2);
   return;
 }
 
@@ -1869,8 +1889,7 @@ void set_crafting_extra_desc(struct char_data *ch, const char *arg2)
   }
 
   GET_CRAFT(ch).ex_description = strdup(arg2);
-  send_to_char(ch, "You have set the extra description for your crafting item to:\r\n-- %s\r\n",
-               arg2);
+  show_craft_description(ch, "You have set the extra description for your crafting item to:\r\n-- ", arg2);
   return;
 }
 
@@ -2955,6 +2974,7 @@ int crafting_mote_by_bonus_location(int location, int specific, int bonus_type)
   return CRAFTING_MOTE_NONE;
 };
 
+
 void show_current_craft(struct char_data *ch)
 {
   if (player_has_supply_order(ch))
@@ -2980,6 +3000,7 @@ void show_current_craft(struct char_data *ch)
   if (GET_CRAFT(ch).ex_description != NULL)
   {
     snprintf(temp, sizeof(temp), "%s", GET_CRAFT(ch).ex_description);
+    parse_at(temp);
     snprintf(extra_desc, sizeof(extra_desc), "\r\n%s", strfrmt(temp, 80, 1, FALSE, FALSE, FALSE));
   }
 
@@ -3018,23 +3039,17 @@ void show_current_craft(struct char_data *ch)
                            .variant_descriptions[GET_CRAFT(ch).craft_variant]);
   send_to_char(ch, "\r\n");
   send_to_char(ch, "\tc   DESCRIPTIONS: \tn\r\n");
-  // send_to_char(ch, "-- keywords  : %s\r\n", GET_CRAFT(ch).keywords != NULL ? (strlen(GET_CRAFT(ch).keywords) < 5 ? " " : GET_CRAFT(ch).keywords) : " ");
-  send_to_char(ch, "-- keywords  : %s\r\n",
-               (!GET_CRAFT(ch).keywords || is_abbrev(GET_CRAFT(ch).keywords, "(null)"))
-                   ? "not set"
-                   : GET_CRAFT(ch).keywords);
-  send_to_char(
-      ch, "-- short desc: %s\r\n",
-      (!GET_CRAFT(ch).short_description || is_abbrev(GET_CRAFT(ch).short_description, "(null)"))
-          ? "not set"
-          : GET_CRAFT(ch).short_description);
-  send_to_char(
-      ch, "-- room desc : %s\r\n",
-      (!GET_CRAFT(ch).room_description || is_abbrev(GET_CRAFT(ch).room_description, "(null)"))
-          ? "not set"
-          : GET_CRAFT(ch).room_description);
-  send_to_char(ch, "-- extra desc: %s\r\n",
-               (strstr(extra_desc, "(null)")) ? "not set" : extra_desc);
+  show_craft_description(ch, "-- keywords  : ",
+                         (!GET_CRAFT(ch).keywords || is_abbrev(GET_CRAFT(ch).keywords, "(null)"))
+                             ? "not set" : GET_CRAFT(ch).keywords);
+  show_craft_description(ch, "-- short desc: ",
+                         (!GET_CRAFT(ch).short_description || is_abbrev(GET_CRAFT(ch).short_description, "(null)"))
+                             ? "not set" : GET_CRAFT(ch).short_description);
+  show_craft_description(ch, "-- room desc : ",
+                         (!GET_CRAFT(ch).room_description || is_abbrev(GET_CRAFT(ch).room_description, "(null)"))
+                             ? "not set" : GET_CRAFT(ch).room_description);
+  show_craft_description(ch, "-- extra desc: ",
+                         strstr(extra_desc, "(null)") ? "not set" : extra_desc);
   send_to_char(ch, "\r\n");
   send_to_char(ch, "\tc   MATERIALS: \tn\r\n");
   if (GET_CRAFT(ch).crafting_item_type && GET_CRAFT(ch).crafting_specific &&
@@ -3493,6 +3508,13 @@ bool is_craft_ready(struct char_data *ch, bool verbose)
   int location = 0, modifier = 0, bonus_type = 0, specific = 0;
   int base_group, base_amount, project_amount;
 
+  if (GET_CRAFT(ch).crafting_item_type == CRAFT_TYPE_WEAPON &&
+      is_legacy_composite_bow(GET_CRAFT(ch).crafting_specific))
+  {
+    if (verbose) send_to_char(ch, "Composite bows are legacy weapons. Choose a long bow or short bow.\r\n");
+    return FALSE;
+  }
+
   if (verbose)
     send_to_char(ch, "\r\n");
 
@@ -3800,9 +3822,12 @@ void begin_current_craft(struct char_data *ch)
   GET_CRAFT(ch).craft_duration = seconds;
   GET_CRAFT(ch).crafting_method = SCMD_NEWCRAFT_CREATE;
 
+  char *display = strdup(GET_CRAFT(ch).short_description);
+  parse_at(display);
   send_to_char(ch,
-               "You begin creating %s. This will take a total of %d minutes and %d seconds.\r\n",
-               GET_CRAFT(ch).short_description, seconds / 60, seconds % 60);
+               "You begin creating %s\tn. This will take a total of %d minutes and %d seconds.\r\n",
+               display, seconds / 60, seconds % 60);
+  free(display);
   act("$n starts crafting.", FALSE, ch, 0, 0, TO_ROOM);
 }
 
@@ -3811,6 +3836,9 @@ void set_craft_item_descs(struct char_data *ch, struct obj_data *obj)
   obj->name = strdup(GET_CRAFT(ch).keywords);
   obj->short_description = strdup(GET_CRAFT(ch).short_description);
   obj->description = strdup(GET_CRAFT(ch).room_description);
+  parse_at(obj->name);
+  parse_at(obj->short_description);
+  parse_at(obj->description);
   if (GET_CRAFT(ch).ex_description != NULL)
   {
     struct extra_descr_data *new_descr;
@@ -3818,6 +3846,7 @@ void set_craft_item_descs(struct char_data *ch, struct obj_data *obj)
     CREATE(new_descr, struct extra_descr_data, 1);
     new_descr->keyword = strdup(obj->name);
     snprintf(extra, sizeof(extra), "%s\n", GET_CRAFT(ch).ex_description);
+    parse_at(extra);
     new_descr->description = strdup(extra);
     new_descr->next = obj->ex_description;
     obj->ex_description = new_descr;
@@ -4758,6 +4787,12 @@ void create_craft_weapon(struct char_data *ch)
   struct obj_data *obj;
   int skill = ABILITY_CRAFT_WEAPONSMITHING;
   int dc = 0;
+
+  if (is_legacy_composite_bow(w_type))
+  {
+    send_to_char(ch, "Composite bows can no longer be crafted. Choose an ordinary bow.\r\n");
+    return;
+  }
 
   if ((obj = setup_craft_weapon(ch, w_type)) == NULL)
   {
@@ -8345,7 +8380,10 @@ void craft_update(void)
           case SCMD_NEWCRAFT_CREATE:
             if (GET_CRAFT(ch).craft_duration % 5 == 0)
             {
-              send_to_char(ch, "Crafting %s. ", GET_CRAFT(ch).short_description);
+              char *display = strdup(GET_CRAFT(ch).short_description);
+              parse_at(display);
+              send_to_char(ch, "Crafting %s\tn. ", display);
+              free(display);
               for (i = 0; i < GET_CRAFT(ch).craft_duration; i++)
                 send_to_char(ch, "*");
               send_to_char(ch, "\r\n");
@@ -10613,7 +10651,9 @@ int select_random_craft_recipe(void)
   choice = dice(1, NUM_CRAFTING_RECIPES - 1);
 
   while ((type != crafting_recipes[choice].object_type ||
-          crafting_recipes[choice].object_type == ITEM_INSTRUMENT) &&
+          crafting_recipes[choice].object_type == ITEM_INSTRUMENT ||
+          (crafting_recipes[choice].object_type == ITEM_WEAPON &&
+           is_legacy_composite_bow(crafting_recipes[choice].practical_type))) &&
          attempts < 100)
   {
     choice = dice(1, NUM_CRAFTING_RECIPES - 1);
@@ -10621,7 +10661,9 @@ int select_random_craft_recipe(void)
   }
 
   /* Return -1 if we couldn't find a non-instrument recipe */
-  if (crafting_recipes[choice].object_type == ITEM_INSTRUMENT)
+  if (crafting_recipes[choice].object_type == ITEM_INSTRUMENT ||
+      (crafting_recipes[choice].object_type == ITEM_WEAPON &&
+       is_legacy_composite_bow(crafting_recipes[choice].practical_type)))
     return CRAFT_RECIPE_NONE;
 
   return choice;
@@ -10665,12 +10707,16 @@ int select_stable_craft_recipe(int seed)
   choice = (seed % (NUM_CRAFTING_RECIPES - 1)) + 1;
 
   int attempts = 0;
-  while (type != crafting_recipes[choice].object_type && attempts < 100)
+  while ((type != crafting_recipes[choice].object_type ||
+          (crafting_recipes[choice].object_type == ITEM_WEAPON &&
+           is_legacy_composite_bow(crafting_recipes[choice].practical_type))) && attempts < 100)
   {
     choice = ((choice + seed + attempts) % (NUM_CRAFTING_RECIPES - 1)) + 1;
     attempts++;
   }
 
+  if (crafting_recipes[choice].object_type == ITEM_WEAPON &&
+      is_legacy_composite_bow(crafting_recipes[choice].practical_type)) return 0;
   return choice;
 }
 
@@ -11239,7 +11285,7 @@ void show_mote_bonuses(struct char_data *ch, int mote)
   send_to_char(ch, "\tcWeapon Enhancement Bonuses for:\tn\r\n");
   for (i = 1; i < NUM_WEAPON_TYPES; i++)
   {
-    if (get_enhancement_mote_type(ch, CRAFT_TYPE_WEAPON, i) == mote)
+    if (!is_legacy_composite_bow(i) && get_enhancement_mote_type(ch, CRAFT_TYPE_WEAPON, i) == mote)
     {
       send_to_char(ch, "%s", weapon_list[i].name);
       send_to_char(ch, ", ");
@@ -11583,6 +11629,16 @@ void refresh_supply_slots(struct char_data *ch)
   int used_recipes[NUM_CRAFTING_RECIPES];
   int num_used = 0;
 
+  /* Refresh saved offers for retired bows before showing selectable contracts. */
+  for (i = 0; i < 5; i++)
+  {
+    int recipe = GET_CRAFT(ch).supply_slots[i].recipe;
+    if (recipe > CRAFT_RECIPE_NONE && recipe < NUM_CRAFTING_RECIPES &&
+        crafting_recipes[recipe].object_type == ITEM_WEAPON &&
+        is_legacy_composite_bow(crafting_recipes[recipe].practical_type))
+      GET_CRAFT(ch).supply_slot_active[i] = FALSE;
+  }
+
   // Track recipes already used in existing slots
   for (i = 0; i < 5; i++)
   {
@@ -11662,10 +11718,12 @@ void refresh_supply_slots(struct char_data *ch)
     if (!unique_found)
     {
       int recipe_id;
-      for (recipe_id = 1; recipe_id <= NUM_CRAFTING_RECIPES && !unique_found; recipe_id++)
+      for (recipe_id = 1; recipe_id < NUM_CRAFTING_RECIPES && !unique_found; recipe_id++)
       {
         bool already_used = FALSE;
         int j;
+        if (crafting_recipes[recipe_id].object_type == ITEM_WEAPON &&
+            is_legacy_composite_bow(crafting_recipes[recipe_id].practical_type)) continue;
         for (j = 0; j < num_used; j++)
         {
           if (used_recipes[j] == recipe_id)
@@ -15096,7 +15154,7 @@ static void impl_do_reforge_new_(struct char_data *ch, char *argument,
     /* Search for matching weapon type */
     for (weapon_index = 0; weapon_index < NUM_WEAPON_TYPES; weapon_index++)
     {
-      if (is_abbrev(weapon_list[weapon_index].name, target_arg))
+      if (!is_legacy_composite_bow(weapon_index) && is_abbrev(weapon_list[weapon_index].name, target_arg))
         break;
     }
     if (weapon_index >= NUM_WEAPON_TYPES)

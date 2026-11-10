@@ -106,6 +106,8 @@ int deadly_aim_step(struct char_data *ch);
 int ranged_range_penalty(struct char_data *ch, struct char_data *victim, struct obj_data *weapon);
 int ranged_concealment(struct char_data *ch, struct char_data *victim, int attack_type);
 int combat_distance(struct char_data *ch, struct char_data *victim);
+struct obj_data *active_throwing_weapon(struct char_data *ch);
+int recorded_combat_distance(struct char_data *ch, struct char_data *victim);
 int combat_melee_range(struct char_data *ch, struct obj_data *weapon);
 struct obj_data *get_wielded(struct char_data *ch, int attack_type);
 bool combat_attack_in_range(struct char_data *ch, struct char_data *victim, int attack_type,

@@ -2800,6 +2800,27 @@ void display_item_object_values(struct char_data *ch, struct obj_data *item, int
   }
 }
 
+/* Lore's item type identifies the actual equipment subtype, including armor
+ * pieces and shields, rather than just the broad object category. */
+static const char *lore_item_type(struct obj_data *obj)
+{
+  int type = GET_OBJ_TYPE(obj);
+  int subtype;
+  if (type == ITEM_WEAPON)
+  {
+    subtype = GET_WEAPON_TYPE(obj);
+    if (subtype >= 0 && subtype < NUM_WEAPON_TYPES && weapon_list[subtype].name)
+      return weapon_list[subtype].name;
+  }
+  else if (type == ITEM_ARMOR)
+  {
+    subtype = GET_OBJ_VAL(obj, 1);
+    if (subtype >= 0 && subtype < NUM_SPEC_ARMOR_TYPES && armor_list[subtype].name)
+      return armor_list[subtype].name;
+  }
+  return type >= 0 && type < NUM_ITEM_TYPES ? item_types[type] : "Unknown";
+}
+
 /* a central location for identification/statting of items */
 void do_stat_object(struct char_data *ch, struct obj_data *j, int mode)
 {
@@ -2814,7 +2835,7 @@ void do_stat_object(struct char_data *ch, struct obj_data *j, int mode)
   if (mode == ITEM_STAT_MODE_LORE_SKILL)
   {
     web_info_field(ch, "Item", "Name", "%s", object_short_description(j));
-    web_info_field(ch, "Item", "Type", "%s", item_types[GET_OBJ_TYPE(j)]);
+    web_info_field(ch, "Item", "Type", "%s", lore_item_type(j));
     web_info_field(ch, "Item", "Keywords", "%s", j->name);
     web_info_field(ch, "Properties", "Minimum level", "%d", GET_OBJ_LEVEL(j));
     web_info_field(ch, "Properties", "Weight", "%d", GET_OBJ_WEIGHT(j));
@@ -2831,7 +2852,6 @@ void do_stat_object(struct char_data *ch, struct obj_data *j, int mode)
     }
     if (GET_OBJ_TYPE(j) == ITEM_WEAPON)
     {
-      web_info_field(ch, "Weapon", "Type", "%s", weapon_list[GET_WEAPON_TYPE(j)].name);
       web_info_field(ch, "Weapon", "Enhancement", "%+d", GET_ENHANCEMENT_BONUS(j));
       web_info_field(ch, "Weapon", "Damage", "%dd%d", GET_OBJ_VAL(j, 1), GET_OBJ_VAL(j, 2));
     }
@@ -3470,9 +3490,10 @@ static void perform_put(struct char_data *ch, struct obj_data *obj, struct obj_d
     }
   }
 
-  if (GET_OBJ_TYPE(cont) == ITEM_AMMO_POUCH && GET_OBJ_TYPE(obj) != ITEM_MISSILE)
+  if (GET_OBJ_TYPE(cont) == ITEM_AMMO_POUCH && GET_OBJ_TYPE(obj) != ITEM_MISSILE &&
+      !thrown_weapon_type(obj))
   {
-    act("You can only put ammo into $P.", FALSE, ch, obj, cont, TO_CHAR);
+    act("You can only put ammunition or throwable weapons into $P.", FALSE, ch, obj, cont, TO_CHAR);
     return;
   }
 
@@ -6115,6 +6136,9 @@ static bool perform_wield_at(struct char_data *ch, struct obj_data *obj, bool no
 {
   int level_allowed = GET_LEVEL(ch) + MAX(0, compute_ability(ch, ABILITY_USE_MAGIC_DEVICE) / 5);
 
+  if (FIGHTING(ch) && !is_action_available(ch, HAS_FEAT(ch, FEAT_QUICK_DRAW) ? atSWIFT : atMOVE, not_silent))
+    return FALSE;
+
   if (!CAN_WEAR(obj, ITEM_WEAR_WIELD))
   {
     if (not_silent)
@@ -6146,6 +6170,13 @@ static bool perform_wield_at(struct char_data *ch, struct obj_data *obj, bool no
   else
   {
     perform_wear(ch, obj, where);
+    if (GET_EQ(ch, WEAR_WIELD_1) != obj && GET_EQ(ch, WEAR_WIELD_2H) != obj &&
+        GET_EQ(ch, WEAR_WIELD_OFFHAND) != obj) return FALSE;
+    if (FIGHTING(ch))
+    {
+      if (HAS_FEAT(ch, FEAT_QUICK_DRAW)) USE_SWIFT_ACTION(ch);
+      else USE_MOVE_ACTION(ch);
+    }
     return TRUE;
   }
 
@@ -9777,6 +9808,7 @@ ACMDU(do_outfit)
     {
       for (i = 1; i < NUM_WEAPON_TYPES; i++)
       {
+        if (is_legacy_composite_bow(i)) continue;
         send_to_char(ch, "%-25s", weapon_list[i].name);
         if ((i % 4) == 3)
           send_to_char(ch, "\r\n");
@@ -9821,7 +9853,7 @@ ACMDU(do_outfit)
     {
       for (i = 1; i < NUM_WEAPON_TYPES; i++)
       {
-        if (is_abbrev(arg2, weapon_list[i].name))
+        if (!is_legacy_composite_bow(i) && is_abbrev(arg2, weapon_list[i].name))
           break;
       }
       if (i < 1 || i >= NUM_WEAPON_TYPES)
@@ -9901,6 +9933,11 @@ ACMDU(do_outfit)
     if (!GET_OUTFIT_TYPE(ch))
     {
       send_to_char(ch, "You must specify an outfit item type first.\r\n");
+      return;
+    }
+    if (GET_OBJ_TYPE(GET_OUTFIT_OBJ(ch)) == ITEM_WEAPON && is_legacy_composite_bow(GET_OUTFIT_TYPE(ch)))
+    {
+      send_to_char(ch, "Composite bows are legacy-only. Select a long bow or short bow.\r\n");
       return;
     }
     if (!GET_OUTFIT_DESC(ch))

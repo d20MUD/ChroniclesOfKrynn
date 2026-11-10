@@ -44,6 +44,9 @@ stubs = r'''
 #include <strings.h>
 #define PERS(ch, viewer) ((ch)->name)
 #define legendary_grounded(ch) false
+#define THROWING(ch) false
+#define get_throwing_source(ch) NULL
+#define ranged_weapon_melee_type(...) 0
 #define send_identity_to_group(ch,g,target,fmt,...) send_to_group(ch,g,fmt,##__VA_ARGS__)
 #define TRUE true
 #define FALSE false

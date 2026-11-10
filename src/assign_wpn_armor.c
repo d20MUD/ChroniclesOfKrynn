@@ -24,6 +24,7 @@
 #include "spells.h"
 #include "perks.h"
 #include "alchemy.h"
+#include "fight.h"
 
 /* global */
 struct armor_table armor_list[NUM_SPEC_ARMOR_TYPES];
@@ -83,6 +84,7 @@ int is_proficient_with_weapon(struct char_data *ch, int weapon)
     case WEAPON_TYPE_CLUB:
     case WEAPON_TYPE_DAGGER:
     case WEAPON_TYPE_KNIFE:
+    case WEAPON_TYPE_THROWING_KNIFE:
     case WEAPON_TYPE_QUARTERSTAFF:
     case WEAPON_TYPE_SCIMITAR:
     case WEAPON_TYPE_SCYTHE:
@@ -140,6 +142,7 @@ int is_proficient_with_weapon(struct char_data *ch, int weapon)
     case WEAPON_TYPE_HEAVY_CROSSBOW:
     case WEAPON_TYPE_DAGGER:
     case WEAPON_TYPE_KNIFE:
+    case WEAPON_TYPE_THROWING_KNIFE:
     case WEAPON_TYPE_DART:
     case WEAPON_TYPE_RAPIER:
     case WEAPON_TYPE_SHORT_BOW:
@@ -172,6 +175,7 @@ int is_proficient_with_weapon(struct char_data *ch, int weapon)
     {
     case WEAPON_TYPE_DAGGER:
     case WEAPON_TYPE_KNIFE:
+    case WEAPON_TYPE_THROWING_KNIFE:
     case WEAPON_TYPE_QUARTERSTAFF:
     case WEAPON_TYPE_CLUB:
     case WEAPON_TYPE_HEAVY_CROSSBOW:
@@ -186,6 +190,7 @@ int is_proficient_with_weapon(struct char_data *ch, int weapon)
     {
     case WEAPON_TYPE_DAGGER:
     case WEAPON_TYPE_KNIFE:
+    case WEAPON_TYPE_THROWING_KNIFE:
     case WEAPON_TYPE_QUARTERSTAFF:
     case WEAPON_TYPE_CLUB:
     case WEAPON_TYPE_HEAVY_CROSSBOW:
@@ -205,6 +210,7 @@ int is_proficient_with_weapon(struct char_data *ch, int weapon)
     case WEAPON_TYPE_HAND_CROSSBOW:
     case WEAPON_TYPE_DAGGER:
     case WEAPON_TYPE_KNIFE:
+    case WEAPON_TYPE_THROWING_KNIFE:
     case WEAPON_TYPE_KUKRI:
     case WEAPON_TYPE_DART:
     case WEAPON_TYPE_LIGHT_MACE:
@@ -566,6 +572,136 @@ bool weapon_is_loaded(struct char_data *ch, struct obj_data *wielded, bool silen
 }
 
 /* this function will check to make sure ammo is ready for firing */
+/* Type IDs and combat rules remain stable for already-owned composite bows. */
+bool is_legacy_composite_bow(int type)
+{
+  return type == WEAPON_TYPE_COMPOSITE_LONGBOW || type == WEAPON_TYPE_COMPOSITE_SHORTBOW ||
+         (type >= WEAPON_TYPE_COMPOSITE_LONGBOW_2 && type <= WEAPON_TYPE_COMPOSITE_SHORTBOW_5);
+}
+
+int current_weapon_type(int type)
+{
+  if (type == WEAPON_TYPE_COMPOSITE_LONGBOW ||
+      (type >= WEAPON_TYPE_COMPOSITE_LONGBOW_2 && type <= WEAPON_TYPE_COMPOSITE_LONGBOW_5)) return WEAPON_TYPE_LONG_BOW;
+  if (type == WEAPON_TYPE_COMPOSITE_SHORTBOW ||
+      (type >= WEAPON_TYPE_COMPOSITE_SHORTBOW_2 && type <= WEAPON_TYPE_COMPOSITE_SHORTBOW_5)) return WEAPON_TYPE_SHORT_BOW;
+  return type;
+}
+
+static char *current_bow_description(const char *text)
+{
+  char *result, *out;
+  if (!text) return NULL;
+  result = strdup(text); out = result;
+  while (*text)
+  {
+    if (!strncasecmp(text, "composite", 9))
+    {
+      text += 9;
+      while (*text == ' ') text++;
+    }
+    else if (*text == '(' && text[1] >= '1' && text[1] <= '5' && text[2] == ')')
+    { if (out > result && out[-1] == ' ') out--; text += 3; }
+    else *out++ = *text++;
+  }
+  *out = '\0';
+  return result;
+}
+
+/* New instances of old world prototypes become ordinary bows. Saved object
+ * restoration uses read_object_for_restore, so existing weapons stay legacy. */
+void retire_new_composite_bow(struct obj_data *obj)
+{
+  struct obj_data *proto = NULL;
+  char *old;
+  if (!obj || GET_OBJ_TYPE(obj) != ITEM_WEAPON || !is_legacy_composite_bow(GET_OBJ_VAL(obj, 0))) return;
+  if (obj->item_number >= 0 && obj->item_number <= top_of_objt) proto = &obj_proto[obj->item_number];
+  GET_OBJ_VAL(obj, 0) = current_weapon_type(GET_OBJ_VAL(obj, 0));
+  old = obj->name; obj->name = current_bow_description(old);
+  if (!proto || old != proto->name) free(old);
+  old = obj->short_description; obj->short_description = current_bow_description(old);
+  if (!proto || old != proto->short_description) free(old);
+  old = obj->description; obj->description = current_bow_description(old);
+  if (!proto || old != proto->description) free(old);
+}
+
+/* Both bundled ammunition and individual throwable weapons fit an ammo pouch. */
+int thrown_weapon_type(struct obj_data *obj)
+{
+  int type;
+  if (!obj) return 0;
+  if (GET_OBJ_TYPE(obj) == ITEM_WEAPON) type = GET_OBJ_VAL(obj, 0);
+  else if (GET_OBJ_TYPE(obj) == ITEM_MISSILE && GET_OBJ_VAL(obj, 0) == AMMO_TYPE_THROWN)
+    type = GET_OBJ_VAL(obj, AMMO_VAL_WEAPON_TYPE);
+  else if (GET_OBJ_TYPE(obj) == ITEM_MISSILE && GET_OBJ_VAL(obj, 0) == AMMO_TYPE_DART)
+    type = WEAPON_TYPE_DART;
+  else return 0;
+  return type > WEAPON_TYPE_UNARMED && type < NUM_WEAPON_TYPES &&
+         IS_SET(weapon_list[type].weaponFlags, WEAPON_FLAG_THROWN) ? type : 0;
+}
+
+bool is_pure_thrown_weapon_type(int type)
+{
+  return type == WEAPON_TYPE_SHURIKEN || type == WEAPON_TYPE_DART ||
+         type == WEAPON_TYPE_THROWING_AXE || type == WEAPON_TYPE_JAVELIN ||
+         type == WEAPON_TYPE_THROWING_KNIFE || type == WEAPON_TYPE_THROWING_HAMMER;
+}
+
+struct obj_data *get_throwing_source(struct char_data *ch)
+{
+  struct obj_data *pouch, *obj, *first = NULL, *weapon;
+  int preference;
+  if (!ch || IS_WILDSHAPED(ch) || IS_MORPHED(ch)) return NULL;
+  preference = IS_NPC(ch) ? 0 : GET_PREFERRED_AMMO(ch);
+  pouch = GET_EQ(ch, WEAR_AMMO_POUCH);
+  for (obj = pouch ? pouch->contains : NULL; obj; obj = obj->next_content)
+  {
+    if (!thrown_weapon_type(obj)) continue;
+    if (GET_OBJ_TYPE(obj) == ITEM_MISSILE && !ammunition_is_unlimited(obj, NULL) &&
+        ammunition_remaining(obj) <= 0) continue;
+    if (!first) first = obj;
+    if (preference && GET_OBJ_VNUM(obj) == preference - 1) return obj;
+  }
+  if (first) return first;
+  /* A normal equipped throwable can be thrown without an ammunition supply. */
+  weapon = GET_EQ(ch, WEAR_WIELD_1);
+  if (!weapon) weapon = GET_EQ(ch, WEAR_WIELD_2H);
+  return thrown_weapon_type(weapon) ? weapon : NULL;
+}
+
+bool throwing_allows_full_attack(struct char_data *ch)
+{
+  struct obj_data *source = get_throwing_source(ch);
+  return HAS_FEAT(ch, FEAT_QUICK_DRAW) || (source &&
+      (GET_OBJ_TYPE(source) == ITEM_WEAPON
+           ? obj_has_special_ability(source, WEAPON_SPECAB_RETURNING)
+           : GET_OBJ_VAL(source, AMMO_VAL_RETURNING)));
+}
+
+/* Build from the selected supply, never from an enclosing/nested attack. */
+struct obj_data *make_thrown_weapon_profile(struct obj_data *source, struct obj_data *profile)
+{
+  int type = thrown_weapon_type(source);
+  if (!type) return NULL;
+  if (GET_OBJ_TYPE(source) == ITEM_WEAPON) return source;
+  *profile = *source;
+  GET_OBJ_TYPE(profile) = ITEM_WEAPON;
+  GET_OBJ_VAL(profile, 0) = type;
+  GET_OBJ_VAL(profile, 1) = weapon_list[type].numDice;
+  GET_OBJ_VAL(profile, 2) = weapon_list[type].diceSize;
+  GET_OBJ_VAL(profile, 3) = 0;
+  return profile;
+}
+
+struct obj_data *get_throwing_weapon(struct char_data *ch)
+{
+  struct obj_data *active;
+  if (!ch) return NULL;
+  active = active_throwing_weapon(ch);
+  if (active) return active;
+  return make_thrown_weapon_profile(get_throwing_source(ch), &ch->char_specials.throwing_profile);
+}
+
 bool is_throwing_weapon(struct char_data *ch, struct obj_data *weapon)
 {
   int type;
@@ -582,12 +718,15 @@ bool ammunition_is_unlimited(struct obj_data *ammo, struct obj_data *weapon)
 {
   if (!ammo)
     return FALSE;
+  if (GET_OBJ_TYPE(ammo) == ITEM_WEAPON)
+    return obj_has_special_ability(ammo, WEAPON_SPECAB_RETURNING);
   if (GET_OBJ_VAL(ammo, AMMO_VAL_UNLIMITED))
     return TRUE;
   if (GET_OBJ_VAL(ammo, 0) != AMMO_TYPE_THROWN && GET_OBJ_VAL(ammo, 0) != AMMO_TYPE_DART)
     return FALSE;
   return GET_OBJ_VAL(ammo, AMMO_VAL_RETURNING) ||
-         (weapon && obj_has_special_ability(weapon, WEAPON_SPECAB_RETURNING));
+         (weapon && GET_OBJ_VAL(ammo, AMMO_VAL_WEAPON_TYPE) == GET_OBJ_VAL(weapon, 0) &&
+          obj_has_special_ability(weapon, WEAPON_SPECAB_RETURNING));
 }
 
 /* Zero maximum is the legacy single-projectile format, not an empty bundle. */
@@ -611,7 +750,7 @@ void format_ammunition_quantity(struct obj_data *ammo, char *buffer, size_t size
     snprintf(buffer, size, " (%d)", ammunition_remaining(ammo));
 }
 
-static bool usable_ammunition(struct char_data *ch, struct obj_data *wielded,
+bool usable_ammunition(struct char_data *ch, struct obj_data *wielded,
                               struct obj_data *ammo, bool silent)
 {
   if (GET_OBJ_TYPE(ammo) != ITEM_MISSILE)
@@ -675,6 +814,7 @@ static bool usable_ammunition(struct char_data *ch, struct obj_data *wielded,
     switch (GET_OBJ_VAL(wielded, 0))
     {
     case WEAPON_TYPE_SLING:
+    case WEAPON_TYPE_HOOPAK:
       break;
     default:
       if (!silent)
@@ -770,12 +910,79 @@ bool has_ammo_in_pouch(struct char_data *ch, struct obj_data *wielded, bool sile
   return TRUE;
 }
 
+/* Hoopak mode queries do not consume or reorder ammunition. An unrecorded
+ * distance means combat has not opened yet, so hybrid starts at range. */
+bool hoopak_uses_ranged(struct char_data *ch, struct obj_data *weapon)
+{
+  struct obj_data *pouch, *ammo;
+  int distance;
+  if (!ch || IS_NPC(ch) || !weapon || GET_OBJ_TYPE(weapon) != ITEM_WEAPON ||
+      GET_OBJ_VAL(weapon, 0) != WEAPON_TYPE_HOOPAK ||
+      GET_HOOPAK_MODE(ch) == HOOPAK_MODE_MELEE)
+    return FALSE;
+  pouch = GET_EQ(ch, WEAR_AMMO_POUCH);
+  for (ammo = pouch ? pouch->contains : NULL; ammo; ammo = ammo->next_content)
+    if (usable_ammunition(ch, weapon, ammo, TRUE))
+      break;
+  if (!ammo)
+    return FALSE;
+  if (GET_HOOPAK_MODE(ch) == HOOPAK_MODE_RANGED)
+    return TRUE;
+  distance = recorded_combat_distance(ch, FIGHTING(ch));
+  return distance < 0 || distance > 5;
+}
+
+/* Empty launchers and melee-mode hoopaks can be used in melee. Do not select
+ * or reorder ammo or change FIRING: combat calculations also call this query. */
+int ranged_weapon_melee_type(struct char_data *ch, struct obj_data *weapon)
+{
+  struct obj_data *pouch, *ammo;
+  int melee_type;
+  if (!ch || IS_NPC(ch) || IS_WILDSHAPED(ch) || IS_MORPHED(ch) ||
+      !weapon || GET_OBJ_TYPE(weapon) != ITEM_WEAPON)
+    return 0;
+  if (GET_OBJ_VAL(weapon, 0) == WEAPON_TYPE_HOOPAK)
+    return hoopak_uses_ranged(ch, weapon) ? 0 : WEAPON_TYPE_HOOPAK;
+  switch (current_weapon_type(GET_OBJ_VAL(weapon, 0)))
+  {
+  case WEAPON_TYPE_LONG_BOW:
+  case WEAPON_TYPE_SHORT_BOW:
+    melee_type = WEAPON_TYPE_QUARTERSTAFF;
+    break;
+  case WEAPON_TYPE_HEAVY_CROSSBOW:
+  case WEAPON_TYPE_LIGHT_CROSSBOW:
+  case WEAPON_TYPE_HAND_CROSSBOW:
+  case WEAPON_TYPE_HEAVY_REP_XBOW:
+  case WEAPON_TYPE_LIGHT_REP_XBOW:
+    melee_type = WEAPON_TYPE_CLUB;
+    break;
+  case WEAPON_TYPE_SLING:
+    melee_type = WEAPON_TYPE_WHIP;
+    break;
+  default:
+    return 0;
+  }
+  pouch = GET_EQ(ch, WEAR_AMMO_POUCH);
+  for (ammo = pouch ? pouch->contains : NULL; ammo; ammo = ammo->next_content)
+    if (usable_ammunition(ch, weapon, ammo, TRUE))
+      return 0;
+  return melee_type;
+}
+
 /* ranged combat (archery, etc)
  * this function will check for a ranged weapon, ammo and does
  * a check of loaded-status (like x-bow) and "has_ammo_in_pouch" */
 bool can_fire_ammo(struct char_data *ch, bool silent)
 {
   struct obj_data *wielded = NULL;
+
+  if (THROWING(ch))
+  {
+    if (get_throwing_source(ch)) return TRUE;
+    if (!silent) send_to_char(ch, "You have no throwing ammunition or equipped throwable weapon.\r\n");
+    FIRING(ch) = FALSE;
+    return FALSE;
+  }
 
   if (!(wielded = is_using_ranged_weapon(ch, silent)))
   {
@@ -807,6 +1014,7 @@ bool can_fire_ammo(struct char_data *ch, bool silent)
 /*check all wielded slots looking for ranged weapon*/
 struct obj_data *is_using_ranged_weapon(struct char_data *ch, bool silent_mode)
 {
+  if (THROWING(ch)) return get_throwing_weapon(ch);
   struct obj_data *wielded = GET_EQ(ch, WEAR_WIELD_2H);
 
   if (!wielded)
@@ -825,6 +1033,15 @@ struct obj_data *is_using_ranged_weapon(struct char_data *ch, bool silent_mode)
   {
     if (!silent_mode)
       send_to_char(ch, "What?!!?\r\n");
+    return NULL;
+  }
+
+  if (GET_OBJ_TYPE(wielded) == ITEM_WEAPON && GET_OBJ_VAL(wielded, 0) == WEAPON_TYPE_HOOPAK)
+  {
+    if (hoopak_uses_ranged(ch, wielded))
+      return wielded;
+    if (!silent_mode)
+      send_to_char(ch, "Your hoopak is currently being used as a melee weapon.\r\n");
     return NULL;
   }
 
@@ -1130,6 +1347,14 @@ void load_weapons(void)
             "A light crossbow is a lighter version of a normal crossbow. It fires with less force "
             "than a heavy crossbow, and takes a -2 penalty to hit if fired with one hand.");
   /*	(weapon num, name, numDamDice, sizeDamDice, critRange, critMult, weapon flags, cost, damageType, weight, range, weaponFamily, Size, material, handle, head) */
+  setweapon(WEAPON_TYPE_THROWING_KNIFE, "throwing knife", 1, 4, 1, 2,
+            WEAPON_FLAG_SIMPLE | WEAPON_FLAG_THROWN | WEAPON_FLAG_RANGED, 2, DAMAGE_TYPE_PIERCING,
+            1, 10, WEAPON_FAMILY_SMALL_BLADE, SIZE_TINY, MATERIAL_STEEL, HANDLE_TYPE_HILT,
+            HEAD_TYPE_BLADE, "A small knife balanced for throwing.");
+  setweapon(WEAPON_TYPE_THROWING_HAMMER, "throwing hammer", 1, 4, 0, 2,
+            WEAPON_FLAG_MARTIAL | WEAPON_FLAG_THROWN | WEAPON_FLAG_RANGED, 1, DAMAGE_TYPE_BLUDGEONING,
+            2, 20, WEAPON_FAMILY_HAMMER, SIZE_SMALL, MATERIAL_STEEL, HANDLE_TYPE_HANDLE,
+            HEAD_TYPE_HEAD, "A light hammer balanced for throwing.");
   setweapon(WEAPON_TYPE_DART, "dart", 1, 4, 0, 2,
             WEAPON_FLAG_SIMPLE | WEAPON_FLAG_THROWN | WEAPON_FLAG_RANGED, 1, DAMAGE_TYPE_PIERCING,
             1, 20, WEAPON_FAMILY_THROWN, SIZE_TINY, MATERIAL_WOOD, HANDLE_TYPE_SHAFT,
@@ -1140,7 +1365,7 @@ void load_weapons(void)
             "arrows by the fact that they are not of the right length to use with a normal bow.");
   setweapon(WEAPON_TYPE_JAVELIN, "javelin", 1, 6, 0, 2,
             WEAPON_FLAG_SIMPLE | WEAPON_FLAG_THROWN | WEAPON_FLAG_RANGED, 1, DAMAGE_TYPE_PIERCING,
-            2, 30, WEAPON_FAMILY_SPEAR, SIZE_MEDIUM, MATERIAL_WOOD, HANDLE_TYPE_SHAFT,
+            2, 30, WEAPON_FAMILY_POLEARM, SIZE_MEDIUM, MATERIAL_WOOD, HANDLE_TYPE_SHAFT,
             HEAD_TYPE_POINT, "A javelin is a thin throwing spear.");
   setweapon(WEAPON_TYPE_SLING, "sling", 1, 4, 0, 2, WEAPON_FLAG_SIMPLE | WEAPON_FLAG_RANGED, 1,
             DAMAGE_TYPE_BLUDGEONING, 1, 50, WEAPON_FAMILY_THROWN, SIZE_SMALL, MATERIAL_LEATHER,
@@ -1155,8 +1380,8 @@ void load_weapons(void)
             WEAPON_FAMILY_HAMMER, SIZE_SMALL, MATERIAL_STEEL, HANDLE_TYPE_HANDLE, HEAD_TYPE_HEAD,
             "A lighter version of a warhammer, this weapon usually has a sleek metal head with one "
             "striking surface.");
-  setweapon(WEAPON_TYPE_HAND_AXE, "hand axe", 1, 6, 0, 3, WEAPON_FLAG_MARTIAL, 6,
-            DAMAGE_TYPE_SLASHING, 3, 0, WEAPON_FAMILY_AXE, SIZE_SMALL, MATERIAL_STEEL,
+  setweapon(WEAPON_TYPE_HAND_AXE, "hand axe", 1, 6, 0, 3, WEAPON_FLAG_MARTIAL | WEAPON_FLAG_THROWN, 6,
+            DAMAGE_TYPE_SLASHING, 3, 10, WEAPON_FAMILY_AXE, SIZE_SMALL, MATERIAL_STEEL,
             HANDLE_TYPE_HANDLE, HEAD_TYPE_BLADE,
             "This one-handed axe is short (roughly 1 foot long) and designed for use with one "
             "hand. Unlike throwing axes, it is not well balanced for a graceful tumbling motion, "
@@ -1301,7 +1526,7 @@ void load_weapons(void)
             75, DAMAGE_TYPE_PIERCING, 3, 100, WEAPON_FAMILY_BOW, SIZE_MEDIUM, MATERIAL_WOOD,
             HANDLE_TYPE_STRING, HEAD_TYPE_BOW,
             "At almost 5 feet in height, a longbow is made up of one solid piece of carefully "
-            "curved wood.");
+            "curved wood. Its full Strength modifier applies to damage, without a rating cap.");
 
   setweapon(WEAPON_TYPE_COMPOSITE_LONGBOW, "composite long bow", 1, 8, 0, 3,
             WEAPON_FLAG_MARTIAL | WEAPON_FLAG_RANGED, 100, DAMAGE_TYPE_PIERCING, 3, 110,
@@ -1337,7 +1562,7 @@ void load_weapons(void)
   setweapon(WEAPON_TYPE_SHORT_BOW, "short bow", 1, 6, 0, 3,
             WEAPON_FLAG_MARTIAL | WEAPON_FLAG_RANGED, 30, DAMAGE_TYPE_PIERCING, 2, 60,
             WEAPON_FAMILY_BOW, SIZE_MEDIUM, MATERIAL_WOOD, HANDLE_TYPE_STRING, HEAD_TYPE_BOW,
-            "A shortbow is made up of one piece of wood, about 3 feet in length.");
+            "A shortbow is made up of one piece of wood, about 3 feet in length. Its full Strength modifier applies to damage, without a rating cap.");
 
   setweapon(WEAPON_TYPE_COMPOSITE_SHORTBOW, "composite short bow", 1, 6, 0, 3,
             WEAPON_FLAG_MARTIAL | WEAPON_FLAG_RANGED, 75, DAMAGE_TYPE_PIERCING, 2, 70,
@@ -1511,7 +1736,7 @@ void load_weapons(void)
             HANDLE_TYPE_HANDLE, HEAD_TYPE_HEAD,
             "A warmaul has one damaging end with two heads; one axe and one hammer.");
   setweapon(WEAPON_TYPE_HOOPAK, "hoopak", 1, 6, 0, 2, WEAPON_FLAG_EXOTIC, 1, DAMAGE_TYPE_PIERCING,
-            4, 0, WEAPON_FAMILY_RANGED, SIZE_MEDIUM, MATERIAL_WOOD, HANDLE_TYPE_SHAFT,
+            4, 50, WEAPON_FAMILY_RANGED, SIZE_MEDIUM, MATERIAL_WOOD, HANDLE_TYPE_SHAFT,
             HEAD_TYPE_HEAD,
             "A hoopak is a sturdy stick with a sling at one end and a pointed tip at the other.");
   setweapon(WEAPON_TYPE_ATHAME, "athame", 1, 4, 1, 2, WEAPON_FLAG_THROWN | WEAPON_FLAG_SIMPLE, 2,
@@ -2957,7 +3182,7 @@ struct obj_data *take_ammo_projectile(struct obj_data *ammo, struct obj_data *we
 {
   struct obj_data *shot;
   bool unlimited = ammunition_is_unlimited(ammo, weapon);
-  if (!unlimited &&
+  if (GET_OBJ_TYPE(ammo) == ITEM_MISSILE && !unlimited &&
       (GET_OBJ_VAL(ammo, AMMO_VAL_MAX) <= 0 ||
        GET_OBJ_VAL(ammo, AMMO_VAL_QUANTITY) <= 1))
   {
@@ -2978,10 +3203,10 @@ struct obj_data *take_ammo_projectile(struct obj_data *ammo, struct obj_data *we
   /* All emitted shots are transient and destroyed after attack resolution. */
   if (unlimited)
   {
-    GET_OBJ_VAL(shot, 2) = 100;
+    if (GET_OBJ_TYPE(shot) == ITEM_MISSILE) GET_OBJ_VAL(shot, 2) = 100;
     GET_OBJ_COST(shot) = 0;
   }
-  else
+  else if (GET_OBJ_TYPE(ammo) == ITEM_MISSILE)
     GET_OBJ_VAL(ammo, AMMO_VAL_QUANTITY)--;
   GET_OBJ_VAL(shot, AMMO_VAL_MIN) = 0;
   GET_OBJ_VAL(shot, AMMO_VAL_MAX) = 0;

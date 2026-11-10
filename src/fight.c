@@ -91,8 +91,20 @@ struct ranged_shot_context
   struct ranged_shot_context *previous;
   struct obj_data *extra_projectile;
   bool extra_unlimited, manyshot, resolving_extra;
+  bool thrown, thrown_used;
+  struct obj_data *throwing_source;
+  struct obj_data throwing_profile;
 };
 static struct ranged_shot_context *current_shot = NULL;
+
+struct obj_data *active_throwing_weapon(struct char_data *ch)
+{
+  if (!current_shot || current_shot->attacker != ch || !current_shot->thrown)
+    return NULL;
+  if (current_shot->throwing_source && GET_OBJ_TYPE(current_shot->throwing_source) == ITEM_WEAPON)
+    return current_shot->throwing_source;
+  return &current_shot->throwing_profile;
+}
 
 /* Transient shots use plain names in combat; their supply keeps its count. */
 bool is_ranged_projectile(const struct obj_data *obj)
@@ -115,6 +127,8 @@ void forget_ranged_projectile(struct obj_data *obj)
       context->projectile = NULL;
     if (context->extra_projectile == obj)
       context->extra_projectile = NULL;
+    if (context->throwing_source == obj)
+      context->throwing_source = NULL;
   }
   if (last_missile == obj)
     last_missile = NULL;
@@ -127,10 +141,14 @@ static struct obj_data *ranged_ammunition(struct char_data *ch)
     if (current_shot->resolving_extra && current_shot->extra_projectile)
       return current_shot->extra_projectile;
     if (current_shot->projectile)
-      return current_shot->projectile;
+      return GET_OBJ_TYPE(current_shot->projectile) == ITEM_MISSILE ? current_shot->projectile : NULL;
   }
   if (can_fire_ammo(ch, TRUE))
-    return GET_EQ(ch, WEAR_AMMO_POUCH)->contains;
+  {
+    struct obj_data *supply = THROWING(ch) ? get_throwing_source(ch) :
+        (GET_EQ(ch, WEAR_AMMO_POUCH) ? GET_EQ(ch, WEAR_AMMO_POUCH)->contains : NULL);
+    return supply && GET_OBJ_TYPE(supply) == ITEM_MISSILE ? supply : NULL;
+  }
   return NULL;
 }
 
@@ -174,9 +192,20 @@ static struct combat_distance_data *find_combat_distance(struct char_data *ch,
   return NULL;
 }
 
+/* Query an established separation without choosing an opening combat mode. */
+int recorded_combat_distance(struct char_data *ch, struct char_data *victim)
+{
+  struct combat_distance_data *entry;
+  if (!ch || !victim || IN_ROOM(ch) == NOWHERE || IN_ROOM(ch) != IN_ROOM(victim))
+    return -1;
+  entry = find_combat_distance(ch, victim);
+  return entry ? MIN(entry->distance, ROOM_SIZE(IN_ROOM(ch))) : -1;
+}
+
 int combat_distance(struct char_data *ch, struct char_data *victim)
 {
   struct combat_distance_data *entry;
+  struct obj_data *first_weapon, *second_weapon;
   if (!ch || !victim || IN_ROOM(ch) == NOWHERE || IN_ROOM(ch) != IN_ROOM(victim))
     return -1;
   if (ch == victim)
@@ -184,7 +213,10 @@ int combat_distance(struct char_data *ch, struct char_data *victim)
   entry = find_combat_distance(ch, victim);
   if (entry)
     return MIN(entry->distance, ROOM_SIZE(IN_ROOM(ch)));
-  return (is_using_ranged_weapon(ch, TRUE) || is_using_ranged_weapon(victim, TRUE))
+  first_weapon = is_using_ranged_weapon(ch, TRUE);
+  second_weapon = is_using_ranged_weapon(victim, TRUE);
+  return ((first_weapon && !ranged_weapon_melee_type(ch, first_weapon)) ||
+          (second_weapon && !ranged_weapon_melee_type(victim, second_weapon)))
              ? ROOM_SIZE(IN_ROOM(ch)) : 0;
 }
 
@@ -255,7 +287,8 @@ int combat_melee_range(struct char_data *ch, struct obj_data *weapon)
     return 5;
   if (weapon && GET_OBJ_TYPE(weapon) == ITEM_WEAPON)
   {
-    type = GET_OBJ_VAL(weapon, 0);
+    type = ranged_weapon_melee_type(ch, weapon);
+    if (!type) type = GET_OBJ_VAL(weapon, 0);
     if (type >= 0 && type < NUM_WEAPON_TYPES &&
         IS_SET(weapon_list[type].weaponFlags, WEAPON_FLAG_REACH))
       return 10;
@@ -296,7 +329,8 @@ int advance_combat_distance(struct char_data *ch, struct char_data *victim, int 
 {
   struct combat_distance_data *entry;
   int distance, speed;
-  if (!ch || !victim || GET_POS(ch) < POS_FIGHTING ||
+  if (!ch || !victim || !is_action_available(ch, atMOVE, FALSE) ||
+      GET_POS(ch) < POS_FIGHTING ||
       AFF_FLAGGED(ch, AFF_STUN) || AFF_FLAGGED(ch, AFF_DAZED) ||
       AFF_FLAGGED(ch, AFF_PARALYZED) || char_has_mud_event(ch, eSTUNNED) ||
       AFF_FLAGGED(ch, AFF_GRAPPLED) || AFF_FLAGGED(ch, AFF_ENTANGLED) || legendary_grounded(ch))
@@ -312,6 +346,7 @@ int advance_combat_distance(struct char_data *ch, struct char_data *victim, int 
   if (!entry)
     return 0;
   entry->distance = MAX(desired, distance - speed);
+  USE_MOVE_ACTION(ch);
   return distance - entry->distance;
 }
 
@@ -2455,6 +2490,8 @@ void stop_fighting(struct char_data *ch)
   FIGHTING(ch) = NULL;
   clear_combat_distances(ch, FALSE);
   FIRING(ch) = FALSE;
+  THROWING(ch) = FALSE;
+  ch->char_specials.throw_opening_round = FALSE;
   if (GET_POS(ch) == POS_FIGHTING) /* in case they are position fighting */
     change_position(ch, POS_STANDING);
   update_pos(ch);
@@ -7632,6 +7669,27 @@ static int resolve_damage(struct char_data *ch,struct char_data *victim,int dam,
   return (dam);
 }
 
+/* Use a local combat profile, preserving the equipped object and its bonuses. */
+static bool empty_launcher_melee_profile(struct char_data *ch, struct obj_data **weapon,
+                                        struct obj_data *profile, int attack_type)
+{
+  int melee_type;
+  if (attack_type != ATTACK_TYPE_PRIMARY && attack_type != ATTACK_TYPE_OFFHAND &&
+      attack_type != ATTACK_TYPE_TWOHAND && attack_type != ATTACK_TYPE_PRIMARY_SNEAK &&
+      attack_type != ATTACK_TYPE_OFFHAND_SNEAK)
+    return FALSE;
+  if (!(melee_type = ranged_weapon_melee_type(ch, *weapon)) ||
+      melee_type == WEAPON_TYPE_HOOPAK || ranged_ammunition(ch))
+    return FALSE;
+  *profile = **weapon;
+  GET_OBJ_VAL(profile, 0) = melee_type;
+  GET_OBJ_VAL(profile, 1) = weapon_list[melee_type].numDice;
+  GET_OBJ_VAL(profile, 2) = weapon_list[melee_type].diceSize;
+  GET_OBJ_VAL(profile, 3) = melee_type == WEAPON_TYPE_WHIP ? TYPE_WHIP - TYPE_HIT : TYPE_POUND - TYPE_HIT;
+  *weapon = profile;
+  return TRUE;
+}
+
 /* you are going to arrive here from an attack, or viewing mode
  * We have two functions: compute_hit_damage() and compute_damage_bonus() that
  * both basically will compute how much damage a given hit will do or display
@@ -7674,6 +7732,14 @@ int compute_damage_bonus(struct char_data *ch, struct char_data *vict, struct ob
     wielded = NULL;
   else
     wielded = get_wielded(ch, attack_type);
+
+  struct obj_data melee_profile;
+  bool empty_launcher = empty_launcher_melee_profile(ch, &wielded, &melee_profile, attack_type);
+  if (empty_launcher)
+  {
+    dambonus -= 4;
+    if (display_mode) send_to_char(ch, "Empty ranged weapon used in melee: -4 damage\r\n");
+  }
 
   if (wielded && is_using_light_weapon(ch, wielded) && OBJ_FLAGGED(wielded, ITEM_AGILE))
   {
@@ -8063,6 +8129,12 @@ int compute_damage_bonus(struct char_data *ch, struct char_data *vict, struct ob
           {
             switch (GET_OBJ_VAL(wielded, 0))
             {
+            case WEAPON_TYPE_LONG_BOW:
+            case WEAPON_TYPE_SHORT_BOW:
+              if (display_mode)
+                send_to_char(ch, "Bow strength bonus: \tR%d\tn\r\n", str_bonus);
+              dambonus += str_bonus;
+              break;
             case WEAPON_TYPE_COMPOSITE_SHORTBOW:
             case WEAPON_TYPE_COMPOSITE_LONGBOW:
               if (display_mode)
@@ -9151,6 +9223,9 @@ int crit_range_extension(struct char_data *ch, struct obj_data *weap) {
 
 int determine_threat_range(struct char_data *ch, struct obj_data *wielded, struct char_data *victim)
 {
+  struct obj_data melee_profile;
+  empty_launcher_melee_profile(ch, &wielded, &melee_profile, ATTACK_TYPE_PRIMARY);
+
   int threat_range = 19;
 
   if (wielded)
@@ -9301,6 +9376,9 @@ int determine_threat_range(struct char_data *ch, struct obj_data *wielded, struc
 int determine_critical_multiplier(struct char_data *ch, struct obj_data *wielded,
                                   struct char_data *victim)
 {
+  struct obj_data melee_profile;
+  empty_launcher_melee_profile(ch, &wielded, &melee_profile, ATTACK_TYPE_PRIMARY);
+
   int crit_multi = 2;
 
   if (wielded)
@@ -9407,6 +9485,9 @@ int determine_critical_multiplier(struct char_data *ch, struct obj_data *wielded
 int compute_dam_dice(struct char_data *ch, struct char_data *victim, struct obj_data *wielded,
                      int mode, int attack_type)
 {
+  struct obj_data melee_profile;
+  empty_launcher_melee_profile(ch, &wielded, &melee_profile, attack_type);
+
   int diceOne = 0, diceTwo = 0;
   bool is_ranged = FALSE;
 
@@ -9416,7 +9497,7 @@ int compute_dam_dice(struct char_data *ch, struct char_data *victim, struct obj_
   {
     is_ranged = TRUE;
     /* this -has- to be a weapon, can_fire_ammo() already verified this */
-    wielded = is_using_ranged_weapon(ch, TRUE);
+    wielded = get_wielded(ch, ATTACK_TYPE_RANGED);
   } /* should be ready to check for ranged */
 
   // just information mode
@@ -9826,6 +9907,9 @@ int compute_hit_damage(struct char_data *ch, struct char_data *victim, int w_typ
     wielded = NULL;
   else
     wielded = get_wielded(ch, attack_type);
+
+  struct obj_data melee_profile;
+  empty_launcher_melee_profile(ch, &wielded, &melee_profile, attack_type);
 
   if (GET_EQ(ch, WEAR_WIELD_2H) && mode != MODE_DISPLAY_RANGED && attack_type != ATTACK_TYPE_RANGED)
     attack_type = ATTACK_TYPE_TWOHAND;
@@ -11303,6 +11387,7 @@ int weapon_special(struct obj_data *wpn, struct char_data *ch, char *hit_msg)
 struct obj_data *get_wielded(struct char_data *ch, /* Wielder */
                              int attack_type)      /* Type of attack. */
 {
+  if (attack_type == ATTACK_TYPE_RANGED && THROWING(ch)) return get_throwing_weapon(ch);
   struct obj_data *wielded = NULL;
   /* Check the primary hand location. */
   wielded = GET_EQ(ch, WEAR_WIELD_1);
@@ -11396,6 +11481,10 @@ int compute_attack_bonus_full(struct char_data *ch,     /* Attacker */
   else
     wielded = get_wielded(ch, attack_type);
 
+  struct obj_data melee_profile;
+  bool empty_launcher = empty_launcher_melee_profile(ch, &wielded, &melee_profile, attack_type);
+  if (empty_launcher) calc_bab -= 8;
+
   /* Initialize bonuses to 0 */
   for (i = 0; i < NUM_BONUS_TYPES; i++)
     bonuses[i] = 0;
@@ -11414,7 +11503,10 @@ int compute_attack_bonus_full(struct char_data *ch,     /* Attacker */
     send_to_char(ch, "%2d: %-50s\r\n", BAB(ch), "Base Attack Bonus");
   }
 
-  if (is_dual_wielding(ch))
+  if (display && empty_launcher)
+    send_to_char(ch, "-8: Empty ranged weapon used in melee\r\n");
+
+  if (is_dual_wielding(ch) && !(attack_type == ATTACK_TYPE_RANGED && THROWING(ch)))
   {
     calc_bab += dual_wielding_penalty(
         ch, (attack_type == ATTACK_TYPE_OFFHAND || attack_type == ATTACK_TYPE_OFFHAND_SNEAK));
@@ -13349,6 +13441,9 @@ int wildshape_weapon_type(struct char_data *ch)
 int determine_weapon_type(struct char_data *ch, struct char_data *victim, struct obj_data *wielded,
                           int attack_type)
 {
+  struct obj_data melee_profile;
+  empty_launcher_melee_profile(ch, &wielded, &melee_profile, attack_type);
+
   int w_type = TYPE_HIT, count = 0;
   int w_type_array[NUM_ATTACK_TYPES];
 
@@ -13756,8 +13851,8 @@ int handle_successful_attack(struct char_data *ch, struct char_data *victim,
                              int is_critical, int attack_type, int dam_type,
                              struct obj_data *missile, struct legendary_attack *technique)
 {
-  int ammo_damage_type = missile ? GET_OBJ_VAL(missile, AMMO_VAL_DAMAGE_TYPE) : 0;
-  int ammo_damage_die = missile ? GET_OBJ_VAL(missile, AMMO_VAL_DAMAGE_DIE) : 0;
+  int ammo_damage_type = missile && GET_OBJ_TYPE(missile) == ITEM_MISSILE ? GET_OBJ_VAL(missile, AMMO_VAL_DAMAGE_TYPE) : 0;
+  int ammo_damage_die = missile && GET_OBJ_TYPE(missile) == ITEM_MISSILE ? GET_OBJ_VAL(missile, AMMO_VAL_DAMAGE_DIE) : 0;
   struct affected_type af = {0}; /* for crippling strike */
   struct affected_type *af2;     // for hostile juxtaposition
   /* This is a bit of cruft from homeland code - It is used to activate a weapon 'special'
@@ -15415,6 +15510,29 @@ static void release_ranged_shot(struct ranged_shot_context *context)
   if (extra) extract_obj(extra);
 }
 
+static void finish_thrown_weapon(struct ranged_shot_context *context)
+{
+  struct char_data *ch = context->attacker;
+  /* An individual non-returning weapon is kept, but must be wielded again.
+   * Extraction callbacks invalidate throwing_source before it can be reused. */
+  if (context->thrown_used && context->throwing_source &&
+      GET_OBJ_TYPE(context->throwing_source) == ITEM_WEAPON &&
+      !ammunition_is_unlimited(context->throwing_source, NULL))
+  {
+    struct obj_data *source = context->throwing_source;
+    if (source->worn_by == ch)
+    {
+      obj_to_char(unequip_char(ch, source->worn_on), ch);
+      act("$p returns to your inventory; wield it again before throwing it.", FALSE, ch, source, NULL, TO_CHAR);
+    }
+    else if (source->in_obj && source->in_obj->worn_by == ch)
+    {
+      obj_from_obj(source);
+      obj_to_char(source, ch);
+    }
+  }
+}
+
 int hit(struct char_data *ch, struct char_data *victim, int type, int dam_type, int penalty,
         int attack_type)
 {
@@ -15422,11 +15540,21 @@ int hit(struct char_data *ch, struct char_data *victim, int type, int dam_type, 
   int result;
   if (!ch || !victim || IN_ROOM(ch) == NOWHERE || IN_ROOM(ch) != IN_ROOM(victim))
     return HIT_MISS;
+  if (attack_type == ATTACK_TYPE_RANGED && THROWING(ch))
+  {
+    struct obj_data *weapon;
+    context.throwing_source = get_throwing_source(ch);
+    weapon = make_thrown_weapon_profile(context.throwing_source, &context.throwing_profile);
+    if (!weapon || !context.throwing_source) return HIT_MISS;
+    context.thrown = TRUE;
+    context.throwing_profile = *weapon;
+  }
   context.manyshot = attack_type == ATTACK_TYPE_RANGED && ch->char_specials.manyshot_pending &&
                      manyshot_ready(ch, get_wielded(ch, ATTACK_TYPE_RANGED));
   ch->char_specials.manyshot_pending = FALSE;
   current_shot = &context;
   result = resolve_weapon_hit(ch, victim, type, dam_type, penalty, attack_type);
+  finish_thrown_weapon(&context);
   /* All fired projectiles are spent, including misses, deflections and Manyshot.
    * Unlimited/Returning preserve the supply, not a collectible shot object. */
   release_ranged_shot(&context);
@@ -15462,12 +15590,13 @@ static int resolve_weapon_hit(struct char_data *ch, struct char_data *victim, in
   if (!ch || !victim || IN_ROOM(ch) == NOWHERE || IN_ROOM(ch) != IN_ROOM(victim))
     return (HIT_MISS); /* All attacks require a target in the same room. */
 
-  if (AFF_FLAGGED(ch, AFF_STAGGERED) && GET_ATTACKS_THIS_ROUND(ch) >= 1)
+  if ((AFF_FLAGGED(ch, AFF_STAGGERED) || !is_action_available(ch, atMOVE, FALSE)) &&
+      GET_ATTACKS_THIS_ROUND(ch) >= 1)
     return (HIT_MISS);
 
   if (attack_type == ATTACK_TYPE_RANGED &&
       is_throwing_weapon(ch, get_wielded(ch, ATTACK_TYPE_RANGED)) &&
-      !HAS_FEAT(ch, FEAT_QUICK_DRAW) && GET_ATTACKS_THIS_ROUND(ch) >= 1)
+      !throwing_allows_full_attack(ch) && GET_ATTACKS_THIS_ROUND(ch) >= 1)
     return HIT_MISS;
 
   GET_ATTACKS_THIS_ROUND(ch)++;
@@ -15547,18 +15676,21 @@ static int resolve_weapon_hit(struct char_data *ch, struct char_data *victim, in
    examining obvious cases where the attack will fail */
   if (attack_type == ATTACK_TYPE_RANGED)
   {
-    if (ammo_pouch)
-      /* If we need a global variable to make some information available outside
-       *  this function, then we might have a bit of an issue with the design.
-       * Set the current missile to the first missile in the ammo pouch. */
-      last_missile = missile = ammo_pouch->contains;
-    if (!ammo_pouch || !has_ammo_in_pouch(ch, wielded, FALSE))
-    { /* no ammo = miss for ranged attacks*/
-      send_to_char(ch, "You have no ammo!\r\n");
-      return (HIT_MISS);
+    if (current_shot->thrown)
+    {
+      missile = current_shot->throwing_source;
+      if (!missile) return HIT_MISS;
     }
-
-    last_missile = missile = ammo_pouch->contains;
+    else
+    {
+      if (!ammo_pouch || !has_ammo_in_pouch(ch, wielded, FALSE))
+      {
+        send_to_char(ch, "You have no ammo!\r\n");
+        return HIT_MISS;
+      }
+      missile = ammo_pouch->contains;
+    }
+    last_missile = missile;
 
     /* reloading type of weapons, such as crossbows */
     if (is_reloading_weapon(ch, wielded, TRUE))
@@ -15708,6 +15840,7 @@ static int resolve_weapon_hit(struct char_data *ch, struct char_data *victim, in
     current_shot->unlimited = ammunition_is_unlimited(missile, wielded);
     missile = take_ammo_projectile(missile, wielded);
     current_shot->projectile = missile;
+    current_shot->thrown_used = current_shot->thrown;
     last_missile = missile;
     if (current_shot->manyshot && !has_ammo_in_pouch(ch, wielded, TRUE))
       current_shot->manyshot = FALSE;
@@ -16640,7 +16773,8 @@ static int perform_staggered_attack(struct char_data *ch, int mode, int phase)
 
     if (wpn_reload_status != HIT_NEED_RELOAD && !can_fire_ammo(ch, FALSE))
     {
-      stop_fighting(ch);
+      if (!THROWING(ch) && !ranged_weapon_melee_type(ch, get_wielded(ch, ATTACK_TYPE_PRIMARY)))
+        stop_fighting(ch);
       FIRING(ch) = FALSE;
     }
 
@@ -16648,7 +16782,7 @@ static int perform_staggered_attack(struct char_data *ch, int mode, int phase)
   }
 
   wielded = is_using_ranged_weapon(ch, TRUE);
-  if (wielded)
+  if (wielded && !ranged_weapon_melee_type(ch, wielded))
   {
     send_to_char(ch, "You can not use a ranged weapon in melee combat: ");
     can_fire_ammo(ch, FALSE);
@@ -16682,18 +16816,37 @@ int perform_attacks(struct char_data *ch, int mode, int phase)
   if (GET_POS(ch) == POS_DEAD)
     return (0);
 
-  /*  If we have no standard action (and are using regular attack mode.)
-   *  Do not attack at all. If we have no move action (and are in regular
-   *  attack mode) skip all phases but the first. */
+  if (mode == NORMAL_ATTACK_ROUTINE && THROWING(ch) && FIGHTING(ch))
+  {
+    wielded = get_wielded(ch, ATTACK_TYPE_PRIMARY);
+    if (combat_distance(ch, FIGHTING(ch)) <= combat_melee_range(ch, wielded) &&
+        (!ch->char_specials.throw_opening_round || !get_throwing_source(ch)))
+    {
+      THROWING(ch) = FALSE;
+      FIRING(ch) = FALSE;
+    }
+    else
+    {
+      FIRING(ch) = can_fire_ammo(ch, TRUE);
+      if (!FIRING(ch)) return 0;
+    }
+  }
+
+  /* A standard action permits one attack. A full attack also needs the move
+   * action, including any bonus attacks assigned to the first phase. */
   if ((mode == NORMAL_ATTACK_ROUTINE) && !is_action_available(ch, atSTANDARD, FALSE))
     return (0);
-  else if ((mode == NORMAL_ATTACK_ROUTINE) && (phase != PHASE_1) &&
-           !is_action_available(ch, atMOVE, FALSE))
-    return (0);
+
+  /* A hybrid hoopak can change modes as its opponent closes or moves away. */
+  wielded = get_wielded(ch, ATTACK_TYPE_PRIMARY);
+  if (mode == NORMAL_ATTACK_ROUTINE && wielded &&
+      GET_OBJ_TYPE(wielded) == ITEM_WEAPON && GET_OBJ_VAL(wielded, 0) == WEAPON_TYPE_HOOPAK)
+    FIRING(ch) = can_fire_ammo(ch, TRUE);
 
   guard_check(ch, FIGHTING(ch)); /* this is the guard skill check */
 
-  if (AFF_FLAGGED(ch, AFF_STAGGERED))
+  if (AFF_FLAGGED(ch, AFF_STAGGERED) ||
+      (mode != DISPLAY_ROUTINE_POTENTIAL && !is_action_available(ch, atMOVE, FALSE)))
     return perform_staggered_attack(ch, mode, phase);
 
   /** BEGIN PROCESS OF COUNTING ATTACKS AND PENALTIES FOR SUCCESSIVE ATTACKS  **/
@@ -16897,7 +17050,7 @@ int perform_attacks(struct char_data *ch, int mode, int phase)
   if (can_fire_ammo(ch, TRUE))
   {
     if (mode == NORMAL_ATTACK_ROUTINE && !IS_NPC(ch) &&
-        (!is_throwing_weapon(ch, is_using_ranged_weapon(ch, TRUE)) || HAS_FEAT(ch, FEAT_QUICK_DRAW)))
+        (!is_throwing_weapon(ch, is_using_ranged_weapon(ch, TRUE)) || throwing_allows_full_attack(ch)))
     {
       int quick_draw_speed_bonus = get_ranger_attack_speed_bonus(ch);
       if (quick_draw_speed_bonus > 0 && rand_number(1, 100) <= quick_draw_speed_bonus)
@@ -16913,7 +17066,7 @@ int perform_attacks(struct char_data *ch, int mode, int phase)
     /* Rapidshot mode gives an extra attack, but with a penalty to all attacks. */
     if (AFF_FLAGGED(ch, AFF_RAPID_SHOT) && HAS_FEAT(ch, FEAT_RAPID_SHOT) &&
         is_action_available(ch, atMOVE, FALSE) && !AFF_FLAGGED(ch, AFF_STAGGERED) &&
-        (!is_throwing_weapon(ch, is_using_ranged_weapon(ch, TRUE)) || HAS_FEAT(ch, FEAT_QUICK_DRAW)))
+        (!is_throwing_weapon(ch, is_using_ranged_weapon(ch, TRUE)) || throwing_allows_full_attack(ch)))
     {
       penalty -= 2;
       ranged_attacks++;
@@ -16928,7 +17081,7 @@ int perform_attacks(struct char_data *ch, int mode, int phase)
       }
     }
   }
-  if (is_throwing_weapon(ch, is_using_ranged_weapon(ch, TRUE)) && !HAS_FEAT(ch, FEAT_QUICK_DRAW))
+  if (is_throwing_weapon(ch, is_using_ranged_weapon(ch, TRUE)) && !throwing_allows_full_attack(ch))
     ranged_attacks = 1;
 
   /* -- finished processing base number of attacks and BAB for ranged -- */
@@ -17002,7 +17155,7 @@ int perform_attacks(struct char_data *ch, int mode, int phase)
           {
             int qd_chance = get_ranger_quick_draw_proc_chance(ch);
             if (!AFF_FLAGGED(ch, AFF_STAGGERED) && qd_chance > 0 &&
-                (!is_throwing_weapon(ch, is_using_ranged_weapon(ch, TRUE)) || HAS_FEAT(ch, FEAT_QUICK_DRAW)) &&
+                (!is_throwing_weapon(ch, is_using_ranged_weapon(ch, TRUE)) || throwing_allows_full_attack(ch)) &&
                 rand_number(1, 100) <= qd_chance && can_fire_ammo(ch, TRUE))
             {
               send_to_char(ch, "Your Quick Draw lets you snap off an extra shot!\r\n");
@@ -17027,7 +17180,8 @@ int perform_attacks(struct char_data *ch, int mode, int phase)
           /* we can't fire an arrow, we are NOT in silent-mode so the
            reason we are exiting ranged combat should be announced via
            can_fire_ammo() */
-          stop_fighting(ch);
+          if (!THROWING(ch) && !ranged_weapon_melee_type(ch, get_wielded(ch, ATTACK_TYPE_PRIMARY)))
+            stop_fighting(ch);
           FIRING(ch) = FALSE;
           return 0;
         }
@@ -17051,7 +17205,8 @@ int perform_attacks(struct char_data *ch, int mode, int phase)
        with silent-mode off */
     if (!can_fire_ammo(ch, FALSE))
     {
-      stop_fighting(ch);
+      if (!THROWING(ch) && !ranged_weapon_melee_type(ch, get_wielded(ch, ATTACK_TYPE_PRIMARY)))
+        stop_fighting(ch);
       FIRING(ch) = FALSE;
     }
 
@@ -17060,13 +17215,15 @@ int perform_attacks(struct char_data *ch, int mode, int phase)
 
     /* Display Modes, not actually firing, how many attacks? */
   }
-  else if (mode == RETURN_NUM_ATTACKS && is_using_ranged_weapon(ch, TRUE))
+  else if (mode == RETURN_NUM_ATTACKS && is_using_ranged_weapon(ch, TRUE) &&
+           !ranged_weapon_melee_type(ch, is_using_ranged_weapon(ch, TRUE)))
   {
     return ranged_attacks;
 
     /* Display Modes, not actually firing, show our routines full POWAH! */
   }
-  else if (mode == DISPLAY_ROUTINE_POTENTIAL && is_using_ranged_weapon(ch, TRUE))
+  else if (mode == DISPLAY_ROUTINE_POTENTIAL && is_using_ranged_weapon(ch, TRUE) &&
+           !ranged_weapon_melee_type(ch, is_using_ranged_weapon(ch, TRUE)))
   {
     while (ranged_attacks > 0)
     {
@@ -17110,7 +17267,7 @@ int perform_attacks(struct char_data *ch, int mode, int phase)
   /* we are going to exit melee combat if we are somehow wielding a ranged
              weapon here */
   wielded = is_using_ranged_weapon(ch, TRUE);
-  if (wielded)
+  if (wielded && !ranged_weapon_melee_type(ch, wielded))
   {
     send_to_char(ch, "You can not use a ranged weapon in melee combat: ");
     can_fire_ammo(ch, FALSE); /* we are using the function to report why! */
@@ -17862,6 +18019,7 @@ EVENTFUNC(event_combat_round)
   /* Summon breath and other attacks can kill their caster through retaliation. */
   if (find_char(combatant_id) != ch)
     return 0;
+  if (phase == 3) ch->char_specials.throw_opening_round = FALSE;
 
   /* Alchemist: Unstable Mutagen backlash (10% chance per round while mutagen active)
    * Perfect Mutagen capstone grants immunity to this backlash. */

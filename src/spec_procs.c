@@ -1254,14 +1254,7 @@ int compute_ability_full(struct char_data *ch, int abilityNum, bool recursive)
     value -= 2;
   }
 
-  if (GET_BACKGROUND(ch) >= 0)
-  {
-    if ((background_list[GET_BACKGROUND(ch)].skills[0] == abilityNum) ||
-        (background_list[GET_BACKGROUND(ch)].skills[1] == abilityNum))
-    {
-      value += 2;
-    }
-  }
+  value += background_skill_bonus(ch, abilityNum);
 
   if (HAS_FEAT(ch, FEAT_BG_TRADER) && is_crafting_skill(abilityNum))
   {
@@ -10937,6 +10930,7 @@ void display_buy_weapon_types(struct char_data *ch, int level, sbyte masterwork)
 
   for (i = 2; i < NUM_WEAPON_TYPES; i++)
   {
+    if (is_legacy_composite_bow(i)) continue;
     cost = get_vendor_weapon_cost(ch, level, i, masterwork);
     send_to_char(ch, "%25s %6d gold ", weapon_list[i].name, cost);
     if ((i % 2) == 1)
@@ -11318,7 +11312,7 @@ SPECIAL(buyweapons)
 
   for (i = 0; i < NUM_WEAPON_TYPES; i++)
   {
-    if (!strcmp(arg2, weapon_list[i].name))
+    if (!is_legacy_composite_bow(i) && !strcmp(arg2, weapon_list[i].name))
       break;
   }
 
@@ -11411,6 +11405,11 @@ SPECIAL(buyweapons)
 
 void create_crafting_mold(struct char_data *ch, int selection, int type)
 {
+  if (type == MOLD_TYPE_WEAPON && is_legacy_composite_bow(selection))
+  {
+    if (ch) send_to_char(ch, "Composite bow molds are no longer available.\r\n");
+    return;
+  }
   if (!ch)
     return;
 
@@ -11549,6 +11548,7 @@ SPECIAL(buymolds)
     {
       for (i = 1; i < NUM_WEAPON_TYPES; i++)
       {
+        if (is_legacy_composite_bow(i)) continue;
         send_to_char(ch, "%-25s ", weapon_list[i].name);
         if ((i % 3) == 2)
           send_to_char(ch, "\r\n");
@@ -11593,7 +11593,7 @@ SPECIAL(buymolds)
     }
     for (i = 1; i < NUM_WEAPON_TYPES; i++)
     {
-      if (!strcmp(argument, weapon_list[i].name))
+      if (!is_legacy_composite_bow(i) && !strcmp(argument, weapon_list[i].name))
       {
         selection = i;
         break;

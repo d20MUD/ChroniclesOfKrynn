@@ -59,6 +59,17 @@ static void backgroundo(int background, const char *name, int skill_one, int ski
   background_list[background].feat = featnum;
 }
 
+/* Skill modifiers follow the selected background, independently of its feat. */
+int background_skill_bonus(struct char_data *ch, int ability)
+{
+  int background;
+  if (!ch || IS_NPC(ch) || ability < 1 || ability > NUM_ABILITIES) return 0;
+  background = GET_BACKGROUND(ch);
+  if (background <= BACKGROUND_NONE || background >= NUM_BACKGROUNDS) return 0;
+  return background_list[background].skills[0] == ability ||
+         background_list[background].skills[1] == ability ? 2 : 0;
+}
+
 void initialize_background_list(void)
 {
   int i;

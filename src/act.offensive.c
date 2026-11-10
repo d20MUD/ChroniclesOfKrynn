@@ -4809,8 +4809,8 @@ ACMD(do_hit)
     FIRING(ch) = FALSE;
   }
 
-  /* temporary solution */
-  if (is_using_ranged_weapon(ch, TRUE))
+  if (is_using_ranged_weapon(ch, TRUE) &&
+      !ranged_weapon_melee_type(ch, is_using_ranged_weapon(ch, TRUE)))
   {
     send_to_char(ch, "You can't use a ranged weapon in melee combat, use 'fire' "
                      "instead..\r\n");
@@ -5333,7 +5333,6 @@ ACMD(do_combat_advance)
     send_to_char(ch, "You cannot advance right now.\r\n");
     return;
   }
-  USE_MOVE_ACTION(ch);
   send_to_char(ch, "You advance %d feet toward %s (%d feet away).\r\n",
                moved, PERS(victim, ch), combat_distance(ch, victim));
   act("$n advances toward $N.", FALSE, ch, NULL, victim, TO_NOTVICT);
@@ -12020,7 +12019,6 @@ ACMD(do_reload)
  */
 ACMD(do_throw)
 {
-  struct obj_data *weapon = get_wielded(ch, ATTACK_TYPE_PRIMARY);
   struct char_data *victim;
   char target[MAX_INPUT_LENGTH] = {'\0'};
   bool was_throwing = THROWING(ch);
@@ -12037,10 +12035,10 @@ ACMD(do_throw)
     return;
   }
   THROWING(ch) = TRUE;
-  if (!is_throwing_weapon(ch, weapon))
+  if (!get_throwing_source(ch))
   {
     THROWING(ch) = was_throwing;
-    send_to_char(ch, "Wield a weapon designed for throwing first.\r\n");
+    send_to_char(ch, "Wear a pouch containing throwing ammunition, or wield a throwable weapon.\r\n");
     return;
   }
   victim = *target ? get_char_vis(ch, target, NULL, FIND_CHAR_ROOM) : FIGHTING(ch);
@@ -12064,7 +12062,7 @@ ACMD(do_throw)
       return;
     }
     FIRING(ch) = TRUE;
-    send_to_char(ch, "You prepare to throw your weapon using ammunition.\r\n");
+    send_to_char(ch, "You prepare to throw until your opponent reaches melee range.\r\n");
     return;
   }
   if (!is_action_available(ch, atSTANDARD, TRUE))
@@ -12072,12 +12070,49 @@ ACMD(do_throw)
     THROWING(ch) = was_throwing;
     return;
   }
+  ch->char_specials.throw_opening_round = TRUE;
   hit(ch, victim, TYPE_UNDEFINED, DAM_RESERVED_DBC, 0, ATTACK_TYPE_RANGED);
   FIRING(ch) = FIGHTING(ch) && can_fire_ammo(ch, TRUE);
-  USE_STANDARD_ACTION(ch);
 }
 
 /* Select a prototype so replacement bundles retain the preference. */
+/* Hoopak is a native dual-purpose weapon, not an improvised empty launcher. */
+ACMD(do_hoopak)
+{
+  char arg[MAX_INPUT_LENGTH];
+  const char *names[] = {"hybrid", "ranged", "melee"};
+  int mode;
+  struct obj_data *weapon;
+  PREREQ_NOT_NPC();
+  one_argument(argument, arg, sizeof(arg));
+  if (!*arg)
+  {
+    mode = GET_HOOPAK_MODE(ch);
+    if (mode < HOOPAK_MODE_HYBRID || mode > HOOPAK_MODE_MELEE) mode = HOOPAK_MODE_HYBRID;
+    send_to_char(ch, "Hoopak mode: %s.\r\n"
+                     "Usage: hoopak ranged | hybrid | melee\r\n"
+                     "A) ranged: keep firing, even in melee range.\r\n"
+                     "B) hybrid: open ranged, switch to melee within 5 feet (default).\r\n"
+                     "C) melee: always use the hoopak in melee.\r\n"
+                     "Without usable ammunition in an equipped pouch, all modes use normal melee.\r\n", names[mode]);
+    return;
+  }
+  if (!str_cmp(arg, "ranged") || !str_cmp(arg, "a")) mode = HOOPAK_MODE_RANGED;
+  else if (!str_cmp(arg, "hybrid") || !str_cmp(arg, "b")) mode = HOOPAK_MODE_HYBRID;
+  else if (!str_cmp(arg, "melee") || !str_cmp(arg, "c")) mode = HOOPAK_MODE_MELEE;
+  else
+  {
+    send_to_char(ch, "Usage: hoopak ranged | hybrid | melee\r\n");
+    return;
+  }
+  GET_HOOPAK_MODE(ch) = mode;
+  weapon = get_wielded(ch, ATTACK_TYPE_PRIMARY);
+  if (weapon && GET_OBJ_TYPE(weapon) == ITEM_WEAPON && GET_OBJ_VAL(weapon, 0) == WEAPON_TYPE_HOOPAK)
+    FIRING(ch) = FIGHTING(ch) && can_fire_ammo(ch, TRUE);
+  save_char(ch, 0);
+  send_to_char(ch, "Hoopak mode set to %s.\r\n", names[mode]);
+}
+
 ACMD(do_ammopref)
 {
   struct obj_data *pouch, *ammo;
@@ -12115,6 +12150,32 @@ ACMD(do_ammopref)
   GET_PREFERRED_AMMO(ch) = GET_OBJ_VNUM(ammo) + 1;
   save_char(ch, 0);
   send_to_char(ch, "Preferred ammunition: %s.\r\n", ammo->short_description);
+}
+
+/* Keep ammo <keywords> compatible with its former ammopref abbreviation. */
+ACMD(do_ammo)
+{
+  struct obj_data *pouch;
+  PREREQ_NOT_NPC();
+  skip_spaces_c(&argument);
+  if (*argument)
+  {
+    do_ammopref(ch, argument, cmd, subcmd);
+    return;
+  }
+  pouch = GET_EQ(ch, WEAR_AMMO_POUCH);
+  if (!pouch)
+  {
+    send_to_char(ch, "You do not have an ammo pouch equipped.\r\n");
+    return;
+  }
+  send_to_char(ch, "Equipped ammo pouch: %s\tn\r\n", object_short_description(pouch));
+  if (!pouch->contains)
+  {
+    send_to_char(ch, "It is empty.\r\n");
+    return;
+  }
+  list_obj_to_char(pouch->contains, ch, SHOW_OBJ_SHORT, TRUE, 0);
 }
 
 /* Fire is the normal entry to ranged combat: use an eligible Manyshot opening

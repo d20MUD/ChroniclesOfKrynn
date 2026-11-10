@@ -1,4 +1,4 @@
-BLAST RANGED RANGED_COMBAT AMMO AMMUNITION ARCHERY BOWS FIRE-WEAPONS MISSILES QUIVERS RANGED-WEAPONS SHOOT FIRE RELOAD AUTORELOAD THROW THROWING RETURNING RANGED_FEATS
+BLAST RANGED RANGED_COMBAT AMMO AMMUNITION ARCHERY BOWS FIRE-WEAPONS MISSILES QUIVERS RANGED-WEAPONS SHOOT FIRE RELOAD AUTORELOAD RANGED_FEATS
 
 RANGED COMBAT AND AMMUNITION
 
@@ -89,25 +89,18 @@ polearms, can strike from 10 feet. Your advance stops at your weapon's reach.
 Unarmed attacks cannot borrow the reach of a polearm you are carrying.
 
 THROWING WEAPONS
-Wield a throwable weapon, such as a dagger or shuriken, and put matching
-throwing ammunition in your worn pouch. Then use:
-  throw goblin
+Use throw <target> with throwing ammunition in your worn pouch while holding
+a melee weapon or while bare handed. Your opening round uses thrown attacks;
+afterward, switch to melee when your opponent comes within melee reach.
+Thrown attacks use the ammunition's own weapon type and feats, Dexterity to
+hit, and Strength for damage. Exhausted ammunition means skipped throws
+until you replenish it or close for melee.
 
-The wielded weapon stays in your hand and supplies the attack's weapon
-properties. Each throw spends matching ammunition from your pouch. Daggers
-need dagger ammunition; shuriken need shuriken ammunition. Enhancement bonuses
-on the weapon and ammunition use the better bonus rather than adding together.
-Thrown attacks use Dexterity to hit and Strength for damage.
-
-Without Quick Draw, you can throw once per round. With Quick Draw, you can
-throw at your normal full attack rate, including eligible Rapid Shot attacks.
-Throwing mode continues during combat. Use throw off, or use hit, to return
-to melee use of a weapon that supports melee. You may need to advance first.
-
-Returning on your weapon OR throwing ammunition works like unlimited ammo:
-you can keep throwing without spending the supply. There is no delay or
-per-round supply limit from Returning. You still need matching ammunition
-in your worn pouch. Returning does not grant Quick Draw or extra attacks.
+If no thrown ammunition is available, you can instead throw an equipped
+throwable weapon. A non-returning weapon goes to inventory after the attack;
+re-wielding in combat costs a move action, or swift with Quick Draw.
+Returning weapons stay equipped and can make multiple thrown attacks.
+Use help throw for ammunition types, full attacks and Returning details.
 
 WEAPON RANGE
 Weapons have their own range increments. Beyond the first increment, each

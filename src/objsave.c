@@ -178,7 +178,7 @@ int objsave_save_obj_record_db(struct obj_data *obj, struct char_data *ch, room_
 
   /* load up the object */
   if (GET_OBJ_VNUM(obj) != NOTHING)
-    temp = read_object(GET_OBJ_VNUM(obj), VIRTUAL);
+    temp = read_object_for_restore(GET_OBJ_VNUM(obj), VIRTUAL);
   else
   {
     temp = create_obj();
@@ -1956,7 +1956,7 @@ obj_save_data *objsave_parse_objects(FILE *fl)
             temp = NULL;
           }
 
-          temp = read_object(nr, VIRTUAL);
+          temp = read_object_for_restore(nr, VIRTUAL);
           /* Object created - continue to parse its properties */
         }
         else
@@ -2472,7 +2472,7 @@ obj_save_data *objsave_parse_objects_db(char *name, room_vnum house_vnum)
             }
 
             /* Now create the new object */
-            temp = read_object(nr, VIRTUAL);
+            temp = read_object_for_restore(nr, VIRTUAL);
             if (!temp)
             {
               log("SYSERR: read_object failed for vnum %d in rent file", nr);
@@ -3099,7 +3099,7 @@ int objsave_save_obj_record_db_pet(struct obj_data *obj, struct char_data *ch,
 
   /* load up the object */
   if (GET_OBJ_VNUM(obj) != NOTHING)
-    temp = read_object(GET_OBJ_VNUM(obj), VIRTUAL);
+    temp = read_object_for_restore(GET_OBJ_VNUM(obj), VIRTUAL);
   else
   {
     temp = create_obj();
@@ -3544,7 +3544,7 @@ obj_save_data *objsave_parse_objects_db_pet(char *name, long int pet_idnum)
             }
 
             /* Now create the new object */
-            temp = read_object(nr, VIRTUAL);
+            temp = read_object_for_restore(nr, VIRTUAL);
             if (!temp)
             {
               log("SYSERR: read_object failed for vnum %d in rent file", nr);
@@ -3849,7 +3849,7 @@ int objsave_save_obj_record_db_sheath(struct obj_data *obj, struct char_data *ch
 
   /* load up the object */
   if (GET_OBJ_VNUM(obj) != NOTHING)
-    temp = read_object(GET_OBJ_VNUM(obj), VIRTUAL);
+    temp = read_object_for_restore(GET_OBJ_VNUM(obj), VIRTUAL);
   else
   {
     temp = create_obj();
@@ -4261,7 +4261,7 @@ obj_save_data *objsave_parse_objects_db_sheath(char *name, long int sheath_idnum
             }
 
             /* Now create the new object */
-            temp = read_object(nr, VIRTUAL);
+            temp = read_object_for_restore(nr, VIRTUAL);
             if (!temp)
             {
               log("SYSERR: read_object failed for vnum %d in rent file", nr);

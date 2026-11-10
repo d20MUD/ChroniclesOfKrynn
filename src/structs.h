@@ -5745,6 +5745,11 @@ enum zone_terrain_type {
 #define WEAPON_TYPE_KHOPESH 75
 #define WEAPON_TYPE_KNIFE 76
 #define WEAPON_TYPE_HOOPAK 77
+
+/* Saved hoopak combat preferences; zero keeps existing characters hybrid. */
+#define HOOPAK_MODE_HYBRID 0
+#define HOOPAK_MODE_RANGED 1
+#define HOOPAK_MODE_MELEE 2
 #define WEAPON_TYPE_FOOTMANS_LANCE 78
 #define WEAPON_TYPE_ATHAME 79
 #define WEAPON_TYPE_ESTOC 80
@@ -5752,7 +5757,9 @@ enum zone_terrain_type {
 #define WEAPON_TYPE_ELVEN_CURVE_BLADE 82
 #define WEAPON_TYPE_FALCATA 83
 // One higher than last above
-#define NUM_WEAPON_TYPES 84
+#define WEAPON_TYPE_THROWING_KNIFE 84
+#define WEAPON_TYPE_THROWING_HAMMER 85
+#define NUM_WEAPON_TYPES 86
 
 /* different ammo types */
 #define AMMO_TYPE_UNDEFINED 0
@@ -6850,7 +6857,9 @@ struct char_special_data
   int totalDefense;           /* how many totaldefense attempts left in the round */
   struct char_data *guarding; /* target for 'guard' ability */
   bool firing;                /* is char firing missile weapon? */
-  bool throwing;              /* use a wielded throwable weapon with ammunition */
+  bool throwing;              /* hybrid thrown-weapon combat */
+  bool throw_opening_round;   /* finish the opening thrown volley before melee */
+  struct obj_data throwing_profile; /* transient weapon view of selected thrown ammo */
   bool manyshot_pending;      /* first bow attack of a full attack */
   bool ranged_touch_roll;     /* do not borrow equipped weapon/ammo bonuses for rays */
   bool blasting;              /* is char eldritch blasting? */
@@ -7178,6 +7187,7 @@ struct disguise_observation
 struct player_special_data_saved
 {
   int preferred_ammo; /* Preferred ammunition prototype vnum + 1; 0 = automatic. */
+  int hoopak_mode; /* HOOPAK_MODE_* preference. */
   int color_256; /* Protocol preference: 0 automatic, 1 on, -1 explicitly off. */
   int skills[MAX_SKILLS + 1];         // saved skills
   int spells[MAX_SPELLS];             // saved spells, should be MAX_SPELLS + 1 from spells.h

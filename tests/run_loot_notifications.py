@@ -20,7 +20,7 @@ void MSDPSetString(struct descriptor_data*d,variable_t var,const char*s) {
 }
 void MSDPFlush(struct descriptor_data*d,variable_t var) {assert(var==eMSDP_LOOT_INFO);sent++;}
 '''
-code='\n'.join(function('src/comm.c',sig) for sig in ['bool web_info_begin(struct char_data *ch, int variable, struct output_capture *capture)','void web_info_field(struct char_data *ch, const char *section, const char *label, const char *format, ...)','void web_info_finish(struct char_data *ch, int variable, struct output_capture *capture, const char *topic)'])
+code='\n'.join(function('src/comm.c',sig) for sig in ['bool web_info_begin(struct char_data *ch, int variable, struct output_capture *capture)','void web_info_field(struct char_data *ch, const char *section, const char *label, const char *format, ...)','void web_info_item(struct char_data *ch, const char *section, struct obj_data *obj)','void web_info_finish(struct char_data *ch, int variable, struct output_capture *capture, const char *topic)'])
 code+='\n'+function('src/treasure.c','void web_notify_corpse_loot(struct char_data *recipient, struct char_data *mob, struct obj_data *corpse)')
 checks=r'''
 int main(void) {
@@ -30,7 +30,7 @@ int main(void) {
  ch.desc=&d;d.pProtocol=&protocol;protocol.pVariables=variables;
  variables[eMSDP_LOOT_INFO]=&variable;protocol.bMSDP=true;variable.bReport=true;
  SET_BIT_AR(MOB_FLAGS(&mob),MOB_ISNPC);
- visible.short_description="\tcA fine blade\tn";GET_OBJ_TYPE(&visible)=ITEM_WEAPON;
+ GET_ID(&visible)=12345;visible.short_description="\tcA fine blade\tn";GET_OBJ_TYPE(&visible)=ITEM_WEAPON;
  hidden.short_description="hidden";GET_OBJ_VAL(&hidden,15)=1;
  GET_OBJ_TYPE(&money)=ITEM_MONEY;
  corpse.contains=&visible;visible.next_content=&hidden;hidden.next_content=&money;
@@ -39,6 +39,7 @@ int main(void) {
  assert(json_object_object_get_ex(event,"fields",&fields) && json_object_array_length(fields)==2);
  assert(strstr(response,"A fine blade") && !strstr(response,"hidden"));
  assert(strstr(response,"collect to receive") && strstr(response,"a goblin"));
+ assert(strstr(response,"\"loreTarget\":\"}o12345\""));
  assert(corpse.contains==&visible && visible.next_content==&hidden);
  assert(json_object_object_get_ex(event,"topic",&topic) && !strcmp(json_object_get_string(topic),"Corpse loot"));
  assert(json_object_object_get_ex(event,"id",&id));char *first=strdup(json_object_get_string(id));json_object_put(event);

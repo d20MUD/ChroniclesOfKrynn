@@ -50,6 +50,7 @@ int BAB(struct char_data *ch) {return base_bab;}
 int combat_distance(struct char_data *ch,struct char_data *victim) {return distance;}
 int compute_concealment(struct char_data *victim,struct char_data *ch) {return concealment;}
 bool obj_has_special_ability(struct obj_data *obj,int ability) {return false;}
+struct obj_data *get_throwing_source(struct char_data *ch) {return GET_EQ(ch,WEAR_WIELD_1);}
 static void obj_from_obj(struct obj_data *obj) {
   assert(obj->in_obj);obj->in_obj->contains=obj->next_content;obj->in_obj=NULL;obj->next_content=NULL;
 }
@@ -57,7 +58,7 @@ static void obj_to_char(struct obj_data *obj,struct char_data *ch) {obj->carried
 struct obj_data *create_obj(void) {struct obj_data *obj=calloc(1,sizeof(*obj));IN_ROOM(obj)=NOWHERE;return obj;}
 int dice(int number,int size) {return number*size;}
 '''
-for name in ['bool is_throwing_weapon(','bool ammunition_is_unlimited(','static bool usable_ammunition(','bool has_ammo_in_pouch(','struct obj_data *take_ammo_projectile(','bool reload_weapon(','bool ready_to_reload(']:
+for name in ['bool is_throwing_weapon(','bool ammunition_is_unlimited(','bool throwing_allows_full_attack(','bool usable_ammunition(','bool has_ammo_in_pouch(','struct obj_data *take_ammo_projectile(','bool reload_weapon(','bool ready_to_reload(']:
     code+='\n'+function(weapons,name)
 code+=r'''
 bool can_fire_ammo(struct char_data *ch,bool silent) {

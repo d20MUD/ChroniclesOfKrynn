@@ -24,6 +24,7 @@
 #include "spells.h"
 #include "spec_procs.h"
 #include "traps.h"
+#include "assign_wpn_armor.h"
 
 /* local functions */
 static int update_all_objects(struct obj_data *obj);
@@ -33,6 +34,16 @@ obj_rnum add_object(struct obj_data *newobj, obj_vnum ovnum)
 {
   int found = NOTHING;
   zone_rnum rznum = real_zone_by_thing(ovnum);
+
+  /* Copying a legacy prototype cannot create another composite-bow type.
+   * An unchanged existing legacy prototype may still receive maintenance edits. */
+  {
+    obj_rnum prior = real_object(ovnum);
+    if (GET_OBJ_TYPE(newobj) == ITEM_WEAPON && is_legacy_composite_bow(GET_OBJ_VAL(newobj, 0)) &&
+        (prior == NOTHING || GET_OBJ_TYPE(&obj_proto[prior]) != ITEM_WEAPON ||
+         GET_OBJ_VAL(&obj_proto[prior], 0) != GET_OBJ_VAL(newobj, 0)))
+      retire_new_composite_bow(newobj);
+  }
 
   /* Write object to internal tables. */
   if ((newobj->item_number = real_object(ovnum)) != NOTHING)
@@ -68,6 +79,10 @@ static int update_all_objects(struct obj_data *refobj)
     /* Update the existing object but save a copy for private information. */
     swap = *obj;
     *obj = *refobj;
+    /* Editing an old prototype must not turn a fresh ordinary bow back into
+     * a composite bow. Already-existing legacy instances keep their type. */
+    if (GET_OBJ_TYPE(&swap) != ITEM_WEAPON || !is_legacy_composite_bow(GET_OBJ_VAL(&swap, 0)))
+      retire_new_composite_bow(obj);
 
     /* Copy game-time dependent variables over. */
     memcpy(obj->legendary_uuid, swap.legendary_uuid, sizeof(obj->legendary_uuid));

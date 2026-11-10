@@ -4,6 +4,8 @@ from pathlib import Path
 import subprocess,tempfile
 root=Path(__file__).resolve().parents[1]
 s=(root/'src/act.offensive.c').read_text();a=s.index('ACMD(do_ammopref)');command=s[a:s.index('\n}',a)+2]
+a=s.index('ACMD(do_ammo)');command+='\n'+s[a:s.index('\n}',a)+2]
+assert (root/'src/interpreter.c').read_text().index('{"ammo",') < (root/'src/interpreter.c').read_text().index('{"ammopref",')
 p=(root/'src/players.c').read_text();save=next(l for l in p.splitlines() if 'BUFFER_WRITE("AmPr:' in l);load=next(l for l in p.splitlines() if 'strcmp(tag, "AmPr")' in l)
 code=r'''
 #include "conf.h"
@@ -13,10 +15,12 @@ code=r'''
 #include "handler.h"
 #include "comm.h"
 #include "db.h"
+#include "act.h"
 #include <assert.h>
 #define MAX(a,b) ((a)>(b)?(a):(b))
 #undef ACMD
 #define ACMD(name) void name(struct char_data *ch,const char *argument,int cmd,int subcmd)
+#undef PREREQ_NOT_NPC
 #define PREREQ_NOT_NPC() do { if(IS_NPC(ch))return; } while(0)
 static struct obj_data selected,pouch;
 struct index_data *obj_index;
@@ -30,6 +34,11 @@ size_t send_to_char(struct char_data *ch,const char *format,...){va_list ap;va_s
 void skip_spaces_c(const char **str){while(**str==' ')(*str)++;}
 size_t strlcpy(char *dest,const char *src,size_t size){size_t n=strlen(src);if(size)snprintf(dest,size,"%s",src);return n;}
 struct obj_data *get_obj_in_list_vis(struct char_data *ch,char *name,int *number,struct obj_data *list){return !strcmp(name,"flaming arrows")?list:NULL;}
+static int lists;
+char *object_short_description(const struct obj_data *obj) {return obj->short_description;}
+void list_obj_to_char(struct obj_data *list,struct char_data *ch,int mode,int show,int mxp_type) {
+ assert(list==pouch.contains && mode==SHOW_OBJ_SHORT && show && mxp_type==0);lists++;
+}
 ''' + command + r'''
 static void roundtrip(struct char_data *ch) {
  char buffer[128],tag[5]="AmPr",line[32];
@@ -50,7 +59,12 @@ int main(void){
  do_ammopref(&ch,"none",0,0);assert(saves==2 && last_saved==0);
  do_ammopref(&ch,"",0,0);assert(strstr(message,"Usage: ammopref") && saves==2);
  GET_EQ(&ch,WEAR_AMMO_POUCH)=NULL;do_ammopref(&ch,"flaming arrows",0,0);assert(saves==2);
- puts("Ammo preference: exact pouch choice, errors, clearing, saved value and player-file round trip passed");
+ message[0]=0;do_ammo(&ch,"",0,0);assert(strstr(message,"do not have an ammo pouch equipped") && !lists);
+ GET_EQ(&ch,WEAR_AMMO_POUCH)=&pouch;pouch.short_description="\tcA leather quiver";
+ message[0]=0;do_ammo(&ch,"  ",0,0);assert(strstr(message,"A leather quiver") && lists==1 && saves==2);
+ pouch.contains=NULL;message[0]=0;do_ammo(&ch,"",0,0);assert(strstr(message,"It is empty") && lists==1);
+ pouch.contains=&selected;do_ammo(&ch,"flaming arrows",0,0);assert(saves==3 && GET_PREFERRED_AMMO(&ch)==1235);
+ puts("Ammo listing and preference: equipped/empty/missing pouch, argument compatibility, saved preference and player-file round trip passed");
 }
 '''
 with tempfile.TemporaryDirectory(prefix='ammo-preference-') as directory:

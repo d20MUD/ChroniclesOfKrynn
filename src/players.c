@@ -417,6 +417,7 @@ int load_char(const char *name, struct char_data *ch)
     /* Character initializations. Necessary to keep some things straight. */
     ch->affected = NULL;
     GET_PREFERRED_AMMO(ch) = 0;
+    GET_HOOPAK_MODE(ch) = HOOPAK_MODE_HYBRID;
     memset(ch->player_specials->saved.ammo_craft_settings, 0, sizeof(ch->player_specials->saved.ammo_craft_settings));
     for (i = 0; i < MAX_CLASSES; i++)
     {
@@ -1321,6 +1322,12 @@ int load_char(const char *name, struct char_data *ch)
         break;
 
       case 'H':
+        if (!strcmp(tag, "HpMd"))
+        {
+          int mode = atoi(line);
+          GET_HOOPAK_MODE(ch) = mode >= HOOPAK_MODE_HYBRID && mode <= HOOPAK_MODE_MELEE ? mode : HOOPAK_MODE_HYBRID;
+          break;
+        }
         if (!strcmp(tag, "Hous")) { ch->player_specials->housing_house_id = atol(line); break; }
         if (!strcmp(tag, "Hrom")) { ch->player_specials->housing_room_id = atol(line); break; }
         if (!strcmp(tag, "Hit "))
@@ -3229,6 +3236,7 @@ bool save_char_checked(struct char_data *ch, int mode)
     BUFFER_WRITE("UTF8: %d\n", ch->desc->pProtocol->pVariables[eMSDP_UTF_8]->ValueInt);
   }
   BUFFER_WRITE("AmPr: %d\n", GET_PREFERRED_AMMO(ch));
+  BUFFER_WRITE("HpMd: %d\n", GET_HOOPAK_MODE(ch));
   {
     const int *ammo = ch->player_specials->saved.ammo_craft_settings;
     BUFFER_WRITE("AmCf: %d %d %d %d %d %d %d\n", ammo[0], ammo[1], ammo[2], ammo[3], ammo[4], ammo[5], ammo[6]);

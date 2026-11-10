@@ -1451,14 +1451,14 @@ void assign_deities(void)
 
   add_deity(DEITY_SHEVARASH, "Shevarash", ETHOS_CHAOTIC, ALIGNMENT_NEUTRAL, DOMAIN_ELF,
             DOMAIN_RETRIBUTION, DOMAIN_WAR, DOMAIN_CHAOS, DOMAIN_UNDEFINED, DOMAIN_UNDEFINED,
-            WEAPON_TYPE_COMPOSITE_LONGBOW, DEITY_PANTHEON_FR_ELVEN,
+            WEAPON_TYPE_LONG_BOW, DEITY_PANTHEON_FR_ELVEN,
             "Hatred of the Drow, Vengeance, Crusades, Loss",
             "Shevarash (Description not done yet.  If you wish to write it, email to "
             "ilmater@@gmail.com)\r\n");
 
   add_deity(DEITY_SOLONOR_THELANDIRA, "Solonor Thelandira", ETHOS_CHAOTIC, ALIGNMENT_GOOD,
             DOMAIN_ELF, DOMAIN_PLANT, DOMAIN_GOOD, DOMAIN_WAR, DOMAIN_CHAOS, DOMAIN_UNDEFINED,
-            WEAPON_TYPE_COMPOSITE_LONGBOW, DEITY_PANTHEON_FR_ELVEN,
+            WEAPON_TYPE_LONG_BOW, DEITY_PANTHEON_FR_ELVEN,
             "Archery, Hunting, Wilderness Survival",
             "Solonor Thelandira (Description not done yet.  If you wish to write it, email to "
             "ilmater@@gmail.com)\r\n");
@@ -2472,7 +2472,7 @@ void assign_deities(void)
   /* Zorren - Lord of the Wild Hunt */
   add_deity(DEITY_ZORREN, "Zorren", ETHOS_CHAOTIC, ALIGNMENT_NEUTRAL, DOMAIN_ANIMAL, DOMAIN_MOON,
             DOMAIN_STRENGTH, DOMAIN_TRAVEL, DOMAIN_LIBERATION, DOMAIN_UNDEFINED,
-            WEAPON_TYPE_COMPOSITE_LONGBOW, DEITY_PANTHEON_LUMINARI_CORE,
+            WEAPON_TYPE_LONG_BOW, DEITY_PANTHEON_LUMINARI_CORE,
             "Beasts, Moonlit Pursuit, Primal Triumph, Freedom, The Hunter's Bond",
             "Zorren, Lord of the Wild Hunt, leads the eternal chase beneath the moon. He is\r\n"
             "the primal spirit of the hunt - both predator and protector, savage and noble.\r\n"

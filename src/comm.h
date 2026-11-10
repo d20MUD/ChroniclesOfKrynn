@@ -80,6 +80,7 @@ struct output_capture
 
 bool web_info_begin(struct char_data *ch, int variable, struct output_capture *capture);
 void web_info_finish(struct char_data *ch, int variable, struct output_capture *capture, const char *topic);
+void web_info_item(struct char_data *ch, const char *section, struct obj_data *obj);
 void web_info_field(struct char_data *ch, const char *section, const char *label, const char *format, ...) __attribute__((format(printf, 4, 5)));
 
 bool web_creation_begin(struct descriptor_data *d, const char *input, struct output_capture *capture);

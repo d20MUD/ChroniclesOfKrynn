@@ -4640,6 +4640,39 @@ ACMD(do_defenses)
  * @param cmd The command number
  * @param subcmd Subcommand flags (unused)
  */
+/* Score reports the player's own appearance, independent of an observer's
+ * true sight, introductions, or ability to detect their disguise. */
+static void score_short_descriptions(struct char_data *ch, bool modal)
+{
+  char *natural = current_true_desc(ch);
+  char *current;
+  if (IS_NPC(ch))
+    current = strdup(natural);
+  else if (HAS_DISGUISE(ch))
+    current = current_disguise_desc(ch);
+  else if (has_altered_form(ch))
+    current = current_altered_desc(ch);
+  else
+    current = current_short_desc(ch);
+
+  parse_at(natural);
+  parse_at(current);
+  if (modal)
+  {
+    web_info_field(ch, "Identity", "Short description", "%s", natural);
+    if (strcmp(natural, current))
+      web_info_field(ch, "Identity", "Current short description", "%s", current);
+  }
+  else
+  {
+    send_to_char(ch, "\tcShort description: \tn%s\tn\r\n", natural);
+    if (strcmp(natural, current))
+      send_to_char(ch, "\tcCurrent short description: \tn%s\tn\r\n", current);
+  }
+  free(natural);
+  free(current);
+}
+
 ACMD(do_score_text)
 {
   /* ========================================================================= */
@@ -4696,6 +4729,7 @@ ACMD(do_score_text)
   /* Display name and title */
   send_to_char(ch, "\tcName : \tn%-20s \tcTitle   : \tn%s\r\n", GET_NAME(ch),
                GET_TITLE(ch) ? GET_TITLE(ch) : "None.");
+  score_short_descriptions(ch, FALSE);
 
 #if defined(CAMPAIGN_DL)
   /* Display race with bounds checking */
@@ -5383,6 +5417,7 @@ ACMD(do_score)
   { do_score_text(ch, argument, cmd, subcmd); return; }
   web_info_field(ch, "Identity", "Name", "%s", GET_NAME(ch));
   web_info_field(ch, "Identity", "Title", "%s", GET_TITLE(ch) ? GET_TITLE(ch) : "");
+  score_short_descriptions(ch, TRUE);
   web_info_field(ch, "Identity", "Race", "%s", race_list[GET_RACE(ch)].type);
   web_info_field(ch, "Identity", "Level", "%d", GET_LEVEL(ch));
   web_info_field(ch, "Identity", "Alignment", "%s", get_align_by_num(GET_ALIGNMENT(ch)));
@@ -10716,7 +10751,7 @@ ACMD(do_weapontypes)
                weapon_family[i]);
   for (j = 0; j < NUM_WEAPON_TYPES; j++)
   {
-    if (weapon_list[j].weaponFamily == i)
+    if (!is_legacy_composite_bow(j) && weapon_list[j].weaponFamily == i)
     {
       family_weapons[counter] = weapon_list[j].name;
       counter++;
@@ -10730,14 +10765,14 @@ ACMD(do_weaponlist)
 {
   const char *cmd_weapon_names[NUM_WEAPON_TYPES];
 
-  int j = 0;
+  int j = 0, count = 0;
 
   for (j = 0; j < NUM_WEAPON_TYPES; j++)
   {
-    cmd_weapon_names[j] = weapon_list[j].name;
+    if (!is_legacy_composite_bow(j)) cmd_weapon_names[count++] = weapon_list[j].name;
   }
 
-  column_list(ch, 4, cmd_weapon_names, j, TRUE);
+  column_list(ch, 4, cmd_weapon_names, count, TRUE);
 
   send_to_char(ch, "\tDType 'weaponinfo <name of weapon>' to see details\tn\r\n");
   send_to_char(ch, "\tDType 'armorlist' to see a list of armor types\tn\r\n");

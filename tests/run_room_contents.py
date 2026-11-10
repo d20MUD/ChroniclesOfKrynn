@@ -16,7 +16,18 @@ code=r'''
 #include <string.h>
 #include <errno.h>
 #include <json-c/json.h>
+#define TRUE true
 #define FALSE false
+#define MAX_INPUT_LENGTH 256
+#define NUM_WEARS 2
+#define FIND_OBJ_INV 2
+#define FIND_CHAR_WORLD 4
+#define FIND_OBJ_EQUIP 8
+#define FIND_OBJ_ROOM 16
+#define FIND_OBJ_WORLD 32
+#define IS_SET(bits,flag) ((bits)&(flag))
+#define GET_EQ(ch,i) ((ch)->equipment[i])
+typedef int bitvector_t;
 #define NOWHERE -1
 #define eMSDP_ROOM_CONTENTS 0
 #define MAX_VARIABLE_LENGTH 524288
@@ -26,7 +37,7 @@ code=r'''
 struct variable { bool bReport; };
 struct protocol { bool bMSDP;struct variable **pVariables; };
 struct descriptor_data { struct protocol *pProtocol; };
-struct char_data { long id;int room;bool visible,npc,dead,extracting;const char *name;struct char_data *next_in_room;struct descriptor_data *desc;struct obj_data *carrying; };
+struct char_data { long id;int room;bool visible,npc,dead,extracting;const char *name;struct char_data *next_in_room;struct descriptor_data *desc;struct obj_data *carrying,*equipment[NUM_WEARS]; };
 struct obj_data { long id;bool visible,takeable;const char *name,*description;struct obj_data *next_content; };
 static struct { int vnum;struct char_data *people;struct obj_data *contents; } world[2];
 #define GET_ID(x) ((x)->id)
@@ -62,6 +73,15 @@ code+=function('src/handler.c','struct char_data *get_char_room_vis(')+'\n'
 code+=function('src/handler.c','struct obj_data *get_obj_in_list_vis(')+'\n'
 code+=function('src/comm.c','static void update_msdp_room_contents(')+'\n'
 code+=r'''
+#define strlcpy test_strlcpy
+static size_t test_strlcpy(char *dst,const char *src,size_t n) {size_t len=strlen(src);if(n)snprintf(dst,n,"%s",src);return len;}
+static void one_argument(char *src,char *dst,size_t n) {strlcpy(dst,src,n);char *space=strchr(dst,' ');if(space)*space=0;}
+static struct char_data *get_char_world_vis(struct char_data *ch,char *name,int *number) {return NULL;}
+static struct obj_data *get_obj_vis(struct char_data *ch,char *name,int *number) {return NULL;}
+'''
+code+=function('src/handler.c','int generic_find(')+'\n'
+
+code+=r'''
 static struct json_object *field(struct json_object *o,const char *key) {struct json_object *v;assert(json_object_object_get_ex(o,key,&v));return v;}
 int main(void) {
   struct variable variable={.bReport=true};struct variable *variables[]={&variable};
@@ -95,6 +115,17 @@ int main(void) {
   assert(!get_obj_in_list_vis(&player,objstale,NULL,world[0].contents));
   assert(!room_entity_matches("}c101\nkill",'c',101));
   assert(!room_entity_matches("}c999999999999999999999999999999999",'c',101));
+  /* A loot link keeps identifying its item after pickup or equipping. */
+  struct char_data *target_ch;struct obj_data *target_obj;
+  struct obj_data duplicate={.id=204,.visible=true,.name="sword"};
+  duplicate.next_content=&sword;player.carrying=&duplicate;
+  assert(generic_find("}o200",FIND_OBJ_INV,&player,&target_ch,&target_obj)==FIND_OBJ_INV && target_obj==&sword);
+  player.carrying=NULL;player.equipment[0]=&duplicate;player.equipment[1]=&sword;
+  assert(generic_find("}o200",FIND_OBJ_INV|FIND_OBJ_EQUIP,&player,&target_ch,&target_obj)==FIND_OBJ_EQUIP && target_obj==&sword);
+  sword.visible=false;
+  assert(!generic_find("}o200",FIND_OBJ_EQUIP,&player,&target_ch,&target_obj));
+  sword.visible=true;player.equipment[1]=NULL;
+  assert(!generic_find("}o200",FIND_OBJ_INV|FIND_OBJ_EQUIP,&player,&target_ch,&target_obj));
   /* Regular refreshes remove departed, dead and pending-extraction entities. */
   update_msdp_room_contents(&player);
   report=json_tokener_parse(response);entries=field(report,"entries");

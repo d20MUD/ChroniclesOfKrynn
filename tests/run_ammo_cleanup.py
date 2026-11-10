@@ -50,7 +50,7 @@ void extract_obj(struct obj_data *obj){
  free(obj->name);free(obj->short_description);free(obj->description);free(obj);freed++;
 }
 '''
-for name in ['bool is_throwing_weapon(', 'bool ammunition_is_unlimited(', 'static bool usable_ammunition(', 'bool has_ammo_in_pouch(', 'struct obj_data *take_ammo_projectile(']:code+=function(weapons,name)
+for name in ['bool is_throwing_weapon(', 'bool ammunition_is_unlimited(', 'bool usable_ammunition(', 'bool has_ammo_in_pouch(', 'struct obj_data *take_ammo_projectile(']:code+=function(weapons,name)
 code+=function(fight,'static void release_ranged_shot(')
 code+=r'''
 static struct obj_data *bundle(int rnum,int count){

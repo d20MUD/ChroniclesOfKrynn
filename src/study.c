@@ -3134,7 +3134,9 @@ static void cfeat_disp_menu_old(struct descriptor_data *d)
   for (i = 0; i < NUM_WEAPON_TYPES - 1; i++)
   {
     switch (i + 1)
-    { /* this switch necessary due to composite bow strengths */
+    { /* Legacy bows cannot be selected for new feats. */
+    case WEAPON_TYPE_COMPOSITE_LONGBOW:
+    case WEAPON_TYPE_COMPOSITE_SHORTBOW:
     case WEAPON_TYPE_COMPOSITE_LONGBOW_2:
     case WEAPON_TYPE_COMPOSITE_LONGBOW_3:
     case WEAPON_TYPE_COMPOSITE_LONGBOW_4:

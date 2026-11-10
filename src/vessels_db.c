@@ -311,7 +311,7 @@ void load_cargo_manifest(struct greyhawk_ship_data *ship)
 
     if (cargo_room != NOWHERE && obj_num != NOTHING)
     {
-      cargo = read_object(obj_num, REAL);
+      cargo = read_object_for_restore(obj_num, REAL);
       if (cargo)
       {
         obj_to_room(cargo, cargo_room);

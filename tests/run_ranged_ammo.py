@@ -33,7 +33,7 @@ static int roll;
 int rand_number(int low, int high) { assert(low<=high); return roll ? high : low; }
 struct obj_data *create_obj(void) { return calloc(1,sizeof(struct obj_data)); }
 static void obj_from_obj(struct obj_data *o) { assert(o->in_obj); o->in_obj->contains=o->next_content; o->in_obj=NULL; o->next_content=NULL; }
-''' + function('bool is_throwing_weapon(') + '\n' + function('bool ammunition_is_unlimited(') + '\n' + function('int ammunition_remaining(') + '\n' + function('void format_ammunition_quantity(') + '\n' + function('static bool usable_ammunition(') + '\n' + function('bool has_ammo_in_pouch(') + '\n' + function('struct obj_data *take_ammo_projectile(')
+''' + function('bool is_throwing_weapon(') + '\n' + function('bool ammunition_is_unlimited(') + '\n' + function('int ammunition_remaining(') + '\n' + function('void format_ammunition_quantity(') + '\n' + function('bool usable_ammunition(') + '\n' + function('bool has_ammo_in_pouch(') + '\n' + function('struct obj_data *take_ammo_projectile(')
 utils_source = (root/'src/utils.c').read_text()
 a_label = utils_source.index('char *object_short_description(')
 code += '\nstruct obj_data *obj_proto; obj_rnum top_of_objt = -1;\nstatic const struct obj_data *fired_projectile;\nbool is_ranged_projectile(const struct obj_data *obj) { return obj && obj==fired_projectile; }\n' + utils_source[a_label:utils_source.index('\n}', a_label)+2]

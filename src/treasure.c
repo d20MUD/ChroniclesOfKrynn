@@ -220,7 +220,7 @@ void say_treasure(struct char_data *ch, struct obj_data *obj)
 {
   char buf[MAX_STRING_LENGTH] = {'\0'};
 
-  if (ch && obj) web_info_field(ch, "Received items", "Item", "%s", object_short_description(obj));
+  if (ch && obj) web_info_item(ch, "Received items", obj);
 
   if (ch->char_specials.which_treasure_message == CUSTOM_TREASURE_MESSAGE_BORROW)
   {
@@ -855,7 +855,7 @@ void web_notify_corpse_loot(struct char_data *recipient, struct char_data *mob, 
     if (GET_OBJ_TYPE(obj) != ITEM_MONEY && CAN_SEE_OBJ(recipient, obj))
     {
       found = TRUE;
-      web_info_field(recipient, "On the corpse (collect to receive)", "Item", "%s", object_short_description(obj));
+      web_info_item(recipient, "On the corpse (collect to receive)", obj);
     }
   if (found) web_info_field(recipient, "Source", "Defeated", "%s", PERS(mob, recipient));
   web_info_finish(recipient, eMSDP_LOOT_INFO, &capture, "Corpse loot");
@@ -2042,6 +2042,7 @@ void award_magic_ammo(struct char_data *ch, int grade, int source_level)
   char desc4[MEDIUM_STRING] = {'\0'};
   char desc5[6 * MEDIUM_STRING + sizeof(" is lying here.")] = {'\0'};
   char keywords[MEDIUM_STRING] = {'\0'};
+  const char *ammo_name;
   char damage[80] = {'\0'};
 
   /* ok load blank object */
@@ -2060,6 +2061,9 @@ void award_magic_ammo(struct char_data *ch, int grade, int source_level)
 
   /* now set up this new object */
   set_ammo_object(obj, armor_desc_rollA);
+  ammo_name = GET_OBJ_VAL(obj, 0) == AMMO_TYPE_THROWN
+                  ? weapon_list[GET_OBJ_VAL(obj, AMMO_VAL_WEAPON_TYPE)].name
+                  : ammo_types[GET_OBJ_VAL(obj, 0)];
   set_random_ammo_bonuses(obj, grade, source_level, rare_grade);
 
   /* we should have a completely usable ammo now, just missing descrip/stats */
@@ -2083,10 +2087,10 @@ void award_magic_ammo(struct char_data *ch, int grade, int source_level)
 
   /* mithril sling-bullet */
   snprintf(desc3, MEDIUM_STRING, "%s %s", material_name[GET_OBJ_MATERIAL(obj)],
-           ammo_types[GET_OBJ_VAL(obj, 0)]);
+           ammo_name);
 
   /* sling bullets done! */
-  if (GET_OBJ_VAL(obj, 0) == AMMO_TYPE_STONE)
+  if (GET_OBJ_VAL(obj, 0) == AMMO_TYPE_STONE || GET_OBJ_VAL(obj, 0) == AMMO_TYPE_THROWN)
     ;
   /* with a grooved tip (arrows, bolts, darts) */
   else
@@ -2098,7 +2102,7 @@ void award_magic_ammo(struct char_data *ch, int grade, int source_level)
 
   /* we are adding "ammo" as a keyword here for ease of handling for players */
   snprintf(keywords, MEDIUM_STRING, "ammo %s %s %s %s", ammo_head_descs[armor_desc_rollB],
-           material_name[GET_OBJ_MATERIAL(obj)], ammo_types[GET_OBJ_VAL(obj, 0)],
+           material_name[GET_OBJ_MATERIAL(obj)], ammo_name,
            ammo_descs[armor_desc_rollA]);
   if (GET_OBJ_VAL(obj, AMMO_VAL_DAMAGE_DIE))
     snprintf(damage, sizeof(damage), ", +1d%d %s", GET_OBJ_VAL(obj, AMMO_VAL_DAMAGE_DIE), damtypes[GET_OBJ_VAL(obj, AMMO_VAL_DAMAGE_TYPE)]);
@@ -2697,7 +2701,12 @@ void set_ammo_object(struct obj_data *obj, int type)
   GET_OBJ_VAL(obj, AMMO_VAL_MAX) = 50;
   GET_OBJ_VAL(obj, AMMO_VAL_QUANTITY) = 50;
   if (type == AMMO_TYPE_THROWN)
-    GET_OBJ_VAL(obj, AMMO_VAL_WEAPON_TYPE) = WEAPON_TYPE_DAGGER;
+  {
+    static const int thrown_types[] = {WEAPON_TYPE_SHURIKEN, WEAPON_TYPE_DART,
+        WEAPON_TYPE_THROWING_AXE, WEAPON_TYPE_THROWING_KNIFE, WEAPON_TYPE_JAVELIN,
+        WEAPON_TYPE_THROWING_HAMMER};
+    GET_OBJ_VAL(obj, AMMO_VAL_WEAPON_TYPE) = thrown_types[rand_number(0, 5)];
+  }
 
   /* Ammo Type, 0 Value */
   GET_OBJ_VAL(obj, 0) = type;
@@ -2712,6 +2721,9 @@ void set_ammo_object(struct obj_data *obj, int type)
   /* base material */
   switch (type)
   {
+  case AMMO_TYPE_THROWN:
+    GET_OBJ_MATERIAL(obj) = weapon_list[GET_OBJ_VAL(obj, AMMO_VAL_WEAPON_TYPE)].material;
+    break;
   case AMMO_TYPE_STONE:
     GET_OBJ_MATERIAL(obj) = MATERIAL_STONE;
     break;
@@ -2767,6 +2779,11 @@ void set_armor_object(struct obj_data *obj, int type)
    2 : size of damage dice
  * everything else is computed via the weapon_list[] */
 void set_weapon_object(struct obj_data *obj, int type)
+{
+  set_weapon_object_for_restore(obj, current_weapon_type(type));
+}
+
+void set_weapon_object_for_restore(struct obj_data *obj, int type)
 {
   int wear_inc;
 
@@ -2994,7 +3011,7 @@ void award_magic_weapon(struct char_data *ch, int grade, int source_level)
   }
 
   /* pick a random weapon, 0 = undefined 1 = unarmed */
-  roll = rand_number(1, NUM_WEAPON_TYPES - 1);
+  do { roll = rand_number(1, NUM_WEAPON_TYPES - 1); } while (is_legacy_composite_bow(roll) || is_pure_thrown_weapon_type(roll));
   if (roll == 1)
   {
     award_misc_magic_item(ch, 9, grade, source_level); // monk gloves
@@ -3196,6 +3213,9 @@ void award_magic_weapon(struct char_data *ch, int grade, int source_level)
 
 void give_magic_weapon(struct char_data *ch, int selection, int enchantment, bool silent_mode)
 {
+  if (is_legacy_composite_bow(selection))
+  { send_to_char(ch, "Composite bows are legacy-only; choose a long bow or short bow.\r\n"); return; }
+
   struct obj_data *obj = NULL;
   int roll = 0;
   int color1 = 0, color2 = 0, roll2 = 0, roll3 = 0;
@@ -4209,7 +4229,7 @@ SPECIAL(bazaar)
         }
         break;
       case 2: /* weapon */
-        if (selection < 1 || selection >= NUM_WEAPON_TYPES)
+        if (selection < 1 || selection >= NUM_WEAPON_TYPES || is_legacy_composite_bow(selection))
         {
           send_to_char(ch, "Invalid value for 'selection number'!\r\n");
           oedit_disp_weapon_type_menu(ch->desc);

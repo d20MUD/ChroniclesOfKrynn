@@ -18,6 +18,7 @@ code = r'''
 #define USE_SWIFT_ACTION(ch) ((void)0)
 bool is_crafting_kit(struct obj_data *obj){return true;}
 static int moved;
+int thrown_weapon_type(struct obj_data *obj) {return GET_OBJ_TYPE(obj)==ITEM_WEAPON && GET_OBJ_VAL(obj,0)==WEAPON_TYPE_DAGGER ? WEAPON_TYPE_DAGGER : 0;}
 static char message[2048];
 char *CAP(char *text) {return text;}
 bool housing_put(struct char_data *ch,struct obj_data *obj,struct obj_data *cont){return false;}
@@ -49,14 +50,19 @@ int main(void){
  perform_put(&ch,&ammo[2],&pouch);assert(moved==2 && strstr(message,"2 ammo stacks"));
  // Non-ammo is rejected even with space. Removing a stack frees exactly one slot.
  pouch.contains=&ammo[0];GET_OBJ_TYPE(&ammo[2])=ITEM_OTHER;
- perform_put(&ch,&ammo[2],&pouch);assert(moved==2 && strstr(message,"only put ammo"));
+ perform_put(&ch,&ammo[2],&pouch);assert(moved==2 && strstr(message,"only put ammunition"));
  GET_OBJ_TYPE(&ammo[2])=ITEM_MISSILE;
  perform_put(&ch,&ammo[2],&pouch);assert(moved==3);
  GET_OBJ_VAL(&pouch,0)=0;perform_put(&ch,&ammo[3],&pouch);assert(moved==3);
  GET_OBJ_VAL(&pouch,0)=-1;perform_put(&ch,&ammo[3],&pouch);assert(moved==4);
+ // A throwable weapon fits the pouch; a non-throwable weapon does not.
+ GET_OBJ_VAL(&pouch,0)=-1;GET_OBJ_TYPE(&ammo[3])=ITEM_WEAPON;GET_OBJ_VAL(&ammo[3],0)=WEAPON_TYPE_DAGGER;
+ pouch.contains=NULL;perform_put(&ch,&ammo[3],&pouch);assert(moved==5);
+ GET_OBJ_VAL(&ammo[2],0)=WEAPON_TYPE_LONG_SWORD;GET_OBJ_TYPE(&ammo[2])=ITEM_WEAPON;
+ perform_put(&ch,&ammo[2],&pouch);assert(moved==5);
  // Ordinary containers retain their weight limit.
  GET_OBJ_TYPE(&pouch)=ITEM_CONTAINER;GET_OBJ_VAL(&pouch,0)=2;
- perform_put(&ch,&ammo[0],&pouch);assert(moved==4 && strstr(message,"won't fit"));
+ perform_put(&ch,&ammo[0],&pouch);assert(moved==5 && strstr(message,"won't fit"));
  return 0;
 }
 '''

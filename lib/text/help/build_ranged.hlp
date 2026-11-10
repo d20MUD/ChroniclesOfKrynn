@@ -9,7 +9,7 @@ Use vnums assigned to your building area in the examples below.
 1. BUILD THE WEAPON
 Open oedit <weapon-vnum> and choose the normal Weapon item type. In C) Values,
 select an actual bow, crossbow, or sling weapon type, then set its enhancement.
-Use the weapon subtype to choose shortbow, longbow, composite bow, crossbow,
+Use the weapon subtype to choose shortbow, longbow, crossbow,
 or sling behavior. Do not use the separate legacy Fire Weapon item type.
 
 Selecting the weapon type supplies its base damage dice, weight, material,
@@ -236,6 +236,11 @@ Load fresh copies after saving, then test with an ordinary player character.
   Reset the zone and confirm the keeper and stock return as intended.
   Check the room size, opening distance, mob advancement, and advance command.
   Compare an ordinary mob with one flagged Ranged-Attack.
+
+Long bows and short bows apply the full Strength modifier to damage, with no
+Strength rating cap. Composite bows are legacy weapons: existing saved weapons
+remain usable, but new copies and builder loads become ordinary bows. Composite
+bow types cannot be selected for new weapons.
 
 See also: RANGED, ADVANCE, FORMATION, OEDIT, MEDIT, SEDIT, ZEDIT, REDIT
 #31

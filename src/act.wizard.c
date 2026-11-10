@@ -9176,6 +9176,12 @@ ACMD(do_oconvert)
 
   two_arguments(argument, arg, sizeof(arg), arg2, sizeof(arg2));
   iarg = atoi(arg);
+  if (iarg < 0 || iarg >= NUM_WEAPON_TYPES || is_legacy_composite_bow(iarg))
+  {
+    send_to_char(ch, "Invalid or legacy-only weapon type.\r\n");
+    return;
+  }
+
 
   send_to_char(ch, "%d %s\r\n", iarg, arg2);
 

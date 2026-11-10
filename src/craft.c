@@ -1712,7 +1712,7 @@ int reforge(char *argument, struct obj_data *kit, struct char_data *ch)
   case ITEM_WEAPON:
     for (i = 0; i < NUM_WEAPON_TYPES; i++)
     {
-      if (is_abbrev(weapon_list[i].name, argument))
+      if (!is_legacy_composite_bow(i) && is_abbrev(weapon_list[i].name, argument))
         break;
     }
     if (i >= NUM_WEAPON_TYPES)

@@ -1403,7 +1403,7 @@ static struct obj_data *Obj_from_store(struct obj_file_elem object, int *locatio
   if ((itemnum = real_object(object.item_number)) == NOTHING)
     return (NULL);
 
-  obj = read_object(itemnum, REAL);
+  obj = read_object_for_restore(itemnum, REAL);
 #if USE_AUTOEQ
   *location = object.location;
 #endif

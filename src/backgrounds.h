@@ -23,6 +23,7 @@
 #define RETAINER_MOB_VNUM 13824
 
 void assign_backgrounds(void);
+int background_skill_bonus(struct char_data *ch, int ability);
 void sort_backgrounds(void);
 bool has_acolyte_in_group(struct char_data *ch);
 void show_background_help(struct char_data *ch, int background);

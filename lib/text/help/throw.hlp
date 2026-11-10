@@ -1,0 +1,58 @@
+THROW THROWING THROWN RETURNING
+
+THROWING WEAPONS
+
+Usage: throw <target>
+       throw
+       throw off
+
+Wear an ammo pouch or quiver containing throwing ammunition, then use
+throw <target> to open combat. You may hold a melee weapon or be bare handed.
+An equipped matching throwing weapon is not required. The pouch can hold
+bundles of thrown ammunition and individual weapons with the thrown flag.
+Without throwing ammunition, this form of throwing does not work.
+
+Combat opens with a thrown volley. After the opening round, switch to your
+held melee weapon or unarmed attacks as soon as the target is within your
+melee reach. If ammunition runs out while the target is still distant,
+the remaining throws are skipped. Later rounds cannot throw until you
+replenish ammunition; you can still advance to close for melee. Running out
+of ammo within melee reach allows melee immediately. Throw off or hit also
+returns you to melee use.
+
+Each throw uses the selected ammunition's weapon type, damage dice,
+enhancement and properties, not those of your held melee weapon. Proficiency,
+Weapon Focus, specialization and other weapon-specific feats use the thrown
+type and family. Attack rolls use Dexterity; damage uses Strength.
+
+Without Quick Draw, ordinary thrown ammunition permits one attack per round.
+Quick Draw permits your full attack routine and eligible ranged feat attacks.
+Using a move action still limits you to one attack that round.
+
+THROWING AN EQUIPPED WEAPON
+If no throwing ammunition is available, an equipped weapon with the thrown
+flag (such as a dagger, spear, hand axe or light hammer) can be thrown by
+itself. This also works without a worn ammo pouch. After the attack, the
+weapon goes to your inventory and must be wielded again before another
+throw. Re-wielding in combat uses a move action, or a swift action with
+Quick Draw. Misses also return the weapon to inventory; attacks rejected
+before the throw do not unequip it.
+
+A Returning weapon stays equipped, or stays in its pouch, and can make
+multiple thrown attacks without being re-wielded. Returning thrown ammunition
+is also reusable. Unlimited ammunition preserves the supply but does not
+itself grant Quick Draw.
+
+THROWN AMMUNITION TYPES
+Shuriken, darts, throwing axes, throwing knives, javelins and throwing
+hammers drop as ammunition rather than individual random weapon rewards.
+Throwing knives use the light blade family, javelins use polearms, and
+throwing hammers use hammers. A pouch may also hold normal throwable weapons.
+A non-returning individual pouch weapon goes to inventory after its throw.
+
+Thrown weapons can reach five range increments. Range penalties, formation
+rules and normal combat protections still apply. Ammo in your inventory or
+another container is not used as a pouch supply.
+
+See also: RANGED, AMMUNITION, AMMOPREF, ADVANCE, QUICKDRAW, HOOPAK
+#0

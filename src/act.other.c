@@ -5921,10 +5921,33 @@ static void do_lore_text(struct char_data *ch, const char *argument)
 ACMD(do_lore)
 {
   struct output_capture capture = {0};
+  struct json_object *fields;
+  const char *topic = argument;
   if (!web_info_begin(ch, eMSDP_LORE_INFO, &capture))
   { do_lore_text(ch, argument); return; }
   do_lore_text(ch, argument);
-  web_info_finish(ch, eMSDP_LORE_INFO, &capture, argument);
+  /* Use the successfully identified object's name, without resolving a target
+   * again or revealing anything when the lore check failed. */
+  if (json_object_object_get_ex(capture.web_data, "fields", &fields))
+  {
+    size_t i;
+    for (i = 0; i < json_object_array_length(fields); i++)
+    {
+      struct json_object *field = json_object_array_get_idx(fields, i);
+      struct json_object *section, *label, *value;
+      if (json_object_object_get_ex(field, "section", &section) &&
+          json_object_object_get_ex(field, "label", &label) &&
+          json_object_object_get_ex(field, "value", &value) &&
+          !strcmp(json_object_get_string(section), "Item") &&
+          !strcmp(json_object_get_string(label), "Name") &&
+          *json_object_get_string(value))
+      {
+        topic = json_object_get_string(value);
+        break;
+      }
+    }
+  }
+  web_info_finish(ch, eMSDP_LORE_INFO, &capture, topic);
 }
 
 /* ability group lore, functions like identify for all items in bag */
@@ -10468,7 +10491,7 @@ ACMDU(do_holyweapon)
 
   for (i = 0; i < NUM_WEAPON_TYPES; i++)
   {
-    if (is_abbrev(argument, weapon_list[i].name))
+    if (!is_legacy_composite_bow(i) && is_abbrev(argument, weapon_list[i].name))
       break;
   }
 

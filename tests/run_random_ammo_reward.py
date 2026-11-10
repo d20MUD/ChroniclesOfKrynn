@@ -14,6 +14,7 @@ stubs=r'''
 const char *ammo_descs[NUM_A_AMMO_DESCS+1];
 const char *ammo_head_descs[NUM_A_AMMO_HEAD_DESCS+1];
 const char *material_name[128];
+struct weapon_table weapon_list[NUM_WEAPON_TYPES]={[WEAPON_TYPE_SHURIKEN]={.name="shuriken"}};
 const char *ammo_types[NUM_AMMO_TYPES+1]={"undefined","arrow","bolt","bullet","dart","throwing ammunition"};
 static int reads,awards,draws,selected;
 static bool missing;
@@ -38,7 +39,7 @@ void cp_modify_object_applies(struct char_data*c,struct obj_data*o,int grade,int
  assert(GET_OBJ_TYPE(o)==ITEM_MISSILE && GET_OBJ_VAL(o,0)==selected);
  assert(GET_OBJ_VAL(o,AMMO_VAL_MIN)==50 && GET_OBJ_VAL(o,AMMO_VAL_MAX)==50 && GET_OBJ_VAL(o,AMMO_VAL_QUANTITY)==50);
  assert(!GET_OBJ_VAL(o,AMMO_VAL_UNLIMITED) && !GET_OBJ_VAL(o,AMMO_VAL_RETURNING));
- if(selected==AMMO_TYPE_THROWN)assert(GET_OBJ_VAL(o,AMMO_VAL_WEAPON_TYPE)==WEAPON_TYPE_DAGGER);
+ if(selected==AMMO_TYPE_THROWN)assert(GET_OBJ_VAL(o,AMMO_VAL_WEAPON_TYPE)==WEAPON_TYPE_SHURIKEN);
  assert(OBJ_FLAGGED(o,ITEM_MAGIC));
  assert(GET_OBJ_VAL(o,4)==grade);awards++;delivered=o;
 }
@@ -55,7 +56,7 @@ int main(void) {
   award_magic_ammo(&ch,2,12);
   assert(reads==1 && awards==1 && delivered);
   assert(GET_OBJ_VAL(delivered,4)==3 && GET_OBJ_VAL(delivered,AMMO_VAL_QUANTITY)==50);
-  assert(strstr(delivered->name,ammo_types[selected]));
+  assert(strstr(delivered->name,selected==AMMO_TYPE_THROWN?"shuriken":ammo_types[selected]));
   free(delivered->name);free(delivered->short_description);free(delivered->description);free(delivered);
  }
  // Every five-level boundary, rarity chance, element and ammo subtype.

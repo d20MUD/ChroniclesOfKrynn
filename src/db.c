@@ -4924,7 +4924,7 @@ void remove_obj_from_rnum_hash(struct obj_data *obj)
 }
 
 /* create a new object from a prototype */
-struct obj_data *read_object(obj_vnum nr, int type) /* and obj_rnum */
+struct obj_data *read_object_for_restore(obj_vnum nr, int type) /* and obj_rnum */
 {
   struct obj_data *obj;
   struct obj_special_ability *proto_specab, *specab_list;
@@ -5048,7 +5048,7 @@ struct obj_data *read_object(obj_vnum nr, int type) /* and obj_rnum */
     int enhancement_bonus = GET_ENHANCEMENT_BONUS(obj);
     if (GET_OBJ_TYPE(obj) == ITEM_WEAPON)
     {
-      set_weapon_object(obj, GET_OBJ_VAL(obj, 0));
+      set_weapon_object_for_restore(obj, GET_OBJ_VAL(obj, 0));
       GET_OBJ_COST(obj) = cost;
     }
     else if (GET_OBJ_TYPE(obj) == ITEM_ARMOR)
@@ -5089,6 +5089,14 @@ struct obj_data *read_object(obj_vnum nr, int type) /* and obj_rnum */
   }
 
   return (obj);
+}
+
+/* Fresh spawns must not reintroduce retired weapon types from old prototypes. */
+struct obj_data *read_object(obj_vnum nr, int type)
+{
+  struct obj_data *obj = read_object_for_restore(nr, type);
+  retire_new_composite_bow(obj);
+  return obj;
 }
 
 #define ZO_DEAD 999

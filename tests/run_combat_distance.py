@@ -36,6 +36,8 @@ code=headers+r'''
 #undef USE_MOVE_ACTION
 #define USE_MOVE_ACTION(ch) (used_move++,move_ready=false)
 #define is_action_available(ch,action,show) move_ready
+#define ranged_weapon_melee_type(...) (empty_launcher ? WEAPON_TYPE_QUARTERSTAFF : 0)
+static bool empty_launcher;
 #define one_argument(text,buf,len) snprintf(buf,len,"%s",text)
 #define get_char_vis(...) selected
 static int used_move, staff_calls;
@@ -75,6 +77,7 @@ static void reset_pairs(void) {
   clear_combat_distances(&pc,true); clear_combat_distances(&mob,true);
   clear_combat_distances(&other,true);clear_combat_distances(&follower,true);
   assert(!combat_distances);
+  move_ready=true;
 }
 int main(void) {
   world=rooms;top_of_world=1;rooms[0].sector_type=SECT_FIELD;
@@ -93,13 +96,18 @@ int main(void) {
   assert(combat_distance(&pc,&mob)==0);
   GET_EQ(&pc,WEAR_WIELD_1)=&bow;
   assert(combat_distance(&pc,&mob)==50 && combat_distance(&mob,&pc)==50);
+  empty_launcher=true;assert(combat_distance(&pc,&mob)==0);
+  empty_launcher=false;
   FIGHTING(&pc)=&mob;FIGHTING(&mob)=&pc;
   start_combat_distance(&pc,&mob);start_combat_distance(&mob,&pc);
   assert(combat_distances && !combat_distances->next);
   assert(!combat_attack_in_range(&mob,&pc,ATTACK_TYPE_PRIMARY,NULL));
   assert(combat_attack_in_range(&pc,&mob,ATTACK_TYPE_RANGED,&bow));
   auto_advance_mob(&mob,2);auto_advance_mob(&mob,3);assert(combat_distance(&pc,&mob)==50);
-  auto_advance_mob(&mob,1);assert(combat_distance(&pc,&mob)==20);
+  auto_advance_mob(&mob,1);assert(combat_distance(&pc,&mob)==20 && !move_ready);
+  int moves_before=used_move;
+  auto_advance_mob(&mob,1);assert(combat_distance(&pc,&mob)==20 && used_move==moves_before);
+  move_ready=true;
   assert(!combat_attack_in_range(&mob,&pc,ATTACK_TYPE_RANGED,NULL));
   SET_BIT_AR(MOB_FLAGS(&mob),MOB_RANGED_ATTACK);
   assert(combat_attack_in_range(&mob,&pc,ATTACK_TYPE_PRIMARY,NULL));
@@ -154,7 +162,7 @@ int main(void) {
   assert(!combat_distances);
   rooms[0].room_size=INT_MAX;GET_EQ(&pc,WEAR_WIELD_1)=&bow;
   assert(combat_distance(&pc,&mob)==INT_MAX);
-  assert(advance_combat_distance(&mob,&pc,5)==12);
+  assert(advance_combat_distance(&mob,&pc,5)==12 && !move_ready);
   reset_pairs();
   puts("PASS: ranged/melee starts, symmetric multi-opponent distance, per-round mob/charmie movement, ranged mob flag, 5/10-foot reach, advance actions, immobilization, cleanup and staff authorization.");
 }

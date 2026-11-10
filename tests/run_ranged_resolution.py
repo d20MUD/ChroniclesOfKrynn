@@ -10,7 +10,7 @@ def function(name):
     start=fight.index(name)
     return fight[start:fight.index('\n}',start)+2]
 a=fight.index('struct ranged_shot_context\n')
-b=fight.index('static bool manyshot_ready(',a)
+b=fight.index('bool manyshot_ready(',a)
 context=fight[a:b]
 a=fight.index('      if (!victim_is_dead && attack_type == ATTACK_TYPE_RANGED &&\n          ammo_damage_type')
 b=fight.index('      if (!victim_is_dead && current_shot',a)
@@ -28,12 +28,15 @@ static struct obj_data *last_missile;
 static struct obj_data source, projectile[2];
 static int mode, depth, resolved, removed, captured_type, captured_damage;
 static bool ready;
+static struct obj_data *get_throwing_source(struct char_data *ch) {return NULL;}
+static struct obj_data *get_throwing_weapon(struct char_data *ch) {return NULL;}
+static struct obj_data *make_thrown_weapon_profile(struct obj_data *source,struct obj_data *profile) {return NULL;}
 static bool manyshot_ready(struct char_data *ch,struct obj_data *obj) {return false;}
 static struct obj_data *get_wielded(struct char_data *ch,int type) {return NULL;}
 static bool can_fire_ammo(struct char_data *ch,bool silent) { return ready; }
 static void extract_obj(struct obj_data *obj);
 static int resolve_weapon_hit(struct char_data *,struct char_data *,int,int,int,int);
-''' + context + function('int hit(struct char_data *ch,') + r'''
+''' + context + '\nstatic void finish_thrown_weapon(struct ranged_shot_context *context) {}\n' + function('static void release_ranged_shot(') + function('int hit(struct char_data *ch,') + r'''
 static void extract_obj(struct obj_data *obj) {
   removed++;
   forget_ranged_projectile(obj);
@@ -78,6 +81,7 @@ int main(void) {
   IN_ROOM(&victim)=1;
   for(mode=0;mode<6;mode++) {
     memset(projectile,0,sizeof(projectile));
+    GET_OBJ_TYPE(&projectile[0])=GET_OBJ_TYPE(&projectile[1])=ITEM_MISSILE;
     for(int i=0;i<2;i++) IN_ROOM(&projectile[i])=mode==1 ? 1 : NOWHERE;
     removed=resolved=0;
     assert(hit(&ch,&victim,0,0,0,ATTACK_TYPE_RANGED)==9);

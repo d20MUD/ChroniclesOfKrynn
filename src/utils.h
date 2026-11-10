@@ -3037,6 +3037,7 @@ void set_eidolon_descs(struct char_data *ch);
 #define GET_ELEMENTAL_EMBODIMENT_TYPE(ch) ((ch)->player_specials->saved.elemental_embodiment_type)
 #define GET_ELEMENTAL_MASTERY_ACTIVE(ch) ((ch)->player_specials->saved.elemental_mastery_active)
 #define GET_ELEMENTAL_MASTERY_COOLDOWN(ch) ((ch)->player_specials->saved.elemental_mastery_cooldown)
+#define GET_HOOPAK_MODE(ch) ((ch)->player_specials->saved.hoopak_mode)
 #define GET_PREFERRED_AMMO(ch) ((ch)->player_specials->saved.preferred_ammo)
 #define GET_SUMMONER_PREFERRED_ELEMENT(ch) ((ch)->player_specials->saved.summoner_preferred_element)
 

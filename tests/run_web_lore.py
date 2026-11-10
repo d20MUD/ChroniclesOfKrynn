@@ -61,6 +61,7 @@ code += '\n' + function('src/modify.c', 'void page_string(')
 code += r'''
 static void do_lore_text(struct char_data *ch,const char *argument) {
   if (!strcmp(argument,"silent")) return;
+  if (!strcmp(argument,"item")) {web_info_field(ch,"Item","Name","%s","a \tRred\tn sword, 100% sharp");return;}
   if (!strcmp(argument,"native")) {web_info_field(ch,"Identity","Name","native");return;}
   if(ch->desc->output_capture) {
     write_to_output(ch->desc,"Help for %s\n",argument);
@@ -111,6 +112,10 @@ int main(void) {
   decoded=json_tokener_parse(response);assert(decoded);
   assert(!*json_object_get_string(field(decoded,"body")));
   assert(json_object_array_length(field(decoded,"fields"))==1);
+  json_object_put(decoded);
+  do_lore(&character,"item",0,0);
+  decoded=json_tokener_parse(response);assert(decoded);
+  assert(!strcmp(json_object_get_string(field(decoded,"topic")),"a \tRred\tn sword, 100% sharp"));
   json_object_put(decoded);
   free(last_response);last_response=strdup(response);
   do_lore(&character,"silent",0,0);

@@ -2,10 +2,15 @@ AMMOPREF AMMO-PREFERENCE PREFERRED-AMMO
 
 AMMOPREF - PREFERRED AMMUNITION
 
-Usage: ammopref
+Usage: ammo
+       ammopref
        ammopref <ammo keywords>
        ammopref none
        ammopref auto
+
+Type ammo by itself to show your equipped ammo pouch and its contents,
+including remaining ammunition quantities. Ammo <keywords> is a shortcut
+for ammopref <keywords>.
 
 Choose which ammunition to use first when your equipped ammo pouch holds
 multiple kinds. With no arguments, ammopref shows your current preference

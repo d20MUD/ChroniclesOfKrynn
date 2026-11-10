@@ -422,3 +422,5 @@ unittests/CuTest/vessel_stress_test
 
 # Preferred ammunition command help
 !lib/text/help/ammopref.hlp
+!lib/text/help/hoopak.hlp
+!lib/text/help/throw.hlp

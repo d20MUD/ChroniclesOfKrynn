@@ -2421,6 +2421,24 @@ void web_info_field(struct char_data *ch, const char *section, const char *label
   json_object_array_add(fields, field);
 }
 
+/* Use the same exact-object selector as room item links, so duplicate names
+ * and color codes never change which item the lore command attempts. */
+void web_info_item(struct char_data *ch, const char *section, struct obj_data *obj)
+{
+  struct output_capture *capture = ch && ch->desc ? ch->desc->output_capture : NULL;
+  struct json_object *fields, *field;
+  size_t count;
+  char target[64];
+  if (!obj || !capture || !capture->web_data ||
+      !json_object_object_get_ex(capture->web_data, "fields", &fields)) return;
+  count = json_object_array_length(fields);
+  web_info_field(ch, section, "Item", "%s", object_short_description(obj));
+  if (json_object_array_length(fields) != count + 1 || GET_ID(obj) <= 0) return;
+  field = json_object_array_get_idx(fields, count);
+  snprintf(target, sizeof(target), "}o%ld", (long)GET_ID(obj));
+  json_object_object_add(field, "loreTarget", json_object_new_string(target));
+}
+
 void web_info_finish(struct char_data *ch, int variable, struct output_capture *capture, const char *topic)
 {
   static unsigned long sequence;
@@ -4911,6 +4929,72 @@ static void send_room_change_msdp_variables(struct descriptor_data *d)
 
 /* Only publish visible room entities. Display names remain viewer-aware, so
  * disguises and unknown player identities follow the normal room presentation. */
+/* HUD inspection never consumes ammo, reorders stacks, or changes FIRING. */
+static void update_msdp_ammo_status(struct char_data *ch)
+{
+  struct descriptor_data *d = ch ? ch->desc : NULL;
+  struct obj_data *weapon = NULL, *pouch, *ammo, *selected = NULL;
+  struct json_object *status;
+  const int slots[] = {WEAR_WIELD_2H, WEAR_WIELD_1, WEAR_WIELD_OFFHAND};
+  int i, type, preference, ammo_vnum = NOTHING;
+  long long quantity = 0;
+  bool unlimited = FALSE;
+  const char *name = "";
+  if (!d || IS_NPC(ch) || !d->pProtocol ||
+      !d->pProtocol->pVariables[eMSDP_AMMO_STATUS]->bReport) return;
+  if (!IS_WILDSHAPED(ch) && !IS_MORPHED(ch))
+    for (i = 0; i < 3; i++)
+    {
+      weapon = GET_EQ(ch, slots[i]);
+      if (!weapon || GET_OBJ_TYPE(weapon) != ITEM_WEAPON) { weapon = NULL; continue; }
+      type = GET_OBJ_VAL(weapon, 0);
+      if (type >= 0 && type < NUM_WEAPON_TYPES &&
+          (IS_SET(weapon_list[type].weaponFlags, WEAPON_FLAG_RANGED) || type == WEAPON_TYPE_HOOPAK)) break;
+      weapon = NULL;
+    }
+  if (!weapon)
+  {
+    MSDPSetString(d, eMSDP_AMMO_STATUS, "{\"ranged\":false}");
+    return;
+  }
+  pouch = GET_EQ(ch, WEAR_AMMO_POUCH);
+  preference = GET_PREFERRED_AMMO(ch);
+  if (preference > 0)
+  {
+    obj_rnum prototype = real_object(preference - 1);
+    ammo_vnum = preference - 1;
+    name = prototype != NOTHING ? obj_proto[prototype].short_description : "Unavailable preferred ammunition";
+  }
+  for (ammo = pouch ? pouch->contains : NULL; ammo; ammo = ammo->next_content)
+  {
+    if (GET_OBJ_TYPE(ammo) != ITEM_MISSILE) continue;
+    if (preference > 0 ? GET_OBJ_VNUM(ammo) == ammo_vnum : usable_ammunition(ch, weapon, ammo, TRUE))
+    { selected = ammo; break; }
+  }
+  if (selected)
+  {
+    ammo_vnum = GET_OBJ_VNUM(selected);
+    name = selected->short_description;
+    for (ammo = pouch->contains; ammo; ammo = ammo->next_content)
+      if (GET_OBJ_TYPE(ammo) == ITEM_MISSILE && GET_OBJ_VNUM(ammo) == ammo_vnum &&
+          (ammo_vnum != NOTHING || (GET_OBJ_VAL(ammo, 0) == GET_OBJ_VAL(selected, 0) &&
+           !strcmp(ammo->short_description, selected->short_description))))
+      {
+        quantity += ammunition_remaining(ammo);
+        if (ammunition_is_unlimited(ammo, weapon)) unlimited = TRUE;
+      }
+  }
+  status = json_object_new_object();
+  json_object_object_add(status, "ranged", json_object_new_boolean(TRUE));
+  json_object_object_add(status, "pouch", json_object_new_boolean(pouch != NULL));
+  json_object_object_add(status, "preferred", json_object_new_boolean(preference > 0));
+  json_object_object_add(status, "name", json_object_new_string(name ? name : ""));
+  json_object_object_add(status, "quantity", json_object_new_int64(quantity));
+  json_object_object_add(status, "unlimited", json_object_new_boolean(unlimited));
+  MSDPSetString(d, eMSDP_AMMO_STATUS, json_object_to_json_string_ext(status, JSON_C_TO_STRING_PLAIN));
+  json_object_put(status);
+}
+
 static void update_msdp_room_contents(struct char_data *ch)
 {
   struct descriptor_data *d = ch ? ch->desc : NULL;
@@ -5015,6 +5099,7 @@ static void update_msdp_descriptor(struct descriptor_data *d, struct char_data *
   update_msdp_quest_info(d, ch);
   update_msdp_room_quests(ch);
   update_msdp_room_contents(ch);
+  update_msdp_ammo_status(ch);
 
   update_msdp_room(ch);
   update_msdp_automap(d, ch);
@@ -5476,6 +5561,10 @@ static void msdp_update(void)
 
       /* Inventory */
       update_msdp_inventory(ch);
+
+      /* Subscriptions may start after login; keep ammunition current after
+       * every shot, pouch change, preference change, or weapon swap. */
+      update_msdp_ammo_status(ch);
 
       /* Quests */
       update_msdp_quest_info(d, ch);

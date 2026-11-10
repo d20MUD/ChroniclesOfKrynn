@@ -554,7 +554,9 @@ ACMD_DECL(do_bullrush);
 /* Functions without subcommands */
 ACMD_DECL(do_cexchange);
 ACMD_DECL(do_fire);
+ACMD_DECL(do_ammo);
 ACMD_DECL(do_ammopref);
+ACMD_DECL(do_hoopak);
 ACMD_DECL(do_throw);
 ACMD_DECL(do_aura_of_vengeance);
 ACMD_DECL(do_aura_of_justice);

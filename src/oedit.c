@@ -982,17 +982,13 @@ void oedit_disp_armor_type_menu(struct descriptor_data *d)
 
 void oedit_disp_weapon_type_menu(struct descriptor_data *d)
 {
-  const char *weapon_types[NUM_WEAPON_TYPES - 1];
-  int i = 0;
-
-  /* we want to use column_list here, but we don't have a pre made list
-   * of string values (without undefined).  Make one, and make sure it is in order. */
-  for (i = 0; i < NUM_WEAPON_TYPES - 1; i++)
+  int i, count = 0;
+  for (i = 1; i < NUM_WEAPON_TYPES; i++)
   {
-    weapon_types[i] = weapon_list[i + 1].name;
+    if (is_legacy_composite_bow(i)) continue;
+    write_to_output(d, "%3d) %-27s%s", i, weapon_list[i].name, ++count % 3 ? "" : "\r\n");
   }
-
-  column_list(d->character, 3, weapon_types, NUM_WEAPON_TYPES - 1, TRUE);
+  if (count % 3) write_to_output(d, "\r\n");
 }
 
 int compute_ranged_weapon_actual_value(int list_value)
@@ -2952,6 +2948,12 @@ void oedit_parse(struct descriptor_data *d, char *arg)
       /* ITEM_ARMOR */
 
     case ITEM_WEAPON:
+      if (is_legacy_composite_bow(atoi(arg)))
+      {
+        write_to_output(d, "Composite bows are legacy-only. Choose an ordinary bow.\r\n");
+        oedit_disp_weapon_type_menu(d);
+        return;
+      }
       /* function from treasure.c */
       set_weapon_object(OLC_OBJ(d), MIN(MAX(atoi(arg), 0), NUM_WEAPON_TYPES - 1));
 

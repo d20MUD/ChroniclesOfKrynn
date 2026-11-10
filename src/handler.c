@@ -3687,7 +3687,9 @@ int generic_find(const char *arg_in, bitvector_t bitvector, struct char_data *ch
   if (IS_SET(bitvector, FIND_OBJ_EQUIP))
   {
     for (found = FALSE, i = 0; i < NUM_WEARS && !found; i++)
-      if (GET_EQ(ch, i) && isname(name, GET_EQ(ch, i)->name) && --number == 0)
+      if (GET_EQ(ch, i) &&
+          (room_entity_matches(name, 'o', GET_ID(GET_EQ(ch, i))) || isname(name, GET_EQ(ch, i)->name)) &&
+          CAN_SEE_OBJ(ch, GET_EQ(ch, i)) && --number == 0)
       {
         *tar_obj = GET_EQ(ch, i);
         found = TRUE;
@@ -3758,7 +3760,8 @@ bool formation_allows_attack(struct char_data *ch, int attack_type, struct obj_d
   if (weapon && GET_OBJ_TYPE(weapon) == ITEM_WEAPON && attack_type != ATTACK_TYPE_UNARMED &&
       attack_type < ATTACK_TYPE_PRIMARY_EVO_BITE)
   {
-    weapon_type = GET_OBJ_VAL(weapon, 0);
+    weapon_type = ranged ? 0 : ranged_weapon_melee_type(ch, weapon);
+    if (!weapon_type) weapon_type = GET_OBJ_VAL(weapon, 0);
     if (weapon_type >= 0 && weapon_type < NUM_WEAPON_TYPES)
       reach = IS_SET(weapon_list[weapon_type].weaponFlags, WEAPON_FLAG_REACH);
   }

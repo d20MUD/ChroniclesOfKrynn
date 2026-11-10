@@ -14828,6 +14828,8 @@ void mag_creations(int level, struct char_data *ch, struct char_data *vict, stru
   {
     /* a little convenient idea, item should match char size */
     GET_OBJ_SIZE(tobj) = GET_SIZE(ch);
+    if (spellnum == SPELL_HOLY_SWORD || spellnum == SPELL_UNHOLY_SWORD)
+      GET_HOLY_WEAPON_TYPE(ch) = current_weapon_type(GET_HOLY_WEAPON_TYPE(ch));
     if (spellnum == SPELL_HOLY_SWORD)
     {
       send_to_char(ch, "You can change your holy weapon type with the 'holyweapon' command. The "
