@@ -1492,6 +1492,7 @@ void display_item_object_values(struct char_data *ch, struct obj_data *item, int
   char actmtds[MAX_STRING_LENGTH] = {'\0'};
   int (*name)(struct char_data *ch, void *me, int cmd, const char *argument);
   bool found = FALSE;
+  size_t lore_section_start = 0;
 
   /* zusuk set these up for quicker setup of new items */
   int v1 = GET_OBJ_VAL(item, 0);
@@ -1503,6 +1504,8 @@ void display_item_object_values(struct char_data *ch, struct obj_data *item, int
     send_to_group(NULL, GROUP(ch), "\tc-----------Item-Type Specific Values:--------------\tn");
   else
     text_line(ch, "\tcItem-Type Specific Values:\tn", line_length, '-', '-');
+
+  if (mode == ITEM_STAT_MODE_LORE_SKILL) lore_section_start = web_info_output_mark(ch);
 
   switch (GET_OBJ_TYPE(item))
   {
@@ -1740,8 +1743,6 @@ void display_item_object_values(struct char_data *ch, struct obj_data *item, int
     {
       found = TRUE;
       sprintbit(specab->activation_method, activation_methods, actmtds, MAX_STRING_LENGTH);
-      if (mode == ITEM_STAT_MODE_LORE_SKILL)
-        web_info_field(ch, "Special abilities", special_ability_info[specab->ability].name, "Level %d; %s; command: %s", specab->level, actmtds, specab->command_word ? specab->command_word : "None");
 
       if (mode == ITEM_STAT_MODE_G_LORE)
         send_to_group(NULL, GROUP(ch),
@@ -2798,6 +2799,8 @@ void display_item_object_values(struct char_data *ch, struct obj_data *item, int
         (name)(ch, item, 0, "identify"); /* show identify info tagged in the actual proc */
     }
   }
+  if (mode == ITEM_STAT_MODE_LORE_SKILL)
+    web_info_output_section(ch, "Item details", lore_section_start);
 }
 
 /* Lore's item type identifies the actual equipment subtype, including armor
@@ -2831,54 +2834,19 @@ void do_stat_object(struct char_data *ch, struct obj_data *j, int mode)
   char buf[MAX_STRING_LENGTH] = {'\0'};
   char buf2[MAX_STRING_LENGTH] = {'\0'};
   int line_length = 80;
+  size_t lore_section_start = 0;
 
   if (mode == ITEM_STAT_MODE_LORE_SKILL)
   {
     web_info_field(ch, "Item", "Name", "%s", object_short_description(j));
     web_info_field(ch, "Item", "Type", "%s", lore_item_type(j));
     web_info_field(ch, "Item", "Keywords", "%s", j->name);
-    web_info_field(ch, "Properties", "Minimum level", "%d", GET_OBJ_LEVEL(j));
-    web_info_field(ch, "Properties", "Weight", "%d", GET_OBJ_WEIGHT(j));
-    web_info_field(ch, "Properties", "Value", "%d", GET_OBJ_COST(j));
-    web_info_field(ch, "Properties", "Size", "%s", size_names[compute_object_size(j)]);
-    web_info_field(ch, "Properties", "Material", "%s", material_name[GET_OBJ_MATERIAL(j)]);
-    for (i = 0; i < MAX_OBJ_AFFECT; i++) if (j->affected[i].modifier)
-    {
-      if (j->affected[i].location == APPLY_FEAT && j->affected[i].modifier > 0 && j->affected[i].modifier < NUM_FEATS)
-        web_info_field(ch, "Granted feats", feat_list[j->affected[i].modifier].name, "%s", "Granted");
-      else if (j->affected[i].location == APPLY_SKILL && j->affected[i].specific >= 0 && j->affected[i].specific < NUM_ABILITIES)
-        web_info_field(ch, "Skill bonuses", ability_names[j->affected[i].specific], "%+d (%s)", j->affected[i].modifier, bonus_types[j->affected[i].bonus_type]);
-      else web_info_field(ch, "Bonuses", apply_types[j->affected[i].location], "%+d (%s)", j->affected[i].modifier, bonus_types[j->affected[i].bonus_type]);
-    }
-    if (GET_OBJ_TYPE(j) == ITEM_WEAPON)
-    {
-      web_info_field(ch, "Weapon", "Enhancement", "%+d", GET_ENHANCEMENT_BONUS(j));
-      web_info_field(ch, "Weapon", "Damage", "%dd%d", GET_OBJ_VAL(j, 1), GET_OBJ_VAL(j, 2));
-    }
-    if (GET_OBJ_TYPE(j) == ITEM_ARMOR)
-    {
-      web_info_field(ch, "Armor", "Armor bonus", "%.1f", (float)GET_OBJ_VAL(j, 0) / 10.0);
-      web_info_field(ch, "Armor", "Enhancement", "%+d", GET_ENHANCEMENT_BONUS(j));
-    }
-    sprintbitarray(GET_OBJ_WEAR(j), wear_bits, TW_ARRAY_MAX, buf);
-    web_info_field(ch, "Properties", "Wear locations", "%s", buf);
-    sprintbitarray(GET_OBJ_AFFECT(j), affected_bits, AF_ARRAY_MAX, buf);
-    web_info_field(ch, "Properties", "Effects", "%s", buf);
-    if (GET_OBJ_TYPE(j) == ITEM_AMMO_POUCH)
-    {
-      if (GET_OBJ_VAL(j, 0) < 0) web_info_field(ch, "Ammo pouch", "Stack capacity", "%s", "Unlimited");
-      else web_info_field(ch, "Ammo pouch", "Stack capacity", "%d", GET_OBJ_VAL(j, 0));
-      web_info_field(ch, "Ammo pouch", "Stacks stored", "%d", num_obj_in_obj(j->contains));
-    }
-    if (GET_OBJ_TYPE(j) == ITEM_MISSILE)
-    {
-      web_info_field(ch, "Ammunition", "Type", "%s", ammo_types[GET_OBJ_VAL(j, 0)]);
-      web_info_field(ch, "Ammunition", "Enhancement", "%+d", GET_OBJ_VAL(j, 4));
-      web_info_field(ch, "Ammunition", "Bonus damage type", "%s", damtypes[MIN(NUM_DAM_TYPES - 1, MAX(0, GET_OBJ_VAL(j, AMMO_VAL_DAMAGE_TYPE)))]);
-      if (ammunition_is_unlimited(j, NULL)) web_info_field(ch, "Ammunition", "Quantity", "%s", "Unlimited");
-      else web_info_field(ch, "Ammunition", "Quantity", "%d", ammunition_remaining(j));
-      web_info_field(ch, "Ammunition", "Damage die", "%d", GET_OBJ_VAL(j, AMMO_VAL_DAMAGE_DIE));
-    }
+    if (GET_OBJ_TYPE(j) == ITEM_WEAPON_OIL)
+      web_info_field(ch, "Item", "Special feature", "Adds '%s' to a weapon with 'apply' command",
+                     special_ability_info[GET_OBJ_VAL(j, 0)].name);
+    else
+      web_info_field(ch, "Item", "Special feature", "%s",
+                     GET_OBJ_SPEC(j) ? get_spec_func_name(GET_OBJ_SPEC(j)) : "None");
   }
 
   if (mode == ITEM_STAT_MODE_G_LORE)
@@ -2960,6 +2928,8 @@ void do_stat_object(struct char_data *ch, struct obj_data *j, int mode)
   else
     text_line(ch, "\tcVarious Variables\tn", line_length, '-', '-');
 
+  if (mode == ITEM_STAT_MODE_LORE_SKILL) lore_section_start = web_info_output_mark(ch);
+
   if (mode == ITEM_STAT_MODE_G_LORE)
     send_to_group(
         NULL, GROUP(ch), "Weight: %d, Value: %d, Cost/day: %d, Timer: %d, Min level: %d\r\n",
@@ -3014,12 +2984,17 @@ void do_stat_object(struct char_data *ch, struct obj_data *j, int mode)
     }
   }
 
+  if (mode == ITEM_STAT_MODE_LORE_SKILL)
+    web_info_output_section(ch, "Properties", lore_section_start);
+
   /* flags */
 
   if (mode == ITEM_STAT_MODE_G_LORE)
     ;
   else
     text_line(ch, "\tcObject Bits / Affections\tn", line_length, '-', '-');
+
+  if (mode == ITEM_STAT_MODE_LORE_SKILL) lore_section_start = web_info_output_mark(ch);
 
   if (GET_OBJ_TYPE(j) != ITEM_FOOD && GET_OBJ_TYPE(j) != ITEM_DRINK)
   {
@@ -3150,6 +3125,9 @@ void do_stat_object(struct char_data *ch, struct obj_data *j, int mode)
     send_to_group(NULL, GROUP(ch), "\r\n");
   else
     send_to_char(ch, "\r\n");
+
+  if (mode == ITEM_STAT_MODE_LORE_SKILL)
+    web_info_output_section(ch, "Effects and bonuses", lore_section_start);
 
   /* location info */
   if (mode == ITEM_STAT_MODE_IMMORTAL)

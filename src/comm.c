@@ -2421,6 +2421,32 @@ void web_info_field(struct char_data *ch, const char *section, const char *label
   json_object_array_add(fields, field);
 }
 
+/* Present canonical command output as a visible section without maintaining a
+ * second, inevitably incomplete serializer for every item type and proc. */
+size_t web_info_output_mark(struct char_data *ch)
+{
+  struct output_capture *capture = ch && ch->desc ? ch->desc->output_capture : NULL;
+  return capture ? capture->length : 0;
+}
+
+void web_info_output_section(struct char_data *ch, const char *section, size_t start)
+{
+  struct output_capture *capture = ch && ch->desc ? ch->desc->output_capture : NULL;
+  struct json_object *fields, *field;
+  if (!capture || !capture->web_data || !capture->text || start >= capture->length) return;
+  if (!json_object_object_get_ex(capture->web_data, "fields", &fields) ||
+      json_object_array_length(fields) >= 512)
+  { capture->truncated = TRUE; return; }
+  field = json_object_new_object();
+  json_object_object_add(field, "section", json_object_new_string(section));
+  json_object_object_add(field, "label", json_object_new_string(""));
+  /* These bytes are already bounded by OUTPUT_CAPTURE_LIMIT. Do not apply the
+   * shorter printf field limit to spellbooks, special abilities or proc text. */
+  json_object_object_add(field, "value", json_object_new_string_len(
+      capture->text + start, (int)(capture->length - start)));
+  json_object_array_add(fields, field);
+}
+
 /* Use the same exact-object selector as room item links, so duplicate names
  * and color codes never change which item the lore command attempts. */
 void web_info_item(struct char_data *ch, const char *section, struct obj_data *obj)
