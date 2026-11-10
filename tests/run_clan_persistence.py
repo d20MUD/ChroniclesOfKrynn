@@ -4,7 +4,7 @@ from clan_snapshot_fixture import snapshot,manifest
 import sys,json,subprocess,shlex,time
 sys.path.insert(0,str(ROOT/'scripts'))
 from build_clan_repository_tool import build
-with database(('20261110_clan_progression_v001.sql','20261110_clan_progression_v002.sql')) as (tmp,socket,sql,client):
+with database(('20261110_clan_progression_v001.sql','20261110_clan_progression_v002.sql','20261110_clan_progression_v003.sql','20261110_clan_progression_v004.sql','20261110_clan_progression_v005.sql')) as (tmp,socket,sql,client):
  tool=tmp/'tool';build(tool,sanitize=True);initial=snapshot();at=int(time.time())-100
  for entry in initial['clans']:
   for k in ['created_at','updated_at','state_updated_at']:entry['core'][k]=at

@@ -47,6 +47,7 @@
 #include "ai_service.h"
 #include "class.h"
 #include "clan.h"
+#include "clan_persistence.h"
 #include "clan_economy.h"
 #include "msgedit.h"
 #include "craft.h"
@@ -1291,14 +1292,17 @@ void boot_db(void)
     load_crafts();
 
     log("Booting clans.");
-    load_clans();
+    if (!clan_persistence_boot_environment())
+    {
+      log("SYSERR: Clan persistence boot failed; startup aborted");
+      exit(1);
+    }
 
     log("Initializing clan economy system.");
     init_clan_economy();
     load_clan_investments();
 
-    log("Loading clan zone claim info.");
-    load_claims();
+    /* Claims were loaded with the selected clan authority above. */
   }
 
   log("Initializing PubSub system.");

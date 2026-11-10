@@ -5190,11 +5190,12 @@ const char *crafting_methods[] = {"",
                                   "constructing a golem",
                                   "butchering",
                                   "disenchanting",
+                                  "crafting ammunition",
                                   "\n"};
 
 const char *crafting_methods_short[] = {"",       "craft",   "survey",      "harvest",
                                         "refine", "resize",  "supplyorder", "equipment",
-                                        "golem",  "butcher", "disenchant",  "\n"};
+                                        "golem",  "butcher", "disenchant", "ammo", "\n"};
 
 const char *campaigns[] = {"Default (Luminari)", "Dragonlance", "Forgotten Realms", "\n"};
 

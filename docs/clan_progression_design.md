@@ -1,6 +1,6 @@
 # Clan Progression and Personal Favor
 
-Status: concept design with the Phase 2 pilot balance specification. Phases 3–5 (including 4a–4c) provide disabled configuration, checked version-2 MySQL persistence, gated integration and a repeatable offline importer, verified in disposable storage. No live migration or gameplay enablement has occurred. Next is Phase 5a SQL boot loading/configuration. See the [persistence handoff](clan_progression_phase_4abc_handoff.md) and [import handoff](clan_progression_phase_5_handoff.md). Illustrative values below are superseded where necessary by the [Phase 2 specification](clan_progression_phase_2_spec.md); pilot values remain subject to measured tuning.
+Status: concept design with the Phase 2 pilot balance specification. Phases 3–8 (including 4a–4c and 5a–5b) provide disabled configuration, checked version-5 SQL persistence, explicit boot authority, migration/recovery rehearsal, Favor/account windows and durable exactly-once SQL award receipts. No live migration, award or progression enablement occurred. Next is Phase 9 Clan XP/level/Influence policy. See the [Phase 8 handoff](clan_progression_phase_8_handoff.md). Illustrative values below are superseded where necessary by the [Phase 2 specification](clan_progression_phase_2_spec.md); pilot values remain subject to measured tuning.
 
 ## Goals
 

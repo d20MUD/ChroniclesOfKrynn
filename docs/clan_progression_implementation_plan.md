@@ -1,6 +1,6 @@
 # Clan Progression Implementation Plan
 
-Status: Phases 1–5, including prerequisites 4a–4c, are complete as disabled foundations. Checked version-2 persistence, gated callers and the repeatable offline importer are implemented and validated in disposable storage. Phase 5a SQL boot loading/configuration is next. No game database migration, deployment, authority switch or gameplay enablement has been performed.
+Status: Phases 1–8, including 4a–4c and 5a–5b, are complete as disabled foundations. Version-5 persistence now includes bounded durable event acceptance, immutable reward receipts and atomic SQL counter/balance composition. Phase 9 Clan XP/level/Influence policy is next. No game database migration, live award, deployment or progression enablement has occurred.
 
 Design reference: [Clan Progression and Personal Favor](clan_progression_design.md).
 
@@ -326,3 +326,49 @@ A phase is complete only when its deliverable and acceptance check are satisfied
 - **Behavior delivered:** strict full legacy import, native description decoding, dry-run comparisons, private durable raw backups, source rechecks, immutable transactional receipts and unchanged reruns. Newer SQL state/tombstones/cutover cannot be overwritten. Ambiguous investment ownership fails for review.
 - **Checks:** ASan/UBSan native reader/repository/adapter/bridge checks; disposable MariaDB import, rerun and protection scenarios; configuration/schema and existing clan regressions; both full server builds. Fixed a one-byte native long-line reader overrun discovered by these checks.
 - **Next entry point:** Phase 5a SQL boot loading/configuration and mirror reconciliation, then 5b operational cutover/rollback rehearsal. No live database changes, restart or feature enablement.
+
+
+### Phase 5a
+
+- **Status:** complete; split into 5a-1 schema/retained timers and 5a-2 boot hydration/authority attachment.
+- **Files changed:** `src/clan_boot.c`, persistence/repository APIs, `src/db.c`, `src/clan_progression.h`, version-3 migration and generated contract, environment example, build manifests and boot regression tests.
+- **Behavior delivered:** explicit legacy/shadow/MySQL boot selection; complete SQL metadata/claim hydration, hash rebuild, stable-player validation and membership mirror reconciliation. Empty stores load safely. Unsupported/malformed records and SQL failures stop requested SQL boot without stale-file fallback. Expiry/cancellation preserves saved family cooldowns, without enabling effects.
+- **Checks:** strict/sanitizer production-module tests in disposable MariaDB, including already spawned NPCs, fresh/imported state, missing/deleted player IDs, outages and disabled defaults; both server builds.
+- **Scope:** no automatic schema migration/import/cutover, no gameplay awards/effects. Economic/lifecycle gates remain. See [handoff](clan_progression_phase_5a_6_handoff.md).
+
+### Phase 5b
+
+- **Status:** complete as required prerequisite for requested Phase 6; split into 5b-1 atomic transition/retry and 5b-2 post-cutover SQL recovery rehearsal.
+- **Files changed:** checked repository/native bridge cutover operation, `tests/run_clan_boot_favor.py`, recovery policy in the handoff.
+- **Behavior delivered:** revision-checked explicit fresh/imported offline authority selection; receipt/control update in one transaction. Repeated/stale transitions fail; uncertain acknowledgements reconcile through reads. No reverse-cutover API or reopening stale files.
+- **Checks:** injected transition failure rolls back both receipt and control; successful transition preserves treasury/membership, repeated boot preserves timers, stale import cannot overwrite a post-cutover write. Complete transactional SQL dump restored to a second disposable database compares equal, including that write. Existing tombstone/incarnation regressions pass.
+- **Rollback policy:** preserve SQL authority after cutover and recover the complete latest store; binary downgrade/reverse export requires a separate reviewed conversion accounting for post-cutover writes. No operational cutover occurred.
+
+### Phase 6
+
+- **Status:** complete; split into 6-1 retained Favor schema and 6-2 checked reads/writes and lifecycle regression.
+- **Files changed:** version-3 `clan_personal_favor` table/triggers, repository Favor APIs, `tests/clan_favor.c`, combined boot/recovery runner, design/plan/handoff documentation.
+- **Behavior delivered:** cumulative eighth-point Favor keyed by stable character and clan incarnation, optimistic revisions, monotonic balances/timestamps, retained former-clan/tombstone records and no inherited standing on vnum reuse. No debit/purchase or officer-award endpoint.
+- **Checks:** independent standings, leave/reconnect persistence, missing rows, conflicts, backward time, int64 limits, no decreases/deletion, tombstone read-only behavior, new-incarnation isolation and migration reruns; existing persistence/import/configuration/clan login regressions and both builds.
+- **Next entry point:** Phase 7 account-level contribution windows, then Phase 8 durable receipts. Favor awards and eligibility remain gated pending their later services. No live database or feature enablement changes.
+
+
+### Phase 7
+
+- **Status:** complete; split into 7-1 deterministic UTC periods and 7-2 retained account-window schema/repository validation.
+- **Files changed:** `src/clan_progression.{c,h}`, `src/clan_repository.{c,h}`, version-4 migration and generated schema contract/generator, current-schema regression fixtures, `tests/clan_account_windows.c`, `tests/run_clan_account_windows.py`, environment example, build distribution list and [Phase 7 handoff](clan_progression_phase_7_handoff.md).
+- **Behavior delivered:** account-global weekly eighth-point base-XP/Favor totals and six explicit source counters; retained account/week keys, optimistic revisions, monotonic usage and history guards. Reconnect/alt/clan changes cannot reset a budget. Pure UTC daily/Monday-weekly calculations use occurrence time, exact half-open boundaries and checked int64 arithmetic. Delayed operations retain their original week.
+- **Checks:** strict C99/ASan/UBSan tests against private socket-only MariaDB; independent UTC datetime oracle across >1,000 timestamps and three process timezones, exact resets/leap/DST/post-2038/int64 boundaries; independent connections/shared account state, conflicts, injected rollback, retained weeks, corrupt data, migration reruns and schema drift. Existing repository/snapshot/persistence/import/boot/Favor/configuration/clan-login regressions and both full builds pass.
+- **Scope:** no live writes, account gameplay hooks, reward/cap calculation, daily prototype event tracking or feature enablement. Future callers must use actual account_data.id. All previous economic/lifecycle gates remain.
+- **Next entry point:** Phase 8 durable receipts and a composable atomic SQL transaction for account counters, clan/personal balances and event identity. Do not connect the standalone window writer to rewards as a separate commit.
+
+
+### Phase 8
+
+- **Status:** complete; split into 8a durable acceptance/unique identity, 8b atomic counter/balance composition and 8c process-crash/replay/concurrency verification.
+- **Files changed:** `src/clan_rewards.h`, checked repository/internal account/Favor stages, version-5 migration/generated contract, current-schema fixtures, `tests/clan_rewards.c`, `tests/run_clan_rewards.py`, environment/distribution notes and [Phase 8 handoff](clan_progression_phase_8_handoff.md).
+- **Behavior delivered:** bounded SQL pending events (100/character, 10,000/server), stable event/source/recipient deduplication, immutable requested facts and terminal receipt proof; one transaction for account usage/source counters, clan XP/Influence, personal Favor, clan weekly budgets and exact award decision. Replays return the original receipt without policy reruns or new awards. Delayed recovery retains the occurrence week; explicit cancellation preserves claim history.
+- **Recovery boundary:** SQL-only progression awards need no player-file changes. Required escrow/checkpoint/outbox/acknowledgement protocol for future gold/inventory actions is documented against the audited estate/legendary/durable-file patterns. Separate SQL connections are not assumed atomic. Existing economic/file gates remain until each concrete adapter is implemented and fault-tested.
+- **Checks:** strict C99/ASan/UBSan actual-module tests in disposable MariaDB; eight actual process interruption points, injected rollbacks, unknown acknowledgements, reset recovery, concurrent duplicate/shared-account claims, overflow, pending bounds, retained terminal history, populated migration reruns and schema drift. Prior repository/snapshot/persistence/import/boot/Favor/account/configuration/clan-login regressions and CMake/Automake builds pass.
+- **Scope:** trusted server-only persistence coordinator; no reward/cap policy, gameplay hook, file delivery acknowledgement, migration or live enablement. Future callbacks are pure and must honor the accepted rules snapshot. Runtime progression caches must reconcile committed SQL before service integration.
+- **Next entry point:** Phase 9 XP/level/Influence policy through the checked coordinator, then Phase 10 personal Favor/account/clan budgets; all default feature gates remain OFF.

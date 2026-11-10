@@ -1,4 +1,4 @@
-/* Gated legacy/MySQL writers. Boot hydration/cutover remains Phase 5a. */
+/* Checked legacy/MySQL writers; explicit boot hydration lives in clan_boot.c. */
 #include "conf.h"
 #include "sysdep.h"
 #include "structs.h"
@@ -230,6 +230,12 @@ world_snapshot(int64_t now)
   }
   return root;
 }
+void
+clan_persistence_pin_mysql(void)
+{
+  mode = CLAN_STORE_MYSQL;
+  ready = false;
+}
 bool
 clan_persistence_sql_authority(void)
 {
@@ -434,8 +440,8 @@ clan_persistence_member_update(int64_t id, int vnum, int rank)
     return true;
   if (!ready)
     return false;
-  uid = (vnum == 0 || vnum == NO_CLAN) ? NULL : uid_at(committed, vnum);
-  if (vnum != 0 && vnum != NO_CLAN && !uid)
+  uid = (vnum == 0 || vnum == (int)NO_CLAN) ? NULL : uid_at(committed, vnum);
+  if (vnum != 0 && vnum != (int)NO_CLAN && !uid)
     return false;
   old = member(committed, id);
   if ((!old && !uid) || (old && uid && !strcmp(uid, json_object_get_string(get(old, "clan_uid"))) &&

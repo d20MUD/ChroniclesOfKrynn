@@ -6328,6 +6328,7 @@ struct crafting_data_info
   int skill_roll;
   int dc;
   int craft_duration;
+  int ammo_job[8]; // immutable recipe settings [0..6], portable kit flag [7]
   int obj_level;
   int level_adjust;
 

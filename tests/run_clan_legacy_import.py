@@ -5,7 +5,7 @@ from clan_snapshot_fixture import snapshot,FIELDS
 import sys,json,subprocess,time,hashlib,copy,stat
 sys.path.insert(0,str(ROOT/'scripts'))
 from build_clan_repository_tool import build
-with database(('20261110_clan_progression_v001.sql','20261110_clan_progression_v002.sql')) as (tmp,socket,sql,client):
+with database(('20261110_clan_progression_v001.sql','20261110_clan_progression_v002.sql','20261110_clan_progression_v003.sql','20261110_clan_progression_v004.sql','20261110_clan_progression_v005.sql')) as (tmp,socket,sql,client):
  tool=tmp/'tool';build(tool,sanitize=True);source=tmp/'legacy';source.mkdir();players=source/'players';(players/'A-E').mkdir(parents=True)
  data=snapshot();data['clans'][1]['legacy']['relationships'][0]['at_war']=True
  lines=['* representative legacy clans']

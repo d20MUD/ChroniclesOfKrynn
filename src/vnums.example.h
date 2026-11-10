@@ -424,6 +424,7 @@
 #define WEAPON_PROTO                40299
 #define ARMOR_PROTO                 40298
 #define AMMO_PROTO                  40297
+#define FLETCHING_KIT_VNUM           15324
 #define INSTRUMENT_PROTO            40296
 #define ITEM_PROTOTYPE              40210
 #define CRYSTAL_PROTOTYPE           40211
@@ -531,6 +532,7 @@
 #define WEAPON_PROTO 3299
 #define ARMOR_PROTO 3298
 #define AMMO_PROTO 3297
+#define FLETCHING_KIT_VNUM 40448
 #define ITEM_PROTOTYPE 3210
 #define CRYSTAL_PROTOTYPE 3211
 /* unfinished */

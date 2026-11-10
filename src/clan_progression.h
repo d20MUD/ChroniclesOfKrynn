@@ -9,7 +9,7 @@
 
 #define CLAN_PROGRESSION_RULES_VERSION 1
 /* Required schema contract; checked detection lives in clan_repository. */
-#define CLAN_PROGRESSION_SCHEMA_VERSION 2
+#define CLAN_PROGRESSION_SCHEMA_VERSION 5
 #define CLAN_PROGRESSION_UID_SIZE 33
 #define CLAN_PROGRESSION_MAX_LEVEL 20
 #define CLAN_PROGRESSION_MAX_SLOTS 3
@@ -66,8 +66,7 @@ struct clan_progression_state {
   enum clan_progression_record_status status;
   int64_t xp_eighths, influence_eighths, revision;
 };
-/* Separate family rows survive cancellation/replacement. Do not attach the
- * cooldown solely to an occupied slot. No serialization is implemented yet. */
+/* Separate family rows survive cancellation/replacement and slot expiry. */
 struct clan_buff_state {
   char clan_uid[CLAN_PROGRESSION_UID_SIZE], activation_uid[CLAN_PROGRESSION_UID_SIZE];
   enum clan_buff_family family;
@@ -79,9 +78,14 @@ struct clan_favor_state {
   char clan_uid[CLAN_PROGRESSION_UID_SIZE];
   int64_t character_id, favor_eighths, revision;
 };
+/* Keyed by account_data.id and occurrence-time Monday, never character/clan.
+ * claims is indexed by explicit account-source IDs 1..6; slot 0 stays zero.
+ * Shared sources have no per-account claim counter in this record. */
 struct clan_account_window {
   int64_t account_id, starts_at, base_xp_eighths, favor_eighths, revision;
+  int64_t claims[CLAN_SOURCE_EXPEDITION_PERSONAL + 1];
 };
+struct clan_reset_period { int64_t starts_at, ends_at; };
 struct clan_weekly_window {
   char clan_uid[CLAN_PROGRESSION_UID_SIZE];
   int64_t starts_at, incoming_xp_eighths, influence_eighths, revision;
@@ -160,6 +164,15 @@ struct clan_progression_readiness {
 };
 
 extern const struct clan_progression_config clan_progression_defaults;
+/* UTC arithmetic, half-open periods, no local time/DST or wall-clock reads.
+ * Occurrence time must be >=0 and the next boundary representable in int64.
+ * Epoch's first week starts Monday 1969-12-29 (-259200). Outputs unchanged
+ * on failure. Feed a trusted/injected clock's result, not client timestamps. */
+bool clan_progression_week_at(int64_t occurred_at, struct clan_reset_period *out);
+bool clan_progression_day_at(int64_t occurred_at, struct clan_reset_period *out);
+bool clan_progression_account_window_init(int64_t account_id, int64_t occurred_at,
+    struct clan_account_window *out);
+bool clan_progression_account_window_valid(const struct clan_account_window *window);
 bool clan_progression_uid_valid(const char *uid);
 bool clan_progression_points_to_eighths(int64_t points, int64_t *out);
 enum clan_progression_config_error clan_progression_config_validate(

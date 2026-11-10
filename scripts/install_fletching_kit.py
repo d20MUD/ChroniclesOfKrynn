@@ -14,10 +14,18 @@ kit = source.read_text().split('$~')[0].rstrip() + '\n'
 target = args.world_objects / '400.obj'
 original = target.read_text(encoding="latin-1")
 already_installed = False
+index = args.world_objects / 'index'
+indexed_files = set(index.read_text().split()) if index.exists() else set()
 for path in args.world_objects.glob('*.obj'):
     text = path.read_text(encoding="latin-1")
     match = re.search(r'^#40448\s*\n.*?(?=^#\d+\s*$|^\$~)', text, re.M | re.S)
     if match:
+        # The repository ships this unindexed authoring template alongside the
+        # live object files. It is the input, not a second loaded prototype.
+        # Still refuse duplicates if someone indexed it independently.
+        if (path.resolve() == source.resolve() and path.name not in indexed_files
+                and match.group().strip() == kit.strip()):
+            continue
         if path == target and match.group().strip() == kit.strip():
             already_installed = True
             continue

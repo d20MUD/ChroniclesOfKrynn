@@ -806,6 +806,12 @@ int load_char(const char *name, struct char_data *ch)
       switch (*tag)
       {
       case 'A':
+        if (!strcmp(tag, "AmJb"))
+          sscanf(line, "%d %d %d %d %d %d %d %d",
+                 &GET_CRAFT(ch).ammo_job[0], &GET_CRAFT(ch).ammo_job[1],
+                 &GET_CRAFT(ch).ammo_job[2], &GET_CRAFT(ch).ammo_job[3],
+                 &GET_CRAFT(ch).ammo_job[4], &GET_CRAFT(ch).ammo_job[5],
+                 &GET_CRAFT(ch).ammo_job[6], &GET_CRAFT(ch).ammo_job[7]);
         if (!strcmp(tag, "AmCf")) load_ammo_craft_settings(ch, line);
         if (!strcmp(tag, "AmPr")) GET_PREFERRED_AMMO(ch) = MAX(0, atoi(line));
         if (!strcmp(tag, "AiAu"))
@@ -3239,6 +3245,11 @@ bool save_char_checked(struct char_data *ch, int mode)
     BUFFER_WRITE("UTF8: %d\n", ch->desc->pProtocol->pVariables[eMSDP_UTF_8]->ValueInt);
   }
   BUFFER_WRITE("AmPr: %d\n", GET_PREFERRED_AMMO(ch));
+  {
+    const int *job = GET_CRAFT(ch).ammo_job;
+    BUFFER_WRITE("AmJb: %d %d %d %d %d %d %d %d\n",
+                 job[0], job[1], job[2], job[3], job[4], job[5], job[6], job[7]);
+  }
   BUFFER_WRITE("HpMd: %d\n", GET_HOOPAK_MODE(ch));
   {
     const int *ammo = ch->player_specials->saved.ammo_craft_settings;
@@ -4663,7 +4674,7 @@ static void load_ammo_craft_settings(struct char_data *ch, const char *line)
   }
   while (isspace((unsigned char)*line)) line++;
   if (*line) return;
-  if (values[0] > 2 || values[4] > 8 || values[5] > 5) return;
+  if (values[0] >= NUM_AMMO_CRAFT_RECIPES || values[4] > 8 || values[5] > 5) return;
   for (i = 1; i <= 3; i++) if (values[i] >= NUM_CRAFT_MATS) return;
   if (values[6] != 0 && values[6] != 4 && values[6] != 6 && values[6] != 8 && values[6] != 10 && values[6] != 12) return;
   memcpy(ch->player_specials->saved.ammo_craft_settings, values, sizeof(values));

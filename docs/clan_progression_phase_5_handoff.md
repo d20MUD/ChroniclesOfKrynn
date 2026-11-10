@@ -1,6 +1,6 @@
 # Clan progression: Phase 5 import handoff
 
-Status: complete. The offline importer and repeatability checks are implemented; no live import or authority switch was performed. Next is Phase 5a SQL boot loading/configuration and reconciliation, followed by Phase 5b cutover/rollback rehearsal. See [persistence prerequisites](clan_progression_phase_4abc_handoff.md).
+Status: complete. The offline importer and repeatability checks are implemented; no live import or authority switch was performed. Phases 5a, 5b and 6 have since completed; see the [follow-on handoff](clan_progression_phase_5a_6_handoff.md). See [persistence prerequisites](clan_progression_phase_4abc_handoff.md).
 
 ## Operator workflow
 
@@ -12,7 +12,7 @@ python3 scripts/clan_legacy_import.py \
   --index /snapshot/index --players /snapshot/players
 ```
 
-After separately installing schema versions 1 then 2 into an empty staging database, add `--database STAGING_DATABASE --user IMPORT_USER --socket /path/to/staging.sock` to compare against SQL. Passwords, when required, use `MYSQL_PWD`, not command arguments. The tool builds the native bridge automatically, or accepts `--tool /path/to/clan_repository_tool`.
+After separately installing schema versions 1 through 5 into an empty staging database, add `--database STAGING_DATABASE --user IMPORT_USER --socket /path/to/staging.sock` to compare against SQL. Passwords, when required, use `MYSQL_PWD`, not command arguments. The tool builds the native bridge automatically, or accepts `--tool /path/to/clan_repository_tool`.
 
 To perform the reviewed staging import, add:
 

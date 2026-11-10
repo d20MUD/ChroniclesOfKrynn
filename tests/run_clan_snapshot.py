@@ -4,7 +4,7 @@ from clan_snapshot_fixture import snapshot,manifest,A,B
 import sys,json,subprocess,copy
 sys.path.insert(0,str(ROOT/'scripts'))
 from build_clan_repository_tool import build
-with database(('20261110_clan_progression_v001.sql','20261110_clan_progression_v002.sql')) as (tmp,socket,sql,client):
+with database(('20261110_clan_progression_v001.sql','20261110_clan_progression_v002.sql','20261110_clan_progression_v003.sql','20261110_clan_progression_v004.sql','20261110_clan_progression_v005.sql')) as (tmp,socket,sql,client):
  tool=tmp/'tool';build(tool,sanitize=True)
  def run(operation,payload=None,result='ok'):
   p=subprocess.run([str(tool),operation,'clan_test','root','',str(socket)],input=json.dumps(payload or {}),text=True,capture_output=True)

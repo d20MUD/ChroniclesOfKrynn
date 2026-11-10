@@ -3,12 +3,14 @@
 `craft ammo` supports a saved three-material recipe. Configure with `type`,
 `material 1/2/3`, `enhancement`, and `damage`; inspect with `show` or `cost`,
 and attempt with `begin`. `reset` restores defaults. The `AmCf` ASCII player
-file tag stores seven integers: recipe index, three material IDs (0 means
+file tag stores seven integers: stable recipe index (0 arrows, 1 bolts, 2 bullets, 3 knives, 4 axes,
+5 hammers, 6 javelins, 7 darts, 8 shuriken), three material IDs (0 means
 default), enhancement, element index, damage die. Old player files default
 to ordinary arrows. Invalid saved records are ignored.
 
-Slot 1 is wood for shafts, or stone/metal for bullet bodies. Slot 2 is metal
-for heads/cores. Slot 3 is cloth binding. Default recipes consume 2/1/1
+Slot 1 is wood for shafts/handles, stone/metal for bullet bodies, or hard metal
+for shuriken blanks. Slot 2 is metal
+for heads/cores (hard metal for throwing weapons). Slot 3 is cloth binding. Default recipes consume 2/1/1
 (arrows), 1/2/1 (bolts), or 3/1/1 (bullets). Costs for identical materials
 are consolidated before availability checks and spending.
 
@@ -25,31 +27,58 @@ Each successful batch is one item with 50 finite uses. Unlimited/returning
 flags, stale template effects and poison are cleared. Resource consumption,
 normal crafting skill checks, delays, XP, carry limits, combat/trade/project
 guards apply. Failed rolls consume resources; failed prerequisites do not.
-The previous one-line syntax remains available without changing saved settings.
+Bare `craft ammo <type>` commands for all nine recipes use saved materials and magical
+settings for that ammo type, without changing the saved recipe. `cost arrows`
+(and the other types) previews the same plan. A one-shot switch to/from bullets
+uses the target default for an incompatible body/shaft selection. Explicit
+material choices are never silently substituted when stock runs out. The
+older syntax with explicit enhancement/damage arguments remains available
+with its own defaults, without changing saved settings.
+
+## Throwing bundles
+
+`craft throwing` aliases `craft ammo`, including `type`, numbered `material`,
+`enhancement`, `damage`, `show`, `cost`, `begin` and `reset`. The aliases share
+one saved recipe. Original persisted indices 0–2 remain unchanged; new recipe
+indices are appended and validated against `NUM_AMMO_CRAFT_RECIPES` by the
+player-file loader.
+
+| Type | Native weapon | Default wood/metal/cloth costs | Skill |
+| --- | --- | --- | --- |
+| knives | throwing knife | 1 ash, 3 iron, 1 hemp | weaponsmithing |
+| axes | throwing axe | 2 ash, 4 iron, 1 hemp | weaponsmithing |
+| hammers | throwing hammer | 2 ash, 4 iron, 1 hemp | weaponsmithing |
+| javelins | javelin | 4 ash, 2 iron, 1 hemp | woodworking |
+| darts | dart | 1 ash, 1 iron, 1 hemp | woodworking |
+| shuriken | shuriken | 2 iron blanks, 2 iron edges, 1 hemp | weaponsmithing |
+
+Each bundle is an `ITEM_MISSILE` with 50 finite uses. Throwing weapons store
+`AMMO_TYPE_THROWN` and their explicit native subtype in `AMMO_VAL_WEAPON_TYPE`;
+darts use `AMMO_TYPE_DART`. Native pouch selection, `throw`, proficiency,
+damage and finite-consumption code handles these without a new combat path.
+Enhancement and elemental damage use the existing material-quality recipe.
+Neither unlimited nor returning properties are introduced. Missing inputs
+spend nothing; failed craft checks consume the selected resources as usual.
 
 ## Portable kit
 
-Object 40448 is an ITEM_CRAFTING_TOOL portable fletching kit. Carrying it
-directly or equipping it replaces the ammo tool and station checks only.
-Nested containers are not searched. Identity uses prototype vnum and item
-type, not keywords or crafting-tool bonus values.
+Krynn uses object 15324, configured by `FLETCHING_KIT_VNUM` in `src/vnums.h`.
+The tracked `src/vnums.example.h` records the Krynn setting and the alternative
+world's existing 40448 setting. Carrying the configured kit directly or equipping
+it replaces the ammo tool and station checks only. Nested containers are not
+searched. The kit must be a miscellaneous item (`ITEM_OTHER`, as authored on
+Krynn) or a crafting tool (`ITEM_CRAFTING_TOOL`); keywords and tool bonus values
+do not determine its identity.
 
-`craft ammo kit` creates the kit with DC 15 woodworking, consuming 2 ash wood,
-2 iron and 2 hemp per attempt. Making the kit requires the usual equipped
-woodworking tool and carpentry table, even when already carrying a kit.
-A kit is reusable and never substitutes for ammo resources or motes.
+`craft ammo kit` creates that configured object with DC 15 woodworking,
+consuming 2 ash wood, 2 bronze and 2 hemp per attempt. Making the kit requires
+the usual equipped woodworking tool and carpentry table, even when already
+carrying a kit. A kit is reusable and never substitutes for ammo resources or
+motes. Krynn's existing object 15324 needs no additional template installation.
+Rebuild/restart the desired game port to use a changed vnum setting.
 
-Install `lib/world/obj/fletching_kit.obj` into an indexed world file before
-restarting the server:
-
-```
-python3 scripts/install_fletching_kit.py /path/to/mud/lib/world/obj
-```
-
-The installer backs up and atomically updates indexed `400.obj`, is idempotent,
-and refuses conflicting object 40448. Build/restart the desired game port
-and apply `sql/20261109_craft_ammo_help.sql` to its help database. Updating
-this repository alone does not install world data into another game instance.
+The authored 40448 template and `scripts/install_fletching_kit.py` remain
+available for worlds configured to use that vnum.
 
 Validation: `python3 tests/run_craft_ammo.py` executes production planners,
 command handling, material helpers, object construction and saved-record
@@ -84,3 +113,13 @@ Other compatible stacks become fallback ammo; a replacement of the preferred
 type can be selected later using the saved ID. The sanitizer harness
 `tests/run_ammo_cleanup.py` covers depletion, fallback, nested contexts,
 Manyshot, extraction callbacks and early projectile removal.
+
+### Timed ammo jobs
+
+Ammo, throwing bundles, and portable fletching kits use `craft_update` with
+`SCMD_NEWCRAFT_AMMO`. The base duration is 60 seconds, reduced by the rapid
+talent for the recipe skill (minimum one second). Ingredients and motes are
+consumed at start; the roll, crafting XP and result are deferred until completion.
+`craft ammo cancel` and `craft throwing cancel` stop the job without a refund.
+An immutable eight-integer `AmJb` snapshot and the normal `CrDu`/`CrMe` fields
+preserve the selected recipe and remaining time across logins.

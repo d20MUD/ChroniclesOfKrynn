@@ -14,7 +14,8 @@ enum clan_repository_result
   CLAN_REPO_SCHEMA,
   CLAN_REPO_CONFLICT,
   CLAN_REPO_DELETED,
-  CLAN_REPO_COMMIT_UNKNOWN
+  CLAN_REPO_COMMIT_UNKNOWN,
+  CLAN_REPO_CAPACITY
 };
 struct clan_repository_record
 {
@@ -67,4 +68,27 @@ clan_repository_snapshot_write(MYSQL* db,
                                struct json_object* import_manifest);
 /* Canonicalize owned trees; rank ordering is preserved. */
 bool clan_repository_snapshot_canonicalize(struct json_object *snapshot);
+/* Offline, quiesced cutover only. NULL digest explicitly selects a fresh,
+ * empty store; otherwise require the reviewed import receipt. Revision CAS. */
+enum clan_repository_result clan_repository_cutover(MYSQL *db,
+    int64_t expected_revision, const char *source_digest);
+/* Family history remains persisted after expiry/cancellation. Output unchanged
+ * on error; no rows means no activations, never synthesized cooldowns. */
+enum clan_repository_result clan_repository_buffs_read(MYSQL *db,
+    struct clan_buff_state *out, size_t capacity, size_t *count);
+bool clan_repository_buff_active(const struct clan_buff_state *buff, int64_t now);
+/* No membership dependency: former-clan standings remain addressable. Missing
+ * rows return NOT_FOUND, not a persisted/inferred award. Revision -1 inserts. */
+enum clan_repository_result clan_repository_favor_load(MYSQL *db,
+    int64_t character_id, const char *clan_uid, struct clan_favor_state *out);
+enum clan_repository_result clan_repository_favor_save(MYSQL *db,
+    const struct clan_favor_state *state, int64_t expected_revision, int64_t now);
+/* Uses occurrence time to select a retained account-global week. NOT_FOUND
+ * leaves output unchanged; initialize a proposed zero row with the pure helper.
+ * Saving a new week never deletes/resets an older week. Revision -1 inserts.
+ * No gameplay hooks: Phase 8 must compose counters/balances with receipts. */
+enum clan_repository_result clan_repository_account_window_load(MYSQL *db,
+    int64_t account_id, int64_t occurred_at, struct clan_account_window *out);
+enum clan_repository_result clan_repository_account_window_save(MYSQL *db,
+    const struct clan_account_window *window, int64_t expected_revision, int64_t written_at);
 #endif

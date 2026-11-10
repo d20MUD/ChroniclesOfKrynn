@@ -2,9 +2,14 @@
 #define KRYNN_CLAN_PERSISTENCE_H
 #include "clan_progression.h"
 struct char_data;
-/* Phase 4c writer integration, NOT a boot loader/cutover switch. Default LEGACY.
- * MYSQL attachment requires already reconciled runtime clan data, an imported
- * store explicitly marked MYSQL, and the checked schema. No startup caller yet. */
+/* Boot-only selection: NULL/legacy (default), shadow or mysql. Never imports
+ * implicitly. MYSQL requires explicit offline cutover; failure stops startup. */
+bool clan_persistence_boot(const char *selection);
+bool clan_persistence_boot_environment(void);
+bool clan_persistence_boot_buff(size_t index, struct clan_buff_state *out);
+/* Internal boot latch: pin before any storage access, never fall back. */
+void clan_persistence_pin_mysql(void);
+/* Attach already reconciled runtime metadata to a checked authoritative store. */
 bool
 clan_persistence_configure(enum clan_store_mode mode);
 bool

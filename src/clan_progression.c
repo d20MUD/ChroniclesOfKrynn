@@ -299,3 +299,52 @@ bool clan_progression_feature_available(const struct clan_progression_config *co
     default: return false;
   }
 }
+
+/* Unix epoch is Thursday. Its Monday is -3 days. Modulo the timestamp
+ * BEFORE adding the offset to avoid overflow near INT64_MAX. */
+bool clan_progression_week_at(int64_t occurred_at, struct clan_reset_period *out)
+{
+  struct clan_reset_period period;
+  int64_t offset;
+  if (!out || occurred_at < 0) return false;
+  offset = (occurred_at % INT64_C(604800) + INT64_C(259200)) % INT64_C(604800);
+  period.starts_at = occurred_at - offset;
+  if (period.starts_at > INT64_MAX - INT64_C(604800)) return false;
+  period.ends_at = period.starts_at + INT64_C(604800);
+  *out = period;
+  return true;
+}
+bool clan_progression_day_at(int64_t occurred_at, struct clan_reset_period *out)
+{
+  struct clan_reset_period period;
+  if (!out || occurred_at < 0) return false;
+  period.starts_at = occurred_at - occurred_at % INT64_C(86400);
+  if (period.starts_at > INT64_MAX - INT64_C(86400)) return false;
+  period.ends_at = period.starts_at + INT64_C(86400);
+  *out = period;
+  return true;
+}
+bool clan_progression_account_window_init(int64_t account_id, int64_t occurred_at,
+    struct clan_account_window *out)
+{
+  struct clan_reset_period period;
+  struct clan_account_window window;
+  if (account_id <= 0 || !out || !clan_progression_week_at(occurred_at, &period)) return false;
+  memset(&window, 0, sizeof(window));
+  window.account_id = account_id;
+  window.starts_at = period.starts_at;
+  *out = window;
+  return true;
+}
+bool clan_progression_account_window_valid(const struct clan_account_window *w)
+{
+  struct clan_reset_period period;
+  size_t i;
+  if (!w || w->account_id <= 0 || w->starts_at < -INT64_C(259200) ||
+      !clan_progression_week_at(w->starts_at < 0 ? 0 : w->starts_at, &period) ||
+      period.starts_at != w->starts_at || w->base_xp_eighths < 0 ||
+      w->favor_eighths < 0 || w->revision < 0 || w->claims[0]) return false;
+  for (i = 1; i <= CLAN_SOURCE_EXPEDITION_PERSONAL; i++)
+    if (w->claims[i] < 0) return false;
+  return true;
+}

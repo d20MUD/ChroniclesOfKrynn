@@ -6,6 +6,10 @@
 #include "structs.h" // For struct definitions
 #include "utils.h"   // For ACMD_DECL and SPECIAL_DECL macros
 
+/* Persisted ammo recipe indices: 0 arrows, 1 bolts, 2 bullets, 3 knives,
+ * 4 axes, 5 hammers, 6 javelins, 7 darts, 8 shuriken. Append, never reorder. */
+#define NUM_AMMO_CRAFT_RECIPES 9
+
 // materials used for the new crafting system
 #define CRAFT_MAT_NONE 0
 #define CRAFT_MAT_COPPER 1
@@ -193,6 +197,7 @@
 #define SCMD_NEWCRAFT_GOLEM 8
 #define SCMD_NEWCRAFT_BUTCHER 9
 #define SCMD_NEWCRAFT_DISENCHANT 10
+#define SCMD_NEWCRAFT_AMMO 11
 
 #define NUM_CRAFTING_METHODS 10
 

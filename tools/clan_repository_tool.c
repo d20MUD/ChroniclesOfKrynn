@@ -81,6 +81,17 @@ main(int argc, char** argv)
   }
   if (!strcmp(argv[1], "read"))
     status = clan_repository_snapshot_read(db, &out);
+  else if (!strcmp(argv[1], "cutover"))
+  {
+    struct json_object *revision = get(request, "expected_revision"),
+                       *digest = get(request, "source_digest"),
+                       *fresh = get(request, "fresh");
+    if (json_object_is_type(revision, json_type_int) &&
+        ((json_object_is_type(digest, json_type_string) && !fresh) ||
+         (!digest && json_object_is_type(fresh, json_type_boolean) && json_object_get_boolean(fresh))))
+      status = clan_repository_cutover(db, json_object_get_int64(revision),
+          digest ? json_object_get_string(digest) : NULL);
+  }
   else if (!strcmp(argv[1], "save") || !strcmp(argv[1], "import"))
   {
     struct json_object *snapshot = get(request, "snapshot"),

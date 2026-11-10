@@ -58,6 +58,7 @@ circle_SOURCES = \
 	src/clan.c \
 	src/clan_progression.c \
 	src/clan_repository.c \
+	src/clan_boot.c \
 	src/clan_persistence.c \
 	src/clan_economy.c \
 	src/clan_edit.c \
@@ -317,11 +318,15 @@ src/constants.c: $(filter-out src/constants.c,$(circle_SOURCES))
 EXTRA_DIST = \
 	src/clan_progression.h \
 	src/clan_repository.h \
+	src/clan_rewards.h \
 	src/clan_persistence.h \
 	src/clan_legacy_fields.h \
 	src/clan_repository_schema.inc \
 	sql/20261110_clan_progression_v001.sql \
 	sql/20261110_clan_progression_v002.sql \
+	sql/20261110_clan_progression_v003.sql \
+	sql/20261110_clan_progression_v004.sql \
+	sql/20261110_clan_progression_v005.sql \
 	scripts/generate_clan_schema_contract.py \
 	scripts/build_clan_repository_tool.py \
 	scripts/clan_legacy_import.py \
