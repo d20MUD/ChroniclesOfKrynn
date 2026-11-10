@@ -497,6 +497,38 @@ bool remove_clan(clan_vnum c_v)
   return TRUE;
 }
 
+static bool remove_sql_clan(clan_vnum c_v)
+{
+  clan_rnum c_n = real_clan(c_v);
+  int index, k, old_count = num_of_clans;
+  struct claim_data *claim;
+  if (c_n == NO_CLAN || !clan_persistence_disband(c_v)) return false;
+  /* Legacy arrays use runtime indices. Compact both axes/popularity before
+   * remove_clan shifts the row array, preserving surviving clans' meanings. */
+  for (index = 0; index < old_count; index++) {
+    for (k = c_n; k < old_count-1; k++) {
+      clan_list[index].allies[k] = clan_list[index].allies[k+1];
+      clan_list[index].at_war[k] = clan_list[index].at_war[k+1];
+    }
+    clan_list[index].allies[old_count-1] = FALSE;
+    clan_list[index].at_war[old_count-1] = FALSE;
+    clan_list[index].cache_timestamp = 0;
+  }
+  for (claim = claim_list; claim; claim = claim->next) {
+    if (claim->clan == c_v) { claim->clan = NO_CLAN; claim->claimant = 0; }
+    for (k = c_n; k < old_count-1; k++) claim->popularity[k] = claim->popularity[k+1];
+    claim->popularity[old_count-1] = 0;
+  }
+  free(clan_list[c_n].description);clan_list[c_n].description = NULL;
+  free(clan_list[c_n].abrev);clan_list[c_n].abrev = NULL;
+  if (!remove_clan(c_v)) {
+    clan_persistence_pin_mysql();
+    return false;
+  }
+  save_player_index();
+  return true;
+}
+
 /* Free a single clan - should NOT be used for clans in the clan list */
 void free_clan(struct clan_data *c)
 {
@@ -1973,11 +2005,6 @@ ACMD(do_clanclaim)
 /* clan create (IMP) command */
 ACMD(do_clancreate)
 {
-  if (clan_persistence_sql_authority()) {
-    send_to_char(ch, "SQL clan creation requires the incarnation lifecycle service.\r\n");
-    return;
-  }
-
   if (!clan_persistence_access(ch)) return;
   char c_n[MAX_INPUT_LENGTH] = {'\0'}, c_l[MAX_INPUT_LENGTH] = {'\0'};
   struct char_data *l;
@@ -2052,6 +2079,12 @@ ACMD(do_clancreate)
     return;
   }
 
+  if (clan_persistence_sql_authority() && GET_CLAN(l) != 0 && GET_CLAN(l) != NO_CLAN) {
+    send_to_char(ch, "The leader must leave their current clan/application before founding another.\r\n");
+    return;
+  }
+  memset(&new_clan, 0, sizeof(new_clan));
+  new_clan.date_founded = new_clan.last_activity = time(NULL);
   new_clan.vnum = v;
   new_clan.clan_name = strdup(c_n);
   if (!new_clan.clan_name)
@@ -2131,6 +2164,29 @@ ACMD(do_clancreate)
   new_clan.privilege[CP_SETPRIVS] = RANK_LEADERONLY;
   /* Member (Rank 5): Claim zones      */
   new_clan.privilege[CP_CLAIM] = RANK_LEADERONLY;
+
+  if (clan_persistence_sql_authority()) {
+    if (!clan_persistence_create(&new_clan, l)) {
+      for (i = 0; i < MAX_CLANRANKS; i++) free(new_clan.rank_name[i]);
+      free(new_clan.clan_name);
+      send_to_char(ch, "Clan creation could not be confirmed. Reconcile SQL before retrying.\r\n");
+      return;
+    }
+    if (!add_clan(&new_clan)) {
+      for (i = 0; i < MAX_CLANRANKS; i++) free(new_clan.rank_name[i]);
+      free(new_clan.clan_name);
+      clan_persistence_pin_mysql();
+      send_to_char(ch, "Clan was created in SQL; runtime reload is required.\r\n");
+      return;
+    }
+    clan_persistence_reconcile_player(l);
+    if (!save_char_checked(l, 0))
+      send_to_char(ch, "Clan created in SQL; the leader's local file mirror needs recovery.\r\n");
+    save_player_index();
+    send_to_char(ch, "Clan created with a fresh progression identity and leader membership.\r\n");
+    send_to_char(l, "Your new clan, '%s', has been created.\r\n", c_n);
+    return;
+  }
 
   send_to_char(ch, "Adding clan '%s' (Leader: %s) at VNUM %d\r\n", c_n, PERS(l, ch), v);
   if (add_clan(&new_clan))
@@ -2552,22 +2608,16 @@ ACMD(do_clandeposit)
 /* clan destroy (IMP) command */
 ACMD(do_clandestroy)
 {
-  if (clan_persistence_sql_authority()) {
-    send_to_char(ch, "SQL clan disbanding requires the retained-history lifecycle service.\r\n");
-    return;
-  }
-
   if (!clan_persistence_access(ch)) return;
   struct char_data *vict;
   bool immcom = FALSE;
   clan_vnum c_v;
   clan_rnum c_n;
   char c_name[MAX_INPUT_LENGTH] = {'\0'}, c_ldr[MAX_NAME_LENGTH], buf[MAX_INPUT_LENGTH] = {'\0'};
-  const char *buf2;
   int j, p_pos = 0;
   long c_lid;
 
-  buf2 = one_argument(argument, buf, sizeof(buf));
+  one_argument(argument, buf, sizeof(buf));
 
   if (GET_LEVEL(ch) == LVL_IMPL)
     immcom = TRUE;
@@ -2576,13 +2626,13 @@ ACMD(do_clandestroy)
   {
     if (immcom)
     {
-      if ((c_n = real_clan(atoi(buf2))) == NO_CLAN)
+      if ((c_n = real_clan(atoi(buf))) == NO_CLAN)
       {
         send_to_char(ch, "Invalid clan VNUM specified.\r\n");
         send_to_char(ch,
                      "The clan you entered %d, doesn't match your"
                      " clan %d.\r\n",
-                     real_clan(atoi(buf2)), real_clan(GET_CLAN(ch)));
+                     real_clan(atoi(buf)), real_clan(GET_CLAN(ch)));
         return;
       }
     }
@@ -2597,6 +2647,15 @@ ACMD(do_clandestroy)
   {
     send_to_char(ch, "Only the clan leader or an implementor can "
                      "disband a clan!\r\n");
+    return;
+  }
+
+  if (clan_persistence_sql_authority()) {
+    if (remove_sql_clan(clan_list[c_n].vnum))
+      send_to_char(ch, "Clan disbanded. Its progression and Favor history are retained.\r\n");
+    else
+      send_to_char(ch, "Clan disbanding could not be confirmed. SQL authority is retained; "
+                       "reload/reconcile before retrying.\r\n");
     return;
   }
 

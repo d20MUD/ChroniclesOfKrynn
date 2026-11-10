@@ -35,6 +35,11 @@ bool clan_reward_event_valid(const struct clan_reward_event *event);
  * return the original receipt without calling decide again. */
 enum clan_repository_result clan_reward_prepare(MYSQL *,const struct clan_reward_event *,
     int64_t accepted_at,struct json_object **out);
+/* Acceptance for future personal source adapters: accepted membership checked
+ * under the same control lock as the durable event. Replays are checked first.
+ * Lower-level prepare remains trusted recovery/test infrastructure. */
+enum clan_repository_result clan_reward_prepare_member(MYSQL *, const struct clan_reward_event *,
+    int64_t accepted_at, struct json_object **out);
 enum clan_repository_result clan_reward_load(MYSQL *,const char *operation_uid,struct json_object **out);
 enum clan_repository_result clan_reward_complete(MYSQL *,const char *operation_uid,int64_t now,
     clan_reward_decide_fn decide,void *context,struct json_object **out);

@@ -114,8 +114,8 @@ clan_repository_result_name(enum clan_repository_result r)
 {
   static const char* names[] = { "ok",          "not-found",       "invalid",
                                  "unavailable", "schema-mismatch", "conflict",
-                                 "deleted",     "commit-unknown", "capacity" };
-  return r >= CLAN_REPO_OK && r <= CLAN_REPO_CAPACITY ? names[r] : "invalid-result";
+                                 "deleted",     "commit-unknown", "capacity", "ineligible" };
+  return r >= CLAN_REPO_OK && r <= CLAN_REPO_INELIGIBLE ? names[r] : "invalid-result";
 }
 bool
 clan_repository_uid_generate(char out[33])
@@ -2156,11 +2156,11 @@ reward_finish(MYSQL* db, struct json_object* root, struct json_object** out, int
   *out = root;
   return CLAN_REPO_OK;
 }
-enum clan_repository_result
-clan_reward_prepare(MYSQL* db,
+static enum clan_repository_result
+reward_prepare(MYSQL* db,
                     const struct clan_reward_event* e,
                     int64_t now,
-                    struct json_object** out)
+                    struct json_object** out, bool require_member)
 {
   enum clan_repository_result status;
   struct json_object *root = NULL, *wanted, *stored;
@@ -2215,6 +2215,21 @@ clan_reward_prepare(MYSQL* db,
     return reward_abort(db, status, NULL);
   if (clan.status != CLAN_RECORD_ACTIVE)
     return reward_abort(db, CLAN_REPO_DELETED, NULL);
+  if (require_member) {
+    if (!e->player_id) return reward_abort(db, CLAN_REPO_INVALID, NULL);
+    int64_t ranks;
+    if (!query(db, "SELECT m.rank_id,JSON_LENGTH(JSON_EXTRACT(l.details,'$.ranks')) "
+        "FROM clan_memberships m JOIN clan_progression_legacy l ON l.clan_uid=m.clan_uid "
+        "WHERE m.player_id=%" PRId64 " AND m.clan_uid='%s' FOR UPDATE",
+        e->player_id, e->clan_uid)) goto failed;
+    res = mysql_store_result(db);
+    if (!res) goto failed;
+    row = mysql_fetch_row(res);
+    bool accepted = row && integer(row[0], &count) && integer(row[1], &ranks) &&
+        count > 0 && count <= ranks;
+    mysql_free_result(res);
+    if (!accepted) return reward_abort(db, CLAN_REPO_INELIGIBLE, NULL);
+  }
   if (!query(db, "SELECT COUNT(*) FROM clan_reward_receipts WHERE receipt_status=0"))
     goto failed;
   res = mysql_store_result(db);
@@ -2299,6 +2314,13 @@ reward_add(int64_t* value, int64_t amount)
   *value += amount;
   return true;
 }
+enum clan_repository_result clan_reward_prepare(MYSQL *db, const struct clan_reward_event *e,
+    int64_t now, struct json_object **out)
+{ return reward_prepare(db, e, now, out, false); }
+enum clan_repository_result clan_reward_prepare_member(MYSQL *db, const struct clan_reward_event *e,
+    int64_t now, struct json_object **out)
+{ return reward_prepare(db, e, now, out, true); }
+
 static struct json_object*
 reward_snapshot_json(const struct clan_reward_snapshot* s)
 {
@@ -2334,6 +2356,20 @@ reward_snapshot_load(MYSQL* db, const struct clan_reward_event* e, struct clan_r
   clan_progression_week_at(e->occurred_at, &period);
   /* Global control serializes all authoritative writers, followed by receipt,
    * account window, clan core/state, personal Favor, clan week. */
+  if (e->source == CLAN_SOURCE_EXPEDITION_PERSONAL) {
+    int64_t rank, ranks;
+    if (!query(db, "SELECT m.rank_id,JSON_LENGTH(JSON_EXTRACT(l.details,'$.ranks')) "
+        "FROM clan_memberships m JOIN clan_progression_legacy l ON l.clan_uid=m.clan_uid "
+        "WHERE m.player_id=%" PRId64 " AND m.clan_uid='%s' FOR UPDATE",
+        e->player_id, e->clan_uid)) return failure(db);
+    res = mysql_store_result(db);
+    if (!res) return failure(db);
+    row = mysql_fetch_row(res);
+    bool accepted = row && integer(row[0], &rank) && integer(row[1], &ranks) &&
+        rank > 0 && rank <= ranks;
+    mysql_free_result(res);
+    if (!accepted) return CLAN_REPO_INELIGIBLE;
+  }
   if (e->player_id)
   {
     snprintf(sql,
@@ -2679,4 +2715,101 @@ clan_reward_pending(MYSQL* db,
   mysql_free_result(res);
   *out = array;
   return CLAN_REPO_OK;
+}
+
+
+static bool uid_field_is(struct json_object *o, const char *key, const char *uid)
+{
+  struct json_object *value = reward_get(o, key);
+  const char *text = json_object_get_string(value);
+  return text && !strcmp(text, uid);
+}
+bool clan_repository_snapshot_disband(struct json_object *root, const char *uid)
+{
+  struct json_object *clans, *members, *claims;
+  size_t i, j;
+  bool found = false;
+  if (!clan_progression_uid_valid(uid) || !clan_repository_snapshot_valid(root)) return false;
+  clans = reward_get(root, "clans");members = reward_get(root, "members");claims = reward_get(root, "claims");
+  for (i = json_object_array_length(clans); i > 0; i--) {
+    struct json_object *entry = json_object_array_get_idx(clans, i-1);
+    if (uid_field_is(reward_get(entry, "core"), "uid", uid)) {
+      json_object_array_del_idx(clans, i-1, 1);found = true;
+    } else {
+      struct json_object *edges = reward_get(reward_get(entry, "legacy"), "relationships");
+      for (j = json_object_array_length(edges); j > 0; j--)
+        if (uid_field_is(json_object_array_get_idx(edges, j-1), "peer_uid", uid))
+          json_object_array_del_idx(edges, j-1, 1);
+    }
+  }
+  if (!found) return false;
+  for (i = json_object_array_length(members); i > 0; i--)
+    if (uid_field_is(json_object_array_get_idx(members, i-1), "clan_uid", uid))
+      json_object_array_del_idx(members, i-1, 1);
+  for (i = 0; i < json_object_array_length(claims); i++) {
+    struct json_object *claim = json_object_array_get_idx(claims, i);
+    struct json_object *popularity = reward_get(claim, "popularity");
+    if (uid_field_is(claim, "controller_uid", uid)) {
+      json_object_object_add(claim, "controller_uid", NULL);
+      json_object_object_add(claim, "claimant_id", json_object_new_int64(0));
+    }
+    for (j = json_object_array_length(popularity); j > 0; j--)
+      if (uid_field_is(json_object_array_get_idx(popularity, j-1), "clan_uid", uid))
+        json_object_array_del_idx(popularity, j-1, 1);
+  }
+  return clan_repository_snapshot_canonicalize(root) && clan_repository_snapshot_valid(root);
+}
+enum clan_repository_result clan_repository_disband(MYSQL *db, const char *uid,
+    int64_t revision, int64_t now)
+{
+  struct json_object *root = NULL;
+  struct clan_repository_record r;
+  enum clan_repository_result status;
+  if (!clan_progression_uid_valid(uid) || revision < 0 || now < 0) return CLAN_REPO_INVALID;
+  status = clan_repository_load(db, uid, &r);
+  if (status != CLAN_REPO_OK) return status;
+  if (r.status != CLAN_RECORD_ACTIVE) return CLAN_REPO_DELETED;
+  status = clan_repository_snapshot_read(db, &root);
+  if (status != CLAN_REPO_OK) return status;
+  if (json_object_get_int64(reward_get(root, "store_revision")) != revision)
+    status = CLAN_REPO_CONFLICT;
+  else if (!clan_repository_snapshot_disband(root, uid)) status = CLAN_REPO_CONFLICT;
+  else {
+    json_object_object_add(root, "written_at", json_object_new_int64(now));
+    status = clan_repository_snapshot_write(db, root, revision, NULL);
+  }
+  json_object_put(root);
+  return status;
+}
+enum clan_repository_result clan_repository_member_access(MYSQL *db, int64_t player,
+    const char *uid, enum clan_member_access *out)
+{
+  struct json_object *root = NULL, *clans, *members;
+  enum clan_repository_result status;
+  enum clan_member_access access = CLAN_ACCESS_FORMER;
+  struct clan_repository_record record;
+  size_t i;
+  bool found = false;
+  if (!out || player <= 0 || !clan_progression_uid_valid(uid)) return CLAN_REPO_INVALID;
+  status = clan_repository_snapshot_read(db, &root);
+  if (status != CLAN_REPO_OK) return status;
+  clans = reward_get(root, "clans");members = reward_get(root, "members");
+  for (i = 0; i < json_object_array_length(clans); i++)
+    if (uid_field_is(reward_get(json_object_array_get_idx(clans, i), "core"), "uid", uid)) found = true;
+  if (found) {
+    for (i = 0; i < json_object_array_length(members); i++) {
+      struct json_object *m = json_object_array_get_idx(members, i);
+      if (json_object_get_int64(reward_get(m, "player_id")) == player && uid_field_is(m, "clan_uid", uid))
+        access = json_object_get_int(reward_get(m, "rank_id")) > 0 ? CLAN_ACCESS_ACCEPTED : CLAN_ACCESS_APPLICANT;
+    }
+  } else {
+    status = clan_repository_load(db, uid, &record);
+    if (status == CLAN_REPO_OK) {
+      if (record.status != CLAN_RECORD_DELETED) status = CLAN_REPO_CONFLICT;
+      else access = CLAN_ACCESS_DELETED;
+    }
+  }
+  json_object_put(root);
+  if (status == CLAN_REPO_OK) *out = access;
+  return status;
 }

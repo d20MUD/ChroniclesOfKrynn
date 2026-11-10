@@ -56,6 +56,7 @@ circle_SOURCES = \
 	src/cedit.c \
 	src/char_descs.c \
 	src/clan.c \
+	src/clan_awards.c \
 	src/clan_progression.c \
 	src/clan_repository.c \
 	src/clan_boot.c \
@@ -319,6 +320,7 @@ EXTRA_DIST = \
 	src/clan_progression.h \
 	src/clan_repository.h \
 	src/clan_rewards.h \
+	src/clan_awards.h \
 	src/clan_persistence.h \
 	src/clan_legacy_fields.h \
 	src/clan_repository_schema.inc \

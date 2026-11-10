@@ -1,6 +1,6 @@
 # Clan Progression Implementation Plan
 
-Status: Phases 1–8, including 4a–4c and 5a–5b, are complete as disabled foundations. Version-5 persistence now includes bounded durable event acceptance, immutable reward receipts and atomic SQL counter/balance composition. Phase 9 Clan XP/level/Influence policy is next. No game database migration, live award, deployment or progression enablement has occurred.
+Status: Phases 1–11, including 4a–4c and 5a–5b, are complete as disabled foundations. Version-5 persistence and reward policy now include membership eligibility, retained-history lifecycle operations and atomic SQL creation/disbanding. Phase 12 text readouts and restricted inspection is next. No game database migration, live award, deployment or progression enablement has occurred.
 
 Design reference: [Clan Progression and Personal Favor](clan_progression_design.md).
 
@@ -372,3 +372,33 @@ A phase is complete only when its deliverable and acceptance check are satisfied
 - **Checks:** strict C99/ASan/UBSan actual-module tests in disposable MariaDB; eight actual process interruption points, injected rollbacks, unknown acknowledgements, reset recovery, concurrent duplicate/shared-account claims, overflow, pending bounds, retained terminal history, populated migration reruns and schema drift. Prior repository/snapshot/persistence/import/boot/Favor/account/configuration/clan-login regressions and CMake/Automake builds pass.
 - **Scope:** trusted server-only persistence coordinator; no reward/cap policy, gameplay hook, file delivery acknowledgement, migration or live enablement. Future callbacks are pure and must honor the accepted rules snapshot. Runtime progression caches must reconcile committed SQL before service integration.
 - **Next entry point:** Phase 9 XP/level/Influence policy through the checked coordinator, then Phase 10 personal Favor/account/clan budgets; all default feature gates remain OFF.
+
+
+### Phase 9
+
+- **Status:** complete; split into 9a pure levels/clan budget policy, 9b shared receipt composition and 9c runtime cache reconciliation.
+- **Files changed:** `src/clan_awards.{c,h}`, build manifests, persistence adapter, policy/receipt/cache tests and [Phase 9 handoff](clan_progression_phase_9_handoff.md).
+- **Behavior delivered:** derived levels 1–20; multi-level rewards; lifetime XP cap; clan weekly full/quarter XP bands; independent weekly/stored Influence capacity; eighth-point arithmetic and retained truncation flags. Gated shared awards commit through existing atomic receipts; personal sources fail closed pending Phase 10. Progression-only cache refresh and automatic pre-save reconciliation preserve committed awards without merging unrelated SQL metadata.
+- **Checks:** strict C99/ASan/UBSan production policy tests; disposable SQL transaction/crash/replay/concurrency and cache/save tests; configuration/campaign gates; CMake and Automake builds.
+- **Scope:** no gameplay hook, personal reward service, source eligibility/contract quota adapter, migration, live award, restart or feature enablement. Version-1 policy and occurrence-week receipts remain immutable.
+- **Next entry point:** Phase 10 account bands/source budgets, cumulative Favor awards/standing lookup and reward explanations, composing the clan projection inside the same receipt transaction.
+
+
+### Phase 10
+
+- **Status:** complete; split into 10a pure personal policy/standings/explanations and 10b checked receipt composition/recovery tests.
+- **Files changed:** `src/clan_awards.{c,h}`, production policy and receipt test harnesses, `tests/run_clan_personal_awards.py`, design/plan status and [Phase 10 handoff](clan_progression_phase_10_handoff.md).
+- **Behavior delivered:** exact 600-full/600-half account bands, account-global source claim limits, independent 600 weekly Favor cap, cumulative per-incarnation Favor standings, versioned cap explanations and atomic personal awards through existing receipts. Full/half/zero kill tuples require trusted source facts; other sources require exact configured tuples. Preview is advisory; committed replay never recalculates or duplicates rewards.
+- **Checks:** strict C99/ASan/UBSan actual-module policy checks; disposable SQL alternate-character/clan limits, band examples, zero/capped receipts, stage rollback, lost acknowledgement, replay/reset recovery, concurrent last claim and overflow tests; prior receipt/crash/cache/gate regressions; CMake and Automake builds.
+- **Scope:** no source gameplay hook, daily prototype tracker, manual inventory turn-in, lifecycle adapter, live migration/award or enablement. Future resource-consuming actions still require their recoverable file/SQL protocol and zero-payout rejection.
+- **Next entry point:** Phase 11 joining/departure/expulsion/deletion and eligibility queries, preserving retained Favor and incarnation identity.
+
+
+### Phase 11
+
+- **Status:** complete; split into 11a membership/receipt eligibility, 11b retained-history disbanding and 11c atomic creation/runtime mirror integration.
+- **Files changed:** clan repository/reward APIs, persistence adapter, clan creation/destruction paths, lifecycle and runtime/persistence tests, design/plan status and [Phase 11 handoff](clan_progression_phase_11_handoff.md).
+- **Behavior delivered:** current accepted/applicant/former/deleted access keyed by immutable incarnation; checked personal event acceptance; current-membership validation for uncommitted expedition claims; retained occurrence-time ordinary rewards and committed replay. SQL creation commits fresh identity/leader together; disband commits tombstone/membership/relation/claim changes before compacting runtime arrays and mirrors. Favor, cooldowns, account limits, receipts and inventory remain isolated/retained across departure and vnum reuse. Fixed cache ordering after membership replacement.
+- **Checks:** strict C99/ASan/UBSan actual SQL lifecycle and rollback/history/reuse tests; real runtime creation/removal and mirror/index/relationship compaction; prior receipt, personal award, boot/Favor, campaign and clan-login regressions; CMake/Automake builds.
+- **Scope:** no live migration, authority switch, restart, gameplay reward hook or progression enablement. Release gates stay OFF. Source occurrence/account/expiry checks and later buff/stat invalidation remain their respective integration phases. SQL uncertainty fails closed and requires reconciliation, without stale-file fallback.
+- **Next entry point:** Phase 12 text readouts and restricted inspection tools using checked status, Favor, contribution windows and explanations; no officer mint endpoint.

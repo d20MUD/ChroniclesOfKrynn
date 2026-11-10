@@ -48,7 +48,7 @@ uid_at(struct json_object* root, int vnum)
   return e ? json_object_get_string(get(get(e, "core"), "uid")) : NULL;
 }
 static struct json_object*
-world_snapshot(int64_t now)
+world_snapshot_extra(int64_t now, struct clan_data *extra)
 {
   struct json_object *root = json_object_new_object(), *clans = json_object_new_array(),
                      *claims = json_object_new_array();
@@ -58,9 +58,9 @@ world_snapshot(int64_t now)
   json_object_object_add(root, "claims", claims);
   json_object_object_add(root, "members", copy(get(committed, "members")));
   json_object_object_add(root, "written_at", json_object_new_int64(now));
-  for (i = 0; i < num_of_clans; i++)
+  for (i = 0; i < num_of_clans + (extra ? 1 : 0); i++)
   {
-    struct clan_data* c = &clan_list[i];
+    struct clan_data* c = i < num_of_clans ? &clan_list[i] : extra;
     struct clan_repository_record r;
     struct json_object *old = by_vnum(committed, c->vnum), *e = json_object_new_object(),
                        *legacy = json_object_new_object(), *ranks = json_object_new_array(),
@@ -230,6 +230,9 @@ world_snapshot(int64_t now)
   }
   return root;
 }
+static struct json_object *world_snapshot(int64_t now)
+{ return world_snapshot_extra(now, NULL); }
+
 void
 clan_persistence_pin_mysql(void)
 {
@@ -375,6 +378,13 @@ write_snapshot(struct json_object* candidate)
     json_object_put(candidate);
     return false;
   }
+  /* Membership replacements may append a lower player ID. Keep the cached
+   * committed ordering identical to checked SQL reads before later refreshes. */
+  if (!clan_repository_snapshot_canonicalize(candidate)) {
+    ready = false;
+    json_object_put(candidate);
+    return false;
+  }
   revision = json_object_get_int64(get(committed, "store_revision"));
   status = clan_repository_snapshot_write(connection->conn, candidate, revision, NULL);
   mysql_pool_release(connection);
@@ -409,11 +419,58 @@ write_snapshot(struct json_object* candidate)
   return true;
 }
 bool
+clan_persistence_refresh_progression(void)
+{
+  MYSQL_POOL_CONN *connection;
+  struct json_object *root = NULL, *expected = NULL;
+  enum clan_repository_result status;
+  size_t i, j;
+  static const char *fields[] = {
+    "xp_eighths", "influence_eighths", "state_revision", "state_updated_at"
+  };
+  if (mode != CLAN_STORE_MYSQL) return true;
+  if (!committed || !mysql_available || !(connection = mysql_pool_acquire())) goto fail;
+  status = clan_repository_snapshot_read(connection->conn, &root);
+  mysql_pool_release(connection);
+  if (status != CLAN_REPO_OK) goto fail;
+  expected = copy(committed);
+  if (!expected) goto fail;
+  for (i = 0; i < json_object_array_length(get(root, "clans")); i++) {
+    struct json_object *entry = json_object_array_get_idx(get(root, "clans"), i);
+    struct json_object *core = get(entry, "core"), *old;
+    struct clan_repository_record before, after;
+    old = get(by_vnum(expected, json_object_get_int(get(core, "vnum"))), "core");
+    if (!old || !clan_repository_record_parse(old, &before) ||
+        !clan_repository_record_parse(core, &after) ||
+        after.state_revision < before.state_revision ||
+        after.state_updated_at < before.state_updated_at ||
+        (after.state_revision == before.state_revision &&
+         (after.xp_eighths != before.xp_eighths ||
+          after.influence_eighths != before.influence_eighths ||
+          after.state_updated_at != before.state_updated_at))) goto fail;
+    for (j = 0; j < sizeof(fields)/sizeof(fields[0]); j++)
+      json_object_object_add(old, fields[j], json_object_get(get(core, fields[j])));
+  }
+  /* written_at is a proposed save timestamp, not authoritative stored metadata. */
+  json_object_object_del(expected, "written_at");
+  if (!json_object_equal(expected, root)) goto fail;
+  json_object_put(expected);
+  json_object_put(committed);
+  committed = root;
+  ready = true;
+  return true;
+fail:
+  if (expected) json_object_put(expected);
+  if (root) json_object_put(root);
+  ready = false;
+  return false;
+}
+bool
 clan_persistence_save(void)
 {
   if (mode != CLAN_STORE_MYSQL)
     return false;
-  if (!ready)
+  if (!ready || !clan_persistence_refresh_progression())
     return false;
   return write_snapshot(world_snapshot((int64_t)time(NULL)));
 }
@@ -439,6 +496,8 @@ clan_persistence_member_update(int64_t id, int vnum, int rank)
   if (mode != CLAN_STORE_MYSQL)
     return true;
   if (!ready)
+    return false;
+  if (!clan_persistence_refresh_progression())
     return false;
   uid = (vnum == 0 || vnum == (int)NO_CLAN) ? NULL : uid_at(committed, vnum);
   if (vnum != 0 && vnum != (int)NO_CLAN && !uid)
@@ -523,6 +582,76 @@ clan_persistence_before_player_save(struct char_data* ch)
   clan_persistence_reconcile_player(ch);
   send_to_char(ch, "Clan storage is unavailable; membership was not saved.\r\n");
   return false;
+}
+bool clan_persistence_progression_access(struct char_data *ch, const char *uid)
+{
+  MYSQL_POOL_CONN *connection;
+  enum clan_member_access access;
+  enum clan_repository_result status;
+  if (!ch || IS_NPC(ch) || mode != CLAN_STORE_MYSQL || !ready ||
+      !clan_progression_uid_valid(uid)) return false;
+  if (!mysql_available || !(connection = mysql_pool_acquire())) {
+    ready = false;
+    return false;
+  }
+  status = clan_repository_member_access(connection->conn, GET_IDNUM(ch), uid, &access);
+  mysql_pool_release(connection);
+  if (status != CLAN_REPO_OK) {
+    if (status != CLAN_REPO_NOT_FOUND) ready = false;
+    return false;
+  }
+  return access == CLAN_ACCESS_ACCEPTED;
+}
+bool clan_persistence_create(struct clan_data *draft, struct char_data *leader)
+{
+  struct json_object *candidate, *membership;
+  const char *uid;
+  int i;
+  if (mode != CLAN_STORE_MYSQL || !ready || !draft || !leader || IS_NPC(leader) ||
+      GET_IDNUM(leader) <= 0 || num_of_clans >= MAX_CLANS ||
+      draft->leader != GET_IDNUM(leader) || !clan_persistence_refresh_progression() ||
+      by_vnum(committed, draft->vnum) || member(committed, GET_IDNUM(leader))) return false;
+  for (i = 0; i < MAX_CLANS; i++)
+    if (draft->allies[i] || draft->at_war[i]) return false;
+  clan_persistence_reconcile_player(leader);
+  candidate = world_snapshot_extra((int64_t)time(NULL), draft);
+  if (!candidate) return false;
+  uid = uid_at(candidate, draft->vnum);
+  if (!uid) { json_object_put(candidate);return false; }
+  membership = json_object_new_object();
+  json_object_object_add(membership, "player_id", json_object_new_int64(GET_IDNUM(leader)));
+  json_object_object_add(membership, "clan_uid", json_object_new_string(uid));
+  json_object_object_add(membership, "rank_id", json_object_new_int(1));
+  json_object_object_add(membership, "legacy_points", json_object_new_int(0));
+  json_object_array_add(get(candidate, "members"), membership);
+  return write_snapshot(candidate);
+}
+bool clan_persistence_disband(int vnum)
+{
+  struct json_object *candidate;
+  struct char_data *ch;
+  const char *uid;
+  int p;
+  if (mode != CLAN_STORE_MYSQL || !ready || !clan_persistence_refresh_progression()) return false;
+  uid = uid_at(committed, vnum);
+  if (!uid) return false;
+  candidate = world_snapshot((int64_t)time(NULL));
+  if (!candidate) return false;
+  if (!clan_repository_snapshot_disband(candidate, uid)) {
+    json_object_put(candidate);
+    return false;
+  }
+  if (!write_snapshot(candidate)) return false;
+  /* SQL is authoritative. Offline player files are reconciled on load; do not
+   * make an SQL tombstone depend on writing every character file. */
+  for (p = 0; p <= top_of_p_table; p++)
+    if (player_table[p].clan == vnum) player_table[p].clan = NO_CLAN;
+  for (ch = character_list; ch; ch = ch->next) {
+    if (!IS_NPC(ch) && GET_CLAN(ch) == (clan_vnum)vnum)
+      send_to_char(ch, "Your clan has been disbanded. You are no longer a member.\r\n");
+    clan_persistence_reconcile_player(ch);
+  }
+  return true;
 }
 bool
 clan_persistence_access(struct char_data* ch)

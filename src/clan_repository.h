@@ -15,7 +15,8 @@ enum clan_repository_result
   CLAN_REPO_CONFLICT,
   CLAN_REPO_DELETED,
   CLAN_REPO_COMMIT_UNKNOWN,
-  CLAN_REPO_CAPACITY
+  CLAN_REPO_CAPACITY,
+  CLAN_REPO_INELIGIBLE
 };
 struct clan_repository_record
 {
@@ -91,4 +92,15 @@ enum clan_repository_result clan_repository_account_window_load(MYSQL *db,
     int64_t account_id, int64_t occurred_at, struct clan_account_window *out);
 enum clan_repository_result clan_repository_account_window_save(MYSQL *db,
     const struct clan_account_window *window, int64_t expected_revision, int64_t written_at);
+/* Current accepted membership is separate from historical Favor ownership. */
+enum clan_member_access {
+  CLAN_ACCESS_ACCEPTED, CLAN_ACCESS_APPLICANT, CLAN_ACCESS_FORMER, CLAN_ACCESS_DELETED
+};
+enum clan_repository_result clan_repository_member_access(MYSQL *, int64_t player_id,
+    const char *clan_uid, enum clan_member_access *out);
+/* Prune a private candidate only; discard it on failure. Retains all historical
+ * SQL rows when snapshot_write tombstones the omitted incarnation. */
+bool clan_repository_snapshot_disband(struct json_object *, const char *clan_uid);
+enum clan_repository_result clan_repository_disband(MYSQL *, const char *clan_uid,
+    int64_t expected_store_revision, int64_t now);
 #endif

@@ -2,6 +2,7 @@
 #define KRYNN_CLAN_PERSISTENCE_H
 #include "clan_progression.h"
 struct char_data;
+struct clan_data;
 /* Boot-only selection: NULL/legacy (default), shadow or mysql. Never imports
  * implicitly. MYSQL requires explicit offline cutover; failure stops startup. */
 bool clan_persistence_boot(const char *selection);
@@ -16,6 +17,10 @@ bool
 clan_persistence_sql_authority(void);
 bool
 clan_persistence_ready(void);
+/* Reconcile SQL progression-only changes; other metadata conflicts fail closed.
+ * Call after a reward commit/unknown acknowledgement and before cached reads.
+ * Saves also refresh automatically, retaining dirty runtime legacy fields. */
+bool clan_persistence_refresh_progression(void);
 bool
 clan_persistence_save(void);
 bool
@@ -24,6 +29,15 @@ void
 clan_persistence_reconcile_player(struct char_data* ch);
 bool
 clan_persistence_member_update(int64_t player_id, int vnum, int rank);
+/* New progression access uses immutable incarnation identity and current SQL
+ * accepted membership, never a vnum or retained Favor balance alone. */
+bool clan_persistence_progression_access(struct char_data *, const char *clan_uid);
+/* Commit tombstone/membership/relationship/claim changes before runtime removal.
+ * Caller must compact its clan/claim arrays after success; failures keep runtime
+ * topology intact and pin unavailable SQL authority on ambiguous outcomes. */
+bool clan_persistence_disband(int vnum);
+/* Atomic fresh identity + leader membership; publish runtime draft only on OK. */
+bool clan_persistence_create(struct clan_data *draft, struct char_data *leader);
 bool
 clan_persistence_access(struct char_data* ch);
 bool

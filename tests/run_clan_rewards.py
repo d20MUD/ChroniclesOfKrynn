@@ -11,7 +11,7 @@ with database(migrations) as (tmp,socket,sql,client):
  subprocess.run([str(tool),'import','clan_test','root','',str(socket)],input=json.dumps(dict(snapshot=snapshot(),expected_revision=0,manifest=manifest())),text=True,check=True,stdout=subprocess.DEVNULL)
  sql('UPDATE clan_store_control SET store_mode=2; UPDATE clan_import_manifests SET import_status=2;')
  binary=tmp/'rewards';flags=shlex.split(subprocess.check_output(['pkg-config','--cflags','--libs','mariadb','openssl','json-c'],text=True))
- subprocess.run(['cc','-std=c99','-Wall','-Wextra','-Werror','-pedantic','-g','-DCLAN_REWARD_TEST','-fsanitize=address,undefined','-fno-pie','-no-pie','-I'+str(ROOT/'src'),str(ROOT/'tests/clan_rewards.c'),str(ROOT/'src/clan_repository.c'),str(ROOT/'src/clan_progression.c'),*flags,'-o',str(binary)],check=True)
+ subprocess.run(['cc','-std=c99','-Wall','-Wextra','-Werror','-pedantic','-g','-DCLAN_REWARD_TEST','-fsanitize=address,undefined','-fno-pie','-no-pie','-I'+str(ROOT/'src'),str(ROOT/'tests/clan_rewards.c'),str(ROOT/'src/clan_repository.c'),str(ROOT/'src/clan_awards.c'),str(ROOT/'src/clan_progression.c'),*flags,'-o',str(binary)],check=True)
  seq=100
  def event(**changes):
   global seq
@@ -102,6 +102,25 @@ with database(migrations) as (tmp,socket,sql,client):
  races=[event(clan_uid=B,account_id=99,player_id=5000000010) for _ in range(2)]
  for e in races:run('prepare',e)
  concurrent_complete(races);assert sql('SELECT base_xp_eighths FROM clan_account_windows WHERE account_id=99')=='48'
+ # Phase 9 service uses actual locked balances, caps and immutable receipts.
+ sql(f"UPDATE clan_progression_state SET xp_eighths=303992,influence_eighths=159960,revision=revision+1 WHERE clan_uid='{B}'")
+ policy_event=event(clan_uid=B,source=7,account_id=0,player_id=0,requested_xp_eighths=1600,requested_influence_eighths=800,requested_favor_eighths=0)
+ run('prepare',policy_event)
+ run('policy',request(policy_event,disabled=True),'invalid')
+ run('policy',request(policy_event,unready=True),'invalid')
+ before=balances();run('policy',request(policy_event,fault=3),'unavailable');assert balances()==before
+ award=run('policy',request(policy_event))['receipt'];d=award['decision']['delta']
+ assert d['xp_eighths']==8 and d['influence_eighths']==40 and d['cap_flags']==10,d
+ assert award['decision']['after']['clan_xp']==304000 and award['decision']['after']['clan_influence']==160000
+ assert run('policy',request(policy_event,disabled=True))['receipt']==award
+ personal_policy=event(clan_uid=B);run('prepare',personal_policy);run('policy',request(personal_policy),'invalid')
+ wrong_tuple=event(clan_uid=B,source=7,account_id=0,player_id=0,requested_favor_eighths=0)
+ run('prepare',wrong_tuple);run('policy',request(wrong_tuple),'invalid')
+ # A capped clan still records a zero payout and its original incoming XP.
+ capped=event(clan_uid=B,source=7,account_id=0,player_id=0,requested_xp_eighths=1600,requested_influence_eighths=800,requested_favor_eighths=0)
+ run('prepare',capped);out=run('policy',request(capped))['receipt']['decision']
+ assert out['delta']['xp_eighths']==out['delta']['influence_eighths']==0
+ assert out['delta']['incoming_xp_eighths']==1600
  # Receipt replay survives membership changes and a retained deleted incarnation.
  tombstone=event();run('prepare',tombstone)
  sql(f"UPDATE clan_progression_clans SET record_status=2,deleted_at_utc=2200604802,updated_at_utc=2200604802 WHERE clan_uid='{A}'")
@@ -131,4 +150,4 @@ with database(migrations) as (tmp,socket,sql,client):
   assert subprocess.run(client,input=mutation,text=True,capture_output=True).returncode!=0,mutation
  before=balances();subprocess.run(client,input=(ROOT/'sql'/migrations[-1]).read_text(),text=True,check=True);assert balances()==before
  sql('DROP TRIGGER cp_reward_immutable');run('load',request(first),'schema-mismatch')
- print('Phase 8: durable acceptance/bounds, SQL atomicity, eight process crash boundaries, exact replay, reset recovery, concurrent claims, canceled/deleted history, overflow and migration guards passed')
+ print('Phases 8–9: clan XP/Influence policy, gated and capped receipts, durable acceptance/bounds, SQL atomicity, eight process crash boundaries, exact replay, reset recovery, concurrent claims, canceled/deleted history, overflow and migration guards passed')
