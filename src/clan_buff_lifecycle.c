@@ -42,7 +42,7 @@ static void canonical(char *out,const char *in)
   while(*in) {unsigned char c=(unsigned char)*in++;if(!isspace(c)&&c!='`'&&c!='('&&c!=')')*out++=(char)tolower(c);}
   *out=0;
 }
-static enum clan_repository_result begin(MYSQL *db)
+enum clan_repository_result clan_buff_lifecycle_schema_check(MYSQL *db)
 {
   enum clan_repository_result result=clan_buff_activation_schema_check(db);
   MYSQL_RES *res;MYSQL_ROW row;int64_t n;size_t i;bool ok;
@@ -67,6 +67,12 @@ static enum clan_repository_result begin(MYSQL *db)
     if(ok){canonical(actual,row[0]);canonical(expected,body);ok=!strcmp(actual,expected)&&!strcmp(row[1],i?"DELETE":"UPDATE")&&!strcmp(row[2],"BEFORE");}
     mysql_free_result(res);if(!ok)return CLAN_REPO_SCHEMA;
   }
+  return CLAN_REPO_OK;
+}
+static enum clan_repository_result begin(MYSQL *db)
+{
+  enum clan_repository_result result=clan_buff_lifecycle_schema_check(db);int64_t n;
+  if(result!=CLAN_REPO_OK)return result;
   if(!sql(db,"START TRANSACTION"))return CLAN_REPO_UNAVAILABLE;
   if(!scalar(db,"SELECT store_mode FROM clan_store_control WHERE singleton=1 FOR UPDATE",&n)||n!=CLAN_STORE_MYSQL){sql(db,"ROLLBACK");return CLAN_REPO_CONFLICT;}
   return CLAN_REPO_OK;

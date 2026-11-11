@@ -4,6 +4,7 @@
 /* Trusted server configuration only. Defaults OFF. Invalid configuration clears
  * all effects and fails closed. No player command or implicit enablement. */
 bool clan_buff_runtime_configure(const struct clan_progression_config *);
+const struct clan_progression_config *clan_buff_runtime_policy(void);
 struct char_data;
 /* Defer only HP clamping while restoring equipment; finish before world scripts.
  * Both normal login and copyover use enter_player_game's common restore path. */

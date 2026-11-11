@@ -1,0 +1,42 @@
+CLANBUFFS CLANBUFF CLANBUFFMANAGEMENT
+
+CLAN BUFFS
+
+  clan buffs
+  clan buffs activate <family number> <tier> <slot>
+  clan buffs replace <family number> <tier> <slot> <current activation UID>
+  clan buffs cancel <activation UID>
+  clan buffs permission <maximum rank>
+
+The list shows your clan's unlocked buffs, tier prices, available slots,
+active buffs and family cooldowns. Family numbers are:
+
+  1 Scholar's Encouragement   2 Arcane Readiness   3 Psionic Focus
+  4 Company Vitality          5 Artisan's Guidance
+
+Activation spends shared Influence. You must be a current accepted member
+with buff-management permission. A clan leader can delegate management to
+accepted ranks 1 through the chosen maximum; zero restores leader-only.
+The chosen rank must exist. Staff status does not bypass these checks.
+Buffs must be enabled for your clan by the game's trusted configuration.
+
+Cancelling gives no refund. Replacement also gives no refund and does not
+clear either family's cooldown. Replacing an occupied slot requires the
+active UID shown by the list:
+
+  clan buffs replace <family> <tier> <slot> <current activation UID>
+
+The game creates an operation UID for you.
+The command prints an exact retry command before requesting a change. If
+an error says the result is uncertain, use that exact command instead of
+starting another operation. An identical retry returns the original result
+without charging again; changing its arguments produces a conflict.
+
+An unoccupied activation and cancellation create the operation UID for you.
+For an explicit retry, use:
+
+  clan buffs activate <family> <tier> <slot> <operation UID> <clan UID> [active UID]
+  clan buffs cancel <active UID> <operation UID> <clan UID>
+
+See also: CLANPROGRESSION, CLAN
+#0

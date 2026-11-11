@@ -263,6 +263,7 @@ ACMD_DECL(do_clanlist);
 ACMD_DECL(do_clanowner);
 ACMD_DECL(do_clanpromote);
 ACMD_DECL(do_clanstatus);
+ACMD_DECL(do_clanbuffs);
 ACMD_DECL(do_clanprogress);
 ACMD_DECL(do_clanfavor);
 ACMD_DECL(do_claninspect);

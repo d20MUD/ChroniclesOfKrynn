@@ -246,3 +246,32 @@ abort:
   free(quoted);if(o)json_object_put(o);
   sql(db,"ROLLBACK");return result;
 }
+
+enum clan_repository_result clan_buff_management_set(MYSQL *db,const struct clan_progression_config *c,
+    const char *uid,int64_t actor,int maximum)
+{
+  struct clan_repository_record record;
+  struct clan_progression_readiness ready={true,false,false,false,CLAN_PROGRESSION_SCHEMA_VERSION};
+  enum clan_repository_result result;int64_t mode,ranks,member;char query[256];
+  if(!clan_progression_uid_valid(uid)||actor<=0||maximum<0||maximum>15||
+      clan_progression_config_validate(c,NULL)!=CLAN_CONFIG_OK)return CLAN_REPO_INVALID;
+  result=clan_buff_activation_schema_check(db);if(result!=CLAN_REPO_OK)return result;
+  if(db->server_status&SERVER_STATUS_IN_TRANS)return CLAN_REPO_INVALID;
+  if(!sql(db,"START TRANSACTION"))return CLAN_REPO_UNAVAILABLE;
+  if(!scalar(db,"SELECT store_mode FROM clan_store_control WHERE singleton=1 FOR UPDATE",&mode))goto failed;
+  if(mode!=CLAN_STORE_MYSQL){result=CLAN_REPO_CONFLICT;goto abort;}
+  result=clan_repository_load(db,uid,&record);if(result!=CLAN_REPO_OK)goto abort;
+  snprintf(query,sizeof(query),"SELECT COALESCE(MAX(rank_id),0) FROM clan_memberships WHERE clan_uid='%s' AND player_id=%" PRId64 " AND rank_id>0",uid,actor);
+  if(!scalar(db,query,&member))goto failed;
+  if(member<=0||record.leader_id!=actor||record.status!=CLAN_RECORD_ACTIVE||
+      !clan_progression_feature_available(c,CLAN_FEATURE_BUFFS,&ready,uid)){result=CLAN_REPO_INELIGIBLE;goto abort;}
+  snprintf(query,sizeof(query),"SELECT JSON_LENGTH(JSON_EXTRACT(details,'$.ranks')) FROM clan_progression_legacy WHERE clan_uid='%s'",uid);
+  if(!scalar(db,query,&ranks))goto failed;
+  if(ranks<1||ranks>15||member>ranks){result=CLAN_REPO_SCHEMA;goto abort;}
+  if(maximum>ranks){result=CLAN_REPO_INVALID;goto abort;}
+  if(!sql(db,"INSERT INTO clan_buff_management(clan_uid,privilege_id,max_rank) VALUES('%s',21,%d) ON DUPLICATE KEY UPDATE max_rank=VALUES(max_rank)",uid,maximum))goto failed;
+  if(!sql(db,"COMMIT"))return CLAN_REPO_COMMIT_UNKNOWN;
+  return CLAN_REPO_OK;
+failed:result=CLAN_REPO_UNAVAILABLE;
+abort:sql(db,"ROLLBACK");return result;
+}

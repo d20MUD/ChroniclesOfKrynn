@@ -2168,8 +2168,9 @@ static enum clan_repository_result
 reward_prepare(MYSQL* db,
                     const struct clan_reward_event* e,
                     int64_t now,
-                    struct json_object** out, bool require_member)
+                    struct json_object** out, bool require_member, int64_t prototype)
 {
+  struct clan_reward_event frozen;
   enum clan_repository_result status;
   struct json_object *root = NULL, *wanted, *stored;
   MYSQL_RES* res;
@@ -2180,6 +2181,22 @@ reward_prepare(MYSQL* db,
   int64_t count;
   if (!out || !clan_reward_event_valid(e) || now < e->occurred_at)
     return CLAN_REPO_INVALID;
+  if (prototype && (prototype < 1 || e->source != CLAN_SOURCE_KILL ||
+      e->requested_xp_eighths != 16 || e->requested_influence_eighths != 8 ||
+      e->requested_favor_eighths != 8)) return CLAN_REPO_INVALID;
+  frozen = *e;
+  if (prototype) {
+    /* The optional source table must participate in the receipt transaction. */
+    if(!query(db,"SELECT ENGINE,(SELECT COUNT(*) FROM information_schema.TRIGGERS "
+        "WHERE TRIGGER_SCHEMA=DATABASE() AND EVENT_OBJECT_TABLE='clan_kill_sources' "
+        "AND TRIGGER_NAME IN ('cp_kill_retained','cp_kill_immutable')) "
+        "FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='clan_kill_sources'"))
+      return failure(db);
+    res=mysql_store_result(db);if(!res)return failure(db);
+    row=mysql_fetch_row(res);
+    bool checked=row&&row[0]&&!strcmp(row[0],"InnoDB")&&integer(row[1],&count)&&count==2;
+    mysql_free_result(res);if(!checked)return CLAN_REPO_SCHEMA;
+  }
   status = reward_begin(db);
   if (status != CLAN_REPO_OK)
     return status;
@@ -2198,6 +2215,21 @@ reward_prepare(MYSQL* db,
   {
     /* An identical event under a different operation nonce returns its first
      * receipt. A different target/request/occurrence never becomes a retry. */
+    if (prototype) {
+      if (!query(db,"SELECT prototype FROM clan_kill_sources WHERE operation_uid='%s'",
+          json_object_get_string(reward_get(reward_get(root,"event"),"operation_uid"))))
+        return reward_abort(db, failure(db), root);
+      res=mysql_store_result(db); if(!res)return reward_abort(db,failure(db),root);
+      row=mysql_fetch_row(res);
+      bool same=row&&integer(row[0],&count)&&count==prototype;
+      mysql_free_result(res);
+      if(!same)return reward_abort(db,CLAN_REPO_CONFLICT,root);
+      struct json_object *prior=reward_get(root,"event");
+      frozen.requested_xp_eighths=json_object_get_int64(reward_get(prior,"requested_xp_eighths"));
+      frozen.requested_influence_eighths=json_object_get_int64(reward_get(prior,"requested_influence_eighths"));
+      frozen.requested_favor_eighths=json_object_get_int64(reward_get(prior,"requested_favor_eighths"));
+      e=&frozen;
+    }
     wanted = reward_event_json(e);
     stored = reward_get(root, "event");
     json_object_object_del(wanted, "operation_uid");
@@ -2272,6 +2304,18 @@ reward_prepare(MYSQL* db,
     if (count >= clan_progression_defaults.limits.pending_per_character)
       return reward_abort(db, CLAN_REPO_CAPACITY, NULL);
   }
+  if (prototype) {
+    if(!query(db,"SELECT COUNT(*) FROM clan_kill_sources WHERE account_id=%" PRId64
+        " AND prototype=%" PRId64 " AND utc_day=%" PRId64,e->account_id,prototype,e->occurred_at/86400))goto failed;
+    res=mysql_store_result(db);if(!res)goto failed;
+    row=mysql_fetch_row(res);bool valid=row&&integer(row[0],&count);mysql_free_result(res);
+    if(!valid)return reward_abort(db,CLAN_REPO_SCHEMA,NULL);
+    int multiplier=count<20?2:count<40?1:0;
+    frozen.requested_xp_eighths=8*multiplier;
+    frozen.requested_influence_eighths=4*multiplier;
+    frozen.requested_favor_eighths=4*multiplier;
+    e=&frozen;
+  }
   if (!query(db,
              "INSERT INTO "
              "clan_reward_receipts(operation_uid,event_uid,clan_uid,beneficiary_key,account_id,"
@@ -2294,6 +2338,8 @@ reward_prepare(MYSQL* db,
              e->requested_favor_eighths,
              now))
     goto failed;
+  if(prototype&&!query(db,"INSERT INTO clan_kill_sources VALUES('%s','%s',%" PRId64 ",%" PRId64 ",%" PRId64 ")",
+      e->operation_uid,e->event_uid,e->account_id,prototype,e->occurred_at/86400))goto failed;
   snprintf(where, sizeof(where), "operation_uid='%s'", e->operation_uid);
   status = reward_read_where(db, where, &root);
   if (status != CLAN_REPO_OK)
@@ -2324,10 +2370,14 @@ reward_add(int64_t* value, int64_t amount)
 }
 enum clan_repository_result clan_reward_prepare(MYSQL *db, const struct clan_reward_event *e,
     int64_t now, struct json_object **out)
-{ return reward_prepare(db, e, now, out, false); }
+{ return reward_prepare(db, e, now, out, false, 0); }
 enum clan_repository_result clan_reward_prepare_member(MYSQL *db, const struct clan_reward_event *e,
     int64_t now, struct json_object **out)
-{ return reward_prepare(db, e, now, out, true); }
+{ return reward_prepare(db, e, now, out, true, 0); }
+
+enum clan_repository_result clan_reward_prepare_kill(MYSQL *db,const struct clan_reward_event *e,
+    int64_t prototype,int64_t now,struct json_object **out)
+{if(prototype<=0)return CLAN_REPO_INVALID;return reward_prepare(db,e,now,out,true,prototype);}
 
 static struct json_object*
 reward_snapshot_json(const struct clan_reward_snapshot* s)

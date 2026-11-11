@@ -32,7 +32,7 @@
 #include "quest.h"
 #include "discord_bridge.h"
 
-ACMDU(do_rsay)
+ACMDU(do_rsay_communication_impl)
 {
   char type[20];
   char *arg2 = NULL;
@@ -139,7 +139,7 @@ ACMDU(do_rsay)
   }
 }
 
-ACMDU(do_say)
+ACMDU(do_say_communication_impl)
 {
   char type[20];
   char *arg2 = NULL;
@@ -233,7 +233,7 @@ ACMDU(do_say)
   }
 }
 
-ACMDU(do_osay)
+ACMDU(do_osay_communication_impl)
 {
   char type[20];
   char *arg2 = NULL;
@@ -315,7 +315,7 @@ ACMDU(do_osay)
   }
 }
 
-ACMDU(do_speak)
+ACMDU(do_speak_communication_impl)
 {
   skip_spaces(&argument);
   int i = 0;
@@ -370,7 +370,7 @@ ACMDU(do_speak)
   }
 }
 
-ACMDU(do_gsay)
+ACMDU(do_gsay_communication_impl)
 {
   skip_spaces(&argument);
 
@@ -489,7 +489,7 @@ static int is_tell_ok(struct char_data *ch, struct char_data *vict)
 
 /* Yes, do_tell probably could be combined with whisper and ask, but it is
  * called frequently, and should IMHO be kept as tight as possible. */
-ACMD(do_tell)
+ACMD(do_tell_communication_impl)
 {
   struct char_data *vict = NULL;
   char buf[MAX_INPUT_LENGTH] = {'\0'}, buf2[MAX_INPUT_LENGTH] = {'\0'};
@@ -589,7 +589,7 @@ ACMD(do_tell)
   }
 }
 
-ACMDU(do_reply)
+ACMDU(do_reply_communication_impl)
 {
   struct char_data *tch = character_list;
 
@@ -713,7 +713,7 @@ ACMD(do_write)
   }
 }
 
-ACMD(do_page)
+ACMD(do_page_communication_impl)
 {
   struct descriptor_data *d;
   struct char_data *vict;
@@ -755,8 +755,17 @@ ACMD(do_page)
   }
 }
 
+/* OOC chat names are independent of ordinary roleplay short descriptions. */
+static const char *chat_channel_identity(struct char_data *speaker, struct char_data *reader)
+{
+  if (!IS_NPC(speaker) && CAN_SEE(reader, speaker) &&
+      (!PRF_FLAGGED(speaker, PRF_ANONYMOUS) || has_intro(reader, speaker)))
+    return GET_NAME(speaker);
+  return show_pers(speaker, reader);
+}
+
 /* Generalized communication function by Fred C. Merkel (Torg). */
-ACMDU(do_gen_comm)
+ACMDU(do_gen_comm_communication_impl)
 {
   struct descriptor_data *i;
   char color_on[24];
@@ -929,7 +938,8 @@ ACMDU(do_gen_comm)
     /* Create per-recipient message with show_pers for name display */
     if (!emoting)
     {
-      snprintf(buf3, sizeof(buf3), "%s %ss, '%s'\r\n", show_pers(ch, i->character),
+      snprintf(buf3, sizeof(buf3), "%s %ss, '%s'\r\n", subcmd == SCMD_GOSSIP ? chat_channel_identity(ch, i->character)
+                                    : show_pers(ch, i->character),
                com_msgs[subcmd][1], argument);
     }
 
@@ -991,7 +1001,7 @@ ACMDU(do_gen_comm)
   route_mud_to_discord(subcmd, ch, argument, emoting);
 }
 
-ACMDU(do_qcomm)
+ACMDU(do_qcomm_communication_impl)
 {
   if (!PRF_FLAGGED(ch, PRF_QUEST))
   {
@@ -1036,7 +1046,7 @@ ACMDU(do_qcomm)
   }
 }
 
-ACMDU(do_temote)
+ACMDU(do_temote_communication_impl)
 {
   char arg[MAX_INPUT_LENGTH] = {'\0'};
   char msg[MAX_INPUT_LENGTH] = {'\0'};
@@ -1098,7 +1108,7 @@ ACMDU(do_temote)
   act(out, FALSE, ch, 0, vict, TO_NOTVICT);
 }
 
-ACMD(do_diceroll)
+ACMD(do_diceroll_communication_impl)
 {
   int num = 0, size = 0, roll = 0, mod = 0;
   char output[MEDIUM_STRING] = {'\0'};
@@ -1141,7 +1151,7 @@ ACMD(do_diceroll)
 #define CHECK_TAR_SELF 1
 #define CHECK_TAR_PERSON 2
 
-ACMDU(do_skillcheck)
+ACMDU(do_skillcheck_communication_impl)
 {
   int roll = 0, mod = 0, i = 0, j = 0;
   char abiltext[64] = {'\0'}; /* ability names are short */
@@ -1432,3 +1442,107 @@ ACMD(do_dialogue_quest)
 #undef CHECK_TAR_EVERYONE
 #undef CHECK_TAR_SELF
 #undef CHECK_TAR_PERSON
+
+ACMD(do_rsay)
+{
+  bool route_communication = TRUE;
+  if (route_communication) communication_output_depth++;
+  do_rsay_communication_impl(ch, argument, cmd, subcmd);
+  if (route_communication) communication_output_depth--;
+}
+
+ACMD(do_say)
+{
+  bool route_communication = TRUE;
+  if (route_communication) communication_output_depth++;
+  do_say_communication_impl(ch, argument, cmd, subcmd);
+  if (route_communication) communication_output_depth--;
+}
+
+ACMD(do_osay)
+{
+  bool route_communication = TRUE;
+  if (route_communication) communication_output_depth++;
+  do_osay_communication_impl(ch, argument, cmd, subcmd);
+  if (route_communication) communication_output_depth--;
+}
+
+ACMD(do_speak)
+{
+  bool route_communication = TRUE;
+  if (route_communication) communication_output_depth++;
+  do_speak_communication_impl(ch, argument, cmd, subcmd);
+  if (route_communication) communication_output_depth--;
+}
+
+ACMD(do_gsay)
+{
+  bool route_communication = TRUE;
+  if (route_communication) communication_output_depth++;
+  do_gsay_communication_impl(ch, argument, cmd, subcmd);
+  if (route_communication) communication_output_depth--;
+}
+
+ACMD(do_tell)
+{
+  bool route_communication = TRUE;
+  if (route_communication) communication_output_depth++;
+  do_tell_communication_impl(ch, argument, cmd, subcmd);
+  if (route_communication) communication_output_depth--;
+}
+
+ACMD(do_reply)
+{
+  bool route_communication = TRUE;
+  if (route_communication) communication_output_depth++;
+  do_reply_communication_impl(ch, argument, cmd, subcmd);
+  if (route_communication) communication_output_depth--;
+}
+
+ACMD(do_page)
+{
+  bool route_communication = TRUE;
+  if (route_communication) communication_output_depth++;
+  do_page_communication_impl(ch, argument, cmd, subcmd);
+  if (route_communication) communication_output_depth--;
+}
+
+ACMD(do_gen_comm)
+{
+  bool route_communication = TRUE;
+  if (route_communication) communication_output_depth++;
+  do_gen_comm_communication_impl(ch, argument, cmd, subcmd);
+  if (route_communication) communication_output_depth--;
+}
+
+ACMD(do_qcomm)
+{
+  bool route_communication = TRUE;
+  if (route_communication) communication_output_depth++;
+  do_qcomm_communication_impl(ch, argument, cmd, subcmd);
+  if (route_communication) communication_output_depth--;
+}
+
+ACMD(do_temote)
+{
+  bool route_communication = TRUE;
+  if (route_communication) communication_output_depth++;
+  do_temote_communication_impl(ch, argument, cmd, subcmd);
+  if (route_communication) communication_output_depth--;
+}
+
+ACMD(do_diceroll)
+{
+  bool route_communication = TRUE;
+  if (route_communication) communication_output_depth++;
+  do_diceroll_communication_impl(ch, argument, cmd, subcmd);
+  if (route_communication) communication_output_depth--;
+}
+
+ACMD(do_skillcheck)
+{
+  bool route_communication = TRUE;
+  if (route_communication) communication_output_depth++;
+  do_skillcheck_communication_impl(ch, argument, cmd, subcmd);
+  if (route_communication) communication_output_depth--;
+}

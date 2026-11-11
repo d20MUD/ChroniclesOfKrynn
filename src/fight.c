@@ -19,6 +19,7 @@
 #include "legendary_equipment.h"
 #include "legendary_earnings.h"
 #include "structs.h"
+#include "clan_sources.h"
 #include "utils.h"
 #include "mob_utils.h"
 #include "epic_magic.h"
@@ -6372,6 +6373,7 @@ int dam_killed_vict(struct char_data *ch, struct char_data *victim)
     }
   }
 
+  clan_source_death(victim, ch);
   legendary_boss_death(victim, ch);
   GET_POS(victim) = POS_DEAD;
 
@@ -7021,6 +7023,7 @@ static int resolve_damage(struct char_data *ch,struct char_data *victim,int dam,
             victim, TO_NOTVICT);
 
         /* Transfer damage to paladin */
+        clan_source_action(k, ch, CLAN_COMBAT_MITIGATE, victim, dam);
         legendary_record_action(k, ch, LEG_ACTION_INTERCEPT, victim, dam);
         GET_HIT(k) -= dam;
         update_pos(k);
@@ -7045,6 +7048,7 @@ static int resolve_damage(struct char_data *ch,struct char_data *victim,int dam,
     if (transfer > 0 && GET_POS(summoner) > POS_DEAD)
     {
       dam -= transfer;
+      clan_source_action(summoner, ch, CLAN_COMBAT_MITIGATE, victim, transfer);
       legendary_record_action(summoner, ch, LEG_ACTION_INTERCEPT, victim, transfer);
       GET_HIT(summoner) -= transfer;
       update_pos(summoner);
@@ -7066,6 +7070,7 @@ static int resolve_damage(struct char_data *ch,struct char_data *victim,int dam,
       {
         shared_damage = MIN(shared_damage, dam - 1);
         dam -= shared_damage;
+        clan_source_action(golem, ch, CLAN_COMBAT_MITIGATE, victim, shared_damage);
         legendary_record_action(golem, ch, LEG_ACTION_INTERCEPT, victim, shared_damage);
         GET_HIT(golem) -= shared_damage;
         update_pos(golem);
@@ -7083,6 +7088,7 @@ static int resolve_damage(struct char_data *ch,struct char_data *victim,int dam,
       {
         shared_damage = MIN(shared_damage, dam - 1);
         dam -= shared_damage;
+        clan_source_action(victim->master, ch, CLAN_COMBAT_MITIGATE, victim, shared_damage);
         legendary_record_action(victim->master, ch, LEG_ACTION_INTERCEPT, victim, shared_damage);
         GET_HIT(victim->master) -= shared_damage;
         update_pos(victim->master);
@@ -7104,6 +7110,7 @@ static int resolve_damage(struct char_data *ch,struct char_data *victim,int dam,
     legendary_native_observe(ch,victim,dam);
   }
 #endif
+  clan_source_damage(ch,victim,dam,!origin);
   GET_HIT(victim) -= dam;
   if (!origin && ch && IS_EPIC_SPELL(w_type))
   {

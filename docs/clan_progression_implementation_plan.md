@@ -1,6 +1,6 @@
 # Clan Progression Implementation Plan
 
-Status: Phases 1–23, including 4a–4c and 5a–5b, are complete as disabled foundations. Version-5 persistence and reward policy now include membership eligibility, retained-history lifecycle operations and atomic SQL creation/disbanding. Read-only progression commands and pure buff queries are implemented. Activation validation and atomic activation/replacement services are implemented behind disabled gates, with an explicit version-1 activation schema extension to core v5. Durable cancellation/expiration, runtime reconciliation and Company Vitality HP integration are complete behind disabled defaults. Prepared-caster Arcane Readiness timing and saved head-cycle snapshots are complete. Spontaneous slot recovery now shares the saved-cycle semantics. Psionic Focus now applies bounded fractional out-of-combat PSP recovery. Scholar's Encouragement now adjusts source-qualified NPC damage/kill character XP. Artisan's Guidance production checks and the initial five-family stacking audit are complete. Phase 24 player commands are next. No game database migration, live award, deployment or progression enablement has occurred.
+Status: Phases 1–27, including 4a–4c and 5a–5b, are complete as disabled foundations. Version-5 persistence and reward policy now include membership eligibility, retained-history lifecycle operations and atomic SQL creation/disbanding. Read-only progression commands and pure buff queries are implemented. Activation validation and atomic activation/replacement services are implemented behind disabled gates, with an explicit version-1 activation schema extension to core v5. Durable cancellation/expiration, runtime reconciliation and Company Vitality HP integration are complete behind disabled defaults. Prepared-caster Arcane Readiness timing and saved head-cycle snapshots are complete. Spontaneous slot recovery now shares the saved-cycle semantics. Psionic Focus now applies bounded fractional out-of-combat PSP recovery. Scholar's Encouragement now adjusts source-qualified NPC damage/kill character XP. Artisan's Guidance production checks and the initial five-family stacking audit are complete. Player-facing buff commands and the shared combat eligibility query are complete. Live kill contribution and successful supply-order turn-in hooks are implemented behind the existing disabled gates. Phase 28 delivery definitions are next. No game database migration, live award, deployment or progression enablement has occurred.
 
 Design reference: [Clan Progression and Personal Favor](clan_progression_design.md).
 
@@ -488,3 +488,30 @@ A phase is complete only when its deliverable and acceptance check are satisfied
 - **Delivered:** documented five-family application order and stacking boundaries; extended duplicate-tier/family and valid coexistence tests; audited dormant territory helpers without enabling them. Non-clan bonuses stack once at each intended boundary; clan reward facts remain separate.
 - **Validation:** production crafting, HP/equipment, timing, PSP and XP regressions; pure family/slot checks and SQL runtime coexistence.
 - **Handoff:** [Phases 22–23](clan_progression_phase_22_23_handoff.md). Next is Phase 24 player-facing commands. No live enablement or restart.
+
+### Phase 24
+
+- **Status:** complete, defaults remain OFF.
+- **Delivered:** `clan buffs` list/activate/cancel/permission commands, authoritative account/member selection, existing atomic commit services and denial explanations, exact replay commands and leader-only rank delegation under privilege ID 21. No legacy privilege renumbering or staff bypass.
+- **Validation:** actual native command adapter against disposable SQL, including parsing, disabled gates, delegation/revocation, commits/cancellation and replay/conflicts after departure.
+
+### Phase 25
+
+- **Status:** complete as a shared trusted-fact eligibility query; no payout hook enabled.
+- **Delivered:** bounded encounter/participation query independent of XP and legendary boss/level rules, actual level/HP/room/recency thresholds, support/heal/defense paths, controlled-owner resolution, account identity/deduplication and victim exclusions. Invalid facts fail closed.
+- **Validation:** ASan/UBSan representative short/long fights, roles, difficulty/level bands, effective amounts, application deduplication, exclusions and bounded arithmetic; Make/CMake builds and buff regressions.
+- **Handoff:** [Phases 24–25](clan_progression_phase_24_25_handoff.md). Next is Phase 26 live kill/source collection and receipt-backed awards. No live enablement or restart.
+
+
+### Phase 26
+
+- **Status:** complete behind disabled earnings defaults.
+- **Delivered:** bounded live combat collection and shared eligibility at normal NPC death; stable receipt-backed contributions, atomic account/prototype/day full/half/zero source claims, existing weekly/account/Favor/clan policy, and bounded pending recovery. Independent of character XP and legendary boss/level rules.
+- **Validation:** disposable SQL and native ASan/UBSan collector/award integration, daily boundaries, concurrency, replay, lost acknowledgement, owner/account identity, roles and exclusions; Make/CMake builds.
+
+### Phase 27
+
+- **Status:** complete behind disabled earnings defaults.
+- **Delivered:** successful supply-order turn-in hook after normal rewards/cooldown/order clearing, saved completion identity before SQL acceptance, retry/recovery and unchanged existing item-production and turn-in rules.
+- **Validation:** actual turn-in guard/reward/cooldown/duplicate tests, SQL personal source caps, saved-marker replay and failed-save integration tests.
+- **Handoff:** [Phases 26–27](clan_progression_phase_26_27_handoff.md). Next is Phase 28 delivery definitions. No live enablement or restart.

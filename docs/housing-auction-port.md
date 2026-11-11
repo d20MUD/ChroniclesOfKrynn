@@ -202,3 +202,58 @@ including SQL persistence of apostrophes, multiline text, typed affections,
 item values, binding/proficiency, timers, weapon effects, complete special-ability
 lists, and transfer identities. SQL inventory reloads are checked as well. Full live-server playtesting remains a
 post-installation check.
+
+## Owner room sectors and layout reuse
+
+Use `house sector <type>` in a room you own. Allowed values are `Inside`, `City`,
+`Field`, `Forest`, `Water (Swim)` (also `water` or `swim`), `Underwater`, and `Cave`.
+Inside, Underwater and Cave set `ROOM_INDOORS`; the other choices remove only that
+flag. The house flag and other room settings remain intact. Guests cannot edit
+sectors. Invalid choices list the available values without changing the room.
+
+Sectors are persisted in `housing_room_settings`; existing rooms default to Inside.
+The normal estate bootstrap creates this table when permitted. Install
+`sql/20261111_housing_room_sectors.sql` before startup if the runtime database user
+has no DDL permission. Master and fresh-install schemas include the table as well.
+No live database was modified while implementing this change.
+
+`house build <direction>` now searches the connected house layout before charging
+for a room. Positions derive from cardinal/diagonal/up/down exits, separately from
+public-zone rooms and other houses. When an existing room occupies the target
+position, the command saves a two-way connection instead of creating or charging
+for another room. An existing matching reverse exit keeps its runtime door/key
+settings; conflicting exits are not overwritten. Ambiguous or contradictory maps
+are refused. Existing forward exits report that they already exist. New room
+construction retains its normal price and behavior. Linking exits is transactional
+and survives leaving/re-entering and house materialization.
+
+Validation: disposable estate SQL integration tests cover all sectors and indoor
+flag transitions, invalid/guest edits, rehydration from SQL, cardinal/diagonal/floor
+room reuse, free linking with zero gold, saved exits and existing reverse settings.
+`tests/run_house_geometry.py` tests the production geometry/sector helpers with
+ASan/UBSan, including ambiguity, inconsistent cycles and other-house isolation.
+Make and CMake builds pass. No live migration or game restart was performed.
+
+## Discounted room-description corrections
+
+The first `house description <text>` customization in each room costs the normal
+neighborhood description price. Subsequent description edits in that room cost
+10% of the current normal price, rounded up (minimum 1 gold for a nonzero price;
+a free neighborhood remains free). For example, a 1,000-gold first edit is followed
+by 100-gold corrections. Titles and extra descriptions retain their existing prices.
+Successful description edits report the amount charged.
+
+`housing_room_description_edits` permanently records that the room has been
+customized, even if its text is later reset to the default. Rooms customized before
+this feature also qualify automatically when their stored description differs from
+the unfinished-room default. Another untouched room still pays its own first-edit
+price. The text update and eligibility marker commit together; failed saves do not
+change runtime text or deduct gold. Existing owner and affordability checks remain.
+
+The estate bootstrap and installation schemas include the new table. For database
+users without DDL privileges, install `sql/20261111_housing_description_edits.sql`
+before startup. No live schema changes were made during implementation.
+
+Disposable SQL tests cover first/repeat prices, separate rooms, old customized
+rooms, re-entry, default-text restoration, invalid/unaffordable attempts and rollback
+of a forced marker-write failure. Make and CMake builds pass.

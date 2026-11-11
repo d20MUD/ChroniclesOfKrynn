@@ -110,6 +110,8 @@ const struct clan_cmds clan_commands[] = {
     {"promote", CP_PROMOTE, LVL_GRSTAFF, do_clanpromote,
      "%sclan promote <player>     %s- %sIncrease a clan member's clan"
      " rank%s\r\n"},
+    {"buffs", CP_ALL, LVL_GRSTAFF, do_clanbuffs,
+     "%sclan buffs                 %s- %sList, activate, cancel and delegate clan buffs%s\r\n"},
     {"progress", CP_ALL, LVL_GRSTAFF, do_clanprogress,
      "%sclan progress [uid]        %s- %sYour clan progression, Favor and account limits%s\r\n"},
     {"favor", CP_ALL, LVL_GRSTAFF, do_clanfavor,
@@ -5586,7 +5588,7 @@ ACMD(do_clanset)
 /***************************************************************************
  End of Clanset Imm command code - Start of clantalk communications channel
  **************************************************************************/
-ACMD(do_clantalk)
+ACMD(do_clantalk_communication_impl)
 {
   if (!clan_persistence_access(ch)) return;
   char buf[MAX_STRING_LENGTH] = {'\0'}, buf2[MAX_STRING_LENGTH + 256] = {'\0'},
@@ -6074,3 +6076,11 @@ void check_clan_locks(void)
 }
 
 #endif
+
+ACMD(do_clantalk)
+{
+  bool route_communication = TRUE;
+  if (route_communication) communication_output_depth++;
+  do_clantalk_communication_impl(ch, argument, cmd, subcmd);
+  if (route_communication) communication_output_depth--;
+}

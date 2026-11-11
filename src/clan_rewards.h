@@ -40,6 +40,11 @@ enum clan_repository_result clan_reward_prepare(MYSQL *,const struct clan_reward
  * Lower-level prepare remains trusted recovery/test infrastructure. */
 enum clan_repository_result clan_reward_prepare_member(MYSQL *, const struct clan_reward_event *,
     int64_t accepted_at, struct json_object **out);
+/* Kill source acceptance freezes the account/prototype/UTC-day 20 full,
+ * 20 half, then zero policy in the same transaction as its pending receipt.
+ * Requires the optional clan_kill_sources extension. Retries retain the tuple. */
+enum clan_repository_result clan_reward_prepare_kill(MYSQL *,const struct clan_reward_event *,
+    int64_t prototype,int64_t accepted_at,struct json_object **out);
 enum clan_repository_result clan_reward_load(MYSQL *,const char *operation_uid,struct json_object **out);
 enum clan_repository_result clan_reward_complete(MYSQL *,const char *operation_uid,int64_t now,
     clan_reward_decide_fn decide,void *context,struct json_object **out);

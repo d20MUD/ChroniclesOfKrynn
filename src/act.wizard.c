@@ -330,7 +330,7 @@ int purge_room(room_rnum room)
   return 1;
 }
 
-ACMD(do_echo)
+ACMD(do_echo_communication_impl)
 {
   skip_spaces_c(&argument);
 
@@ -3174,7 +3174,7 @@ ACMD(do_force)
   }
 }
 
-ACMDU(do_wiznet)
+ACMDU(do_wiznet_communication_impl)
 {
   char buf1[MAX_INPUT_LENGTH] = {'\0'}, buf2[MAX_INPUT_LENGTH] = {'\0'},
        buf3[MAX_INPUT_LENGTH] = {'\0'}, buf4[MAX_INPUT_LENGTH] = {'\0'};
@@ -13523,3 +13523,19 @@ ACMD(do_settestkit)
 }
 
 /* EOF */
+
+ACMD(do_wiznet)
+{
+  bool route_communication = TRUE;
+  if (route_communication) communication_output_depth++;
+  do_wiznet_communication_impl(ch, argument, cmd, subcmd);
+  if (route_communication) communication_output_depth--;
+}
+
+ACMD(do_echo)
+{
+  bool route_communication = subcmd == SCMD_EMOTE;
+  if (route_communication) communication_output_depth++;
+  do_echo_communication_impl(ch, argument, cmd, subcmd);
+  if (route_communication) communication_output_depth--;
+}

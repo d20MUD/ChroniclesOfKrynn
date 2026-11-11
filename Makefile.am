@@ -61,6 +61,9 @@ circle_SOURCES = \
 	src/clan_buff_commit.c \
 	src/clan_buff_lifecycle.c \
 	src/clan_buff_runtime.c \
+	src/clan_buff_commands.c \
+	src/clan_combat.c \
+	src/clan_sources.c \
 	src/clan_status.c \
 	src/clan_commands.c \
 	src/clan_awards.c \
@@ -332,6 +335,9 @@ EXTRA_DIST = \
 	src/clan_buff_activation.h \
 	src/clan_buff_lifecycle.h \
 	src/clan_buff_runtime.h \
+	src/clan_buff_commands.h \
+	src/clan_combat.h \
+	src/clan_sources.h \
 	sql/20261111_clan_buff_lifecycle_v001.sql \
 	sql/20261111_clan_buff_activations_v001.sql \
 	src/clan_status.h \

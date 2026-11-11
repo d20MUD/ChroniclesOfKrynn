@@ -18,7 +18,7 @@ with database(migrations) as (tmp,socket,sql,client):
     driver=tmp/'driver.c';driver.write_text((ROOT/'tests/clan_buff_lifecycle.c').read_text()+'\n#define time clan_test_time\n'+function+'\n#undef time\n')
     flags=shlex.split(subprocess.check_output(['pkg-config','--cflags','--libs','mariadb','openssl','json-c'],text=True))
     binary=tmp/'lifecycle'
-    subprocess.run(['cc','-std=gnu99','-Wall','-Wextra','-Werror','-g','-fsanitize=address,undefined','-fno-pie','-no-pie','-DCLAN_BUFF_LIFECYCLE_TEST','-I'+str(ROOT/'src'),str(driver),*[str(ROOT/'src'/f) for f in ['clan_repository.c','clan_progression.c','clan_awards.c','clan_buff_queries.c','clan_buff_activation.c','clan_buff_commit.c','clan_buff_lifecycle.c','clan_buff_runtime.c']],*flags,'-o',str(binary)],check=True)
+    subprocess.run(['cc','-std=gnu99','-Wall','-Wextra','-Werror','-g','-fsanitize=address,undefined','-fno-pie','-no-pie','-DCLAN_BUFF_LIFECYCLE_TEST','-I'+str(ROOT/'src'),str(driver),*[str(ROOT/'src'/f) for f in ['clan_repository.c','clan_progression.c','clan_awards.c','clan_buff_queries.c','clan_buff_activation.c','clan_buff_commit.c','clan_buff_lifecycle.c','clan_buff_runtime.c','clan_status.c','clan_buff_commands.c']],*flags,'-o',str(binary)],check=True)
     def proc(request):return subprocess.run([str(binary),str(socket)],input=json.dumps(request),text=True,capture_output=True)
     def run(mode='reconcile',expected='ok',**kw):
         r=dict(mode=mode,now=2200000000)|kw;p=proc(r);assert p.returncode==0,(p.stdout,p.stderr)
@@ -82,6 +82,48 @@ with database(migrations) as (tmp,socket,sql,client):
     run('activate',operation_uid='e'*32,now=2201166400,family=5)
     run('activate',operation_uid='f'*32,now=2201166400,family=1,slot=2)
     p=proc(dict(mode='artisan-runtime',now=2201166400));assert p.returncode==0,(p.stdout,p.stderr);print(p.stdout.strip())
+    # Actual Phase 24 command adapter, injected live config on this private DB.
+    def command(args,**extra):
+        p=proc(dict(mode='buff-command',now=2201296000,args=args)|extra)
+        assert p.returncode==0,(args,p.stdout,p.stderr)
+        return json.loads(p.stdout)['text']
+    text=command('list');assert "Family 5: Artisan" in text and 'Buff slots' in text,text
+    before=state();assert 'Usage' not in command('activate 2 1 1',disabled=True) and state()==before
+    text=command('activate 2 1 1',disabled=True);assert 'disabled' in text,text
+    for args in ['activate 2 -1 1','activate 2 1 99999999999',"activate 2 1 1 bad uid",'cancel bad','permission -1','list extra','replace 3 1 1 bad']:
+        assert 'clan buffs list' in command(args) and state()==before
+    assert 'authenticated' in command('list',account=0)
+    assert 'ineligible' in command('permission 2',actor=88) or 'membership' in command('permission 2',actor=88)
+    assert 'invalid' in command('permission 3')
+    assert 'ok' in command('permission 2')
+    assert sql(f"SELECT max_rank FROM clan_buff_management WHERE clan_uid='{A}'")=='2'
+    sql(f"INSERT INTO clan_memberships(player_id,clan_uid,rank_id,legacy_points) VALUES(88,'{A}',2,0)")
+    text=command(f'activate 2 1 1 {"1a"*16} {A}',actor=88);assert 'Buff operation: ok' in text,text
+    after=state();assert 'Buff operation: ok' in command(f'activate 2 1 1 {"1a"*16} {A}',actor=88) and state()==after
+    assert 'Buff operation: conflict' in command(f'activate 3 1 1 {"1a"*16} {A}',actor=88)
+    # Occupied slots require the exact active UID before replacement.
+    after=state();text=command(f'replace 3 1 1 {"8a"*16}',actor=88)
+    assert 'changed' in text and state()==after,text
+    after=state();text=command(f'activate 3 1 1 {"4a"*16} {A}',actor=88)
+    assert 'explicit replacement' in text and state()==after,text
+    text=command(f'activate 3 1 1 {"4a"*16} {A} {"8a"*16}',actor=88)
+    assert 'changed' in text and state()==after,text
+    text=command(f'activate 3 1 1 {"5a"*16} {A} {"1a"*16}',actor=88)
+    assert 'Buff operation: ok' in text,text
+    text=command(f'replace 4 1 1 {"5a"*16}',actor=88);assert 'Buff operation: ok' in text,text
+    text=command('list');assert 'next use' in text and 'UTC' in text
+    # Revoke management: no refresh/cancel bypass; leader can still cancel.
+    assert 'ok' in command('permission 0')
+    assert 'permission' in command(f'cancel 0123456789abcdef0123456789abcdef {"2a"*16} {A}',actor=88)
+    assert 'Buff operation: ok' in command(f'cancel 0123456789abcdef0123456789abcdef {"3a"*16} {A}')
+    sql('DELETE FROM clan_memberships WHERE player_id=88')
+    after=state();assert 'Buff operation: ok' in command(f'activate 2 1 1 {"1a"*16} {A}',actor=88,disabled=True) and state()==after
+    assert 'ok' in command('permission 2')
+    sql(f"UPDATE clan_progression_legacy SET details=JSON_SET(details,'$.ranks',JSON_ARRAY('Leader')) WHERE clan_uid='{A}'")
+    assert 'ok' in command('permission 0')
+    sql(f"UPDATE clan_progression_legacy SET details=JSON_SET(details,'$.ranks',JSON_ARRAY('Leader','Member')) WHERE clan_uid='{A}'")
+    print('Phase 24 command parsing, listing, delegation/revocation, activation/cancel, exact retry/conflict and departure replay passed')
     sql('DROP TRIGGER cble_retained');before=state()
     run(expected='schema-mismatch',now=2200500000);assert state()==before
+    assert 'lifecycle storage is not ready' in command('activate 4 1 1') and state()==before
     print('Phases 16–17: exact-once cancellation/expiry, retained cooldowns, restart/offline reconciliation, faults/crashes/retries, invalidation and Company Vitality HP invariants passed.')

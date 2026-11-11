@@ -6342,6 +6342,10 @@ struct crafting_data_info
   int resize_mat_type;
   int resize_mat_num;
 
+  // Durable successful-turn-in handoff; retained until SQL receipt acceptance.
+  char clan_supply_event[33], clan_supply_uid[33];
+  int64_t clan_supply_account, clan_supply_at;
+
   // supply order info
   int supply_num_required;
   int supply_contract_type;

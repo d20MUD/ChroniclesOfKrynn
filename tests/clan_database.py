@@ -8,7 +8,7 @@ def database(migrations=('20261110_clan_progression_v001.sql',)):
  with tempfile.TemporaryDirectory(prefix='clan-db-') as directory:
   tmp=Path(directory);sock=tmp/'mysql.sock';log=tmp/'server.log'
   subprocess.run(['mariadb-install-db','--no-defaults','--datadir='+str(tmp/'data'),'--auth-root-authentication-method=normal','--skip-test-db'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,check=True)
-  process=subprocess.Popen(['mariadbd','--no-defaults','--datadir='+str(tmp/'data'),'--socket='+str(sock),'--pid-file='+str(tmp/'pid'),'--skip-networking','--log-error='+str(log),'--user='+getpass.getuser()],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+  process=subprocess.Popen(['mariadbd','--no-defaults','--datadir='+str(tmp/'data'),'--socket='+str(sock),'--tmpdir='+str(tmp),'--pid-file='+str(tmp/'pid'),'--skip-networking','--log-error='+str(log),'--user='+getpass.getuser()],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
   client=['mariadb','--no-defaults','--socket='+str(sock),'-uroot','--batch','--skip-column-names']
   try:
    for _ in range(100):

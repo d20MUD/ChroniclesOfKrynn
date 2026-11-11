@@ -500,6 +500,9 @@ set(SRC_C_FILES
     src/clan_buff_commit.c
     src/clan_buff_lifecycle.c
     src/clan_buff_runtime.c
+    src/clan_buff_commands.c
+    src/clan_combat.c
+    src/clan_sources.c
     src/clan_status.c
     src/clan_commands.c
     src/clan_awards.c

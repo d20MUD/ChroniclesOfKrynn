@@ -100,3 +100,15 @@ void free_tokens(char **tokens)
 }
 
 #endif
+
+/* These isolated estate/legendary fixtures run with clan earnings disabled.
+ * Live clan integration is exercised separately by run_clan_kill_sources.py. */
+#include "clan_sources.h"
+void clan_source_action(struct char_data *a,struct char_data *v,enum clan_combat_action_kind k,struct char_data *ally,int amount)
+{(void)a;(void)v;(void)k;(void)ally;(void)amount;}
+void clan_source_support(struct char_data *a,struct char_data *ally,enum clan_combat_action_kind k,int amount)
+{(void)a;(void)ally;(void)k;(void)amount;}
+void clan_source_damage(struct char_data *a,struct char_data *v,int amount,bool attack)
+{(void)a;(void)v;(void)amount;(void)attack;}
+void clan_source_death(struct char_data *v,struct char_data *k){(void)v;(void)k;}
+void clan_source_forget(struct char_data *v){(void)v;}

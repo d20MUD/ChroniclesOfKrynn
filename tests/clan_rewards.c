@@ -29,13 +29,13 @@ int main(int argc,char **argv)
  clan_reward_fault=(int)n(request,"fault");clan_reward_crash=(int)n(request,"crash");
  uid(operation,request,"operation_uid");out=json_object_new_object();json_object_object_add(out,"untouched",json_object_new_boolean(true));
  {struct json_object *original=out;
- if(!strcmp(argv[2],"prepare") || !strcmp(argv[2],"prepare-member")){
+ if(!strcmp(argv[2],"prepare") || !strcmp(argv[2],"prepare-member") || !strcmp(argv[2],"prepare-kill")){
   struct clan_reward_event e;memset(&e,0,sizeof(e));uid(e.operation_uid,request,"operation_uid");uid(e.event_uid,request,"event_uid");uid(e.clan_uid,request,"clan_uid");
   e.source=(enum clan_reward_source)n(request,"source");e.rules_version=(int)n(request,"rules_version");
 #define F(key) e.key=n(request,#key)
   F(account_id);F(player_id);F(occurred_at);F(requested_xp_eighths);F(requested_influence_eighths);F(requested_favor_eighths);
 #undef F
-  status=!strcmp(argv[2],"prepare-member") ? clan_reward_prepare_member(db,&e,n(request,"now"),&out) : clan_reward_prepare(db,&e,n(request,"now"),&out);
+  status=!strcmp(argv[2],"prepare-kill") ? clan_reward_prepare_kill(db,&e,n(request,"prototype"),n(request,"now"),&out) : !strcmp(argv[2],"prepare-member") ? clan_reward_prepare_member(db,&e,n(request,"now"),&out) : clan_reward_prepare(db,&e,n(request,"now"),&out);
  }else if(!strcmp(argv[2],"access")) {
   enum clan_member_access access;
   char clan_uid[33];uid(clan_uid,request,"clan_uid");

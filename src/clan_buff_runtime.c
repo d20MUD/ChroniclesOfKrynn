@@ -155,3 +155,5 @@ void clan_buff_runtime_login_end(struct char_data *ch,int64_t now)
   calculate_max_hp(ch,false);
   GET_HIT(ch)=MIN(GET_HIT(ch),GET_MAX_HIT(ch));
 }
+
+const struct clan_progression_config *clan_buff_runtime_policy(void) { return config; }

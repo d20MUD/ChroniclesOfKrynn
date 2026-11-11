@@ -3,6 +3,7 @@
 #include "conf.h"
 #include "sysdep.h"
 #include "structs.h"
+#include "clan_sources.h"
 #include "utils.h"
 #include "comm.h"
 #include "db.h"
@@ -363,7 +364,7 @@ int legendary_heal(struct char_data *source,struct char_data *target,int amount)
   if(AFF_FLAGGED(source,AFF_BLACKMANTLE)||AFF_FLAGGED(target,AFF_BLACKMANTLE))amount=(int)((int64_t)amount*8/10);
   actual=MIN(amount,MAX(0,GET_MAX_HIT(target)-GET_HIT(target)));
   actual=legendary_budget_debit(target,LEG_BUDGET_HEALING,actual);
-  if(actual){GET_HIT(target)+=actual;update_pos(target);legendary_record_support(source,target,LEG_ACTION_HEAL,actual);}return actual;
+  if(actual){GET_HIT(target)+=actual;update_pos(target);clan_source_support(source,target,CLAN_COMBAT_HEAL,actual);legendary_record_support(source,target,LEG_ACTION_HEAL,actual);}return actual;
 }
 int legendary_resource_restore(struct char_data *ch,int amount)
 {
@@ -495,6 +496,7 @@ int legendary_temporary_hp(const struct legendary_activation *a,int amount,int d
   if(!grant){effects->revoked=true;sweep();return 0;}
   effects->spec.magnitude=old+grant;
   if(e)e->revoked=true;
+  clan_source_support(a->source,a->target,CLAN_COMBAT_HEAL,grant);
   legendary_record_support(a->source,a->target,LEG_ACTION_HEAL,grant);
   sweep();return grant;
 }
@@ -546,8 +548,9 @@ int legendary_effects_damage(struct char_data *source,struct char_data *target,i
         /* A terminal, tagged transfer: no defenses, recursion, lifesteal or new
          * offensive participation; the actual interceptor gets one receipt. */
         GET_HIT(e->activation.source)-=prevented;update_pos(e->activation.source);
+        clan_source_action(e->activation.source,source,CLAN_COMBAT_MITIGATE,target,prevented);
         legendary_record_action(e->activation.source,source,LEG_ACTION_INTERCEPT,target,prevented);
-      }else legendary_record_support(e->activation.source,target,LEG_ACTION_DEFENSE,prevented);
+      }else {clan_source_support(e->activation.source,target,CLAN_COMBAT_MITIGATE,prevented);legendary_record_support(e->activation.source,target,LEG_ACTION_DEFENSE,prevented);}
       if(e->spec.pool>0){e->spec.pool-=prevented;if(!e->spec.pool)e->revoked=true;}
       if(e->spec.charges>0&&!--e->spec.charges)e->revoked=true;
     }

@@ -830,8 +830,10 @@ void route_discord_to_mud(const char *channel, const char *name, const char *mes
     snprintf(buf, sizeof(buf), "%s%s: %s%s\r\n", channel_color, formatted_name, message,
              CCNRM(d->character, C_NRM));
 
-    /* Send the message */
+    /* Apply the same recipient-filtered communication routing as MUD channels. */
+    communication_output_depth++;
     send_to_char(d->character, "%s", buf);
+    communication_output_depth--;
   }
 }
 

@@ -14,6 +14,7 @@
 #include "legendary_techniques.h"
 #include "legendary_earnings.h"
 #include "structs.h"
+#include "clan_sources.h"
 #include "utils.h"
 #include "epic_magic.h"
 #include "comm.h"
@@ -10835,7 +10836,10 @@ void mag_affects_full(int level, struct char_data *ch, struct char_data *victim,
   if (legendary_applied && !legendary_had_effect)
   {
     if (spell_info[spellnum].violent)
+    {
+      clan_source_action(ch,victim,CLAN_COMBAT_SUPPORT,NULL,1);
       legendary_record_action(ch, victim, LEG_ACTION_DEBUFF, NULL, 1);
+    }
     else
       switch (spellnum)
       {
@@ -10848,6 +10852,7 @@ void mag_affects_full(int level, struct char_data *ch, struct char_data *victim,
         case SPELL_DISPLACEMENT: case SPELL_MIND_BLANK: case SPELL_PROT_FROM_EVIL:
         case SPELL_PROT_FROM_GOOD: case SPELL_ELEMENTAL_RESISTANCE: case SPELL_RESISTANCE:
         case SPELL_SHIELD_OF_FORTIFICATION: case SPELL_PROTECTION_FROM_POISON:
+          clan_source_support(ch,victim,CLAN_COMBAT_DEFENSE,1);
           legendary_record_support(ch, victim, LEG_ACTION_DEFENSE, 1); break;
       }
   }
@@ -13499,6 +13504,8 @@ bool process_healing(struct char_data *ch, struct char_data *victim, int spellnu
   /* this is for PSP */
   GET_PSP(victim) = MIN(GET_MAX_PSP(victim), GET_PSP(victim) + psp);
 
+  clan_source_support(ch,victim,CLAN_COMBAT_HEAL,
+      MAX(0, MIN(GET_MAX_HIT(victim), GET_HIT(victim)) - start_hp));
   legendary_record_support(ch, victim, LEG_ACTION_HEAL,
       MAX(0, MIN(GET_MAX_HIT(victim), GET_HIT(victim)) - start_hp));
 

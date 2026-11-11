@@ -127,4 +127,7 @@ extern int next_tick;
 
 #endif /* __COMM_C__ */
 
+/* Nestable communication scope; web chat uses transient MSDP events. */
+extern int communication_output_depth;
+
 #endif /* _COMM_H_ */

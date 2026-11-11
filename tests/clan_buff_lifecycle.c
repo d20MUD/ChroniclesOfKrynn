@@ -7,10 +7,23 @@
 #include "clan_persistence.h"
 #include "clan_buff_runtime.h"
 #include "clan_buff_lifecycle.h"
+#include "clan_buff_commands.h"
+#include "perfmon.h"
 #include "legendary.h"
 #include <json-c/json.h>
 #include <assert.h>
 #include <limits.h>
+void PERF_prof_sect_init(struct PERF_prof_sect **p,const char *id){(void)id;*p=NULL;}
+void PERF_prof_sect_enter(struct PERF_prof_sect *p){(void)p;}
+void PERF_prof_sect_exit(struct PERF_prof_sect *p){(void)p;}
+static char command_output[32768];
+size_t send_to_char(struct char_data *ch,const char *format,...)
+{
+  size_t used=strlen(command_output);int n;va_list args;(void)ch;
+  va_start(args,format);n=vsnprintf(command_output+used,sizeof(command_output)-used,format,args);va_end(args);
+  assert(n>=0&&(size_t)n<sizeof(command_output)-used);return (size_t)n;
+}
+bool legendary_uuid_generate(char out[33]){strcpy(out,"0123456789abcdef0123456789abcdef");return true;}
 struct char_data *character_list;
 struct player_special_data dummy_mob;
 bool mysql_available=true;
@@ -176,6 +189,18 @@ int main(int argc,char **argv)
   assert(json_object_object_get_ex(input,"mode",&v));mode=json_object_get_string(v);
   assert(json_object_object_get_ex(input,"now",&v));now=json_object_get_int64(v);test_now=now;
   db=mysql_init(NULL);assert(mysql_real_connect(db,NULL,"root",NULL,"clan_test",0,argv[1],0));connection.conn=db;
+  if(!strcmp(mode,"buff-command")) {
+    struct char_data ch={0};struct descriptor_data desc={0};struct account_data account={0};
+    const char *args="";struct json_object *answer=json_object_new_object();
+    GET_IDNUM((&ch))=5000000007;ch.desc=&desc;desc.character=&ch;desc.account=&account;account.id=77;
+    if(json_object_object_get_ex(input,"actor",&v))GET_IDNUM((&ch))=json_object_get_int64(v);
+    if(json_object_object_get_ex(input,"account",&v))account.id=json_object_get_int(v);
+    if(json_object_object_get_ex(input,"disabled",&v))c.controls.buffs=!json_object_get_boolean(v);
+    if(json_object_object_get_ex(input,"args",&v))args=json_object_get_string(v);
+    assert(clan_buff_runtime_configure(&c));clan_buff_command(&ch,args,now);
+    json_object_object_add(answer,"text",json_object_new_string(command_output));puts(json_object_to_json_string(answer));
+    json_object_put(answer);json_object_put(input);mysql_close(db);return 0;
+  }
   if(!strcmp(mode,"artisan-runtime")){artisan_runtime(now);json_object_put(input);mysql_close(db);return 0;}
   if(!strcmp(mode,"scholar-runtime")){scholar_runtime(now);json_object_put(input);mysql_close(db);return 0;}
   if(!strcmp(mode,"psionic-runtime")){psionic_runtime(db,now);json_object_put(input);mysql_close(db);return 0;}

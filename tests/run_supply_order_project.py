@@ -12,16 +12,34 @@ def function(signature):
     return source[start:source.index('\n}', start) + 2]
 headers = ''.join(f'#include "{h}"\n' for h in
                   ['conf.h', 'sysdep.h', 'structs.h', 'utils.h', 'spells.h',
-                   'comm.h', 'interpreter.h', 'crafting_new.h', 'crafting_recipes.h'])
+                   'comm.h', 'interpreter.h', 'crafting_new.h', 'crafting_recipes.h', 'db.h', 'account.h', 'clan_sources.h', 'modify.h'])
 code = '\n'.join(line for line in source.splitlines() if line.startswith(('#define NSUPPLY_ORDER_DURATION ', '#define CREATE_BASE_TIME '))) + '\n'
 code += r'''
 #include <assert.h>
 struct player_special_data dummy_mob;
 struct craft_recipe_data crafting_recipes[NUM_CRAFTING_RECIPES];
 const char *ability_names[NUM_ABILITIES + 1];
-static int awarded_skill, consumed, station_skill;
+static int awarded_skill, consumed, station_skill, identities, turnins;
+static bool quartermaster=true;
+struct happyhour happy_data;
+void parse_at(char *text) { (void)text; }
+bool has_quartermaster_in_room(struct char_data *ch) { return quartermaster; }
+int calculate_supply_order_reward(struct char_data *ch) { return 100; }
+int apply_account_reward_bonus(struct char_data *ch,int amount,int bonus) { return amount; }
+bool remove_supply_order_materials(struct char_data *ch) { return true; }
+void clan_source_supply_identity(struct char_data *ch,char uid[33]) {
+  identities++;strcpy(uid,"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+}
+void clan_source_supply_complete(struct char_data *ch,const char uid[33]) {
+  assert(!strcmp(uid,"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"));
+  assert(!GET_CRAFT(ch).supply_num_required && !GET_NSUPPLY_NUM_MADE(ch));
+  assert(GET_CRAFT(ch).crafting_recipe==CRAFT_RECIPE_NONE);
+  assert(GET_CRAFT(ch).supply_orders_completed_count==1);
+  turnins++;
+}
 void basic_mud_log(const char *fmt, ...) { assert(0); }
 size_t send_to_char(struct char_data *ch, const char *fmt, ...) { return 0; }
+int MIN(int a,int b) { return a<b?a:b; }
 int dice(int n, int size) { return 1; }
 int num_supply_order_requisitions_to_go(struct char_data *ch) {
   return GET_CRAFT(ch).supply_num_required - GET_NSUPPLY_NUM_MADE(ch);
@@ -47,7 +65,8 @@ for sig in ['int craft_recipe_by_type(int type)',
             'int recipe_skill_to_actual_crafting_skill(int recipe_skill)',
             'static void update_supply_order_project(struct char_data *ch)',
             'void start_supply_order(struct char_data *ch)',
-            'void craft_supplyorder_complete(struct char_data *ch)']:
+            'void craft_supplyorder_complete(struct char_data *ch)',
+            'void complete_supply_order(struct char_data *ch)']:
     code += function(sig)
 # Compile the actual normal-craft entry point, stubbing only its unrelated normal-item dependencies.
 code += r'''
@@ -69,6 +88,7 @@ int main(void) {
     ABILITY_CRAFT_TAILORING, ABILITY_CRAFT_ALCHEMY};
   for (int t = 0; t < 4; t++) for (int k = 0; k < 7; k++) {
     memset(&ps, 0, sizeof(ps));
+    identities=turnins=0;
     crafting_recipes[1].object_type = types[t];
     crafting_recipes[1].object_subtype = 12;
     crafting_recipes[1].variant_skill[0] = skills[k];
@@ -101,6 +121,18 @@ int main(void) {
     assert(GET_NSUPPLY_NUM_MADE((&ch)) == 2 && consumed == 2);
     begin_current_craft(&ch);
     assert(GET_CRAFT((&ch)).craft_duration == 0);
+    assert(!identities&&!turnins); /* producing items is not a turn-in */
+    quartermaster=false;complete_supply_order(&ch);
+    assert(!identities&&!turnins);
+    quartermaster=true;
+    GET_NSUPPLY_NUM_MADE((&ch))=1;complete_supply_order(&ch);
+    assert(!identities&&!turnins);
+    GET_NSUPPLY_NUM_MADE((&ch))=2;
+    long long before=GET_GOLD(&ch);
+    complete_supply_order(&ch);
+    assert(identities==1&&turnins==1&&GET_GOLD(&ch)==before+100);
+    complete_supply_order(&ch);
+    assert(identities==1&&turnins==1&&GET_GOLD(&ch)==before+100);
   }
   return 0;
 }

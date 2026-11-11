@@ -5,7 +5,7 @@
 #include "utils.h"      /* for ACMD */
 #include "ai_service.h" /* for ai_npc_dialogue_async */
 
-ACMD(do_spec_comm)
+ACMD(do_spec_comm_communication_impl)
 {
   char buf[MAX_INPUT_LENGTH] = {'\0'}, buf2[MAX_INPUT_LENGTH] = {'\0'}, *buf3 = NULL;
   struct char_data *vict;
@@ -95,4 +95,12 @@ ACMD(do_spec_comm)
     if (buf3)
       free(buf3);
   }
+}
+
+ACMD(do_spec_comm)
+{
+  bool route_communication = TRUE;
+  if (route_communication) communication_output_depth++;
+  do_spec_comm_communication_impl(ch, argument, cmd, subcmd);
+  if (route_communication) communication_output_depth--;
 }

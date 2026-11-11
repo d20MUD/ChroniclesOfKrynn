@@ -1,6 +1,7 @@
 #ifndef KRYNN_CLAN_BUFF_LIFECYCLE_H
 #define KRYNN_CLAN_BUFF_LIFECYCLE_H
 #include "clan_buff_activation.h"
+enum clan_repository_result clan_buff_lifecycle_schema_check(MYSQL *);
 struct clan_buff_cancel_request {char operation_uid[33],clan_uid[33],activation_uid[33];int64_t actor_id;};
 /* Cancellation has the same release/current-member/management checks as
  * activation. No refund and no reset of any family timestamp. Exact replay is

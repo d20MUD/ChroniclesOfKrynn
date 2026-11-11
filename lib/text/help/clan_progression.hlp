@@ -40,4 +40,5 @@ selected account's usage. The character and account IDs are separate inspection
 keys; this command does not assert that they belong together. Clan rank or
 officer permissions do not grant access to this staff tool. It cannot mint or
 edit any earned currency, counter, receipt or cooldown.
+See also: CLANBUFFS, CLAN
 #0

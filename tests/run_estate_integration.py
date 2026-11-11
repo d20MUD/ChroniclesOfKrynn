@@ -141,7 +141,7 @@ with tempfile.TemporaryDirectory(prefix='krynn-estate-test-') as directory:
         earnings_executable = temp/'legendary-earnings-test'
         limits_source = (root/'src/limits.c').read_text()
         xp_codec = temp/'earnings-xp.c'
-        xp_codec.write_text('\n'.join(re.findall(r'^#include .+$',limits_source,re.M)) + '\n' +
+        xp_codec.write_text('#include "clan_sources.h"\n' + '\n'.join(re.findall(r'^#include .+$',limits_source,re.M)) + '\n' +
             '\n'.join(re.findall(r'^#define (?:NEWBIE_EXP|MIN_NUM_MOBS_TO_KILL_\d+) .+$',limits_source,re.M)) + '\n' +
             function('static int scholar_adventuring_xp(',limits_source) + '\n' +
             function('int gain_exp_from_damage(',limits_source) + '\n' +

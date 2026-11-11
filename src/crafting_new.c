@@ -7,6 +7,7 @@
 #include "legendary_equipment.h"
 #include <time.h>
 #include "structs.h"
+#include "clan_sources.h"
 #include "bool.h"
 #include "mysql.h"
 #include "utils.h"
@@ -10053,6 +10054,7 @@ bool has_crafting_station_in_room(struct char_data *ch, int skill)
 
 void complete_supply_order(struct char_data *ch)
 {
+  char clan_uid[33]="";
   int gold_reward = 0;
   int bonus_exp = 0;
   int artisan_points = 0;
@@ -10081,6 +10083,8 @@ void complete_supply_order(struct char_data *ch)
         num_supply_order_requisitions_to_go(ch));
     return;
   }
+
+  clan_source_supply_identity(ch,clan_uid);
 
   // Calculate rewards
   gold_reward = calculate_supply_order_reward(ch);
@@ -10185,6 +10189,8 @@ void complete_supply_order(struct char_data *ch)
     GET_CRAFT(ch).materials[i][0] = 0;
     GET_CRAFT(ch).materials[i][1] = 0;
   }
+  clan_source_supply_complete(ch,clan_uid);
+
 }
 
 int calculate_supply_order_reward(struct char_data *ch)

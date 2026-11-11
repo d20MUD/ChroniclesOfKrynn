@@ -157,6 +157,39 @@ static void charge(struct char_data *ch, long amount)
   estate_save_player(ch);
 }
 
+/* The first customization buys the room description; later edits are corrections.
+ * Recognize pre-feature custom descriptions as well as durable edit markers. */
+static long room_description_price(struct home_room *room, long full_price)
+{
+  MYSQL_RES *res;
+  MYSQL_ROW row;
+  bool customized=false;
+  if(full_price<0)return -1;
+  res=estate_select("SELECT r.description,EXISTS(SELECT 1 FROM housing_room_description_edits e "
+      "WHERE e.room_id=r.room_id) FROM housing_rooms r WHERE r.room_id=%ld AND r.house_id=%ld",
+      room->id,room->house);
+  if(!res)return -1;
+  row=mysql_fetch_row(res);
+  if(!row){mysql_free_result(res);return -1;}
+  customized=atoi(row[1]) ||
+      (strcmp(row[0],"This room awaits your imagination.\r\n") &&
+       strcmp(row[0],"This room awaits your imagination.\n") &&
+       strcmp(row[0],"This room awaits your imagination."));
+  mysql_free_result(res);
+  return customized ? full_price/10+(full_price%10!=0) : full_price;
+}
+static bool save_room_description(struct home_room *room,const char *quoted_text)
+{
+  if(!estate_query("START TRANSACTION"))return false;
+  if(!estate_query("UPDATE housing_rooms SET description='%s' WHERE room_id=%ld AND house_id=%ld",
+      quoted_text,room->id,room->house)||
+      !estate_query("INSERT IGNORE INTO housing_room_description_edits(room_id) VALUES(%ld)",room->id)||
+      !estate_query("COMMIT")) {
+    estate_query("ROLLBACK");return false;
+  }
+  return true;
+}
+
 static char *description_text(const char *text)
 {
   size_t n = strlen(text);
@@ -234,6 +267,109 @@ static void connect_rooms(long from, int dir, long to)
   world[r].dir_option[dir]->key = NOTHING;
   world[r].dir_option[dir]->to_room = real_room(b->vnum);
 }
+/* Only these owner-selectable sectors are persisted for private house rooms. */
+static int house_sector(const char *name)
+{
+  static const struct { const char *name; int sector; } options[] = {
+    {"inside", SECT_INSIDE}, {"city", SECT_CITY}, {"field", SECT_FIELD},
+    {"forest", SECT_FOREST}, {"water (swim)", SECT_WATER_SWIM},
+    {"underwater", SECT_UNDERWATER}, {"cave", SECT_CAVE}
+  };
+  size_t i;
+  if (!str_cmp(name, "water") || !str_cmp(name, "swim")) return SECT_WATER_SWIM;
+  for (i=0;i<sizeof(options)/sizeof(*options);i++)
+    if (!str_cmp(name, options[i].name)) return options[i].sector;
+  return -1;
+}
+static void apply_house_sector(room_rnum room, int sector)
+{
+  switch (sector) {
+  case SECT_INSIDE: case SECT_CITY: case SECT_FIELD: case SECT_FOREST:
+  case SECT_WATER_SWIM: case SECT_UNDERWATER: case SECT_CAVE: break;
+  default: sector=SECT_INSIDE; break;
+  }
+  world[room].sector_type = sector;
+  if (sector == SECT_INSIDE || sector == SECT_UNDERWATER || sector == SECT_CAVE)
+    SET_BIT_AR(world[room].room_flags, ROOM_INDOORS);
+  else
+    REMOVE_BIT_AR(world[room].room_flags, ROOM_INDOORS);
+}
+
+/* Geometry belongs to this house alone, never the surrounding public zone. */
+static bool house_overlap(struct home_room *origin, int dir, struct home_room **target)
+{
+  static const int delta[10][3] = {
+    {0,1,0},{1,0,0},{0,-1,0},{-1,0,0},{0,0,1},{0,0,-1},
+    {-1,1,0},{1,1,0},{1,-1,0},{-1,-1,0}
+  };
+  struct position { struct home_room *room; int x,y,z; } *positions;
+  struct home_room *r;
+  int capacity=0,count=1,index,door,j;
+  bool valid=true;
+  *target=NULL;
+  if(dir<0||dir>=10)return false;
+  for(r=home_rooms;r;r=r->next)if(r->house==origin->house)capacity++;
+  positions=calloc(capacity,sizeof(*positions));
+  if(!positions)return false;
+  positions[0].room=origin;
+  for(index=0;index<count&&valid;index++) {
+    room_rnum room=real_room(positions[index].room->vnum);
+    if(room==NOWHERE){valid=false;break;}
+    if(positions[index].x==delta[dir][0]&&positions[index].y==delta[dir][1]&&positions[index].z==delta[dir][2]) {
+      if(*target){valid=false;break;}
+      *target=positions[index].room;
+    }
+    for(door=0;door<10;door++) {
+      room_rnum destination;
+      int x,y,z;
+      if(!world[room].dir_option[door])continue;
+      destination=world[room].dir_option[door]->to_room;
+      if(destination==NOWHERE||destination>top_of_world)continue;
+      r=room_record(GET_ROOM_VNUM(destination));
+      if(!r||r->house!=origin->house)continue;
+      x=positions[index].x+delta[door][0];y=positions[index].y+delta[door][1];z=positions[index].z+delta[door][2];
+      for(j=0;j<count&&positions[j].room!=r;j++);
+      if(j<count) {
+        if(positions[j].x!=x||positions[j].y!=y||positions[j].z!=z){valid=false;break;}
+      } else {
+        if(count>=capacity){valid=false;break;}
+        positions[count].room=r;positions[count].x=x;positions[count].y=y;positions[count].z=z;count++;
+      }
+    }
+  }
+  free(positions);
+  return valid;
+}
+static bool link_house_rooms(struct home_room *from, int dir, struct home_room *to)
+{
+  MYSQL_RES *res;
+  MYSQL_ROW row;
+  bool valid=true;
+  if(from->house!=to->house||from==to||dir<0||dir>=10)return false;
+  if(!estate_query("START TRANSACTION"))return false;
+  res=estate_select("SELECT house_id FROM housing_houses WHERE house_id=%ld FOR UPDATE",from->house);
+  if(!res)goto fail;
+  valid=mysql_num_rows(res)==1;mysql_free_result(res);
+  if(!valid)goto fail;
+  res=estate_select("SELECT from_room_id,to_room_id FROM housing_room_exits WHERE "
+      "(from_room_id=%ld AND direction=%d) OR (from_room_id=%ld AND direction=%d) FOR UPDATE",
+      from->id,dir,to->id,rev_dir[dir]);
+  if(!res)goto fail;
+  while((row=mysql_fetch_row(res))) {
+    if(atol(row[1])!=(atol(row[0])==from->id?to->id:from->id))valid=false;
+  }
+  mysql_free_result(res);
+  if(!valid)goto fail;
+  if(!estate_query("INSERT INTO housing_room_exits(from_room_id,direction,to_room_id) "
+      "VALUES(%ld,%d,%ld),(%ld,%d,%ld) ON DUPLICATE KEY UPDATE to_room_id=to_room_id",
+      from->id,dir,to->id,to->id,rev_dir[dir],from->id)||!estate_query("COMMIT"))goto fail;
+  if(!world[real_room(from->vnum)].dir_option[dir])connect_rooms(from->id,dir,to->id);
+  if(!world[real_room(to->vnum)].dir_option[rev_dir[dir]])connect_rooms(to->id,rev_dir[dir],from->id);
+  return true;
+fail:
+  estate_query("ROLLBACK");return false;
+}
+
 static void create_chest(MYSQL_ROW row)
 {
   struct home_chest *c;
@@ -276,8 +412,9 @@ static room_rnum materialize(long house)
   MYSQL_ROW row;
   room_rnum entrance = NOWHERE;
   struct home_room *r;
-  res = estate_select("SELECT room_id,title,description,is_entrance FROM housing_rooms WHERE "
-                      "house_id=%ld ORDER BY room_order",
+  res = estate_select("SELECT r.room_id,r.title,r.description,r.is_entrance,COALESCE(s.sector_type,0) "
+                      "FROM housing_rooms r LEFT JOIN housing_room_settings s USING(room_id) WHERE "
+                      "r.house_id=%ld ORDER BY r.room_order",
                       house);
   if (!res)
     return NOWHERE;
@@ -289,6 +426,7 @@ static room_rnum materialize(long house)
       mysql_free_result(res);
       return NOWHERE;
     }
+    apply_house_sector(nr, atoi(row[4]));
     if (atoi(row[3]))
       entrance = nr;
   }
@@ -710,7 +848,7 @@ int housing_command(struct char_data *ch, const char *argument)
   {
     send_to_char(
         ch, "House: list, buy <name>, enter <id>, leave, info, guest <player>, build <direction>, "
-            "name <text>, title <text>, description <text>, extra <keyword> <text>, chest <command>.\r\n");
+            "sector <type>, name <text>, title <text>, description <text>, extra <keyword> <text>, chest <command>.\r\n");
     return TRUE;
   }
   res = estate_select("SELECT neighborhood_id,house_price FROM housing_neighborhoods WHERE "
@@ -901,6 +1039,20 @@ int housing_command(struct char_data *ch, const char *argument)
     }
     return TRUE;
   }
+  if (!str_cmp(verb, "sector"))
+  {
+    int sector=house_sector(text);
+    if(sector<0) {
+      send_to_char(ch,"Choose a sector: Inside, City, Field, Forest, Water (Swim), Underwater, Cave.\r\n");
+      return TRUE;
+    }
+    if(!estate_query("INSERT INTO housing_room_settings(room_id,sector_type) VALUES(%ld,%d) "
+        "ON DUPLICATE KEY UPDATE sector_type=VALUES(sector_type)",r->id,sector)) {
+      send_to_char(ch,"The room sector could not be saved.\r\n");return TRUE;
+    }
+    apply_house_sector(IN_ROOM(ch),sector);
+    send_to_char(ch,"Room sector updated.\r\n");return TRUE;
+  }
   if (!str_cmp(verb, "build"))
   {
     room_rnum nr;
@@ -909,10 +1061,28 @@ int housing_command(struct char_data *ch, const char *argument)
     for (dir = 0; dir < NUM_OF_DIRS; dir++)
       if (is_abbrev(text, dirs[dir]))
         break;
-    if (!*text || dir >= NUM_OF_DIRS || dir >= 10 || world[IN_ROOM(ch)].dir_option[dir])
+    if (!*text || dir >= NUM_OF_DIRS || dir >= 10)
     {
       send_to_char(ch, "Choose an unused cardinal, diagonal, up or down exit.\r\n");
       return TRUE;
+    }
+    if(world[IN_ROOM(ch)].dir_option[dir]) {
+      send_to_char(ch,"That exit already exists; no new room was built.\r\n");return TRUE;
+    }
+    {
+      struct home_room *target;
+      if(!house_overlap(r,dir,&target)) {
+        send_to_char(ch,"The house layout overlaps or is inconsistent; no room was built.\r\n");return TRUE;
+      }
+      if(target) {
+        struct room_direction_data *reverse=world[real_room(target->vnum)].dir_option[rev_dir[dir]];
+        if(reverse&&reverse->to_room!=IN_ROOM(ch)) {
+          send_to_char(ch,"The existing room's reverse exit is occupied; no exits were changed.\r\n");return TRUE;
+        }
+        if(link_house_rooms(r,dir,target))send_to_char(ch,"Connected the existing room %s; no construction charge.\r\n",dirs[dir]);
+        else send_to_char(ch,"The connection could not be saved; no room was built.\r\n");
+        return TRUE;
+      }
     }
     amount = price(r->house, "room_price");
     if (!afford(ch, amount))
@@ -975,6 +1145,8 @@ int housing_command(struct char_data *ch, const char *argument)
     amount = price(r->house, title   ? "title_price"
                              : extra ? "extra_description_price"
                                      : "description_price");
+    if (!title && !extra)
+      amount = room_description_price(r, amount);
     if (!afford(ch, amount))
     {
       free(key);
@@ -991,7 +1163,8 @@ int housing_command(struct char_data *ch, const char *argument)
                     "INSERT INTO housing_room_extra_descriptions(room_id,keyword,description) "
                     "VALUES(%ld,'%s','%s')",
                     r->id, key, q)
-              : estate_query("UPDATE housing_rooms SET %s='%s' WHERE room_id=%ld AND house_id=%ld",
+              : !title ? save_room_description(r,q)
+                       : estate_query("UPDATE housing_rooms SET %s='%s' WHERE room_id=%ld AND house_id=%ld",
                              column, q, r->id, r->house))
     {
       if (!extra)
@@ -1003,7 +1176,10 @@ int housing_command(struct char_data *ch, const char *argument)
       else
         materialize(r->house);
       charge(ch, amount);
-      send_to_char(ch, "Room updated.\r\n");
+      if (!title && !extra)
+        send_to_char(ch, "Room description updated for %ld gold. Further description edits cost 10%% of the normal price.\r\n", amount);
+      else
+        send_to_char(ch, "Room updated.\r\n");
     }
     free(q);
     free(key);

@@ -9467,7 +9467,7 @@ ACMDU(do_homelands)
   }
 }
 
-ACMD(do_history)
+ACMD(do_history_communication_impl)
 {
   char arg[MAX_INPUT_LENGTH] = {'\0'};
   int type;
@@ -12190,3 +12190,11 @@ ACMD(do_gmcptest)
 }
 
 /*EOF*/
+
+/* Replay communication in the same pane as live channels for MSDP clients. */
+ACMD(do_history)
+{
+  communication_output_depth++;
+  do_history_communication_impl(ch, argument, cmd, subcmd);
+  communication_output_depth--;
+}

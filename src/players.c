@@ -1121,6 +1121,14 @@ int load_char(const char *name, struct char_data *ch)
           GET_CRAFT(ch).level_adjust = atoi(line);
         else if (!strcmp(tag, "CrCa"))
           GET_CRAFT(ch).catalysts_used = MAX(0, MIN(atoi(line), CRAFT_CATALYST_MAX));
+        else if (!strcmp(tag, "ClSE")) {
+          if (strlen(line)==32) strlcpy(GET_CRAFT(ch).clan_supply_event,line,33);
+        }
+        else if (!strcmp(tag, "ClSU")) {
+          if (strlen(line)==32) strlcpy(GET_CRAFT(ch).clan_supply_uid,line,33);
+        }
+        else if (!strcmp(tag, "ClSA")) GET_CRAFT(ch).clan_supply_account = atoll(line);
+        else if (!strcmp(tag, "ClST")) GET_CRAFT(ch).clan_supply_at = atoll(line);
         else if (!strcmp(tag, "CrSN"))
           GET_CRAFT(ch).supply_num_required = atoi(line);
         else if (!strcmp(tag, "CrSR"))
@@ -3451,6 +3459,11 @@ bool save_char_checked(struct char_data *ch, int mode)
   BUFFER_WRITE("CrLA: %d\n", GET_CRAFT(ch).level_adjust);
   BUFFER_WRITE("CrCa: %d\n", GET_CRAFT(ch).catalysts_used);
 
+  if (GET_CRAFT(ch).clan_supply_event[0]) {
+    BUFFER_WRITE("ClSE: %s\nClSU: %s\nClSA: %lld\nClST: %lld\n",
+      GET_CRAFT(ch).clan_supply_event,GET_CRAFT(ch).clan_supply_uid,
+      (long long)GET_CRAFT(ch).clan_supply_account,(long long)GET_CRAFT(ch).clan_supply_at);
+  }
   BUFFER_WRITE("CrSN: %d\n", GET_CRAFT(ch).supply_num_required);
   BUFFER_WRITE("CrAS: %d\n", GET_CRAFT(ch).supply_active_slot);
 

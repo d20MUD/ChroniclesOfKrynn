@@ -2,8 +2,8 @@
 #define KRYNN_CLAN_BUFF_ACTIVATION_H
 #include "clan_buff_queries.h"
 #include "clan_repository.h"
-/* New privilege ID; legacy IDs 0..20 are unchanged. Persisted independently
- * until the Phase 24 command/editor integration. Missing row = leader only. */
+/* Stable privilege ID; legacy IDs 0..20 are unchanged. The dedicated
+ * clan buffs permission command edits this SQL policy. Missing row = leader only. */
 #define CLAN_BUFF_MANAGEMENT_PRIVILEGE 21
 #define CLAN_BUFF_ACTIVATION_SCHEMA 1
 struct clan_buff_request {
@@ -51,6 +51,10 @@ enum clan_repository_result clan_buff_activation_commit(MYSQL *,
  * Successful/ambiguous commits invalidate cached views; no guessed effects. */
 void clan_buff_set_invalidation(void (*callback)(const char *, void *), void *context);
 void clan_buff_invalidate(const char *clan_uid);
+/* Leader-only delegation. 0 restores leader-only; ranks must exist in SQL.
+ * No legacy privilege-array renumbering, no staff bypass, no resource mutation. */
+enum clan_repository_result clan_buff_management_set(MYSQL *,const struct clan_progression_config *,
+    const char *uid,int64_t actor,int maximum_rank);
 /* Internal locked service composition, not player-facing authorization. */
 enum clan_repository_result clan_buff_activation_schema_check(MYSQL *);
 enum clan_repository_result clan_buff_locked_snapshot(MYSQL *, const struct clan_buff_request *,

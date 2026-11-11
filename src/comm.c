@@ -68,6 +68,7 @@
  * files that is included is controlled by conf.h for that platform. */
 
 #include "structs.h"
+#include "clan_sources.h"
 #include "mob_utils.h"
 #include "utils.h"
 #include "comm.h"
@@ -137,6 +138,7 @@ int buf_switches = 0;                                /* # of switches from small
 int circle_shutdown = 0;                             /* clean shutdown */
 int circle_reboot = 0;                               /* reboot the game after a shutdown */
 static volatile sig_atomic_t shutdown_requested = 0; /* flag for signal-triggered shutdown */
+int communication_output_depth = 0;
 int no_specials = 0;                                 /* Suppress ass. of special routines */
 int scheck = 0;                                      /* for syntax checking mode */
 FILE *logfile = NULL;                                /* Where to send the log messages. */
@@ -1414,6 +1416,7 @@ void heartbeat(int heart_pulse)
       legendary_next=legendary_ch->next;legendary_condition_expire(legendary_ch);
     }
     clan_buff_runtime_tick((int64_t)time(NULL));
+    clan_source_tick((int64_t)time(NULL));
     legendary_earnings_maintenance();
     legendary_effects_pulse();
   }
@@ -2526,6 +2529,19 @@ static void capture_output_printf(struct output_capture *capture, const char *fo
   capture->length += count;
 }
 
+static bool send_communication_event(struct descriptor_data *t, const char *text)
+{
+  if (communication_output_depth <= 0 || !t->pProtocol || !t->pProtocol->bMSDP ||
+      !t->pProtocol->pVariables[eMSDP_CLIENT_ID]->pValueString ||
+      strcmp(t->pProtocol->pVariables[eMSDP_CLIENT_ID]->pValueString, "LuminariWebClient"))
+    return false;
+  struct json_object *event = json_object_new_object();
+  json_object_object_add(event, "text", json_object_new_string(text));
+  MSDPSendPair(t, "CHAT_MESSAGE", json_object_to_json_string_ext(event, JSON_C_TO_STRING_PLAIN));
+  json_object_put(event);
+  return true;
+}
+
 size_t vwrite_to_output(struct descriptor_data *t, const char *format, va_list args)
 {
   const char *text_overflow = "\r\nOVERFLOW\r\n";
@@ -2557,6 +2573,9 @@ size_t vwrite_to_output(struct descriptor_data *t, const char *format, va_list a
     size = sizeof(txt) - 1;
     strcpy(txt + size - strlen(text_overflow), text_overflow); /* strcpy: OK */
   }
+
+  if (send_communication_event(t, txt))
+    return t->bufspace;
 
   /* If the text is too big to fit into even a large buffer, truncate
    * the new text to make it fit.  (This will switch to the overflow

@@ -854,17 +854,100 @@ int main(int argc, char **argv)
     assert(!strcmp(world[IN_ROOM(&seller)].name, "An Unfinished Room"));
     assert(GET_GOLD(&seller) == gold);
   }
+  {
+    const char *commands[]={"sector Inside","sector City","sector Field","sector Forest","sector Water (Swim)","sector Underwater","sector Cave"};
+    int sectors[]={SECT_INSIDE,SECT_CITY,SECT_FIELD,SECT_FOREST,SECT_WATER_SWIM,SECT_UNDERWATER,SECT_CAVE};
+    int index;
+    for(index=0;index<7;index++) {
+      house(&seller,commands[index]);assert(world[IN_ROOM(&seller)].sector_type==sectors[index]);
+      assert(!!ROOM_FLAGGED(IN_ROOM(&seller),ROOM_INDOORS)==(index==0||index>=5));
+      assert(scalar("SELECT sector_type FROM housing_room_settings WHERE room_id=1")==sectors[index]);
+      assert(ROOM_FLAGGED(IN_ROOM(&seller),ROOM_HOUSE));
+    }
+    house(&seller,"sector lava");assert(world[IN_ROOM(&seller)].sector_type==SECT_CAVE);
+    house(&seller,"sector Forest");
+    world[IN_ROOM(&seller)].sector_type=SECT_INSIDE;SET_BIT_AR(world[IN_ROOM(&seller)].room_flags,ROOM_INDOORS);
+    house(&seller,"leave");house(&seller,"enter 1");
+    assert(world[IN_ROOM(&seller)].sector_type==SECT_FOREST&&!ROOM_FLAGGED(IN_ROOM(&seller),ROOM_INDOORS));
+  }
   house(&seller, "build north");
   assert(scalar("SELECT COUNT(*) FROM housing_rooms") == 2);
   assert(scalar("SELECT COUNT(*) FROM housing_room_exits") == 2);
   house(&seller, "build north");
   assert(scalar("SELECT COUNT(*) FROM housing_rooms") == 2);
+  {
+    room_rnum origin=IN_ROOM(&seller),north=world[origin].dir_option[NORTH]->to_room,east,northeast;
+    long gold;
+    char_from_room(&seller);char_to_room(&seller,north);house(&seller,"build east");
+    northeast=world[north].dir_option[EAST]->to_room;
+    char_from_room(&seller);char_to_room(&seller,origin);house(&seller,"build east");
+    east=world[origin].dir_option[EAST]->to_room;
+    char_from_room(&seller);char_to_room(&seller,east);
+    world[northeast].dir_option[SOUTH]=calloc(1,sizeof(struct room_direction_data));
+    world[northeast].dir_option[SOUTH]->to_room=east;
+    world[northeast].dir_option[SOUTH]->key=777;
+    world[northeast].dir_option[SOUTH]->exit_info=EX_ISDOOR;
+    gold=GET_GOLD(&seller);GET_GOLD(&seller)=0;house(&seller,"build north");
+    assert(world[northeast].dir_option[SOUTH]->key==777&&world[northeast].dir_option[SOUTH]->exit_info==EX_ISDOOR);
+    assert(world[east].dir_option[NORTH]->to_room==northeast);
+    assert(world[northeast].dir_option[SOUTH]->to_room==east);
+    assert(scalar("SELECT COUNT(*) FROM housing_rooms")==4&&GET_GOLD(&seller)==0);
+    GET_GOLD(&seller)=gold;
+    char_from_room(&seller);char_to_room(&seller,origin);house(&seller,"build northeast");
+    assert(world[origin].dir_option[NORTHEAST]->to_room==northeast);
+    assert(world[northeast].dir_option[SOUTHWEST]->to_room==origin);
+    assert(scalar("SELECT COUNT(*) FROM housing_rooms")==4&&GET_GOLD(&seller)==gold);
+    house(&seller,"build up");
+    {
+      room_rnum upstairs=world[origin].dir_option[UP]->to_room,above_east;
+      char_from_room(&seller);char_to_room(&seller,upstairs);house(&seller,"build east");
+      above_east=world[upstairs].dir_option[EAST]->to_room;
+      char_from_room(&seller);char_to_room(&seller,above_east);gold=GET_GOLD(&seller);
+      house(&seller,"build down");
+      assert(world[above_east].dir_option[DOWN]->to_room==east&&world[east].dir_option[UP]->to_room==above_east);
+      assert(scalar("SELECT COUNT(*) FROM housing_rooms")==6&&GET_GOLD(&seller)==gold);
+    }
+    house(&seller,"leave");house(&seller,"enter 1");
+    assert(world[IN_ROOM(&seller)].dir_option[NORTHEAST]->to_room==northeast);
+  }
   house(&seller, "title A Fine Hall");
   assert(!strcmp(world[IN_ROOM(&seller)].name, "A Fine Hall"));
-  house(&seller, "description My custom hall.");
+  {
+    room_rnum entrance=IN_ROOM(&seller),untouched=world[entrance].dir_option[EAST]->to_room;
+    long gold=GET_GOLD(&seller),normal=scalar("SELECT description_price FROM housing_neighborhoods WHERE neighborhood_id=1");
+    long revision=normal/10+(normal%10!=0);
+    house(&seller,"description My custom hall.");assert(GET_GOLD(&seller)==gold-normal);
+    assert(scalar("SELECT COUNT(*) FROM housing_room_description_edits WHERE room_id=1")==1);
+    gold=GET_GOLD(&seller);house(&seller,"description My corrected hall.");assert(GET_GOLD(&seller)==gold-revision);
+    house(&seller,"leave");house(&seller,"enter 1");gold=GET_GOLD(&seller);
+    house(&seller,"description This room awaits your imagination.");
+    house(&seller,"description My custom hall.");assert(GET_GOLD(&seller)==gold-2*revision);
+    // A new room still pays the full initial customization price.
+    char_from_room(&seller);char_to_room(&seller,untouched);gold=GET_GOLD(&seller);
+    house(&seller,"description An eastern chamber.");assert(GET_GOLD(&seller)==gold-normal);
+    // Old customized rooms qualify even without the new persistent marker.
+    {
+      room_rnum legacy=world[entrance].dir_option[NORTH]->to_room;
+      assert(estate_query("UPDATE housing_rooms SET description='A legacy custom room.' WHERE room_id=2"));
+      char_from_room(&seller);char_to_room(&seller,legacy);gold=GET_GOLD(&seller);
+      house(&seller,"description A corrected legacy room.");assert(GET_GOLD(&seller)==gold-revision);
+    }
+    house(&seller,"leave");house(&seller,"enter 1");gold=GET_GOLD(&seller);
+    house(&seller,"description");assert(GET_GOLD(&seller)==gold);
+    GET_GOLD(&seller)=revision-1;house(&seller,"description Cannot afford this.");
+    assert(GET_GOLD(&seller)==revision-1&&!strcmp(world[IN_ROOM(&seller)].description,"My custom hall.\r\n"));GET_GOLD(&seller)=gold;
+    // A failed marker write rolls back the text update and never charges gold.
+    assert(estate_query("CREATE TRIGGER test_description_save BEFORE INSERT ON housing_room_description_edits FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='test description save failure'"));
+    house(&seller,"description This must roll back.");
+    assert(GET_GOLD(&seller)==gold&&!strcmp(world[IN_ROOM(&seller)].description,"My custom hall.\r\n"));
+    assert(scalar("SELECT COUNT(*) FROM housing_rooms WHERE room_id=1 AND description='My custom hall.'")==1);
+    assert(estate_query("DROP TRIGGER test_description_save"));
+  }
   house(&seller, "extra painting A bright painting.");
   house(&seller, "guest guest");
   house(&guest, "enter 1");
+  house(&guest,"sector Underwater");assert(strstr(output,"Only the owner"));
+  assert(world[IN_ROOM(&guest)].sector_type==SECT_FOREST);
   assert(IN_ROOM(&guest) == IN_ROOM(&seller));
   house(&guest, "name Stolen Home");
   assert(strstr(output, "Only the owner"));

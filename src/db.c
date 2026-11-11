@@ -17,6 +17,7 @@
 #include "legendary_commands.h"
 #include "legendary_equipment.h"
 #include "structs.h"
+#include "clan_sources.h"
 #include "utils.h"
 #include "db.h"
 #include "comm.h"
@@ -6530,6 +6531,7 @@ static void free_followers(struct follow_type *k)
 /* release memory allocated for a char struct */
 void free_char(struct char_data *ch)
 {
+  clan_source_forget(ch);
   legendary_effects_free(ch);
   legendary_loadout_free(ch);
   legendary_foundations_free(ch);
