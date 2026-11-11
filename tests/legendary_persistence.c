@@ -27,11 +27,37 @@ static struct obj_data *weapon(const char *uuid)
   if(uuid)memcpy(obj->legendary_uuid,uuid,33);
   return obj;
 }
+/* All storage routes must retain instance powers, including activate charges. */
+static const struct obj_data *expected_instance;
+static void check_instance(const struct obj_data *copy)
+{
+  const struct obj_data *o=expected_instance;
+  const struct obj_special_ability *a,*b;
+  if(!o)return;
+  assert(!memcmp(o->activate_spell,copy->activate_spell,sizeof(o->activate_spell)));
+  assert(!memcmp(o->wpn_spells,copy->wpn_spells,sizeof(o->wpn_spells)));
+  assert(!memcmp(o->channel_spells,copy->channel_spells,sizeof(o->channel_spells)));
+  assert(!memcmp(&o->weapon_poison,&copy->weapon_poison,sizeof(o->weapon_poison)));
+  assert(!memcmp(o->affected,copy->affected,sizeof(o->affected)));
+  assert(!memcmp(&o->obj_flags,&copy->obj_flags,sizeof(o->obj_flags)));
+  assert(o->has_spells==copy->has_spells && o->tinker_bonus==copy->tinker_bonus);
+  assert(!strcmp(o->short_description,copy->short_description));
+  assert(!strcmp(o->action_description,copy->action_description));
+  assert(!strcmp(o->restring_identifier,copy->restring_identifier));
+  assert(!strcmp(o->arcane_mark,copy->arcane_mark));
+  for(a=o->special_abilities,b=copy->special_abilities;a&&b;a=a->next,b=b->next) {
+    assert(a->ability==b->ability && a->level==b->level && a->activation_method==b->activation_method);
+    assert(!memcmp(a->value,b->value,sizeof(a->value)));
+    assert(!strcmp(a->command_word,b->command_word));
+  }
+  assert(!a&&!b);
+}
 static void dispose_list(obj_save_data *list,const char *uuid)
 {
   obj_save_data *next;
   assert(list && !list->next);
   assert(!strcmp(list->obj->legendary_uuid,uuid));
+  check_instance(list->obj);
   for(;list;list=next){next=list->next;extract_obj(list->obj);free(list);}
 }
 static void store_fixtures(char uuid[33],struct legendary_item_record *r)
@@ -97,11 +123,37 @@ int main(int argc,char **argv)
   assert(!strcmp(obj->legendary_uuid,uuid) && GET_OBJ_BOUND_ID(obj)==1);object_list=NULL;
   fp=tmpfile();fputs("#500\nName: old sword\n\n",fp);rewind(fp);
   dispose_list(objsave_parse_objects(fp),"");fclose(fp);
+  /* Rich instance data, including quoted/multiline descriptions and every
+   * activated/proc/channel spell component, not just prototype defaults. */
+  free(obj->short_description);obj->short_description=strdup("a smith's reforged sword");
+  obj->action_description=strdup("The smith's inscription.\nSecond line.\n");
+  obj->restring_identifier=strdup("long sword");obj->arcane_mark=strdup("a smith's mark");
+  obj->activate_spell[0]=17;obj->activate_spell[1]=51;
+  obj->activate_spell[2]=2;obj->activate_spell[3]=5;obj->activate_spell[4]=8;
+  obj->has_spells=true;obj->tinker_bonus=4;
+  GET_OBJ_PROF(obj)=9;GET_OBJ_TIMER(obj)=17;GET_OBJ_SORT(obj)=2;
+  GET_OBJ_RENT(obj)=45;GET_OBJ_SIZE(obj)=3;GET_OBJ_MATERIAL(obj)=MATERIAL_BRONZE;
+  for(i=0;i<NUM_OBJ_VAL_POSITIONS;i++)GET_OBJ_VAL(obj,i)=i+30;
+  for(i=0;i<MAX_WEAPON_SPELLS;i++)obj->wpn_spells[i]=(struct weapon_spells){i+1,12,25,1,7};
+  for(i=0;i<MAX_WEAPON_CHANNEL_SPELLS;i++)obj->channel_spells[i]=(struct weapon_spells){i+2,13,30,0,6};
+  obj->weapon_poison=(struct obj_weapon_poison){11,16,9};
+  for(i=0;i<SPEC_TIMER_MAX;i++)obj->obj_flags.spec_timer[i]=i+2;
+  for(i=0;i<MAX_OBJ_AFFECT;i++)obj->affected[i]=(struct obj_affected_type){1,i+1,BONUS_TYPE_ENHANCEMENT,7};
+  obj->special_abilities=calloc(1,sizeof(*obj->special_abilities));
+  obj->special_abilities->ability=11;obj->special_abilities->level=16;
+  obj->special_abilities->command_word=strdup("flame");
+  obj->special_abilities->next=calloc(1,sizeof(*obj->special_abilities));
+  obj->special_abilities->next->ability=22;obj->special_abilities->next->command_word=strdup("frost");
+  expected_instance=obj;
   /* Main player SQL and house SQL, including tagged full-record parser. */
   fp=tmpfile();assert(objsave_save_obj_record_db(obj,&owner,NOWHERE,fp,0));fclose(fp);
   dispose_list(objsave_parse_objects_db("owner",NOWHERE),uuid);
   assert(estate_query("UPDATE player_save_objs SET serialized_obj=REPLACE(serialized_obj,'SpCl: 1\\n','')"));
+  /* Historical tokenized rows retain their compatibility path; the rich
+   * roundtrip contract applies to newly written full records. */
+  expected_instance=NULL;
   dispose_list(objsave_parse_objects_db("owner",NOWHERE),uuid);
+  expected_instance=obj;
   fp=tmpfile();assert(objsave_save_obj_record_db(obj,NULL,77,fp,0));fclose(fp);
   dispose_list(objsave_parse_objects_db(NULL,77),uuid);
   /* Pet and sheath use their separate production writers AND parsers. */
@@ -110,6 +162,7 @@ int main(int argc,char **argv)
   assert(objsave_save_obj_record_db_sheath(obj,&owner,99,1));
   bag=item("sheath");
   dispose_list(objsave_parse_objects_db_sheath("owner",99,1,bag),uuid);
+  expected_instance=NULL;
   /* Estate framing used by housing chest, auction, stalls and delivery. */
   copy=weapon(NULL);packed=estate_pack(copy);preview=estate_unpack(packed);free(packed);
   assert(preview && !preview->legendary_uuid[0]);extract_obj(preview);extract_obj(copy);

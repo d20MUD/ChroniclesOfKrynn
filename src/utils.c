@@ -9349,6 +9349,9 @@ void calculate_max_hp(struct char_data *ch, bool display)
   if (display)
     send_to_char(ch, "Legendary Vitality: +%d (effective maximum %d)\r\n",
                  legendary_foundation_value(ch, LEG_F09, 0), GET_MAX_HIT(ch));
+  if (display && ch->clan_vitality_applied > 0)
+    send_to_char(ch, "Company Vitality: +%d (effective maximum %d)\r\n",
+                 ch->clan_vitality_applied, GET_MAX_HIT(ch));
 }
 
 void dismiss_all_followers(struct char_data *ch)

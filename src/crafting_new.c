@@ -4296,6 +4296,17 @@ void return_efficient_saved_materials(struct char_data *ch)
   }
 }
 
+int get_craft_production_bonus(struct char_data *ch, int skill)
+{
+  if (!ch || IS_NPC(ch) ||
+      !((skill >= START_CRAFT_ABILITIES && skill <= END_CRAFT_ABILITIES) ||
+        (skill >= START_HARVEST_ABILITIES && skill <= END_HARVEST_ABILITIES)) ||
+      ch->clan_artisan_bonus < 2 || ch->clan_artisan_bonus > 4 ||
+      ch->clan_artisan_expires_at <= (int64_t)time(NULL))
+    return 0;
+  return ch->clan_artisan_bonus;
+}
+
 static bool create_craft_skill_check_with_roll(struct char_data *ch, struct obj_data *obj, int skill, char *method,
                               int exp, int dc, int *natural_roll)
 {
@@ -4305,10 +4316,11 @@ static bool create_craft_skill_check_with_roll(struct char_data *ch, struct obj_
   int base_skill = GET_ABILITY(ch, skill);
   int specialization_bonus = 0;
   int elbow_grease_bonus = 0;
+  int artisan_bonus = get_craft_production_bonus(ch, skill);
 
   roll = d20(ch);
   if (natural_roll) *natural_roll = roll;
-  skill_mod = get_craft_skill_value(ch, skill);
+  skill_mod = get_craft_skill_value(ch, skill) + artisan_bonus;
 
   /* Check if specialized for message display */
   if (GET_CRAFT(ch).craft_specialization[0] == skill ||
@@ -4401,6 +4413,9 @@ static bool create_craft_skill_check_with_roll(struct char_data *ch, struct obj_
                       " + Craft Magical Arms and Armor [5]");
     }
 
+    if (artisan_bonus > 0)
+      ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + Artisan's Guidance [%d]",
+                      artisan_bonus);
     if (elbow_grease_bonus > 0)
       ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + elbow grease [%d]",
                       elbow_grease_bonus);
@@ -4444,6 +4459,9 @@ static bool create_craft_skill_check_with_roll(struct char_data *ch, struct obj_
                       " + Craft Magical Arms and Armor [5]");
     }
 
+    if (artisan_bonus > 0)
+      ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + Artisan's Guidance [%d]",
+                      artisan_bonus);
     if (elbow_grease_bonus > 0)
       ptr += snprintf(ptr, sizeof(bonus_text) - (ptr - bonus_text), " + elbow grease [%d]",
                       elbow_grease_bonus);
@@ -5929,6 +5947,7 @@ static void craft_ammunition(struct char_data *ch, const char *argument)
     return;
   }
   skill_mod = get_craft_skill_value(ch, plan.recipe->skill) +
+              get_craft_production_bonus(ch, plan.recipe->skill) +
               get_proficient_talent_bonus(ch, plan.recipe->skill) + get_elbow_grease_bonus(ch) +
               get_jack_of_all_trades_bonus(ch);
   if ((!making_kit && HAS_FEAT(ch, FEAT_CRAFT_MAGICAL_ARMS_AND_ARMOR)) ||
@@ -6994,7 +7013,8 @@ void craft_refine_complete(struct char_data *ch)
   roll = d20(ch);
   dc = GET_CRAFT(ch).dc;
   skill_type = GET_CRAFT(ch).skill_type;
-  skill = get_craft_skill_value(ch, skill_type) + get_elbow_grease_bonus(ch) +
+  skill = get_craft_skill_value(ch, skill_type) + get_craft_production_bonus(ch, skill_type) +
+          get_elbow_grease_bonus(ch) +
           get_jack_of_all_trades_bonus(ch);
 
   /* Add proficient talent bonus */
@@ -15571,7 +15591,7 @@ static void impl_do_reforge_new_(struct char_data *ch, char *argument,
   char target_arg[MAX_INPUT_LENGTH];
   int material, skill_required;
   int fast_craft_bonus;
-  int cost, orig_cost, enhancement;
+  int cost, orig_cost, enhancement, original_weight;
   char buf[1024]; /* Buffer for room message */
   int weapon_index = 0;
   int armor_index = 0;
@@ -15632,6 +15652,7 @@ static void impl_do_reforge_new_(struct char_data *ch, char *argument,
   }
 
   /* Store original values */
+  original_weight = GET_OBJ_WEIGHT(obj);
   orig_cost = GET_OBJ_COST(obj);
   enhancement = GET_OBJ_VAL(obj, 4);
 
@@ -15743,6 +15764,10 @@ static void impl_do_reforge_new_(struct char_data *ch, char *argument,
     GET_OBJ_VAL(obj, 1) = armor_index;
     set_armor_object(obj, armor_index);
   }
+
+  /* The same live object retains all instance powers and identity. Only its
+   * base shape changed; account for the new weight in the carrier's total. */
+  IS_CARRYING_W(ch) += GET_OBJ_WEIGHT(obj) - original_weight;
 
   /* If the object has a restring identifier, update keywords, short/long desc using it */
   if (obj->restring_identifier && *obj->restring_identifier)

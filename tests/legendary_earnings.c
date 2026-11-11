@@ -102,9 +102,11 @@ int main(int argc,char **argv)
   IN_ROOM(&boss)=NOWHERE;SET_BIT_AR(MOB_FLAGS(&pet),MOB_ISNPC);SET_BIT_AR(AFF_FLAGS(&pet),AFF_CHARM);
   for(i=0;i<4;i++){char name[32];snprintf(name,sizeof(name),"player%d",i);init_player(&pc[i],name,i+1);pc[i].desc=&descriptors[i];descriptors[i].character=&pc[i];}
   reset();
+  legendary_xp_damage_context(&other,&boss);assert(other.eligible&&other.origin==LEG_XP_DAMAGE&&!other.award_id[0]&&!boss.legendary_encounter_id[0]);
   legendary_xp_kill_context(&source,&boss);assert(source.eligible);
   legendary_credit_xp(&pc[0],123,&source);legendary_credit_xp(&pc[0],123,&source);
   assert(balance(1,"infusion_xp")==123);
+  other=source;other.origin=LEG_XP_DAMAGE;legendary_credit_xp(&pc[0],900,&other);assert(balance(1,"infusion_xp")==123);
   other=source;other.origin=LEG_XP_NONE;legendary_credit_xp(&pc[0],900,&other);assert(balance(1,"infusion_xp")==123);
   GET_LEVEL(&pc[0])=29;legendary_xp_quest_context(&other,100);legendary_credit_xp(&pc[0],900,&other);GET_LEVEL(&pc[0])=30;
   assert(balance(1,"infusion_xp")==123);
@@ -116,7 +118,7 @@ int main(int argc,char **argv)
   legendary_xp_trap_context(&source,&trap);assert(source.eligible);legendary_credit_xp(&pc[0],77,&source);
   legendary_credit_xp(&pc[0],77,&source);assert(balance(1,"infusion_xp")==700);
   copy=copy_trap(&trap);assert(copy && !*copy->legendary_disarm_id);free_trap(copy);
-  boss.master=&pc[0];legendary_xp_kill_context(&other,&boss);assert(!other.eligible);boss.master=NULL;
+  boss.master=&pc[0];legendary_xp_kill_context(&other,&boss);assert(!other.eligible);legendary_xp_damage_context(&other,&boss);assert(!other.eligible);boss.master=NULL;
   boss.legendary_owned_instance=true;legendary_xp_kill_context(&other,&boss);assert(!other.eligible);boss.legendary_owned_instance=false;
   boss.legendary_test_encounter=true;legendary_xp_kill_context(&other,&boss);assert(!other.eligible);boss.legendary_test_encounter=false;
   assert(estate_query("UPDATE legendary_characters SET infusion_xp=1999999995,version=version+1 WHERE player_id=1"));

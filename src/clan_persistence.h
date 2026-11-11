@@ -25,6 +25,8 @@ bool
 clan_persistence_save(void);
 bool
 clan_persistence_before_player_save(struct char_data* ch);
+/* Runtime-only observer; invoked after authoritative mirror reconciliation. */
+void clan_persistence_set_member_invalidation(void (*callback)(struct char_data *, const char *));
 void
 clan_persistence_reconcile_player(struct char_data* ch);
 bool

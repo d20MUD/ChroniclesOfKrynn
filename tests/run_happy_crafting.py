@@ -12,7 +12,7 @@ def function(source,name):
     start=re.search(r'^(?:static )?(?:void|int|bool) '+name+r'\([^;]*?\)\n\{',source,re.M).start()
     return source[start:source.index('\n}',start)+2]+'\n'
 code=function((root/'src/utils.c').read_text(),'get_jack_of_all_trades_bonus')
-code+=''.join(function(craft,n) for n in ['canonical_craft_material','material_grade',
+code+=''.join(function(craft,n) for n in ['get_craft_production_bonus','canonical_craft_material','material_grade',
     'harvesting_skill_by_material','get_insightful_talent_bonus','gain_craft_exp',
     'happy_hour_quantity_bonus','apply_happy_hour_yield','craft_refine_complete',
     'harvest_complete','butcher_complete'])
@@ -72,6 +72,7 @@ size_t send_to_char(struct char_data *ch,const char *fmt,...) {
 }
 static void reset(struct char_data *ch) {
   memset(ch->player_specials,0,sizeof(*ch->player_specials)); memset(&corpse,0,sizeof(corpse));
+  ch->clan_artisan_bonus=0;ch->clan_artisan_expires_at=0;
   output[0]=0; jack_feats=0; efficient=expertise=mote_rank=0; roll=10; skill_value=30;
 }
 '''
@@ -156,6 +157,16 @@ int main(void) {
       craft_refine_complete(&ch);
       assert((GET_CRAFT_MAT((&ch),CRAFT_MAT_STEEL)>0)==!below);
     }
+  }
+  for(int bonus=0;bonus<=4;bonus+=2) {
+    reset(&ch);skill_value=9;ch.clan_artisan_bonus=bonus;ch.clan_artisan_expires_at=time(NULL)+1000;
+    GET_CRAFT((&ch)).refining_result[0]=CRAFT_MAT_STEEL;GET_CRAFT((&ch)).refining_result[1]=1;
+    GET_CRAFT((&ch)).refining_batch_quantity=1;GET_CRAFT((&ch)).dc=20;GET_CRAFT((&ch)).skill_type=ABILITY_HARVEST_MINING;
+    craft_refine_complete(&ch);assert((GET_CRAFT_MAT((&ch),CRAFT_MAT_STEEL)>0)==(bonus>0));
+    reset(&ch);ch.clan_artisan_bonus=bonus;ch.clan_artisan_expires_at=time(NULL)+1000;
+    rooms[0].harvest_material=CRAFT_MAT_STONE;rooms[0].harvest_material_amount=100;
+    skill_value=HARVEST_BASE_DC+MAX(1,material_grade(CRAFT_MAT_STONE)*5)-roll-1;
+    harvest_complete(&ch);assert(!GET_CRAFT_MAT((&ch),CRAFT_MAT_STONE));
   }
   return 0;
 }

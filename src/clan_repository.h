@@ -67,6 +67,9 @@ clan_repository_snapshot_write(MYSQL* db,
                                struct json_object* snapshot,
                                int64_t expected_store_revision,
                                struct json_object* import_manifest);
+/* Internal service composition: caller already owns a transaction and the
+ * global store-control lock. No nested BEGIN/COMMIT; output unchanged on error. */
+enum clan_repository_result clan_repository_snapshot_read_locked(MYSQL *, struct json_object **);
 /* Canonicalize owned trees; rank ordering is preserved. */
 bool clan_repository_snapshot_canonicalize(struct json_object *snapshot);
 /* Offline, quiesced cutover only. NULL digest explicitly selects a fresh,
@@ -77,6 +80,7 @@ enum clan_repository_result clan_repository_cutover(MYSQL *db,
  * on error; no rows means no activations, never synthesized cooldowns. */
 enum clan_repository_result clan_repository_buffs_read(MYSQL *db,
     struct clan_buff_state *out, size_t capacity, size_t *count);
+bool clan_repository_buff_valid(const struct clan_buff_state *);
 bool clan_repository_buff_active(const struct clan_buff_state *buff, int64_t now);
 /* No membership dependency: former-clan standings remain addressable. Missing
  * rows return NOT_FOUND, not a persisted/inferred award. Revision -1 inserts. */

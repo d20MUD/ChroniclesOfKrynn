@@ -110,6 +110,13 @@ void legendary_xp_kill_context(struct legendary_xp_context *ctx,struct char_data
     memcpy(ctx->award_id,victim->legendary_encounter_id,33);ctx->source_vnum=GET_MOB_VNUM(victim);ctx->eligible=true;
   }
 }
+void legendary_xp_damage_context(struct legendary_xp_context *ctx,struct char_data *victim)
+{
+  memset(ctx,0,sizeof(*ctx));ctx->origin=LEG_XP_DAMAGE;
+  if(real_victim(victim)) {
+    ctx->source_vnum=GET_MOB_VNUM(victim);ctx->eligible=true;
+  }
+}
 void legendary_xp_quest_context(struct legendary_xp_context *ctx,int vnum)
 {
   memset(ctx,0,sizeof(*ctx));ctx->origin=LEG_XP_QUEST;ctx->source_vnum=vnum;

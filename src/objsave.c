@@ -2333,6 +2333,7 @@ obj_save_data *objsave_parse_objects_db(char *name, room_vnum house_vnum)
 
     /* Get the data from the row structure. */
     serialized_obj = strdup(row[0]);
+
     /* Handle different query types */
     if (loading_house_data == 2)
     {
@@ -3085,262 +3086,50 @@ static int handle_obj(struct obj_data *temp, struct char_data *ch, int locate,
 }
 
 
+/* Auxiliary storage must persist the same complete instance record as inventory.
+ * In particular, do not rebuild a subset of spells/abilities from a prototype. */
+static int save_auxiliary_object_record(struct obj_data *obj, const char *owner,
+                                       long container_id, int position, bool pet)
+{
+  char *record = NULL, *quoted = NULL, *quoted_owner = NULL, *query = NULL;
+  size_t size = 0;
+  FILE *stream = open_memstream(&record, &size);
+  int ok = FALSE, previous_file_only = estate_file_only;
+  if (stream)
+  {
+    estate_file_only = TRUE;
+    ok = objsave_save_obj_record_db(obj, NULL, NOWHERE, stream, pet ? position : 0) && !ferror(stream);
+    estate_file_only = previous_file_only;
+    if (fclose(stream)) ok = FALSE;
+  }
+  if (ok)
+  {
+    quoted = malloc(size * 2 + 1);
+    quoted_owner = malloc(strlen(owner) * 2 + 1);
+    if (!quoted || !quoted_owner) ok = FALSE;
+  }
+  if (ok)
+  {
+    mysql_real_escape_string(conn, quoted, record, size);
+    mysql_real_escape_string(conn, quoted_owner, owner, strlen(owner));
+    if (pet)
+      ok = asprintf(&query, "INSERT INTO pet_save_objs(pet_idnum,owner_name,serialized_obj) VALUES(%ld,'%s','%s')",
+                    container_id, quoted_owner, quoted) >= 0;
+    else
+      ok = asprintf(&query, "INSERT INTO player_save_objs_sheathed(sheath_obj_id,sheathed_position,owner_name,serialized_obj) VALUES(%ld,%d,'%s','%s')",
+                    container_id, position, quoted_owner, quoted) >= 0;
+  }
+  if (ok) ok = mysql_query(conn, query) == 0;
+  if (!ok) log("SYSERR: Unable to save complete %s object record: %s", pet ? "pet" : "sheath", mysql_error(conn));
+  free(record); free(quoted); free(quoted_owner); free(query);
+  return ok;
+}
+
 int objsave_save_obj_record_db_pet(struct obj_data *obj, struct char_data *ch,
                                    struct char_data *owner, long int pet_idnum, int locate)
 {
-  static char ins_buf[36767]; /* For MySQL insert - static to avoid stack allocation */
-  static char line_buf[16384]; /* Room for escaped descriptions and record delimiters. */
-
-  int counter2, i = 0;
-  struct extra_descr_data *ex_desc;
-  char buf1[4096]; /* Reduced from MAX_STRING_LENGTH */
-  struct obj_data *temp = NULL;
-  struct obj_special_ability *specab = NULL;
-
-  /* load up the object */
-  if (GET_OBJ_VNUM(obj) != NOTHING)
-    temp = read_object_for_restore(GET_OBJ_VNUM(obj), VIRTUAL);
-  else
-  {
-    temp = create_obj();
-    temp->item_number = NOWHERE;
-  }
-
-  /* copy the action-description to buf1 */
-  if (obj->action_description)
-  {
-    strlcpy(buf1, obj->action_description, sizeof(buf1));
-    strip_cr(buf1);
-  }
-  else
-    *buf1 = 0;
-
-  snprintf(
-      ins_buf, sizeof(ins_buf),
-      "insert into pet_save_objs (pet_idnum, owner_name, serialized_obj) values ('%ld', '%s', '",
-      pet_idnum, GET_NAME(owner));
-
-  snprintf(line_buf, sizeof(line_buf), "#%d\n", GET_OBJ_VNUM(obj));
-  strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  if (obj->legendary_uuid[0]) {
-    if (!legendary_identity_line(obj, line_buf, sizeof(line_buf))) {
-      extract_obj(temp);
-      return 0;
-    }
-    strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  }
-
-
-
-  if (locate)
-  {
-    snprintf(line_buf, sizeof(line_buf), "Loc : %d\n", locate);
-    strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  }
-
-  /**** start checks for modifications to default object! ***/
-  /* is object modified from default values? */
-  snprintf(line_buf, sizeof(line_buf), "Vals: %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d\n",
-           GET_OBJ_VAL(obj, 0), GET_OBJ_VAL(obj, 1), GET_OBJ_VAL(obj, 2), GET_OBJ_VAL(obj, 3),
-           GET_OBJ_VAL(obj, 4), GET_OBJ_VAL(obj, 5), GET_OBJ_VAL(obj, 6), GET_OBJ_VAL(obj, 7),
-           GET_OBJ_VAL(obj, 8), GET_OBJ_VAL(obj, 9), GET_OBJ_VAL(obj, 10), GET_OBJ_VAL(obj, 11),
-           GET_OBJ_VAL(obj, 12), GET_OBJ_VAL(obj, 13), GET_OBJ_VAL(obj, 14), GET_OBJ_VAL(obj, 15));
-  strlcat(ins_buf, line_buf, sizeof(ins_buf));
-
-  snprintf(line_buf, sizeof(line_buf), "Flag: %d %d %d %d\n", GET_OBJ_EXTRA(obj)[0],
-           GET_OBJ_EXTRA(obj)[1], GET_OBJ_EXTRA(obj)[2], GET_OBJ_EXTRA(obj)[3]);
-
-#define TEST_OBJS(obj1, obj2, field)                                                               \
-  ((!obj1->field || !obj2->field || strcmp(obj1->field, obj2->field)))
-#define TEST_OBJN(field) (obj->obj_flags.field != temp->obj_flags.field)
-
-  if (TEST_OBJS(obj, temp, name))
-  {
-    snprintf(line_buf, sizeof(line_buf), "Name: %s\n", obj->name ? obj->name : "Undefined");
-    strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  }
-  if (TEST_OBJS(obj, temp, short_description))
-  {
-    snprintf(line_buf, sizeof(line_buf), "Shrt: %s\n",
-             obj->short_description ? obj->short_description : "Undefined");
-    strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  }
-
-  /* These two could be a pain on the read... we'll see... */
-  if (TEST_OBJS(obj, temp, description))
-  {
-    snprintf(line_buf, sizeof(line_buf), "Desc: %s\n",
-             obj->description ? obj->description : "Undefined");
-    strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  }
-  /* Only even try to process this if an action desc exists */
-  if (obj->action_description || temp->action_description)
-    if (TEST_OBJS(obj, temp, action_description))
-    {
-      snprintf(line_buf, sizeof(line_buf), "ADes:\n%s~\n", buf1);
-      strlcat(ins_buf, line_buf, sizeof(ins_buf));
-    }
-  if (TEST_OBJN(type_flag))
-  {
-    snprintf(line_buf, sizeof(line_buf), "Type: %d\n", GET_OBJ_TYPE(obj));
-    strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  }
-  if (TEST_OBJN(prof_flag))
-  {
-    snprintf(line_buf, sizeof(line_buf), "Prof: %d\n", GET_OBJ_PROF(obj));
-    strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  }
-  if (TEST_OBJN(material))
-  {
-    snprintf(line_buf, sizeof(line_buf), "Mats: %d\n", GET_OBJ_MATERIAL(obj));
-    strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  }
-  if (TEST_OBJN(size))
-  {
-    snprintf(line_buf, sizeof(line_buf), "Size: %d\n", GET_OBJ_SIZE(obj));
-    strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  }
-  if (TEST_OBJN(weight))
-  {
-    snprintf(line_buf, sizeof(line_buf), "Wght: %d\n", GET_OBJ_WEIGHT(obj));
-    strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  }
-  if (TEST_OBJN(level))
-  {
-    snprintf(line_buf, sizeof(line_buf), "Levl: %d\n", GET_OBJ_LEVEL(obj));
-    strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  }
-  if (TEST_OBJN(cost))
-  {
-    snprintf(line_buf, sizeof(line_buf), "Cost: %d\n", GET_OBJ_COST(obj));
-    strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  }
-  if (TEST_OBJN(cost_per_day))
-  {
-    snprintf(line_buf, sizeof(line_buf), "Rent: %d\n", GET_OBJ_RENT(obj));
-    strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  }
-  if (TEST_OBJN(bound_id))
-  {
-    snprintf(line_buf, sizeof(line_buf), "Bind: %d\n", GET_OBJ_BOUND_ID(obj));
-    strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  }
-  if (TEST_OBJN(bitvector))
-  {
-    snprintf(line_buf, sizeof(line_buf), "Perm: %d %d %d %d\n", GET_OBJ_PERM(obj)[0],
-             GET_OBJ_PERM(obj)[1], GET_OBJ_PERM(obj)[2], GET_OBJ_PERM(obj)[3]);
-    strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  }
-  if (TEST_OBJN(bitvector2))
-  {
-    snprintf(line_buf, sizeof(line_buf), "Prm2: %d %d %d %d\n", GET_OBJ2_PERM(obj)[0],
-             GET_OBJ2_PERM(obj)[1], GET_OBJ2_PERM(obj)[2], GET_OBJ2_PERM(obj)[3]);
-    strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  }
-  if (TEST_OBJN(wear_flags))
-  {
-    snprintf(line_buf, sizeof(line_buf), "Wear: %d %d %d %d\n", GET_OBJ_WEAR(obj)[0],
-             GET_OBJ_WEAR(obj)[1], GET_OBJ_WEAR(obj)[2], GET_OBJ_WEAR(obj)[3]);
-    strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  }
-  if (TEST_OBJN(i_sort))
-  {
-    snprintf(line_buf, sizeof(line_buf), "Sort: %d\n", GET_OBJ_SORT(obj));
-    strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  }
-
-  /* Do we have modified affects? */
-  for (counter2 = 0; counter2 < MAX_OBJ_AFFECT; counter2++)
-  {
-    bool diff = obj->affected[counter2].modifier != temp->affected[counter2].modifier ||
-                obj->affected[counter2].location != temp->affected[counter2].location ||
-                obj->affected[counter2].bonus_type != temp->affected[counter2].bonus_type ||
-                obj->affected[counter2].specific != temp->affected[counter2].specific ||
-                obj->affected[counter2].specific != 0; /* force-save specific if set */
-
-    if (diff)
-    {
-      snprintf(line_buf, sizeof(line_buf), "Aff : %d %d %d %d %d\n", counter2,
-               obj->affected[counter2].location, obj->affected[counter2].modifier,
-               obj->affected[counter2].bonus_type, obj->affected[counter2].specific);
-      strlcat(ins_buf, line_buf, sizeof(ins_buf));
-    }
-  }
-
-  /* Do we have modified extra descriptions? */
-  if (obj->ex_description || temp->ex_description)
-  {
-    /* To be reimplemented.  Need to handle this case in loading as
-       well */
-    if ((obj->ex_description && temp->ex_description &&
-         obj->ex_description != temp->ex_description) ||
-        !obj->ex_description || !temp->ex_description)
-    {
-      for (ex_desc = obj->ex_description; ex_desc; ex_desc = ex_desc->next)
-      {
-        /*. Sanity check to prevent nasty protection faults . */
-        if (!*ex_desc->keyword || !*ex_desc->description)
-        {
-          continue;
-        }
-        strlcpy(buf1, ex_desc->description, sizeof(buf1));
-        strip_cr(buf1);
-        snprintf(line_buf, sizeof(line_buf),
-                 "EDes:\n"
-                 "%s~\n"
-                 "%s~\n",
-                 ex_desc->keyword, buf1);
-        strlcat(ins_buf, line_buf, sizeof(ins_buf));
-      }
-    }
-  }
-
-  /* got modified spells in spellbook? */
-  if (obj->sbinfo)
-  { /*. Yep, save them too . */
-    for (i = 0; i < SPELLBOOK_SIZE; i++)
-    {
-      snprintf(line_buf, sizeof(line_buf), "Spbk: %d %d\n", obj->sbinfo[i].spellname,
-               obj->sbinfo[i].pages);
-      strlcat(ins_buf, line_buf, sizeof(ins_buf));
-    }
-  }
-
-  // weapon and armor special abilities
-  if (obj->special_abilities)
-  { /* Yes, save them too. */
-    specab = obj->special_abilities;
-    snprintf(line_buf, sizeof(line_buf), "SpAb: %d %d %d %d %d %d %d %s\n", specab->ability,
-             specab->level, specab->activation_method, specab->value[0], specab->value[1],
-             specab->value[2], specab->value[3],
-             (specab->command_word && *specab->command_word) ? specab->command_word : "");
-    strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  }
-
-  if (obj->activate_spell[ACT_SPELL_SPELLNUM] > 0)
-  {
-    snprintf(line_buf, sizeof(line_buf), "Actv: %d %d %d %d %d\n",
-             obj->activate_spell[ACT_SPELL_LEVEL], obj->activate_spell[ACT_SPELL_SPELLNUM],
-             obj->activate_spell[ACT_SPELL_CURRENT_USES], obj->activate_spell[ACT_SPELL_MAX_USES],
-             obj->activate_spell[ACT_SPELL_COOLDOWN]);
-    strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  }
-
-  /*** end checks for object modifications ****/
-
-  snprintf(line_buf, sizeof(line_buf), "');");
-  strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  if (mysql_query(conn, ins_buf))
-  {
-    log("SYSERR: Unable to INSERT into pet_save_objs: %s", mysql_error(conn));
-    /* Table doesn't exist, skip saving pet objects */
-    extract_obj(temp);
-    return 0;
-  }
-
-  extract_obj(temp);
-
-  return 1;
+  (void)ch;
+  return save_auxiliary_object_record(obj, GET_NAME(owner), pet_idnum, locate, TRUE);
 }
 #undef TEST_OBJS
 #undef TEST_OBJN
@@ -3454,6 +3243,23 @@ obj_save_data *objsave_parse_objects_db_pet(char *name, long int pet_idnum)
 
     /* Get the data from the row structure. */
     serialized_obj = strdup(row[0]);
+
+    if (strstr(serialized_obj, "\nSpCl:"))
+    {
+      FILE *record_file = fmemopen(serialized_obj, strlen(serialized_obj), "r");
+      obj_save_data *parsed = record_file ? objsave_parse_objects(record_file) : NULL;
+      if (record_file) fclose(record_file);
+      while (parsed)
+      {
+        obj_save_data *next = parsed->next;
+        parsed->next = NULL;
+        if (current) current->next = parsed; else head = parsed;
+        current = parsed;
+        parsed = next;
+      }
+      free(serialized_obj);
+      continue;
+    }
 
     lines = tokenize(serialized_obj, "\n");
     if (!lines)
@@ -3838,252 +3644,7 @@ obj_save_data *objsave_parse_objects_db_pet(char *name, long int pet_idnum)
 int objsave_save_obj_record_db_sheath(struct obj_data *obj, struct char_data *ch,
                                       long int sheath_idnum, int sheath_slot)
 {
-  static char ins_buf[36767]; /* For MySQL insert - static to avoid stack allocation */
-  static char line_buf[16384]; /* Room for escaped descriptions and record delimiters. */
-
-  int counter2, i = 0;
-  struct extra_descr_data *ex_desc;
-  char buf1[4096]; /* Reduced from MAX_STRING_LENGTH */
-  struct obj_data *temp = NULL;
-  struct obj_special_ability *specab = NULL;
-
-  /* load up the object */
-  if (GET_OBJ_VNUM(obj) != NOTHING)
-    temp = read_object_for_restore(GET_OBJ_VNUM(obj), VIRTUAL);
-  else
-  {
-    temp = create_obj();
-    temp->item_number = NOWHERE;
-  }
-
-  /* copy the action-description to buf1 */
-  if (obj->action_description)
-  {
-    strlcpy(buf1, obj->action_description, sizeof(buf1));
-    strip_cr(buf1);
-  }
-  else
-    *buf1 = 0;
-
-  snprintf(ins_buf, sizeof(ins_buf),
-           "insert into player_save_objs_sheathed (id, sheath_obj_id, sheathed_position, "
-           "owner_name, serialized_obj) values (NULL, '%ld', %d, '%s', '",
-           sheath_idnum, sheath_slot, GET_NAME(ch));
-
-  snprintf(line_buf, sizeof(line_buf), "#%d\n", GET_OBJ_VNUM(obj));
-  strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  if (obj->legendary_uuid[0]) {
-    if (!legendary_identity_line(obj, line_buf, sizeof(line_buf))) {
-      extract_obj(temp);
-      return 0;
-    }
-    strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  }
-
-
-  /**** start checks for modifications to default object! ***/
-  /* is object modified from default values? */
-  snprintf(line_buf, sizeof(line_buf), "Vals: %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d\n",
-           GET_OBJ_VAL(obj, 0), GET_OBJ_VAL(obj, 1), GET_OBJ_VAL(obj, 2), GET_OBJ_VAL(obj, 3),
-           GET_OBJ_VAL(obj, 4), GET_OBJ_VAL(obj, 5), GET_OBJ_VAL(obj, 6), GET_OBJ_VAL(obj, 7),
-           GET_OBJ_VAL(obj, 8), GET_OBJ_VAL(obj, 9), GET_OBJ_VAL(obj, 10), GET_OBJ_VAL(obj, 11),
-           GET_OBJ_VAL(obj, 12), GET_OBJ_VAL(obj, 13), GET_OBJ_VAL(obj, 14), GET_OBJ_VAL(obj, 15));
-  strlcat(ins_buf, line_buf, sizeof(ins_buf));
-
-  snprintf(line_buf, sizeof(line_buf), "Flag: %d %d %d %d\n", GET_OBJ_EXTRA(obj)[0],
-           GET_OBJ_EXTRA(obj)[1], GET_OBJ_EXTRA(obj)[2], GET_OBJ_EXTRA(obj)[3]);
-
-#define TEST_OBJS(obj1, obj2, field)                                                               \
-  ((!obj1->field || !obj2->field || strcmp(obj1->field, obj2->field)))
-#define TEST_OBJN(field) (obj->obj_flags.field != temp->obj_flags.field)
-
-  if (TEST_OBJS(obj, temp, name))
-  {
-    snprintf(line_buf, sizeof(line_buf), "Name: %s\n", obj->name ? obj->name : "Undefined");
-    strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  }
-  if (TEST_OBJS(obj, temp, short_description))
-  {
-    snprintf(line_buf, sizeof(line_buf), "Shrt: %s\n",
-             obj->short_description ? obj->short_description : "Undefined");
-    strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  }
-
-  /* These two could be a pain on the read... we'll see... */
-  if (TEST_OBJS(obj, temp, description))
-  {
-    snprintf(line_buf, sizeof(line_buf), "Desc: %s\n",
-             obj->description ? obj->description : "Undefined");
-    strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  }
-  /* Only even try to process this if an action desc exists */
-  if (obj->action_description || temp->action_description)
-    if (TEST_OBJS(obj, temp, action_description))
-    {
-      snprintf(line_buf, sizeof(line_buf), "ADes:\n%s~\n", buf1);
-      strlcat(ins_buf, line_buf, sizeof(ins_buf));
-    }
-  if (TEST_OBJN(type_flag))
-  {
-    snprintf(line_buf, sizeof(line_buf), "Type: %d\n", GET_OBJ_TYPE(obj));
-    strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  }
-  if (TEST_OBJN(prof_flag))
-  {
-    snprintf(line_buf, sizeof(line_buf), "Prof: %d\n", GET_OBJ_PROF(obj));
-    strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  }
-  if (TEST_OBJN(material))
-  {
-    snprintf(line_buf, sizeof(line_buf), "Mats: %d\n", GET_OBJ_MATERIAL(obj));
-    strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  }
-  if (TEST_OBJN(size))
-  {
-    snprintf(line_buf, sizeof(line_buf), "Size: %d\n", GET_OBJ_SIZE(obj));
-    strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  }
-  if (TEST_OBJN(weight))
-  {
-    snprintf(line_buf, sizeof(line_buf), "Wght: %d\n", GET_OBJ_WEIGHT(obj));
-    strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  }
-  if (TEST_OBJN(level))
-  {
-    snprintf(line_buf, sizeof(line_buf), "Levl: %d\n", GET_OBJ_LEVEL(obj));
-    strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  }
-  if (TEST_OBJN(cost))
-  {
-    snprintf(line_buf, sizeof(line_buf), "Cost: %d\n", GET_OBJ_COST(obj));
-    strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  }
-  if (TEST_OBJN(cost_per_day))
-  {
-    snprintf(line_buf, sizeof(line_buf), "Rent: %d\n", GET_OBJ_RENT(obj));
-    strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  }
-  if (TEST_OBJN(bound_id))
-  {
-    snprintf(line_buf, sizeof(line_buf), "Bind: %d\n", GET_OBJ_BOUND_ID(obj));
-    strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  }
-  if (TEST_OBJN(bitvector))
-  {
-    snprintf(line_buf, sizeof(line_buf), "Perm: %d %d %d %d\n", GET_OBJ_PERM(obj)[0],
-             GET_OBJ_PERM(obj)[1], GET_OBJ_PERM(obj)[2], GET_OBJ_PERM(obj)[3]);
-    strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  }
-  if (TEST_OBJN(bitvector2))
-  {
-    snprintf(line_buf, sizeof(line_buf), "Prm2: %d %d %d %d\n", GET_OBJ2_PERM(obj)[0],
-             GET_OBJ2_PERM(obj)[1], GET_OBJ2_PERM(obj)[2], GET_OBJ2_PERM(obj)[3]);
-    strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  }
-  if (TEST_OBJN(wear_flags))
-  {
-    snprintf(line_buf, sizeof(line_buf), "Wear: %d %d %d %d\n", GET_OBJ_WEAR(obj)[0],
-             GET_OBJ_WEAR(obj)[1], GET_OBJ_WEAR(obj)[2], GET_OBJ_WEAR(obj)[3]);
-    strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  }
-  if (TEST_OBJN(i_sort))
-  {
-    snprintf(line_buf, sizeof(line_buf), "Sort: %d\n", GET_OBJ_SORT(obj));
-    strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  }
-
-  /* Do we have modified affects? */
-  for (counter2 = 0; counter2 < MAX_OBJ_AFFECT; counter2++)
-  {
-    bool diff = obj->affected[counter2].modifier != temp->affected[counter2].modifier ||
-                obj->affected[counter2].location != temp->affected[counter2].location ||
-                obj->affected[counter2].bonus_type != temp->affected[counter2].bonus_type ||
-                obj->affected[counter2].specific != temp->affected[counter2].specific ||
-                obj->affected[counter2].specific != 0; /* force-save specific if set */
-
-    if (diff)
-    {
-      snprintf(line_buf, sizeof(line_buf), "Aff : %d %d %d %d %d\n", counter2,
-               obj->affected[counter2].location, obj->affected[counter2].modifier,
-               obj->affected[counter2].bonus_type, obj->affected[counter2].specific);
-      strlcat(ins_buf, line_buf, sizeof(ins_buf));
-    }
-  }
-
-  /* Do we have modified extra descriptions? */
-  if (obj->ex_description || temp->ex_description)
-  {
-    /* To be reimplemented.  Need to handle this case in loading as
-       well */
-    if ((obj->ex_description && temp->ex_description &&
-         obj->ex_description != temp->ex_description) ||
-        !obj->ex_description || !temp->ex_description)
-    {
-      for (ex_desc = obj->ex_description; ex_desc; ex_desc = ex_desc->next)
-      {
-        /*. Sanity check to prevent nasty protection faults . */
-        if (!*ex_desc->keyword || !*ex_desc->description)
-        {
-          continue;
-        }
-        strlcpy(buf1, ex_desc->description, sizeof(buf1));
-        strip_cr(buf1);
-        snprintf(line_buf, sizeof(line_buf),
-                 "EDes:\n"
-                 "%s~\n"
-                 "%s~\n",
-                 ex_desc->keyword, buf1);
-        strlcat(ins_buf, line_buf, sizeof(ins_buf));
-      }
-    }
-  }
-
-  /* got modified spells in spellbook? */
-  if (obj->sbinfo)
-  { /*. Yep, save them too . */
-    for (i = 0; i < SPELLBOOK_SIZE; i++)
-    {
-      snprintf(line_buf, sizeof(line_buf), "Spbk: %d %d\n", obj->sbinfo[i].spellname,
-               obj->sbinfo[i].pages);
-      strlcat(ins_buf, line_buf, sizeof(ins_buf));
-    }
-  }
-
-  // weapon and armor special abilities
-  if (obj->special_abilities)
-  { /* Yes, save them too. */
-    specab = obj->special_abilities;
-    snprintf(line_buf, sizeof(line_buf), "SpAb: %d %d %d %d %d %d %d %s\n", specab->ability,
-             specab->level, specab->activation_method, specab->value[0], specab->value[1],
-             specab->value[2], specab->value[3],
-             (specab->command_word && *specab->command_word) ? specab->command_word : "");
-    strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  }
-
-  if (obj->activate_spell[ACT_SPELL_SPELLNUM] > 0)
-  {
-    snprintf(line_buf, sizeof(line_buf), "Actv: %d %d %d %d %d\n",
-             obj->activate_spell[ACT_SPELL_LEVEL], obj->activate_spell[ACT_SPELL_SPELLNUM],
-             obj->activate_spell[ACT_SPELL_CURRENT_USES], obj->activate_spell[ACT_SPELL_MAX_USES],
-             obj->activate_spell[ACT_SPELL_COOLDOWN]);
-    strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  }
-
-  /*** end checks for object modifications ****/
-
-  snprintf(line_buf, sizeof(line_buf), "');");
-  strlcat(ins_buf, line_buf, sizeof(ins_buf));
-  if (mysql_query(conn, ins_buf))
-  {
-    log("SYSERR: Unable to INSERT into player_save_objs_sheathed: %s\n%s\n", mysql_error(conn),
-        ins_buf);
-    extract_obj(temp);
-    return 1;
-  }
-
-  extract_obj(temp);
-
-  return 1;
+  return save_auxiliary_object_record(obj, GET_NAME(ch), sheath_idnum, sheath_slot, FALSE);
 }
 
 void load_sheath_contents(struct char_data *ch, struct obj_data *sheath, long int idnum)
@@ -4169,6 +3730,25 @@ obj_save_data *objsave_parse_objects_db_sheath(char *name, long int sheath_idnum
 
     /* Get the data from the row structure. */
     serialized_obj = strdup(row[0]);
+
+    if (strstr(serialized_obj, "\nSpCl:"))
+    {
+      FILE *record_file = fmemopen(serialized_obj, strlen(serialized_obj), "r");
+      obj_save_data *parsed = record_file ? objsave_parse_objects(record_file) : NULL;
+      if (record_file) fclose(record_file);
+      while (parsed)
+      {
+        obj_save_data *next = parsed->next;
+        if (sheath_slot == 1) sheath->sheath_primary = parsed->obj;
+        else if (sheath_slot == 2) sheath->sheath_secondary = parsed->obj;
+        parsed->next = NULL;
+        if (current) current->next = parsed; else head = parsed;
+        current = parsed;
+        parsed = next;
+      }
+      free(serialized_obj);
+      continue;
+    }
 
     lines = tokenize(serialized_obj, "\n");
     if (!lines)

@@ -71,7 +71,7 @@ EVENTFUNC(event_brewing)
   int num_spells = 0, highest_circle = 0, brewing_skill = 0;
   int total_motes_by_type[NUM_CRAFT_MOTES] = {0};
   int total_gold = 0;
-  int dc = 0, d20_roll = 0, roll = 0;
+  int dc = 0, d20_roll = 0, roll = 0, artisan_bonus = 0;
   bool critical_success = FALSE;
   int i, cycle;
 
@@ -145,11 +145,13 @@ EVENTFUNC(event_brewing)
 
   /* NOW perform the skill check at the end of brewing */
   d20_roll = d20(ch);
-  roll = d20_roll + brewing_skill;
+  /* Check-only bonus is resolved at completion, never stored in the job. */
+  artisan_bonus = get_craft_production_bonus(ch, ABILITY_CRAFT_ALCHEMY);
+  roll = d20_roll + brewing_skill + artisan_bonus;
 
   /* Display skill check details */
   send_to_char(ch, "Alchemy skill check: d20(%d) + skill(%d) = %d vs DC %d\r\n", d20_roll,
-               brewing_skill, roll, dc);
+               brewing_skill + artisan_bonus, roll, dc);
 
   /* Check for critical failure (natural 1) */
   if (d20_roll == 1)

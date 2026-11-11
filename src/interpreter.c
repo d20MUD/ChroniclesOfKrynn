@@ -12,6 +12,7 @@
 
 #include "conf.h"
 #include "sysdep.h"
+#include "clan_buff_runtime.h"
 #include "legendary_foundations.h"
 #include "legendary_effects.h"
 #include "legendary_equipment.h"
@@ -6718,6 +6719,7 @@ int enter_player_game(struct descriptor_data *d)
   char_to_room(d->character, load_room);
   load_result = Crash_load(d->character);
   (void)legendary_loadout_get(d->character);
+  clan_buff_runtime_login_end(d->character,(int64_t)time(NULL));
   if (!legendary_earnings_recover(d->character) ||
       (legendary_earnings_available() && !legendary_budget_prime(d->character)))
   {

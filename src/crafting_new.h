@@ -475,4 +475,8 @@ int get_golem_size_from_vnum(int vnum);
 struct char_data *get_active_golem_follower(struct char_data *ch);
 bool has_golem_follower(struct char_data *ch);
 
+
+/* Check-only clan modifier; never part of ranks, recipe access or crafting XP. */
+int get_craft_production_bonus(struct char_data *ch, int skill);
+
 #endif // NEWCRAFT_H

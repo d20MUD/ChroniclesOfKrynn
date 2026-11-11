@@ -297,6 +297,7 @@ void obj_from_room(struct obj_data *obj)
   obj->next_content = NULL;
   IN_ROOM(obj) = NOWHERE;
 }
+char *object_short_description(const struct obj_data *obj) { return obj->short_description; }
 void extract_obj(struct obj_data *obj)
 {
 #ifdef LEGENDARY_PERSISTENCE_TEST

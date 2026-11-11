@@ -38,6 +38,7 @@
 #include "char_descs.h"
 #include "clan.h"
 #include "clan_persistence.h"
+#include "clan_buff_runtime.h"
 #include "mud_event.h"
 #include "dg_event.h"
 #include "craft.h" // crafting (auto craft quest inits)
@@ -2375,6 +2376,7 @@ int load_char(const char *name, struct char_data *ch)
     HAS_REAL_FEAT(ch, FEAT_MIRAGE_FLARE) = 1;
   }
 
+  clan_buff_runtime_login_begin(ch);
   reconcile_alter_self(ch);
 
   /* Legacy nonmagical race-only disguises must be reapplied using the new command.

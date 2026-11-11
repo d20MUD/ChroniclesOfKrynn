@@ -80,13 +80,18 @@ with tempfile.TemporaryDirectory(prefix='krynn-estate-test-') as directory:
     if os.environ.get('LEGENDARY_PERSISTENCE_TEST') == '1':
         legendary_codec = temp/'legendary-codec.c'
         legendary_codec.write_text(codec.read_text() + '\n' + '\n'.join([
+            function('static int save_auxiliary_object_record('),
             function('int objsave_save_obj_record_db_pet('),
             function('int objsave_save_obj_record_db_sheath('),
             function('obj_save_data *objsave_parse_objects_db_pet('),
             function('obj_save_data *objsave_parse_objects_db_sheath('),
             function('char **tokenize(', (root/'src/mysql.c').read_text()),
             function('void free_tokens(', (root/'src/mysql.c').read_text()),
-            '#include "genobj.h"', '#include "traps.h"',
+            '#include "genobj.h"', '#include "traps.h"', '#include "assign_wpn_armor.h"',
+            function('bool is_legacy_composite_bow(', (root/'src/assign_wpn_armor.c').read_text()),
+            function('int current_weapon_type(', (root/'src/assign_wpn_armor.c').read_text()),
+            function('static char *current_bow_description(', (root/'src/assign_wpn_armor.c').read_text()),
+            function('void retire_new_composite_bow(', (root/'src/assign_wpn_armor.c').read_text()),
             function('void free_object_strings_proto(', (root/'src/genobj.c').read_text()),
             function('static void copy_object_strings(', (root/'src/genobj.c').read_text()),
             function('int copy_object_main(', (root/'src/genobj.c').read_text()),
@@ -138,6 +143,8 @@ with tempfile.TemporaryDirectory(prefix='krynn-estate-test-') as directory:
         xp_codec = temp/'earnings-xp.c'
         xp_codec.write_text('\n'.join(re.findall(r'^#include .+$',limits_source,re.M)) + '\n' +
             '\n'.join(re.findall(r'^#define (?:NEWBIE_EXP|MIN_NUM_MOBS_TO_KILL_\d+) .+$',limits_source,re.M)) + '\n' +
+            function('static int scholar_adventuring_xp(',limits_source) + '\n' +
+            function('int gain_exp_from_damage(',limits_source) + '\n' +
             function('int gain_exp(struct char_data *',limits_source) + '\n' +
             function('int gain_exp_with_source(struct char_data *',limits_source) + '\n' +
             function('bool process_healing(struct char_data *', (root/'src/magic.c').read_text()))

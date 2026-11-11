@@ -4,6 +4,7 @@
 struct clan_buff_family_view {
   enum clan_buff_family family;
   enum clan_buff_category category;
+  char activation_uid[CLAN_PROGRESSION_UID_SIZE];
   int unlocked_tier, active_tier, active_slot;
   bool active, cooling_down, category_available;
   unsigned int available_slots; /* bit 0 = slot 1; no permission/price promise */

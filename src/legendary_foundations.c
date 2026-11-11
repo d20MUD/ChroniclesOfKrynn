@@ -11,6 +11,7 @@
 #include "legendary_equipment.h"
 #include "legendary_foundations.h"
 #include "legendary_techniques.h"
+#include <limits.h>
 
 struct legendary_foundation_state {
   bool busy,syncing,rerun;
@@ -115,7 +116,10 @@ void legendary_foundations_end(struct char_data *ch)
 {
   if(!ch||IS_NPC(ch)||!ch->legendary_foundations)return;
   /* Raising a maximum never raises the corresponding current pool. */
-  if(!ch->legendary_serializing){GET_HIT(ch)=MIN(GET_HIT(ch),GET_MAX_HIT(ch));GET_MOVE(ch)=MIN(GET_MOVE(ch),GET_MAX_MOVE(ch));GET_PSP(ch)=MIN(GET_PSP(ch),GET_MAX_PSP(ch));}
+  if(!ch->legendary_serializing){
+    if(!ch->clan_buff_login_pending)GET_HIT(ch)=MIN(GET_HIT(ch),GET_MAX_HIT(ch));
+    GET_MOVE(ch)=MIN(GET_MOVE(ch),GET_MAX_MOVE(ch));GET_PSP(ch)=MIN(GET_PSP(ch),GET_MAX_PSP(ch));
+  }
   if(ch->legendary_foundations) {
     bool again=ch->legendary_foundations->rerun;
     ch->legendary_foundations->rerun=false;ch->legendary_foundations->busy=false;
@@ -201,6 +205,21 @@ int legendary_foundation_regen(struct char_data *ch)
 void legendary_foundation_hp(struct char_data *ch,int ordinary_max)
 {
   int bonus=legendary_foundation_value(ch,LEG_F09,0)+legendary_item_passive_value(ch,1);
-  GET_MAX_HIT(ch)=ordinary_max+bonus;
-  if(!ch->legendary_serializing&&(bonus||ch->legendary_foundations))GET_HIT(ch)=MIN(GET_HIT(ch),GET_MAX_HIT(ch));
+  int old_clan_bonus=ch->clan_vitality_applied;
+  bool old_clan_active=ch->clan_vitality_was_active;
+  int percent=(!IS_NPC(ch)&&!ch->legendary_serializing&&ch->clan_vitality_percent>0&&
+      ch->clan_vitality_percent<=15&&ch->clan_vitality_expires_at>(int64_t)time(NULL))
+      ?ch->clan_vitality_percent:0;
+  int64_t base=(int64_t)ordinary_max+bonus;
+  int64_t effective;
+  if(base<1)base=1;
+  if(base>INT_MAX)base=INT_MAX;
+  effective=base+base*percent/100;
+  GET_MAX_HIT(ch)=(int)(effective>INT_MAX?INT_MAX:effective);
+  if(!ch->legendary_serializing) {
+    ch->clan_vitality_applied=GET_MAX_HIT(ch)-(int)base;
+    ch->clan_vitality_was_active=percent>0;
+    if(!ch->clan_buff_login_pending&&(bonus||ch->legendary_foundations||old_clan_bonus||old_clan_active||percent))
+      GET_HIT(ch)=MIN(GET_HIT(ch),GET_MAX_HIT(ch));
+  }
 }

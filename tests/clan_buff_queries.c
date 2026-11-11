@@ -72,6 +72,18 @@ int main(void)
   assert(clan_buff_query(&c,A,CLAN_RECORD_ACTIVE,10,rows,1,150,&v)&&family(&v,CLAN_BUFF_SCHOLAR)->active);
   assert(!clan_buff_query(&c,A,CLAN_RECORD_ACTIVE,10,NULL,1,150,&v));
   assert(!clan_buff_query(&c,A,CLAN_RECORD_ACTIVE,0,NULL,0,150,&v));
+  /* Phase 23: every family's duplicate tiers/copies fail, while distinct
+   * approved categories coexist within the validated three-slot limit. */
+  for(int id=1;id<=5;id++)for(int tier=1;tier<=3;tier++) {
+    rows[0]=row(id,1);rows[1]=row(id,2);rows[1].tier=tier;
+    memset(rows[1].activation_uid,'e',32);
+    assert(!clan_buff_query(&c,A,CLAN_RECORD_ACTIVE,20,rows,2,150,&v));
+  }
+  for(int first=1;first<=3;first++)for(int second=first+1;second<=4;second++)for(int third=second+1;third<=5;third++) {
+    rows[0]=row(first,1);rows[1]=row(second,2);rows[2]=row(third,3);
+    assert(clan_buff_query(&c,A,CLAN_RECORD_ACTIVE,20,rows,3,150,&v));
+    assert(v.slots_used==3);
+  }
   puts("Phase 13: level/tier/slot unlocks, active/category limits, family cooldown boundaries, cancellation, rotation, incarnation isolation, corrupt-state rejection and pure queries passed.");
   return 0;
 }

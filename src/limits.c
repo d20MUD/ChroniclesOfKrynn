@@ -949,51 +949,62 @@ void regen_update(struct char_data *ch)
  * that a character's age will now only affect the HMV gain per tick, and _not_
  * the HMV maximums. */
 
+/* Only this PSP tick receives Psionic Focus; the shared helper also feeds MOVE. */
+static void recover_psp_tick(struct char_data *ch, int64_t now)
+{
+  int64_t before = GET_PSP(ch), maximum = GET_MAX_PSP(ch), value = before;
+  int64_t recovery, scaled;
+  bool eligible = !IS_NPC(ch) && ch->clan_psionic_percent > 0 &&
+      ch->clan_psionic_percent <= 30 && ch->clan_psionic_expires_at > now &&
+      ch->clan_psionic_activation_uid[0];
+  if (FIGHTING(ch))
+  {
+    ch->clan_psionic_remainder = 0;
+    return;
+  }
+  if (!eligible || before >= maximum)
+    ch->clan_psionic_remainder = 0;
+  if (value < maximum)
+    value++;
+  value += get_psp_regen_amount(ch);
+  if (value < maximum && HAS_FEAT(ch, FEAT_PSIONIC_RECOVERY))
+    value += (int64_t)HAS_FEAT(ch, FEAT_PSIONIC_RECOVERY) * 2;
+  switch (GET_POS(ch))
+  {
+  case POS_SLEEPING: case POS_RECLINING: case POS_RESTING: case POS_SITTING:
+    if (value < maximum)
+      value += 2 + GET_PSIONIC_LEVEL(ch) / 7;
+    break;
+  default:
+    break;
+  }
+  recovery = value - before;
+  /* Preserve ordinary over-max drain; never scale it or award at full PSP. */
+  if (value > maximum)
+    value--;
+  if (eligible && before < maximum && recovery > 0)
+  {
+    scaled = recovery * ch->clan_psionic_percent + ch->clan_psionic_remainder;
+    value += scaled / 100;
+    ch->clan_psionic_remainder = scaled % 100;
+  }
+  if (value >= maximum)
+  {
+    value = maximum;
+    ch->clan_psionic_remainder = 0;
+  }
+  GET_PSP(ch) = (int)MAX(INT_MIN, value);
+}
+
 void regen_psp(void)
 {
-  struct descriptor_data *d = NULL;
-
+  struct descriptor_data *d;
+  int64_t now = (int64_t)time(NULL);
   for (d = descriptor_list; d; d = d->next)
   {
-    if (STATE(d) != CON_PLAYING)
+    if (STATE(d) != CON_PLAYING || !d->character || IN_ROOM(d->character) == NOWHERE)
       continue;
-    if (!d->character)
-      continue;
-    if (IN_ROOM(d->character) == NOWHERE)
-      continue;
-    if (FIGHTING(d->character))
-      continue;
-
-    if (GET_PSP(d->character) < GET_MAX_PSP(d->character))
-      GET_PSP(d->character)++;
-
-    if (!FIGHTING(d->character))
-      GET_PSP(d->character) += get_psp_regen_amount(d->character);
-
-    if (GET_PSP(d->character) < GET_MAX_PSP(d->character))
-      if (HAS_FEAT(d->character, FEAT_PSIONIC_RECOVERY))
-        GET_PSP(d->character) += (HAS_FEAT(d->character, FEAT_PSIONIC_RECOVERY) * 2);
-
-    switch (GET_POS(d->character))
-    {
-    case POS_SLEEPING:
-    case POS_RECLINING:
-    /*case POS_CRAWLING:*/
-    case POS_RESTING:
-    case POS_SITTING:
-      if (GET_PSP(d->character) < GET_MAX_PSP(d->character))
-        GET_PSP(d->character) += 2 + (GET_PSIONIC_LEVEL(d->character) / 7);
-      break;
-    default:
-      break;
-    }
-
-    /* we also have a de-regen if over max in another function */
-    if (GET_PSP(d->character) > GET_MAX_PSP(d->character))
-      GET_PSP(d->character)--;
-
-    if (GET_PSP(d->character) > GET_MAX_PSP(d->character))
-      GET_PSP(d->character) = GET_MAX_PSP(d->character);
+    recover_psp_tick(d->character, now);
   }
 }
 
@@ -1242,6 +1253,30 @@ long int get_minimum_experience_floor(struct char_data *ch)
   }
 }
 
+/* Explicit damage provenance shares the trusted NPC filters used for kills.
+ * Damage awards never become legendary kill receipts or clan contributions. */
+int gain_exp_from_damage(struct char_data *ch, int gain, struct char_data *victim)
+{
+  struct legendary_xp_context source;
+  legendary_xp_damage_context(&source, victim);
+  return gain_exp_with_source(ch, gain, GAIN_EXP_MODE_DAMAGE, &source);
+}
+
+static int scholar_adventuring_xp(struct char_data *ch, int gain, int mode,
+                                  const struct legendary_xp_context *source)
+{
+  int64_t adjusted;
+  if (IS_NPC(ch) || gain <= 0 || !source || !source->eligible ||
+      !((source->origin == LEG_XP_KILL &&
+         (mode == GAIN_EXP_MODE_SOLO || mode == GAIN_EXP_MODE_GROUP)) ||
+        (source->origin == LEG_XP_DAMAGE && mode == GAIN_EXP_MODE_DAMAGE)) ||
+      ch->clan_scholar_percent <= 0 || ch->clan_scholar_percent > 10 ||
+      ch->clan_scholar_expires_at <= (int64_t)time(NULL))
+    return gain;
+  adjusted = (int64_t)gain + (int64_t)gain * ch->clan_scholar_percent / 100;
+  return (int)MIN(INT_MAX, adjusted);
+}
+
 int gain_exp(struct char_data *ch, int gain, int mode)
 {
   return gain_exp_with_source(ch, gain, mode, NULL);
@@ -1410,6 +1445,10 @@ int gain_exp_with_source(struct char_data *ch, int gain, int mode,
       gain += (int)((float)gain * ((float)HAPPY_EXP / (float)(100)));
 
     gain = apply_account_reward_bonus(ch, gain, ACCOUNT_BONUS_EXPERIENCE);
+
+    /* Personal adventuring bonus follows existing modifiers, before the final
+     * cap. Clan contribution source facts never pass through this multiplier. */
+    gain = scholar_adventuring_xp(ch, gain, mode, source);
 
     /* put an absolute cap on the max gain per kill */
     gain = MIN(CONFIG_MAX_EXP_GAIN, gain);

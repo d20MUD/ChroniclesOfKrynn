@@ -496,6 +496,10 @@ set(SRC_C_FILES
     src/clan.c
     src/clan_economy.c
     src/clan_buff_queries.c
+    src/clan_buff_activation.c
+    src/clan_buff_commit.c
+    src/clan_buff_lifecycle.c
+    src/clan_buff_runtime.c
     src/clan_status.c
     src/clan_commands.c
     src/clan_awards.c

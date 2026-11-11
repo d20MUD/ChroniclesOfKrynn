@@ -38,6 +38,8 @@ void set_title(struct char_data *ch, char *title);
 void set_imm_title(struct char_data *ch, char *title);
 void run_autowiz(void);
 int gain_exp(struct char_data *ch, int gain, int mode);
+/* Actual NPC damage only; casting XP keeps the context-free entry point. */
+int gain_exp_from_damage(struct char_data *ch, int gain, struct char_data *victim);
 struct legendary_xp_context;
 int gain_exp_with_source(struct char_data *ch, int gain, int mode,
                          const struct legendary_xp_context *source);

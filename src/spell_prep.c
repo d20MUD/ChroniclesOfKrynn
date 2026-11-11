@@ -404,12 +404,13 @@ void save_prep_queue_by_class(FILE *fl, struct char_data *ch, int class)
   for (; current; current = next)
   {
     next = current->next;
-    fprintf(fl, "%d %d %d %d %d %d\n", class, /* Class number */
+    fprintf(fl, "%d %d %d %d %d %d %d\n", class, /* Class number */
             current->spell,                   /* Spell number being prepared */
             current->metamagic,               /* Metamagic flags as bitmask */
             current->prep_time,               /* Seconds remaining to prepare */
             current->domain,                  /* Domain (for clerics) or 0 */
-            current->arcane_recovery_reduced ? 1 : 0);
+            current->arcane_recovery_reduced ? 1 : 0,
+            current->clan_preparation_started ? 1 : 0);
   }
 }
 
@@ -432,12 +433,13 @@ void save_innate_magic_by_class(FILE *fl, struct char_data *ch, int class)
   for (; current; current = next)
   {
     next = current->next;
-    fprintf(fl, "%d %d %d %d %d %d\n", class, /* Class number */
+    fprintf(fl, "%d %d %d %d %d %d %d\n", class, /* Class number */
             current->circle,                  /* Spell circle (1-9) */
             current->metamagic,               /* Pre-applied metamagic (rare) */
             current->prep_time,               /* Time until slot is ready */
             current->domain,                  /* Domain (usually 0 for innate) */
-            current->arcane_recovery_reduced ? 1 : 0);
+            current->arcane_recovery_reduced ? 1 : 0,
+            current->clan_preparation_started ? 1 : 0);
   }
 }
 
@@ -1207,7 +1209,7 @@ bool known_spells_add(struct char_data *ch, int ch_class, int spellnum, bool loa
 void load_spell_prep_queue(FILE *fl, struct char_data *ch)
 {
   int spell_num, ch_class, metamagic, prep_time, domain, arcane_recovery_reduced, counter = 0;
-  int parsed_values = 0;
+  int parsed_values = 0, clan_started = 0;
   char line[MAX_INPUT_LENGTH + 1];
 
   /* Read entries until sentinel or limit reached */
@@ -1220,12 +1222,13 @@ void load_spell_prep_queue(FILE *fl, struct char_data *ch)
     prep_time = 0;
     domain = 0;
     arcane_recovery_reduced = 0;
+    clan_started = 0;
 
     /* Read next line from file */
     get_line(fl, line);
-    /* Accept legacy 5-value rows and new rows with the Arcane Recovery marker. */
-    parsed_values = sscanf(line, "%d %d %d %d %d %d", &ch_class, &spell_num, &metamagic,
-                           &prep_time, &domain, &arcane_recovery_reduced);
+    /* Accept legacy five/six-value rows and the saved current-cycle marker. */
+    parsed_values = sscanf(line, "%d %d %d %d %d %d %d", &ch_class, &spell_num, &metamagic,
+                           &prep_time, &domain, &arcane_recovery_reduced, &clan_started);
     if (parsed_values < 5)
     {
       log("SYSERR: Invalid spell prep queue data in player file: %s", line);
@@ -1238,10 +1241,26 @@ void load_spell_prep_queue(FILE *fl, struct char_data *ch)
       /* Additional safety check - don't exceed queue limits even when loading */
       if (counter < MAX_PREP_QUEUE_SIZE)
       {
+        struct prep_collection_spell_data *old_head = SPELL_PREP_QUEUE(ch, ch_class);
         prep_queue_add(ch, ch_class, spell_num, metamagic, prep_time, domain);
-        if (SPELL_PREP_QUEUE(ch, ch_class))
+        if (SPELL_PREP_QUEUE(ch, ch_class) != old_head)
+        {
+          SPELL_PREP_QUEUE(ch, ch_class)->clan_preparation_started = (clan_started != 0);
           SPELL_PREP_QUEUE(ch, ch_class)->arcane_recovery_reduced =
               (arcane_recovery_reduced != 0);
+          /* Add normally prepends; file rows are already in queue order.
+           * Keep the saved running cycle at the head through repeated loads. */
+          if (old_head)
+          {
+            struct prep_collection_spell_data *entry = SPELL_PREP_QUEUE(ch, ch_class);
+            struct prep_collection_spell_data *tail = old_head;
+            SPELL_PREP_QUEUE(ch, ch_class) = old_head;
+            while (tail->next)
+              tail = tail->next;
+            tail->next = entry;
+            entry->next = NULL;
+          }
+        }
       }
       else
       {
@@ -1269,7 +1288,7 @@ void load_spell_prep_queue(FILE *fl, struct char_data *ch)
 void load_innate_magic_queue(FILE *fl, struct char_data *ch)
 {
   int circle, ch_class, metamagic, prep_time, domain, arcane_recovery_reduced, counter = 0;
-  int parsed_values = 0;
+  int parsed_values = 0, clan_started = 0;
   char line[MAX_INPUT_LENGTH + 1];
 
   /* Read entries until sentinel or limit */
@@ -1282,12 +1301,13 @@ void load_innate_magic_queue(FILE *fl, struct char_data *ch)
     prep_time = 0;
     domain = 0;
     arcane_recovery_reduced = 0;
+    clan_started = 0;
 
     /* Read next line */
     get_line(fl, line);
-    /* Accept legacy 5-value rows and new rows with the Arcane Recovery marker. */
-    parsed_values = sscanf(line, "%d %d %d %d %d %d", &ch_class, &circle, &metamagic, &prep_time,
-                           &domain, &arcane_recovery_reduced);
+    /* Accept legacy five/six-value rows and the saved current-cycle marker. */
+    parsed_values = sscanf(line, "%d %d %d %d %d %d %d", &ch_class, &circle, &metamagic, &prep_time,
+                           &domain, &arcane_recovery_reduced, &clan_started);
     if (parsed_values < 5)
     {
       log("SYSERR: Invalid innate magic queue data in player file: %s", line);
@@ -1300,10 +1320,26 @@ void load_innate_magic_queue(FILE *fl, struct char_data *ch)
       /* Additional safety check - don't exceed queue limits even when loading */
       if (counter < MAX_INNATE_QUEUE_SIZE)
       {
+        struct innate_magic_data *old_head = INNATE_MAGIC(ch, ch_class);
         innate_magic_add(ch, ch_class, circle, metamagic, prep_time, domain);
-        if (INNATE_MAGIC(ch, ch_class))
+        if (INNATE_MAGIC(ch, ch_class) != old_head)
+        {
+          INNATE_MAGIC(ch, ch_class)->clan_preparation_started = (clan_started != 0);
           INNATE_MAGIC(ch, ch_class)->arcane_recovery_reduced =
               (arcane_recovery_reduced != 0);
+          /* Add normally prepends; file rows are already in queue order.
+           * Keep the saved running cycle at the head through repeated loads. */
+          if (old_head)
+          {
+            struct innate_magic_data *entry = INNATE_MAGIC(ch, ch_class);
+            struct innate_magic_data *tail = old_head;
+            INNATE_MAGIC(ch, ch_class) = old_head;
+            while (tail->next)
+              tail = tail->next;
+            tail->next = entry;
+            entry->next = NULL;
+          }
+        }
       }
       else
       {
@@ -2831,6 +2867,42 @@ bool is_preparing(struct char_data *ch)
   return FALSE;
 }
 
+/* A queued tail reserves no clan benefit. Snapshot only an actual head cycle.
+ * Saved snapshots retain their remaining duration across login/copyover. */
+static void start_clan_preparation_cycle(struct char_data *ch, int class)
+{
+  struct prep_collection_spell_data *head = SPELL_PREP_QUEUE(ch, class);
+  int circle, percent;
+  if (!head || head->clan_preparation_started)
+    return;
+  reset_preparation_time(ch, class);
+  head->clan_preparation_started = TRUE;
+  percent = ch->clan_arcane_percent;
+  if (IS_NPC(ch) || percent <= 0 || percent > 20 ||
+      ch->clan_arcane_expires_at <= (int64_t)time(NULL))
+    return;
+  circle = compute_spells_circle(ch, class, head->spell, head->metamagic, head->domain);
+  head->prep_time = MAX(circle, (int)(((int64_t)MAX(1, head->prep_time) *
+                                      (100 - percent) + 99) / 100));
+}
+
+/* Spontaneous recovery snapshots the actual slot cycle, not queued tails. */
+static void start_clan_recovery_cycle(struct char_data *ch, int class)
+{
+  struct innate_magic_data *head = INNATE_MAGIC(ch, class);
+  int percent;
+  if (!head || head->clan_preparation_started)
+    return;
+  reset_preparation_time(ch, class);
+  head->clan_preparation_started = TRUE;
+  percent = ch->clan_arcane_percent;
+  if (IS_NPC(ch) || percent <= 0 || percent > 20 ||
+      ch->clan_arcane_expires_at <= (int64_t)time(NULL))
+    return;
+  head->prep_time = MAX(head->circle, (int)(((int64_t)MAX(1, head->prep_time) *
+                                            (100 - percent) + 99) / 100));
+}
+
 /* sets prep-state as TRUE, and starts the preparing-event */
 /* we check the queue for top spell for first timer */
 void start_prep_event(struct char_data *ch, int class)
@@ -2857,6 +2929,18 @@ void start_prep_event(struct char_data *ch, int class)
       send_to_char(ch, "You have nothing in your preparation queue for this class to prepare!\r\n");
       return;
     }
+    break;
+  }
+  switch (class)
+  {
+  case CLASS_SORCERER: case CLASS_BARD: case CLASS_INQUISITOR:
+  case CLASS_SUMMONER:
+    start_clan_recovery_cycle(ch, class);
+    break;
+  case CLASS_WARLOCK:
+    break;
+  default:
+    start_clan_preparation_cycle(ch, class);
     break;
   }
   set_preparing_state(ch, class, TRUE);
@@ -2887,11 +2971,21 @@ void stop_prep_event(struct char_data *ch, int class)
   case CLASS_WARLOCK:
   case CLASS_SUMMONER:
     if (INNATE_MAGIC(ch, class))
+    {
+      if (!INNATE_MAGIC(ch, class)->arcane_recovery_reduced)
+        INNATE_MAGIC(ch, class)->clan_preparation_started = FALSE;
       reset_preparation_time(ch, class);
+    }
     break;
   default:
     if (SPELL_PREP_QUEUE(ch, class))
+    {
+      /* Arcane Recovery already preserves interrupted progress; keep that
+       * same cycle's clan snapshot rather than scaling its remainder again. */
+      if (!SPELL_PREP_QUEUE(ch, class)->arcane_recovery_reduced)
+        SPELL_PREP_QUEUE(ch, class)->clan_preparation_started = FALSE;
       reset_preparation_time(ch, class);
+    }
     break;
   }
 }
@@ -4502,6 +4596,8 @@ void reset_preparation_time(struct char_data *ch, int class)
   case CLASS_SUMMONER:
     if (!INNATE_MAGIC(ch, class))
       return;
+    if (INNATE_MAGIC(ch, class)->clan_preparation_started)
+      return;
     if (INNATE_MAGIC(ch, class)->arcane_recovery_reduced &&
         INNATE_MAGIC(ch, class)->prep_time > 0)
       return;
@@ -4511,6 +4607,8 @@ void reset_preparation_time(struct char_data *ch, int class)
     break;
   default:
     if (!SPELL_PREP_QUEUE(ch, class))
+      return;
+    if (SPELL_PREP_QUEUE(ch, class)->clan_preparation_started)
       return;
     if (SPELL_PREP_QUEUE(ch, class)->arcane_recovery_reduced &&
         SPELL_PREP_QUEUE(ch, class)->prep_time > 0)
@@ -4856,6 +4954,7 @@ static bool validate_preparation_queue(struct char_data *ch, int class)
  */
 static int process_spontaneous_caster_prep(struct char_data *ch, int class)
 {
+  start_clan_recovery_cycle(ch, class);
   /* Decrement preparation time for the first slot */
   INNATE_MAGIC(ch, class)->prep_time--;
 
@@ -4883,6 +4982,7 @@ static int process_spontaneous_caster_prep(struct char_data *ch, int class)
     {
       /* Reset timer for next slot and continue */
       reset_preparation_time(ch, class);
+      start_clan_recovery_cycle(ch, class);
 
       /* Song of Focused Mind doubles preparation speed */
       if (affected_by_spell(ch, SKILL_SONG_OF_FOCUSED_MIND))
@@ -4908,6 +5008,8 @@ static int process_spontaneous_caster_prep(struct char_data *ch, int class)
  */
 static int process_prepared_caster_prep(struct char_data *ch, int class)
 {
+  /* Also handles a newly inserted head while an event is already running. */
+  start_clan_preparation_cycle(ch, class);
   /* Decrement preparation time for the first spell */
   SPELL_PREP_QUEUE(ch, class)->prep_time--;
 
@@ -4940,6 +5042,7 @@ static int process_prepared_caster_prep(struct char_data *ch, int class)
     {
       /* Reset timer for next spell and continue */
       reset_preparation_time(ch, class);
+      start_clan_preparation_cycle(ch, class);
 
       /* Song of Focused Mind doubles preparation speed */
       if (affected_by_spell(ch, SKILL_SONG_OF_FOCUSED_MIND))

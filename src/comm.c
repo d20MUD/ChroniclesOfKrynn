@@ -12,6 +12,7 @@
 
 #include "conf.h"
 #include "sysdep.h"
+#include "clan_buff_runtime.h"
 #include "legendary_effects.h"
 #include "legendary_techniques.h"
 #include "legendary_earnings.h"
@@ -1412,6 +1413,7 @@ void heartbeat(int heart_pulse)
     for(legendary_ch=character_list;legendary_ch;legendary_ch=legendary_next){
       legendary_next=legendary_ch->next;legendary_condition_expire(legendary_ch);
     }
+    clan_buff_runtime_tick((int64_t)time(NULL));
     legendary_earnings_maintenance();
     legendary_effects_pulse();
   }

@@ -15,6 +15,9 @@
 #include <limits.h>
 static enum clan_store_mode mode = CLAN_STORE_LEGACY;
 static bool ready = true;
+static void (*member_invalidation)(struct char_data *, const char *);
+void clan_persistence_set_member_invalidation(void (*callback)(struct char_data *,const char *))
+{member_invalidation=callback;}
 static struct json_object* committed;
 static struct json_object*
 get(struct json_object* o, const char* name)
@@ -554,6 +557,8 @@ clan_persistence_reconcile_player(struct char_data* ch)
     }
   GET_CLAN(ch) = vnum;
   GET_CLANRANK(ch) = rank; /* Personal clan points are NOT Favor. */
+  if (member_invalidation)
+    member_invalidation(ch, m && rank>0 ? json_object_get_string(get(m, "clan_uid")) : NULL);
   if (GET_PFILEPOS(ch) >= 0 && GET_PFILEPOS(ch) <= top_of_p_table)
     player_table[GET_PFILEPOS(ch)].clan = vnum;
 }

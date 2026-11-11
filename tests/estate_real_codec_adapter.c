@@ -30,6 +30,7 @@ struct obj_data *read_object(obj_vnum v, int type)
   return create_obj();
 #endif
 }
+struct obj_data *read_object_for_restore(obj_vnum v, int type) { return read_object(v, type); }
 void strip_cr(char *s)
 {
   char *out = s;

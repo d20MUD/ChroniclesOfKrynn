@@ -49,6 +49,7 @@ bool clan_buff_query(const struct clan_progression_config *c, const char *uid,
     f->cooling_down = now < b->next_available_at;
     f->active = status == CLAN_RECORD_ACTIVE && !b->canceled && now < b->expires_at;
     if (f->active) {
+      strcpy(f->activation_uid, b->activation_uid);
       if (b->slot > v.slots_total || b->tier > f->unlocked_tier || v.slots[b->slot-1]) return false;
       f->active_tier = b->tier;
       f->active_slot = b->slot;

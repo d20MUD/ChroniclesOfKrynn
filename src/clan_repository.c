@@ -1016,6 +1016,12 @@ fail:
   return status == CLAN_REPO_OK ? CLAN_REPO_INVALID : status;
 }
 enum clan_repository_result
+clan_repository_snapshot_read_locked(MYSQL *db, struct json_object **out)
+{
+  if (!db || !out || !(db->server_status & SERVER_STATUS_IN_TRANS)) return CLAN_REPO_INVALID;
+  return snapshot_read_tx(db, out);
+}
+enum clan_repository_result
 clan_repository_snapshot_read(MYSQL* db, struct json_object** out)
 {
   struct json_object* root = NULL;
@@ -1426,6 +1432,7 @@ buff_valid(const struct clan_buff_state* b)
          b->next_available_at >= b->expires_at &&
          b->paid_influence_eighths >= 0;
 }
+bool clan_repository_buff_valid(const struct clan_buff_state *b) { return b && buff_valid(b); }
 bool
 clan_repository_buff_active(const struct clan_buff_state* b, int64_t now)
 {

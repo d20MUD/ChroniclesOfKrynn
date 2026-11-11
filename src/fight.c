@@ -2399,6 +2399,7 @@ bool set_fighting(struct char_data *ch, struct char_data *vict)
   }
 
   legendary_loadout_combat_start(ch);
+  ch->clan_psionic_remainder = 0; /* Combat never banks fractional recovery. */
   FIGHTING(ch) = vict;
   start_combat_distance(ch, vict);
   if (!IS_NPC(ch))
@@ -7426,11 +7427,11 @@ static int resolve_damage(struct char_data *ch,struct char_data *victim,int dam,
     if (IS_NPC(ch) && MOB_FLAGGED(ch, MOB_EIDOLON) && ch->master)
     {
       exp_to_give /= 2;
-      gain_exp(ch->master, exp_to_give, GAIN_EXP_MODE_DAMAGE);
+      gain_exp_from_damage(ch->master, exp_to_give, victim);
     }
     else
     {
-      gain_exp(ch, exp_to_give, GAIN_EXP_MODE_DAMAGE);
+      gain_exp_from_damage(ch, exp_to_give, victim);
     }
   }
 

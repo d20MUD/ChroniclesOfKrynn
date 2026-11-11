@@ -41,6 +41,7 @@ static bool craft_has_pending_noncreate_project(struct char_data*c) {return fals
 bool is_wearing_tool_for_crafting_ability(struct char_data*c,int a) {return tool;}
 bool has_crafting_station_in_room(struct char_data*c,int a) {return station;}
 const char *get_crafting_station_name(int a) {return "station";}
+int get_craft_production_bonus(struct char_data *ch,int skill) {return 0;}
 int get_craft_skill_value(struct char_data*c,int a) {return check_skill;}
 int get_proficient_talent_bonus(struct char_data*c,int a) {return 0;}
 int get_elbow_grease_bonus(struct char_data*c) {return 0;}

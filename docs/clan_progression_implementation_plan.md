@@ -1,6 +1,6 @@
 # Clan Progression Implementation Plan
 
-Status: Phases 1–13, including 4a–4c and 5a–5b, are complete as disabled foundations. Version-5 persistence and reward policy now include membership eligibility, retained-history lifecycle operations and atomic SQL creation/disbanding. Read-only progression commands and pure buff queries are implemented. Phase 14 activation validation and structured failure reasons is next. No game database migration, live award, deployment or progression enablement has occurred.
+Status: Phases 1–23, including 4a–4c and 5a–5b, are complete as disabled foundations. Version-5 persistence and reward policy now include membership eligibility, retained-history lifecycle operations and atomic SQL creation/disbanding. Read-only progression commands and pure buff queries are implemented. Activation validation and atomic activation/replacement services are implemented behind disabled gates, with an explicit version-1 activation schema extension to core v5. Durable cancellation/expiration, runtime reconciliation and Company Vitality HP integration are complete behind disabled defaults. Prepared-caster Arcane Readiness timing and saved head-cycle snapshots are complete. Spontaneous slot recovery now shares the saved-cycle semantics. Psionic Focus now applies bounded fractional out-of-combat PSP recovery. Scholar's Encouragement now adjusts source-qualified NPC damage/kill character XP. Artisan's Guidance production checks and the initial five-family stacking audit are complete. Phase 24 player commands are next. No game database migration, live award, deployment or progression enablement has occurred.
 
 Design reference: [Clan Progression and Personal Favor](clan_progression_design.md).
 
@@ -417,3 +417,74 @@ A phase is complete only when its deliverable and acceptance check are satisfied
 - **Delivered:** immutable queries for family/tier unlocks, level-based slots, combat category occupancy, active state and saved family cooldowns. Cancellation, tier changes and slot choices cannot reset the saved next-use timestamp. Malformed/conflicting state fails without publishing output.
 - **Validation:** strict compiler and ASan/UBSan tests cover all levels, unlocks, slot/category conflicts, exact expiry/cooldown boundaries, canceled timers, incarnation separation, configuration changes and input immutability.
 - **Next entry point:** Phase 14 activation validation and structured failure reasons. Availability masks are structural queries, not authorization to activate or spend.
+
+
+### Phase 14
+
+- **Status:** complete; split into 14a pure validation/reasons and 14b current SQL permission revalidation.
+- **Delivered:** structured cumulative rejection reasons, release and membership/management checks, XP/tier/slot/category validation, Influence affordability, expected-replacement identity, family active/cooldown locks and safe timestamps. Privilege ID 21 is independently persisted, defaulting to accepted leader only; legacy privilege positions remain unchanged.
+- **Validation:** native strict C99/ASan/UBSan checks cover pure input immutability, gates, cumulative reasons, unlock boundaries, replacement, combat capacity, corruption and clock limits.
+- **Handoff:** [Phases 14–15](clan_progression_phase_14_15_handoff.md). No activation commands or live enablement.
+
+### Phase 15
+
+- **Status:** complete; split into 15a atomic SQL commit/history and 15b crash/retry/concurrency acceptance.
+- **Delivered:** locked revalidation and one commit for debit, state revision, replacement cancellation, new family timers and immutable operation receipt/activity log. Exact retries return their original proof; mismatched requests conflict. Old family cooldowns survive replacement. Explicit extension migration requires core schema v5 and enables nothing.
+- **Validation:** disposable MariaDB tests cover faults/process death before and after COMMIT, unchanged old buffs on failure, retries after departure/config changes/replacement, simultaneous identical requests, distinct competing requests, exact cooldown boundaries, receipt retention and schema/proof errors. CMake and Make builds and prior campaign/query regressions checked.
+- **Next entry point:** Phase 16 expiration, cancellation, login/restart/copyover reconciliation and member-stat invalidation. Feature defaults remain OFF; no live migration, activation, deployment or restart.
+
+
+### Phase 16
+
+- **Status:** complete; split into 16a durable cancel/expire transitions, 16b coherent runtime hydration and 16c invalidation/acceptance.
+- **Delivered:** checked, idempotent cancellation and bounded exactly-once expiration logs, preserved original cooldowns, current SQL membership/timer reconstruction on heartbeat after login/restart/copyover, fail-closed cache removal, commit invalidation and immediate departure invalidation. Explicit lifecycle schema extension v1 requires core v5 and activation v1; defaults remain OFF.
+- **Validation:** disposable MariaDB and ASan/UBSan exercise rollback/process-death boundaries, lost acknowledgements, concurrent expiry, exact cooldown/expiry times, replay after later activation, storage failures and runtime eligibility changes, and active/expired login-clamp deferral through the common login/copyover path.
+- **Handoff:** [Phases 16–17](clan_progression_phase_16_17_handoff.md). Command/UI exposure remains Phase 24; no live migration or restart.
+
+### Phase 17
+
+- **Status:** complete; split into 17a authoritative final HP integration and 17b persistence/health invariants.
+- **Delivered:** Company Vitality scales the non-clan maximum including legendary flat HP, applies once, preserves ordinary saved HP, uses bounded integer math, never heals, and safely clamps on lower maxima. The final clamp follows the clan adjustment so normal legendary recalculation cannot strip valid buffed HP.
+- **Validation:** native final-HP tests cover all tiers, repeated recalculation, serialization suppression, negative HP, overflow, zero-rounded bonuses, expiry, membership loss/rejoin and feature/storage disablement. Existing legendary and clan regressions plus CMake/Make builds pass.
+- **Next entry point:** Phase 18 Arcane Readiness prepared-caster timing and queue semantics. No other buff effects or production enablement occurred.
+
+### Phase 18
+
+- **Status:** complete behind disabled defaults.
+- **Delivered:** checked Arcane runtime eligibility, prepared-head timing with upward rounding and circle minimum, fixed current-cycle snapshots, backward-compatible queue persistence, and interruption/Arcane Recovery handling without repeated scaling.
+- **Validation:** native ASan/UBSan timing/codec tests and disposable SQL runtime/lifecycle regressions; Make and CMake builds.
+- **Handoff:** [Phase 18](clan_progression_phase_18_handoff.md). Next is Phase 19 spontaneous-caster recovery. No live enablement or restart.
+
+### Phase 19
+
+- **Status:** complete behind disabled defaults.
+- **Delivered:** Arcane Readiness for sorcerer, bard, inquisitor and summoner head-slot recovery; persisted fixed current cycles, normal restart and Arcane Recovery handling; preserved saved order in both queue loaders.
+- **Validation:** ASan/UBSan native prepared/spontaneous timing and codec tests, disposable SQL lifecycle/runtime regressions, Make and CMake builds.
+- **Handoff:** [Phase 19](clan_progression_phase_19_handoff.md). Next is Phase 20 Psionic Focus. No live enablement or restart.
+
+### Phase 20
+
+- **Status:** complete behind disabled defaults.
+- **Delivered:** Psionic Focus on ordinary out-of-combat PSP ticks, per-character/activation fractional carry, maximum and overflow bounds, immediate combat clearing, runtime expiry/membership/storage/disable resets. Shared movement recovery remains unchanged.
+- **Validation:** ASan/UBSan production PSP tick tests, disposable SQL runtime/lifecycle and pure-query regressions, Phase 19 timing/codec regressions, Make/CMake builds.
+- **Handoff:** [Phase 20](clan_progression_phase_20_handoff.md). Next is Phase 21 adventuring XP. No live enablement or restart.
+
+### Phase 21
+
+- **Status:** complete behind disabled defaults.
+- **Delivered:** checked Scholar runtime eligibility, one personal XP multiplier after existing modifiers/before final cap, explicit NPC damage provenance alongside solo/group kill sources, and exclusions for context-free casting and other non-adventuring sources. Contribution facts and rewards remain independent.
+- **Validation:** native ASan/UBSan authoritative XP tests, disposable SQL buff runtime/lifecycle checks, legendary earnings/source regressions, both-campaign group XP tests, Make/CMake builds.
+- **Handoff:** [Phase 21](clan_progression_phase_21_handoff.md). Next is Phase 22 crafting checks. No live enablement or restart.
+
+### Phase 22
+
+- **Status:** complete behind disabled defaults.
+- **Delivered:** Artisan +2/+3/+4 on actual create/ammo/refine/brewing production checks; checked runtime eligibility and expiry; no stored-rank, gathering, XP, material or reward inflation. Existing supply orders have no roll and retain their completion rules.
+- **Validation:** production check/critical/stacking tests, refining-versus-gathering boundary tests, ammo and happy-hour regressions, disposable SQL runtime checks and Make/CMake builds.
+
+### Phase 23
+
+- **Status:** complete.
+- **Delivered:** documented five-family application order and stacking boundaries; extended duplicate-tier/family and valid coexistence tests; audited dormant territory helpers without enabling them. Non-clan bonuses stack once at each intended boundary; clan reward facts remain separate.
+- **Validation:** production crafting, HP/equipment, timing, PSP and XP regressions; pure family/slot checks and SQL runtime coexistence.
+- **Handoff:** [Phases 22–23](clan_progression_phase_22_23_handoff.md). Next is Phase 24 player-facing commands. No live enablement or restart.

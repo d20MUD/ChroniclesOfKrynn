@@ -7046,6 +7046,7 @@ struct prep_collection_spell_data
   int metamagic; /* Bitvector of metamagic affecting this spell. */
   int prep_time; /* Remaining time for preparing this spell. */
   int domain;    /* domain info */
+  bool clan_preparation_started; /* Saved head-cycle snapshot, including no buff. */
   bool arcane_recovery_reduced; /* Arcane Recovery already reduced this entry's timer. */
 
   struct prep_collection_spell_data *next; /*linked-list*/
@@ -7058,6 +7059,7 @@ struct innate_magic_data
   int metamagic; /* Bitvector of metamagic affecting this spell. */
   int prep_time; /* Remaining time for preparing this spell. */
   int domain;    /* domain info */
+  bool clan_preparation_started; /* Saved current recovery-cycle snapshot. */
   bool arcane_recovery_reduced; /* Arcane Recovery already reduced this slot's timer. */
 
   struct innate_magic_data *next; /*linked-list*/
@@ -8038,6 +8040,20 @@ struct dialogue_quest_check
 
 struct char_data
 {
+  /* Clan buff cache: checked runtime state only, never serialized as base HP. */
+  int clan_vitality_percent, clan_vitality_applied, clan_buff_vnum;
+  int clan_artisan_bonus;
+  int64_t clan_artisan_expires_at;
+  int clan_scholar_percent;
+  int64_t clan_scholar_expires_at;
+  int clan_psionic_percent, clan_psionic_remainder;
+  int64_t clan_psionic_expires_at;
+  char clan_psionic_activation_uid[33];
+  int clan_arcane_percent;
+  int64_t clan_arcane_expires_at;
+  bool clan_vitality_was_active, clan_buff_login_pending;
+  int64_t clan_vitality_expires_at;
+  char clan_buff_clan_uid[33];
   bool legendary_serializing; /* Temporary save-time gear removal is not unequip. */
   bool legendary_knockdown; /* Genuine recoverable knockdown; never saved. */
   struct legendary_foundation_state *legendary_foundations; /* Runtime contributions only. */
