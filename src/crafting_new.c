@@ -4296,8 +4296,8 @@ void return_efficient_saved_materials(struct char_data *ch)
   }
 }
 
-bool create_craft_skill_check(struct char_data *ch, struct obj_data *obj, int skill, char *method,
-                              int exp, int dc)
+static bool create_craft_skill_check_with_roll(struct char_data *ch, struct obj_data *obj, int skill, char *method,
+                              int exp, int dc, int *natural_roll)
 {
   if (!ch || !obj)
     return FALSE;
@@ -4307,6 +4307,7 @@ bool create_craft_skill_check(struct char_data *ch, struct obj_data *obj, int sk
   int elbow_grease_bonus = 0;
 
   roll = d20(ch);
+  if (natural_roll) *natural_roll = roll;
   skill_mod = get_craft_skill_value(ch, skill);
 
   /* Check if specialized for message display */
@@ -4454,6 +4455,12 @@ bool create_craft_skill_check(struct char_data *ch, struct obj_data *obj, int sk
     return TRUE;
   }
   return FALSE;
+}
+
+bool create_craft_skill_check(struct char_data *ch, struct obj_data *obj, int skill, char *method,
+                              int exp, int dc)
+{
+  return create_craft_skill_check_with_roll(ch, obj, skill, method, exp, dc, NULL);
 }
 
 int obj_material_to_craft_material(int material)
@@ -5649,19 +5656,47 @@ static struct obj_data *create_crafted_ammo(const struct ammo_craft_plan *plan)
   return obj;
 }
 
+/* Refund the upfront reservation; divisor 1 restores all, 2 retains rounded-up
+ * half costs. Duplicate material slots were combined by the planner already. */
+static void refund_ammunition_costs(struct char_data *ch, const struct ammo_craft_plan *plan,
+                                   int divisor)
+{
+  int i;
+  for (i = 0; i < 3; i++)
+    GET_CRAFT_MAT(ch, plan->materials[i][0]) += plan->materials[i][1] / divisor;
+  for (i = 1; i < NUM_CRAFT_MOTES; i++)
+    GET_CRAFT_MOTES(ch, i) += plan->motes[i] / divisor;
+}
+
+static bool load_ammunition_job(struct char_data *ch, struct ammo_craft_plan *plan)
+{
+  int saved[7], i;
+  bool valid;
+  memcpy(saved, AMMO_SETTINGS(ch), sizeof(saved));
+  memcpy(AMMO_SETTINGS(ch), GET_CRAFT(ch).ammo_job, sizeof(saved));
+  valid = saved_ammo_plan(ch, plan);
+  memcpy(AMMO_SETTINGS(ch), saved, sizeof(saved));
+  if (valid && GET_CRAFT(ch).ammo_job[7])
+  {
+    plan->dc = 15;
+    plan->level = 1;
+    plan->materials[1][0] = CRAFT_MAT_BRONZE;
+    memset(plan->motes, 0, sizeof(plan->motes));
+    for (i = 0; i < 3; i++) plan->materials[i][1] = 2;
+  }
+  return valid;
+}
+
 static void craft_ammunition_complete(struct char_data *ch)
 {
   struct ammo_craft_plan plan;
   struct obj_data *obj;
-  int saved[7], old_type;
+  int old_type, natural_roll = 0;
   bool success, making_kit = GET_CRAFT(ch).ammo_job[7] != 0;
   if (GET_CRAFT(ch).crafting_method != SCMD_NEWCRAFT_AMMO ||
       GET_CRAFT(ch).craft_duration > 0)
     return;
-  memcpy(saved, AMMO_SETTINGS(ch), sizeof(saved));
-  memcpy(AMMO_SETTINGS(ch), GET_CRAFT(ch).ammo_job, sizeof(saved));
-  bool valid = saved_ammo_plan(ch, &plan);
-  memcpy(AMMO_SETTINGS(ch), saved, sizeof(saved));
+  bool valid = load_ammunition_job(ch, &plan);
   GET_CRAFT(ch).craft_duration = 0;
   GET_CRAFT(ch).crafting_method = 0;
   memset(GET_CRAFT(ch).ammo_job, 0, sizeof(GET_CRAFT(ch).ammo_job));
@@ -5671,14 +5706,10 @@ static void craft_ammunition_complete(struct char_data *ch)
     save_char(ch, 0);
     return;
   }
-  if (making_kit)
-  {
-    plan.dc = 15;
-    plan.level = 1;
-  }
   obj = making_kit ? read_object(FLETCHING_KIT_VNUM, VIRTUAL) : create_crafted_ammo(&plan);
   if (!obj)
   {
+    if (!making_kit) refund_ammunition_costs(ch, &plan, 1);
     send_to_char(ch, "The crafting template is unavailable; the batch could not be completed.\r\n");
     save_char(ch, 0);
     return;
@@ -5687,10 +5718,24 @@ static void craft_ammunition_complete(struct char_data *ch)
    * with no existing project to overwrite or reimburse. */
   old_type = GET_CRAFT(ch).crafting_item_type;
   GET_CRAFT(ch).crafting_item_type = making_kit ? CRAFT_TYPE_MISC : CRAFT_TYPE_WEAPON;
-  success = create_craft_skill_check(ch, obj, plan.recipe->skill, "ammunition crafting",
-                                     CREATE_BASE_EXP / 5, plan.dc);
+  success = create_craft_skill_check_with_roll(ch, obj, plan.recipe->skill, "ammunition crafting",
+                                     CREATE_BASE_EXP / 5, plan.dc, &natural_roll);
   GET_CRAFT(ch).crafting_item_type = old_type;
   WAIT_STATE(ch, PULSE_VIOLENCE);
+  if (!making_kit && ((!success && natural_roll != 1) || (success && natural_roll == 20)))
+  {
+    /* Costs were reserved at start. Restore all on an ordinary failure;
+     * on a natural 20 retain ceil(cost/2), after combining duplicate slots. */
+    refund_ammunition_costs(ch, &plan, success ? 2 : 1);
+    if (success)
+    {
+      GET_OBJ_VAL(obj, AMMO_VAL_MIN) = 75;
+      GET_OBJ_VAL(obj, AMMO_VAL_MAX) = 75;
+      GET_OBJ_VAL(obj, AMMO_VAL_QUANTITY) = 75;
+      send_to_char(ch, "Your critical success produces 75 uses at half material and mote cost "
+                       "(rounded up).\r\n");
+    }
+  }
   if (success)
   {
     gain_craft_exp(ch, MAX(1, CREATE_BASE_EXP / 5) * plan.level, plan.recipe->skill, TRUE);
@@ -5701,7 +5746,10 @@ static void craft_ammunition_complete(struct char_data *ch)
   else
   {
     extract_obj(obj);
-    send_to_char(ch, "The batch failed; its materials and motes were consumed.\r\n");
+    if (making_kit || natural_roll == 1)
+      send_to_char(ch, "The batch failed; its materials and motes were consumed.\r\n");
+    else
+      send_to_char(ch, "The batch failed; all materials and motes were returned.\r\n");
   }
   save_char(ch, 0);
 }
@@ -5721,10 +5769,16 @@ static void craft_ammunition(struct char_data *ch, const char *argument)
       send_to_char(ch, "You have no ammunition project to cancel.\r\n");
     else
     {
+      if (!load_ammunition_job(ch, &plan))
+      {
+        send_to_char(ch, "The reserved recipe could not be verified; nothing was changed.\r\n");
+        return;
+      }
+      refund_ammunition_costs(ch, &plan, 1);
       GET_CRAFT(ch).craft_duration = 0;
       GET_CRAFT(ch).crafting_method = 0;
       memset(GET_CRAFT(ch).ammo_job, 0, sizeof(GET_CRAFT(ch).ammo_job));
-      send_to_char(ch, "You cancel the batch. Its materials and motes were consumed.\r\n");
+      send_to_char(ch, "You cancel the batch. All reserved materials and motes were returned.\r\n");
       save_char(ch, 0);
     }
     return;

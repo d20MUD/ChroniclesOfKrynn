@@ -28,8 +28,9 @@ Ammo, throwing bundles and fletching kits take 60 seconds to craft before
 rapid-crafting talent reductions. Progress messages show time remaining.
 The skill roll and finished item arrive only when the timer ends. Your
 active recipe and remaining time are saved between logins.
-Use craft ammo cancel (or craft throwing cancel) to stop the job. Materials
-and motes are spent when work begins and are not refunded on cancellation.
+Use craft ammo cancel (or craft throwing cancel) to stop the job and return
+all reserved materials and motes. Fletching-kit cancellation also refunds
+its reserved materials.
 
 A bare craft ammo <type> (arrows, bolts, bullets or a throwing type) starts crafting
 with your saved material, enhancement and damage settings. The ammo type
@@ -41,9 +42,18 @@ Choose any graded wood for shafts, any graded hard metal for heads, and any
 graded cloth for binding. Explicit choices require that exact material; the
 command never silently spends a different grade when your choice runs out.
 
-Every successful batch produces ONE ammunition item with 50 uses, whether
+A normal success produces ONE ammunition item with 50 uses, whether
 arrows, bolts, bullets or throwing weapons. Unlimited and returning ammo
 cannot be crafted. Throwing bundles fit an ammo pouch and work with throw.
+
+AMMO CRAFTING ROLLS
+  Normal success: 50 uses, full material and mote costs.
+  Ordinary failure: no ammo; all reserved materials and motes are returned.
+  Natural 1: critical failure; materials and motes are lost.
+  Natural 20: critical success; 75 uses, half material and mote costs.
+Half costs round UP to whole units, after combining slots using the same
+material. For example, a cost of 3 becomes 2; a cost of 1 remains 1.
+These rules include throwing bundles; fletching kits keep their normal rolls.
 
 THREE MATERIAL SLOTS
   Slot 1: shafts/handles (wood), bullet bodies (stone/metal),
@@ -127,7 +137,7 @@ or equip it. It replaces both the tool and station requirements for all
 ammo and throwing recipes listed here, so you can craft while travelling.
 It does not replace the workshop needed to make another kit, nor grant
 portable crafting for other items. The kit is reusable; materials and motes
-are still consumed on every attempt. Without a kit, equip the correct tool
+follow the ammo roll rules above. Without a kit, equip the correct tool
 and use a matching station:
   Woodworking: arrows, bolts, javelins and darts.
   Weaponsmithing: bullets, knives, axes, hammers and shuriken.
@@ -156,9 +166,10 @@ settings. Use numbered material commands to customize all three slots.
 RESTRICTIONS
 Finish current crafting projects, supply orders, trades, and combat first.
 You need enough skill to possibly succeed and space to carry the result.
-Missing resources or equipment prevent an attempt without spending. Every
-actual attempt consumes ingredients and motes, including failures, and
-requires the crafting timer to finish. Success awards crafting experience.
+Missing resources or equipment prevent an attempt without spending. Costs
+are reserved when work starts; ordinary ammo failures return the reservation.
+Every attempt requires the crafting timer to finish. Success awards crafting
+experience. Cancelling returns all reserved materials and motes.
 
 AMMO POUCHES AND USE
 Put finished ammunition into your equipped ammo pouch/quiver before firing

@@ -1,0 +1,43 @@
+CLANPROGRESSION CLANPROGRESS CLANFAVOR CLANINSPECT
+
+CLAN PROGRESSION READOUTS
+
+  clan progress [clan-incarnation-uid]
+  clan favor [after-incarnation-uid]
+
+Clan progress shows your current SQL clan, Clan XP/level, shared Influence,
+your cumulative Favor and standing, account contribution usage and UTC weekly
+reset, the last committed personal award and any reductions, and buff unlocks,
+active slots and family cooldowns. Readouts do not award or spend anything.
+They report when progression earning or buff activation is disabled.
+
+Your authenticated account ID determines contribution limits. Alts and clan
+changes share the same account allowance. Missing account identity or storage
+is reported as unavailable, rather than granting a fresh allowance.
+
+Clan favor lists your saved Favor history, including former and disbanded
+clans, with each incarnation's immutable UID. Use clan progress <uid> to view
+your own retained standing. Current accepted members can see shared balances;
+applicants and former members cannot inspect those balances. A new clan that
+reuses an old clan number does not inherit its Favor, XP, Influence or timers.
+If there are more history entries, the output gives the command for the next
+page. History does not grant access to a former clan's services.
+
+Amounts retain exact eighth-point fractions. Favor is cumulative and is not
+spent on purchases. Legacy clan points and bank deposits are separate from
+Favor and Clan XP. The existing clan award command does not award Favor.
+
+Buff tiers share one cooldown per incarnation and family. Cancellation and
+expiry release the slot but do not shorten the saved next-use time. Changing
+tier, slot, officer or membership cannot reset it. These readouts do not
+activate, cancel, refresh or replace a buff.
+
+STAFF INSPECTION
+  clan inspect <character-id> <account-id> <clan-incarnation-uid>
+
+Greater staff may inspect retained clan/character progression and the explicitly
+selected account's usage. The character and account IDs are separate inspection
+keys; this command does not assert that they belong together. Clan rank or
+officer permissions do not grant access to this staff tool. It cannot mint or
+edit any earned currency, counter, receipt or cooldown.
+#0

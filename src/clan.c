@@ -110,6 +110,12 @@ const struct clan_cmds clan_commands[] = {
     {"promote", CP_PROMOTE, LVL_GRSTAFF, do_clanpromote,
      "%sclan promote <player>     %s- %sIncrease a clan member's clan"
      " rank%s\r\n"},
+    {"progress", CP_ALL, LVL_GRSTAFF, do_clanprogress,
+     "%sclan progress [uid]        %s- %sYour clan progression, Favor and account limits%s\r\n"},
+    {"favor", CP_ALL, LVL_GRSTAFF, do_clanfavor,
+     "%sclan favor [after-uid]     %s- %sYour retained Favor history%s\r\n"},
+    {"inspect", CP_NONE, LVL_GRSTAFF, do_claninspect,
+     "%sclan inspect <ids> <uid>   %s- %sStaff progression/account inspection%s\r\n"},
     {"status", CP_ALL, LVL_IMMORT, do_clanstatus,
      "%sclan status               %s- %sShows your current clan "
      "status%s\r\n"},

@@ -1,6 +1,6 @@
 # Clan Progression Implementation Plan
 
-Status: Phases 1–11, including 4a–4c and 5a–5b, are complete as disabled foundations. Version-5 persistence and reward policy now include membership eligibility, retained-history lifecycle operations and atomic SQL creation/disbanding. Phase 12 text readouts and restricted inspection is next. No game database migration, live award, deployment or progression enablement has occurred.
+Status: Phases 1–13, including 4a–4c and 5a–5b, are complete as disabled foundations. Version-5 persistence and reward policy now include membership eligibility, retained-history lifecycle operations and atomic SQL creation/disbanding. Read-only progression commands and pure buff queries are implemented. Phase 14 activation validation and structured failure reasons is next. No game database migration, live award, deployment or progression enablement has occurred.
 
 Design reference: [Clan Progression and Personal Favor](clan_progression_design.md).
 
@@ -402,3 +402,18 @@ A phase is complete only when its deliverable and acceptance check are satisfied
 - **Checks:** strict C99/ASan/UBSan actual SQL lifecycle and rollback/history/reuse tests; real runtime creation/removal and mirror/index/relationship compaction; prior receipt, personal award, boot/Favor, campaign and clan-login regressions; CMake/Automake builds.
 - **Scope:** no live migration, authority switch, restart, gameplay reward hook or progression enablement. Release gates stay OFF. Source occurrence/account/expiry checks and later buff/stat invalidation remain their respective integration phases. SQL uncertainty fails closed and requires reconciliation, without stale-file fallback.
 - **Next entry point:** Phase 12 text readouts and restricted inspection tools using checked status, Favor, contribution windows and explanations; no officer mint endpoint.
+
+
+### Phase 12
+
+- **Status:** complete; split into 12a coherent read model, 12b private/staff commands and 12c SQL/command acceptance tests.
+- **Delivered:** `clan progress [uid]`, self-only paginated `clan favor`, and staff-only `clan inspect <character-id> <account-id> <uid>`. Exact fractional balances, retained standing, weekly account/source usage, UTC reset, last personal award reductions and buff readouts use checked authoritative SQL. Missing storage/identity fails explicitly. Read transactions roll back; no currency mint or mutation endpoint exists.
+- **Validation:** disposable version-5 MariaDB tests exercise native command permissions, separate account identity, accepted/former/deleted privacy, pagination, caps, UTC, storage/schema errors and unchanged persisted rows. CMake server build and prior configuration, command and persistence regressions checked.
+- **Handoff:** [Phases 12–13](clan_progression_phase_12_13_handoff.md). Defaults remain OFF; no live migration or deployment.
+
+### Phase 13
+
+- **Status:** complete; split into 13a pure buff queries and 13b boundary/conflict tests.
+- **Delivered:** immutable queries for family/tier unlocks, level-based slots, combat category occupancy, active state and saved family cooldowns. Cancellation, tier changes and slot choices cannot reset the saved next-use timestamp. Malformed/conflicting state fails without publishing output.
+- **Validation:** strict compiler and ASan/UBSan tests cover all levels, unlocks, slot/category conflicts, exact expiry/cooldown boundaries, canceled timers, incarnation separation, configuration changes and input immutability.
+- **Next entry point:** Phase 14 activation validation and structured failure reasons. Availability masks are structural queries, not authorization to activate or spend.

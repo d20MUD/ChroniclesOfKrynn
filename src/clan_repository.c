@@ -1,6 +1,7 @@
 /* Checked clan persistence. No startup/import/membership/gameplay hooks. */
 #include "clan_repository.h"
 #include "clan_rewards.h"
+#include "clan_status.h"
 #include "clan_repository_schema.inc"
 #include <ctype.h>
 #include <errno.h>
@@ -2812,4 +2813,162 @@ enum clan_repository_result clan_repository_member_access(MYSQL *db, int64_t pla
   json_object_put(root);
   if (status == CLAN_REPO_OK) *out = access;
   return status;
+}
+
+
+/* Read all status fields under one consistent snapshot; helper reads neither
+ * commit nor mutate state. The authority/permissions boundary stays explicit. */
+enum clan_repository_result clan_repository_status_read(MYSQL *db, int64_t player,
+    int64_t account, const char *requested_uid, bool inspect, int64_t now,
+    struct clan_status_report *out)
+{
+  struct clan_status_report r;
+  struct json_object *root = NULL, *receipt = NULL, *members;
+  struct clan_reset_period period;
+  enum clan_repository_result status;
+  MYSQL_RES *res = NULL;
+  MYSQL_ROW row;
+  char uid[33] = "", where[320];
+  size_t i, j;
+  if (!out || player <= 0 || account <= 0 || !clan_progression_week_at(now, &period) ||
+      (requested_uid && !clan_progression_uid_valid(requested_uid))) return CLAN_REPO_INVALID;
+  status = clan_repository_schema_check(db);
+  if (status != CLAN_REPO_OK) return status;
+  if (db->server_status & SERVER_STATUS_IN_TRANS) return CLAN_REPO_INVALID;
+  if (!query(db, "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ") ||
+      !query(db, "START TRANSACTION WITH CONSISTENT SNAPSHOT")) return failure(db);
+  memset(&r, 0, sizeof(r));r.queried_at = now;
+  status = snapshot_read_tx(db, &root);
+  if (status != CLAN_REPO_OK) goto done;
+  if (!snapshot_valid(root)) {status = CLAN_REPO_SCHEMA;goto done;}
+  if (json_object_get_int(reward_get(root, "store_mode")) != CLAN_STORE_MYSQL) {
+    status = CLAN_REPO_CONFLICT;goto done;
+  }
+  members = reward_get(root, "members");
+  if (requested_uid) strcpy(uid, requested_uid);
+  else for (i = 0; i < json_object_array_length(members); i++) {
+    struct json_object *m = json_object_array_get_idx(members, i);
+    if (json_object_get_int64(reward_get(m, "player_id")) == player)
+      strcpy(uid, json_object_get_string(reward_get(m, "clan_uid")));
+  }
+  if (!*uid) {status = CLAN_REPO_NOT_FOUND;goto done;}
+  snprintf(where, sizeof(where), "c.clan_uid='%s'", uid);
+  status = load_where(db, where, &r.clan);
+  if (status != CLAN_REPO_OK) goto done;
+  r.membership = r.clan.status == CLAN_RECORD_DELETED ? CLAN_ACCESS_DELETED : CLAN_ACCESS_FORMER;
+  for (i = 0; i < json_object_array_length(members); i++) {
+    struct json_object *m = json_object_array_get_idx(members, i);
+    if (json_object_get_int64(reward_get(m, "player_id")) == player && uid_field_is(m,"clan_uid",uid))
+      r.membership = json_object_get_int(reward_get(m, "rank_id")) > 0 ? CLAN_ACCESS_ACCEPTED : CLAN_ACCESS_APPLICANT;
+  }
+  r.favor.character_id = player;strcpy(r.favor.clan_uid, uid);
+  status = clan_repository_favor_load(db, player, uid, &r.favor);
+  if (status == CLAN_REPO_OK) r.favor_present = true;
+  else if (status != CLAN_REPO_NOT_FOUND) goto done;
+  r.full_clan_access = inspect || r.membership == CLAN_ACCESS_ACCEPTED;
+  if (!r.full_clan_access && r.membership != CLAN_ACCESS_APPLICANT && !r.favor_present) {
+    status = CLAN_REPO_INELIGIBLE;goto done;
+  }
+  clan_progression_account_window_init(account, now, &r.account);
+  status = clan_repository_account_window_load(db, account, now, &r.account);
+  if (status == CLAN_REPO_OK) r.account_present = true;
+  else if (status != CLAN_REPO_NOT_FOUND) goto done;
+  strcpy(r.weekly.clan_uid, uid);r.weekly.starts_at = period.starts_at;
+  if (!query(db, "SELECT incoming_xp_eighths,influence_eighths,revision,updated_at_utc "
+      "FROM clan_weekly_windows WHERE clan_uid='%s' AND starts_at_utc=%" PRId64,
+      uid, period.starts_at)) {status = failure(db);goto done;}
+  res = mysql_store_result(db);
+  if (!res) {status = failure(db);goto done;}
+  row = mysql_fetch_row(res);
+  if (row) {
+    int64_t at;
+    if (!integer(row[0], &r.weekly.incoming_xp_eighths) ||
+        !integer(row[1], &r.weekly.influence_eighths) || !integer(row[2], &r.weekly.revision) ||
+        !integer(row[3], &at) || at < period.starts_at) {status = CLAN_REPO_SCHEMA;goto done;}
+    r.weekly_present = true;
+  }
+  mysql_free_result(res);res = NULL;
+  if (r.full_clan_access) {
+    if (!query(db, "SELECT clan_uid,activation_uid,family_id,tier,slot_id,rules_version,"
+        "started_at,expires_at,next_available_at,paid_influence_eighths,canceled "
+        "FROM clan_buff_families WHERE clan_uid='%s' ORDER BY family_id",uid)) {
+      status = failure(db);goto done;
+    }
+    res = mysql_store_result(db);
+    if (!res) {status = failure(db);goto done;}
+    while ((row = mysql_fetch_row(res))) {
+      struct clan_buff_state *b;
+      int64_t n[9];
+      if (r.buff_count >= CLAN_PROGRESSION_BUFF_COUNT || !row[0] || strlen(row[0])!=32 ||
+          !row[1] || strlen(row[1])!=32) {status = CLAN_REPO_SCHEMA;goto done;}
+      b = &r.buffs[r.buff_count];
+      for (j=0;j<9;j++) if (!integer(row[j+2],&n[j])) {status=CLAN_REPO_SCHEMA;goto done;}
+      if (n[0]>5 || n[1]>3 || n[2]>3 || n[3]>INT32_MAX || n[8]>1) {status=CLAN_REPO_SCHEMA;goto done;}
+      strcpy(b->clan_uid,row[0]);strcpy(b->activation_uid,row[1]);
+      b->family=(enum clan_buff_family)n[0];b->tier=(int)n[1];b->slot=(int)n[2];b->rules_version=(int)n[3];
+      b->started_at=n[4];b->expires_at=n[5];b->next_available_at=n[6];b->paid_influence_eighths=n[7];b->canceled=n[8]!=0;
+      if (!buff_valid(b)) {status=CLAN_REPO_SCHEMA;goto done;}
+      r.buff_count++;
+    }
+    mysql_free_result(res);res=NULL;
+  }
+  snprintf(where,sizeof(where),"player_id=%" PRId64 " AND clan_uid='%s' AND receipt_status=1 "
+      "ORDER BY committed_at_utc DESC,operation_uid DESC LIMIT 1",player,uid);
+  status=reward_read_where(db,where,&receipt);
+  if (status==CLAN_REPO_OK) {
+    struct json_object *d=reward_get(reward_get(receipt,"decision"),"delta");
+    int64_t flags;
+#define READ_DELTA(key) if (!number(d,#key,&r.recent.key)) {status=CLAN_REPO_SCHEMA;goto done;}
+    READ_DELTA(xp_eighths);READ_DELTA(influence_eighths);READ_DELTA(favor_eighths);
+    READ_DELTA(account_base_xp_eighths);READ_DELTA(account_claims);READ_DELTA(incoming_xp_eighths);
+#undef READ_DELTA
+    if (!number(d,"cap_flags",&flags) || flags>INT32_MAX) {status=CLAN_REPO_SCHEMA;goto done;}
+    r.recent.cap_flags=(int)flags;r.receipt_present=true;
+  } else if (status!=CLAN_REPO_NOT_FOUND) goto done;
+  status=CLAN_REPO_OK;
+done:
+  if (res) mysql_free_result(res);
+  if (root) json_object_put(root);
+  if (receipt) json_object_put(receipt);
+  if (!query(db,"ROLLBACK") && status==CLAN_REPO_OK) status=failure(db);
+  if (status==CLAN_REPO_OK) *out=r;
+  return status;
+}
+
+enum clan_repository_result clan_repository_favor_history(MYSQL *db,int64_t player,
+    const char *after,struct json_object **out)
+{
+  MYSQL_RES *res;
+  MYSQL_ROW row;
+  struct json_object *root,*entries;
+  enum clan_repository_result status;
+  char last[33]="";
+  int count=0;
+  if (!out || player<=0 || (after && !clan_progression_uid_valid(after))) return CLAN_REPO_INVALID;
+  status=clan_repository_schema_check(db);
+  if (status!=CLAN_REPO_OK) return status;
+  if (db->server_status & SERVER_STATUS_IN_TRANS) return CLAN_REPO_INVALID;
+  if (!query(db,"SELECT f.clan_uid,c.name,c.record_status,f.favor_eighths FROM clan_personal_favor f "
+      "JOIN clan_progression_clans c ON c.clan_uid=f.clan_uid WHERE f.player_id=%" PRId64
+      " AND f.clan_uid>'%s' ORDER BY f.clan_uid LIMIT 26",player,after?after:"")) return failure(db);
+  res=mysql_store_result(db);if (!res) return failure(db);
+  root=json_object_new_object();entries=json_object_new_array();json_object_object_add(root,"entries",entries);
+  json_object_object_add(root,"next_uid",NULL);
+  while ((row=mysql_fetch_row(res))) {
+    int64_t state,favor;
+    struct json_object *e;
+    unsigned long *lengths=mysql_fetch_lengths(res);
+    if (!lengths || !row[0] || !clan_progression_uid_valid(row[0]) || !row[1] || !*row[1] ||
+        strlen(row[1])>60 || strlen(row[1])!=lengths[1] ||
+        !integer(row[2],&state) || state<1 || state>2 || !integer(row[3],&favor)) {
+      mysql_free_result(res);json_object_put(root);return CLAN_REPO_SCHEMA;
+    }
+    if (count++==25) {json_object_object_add(root,"next_uid",json_object_new_string(last));break;}
+    strcpy(last,row[0]);e=json_object_new_object();json_object_array_add(entries,e);
+    json_object_object_add(e,"uid",json_object_new_string(row[0]));
+    json_object_object_add(e,"name",json_object_new_string(row[1]));
+    json_object_object_add(e,"deleted",json_object_new_boolean(state==2));
+    json_object_object_add(e,"favor_eighths",json_object_new_int64(favor));
+  }
+  mysql_free_result(res);*out=root;return CLAN_REPO_OK;
 }

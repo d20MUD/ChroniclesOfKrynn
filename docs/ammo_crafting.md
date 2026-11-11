@@ -120,6 +120,17 @@ Ammo, throwing bundles, and portable fletching kits use `craft_update` with
 `SCMD_NEWCRAFT_AMMO`. The base duration is 60 seconds, reduced by the rapid
 talent for the recipe skill (minimum one second). Ingredients and motes are
 consumed at start; the roll, crafting XP and result are deferred until completion.
-`craft ammo cancel` and `craft throwing cancel` stop the job without a refund.
+`craft ammo cancel` and `craft throwing cancel` stop the job and refund all reserved costs.
 An immutable eight-integer `AmJb` snapshot and the normal `CrDu`/`CrMe` fields
 preserve the selected recipe and remaining time across logins.
+
+### Ammo roll resource outcomes
+
+Ammo and throwing bundles reserve full material/mote costs when the timer
+starts. The native skill check now exposes its natural roll to this caller
+without changing the public check API or other crafting outcomes. Ordinary
+failures refund all reserved costs; natural 1s consume them. Natural 20s produce
+75 finite uses and refund floor(cost/2), charging ceil(cost/2) for each combined
+material requirement and each mote type. Ordinary successes produce 50 uses at
+full cost. Fletching-kit roll outcomes retain their existing costs. Cancellation of either
+an ammo/throwing batch or a kit returns the full reserved material/mote costs.

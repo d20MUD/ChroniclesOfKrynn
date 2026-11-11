@@ -56,6 +56,9 @@ circle_SOURCES = \
 	src/cedit.c \
 	src/char_descs.c \
 	src/clan.c \
+	src/clan_buff_queries.c \
+	src/clan_status.c \
+	src/clan_commands.c \
 	src/clan_awards.c \
 	src/clan_progression.c \
 	src/clan_repository.c \
@@ -321,6 +324,9 @@ EXTRA_DIST = \
 	src/clan_repository.h \
 	src/clan_rewards.h \
 	src/clan_awards.h \
+	src/clan_buff_queries.h \
+	src/clan_status.h \
+	src/clan_commands.h \
 	src/clan_persistence.h \
 	src/clan_legacy_fields.h \
 	src/clan_repository_schema.inc \
@@ -329,6 +335,7 @@ EXTRA_DIST = \
 	sql/20261110_clan_progression_v003.sql \
 	sql/20261110_clan_progression_v004.sql \
 	sql/20261110_clan_progression_v005.sql \
+	sql/20261111_clan_progression_readouts_help.sql \
 	scripts/generate_clan_schema_contract.py \
 	scripts/build_clan_repository_tool.py \
 	scripts/clan_legacy_import.py \

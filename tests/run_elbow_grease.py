@@ -31,6 +31,7 @@ int get_feat_value(struct char_data *ch, int n) {
 int d20(struct char_data *ch) { return roll; }
 int get_proficient_talent_bonus(struct char_data *ch, int skill) { return 0; }
 bool artificer_efficient_crafter_applies(struct char_data *ch) { return FALSE; }
+char *object_short_description(const struct obj_data *obj) {return obj->short_description;}
 void gain_craft_exp(struct char_data *ch, int exp, int abil, bool verbose) {}
 void reset_current_craft(struct char_data *ch, char *arg, bool a, bool b) { assert(0); }
 size_t send_to_char(struct char_data *ch, const char *fmt, ...) {
@@ -40,6 +41,7 @@ size_t send_to_char(struct char_data *ch, const char *fmt, ...) {
 code += function('utils.c', 'int get_jack_of_all_trades_bonus(struct char_data *ch)')
 code += function('utils.c', 'int get_elbow_grease_bonus(struct char_data *ch)')
 code += function('crafting_new.c', 'int get_craft_skill_value(struct char_data *ch, int skill_num)')
+code += function('crafting_new.c', 'static bool create_craft_skill_check_with_roll(struct char_data *ch, struct obj_data *obj, int skill, char *method,\n                              int exp, int dc, int *natural_roll)')
 code += function('crafting_new.c', 'bool create_craft_skill_check(struct char_data *ch, struct obj_data *obj, int skill, char *method,\n                              int exp, int dc)')
 code += r'''
 int main(void) {

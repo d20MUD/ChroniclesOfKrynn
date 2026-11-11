@@ -13,6 +13,8 @@ players=(root/'src/players.c').read_text();a=players.index('static void load_amm
 code=s[s.index('#define CRAFT_AMMO_BATCH_SIZE'):s.index('static bool obj_has_catalyst_target(',s.index('#define CRAFT_AMMO_BATCH_SIZE'))]
 stubs=r'''
 #include <assert.h>
+struct player_special_data dummy_mob;
+void basic_mud_log(const char *f,...) {assert(0);}
 char *CAP(char *s) {if(*s) *s=toupper((unsigned char)*s);return s;}
 #undef HAS_FEAT
 #define HAS_FEAT(ch,f) 0
@@ -29,7 +31,7 @@ struct weapon_table weapon_list[NUM_WEAPON_TYPES];
 #undef GET_OBJ_VNUM
 #define GET_OBJ_VNUM(o) ((o)->item_number)
 static bool tool=true,station=true,roll=true,missing=false;
-static int saves,crashes,removed,rolls,rapid;
+static int saves,crashes,removed,rolls,rapid,natural_roll=10,check_skill=100;
 int get_rapid_talent_bonus(struct char_data*c,int sk) {return rapid;}
 const char *act(const char*s,int h,struct char_data*c,struct obj_data*o,void*v,int t) {return s;}
 static struct obj_data *delivered;
@@ -39,12 +41,13 @@ static bool craft_has_pending_noncreate_project(struct char_data*c) {return fals
 bool is_wearing_tool_for_crafting_ability(struct char_data*c,int a) {return tool;}
 bool has_crafting_station_in_room(struct char_data*c,int a) {return station;}
 const char *get_crafting_station_name(int a) {return "station";}
-int get_craft_skill_value(struct char_data*c,int a) {return 100;}
+int get_craft_skill_value(struct char_data*c,int a) {return check_skill;}
 int get_proficient_talent_bonus(struct char_data*c,int a) {return 0;}
 int get_elbow_grease_bonus(struct char_data*c) {return 0;}
 int get_jack_of_all_trades_bonus(struct char_data*c) {return 0;}
 static bool artificer_efficient_crafter_applies(struct char_data*c) {return false;}
-bool create_craft_skill_check(struct char_data*c,struct obj_data*o,int sk,char*m,int xp,int dc) {rolls++;return roll;}
+int d20(struct char_data*c) {rolls++;return natural_roll;}
+void reset_current_craft(struct char_data*c,char*a,bool v,bool r) {assert(!r);GET_CRAFT(c).crafting_method=0;GET_CRAFT(c).craft_duration=0;}
 void gain_craft_exp(struct char_data*c,int x,int sk,bool happy) {}
 void obj_to_char(struct obj_data*o,struct char_data*c) {delivered=o;}
 char *object_short_description(const struct obj_data*o) {return o->short_description;}
@@ -208,8 +211,8 @@ int main(void) {
  GET_CRAFT_MAT((&ch),CRAFT_MAT_IRON)=iron_stock;GET_CRAFT_MAT((&ch),CRAFT_MAT_ASH_WOOD)=ash_stock;
  int before=GET_CRAFT_MAT((&ch),CRAFT_MAT_WOOL);craft_and_wait(&ch,"begin");
  assert(delivered && GET_CRAFT_MAT((&ch),CRAFT_MAT_WOOL)==before-1);extract_obj(delivered);delivered=NULL;
- roll=false;before=GET_CRAFT_MAT((&ch),CRAFT_MAT_WOOL);craft_and_wait(&ch,"begin");
- assert(!delivered && GET_CRAFT_MAT((&ch),CRAFT_MAT_WOOL)==before-1);roll=true;
+ roll=false;natural_roll=2;assert(saved_ammo_plan(&ch,&p));check_skill=p.dc-20;before=GET_CRAFT_MAT((&ch),CRAFT_MAT_WOOL);craft_and_wait(&ch,"begin");
+ assert(!delivered && GET_CRAFT_MAT((&ch),CRAFT_MAT_WOOL)==before);roll=true;natural_roll=10;check_skill=100;
  // Portable kit bypasses stations and tools for ammo only; fake names/types cannot.
  struct obj_data kit={0};kit.item_number=FLETCHING_KIT_VNUM;GET_OBJ_TYPE(&kit)=ITEM_CRAFTING_TOOL;ch.carrying=&kit;
  tool=station=false;craft_and_wait(&ch,"begin");assert(delivered);extract_obj(delivered);delivered=NULL;
@@ -227,6 +230,36 @@ int main(void) {
  assert(GET_CRAFT_MAT((&ch),CRAFT_MAT_BRONZE)==bronze_before-2);
  assert(GET_CRAFT_MAT((&ch),CRAFT_MAT_IRON)==iron_before);
  assert(GET_CRAFT_MAT((&ch),CRAFT_MAT_ASH_WOOD)==before-2);extract_obj(delivered);delivered=NULL;
+ // Actual native d20 outcomes: failure refunds all, natural 1 loses all,
+ // natural 20 produces 75 finite uses and charges ceil(cost/2) per material/mote.
+ for(int recipe=0;recipe<NUM_AMMO_CRAFT_RECIPES;recipe++) {
+   char command[100];snprintf(command,sizeof(command),"type %s",ammo_craft_recipes[recipe].name);
+   craft_and_wait(&ch,command);craft_and_wait(&ch,"enhancement 3");craft_and_wait(&ch,"damage fire 6");
+   assert(saved_ammo_plan(&ch,&p));
+   for(int outcome=0;outcome<3;outcome++) {
+     int stock[NUM_CRAFT_MATS],motes[NUM_CRAFT_MOTES];
+     for(int m=0;m<NUM_CRAFT_MATS;m++)stock[m]=GET_CRAFT_MAT((&ch),m)=1000;
+     for(int m=0;m<NUM_CRAFT_MOTES;m++)motes[m]=GET_CRAFT_MOTES((&ch),m)=1000;
+     natural_roll=outcome==0?2:outcome==1?1:20;
+     check_skill=outcome==0?p.dc-20:100;
+     craft_and_wait(&ch,"begin");
+     assert((delivered!=NULL)==(outcome==2));
+     for(int m=0;m<3;m++) {
+       int cost=outcome==0?0:outcome==1?p.materials[m][1]:(p.materials[m][1]+1)/2;
+       if(p.materials[m][1])assert(GET_CRAFT_MAT((&ch),p.materials[m][0])==stock[p.materials[m][0]]-cost);
+     }
+     for(int m=1;m<NUM_CRAFT_MOTES;m++) {
+       int cost=outcome==0?0:outcome==1?p.motes[m]:(p.motes[m]+1)/2;
+       assert(GET_CRAFT_MOTES((&ch),m)==motes[m]-cost);
+     }
+     if(delivered) {
+       assert(GET_OBJ_VAL(delivered,AMMO_VAL_QUANTITY)==75);
+       assert(GET_OBJ_VAL(delivered,AMMO_VAL_MIN)==75&&GET_OBJ_VAL(delivered,AMMO_VAL_MAX)==75);
+       assert(!GET_OBJ_VAL(delivered,AMMO_VAL_UNLIMITED));extract_obj(delivered);delivered=NULL;
+     }
+   }
+ }
+ natural_roll=10;check_skill=100;
  // Throwing recipes persist their selections and consume real materials.
  for(int t=0;t<6;t++) {
    char command[100];snprintf(command,sizeof(command),"type %s",thrown_names[t]);craft_and_wait(&ch,command);
@@ -238,6 +271,9 @@ int main(void) {
  }
  /* Starting work does not roll or deliver; duplicate starts cannot spend again. */
  int old_rolls=rolls;
+ int original_materials[NUM_CRAFT_MATS],original_motes[NUM_CRAFT_MOTES];
+ for(int m=0;m<NUM_CRAFT_MATS;m++)original_materials[m]=GET_CRAFT_MAT((&ch),m);
+ for(int m=0;m<NUM_CRAFT_MOTES;m++)original_motes[m]=GET_CRAFT_MOTES((&ch),m);
  craft_ammunition(&ch,"arrows");
  assert(GET_CRAFT((&ch)).craft_duration==60 && !delivered && rolls==old_rolls);
  craft_ammunition_complete(&ch);assert(!delivered && rolls==old_rolls);
@@ -248,12 +284,17 @@ int main(void) {
  assert(GET_CRAFT_MAT((&ch),pending[1])==remaining_wood);
  craft_ammunition(&ch,"cancel");
  assert(GET_CRAFT((&ch)).craft_duration==0 && GET_CRAFT((&ch)).crafting_method==0);
- assert(GET_CRAFT_MAT((&ch),pending[1])==remaining_wood);
+ for(int m=0;m<NUM_CRAFT_MATS;m++)assert(GET_CRAFT_MAT((&ch),m)==original_materials[m]);
+ for(int m=0;m<NUM_CRAFT_MOTES;m++)assert(GET_CRAFT_MOTES((&ch),m)==original_motes[m]);
+ craft_ammunition(&ch,"cancel");
+ for(int m=0;m<NUM_CRAFT_MATS;m++)assert(GET_CRAFT_MAT((&ch),m)==original_materials[m]);
  craft_ammunition_complete(&ch);assert(!delivered && rolls==old_rolls);
  rapid=15;craft_ammunition(&ch,"arrows");assert(GET_CRAFT((&ch)).craft_duration==45);
  craft_ammunition(&ch,"cancel");
  rapid=100;craft_ammunition(&ch,"kit");assert(GET_CRAFT((&ch)).craft_duration==1);
  craft_ammunition(&ch,"cancel");rapid=0;
+ for(int m=0;m<NUM_CRAFT_MATS;m++)assert(GET_CRAFT_MAT((&ch),m)==original_materials[m]);
+ for(int m=0;m<NUM_CRAFT_MOTES;m++)assert(GET_CRAFT_MOTES((&ch),m)==original_motes[m]);
  craft_and_wait(&ch,"reset");assert(!AMMO_SETTINGS(&ch)[0] && !AMMO_SETTINGS(&ch)[3] && !AMMO_SETTINGS(&ch)[5]);
  return 0;
 }
@@ -268,7 +309,7 @@ with tempfile.TemporaryDirectory(prefix='craft-ammo-') as tmp:
     throwing=(root/'src/assign_wpn_armor.c').read_text(); thrown_functions=''
     for sig in ['int thrown_weapon_type(struct obj_data *obj)', 'struct obj_data *make_thrown_weapon_profile(struct obj_data *source, struct obj_data *profile)']:
         a=throwing.index(sig+'\n{');thrown_functions+=throwing[a:throwing.index('\n}',a)+2]+'\n'
-    p.write_text(headers+'\n'+defines+stubs+names+chop+native+thrown_functions+function('int get_level_adjustment_by_enhancement_bonus(int bonus_amt)')+function('int craft_motes_required(int location, int modifier, int bonus_type, int enhancement)')+'\n'+code+loader+checks)
+    p.write_text(headers+'\n'+defines+stubs+names+chop+native+thrown_functions+function('int get_level_adjustment_by_enhancement_bonus(int bonus_amt)')+function('int craft_motes_required(int location, int modifier, int bonus_type, int enhancement)')+'\n'+function('static bool create_craft_skill_check_with_roll(struct char_data *ch, struct obj_data *obj, int skill, char *method,\n                              int exp, int dc, int *natural_roll)')+'\n'+code+loader+checks)
     subprocess.run([os.environ.get('CC','cc'),'-fsanitize=address','-g','-std=gnu99','-I'+str(root/'src'),str(p),'-o',str(binary)],check=True)
     subprocess.run([str(binary)],check=True)
 print('Ammo crafting: recipes, bounds, elemental costs, enhancement, and material quality and finite template sanitization, guards, and success/failure resource consumption passed.')
