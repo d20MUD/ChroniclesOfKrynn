@@ -502,6 +502,14 @@ set(SRC_C_FILES
     src/clan_buff_runtime.c
     src/clan_buff_commands.c
     src/clan_combat.c
+    src/clan_delivery.c
+    src/clan_delivery_runtime.c
+    src/clan_expedition_enrollment.c
+    src/clan_expedition_runtime.c
+    src/clan_expeditions.c
+    src/clan_expedition_world.c
+    src/clan_objectives.c
+    src/clan_objective_runtime.c
     src/clan_sources.c
     src/clan_status.c
     src/clan_commands.c

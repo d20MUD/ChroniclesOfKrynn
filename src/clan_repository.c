@@ -1174,7 +1174,11 @@ clan_repository_snapshot_write(MYSQL* db,
     }
     free(encoded);
   }
-  if (!query(db, "DELETE FROM clan_memberships") || !query(db, "DELETE FROM clan_zone_claims"))
+  /* Preserve unchanged memberships: retained enrollment hooks distinguish real
+   * departures from ordinary treasury/rank/description snapshot saves. Temporary
+   * staging is connection-local and all row changes share this transaction. */
+  if (!query(db, "CREATE TEMPORARY TABLE IF NOT EXISTS clan_membership_stage LIKE clan_memberships") ||
+      !query(db, "DELETE FROM clan_membership_stage") || !query(db, "DELETE FROM clan_zone_claims"))
     goto fail;
   for (i = 0; i < json_object_array_length(members); i++)
   {
@@ -1186,7 +1190,7 @@ clan_repository_snapshot_write(MYSQL* db,
       goto invalid;
     if (!query(
           db,
-          "INSERT INTO clan_memberships(player_id,clan_uid,rank_id,legacy_points) VALUES(%" PRId64
+          "INSERT INTO clan_membership_stage(player_id,clan_uid,rank_id,legacy_points) VALUES(%" PRId64
           ",'%s',%" PRId64 ",%" PRId64 ")",
           id,
           uid,
@@ -1194,6 +1198,9 @@ clan_repository_snapshot_write(MYSQL* db,
           points))
       goto fail;
   }
+  if (!query(db, "DELETE m FROM clan_memberships m LEFT JOIN clan_membership_stage s ON s.player_id=m.player_id WHERE s.player_id IS NULL") ||
+      !query(db, "INSERT INTO clan_memberships(player_id,clan_uid,rank_id,legacy_points) SELECT player_id,clan_uid,rank_id,legacy_points FROM clan_membership_stage ON DUPLICATE KEY UPDATE clan_uid=VALUES(clan_uid),rank_id=VALUES(rank_id),legacy_points=VALUES(legacy_points)"))
+    goto fail;
   for (i = 0; i < json_object_array_length(claims); i++)
   {
     struct json_object *e = json_object_array_get_idx(claims, i),
@@ -2164,11 +2171,14 @@ reward_finish(MYSQL* db, struct json_object* root, struct json_object** out, int
   *out = root;
   return CLAN_REPO_OK;
 }
+static enum clan_repository_result reward_snapshot_load(MYSQL *,
+    const struct clan_reward_event *,struct clan_reward_snapshot *,bool);
 static enum clan_repository_result
 reward_prepare(MYSQL* db,
                     const struct clan_reward_event* e,
                     int64_t now,
-                    struct json_object** out, bool require_member, int64_t prototype)
+                    struct json_object** out, bool require_member, int64_t prototype,
+                    clan_reward_participant_fn participant,void *context)
 {
   struct clan_reward_event frozen;
   enum clan_repository_result status;
@@ -2344,6 +2354,13 @@ reward_prepare(MYSQL* db,
   status = reward_read_where(db, where, &root);
   if (status != CLAN_REPO_OK)
     return reward_abort(db, status, NULL);
+  if (participant) {
+    struct clan_reward_snapshot snapshot;
+    status=reward_snapshot_load(db,e,&snapshot,false);
+    if(status!=CLAN_REPO_OK)return reward_abort(db,status,root);
+    if(!participant(db,e,&snapshot,NULL,context))
+      return reward_abort(db,CLAN_REPO_INELIGIBLE,root);
+  }
   return reward_finish(db, root, out, 1);
 failed:
   return reward_abort(db, failure(db), NULL);
@@ -2370,14 +2387,21 @@ reward_add(int64_t* value, int64_t amount)
 }
 enum clan_repository_result clan_reward_prepare(MYSQL *db, const struct clan_reward_event *e,
     int64_t now, struct json_object **out)
-{ return reward_prepare(db, e, now, out, false, 0); }
+{ return reward_prepare(db, e, now, out, false, 0, NULL, NULL); }
 enum clan_repository_result clan_reward_prepare_member(MYSQL *db, const struct clan_reward_event *e,
     int64_t now, struct json_object **out)
-{ return reward_prepare(db, e, now, out, true, 0); }
+{ return reward_prepare(db, e, now, out, true, 0, NULL, NULL); }
 
 enum clan_repository_result clan_reward_prepare_kill(MYSQL *db,const struct clan_reward_event *e,
     int64_t prototype,int64_t now,struct json_object **out)
-{if(prototype<=0)return CLAN_REPO_INVALID;return reward_prepare(db,e,now,out,true,prototype);}
+{if(prototype<=0)return CLAN_REPO_INVALID;return reward_prepare(db,e,now,out,true,prototype,NULL,NULL);}
+
+enum clan_repository_result clan_reward_prepare_delivery(MYSQL *db,const struct clan_reward_event *e,
+    int64_t now,clan_reward_participant_fn participant,void *context,struct json_object **out)
+{
+  if(!e || e->source!=CLAN_SOURCE_DELIVERY || !participant)return CLAN_REPO_INVALID;
+  return reward_prepare(db,e,now,out,true,0,participant,context);
+}
 
 static struct json_object*
 reward_snapshot_json(const struct clan_reward_snapshot* s)
@@ -2403,7 +2427,7 @@ reward_snapshot_json(const struct clan_reward_snapshot* s)
   return o;
 }
 static enum clan_repository_result
-reward_snapshot_load(MYSQL* db, const struct clan_reward_event* e, struct clan_reward_snapshot* s)
+reward_snapshot_load(MYSQL* db, const struct clan_reward_event* e, struct clan_reward_snapshot* s, bool dedicated)
 {
   char sql[300];
   enum clan_repository_result status;
@@ -2414,7 +2438,7 @@ reward_snapshot_load(MYSQL* db, const struct clan_reward_event* e, struct clan_r
   clan_progression_week_at(e->occurred_at, &period);
   /* Global control serializes all authoritative writers, followed by receipt,
    * account window, clan core/state, personal Favor, clan week. */
-  if (e->source == CLAN_SOURCE_EXPEDITION_PERSONAL) {
+  if (e->source == CLAN_SOURCE_EXPEDITION_PERSONAL && !dedicated) {
     int64_t rank, ranks;
     if (!query(db, "SELECT m.rank_id,JSON_LENGTH(JSON_EXTRACT(l.details,'$.ranks')) "
         "FROM clan_memberships m JOIN clan_progression_legacy l ON l.clan_uid=m.clan_uid "
@@ -2610,11 +2634,12 @@ reward_stage(MYSQL* db,
   }
   return reward_stop(5) ? CLAN_REPO_UNAVAILABLE : CLAN_REPO_OK;
 }
-enum clan_repository_result
-clan_reward_complete(MYSQL* db,
+static enum clan_repository_result
+reward_complete(MYSQL* db,
                      const char* uid,
                      int64_t now,
                      clan_reward_decide_fn decide,
+                     clan_reward_participant_fn participant,
                      void* context,
                      struct json_object** out)
 {
@@ -2646,12 +2671,16 @@ clan_reward_complete(MYSQL* db,
   if (!decide || now < json_object_get_int64(reward_get(root, "accepted_at")) ||
       !reward_event_parse(reward_get(root, "event"), &e))
     return reward_abort(db, CLAN_REPO_INVALID, root);
-  status = reward_snapshot_load(db, &e, &snapshot);
+  status = reward_snapshot_load(db, &e, &snapshot, participant != NULL);
   if (status != CLAN_REPO_OK)
     return reward_abort(db, status, root);
   memset(&delta, 0, sizeof(delta));
   if (!decide(&e, &snapshot, &delta, context) || !reward_delta_valid(&e, &delta))
     return reward_abort(db, CLAN_REPO_INVALID, root);
+  /* Goods and objective completion proofs require their dedicated coordinators. */
+  if (((e.source==CLAN_SOURCE_DELIVERY || e.source==CLAN_SOURCE_GATHERING || e.source==CLAN_SOURCE_BOUNTY || e.source==CLAN_SOURCE_EXPEDITION_PERSONAL || e.source==CLAN_SOURCE_ASSAULT_SHARED || e.source==CLAN_SOURCE_HUNT_SHARED) && !participant) ||
+      (participant && !participant(db,&e,&snapshot,&delta,context)))
+    return reward_abort(db,CLAN_REPO_INELIGIBLE,root);
   before = reward_snapshot_json(&snapshot);
   status = reward_stage(db, &e, &delta, &snapshot, now);
   if (status != CLAN_REPO_OK)
@@ -2687,6 +2716,21 @@ clan_reward_complete(MYSQL* db,
   if (status != CLAN_REPO_OK)
     return reward_abort(db, status, NULL);
   return reward_finish(db, root, out, 8);
+}
+enum clan_repository_result clan_reward_complete(MYSQL *db,const char *uid,int64_t now,
+    clan_reward_decide_fn decide,void *context,struct json_object **out)
+{return reward_complete(db,uid,now,decide,NULL,context,out);}
+enum clan_repository_result clan_reward_complete_delivery(MYSQL *db,const char *uid,int64_t now,
+    clan_reward_decide_fn decide,clan_reward_participant_fn participant,void *context,struct json_object **out)
+{
+  if(!participant)return CLAN_REPO_INVALID;
+  return reward_complete(db,uid,now,decide,participant,context,out);
+}
+enum clan_repository_result clan_reward_complete_objective(MYSQL *db,const char *uid,int64_t now,
+    clan_reward_decide_fn decide,clan_reward_participant_fn participant,void *context,struct json_object **out)
+{
+  if(!participant)return CLAN_REPO_INVALID;
+  return reward_complete(db,uid,now,decide,participant,context,out);
 }
 enum clan_repository_result
 clan_reward_cancel(MYSQL* db, const char* uid, int reason, int64_t now, struct json_object** out)

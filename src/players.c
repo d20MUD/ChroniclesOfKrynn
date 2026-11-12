@@ -37,6 +37,7 @@
 #include "spells.h"
 #include "char_descs.h"
 #include "clan.h"
+#include "clan_delivery_runtime.h"
 #include "clan_persistence.h"
 #include "clan_buff_runtime.h"
 #include "mud_event.h"
@@ -417,9 +418,12 @@ int load_char(const char *name, struct char_data *ch)
     }
 
     /* Character initializations. Necessary to keep some things straight. */
+    memset(ch->player_specials->clan_objective_pending,0,sizeof(ch->player_specials->clan_objective_pending));
     ch->affected = NULL;
     GET_PREFERRED_AMMO(ch) = 0;
     GET_HOOPAK_MODE(ch) = HOOPAK_MODE_HYBRID;
+    ch->player_specials->saved.ammo_enhancement_mote = 0;
+    GET_CRAFT(ch).ammo_job_enhancement_mote = 0;
     memset(ch->player_specials->saved.ammo_craft_settings, 0, sizeof(ch->player_specials->saved.ammo_craft_settings));
     for (i = 0; i < MAX_CLASSES; i++)
     {
@@ -807,6 +811,8 @@ int load_char(const char *name, struct char_data *ch)
       switch (*tag)
       {
       case 'A':
+        if (!strcmp(tag, "AmEM")) ch->player_specials->saved.ammo_enhancement_mote = atoi(line);
+        if (!strcmp(tag, "AmJM")) GET_CRAFT(ch).ammo_job_enhancement_mote = atoi(line);
         if (!strcmp(tag, "AmJb"))
           sscanf(line, "%d %d %d %d %d %d %d %d",
                  &GET_CRAFT(ch).ammo_job[0], &GET_CRAFT(ch).ammo_job[1],
@@ -1121,6 +1127,14 @@ int load_char(const char *name, struct char_data *ch)
           GET_CRAFT(ch).level_adjust = atoi(line);
         else if (!strcmp(tag, "CrCa"))
           GET_CRAFT(ch).catalysts_used = MAX(0, MIN(atoi(line), CRAFT_CATALYST_MAX));
+        else if (!strcmp(tag,"ClGQ")) strlcpy(ch->player_specials->clan_objective_pending[0],strlen(line)<256?line:"invalid-event",256);
+        else if (!strcmp(tag,"ClBQ")) strlcpy(ch->player_specials->clan_objective_pending[1],strlen(line)<256?line:"invalid-event",256);
+        else if (!strcmp(tag,"ClDv")) {
+          char uid[33];int stage;
+          if(sscanf(line,"%32s %d",uid,&stage)==2 && legendary_uuid_valid(uid) && stage>=0 && stage<=3) {
+            strlcpy(ch->player_specials->clan_delivery_lock,uid,33);ch->player_specials->clan_delivery_stage=stage;
+          } else strlcpy(ch->player_specials->clan_delivery_lock,"invalid-operation",33);
+        }
         else if (!strcmp(tag, "ClSE")) {
           if (strlen(line)==32) strlcpy(GET_CRAFT(ch).clan_supply_event,line,33);
         }
@@ -2650,6 +2664,12 @@ bool save_char_checked(struct char_data *ch, int mode)
   if (NECROMANCER_CAST_TYPE(ch))
     BUFFER_WRITE("NecC: %d\n", NECROMANCER_CAST_TYPE(ch));
   housing_capture_location(ch);
+  if (*ch->player_specials->clan_objective_pending[0])
+    BUFFER_WRITE("ClGQ: %s\n",ch->player_specials->clan_objective_pending[0]);
+  if (*ch->player_specials->clan_objective_pending[1])
+    BUFFER_WRITE("ClBQ: %s\n",ch->player_specials->clan_objective_pending[1]);
+  if (*ch->player_specials->clan_delivery_lock)
+    BUFFER_WRITE("ClDv: %s %d\n",ch->player_specials->clan_delivery_lock,ch->player_specials->clan_delivery_stage);
   if (*ch->player_specials->legendary_operation)
     BUFFER_WRITE("LgTx: %s\n", ch->player_specials->legendary_operation);
   BUFFER_WRITE("Hous: %ld\nHrom: %ld\nECrd: %llu\nEDbt: %llu\n", ch->player_specials->housing_house_id,
@@ -3255,6 +3275,8 @@ bool save_char_checked(struct char_data *ch, int mode)
     BUFFER_WRITE("UTF8: %d\n", ch->desc->pProtocol->pVariables[eMSDP_UTF_8]->ValueInt);
   }
   BUFFER_WRITE("AmPr: %d\n", GET_PREFERRED_AMMO(ch));
+  BUFFER_WRITE("AmEM: %d\nAmJM: %d\n", ch->player_specials->saved.ammo_enhancement_mote,
+               GET_CRAFT(ch).ammo_job_enhancement_mote);
   {
     const int *job = GET_CRAFT(ch).ammo_job;
     BUFFER_WRITE("AmJb: %d %d %d %d %d %d %d %d\n",
@@ -6232,6 +6254,7 @@ bool return_eidolon_gear(struct char_data *pet)
   while (pet->carrying) extract_obj(pet->carrying);
   GET_GOLD(pet) = 0;
   send_to_char(owner, "Your eidolon's equipment and belongings have been saved for return to you.\r\n");
+  clan_delivery_recover(owner);
   estate_recover(owner);
   return TRUE;
 }

@@ -13,6 +13,7 @@ code=r'''
 #include "interpreter.h"
 #include "act.h"
 #include "fight.h"
+#include "db.h"
 #include "mud_event.h"
 #include "actions.h"
 #include "spells.h"
@@ -39,6 +40,7 @@ code=r'''
 static bool perk,improved,feat,ammo_ready=true,ready_two=true,move=true,standard=true,cooldown,dead,moved,kill;
 static int shots,fulls,standards,routines,duration;
 static struct char_data target;
+struct room_data *world;
 static struct obj_data weapon;
 int get_feat_value(struct char_data *ch,int id){return feat;}
 bool has_perk(struct char_data *ch,int id){return id==PERK_RANGER_MANYSHOT?perk:improved;}
@@ -48,7 +50,7 @@ bool is_action_available(struct char_data *ch,action_type type,bool show){return
 struct obj_data *get_wielded(struct char_data *ch,int type){return &weapon;}
 const char *one_argument(const char *arg,char *out,size_t size){snprintf(out,size,"%s",arg);return NULL;}
 struct char_data *get_char_vis(struct char_data *ch,char *arg,int *number,int where){return *arg?&target:NULL;}
-struct char_data *find_char(long id){return dead?NULL:&target;}
+struct char_data *find_char(long id){return dead||id>=100000000?NULL:&target;}
 bool set_fighting(struct char_data *ch,struct char_data *vict){FIGHTING(ch)=vict;return true;}
 int perform_attacks(struct char_data *ch,int mode,int phase){assert(!mode && !phase && FIRING(ch) && FIGHTING(ch)==&target);routines++;return 0;}
 int hit(struct char_data *ch,struct char_data *vict,int type,int dam,int penalty,int attack){
@@ -59,6 +61,7 @@ int hit(struct char_data *ch,struct char_data *vict,int type,int dam,int penalty
 }
 '''+source[a:b]+opening+r'''
 int main(void){
+ struct room_data rooms[3]={{0}};world=rooms;world[1].people=&target;
  struct char_data ch={0};struct obj_data pouch={0},ammo={0};struct player_special_data ps={0};
  ch.player_specials=&ps;GET_EQ(&ch,WEAR_AMMO_POUCH)=&pouch;pouch.contains=&ammo;GET_OBJ_VAL(&ammo,0)=AMMO_TYPE_ARROW;
  IN_ROOM(&ch)=IN_ROOM(&target)=1;GET_POS(&target)=POS_STANDING;
@@ -84,7 +87,16 @@ int main(void){
  assert(try_opening_manyshot(&ch,&target) && routines==1 && fulls==1);
  move=false;assert(!try_opening_manyshot(&ch,&target));move=true;
  ready_two=false;assert(!try_opening_manyshot(&ch,&target));ready_two=true;
- perk=true;shots=0;assert(try_opening_manyshot(&ch,&target) && shots==5);
+ perk=true;shots=0;
+ // DG script lookups reject high IDs; a valid room target must still fire.
+ GET_ID(&target)=100000001;assert(!find_char(GET_ID(&target)));
+ FIGHTING(&ch)=NULL;GET_ATTACKS_THIS_ROUND(&ch)=7;
+ assert(try_opening_manyshot(&ch,&target) && shots==5);
+ assert(!GET_ATTACKS_THIS_ROUND(&ch));
+ world[1].people=NULL;int prior_duration=duration,prior_standards=standards;
+ assert(!try_opening_manyshot(&ch,&target));
+ assert(duration==prior_duration&&standards==prior_standards);
+ world[1].people=&target;
  cooldown=true;assert(!try_opening_manyshot(&ch,&target));cooldown=false;
  ammo_ready=false;assert(!try_opening_manyshot(&ch,&target));ammo_ready=true;
  SET_BIT_AR(AFF_FLAGS(&ch),AFF_STAGGERED);assert(!try_opening_manyshot(&ch,&target));

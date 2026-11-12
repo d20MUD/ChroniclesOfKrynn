@@ -1,0 +1,148 @@
+{
+  "version": 1,
+  "objectives": [
+    {
+      "id": "fresh-ash-v1",
+      "name": "Fresh ash harvest",
+      "family": 4,
+      "target": 21,
+      "grade": 1,
+      "required": 20,
+      "min_clan_level": 1,
+      "min_player_level": 1,
+      "max_player_level": 30
+    },
+    {
+      "id": "fresh-hemp-v1",
+      "name": "Fresh hemp harvest",
+      "family": 4,
+      "target": 26,
+      "grade": 1,
+      "required": 20,
+      "min_clan_level": 1,
+      "min_player_level": 1,
+      "max_player_level": 30
+    },
+    {
+      "id": "fresh-maple-v1",
+      "name": "Fresh maple harvest",
+      "family": 4,
+      "target": 22,
+      "grade": 2,
+      "required": 20,
+      "min_clan_level": 6,
+      "min_player_level": 1,
+      "max_player_level": 30
+    },
+    {
+      "id": "sewer-bandits-v1",
+      "name": "Hostile sewer bandits",
+      "family": 5,
+      "target": 3705,
+      "grade": 0,
+      "required": 20,
+      "min_clan_level": 1,
+      "min_player_level": 3,
+      "max_player_level": 12
+    },
+    {
+      "id": "black-rats-v1",
+      "name": "Large black rats",
+      "family": 5,
+      "target": 12310,
+      "grade": 0,
+      "required": 20,
+      "min_clan_level": 1,
+      "min_player_level": 3,
+      "max_player_level": 13
+    },
+    {
+      "id": "grinning-bandits-v1",
+      "name": "Grinning bandits",
+      "family": 5,
+      "target": 403,
+      "grade": 0,
+      "required": 20,
+      "min_clan_level": 1,
+      "min_player_level": 12,
+      "max_player_level": 22
+    },
+    {
+      "id": "army-recruits-v1",
+      "name": "White Dragonarmy goblin recruits",
+      "family": 5,
+      "target": 5022,
+      "grade": 0,
+      "required": 20,
+      "min_clan_level": 1,
+      "min_player_level": 13,
+      "max_player_level": 23
+    },
+    {
+      "id": "baaz-guards-v1",
+      "name": "Baaz Draconian guards",
+      "family": 5,
+      "target": 14003,
+      "grade": 0,
+      "required": 20,
+      "min_clan_level": 1,
+      "min_player_level": 24,
+      "max_player_level": 30
+    },
+    {
+      "id": "bozak-guards-v1",
+      "name": "Bozak Draconian guards",
+      "family": 5,
+      "target": 14004,
+      "grade": 0,
+      "required": 20,
+      "min_clan_level": 1,
+      "min_player_level": 24,
+      "max_player_level": 30
+    },
+    {
+      "id": "copper-harvest-v1",
+      "name": "Fresh copper harvest",
+      "family": 4,
+      "target": 1,
+      "grade": 1,
+      "required": 20,
+      "min_clan_level": 1,
+      "min_player_level": 1,
+      "max_player_level": 30
+    },
+    {
+      "id": "sewer-spiders-v1",
+      "name": "Enormous sewer spiders",
+      "family": 5,
+      "target": 3701,
+      "grade": 0,
+      "required": 20,
+      "min_clan_level": 1,
+      "min_player_level": 3,
+      "max_player_level": 12
+    },
+    {
+      "id": "saber-tigers-v1",
+      "name": "Saber-toothed tigers",
+      "family": 5,
+      "target": 402,
+      "grade": 0,
+      "required": 20,
+      "min_clan_level": 1,
+      "min_player_level": 12,
+      "max_player_level": 22
+    },
+    {
+      "id": "aurak-guards-v1",
+      "name": "Aurak Draconian guards",
+      "family": 5,
+      "target": 14005,
+      "grade": 0,
+      "required": 20,
+      "min_clan_level": 1,
+      "min_player_level": 24,
+      "max_player_level": 30
+    }
+  ]
+}

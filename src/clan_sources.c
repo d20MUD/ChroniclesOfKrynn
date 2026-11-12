@@ -6,6 +6,8 @@
 #include "db.h"
 #include "mysql.h"
 #include "clan_sources.h"
+#include "clan_objective_runtime.h"
+#include "clan_expedition_enrollment.h"
 #include "clan_awards.h"
 #include "clan_status.h"
 #include "clan_buff_runtime.h"
@@ -149,6 +151,34 @@ static void complete(MYSQL *db,const char *uid,int64_t now)
 {
   struct json_object *receipt=NULL;
   struct clan_progression_readiness ready={.schema_ready=true,.schema_version=CLAN_PROGRESSION_SCHEMA_VERSION};
+  struct json_object *existing=NULL,*event=NULL,*source=NULL;
+  if(clan_reward_load(db,uid,&existing)==CLAN_REPO_OK) {
+    json_object_object_get_ex(existing,"event",&event);
+    if(event)json_object_object_get_ex(event,"source",&source);
+    int kind=json_object_get_int(source);
+    if(kind==CLAN_SOURCE_DELIVERY) {json_object_put(existing);return;}
+    if(kind==CLAN_SOURCE_GATHERING||kind==CLAN_SOURCE_BOUNTY) {
+      struct json_object *objective=NULL,*clan_uid=NULL;
+      json_object_object_get_ex(event,"clan_uid",&clan_uid);
+      if(!clan_progression_feature_available(clan_buff_runtime_policy(),CLAN_FEATURE_EARNINGS,&ready,json_object_get_string(clan_uid))) {json_object_put(existing);return;}
+      clan_objective_reward_complete(db,uid,now,&objective);
+      if(objective)json_object_put(objective);
+      json_object_put(existing);return;
+    }
+    if(kind==CLAN_SOURCE_EXPEDITION_PERSONAL||kind==CLAN_SOURCE_ASSAULT_SHARED||kind==CLAN_SOURCE_HUNT_SHARED) {
+      struct json_object *expedition=NULL;
+      clan_expedition_reward_complete(db,uid,now,clan_buff_runtime_policy(),&expedition);
+      if(expedition)json_object_put(expedition);
+      json_object_put(existing);return;
+    }
+    if(kind==CLAN_SOURCE_BOUNTY_SHARED) {
+      struct json_object *shared=NULL;
+      clan_award_complete_shared(db,uid,now,clan_buff_runtime_policy(),&ready,&shared);
+      if(shared)json_object_put(shared);
+      json_object_put(existing);return;
+    }
+    json_object_put(existing);
+  }
   enum clan_repository_result r=clan_award_complete_personal(db,uid,now,clan_buff_runtime_policy(),&ready,&receipt);
   if(receipt)json_object_put(receipt);
   if(r!=CLAN_REPO_OK&&r!=CLAN_REPO_COMMIT_UNKNOWN)
@@ -165,6 +195,7 @@ void clan_source_death(struct char_data *v,struct char_data *killer)
 {
   struct encounter *e=find(v,false);struct char_data *ch;MYSQL_POOL_CONN *connection;
   struct clan_combat_result results[CLAN_COMBAT_MAX_ACTORS];size_t i;int64_t now=time(NULL);
+  struct clan_objective_event bounties[CLAN_COMBAT_MAX_ACTORS]={0};
   if(!e)return;
   if(!enabled()||e->overflow||!real_victim(v)||IN_ROOM(v)==NOWHERE)goto done;
   if(owner(killer)&&GET_LEVEL(owner(killer))>=LVL_IMMORT)e->facts.staff_test=true;
@@ -180,9 +211,15 @@ void clan_source_death(struct char_data *v,struct char_data *killer)
       a->account_id=ch->desc->account->id;a->accepted=true;
     }
   }
+  if (clan_buff_runtime_policy()->controls.expeditions)
+    clan_expedition_combat(connection->conn,&e->facts,zone_table[world[IN_ROOM(v)].zone].number,
+                          now,clan_buff_runtime_policy());
   if(clan_combat_query(clan_buff_runtime_policy(),&e->facts,results,CLAN_COMBAT_MAX_ACTORS))
     for(i=0;i<e->facts.actor_count;i++)if(!results[i].reasons) {
       struct clan_reward_event event={0};struct json_object *receipt=NULL;
+      for(ch=character_list;ch;ch=ch->next)if(!IS_NPC(ch)&&GET_IDNUM(ch)==results[i].player_id)break;
+      if(ch)clan_objective_bounty_capture(connection->conn,ch,e->facts.victim_prototype,
+          e->facts.encounter_uid,results[i].clan_uid,now,&bounties[i]);
       if(!legendary_uuid_generate(event.operation_uid))continue;
       strcpy(event.event_uid,e->facts.encounter_uid);strcpy(event.clan_uid,results[i].clan_uid);
       event.account_id=results[i].account_id;event.player_id=results[i].player_id;event.occurred_at=now;
@@ -193,6 +230,10 @@ void clan_source_death(struct char_data *v,struct char_data *killer)
       else if(receipt)json_object_put(receipt);
     }
   mysql_pool_release(connection);clan_persistence_refresh_progression();
+  for(i=0;i<e->facts.actor_count;i++)if(*bounties[i].contract_uid) {
+    for(ch=character_list;ch;ch=ch->next)if(!IS_NPC(ch)&&GET_IDNUM(ch)==bounties[i].player_id)break;
+    if(ch)clan_objective_bounty_record(ch,&bounties[i]);
+  }
 done:
   clan_source_forget(v);
 }
@@ -261,7 +302,7 @@ void clan_source_tick(int64_t now)
   if(now<next||!enabled())return;
   next=now+30;
   for(ch=character_list;ch;ch=ch->next)if(!IS_NPC(ch)&&ch->desc&&STATE(ch->desc)==CON_PLAYING)
-    supply_pending(ch,now);
+    {clan_objective_flush(ch);supply_pending(ch,now);}
   MYSQL_POOL_CONN *connection=mysql_pool_acquire();struct json_object *pending=NULL;
   if(!connection)return;
   if(clan_reward_pending(connection->conn,0,cursor[0]?cursor:NULL,100,&pending)==CLAN_REPO_OK) {

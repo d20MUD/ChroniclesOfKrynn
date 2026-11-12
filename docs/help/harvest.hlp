@@ -1,0 +1,17 @@
+HARVEST HARVESTING AUTOHARVEST
+
+HARVEST
+
+Survey first, equip the appropriate harvesting tool, then type harvest.
+Use autoharvest to repeat attempts until the node is exhausted.
+
+  harvest cancel
+  harvest stop
+
+Either command immediately cancels the current harvest and stops its repeat
+loop. The canceled attempt gives no materials, motes or experience and does
+not consume the node. Earlier completed harvests are kept. Your autoharvest
+preference is retained for the next time you deliberately start harvesting.
+
+See also: CRAFTING, SURVEY
+#0

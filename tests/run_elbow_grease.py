@@ -18,6 +18,7 @@ headers = ''.join(f'#include "{h}"\n' for h in
 code = r'''
 #include <assert.h>
 struct player_special_data dummy_mob;
+int get_craft_production_bonus(struct char_data *ch, int skill) { return 0; }
 void basic_mud_log(const char *fmt, ...) { assert(0); }
 static int feat, jack_feats, roll = 10;
 static char output[4096];

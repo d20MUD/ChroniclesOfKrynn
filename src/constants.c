@@ -1310,6 +1310,7 @@ const char *preference_bits[] = {"Brief",
                                  "Spontaneous-Casting",
                                  "Anonymous",
                                  "Auto-Harvest",
+                                 "Disp-Ammo",
                                  "\n"};
 CHECK_TABLE_SIZE(preference_bits, NUM_PRF_FLAGS + 1);
 

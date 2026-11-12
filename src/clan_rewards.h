@@ -28,6 +28,15 @@ struct clan_reward_delta {
  * Later services supply policy; this coordinator never calculates reward caps. */
 typedef bool (*clan_reward_decide_fn)(const struct clan_reward_event *,
     const struct clan_reward_snapshot *, struct clan_reward_delta *, void *context);
+/* SQL-only participant: no commits, files or live character changes. */
+typedef bool (*clan_reward_participant_fn)(MYSQL *, const struct clan_reward_event *,
+    const struct clan_reward_snapshot *, const struct clan_reward_delta *, void *);
+enum clan_repository_result clan_reward_prepare_delivery(MYSQL *,const struct clan_reward_event *,
+    int64_t,clan_reward_participant_fn,void *,struct json_object **);
+enum clan_repository_result clan_reward_complete_delivery(MYSQL *,const char *,int64_t,
+    clan_reward_decide_fn,clan_reward_participant_fn,void *,struct json_object **);
+enum clan_repository_result clan_reward_complete_objective(MYSQL *,const char *,int64_t,
+    clan_reward_decide_fn,clan_reward_participant_fn,void *,struct json_object **);
 bool clan_reward_event_valid(const struct clan_reward_event *event);
 /* Returned JSON trees are owned by caller. Outputs unchanged on errors.
  * prepare durably accepts facts, not an uncommitted cap decision. Complete

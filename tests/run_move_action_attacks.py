@@ -44,6 +44,7 @@ static struct obj_data weapon;
 #define call_magic(...) (blasts++)
 #define can_fire_ammo(...) ranged
 #define ranged_weapon_melee_type(...) (empty_launcher ? WEAPON_TYPE_QUARTERSTAFF : 0)
+#define is_throwing_weapon(...) false
 #define is_using_ranged_weapon(...) ((ranged || empty_launcher) ? &weapon : NULL)
 #define is_reloading_weapon(...) false
 #define weapon_is_loaded(...) true
@@ -68,6 +69,7 @@ int main(void) {
     move_ready=false;GET_ATTACKS_THIS_ROUND(&ch)=0;hits=blasts=0;
     assert(perform_attacks(&ch,RETURN_NUM_ATTACKS,1)==1);
     assert(hits+blasts==0);
+    if(!npc && ranged)FIRING(&ch)=false; // quiver refilled after melee fallback
     perform_attacks(&ch,NORMAL_ATTACK_ROUTINE,phase0 ? 0 : 1);
     perform_attacks(&ch,NORMAL_ATTACK_ROUTINE,1);
     perform_attacks(&ch,NORMAL_ATTACK_ROUTINE,2);

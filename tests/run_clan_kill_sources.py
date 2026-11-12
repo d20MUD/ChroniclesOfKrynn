@@ -70,8 +70,8 @@ with database(migrations) as (tmp,socket,sql,client):
     # Exercise the actual live collector and supply checkpoint adapters with SQL.
     native=tmp/'native'
     subprocess.run(['cc','-std=gnu99','-g','-fsanitize=address,undefined','-fno-pie','-no-pie',
-        '-Dtime=clan_source_test_time','-I'+str(ROOT/'src'),str(ROOT/'tests/clan_sources.c'),
-        *[str(ROOT/'src'/f) for f in ['clan_sources.c','clan_combat.c','clan_repository.c','clan_awards.c','clan_progression.c']],*flags,'-o',str(native)],check=True)
+        '-ffunction-sections','-fdata-sections','-Wl,--gc-sections','-Dtime=clan_source_test_time','-I'+str(ROOT/'src'),str(ROOT/'tests/clan_sources.c'),
+        *[str(ROOT/'src'/f) for f in ['clan_objectives.c','clan_objective_runtime.c','clan_sources.c','clan_combat.c','clan_repository.c','clan_awards.c','clan_progression.c','clan_expedition_enrollment.c','clan_expeditions.c']],*flags,'-o',str(native)],check=True)
     for index,(mode,expected) in enumerate([('kill',1),('alt',1),('support',1),('heal',1),('tank',1),('pet',1),('confuser',1),('outage',1),('outroom-pet',0),('one-hit-bonus',0),
         ('disabled',0),('trivial',0),('owned',0),('outsider',0),('insufficient',0),('dead',0),('abandoned',0),('reset',1),('long',1),('overflow',0),
         ('supply',1),('supply-replay',1),('supply-failed-save',0),('supply-deleted',0)]):

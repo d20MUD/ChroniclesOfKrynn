@@ -1726,6 +1726,53 @@ void echo_on(struct descriptor_data *d)
 /* if you want to add strings that have color codes to it, you
    have to use protocolOutput function to parse it
  * note - i just parse the whole string now, add all the color you want */
+/* Read-only MUD prompt count; independent of MSDP/web HUD state. */
+static bool prompt_ranged_weapon(struct obj_data *obj)
+{
+  int type;
+  if (!obj || GET_OBJ_TYPE(obj) != ITEM_WEAPON) return false;
+  type = GET_OBJ_VAL(obj, 0);
+  return type >= 0 && type < NUM_WEAPON_TYPES &&
+    (IS_SET(weapon_list[type].weaponFlags, WEAPON_FLAG_RANGED) ||
+     IS_SET(weapon_list[type].weaponFlags, WEAPON_FLAG_THROWN) || type == WEAPON_TYPE_HOOPAK);
+}
+static void prompt_ammo_indicator(struct char_data *ch, char *buffer, size_t size)
+{
+  struct obj_data *pouch, *obj, *selected = NULL;
+  bool ranged = false, thrown = false;
+  long long quantity = 0;
+  int slot, preference;
+  if (!buffer || !size) return;
+  *buffer = 0;
+  if (!ch || IS_NPC(ch) || !(pouch = GET_EQ(ch, WEAR_AMMO_POUCH))) return;
+  for (slot = 0; slot < NUM_WEARS; slot++)
+    if (prompt_ranged_weapon(GET_EQ(ch, slot))) ranged = true;
+  for (obj = ch->carrying; obj; obj = obj->next_content)
+    if (prompt_ranged_weapon(obj)) ranged = true;
+  preference = GET_PREFERRED_AMMO(ch);
+  for (obj = pouch->contains; obj; obj = obj->next_content)
+  {
+    if (GET_OBJ_TYPE(obj) != ITEM_MISSILE && !thrown_weapon_type(obj)) continue;
+    if (thrown_weapon_type(obj)) ranged = true;
+    if (!selected) selected = obj;
+    if (preference > 0 && GET_OBJ_VNUM(obj) == (obj_vnum)(preference - 1))
+    { selected = obj; break; }
+  }
+  if (!ranged) return;
+  if (selected)
+  {
+    thrown = thrown_weapon_type(selected) != 0;
+    for (obj = pouch->contains; obj; obj = obj->next_content)
+      if (GET_OBJ_TYPE(obj) == GET_OBJ_TYPE(selected) &&
+          GET_OBJ_VNUM(obj) == GET_OBJ_VNUM(selected) &&
+          (GET_OBJ_VNUM(selected) != NOTHING ||
+           (GET_OBJ_VAL(obj, 0) == GET_OBJ_VAL(selected, 0) &&
+            GET_OBJ_VAL(obj, AMMO_VAL_WEAPON_TYPE) == GET_OBJ_VAL(selected, AMMO_VAL_WEAPON_TYPE))))
+        quantity += GET_OBJ_TYPE(obj) == ITEM_MISSILE ? ammunition_remaining(obj) : 1;
+  }
+  snprintf(buffer, size, "%s:%lld ", thrown ? "Thrown" : "Ammo", quantity);
+}
+
 static char *make_prompt(struct descriptor_data *d)
 {
   static char prompt[MAX_PROMPT_LENGTH] = {'\0'};
@@ -1997,6 +2044,15 @@ static char *make_prompt(struct descriptor_data *d)
           len += count;
       }
     } /* end prompt itself, start extra */
+
+    if (PRF_FLAGGED(ch, PRF_DISPAMMO) && len < sizeof(prompt))
+    {
+      char ammo[64];
+      prompt_ammo_indicator(ch, ammo, sizeof(ammo));
+      count = snprintf(prompt + len, sizeof(prompt) - len, "%s", ammo);
+      if (count >= 0) len += count;
+    }
+
 
     if (HAS_WAIT(d->character) && len < sizeof(prompt))
     {

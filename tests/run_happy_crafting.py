@@ -18,7 +18,7 @@ code+=''.join(function(craft,n) for n in ['get_craft_production_bonus','canonica
     'harvest_complete','butcher_complete'])
 code+=function((root/'src/limits.c').read_text(),'clear_happy_hour_bonuses')
 headers='\n'.join('#include "'+h+'"' for h in ['conf.h','sysdep.h','structs.h','utils.h',
-    'spells.h','comm.h','db.h','constants.h','crafting_new.h','talents.h'])
+    'spells.h','comm.h','db.h','constants.h','crafting_new.h','talents.h','clan_objective_runtime.h'])
 stubs=r'''
 #include <assert.h>
 #define REFINE_BASE_EXP 10
@@ -37,6 +37,15 @@ const char *crafting_materials[NUM_CRAFT_MATS+1];
 const char *crafting_motes[NUM_CRAFT_MOTES+1];
 static struct obj_data corpse;
 static int roll=10, efficient, expertise, mote_rank, skill_value=30, jack_feats;
+static int contract_base,contract_calls;
+static bool contract_ready=true;
+bool clan_objective_harvest_begin(struct char_data *ch,int material,struct clan_objective_event *e) {
+  e->family=4;e->target=material;return contract_ready;
+}
+void clan_objective_harvest_finish(struct char_data *ch,struct clan_objective_event *e,int units) {
+  assert(e->family==4 && units>0 && units<=4);contract_base=units;contract_calls++;
+}
+
 int get_feat_value(struct char_data *ch, int feat) {
   if (feat == FEAT_JACK_OF_ALL_TRADES) return jack_feats & 1;
   if (feat == FEAT_IMPROVED_JACK_OF_ALL_TRADES) return jack_feats & 2;
@@ -103,10 +112,12 @@ int main(void) {
     reset(&ch); rooms[0].harvest_material=materials[i]; rooms[0].harvest_material_amount=10;
     harvest_complete(&ch);
     assert(GET_CRAFT_MAT((&ch),materials[i])==5 && rooms[0].harvest_material_amount==6);
+    assert(contract_base==4);
     assert(GET_CRAFT_SKILL_EXP((&ch),harvesting_skill_by_material(materials[i]))==67);
   }
   reset(&ch); roll=20; rooms[0].harvest_material=CRAFT_MAT_IRONWOOD; rooms[0].harvest_material_amount=4;
   harvest_complete(&ch); assert(GET_CRAFT_MAT((&ch),CRAFT_MAT_IRONWOOD)==10);
+  assert(contract_base==4);
   assert(rooms[0].harvest_material==CRAFT_MAT_NONE);
   /* Depletion must not discard the node's grade for the critical mote roll. */
   assert(GET_CRAFT_MOTES((&ch),NUM_CRAFT_MOTES-1)==37);
@@ -140,7 +151,9 @@ int main(void) {
         rooms[0].harvest_material=materials[i]; rooms[0].harvest_material_amount=100;
         int dc=HARVEST_BASE_DC+MAX(1,material_grade(materials[i])*5);
         skill_value=dc-roll-bonus-below;
+        int prior_calls=contract_calls;
         harvest_complete(&ch);
+        assert(contract_calls-prior_calls==!below);
         assert((GET_CRAFT_MAT((&ch),materials[i])>0)==!below);
         assert(GET_ABILITY((&ch),harvesting_skill_by_material(materials[i]))==0);
         if(bonus) assert(strstr(output,"jack of all trades") || strstr(output,"exemplar"));
@@ -168,6 +181,11 @@ int main(void) {
     skill_value=HARVEST_BASE_DC+MAX(1,material_grade(CRAFT_MAT_STONE)*5)-roll-1;
     harvest_complete(&ch);assert(!GET_CRAFT_MAT((&ch),CRAFT_MAT_STONE));
   }
+  reset(&ch);rooms[0].harvest_material=CRAFT_MAT_HEMP;rooms[0].harvest_material_amount=2;
+  harvest_complete(&ch);assert(contract_base==2);
+  reset(&ch);rooms[0].harvest_material=CRAFT_MAT_HEMP;rooms[0].harvest_material_amount=10;
+  int prior_calls=contract_calls;contract_ready=false;harvest_complete(&ch);
+  assert(contract_calls==prior_calls && !GET_CRAFT_MAT((&ch),CRAFT_MAT_HEMP) && rooms[0].harvest_material_amount==10);
   return 0;
 }
 '''

@@ -8609,6 +8609,9 @@ bool is_prompt_empty(struct char_data *ch)
   if (IS_SET_AR(PRF_FLAGS(ch), PRF_DISPACTIONS))
     prompt_is_empty = FALSE;
 
+  if (IS_SET_AR(PRF_FLAGS(ch), PRF_DISPAMMO))
+    prompt_is_empty = FALSE;
+
   return prompt_is_empty;
 }
 
@@ -8625,7 +8628,7 @@ ACMD(do_display)
 
   if (!*argument)
   {
-    send_to_char(ch, "Usage: prompt { { H | P | V | X | T | R | E | A } | all |"
+    send_to_char(ch, "Usage: prompt { { H | P | V | X | T | R | E | A | Q } | all |"
                      " auto | none }\r\n");
     send_to_char(ch, "Notice this command is deprecated, we recommend using "
                      " PREFEDIT instead.\r\n");
@@ -8651,6 +8654,7 @@ ACMD(do_display)
     SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPROOM);
     SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPMEMTIME);
     SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPACTIONS);
+    SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPAMMO);
   }
   else if (!str_cmp(argument, "off") || !str_cmp(argument, "none"))
   {
@@ -8664,6 +8668,7 @@ ACMD(do_display)
     REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPROOM);
     REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPMEMTIME);
     REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPACTIONS);
+    REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPAMMO);
   }
   else
   {
@@ -8677,11 +8682,15 @@ ACMD(do_display)
     REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPROOM);
     REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPMEMTIME);
     REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPACTIONS);
+    REMOVE_BIT_AR(PRF_FLAGS(ch), PRF_DISPAMMO);
 
     for (i = 0; i < strlen(argument); i++)
     {
       switch (LOWER(argument[i]))
       {
+      case 'q':
+        SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPAMMO);
+        break;
       case 'h':
         SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPHP);
         break;
@@ -8707,7 +8716,7 @@ ACMD(do_display)
         SET_BIT_AR(PRF_FLAGS(ch), PRF_DISPACTIONS);
         break;
       default:
-        send_to_char(ch, "Usage: prompt { { H | M | V | X | T | R | E | A } | all"
+        send_to_char(ch, "Usage: prompt { { H | M | V | X | T | R | E | A | Q } | all"
                          " | auto | none }\r\n");
         return;
       }

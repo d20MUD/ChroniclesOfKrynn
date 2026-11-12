@@ -7,7 +7,7 @@ s = (root/'src/crafting_new.c').read_text()
 def function(signature):
     start=s.index(signature+'\n{')
     return s[start:s.index('\n}',start)+2]
-headers='\n'.join('#include "'+h+'"' for h in ['conf.h','sysdep.h','structs.h','utils.h','comm.h','db.h','constants.h','crafting_new.h','assign_wpn_armor.h','spells.h','interpreter.h','vnums.h'])
+headers='\n'.join('#include "'+h+'"' for h in ['conf.h','sysdep.h','structs.h','utils.h','comm.h','db.h','constants.h','crafting_new.h','assign_wpn_armor.h','spells.h','interpreter.h','vnums.h','talents.h'])
 defines='\n'.join(re.findall(r'^#define CRAFT_MOTES_REQ_.*$',s,re.M))+'\n#define CREATE_BASE_DC 10\n#define CREATE_BASE_EXP 50\n#define CREATE_BASE_TIME 60\n'
 players=(root/'src/players.c').read_text();a=players.index('static void load_ammo_craft_settings(struct char_data *ch, const char *line)\n{');loader=players[a:players.index('\n}',a)+2]
 code=s[s.index('#define CRAFT_AMMO_BATCH_SIZE'):s.index('static bool obj_has_catalyst_target(',s.index('#define CRAFT_AMMO_BATCH_SIZE'))]
@@ -32,6 +32,12 @@ struct weapon_table weapon_list[NUM_WEAPON_TYPES];
 #define GET_OBJ_VNUM(o) ((o)->item_number)
 static bool tool=true,station=true,roll=true,missing=false;
 static int saves,crashes,removed,rolls,rapid,natural_roll=10,check_skill=100;
+static int efficient,expertise,proficient,percent_roll=100,last_xp_skill;
+int get_efficient_talent_bonus(struct char_data *ch,int skill) {return efficient;}
+int get_talent_rank(struct char_data *ch,int talent) {
+ return talent==TALENT_WOODWORKING_EXPERTISE||talent==TALENT_WEAPONSMITHING_EXPERTISE?expertise:0;
+}
+int rand_number(int low,int high){assert(low==1&&high==100);return percent_roll;}
 int get_rapid_talent_bonus(struct char_data*c,int sk) {return rapid;}
 const char *act(const char*s,int h,struct char_data*c,struct obj_data*o,void*v,int t) {return s;}
 static struct obj_data *delivered;
@@ -43,13 +49,13 @@ bool has_crafting_station_in_room(struct char_data*c,int a) {return station;}
 const char *get_crafting_station_name(int a) {return "station";}
 int get_craft_production_bonus(struct char_data *ch,int skill) {return 0;}
 int get_craft_skill_value(struct char_data*c,int a) {return check_skill;}
-int get_proficient_talent_bonus(struct char_data*c,int a) {return 0;}
+int get_proficient_talent_bonus(struct char_data*c,int a) {return proficient;}
 int get_elbow_grease_bonus(struct char_data*c) {return 0;}
 int get_jack_of_all_trades_bonus(struct char_data*c) {return 0;}
 static bool artificer_efficient_crafter_applies(struct char_data*c) {return false;}
 int d20(struct char_data*c) {rolls++;return natural_roll;}
 void reset_current_craft(struct char_data*c,char*a,bool v,bool r) {assert(!r);GET_CRAFT(c).crafting_method=0;GET_CRAFT(c).craft_duration=0;}
-void gain_craft_exp(struct char_data*c,int x,int sk,bool happy) {}
+void gain_craft_exp(struct char_data*c,int x,int sk,bool happy) {last_xp_skill=sk;}
 void obj_to_char(struct obj_data*o,struct char_data*c) {delivered=o;}
 char *object_short_description(const struct obj_data*o) {return o->short_description;}
 void save_char(struct char_data*c,int r) {saves++;}
@@ -236,7 +242,11 @@ int main(void) {
  for(int recipe=0;recipe<NUM_AMMO_CRAFT_RECIPES;recipe++) {
    char command[100];snprintf(command,sizeof(command),"type %s",ammo_craft_recipes[recipe].name);
    craft_and_wait(&ch,command);craft_and_wait(&ch,"enhancement 3");craft_and_wait(&ch,"damage fire 6");
+   const char *mote_names[]={"air","dark","earth","fire","ice","light","lightning","water"};
+   snprintf(command,sizeof(command),"mote %s",mote_names[recipe%8]);
+   craft_ammunition(&ch,command);
    assert(saved_ammo_plan(&ch,&p));
+   assert(p.enhancement_mote==recipe%8+1);
    for(int outcome=0;outcome<3;outcome++) {
      int stock[NUM_CRAFT_MATS],motes[NUM_CRAFT_MOTES];
      for(int m=0;m<NUM_CRAFT_MATS;m++)stock[m]=GET_CRAFT_MAT((&ch),m)=1000;
@@ -297,6 +307,92 @@ int main(void) {
  for(int m=0;m<NUM_CRAFT_MATS;m++)assert(GET_CRAFT_MAT((&ch),m)==original_materials[m]);
  for(int m=0;m<NUM_CRAFT_MOTES;m++)assert(GET_CRAFT_MOTES((&ch),m)==original_motes[m]);
  craft_and_wait(&ch,"reset");assert(!AMMO_SETTINGS(&ch)[0] && !AMMO_SETTINGS(&ch)[3] && !AMMO_SETTINGS(&ch)[5]);
+ // Enhancement currency is independent of all five locked elemental costs.
+ const char *mote_names[]={"air","dark","earth","fire","ice","light","lightning","water"};
+ for(int mote=1;mote<NUM_CRAFT_MOTES;mote++)for(int element=0;element<6;element++) {
+   char command[100];craft_ammunition(&ch,"reset");
+   snprintf(command,sizeof(command),"mote %s",mote_names[mote-1]);craft_ammunition(&ch,command);
+   craft_ammunition(&ch,"enhancement 2");
+   snprintf(command,sizeof(command),"damage %s",ammo_craft_elements[element].name);craft_ammunition(&ch,command);
+   assert(saved_ammo_plan(&ch,&p));assert(p.enhancement_mote==mote);
+   int enhancement_cost=craft_motes_required(0,0,0,2);
+   int damage_cost=element?craft_motes_required(0,0,0,3):0;
+   for(int m=1;m<NUM_CRAFT_MOTES;m++) {
+     assert(p.motes[m]==(m==mote?enhancement_cost:0)+(element&&m==ammo_craft_elements[element].mote?damage_cost:0));
+     GET_CRAFT_MOTES((&ch),m)=1000;
+   }
+   for(int m=0;m<NUM_CRAFT_MATS;m++)GET_CRAFT_MAT((&ch),m)=1000;
+   assert(character_ammo_plan(&ch,"bolts 2 fire 6",&p)&&p.enhancement_mote==mote);
+   craft_ammunition(&ch,"begin");
+   assert(GET_CRAFT((&ch)).ammo_job_enhancement_mote==mote);
+   if(mote==CRAFTING_MOTE_FIRE)GET_CRAFT((&ch)).ammo_job_enhancement_mote=0; // pre-update saved job
+   // A later preference change must not change refunds or a restored timed job.
+   craft_ammunition(&ch,"mote water");
+   assert(load_ammunition_job(&ch,&p)&&p.enhancement_mote==mote);
+   assert(AMMO_ENHANCEMENT_MOTE(&ch)==CRAFTING_MOTE_WATER);
+   craft_ammunition(&ch,"cancel");
+   for(int m=1;m<NUM_CRAFT_MOTES;m++)assert(GET_CRAFT_MOTES((&ch),m)==1000);
+ }
+ int selected=AMMO_ENHANCEMENT_MOTE(&ch);
+ craft_ammunition(&ch,"mote none");assert(AMMO_ENHANCEMENT_MOTE(&ch)==selected);
+ craft_ammunition(&ch,"mote invalid");assert(AMMO_ENHANCEMENT_MOTE(&ch)==selected);
+ craft_ammunition(&ch,"reset");assert(!AMMO_ENHANCEMENT_MOTE(&ch));
+ assert(character_ammo_plan(&ch,"arrows 2",&p)&&p.enhancement_mote==CRAFTING_MOTE_FIRE);
+ // Missing crafting talents: success-only savings and Expertise critical batches.
+ for(int recipe=0;recipe<NUM_AMMO_CRAFT_RECIPES;recipe++)for(int outcome=0;outcome<6;outcome++) {
+   char command[100];craft_ammunition(&ch,"reset");
+   snprintf(command,sizeof(command),"type %s",ammo_craft_recipes[recipe].name);craft_ammunition(&ch,command);
+   craft_ammunition(&ch,"enhancement 2");craft_ammunition(&ch,"mote earth");craft_ammunition(&ch,"damage fire 6");
+   assert(saved_ammo_plan(&ch,&p));
+   for(int m=0;m<NUM_CRAFT_MATS;m++)GET_CRAFT_MAT((&ch),m)=1000;
+   for(int m=1;m<NUM_CRAFT_MOTES;m++)GET_CRAFT_MOTES((&ch),m)=1000;
+   efficient=30;expertise=5;percent_roll=outcome==0?100:outcome==5?10:1;
+   natural_roll=outcome==3?1:outcome==4?2:outcome==2?20:10;
+   check_skill=outcome==4?p.dc-20:100;
+   craft_and_wait(&ch,"begin");
+   bool success=outcome<3||outcome==5,critical=outcome==1||outcome==2;
+   for(int m=0;m<3;m++)if(p.materials[m][1]) {
+     int paid=success||outcome==3?p.materials[m][1]:0;
+     if(critical)paid-=paid/2;
+     if(success&&percent_roll<=30)paid-=paid/2;
+     assert(GET_CRAFT_MAT((&ch),p.materials[m][0])==1000-paid);
+   }
+   for(int m=1;m<NUM_CRAFT_MOTES;m++) {
+     int paid=success||outcome==3?p.motes[m]:0;if(critical)paid-=paid/2;
+     assert(GET_CRAFT_MOTES((&ch),m)==1000-paid);
+   }
+   assert((delivered!=NULL)==success);
+   if(delivered) {
+     assert(GET_OBJ_VAL(delivered,AMMO_VAL_QUANTITY)==(critical?75:50));
+     assert(last_xp_skill==p.recipe->skill);
+     extract_obj(delivered);delivered=NULL;
+   }
+ }
+ // Kits use woodworking talents but retain their own critical/failure rules.
+ for(int outcome=0;outcome<3;outcome++) {
+   craft_ammunition(&ch,"reset");efficient=30;expertise=5;percent_roll=1;
+   natural_roll=outcome==1?20:outcome==2?1:10;check_skill=100;
+   int mats[]={CRAFT_MAT_ASH_WOOD,CRAFT_MAT_BRONZE,CRAFT_MAT_HEMP};
+   for(int i=0;i<3;i++)GET_CRAFT_MAT((&ch),mats[i])=1000;
+   craft_and_wait(&ch,"kit");
+   for(int i=0;i<3;i++)assert(GET_CRAFT_MAT((&ch),mats[i])==(outcome==2?998:999));
+   assert((delivered!=NULL)==(outcome!=2));
+   if(delivered){assert(last_xp_skill==ABILITY_CRAFT_WOODWORKING);extract_obj(delivered);delivered=NULL;}
+ }
+ efficient=expertise=0;check_skill=100;natural_roll=10;percent_roll=100;
+ // Proficient counts once in the actual roll, including the pass/fail boundary.
+ for(int recipe=0;recipe<NUM_AMMO_CRAFT_RECIPES;recipe++) {
+   char command[100];craft_ammunition(&ch,"reset");
+   snprintf(command,sizeof(command),"type %s",ammo_craft_recipes[recipe].name);craft_ammunition(&ch,command);
+   craft_ammunition(&ch,"enhancement 3");
+   assert(saved_ammo_plan(&ch,&p));check_skill=p.dc-11;assert(check_skill>=0);
+   for(int bonus=0;bonus<2;bonus++) {
+     for(int m=0;m<NUM_CRAFT_MATS;m++)GET_CRAFT_MAT((&ch),m)=1000;
+     proficient=bonus;craft_and_wait(&ch,"begin");assert((delivered!=NULL)==(bonus==1));
+     if(delivered){extract_obj(delivered);delivered=NULL;}
+   }
+ }
+ proficient=0;check_skill=100;
  return 0;
 }
 '''

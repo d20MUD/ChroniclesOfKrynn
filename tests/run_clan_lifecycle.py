@@ -51,11 +51,11 @@ with database(migrations) as (tmp,socket,sql,client):
     assert sql(f"SELECT favor_eighths FROM clan_personal_favor WHERE player_id=5000000007 AND clan_uid='{A}'")=='8'
     assert sql(f"SELECT COUNT(*) FROM clan_personal_favor WHERE player_id=5000000007 AND clan_uid='{B}'")=='0'
     run('personal',expedition,'ineligible')
-    # Rejoining the same lifetime can use its standing and original pending claim.
+    # Rejoining retains standing but cannot turn raw facts into an expedition entitlement.
     sql(f"UPDATE clan_memberships SET clan_uid='{A}',rank_id=1 WHERE player_id=5000000007")
     assert access(5000000007,A)==0
-    expedition_receipt=run('personal',expedition)
-    assert expedition_receipt['decision']['after']['favor']==808
+    run('personal',expedition,'ineligible')
+    assert sql(f"SELECT favor_eighths FROM clan_personal_favor WHERE player_id=5000000007 AND clan_uid='{A}'")=='8'
     # Retained cooldowns and pending facts survive atomic tombstoning.
     sql(f"INSERT INTO clan_buff_families VALUES('{A}',1,'{'9'*32}',1,1,1,2200000000,2200086400,2200129600,800,0)")
     pending=event();run('prepare-member',pending)
@@ -68,12 +68,12 @@ with database(migrations) as (tmp,socket,sql,client):
     run('disband',request)
     assert access(5000000007,A)==3 and access(5000000009,B)==0
     assert sql(f"SELECT record_status FROM clan_progression_clans WHERE clan_uid='{A}'")=='2'
-    assert sql(f"SELECT favor_eighths FROM clan_personal_favor WHERE player_id=5000000007 AND clan_uid='{A}'")=='808'
+    assert sql(f"SELECT favor_eighths FROM clan_personal_favor WHERE player_id=5000000007 AND clan_uid='{A}'")=='8'
     assert sql(f"SELECT next_available_at FROM clan_buff_families WHERE clan_uid='{A}'")=='2200129600'
     assert run('load',pending)['status']==0
     run('personal',pending,'deleted')
     assert run('personal',kill,expected='ok')==receipt
-    assert run('personal',expedition)==expedition_receipt
+    run('personal',expedition,'ineligible')
     run('prepare-member',event(),'deleted')
     run('disband',request,'deleted')
     after=bridge('read',{})

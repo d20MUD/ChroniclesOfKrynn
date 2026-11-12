@@ -1523,7 +1523,9 @@ enum zone_terrain_type {
 
 #define PRF_AUTOHARVEST 92        /**< Repeat harvesting until the current node is exhausted */
 
-#define NUM_PRF_FLAGS 93
+#define PRF_DISPAMMO 93          /**< Ammo/thrown count in the MUD prompt */
+
+#define NUM_PRF_FLAGS 94
 
 /* Score Color Theme constants */
 #define SCORE_THEME_ENHANCED 0     /**< Enhanced theme with rich colors */
@@ -6328,6 +6330,7 @@ struct crafting_data_info
   int skill_roll;
   int dc;
   int craft_duration;
+  int ammo_job_enhancement_mote; // frozen independently of elemental damage
   int ammo_job[8]; // immutable recipe settings [0..6], portable kit flag [7]
   int obj_level;
   int level_adjust;
@@ -6427,6 +6430,8 @@ struct trap_data
 /** The Object structure. */
 struct obj_data
 {
+  char clan_delivery_uid[33];
+  int clan_delivery_amount; /* Reserved finite shots, persisted with object. */
   unsigned long long estate_delivery_id;
   char legendary_uuid[33]; /* Optional persistent instance identity, never a prototype ID. */
   bool legendary_quarantined;
@@ -7480,6 +7485,7 @@ struct player_special_data_saved
   char *intro_list[MAX_INTROS]; // Stores names of characters known
 
   struct crafting_data_info craft_data; // New crafting system info
+  int ammo_enhancement_mote; // 0 preserves legacy fire-mote default
   int ammo_craft_settings[7]; // recipe, three materials, enhancement, element, die
 
   int craft_mats_owned[NUM_CRAFT_MATS];
@@ -7636,6 +7642,11 @@ struct player_special_data
   char appearance_cast_args[MAX_INPUT_LENGTH]; /* Per-caster choices survive delayed casting. */
   long housing_house_id, housing_room_id;
   unsigned long long estate_credit_receipt, estate_debit_receipt;
+  char clan_objective_pending[2][256]; /* ClGQ/ClBQ saved occurrence handoffs. */
+  char clan_delivery_lock[33],clan_delivery_inventory[33];
+  int clan_delivery_stage,clan_delivery_inventory_stage;
+  bool clan_delivery_checked;
+  char clan_delivery_quote[4096]; /* Ephemeral confirmation, never a client amount. */
   char legendary_operation[33]; /* Durable economic lock; LgTx player-file tag. */
   struct player_special_data_saved saved; /**< Information to be saved. */
 

@@ -21,7 +21,10 @@ static bool captured;
 static int64_t clock_value=2200172801;
 struct char_data *character_list;
 struct player_special_data dummy_mob;
+struct zone_data *zone_table;
 struct room_data *world;
+room_rnum top_of_world;
+size_t strlcpy(char *dst,const char *src,size_t size){size_t n=strlen(src);if(size){size_t take=n<size-1?n:size-1;memcpy(dst,src,take);dst[take]=0;}return n;}
 struct index_data *mob_index;
 mob_rnum top_of_mobt;
 bool mysql_available=true;
@@ -41,6 +44,7 @@ bool save_char_checked(struct char_data *ch,int mode){
   return save_ok;
 }
 void save_char(struct char_data *ch,int mode){(void)save_char_checked(ch,mode);}
+size_t send_to_char(struct char_data *ch,const char *fmt,...){(void)ch;(void)fmt;return 0;}
 void basic_mud_log(const char *format,...){(void)format;}
 static void player(struct char_data *ch,struct player_special_data *ps,
     struct descriptor_data *d,struct account_data *account,int64_t id,int level)

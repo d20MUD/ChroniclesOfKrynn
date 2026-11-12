@@ -16,6 +16,8 @@ code = r'''
 #define ACMD(name) void name(struct char_data *ch, const char *argument, int cmd, int subcmd)
 #define MAX_INPUT_LENGTH 256
 #define NOWHERE -1
+#define GET_POS(ch) 1
+#define POS_DEAD 0
 #define PRF_AUTOHIT 1
 #define AFF_CHARM 1
 #define FALSE false
@@ -30,6 +32,8 @@ code = r'''
 #define IS_PET(ch) ((ch)->pet)
 #define GROUP(ch) ((ch)->group)
 #define FIGHTING(ch) ((ch)->fighting)
+#define GET_ATTACKS_THIS_ROUND(ch) ((ch)->attacks)
+#define atSTANDARD 0
 #define FIRING(ch) ((ch)->firing)
 #define PRF_FLAGGED(ch, flag) ((ch)->autohit)
 #define AFF_FLAGGED(ch, flag) ((ch)->charmed)
@@ -39,9 +43,9 @@ code = r'''
 #define PREREQ_NOT_PEACEFUL_ROOM() do { if (peaceful) return; } while (0)
 typedef int room_rnum;
 struct group_data { void *members; };
-struct char_data { bool npc, pet, autohit, charmed, visible, sensed, firing; int room; struct char_data *master, *next_in_room, *fighting; struct group_data *group; };
+struct char_data { bool npc, pet, autohit, charmed, visible, sensed, firing; int room, attacks; struct char_data *master, *next_in_room, *fighting; struct group_data *group; };
 static struct { struct char_data *people; } world[2];
-static bool peaceful, ammunition, opening_manyshot;
+static bool peaceful, ammunition, opening_manyshot, blocked;
 static int shots, lookups;
 static char output[512];
 static struct char_data *last_target, *explicit_target;
@@ -50,8 +54,9 @@ static void send_to_char(struct char_data *ch, const char *format, ...) { va_lis
 static struct char_data *get_char_room_vis(struct char_data *ch, const char *name, void *number) { lookups++; return explicit_target; }
 static bool can_blindsense_creature(struct char_data *ch, struct char_data *vict) { return vict->sensed; }
 static void *simple_list(void *members) { return NULL; }
+static bool is_action_available(struct char_data *ch,int action,bool show) { return true; }
 static bool can_fire_ammo(struct char_data *ch, bool silent) { return ammunition; }
-static void hit(struct char_data *ch, struct char_data *vict, int type, int damage, int penalty, int attack) { assert(attack==ATTACK_TYPE_RANGED); shots++; last_target=vict; ch->fighting=vict; }
+static void hit(struct char_data *ch, struct char_data *vict, int type, int damage, int penalty, int attack) { assert(attack==ATTACK_TYPE_RANGED); shots++; last_target=vict; if(!blocked)ch->fighting=vict; }
 static bool has_perk(struct char_data *ch, int perk) { return false; }
 static int is_using_ranged_weapon(struct char_data *ch, bool silent) { return 0; }
 static bool is_throwing_weapon(struct char_data *ch, int weapon) { return false; }
@@ -86,11 +91,16 @@ int main(void) {
   reset(&ch); ammunition=false;
   do_fire(&ch,"",0,0); assert(!shots && !ch.firing); ammunition=true;
   reset(&ch); ch.fighting=&second;
-  do_fire(&ch,"",0,0); assert(!shots && strstr(output,"too busy"));
+  do_fire(&ch,"",0,0); assert(!shots && ch.firing && ch.fighting==&second && strstr(output,"resume firing"));
+  reset(&ch);ch.firing=true;ch.attacks=8;
+  do_fire(&ch,"",0,0);assert(shots==1 && ch.fighting==&first && !ch.attacks);
+  reset(&ch);ch.fighting=&first;explicit_target=&second;
+  do_fire(&ch,"second",0,0);assert(!shots&&ch.fighting==&first&&strstr(output,"current opponent"));
   reset(&ch); peaceful=true;
   do_fire(&ch,"",0,0); assert(!shots); peaceful=false;
   reset(&ch);
   do_fire(&ch,"first north",0,0); assert(!shots && strstr(output,"current room"));
+  reset(&ch);blocked=true;do_fire(&ch,"",0,0);assert(shots==1 && strstr(output,"could not begin firing"));blocked=false;
   reset(&ch); ch.room=NOWHERE;
   do_fire(&ch,"",0,0); assert(!shots);
   puts("Fire auto-hit: eligible room order, visibility/blindsense, pet/charm/player exclusions, explicit targets, preference, ammo and combat guards passed");

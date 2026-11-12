@@ -17,6 +17,8 @@ struct player_special_data dummy_mob;
 struct room_data rooms[2],*world=rooms;
 static int skill_value=30,completed,mode;
 static bool tool=true;
+bool clan_objective_harvest_ready(struct char_data *ch) { return true; }
+void save_char(struct char_data *ch,int mode) {}
 void basic_mud_log(const char *format,...) {assert(0);}
 int MAX(int a,int b) {return a>b?a:b;}
 int harvesting_skill_by_material(int material) {return material?1:0;}
@@ -39,7 +41,7 @@ void harvest_complete(struct char_data *ch) {
  if(mode==6)rooms[0].harvest_material_amount=0;
  GET_CRAFT(ch).crafting_method=0;GET_CRAFT(ch).craft_duration=0;
 }
-'''+function('void newcraft_harvest(')+function('static void complete_harvest_cycle(')+r'''
+'''+function('bool is_harvest_cancel_request(')+function('void newcraft_harvest(')+function('static void complete_harvest_cycle(')+r'''
 static struct char_data ch,opponent;
 static struct player_special_data player;
 static void reset(void) {
@@ -69,6 +71,15 @@ int main(void) {
  reset();GET_POS(&ch)=POS_SLEEPING;complete_harvest_cycle(&ch);assert(!GET_CRAFT((&ch)).craft_duration);
  reset();FIGHTING(&ch)=&opponent;complete_harvest_cycle(&ch);assert(!GET_CRAFT((&ch)).craft_duration);
  reset();SET_BIT_AR(PRF_FLAGS(&ch),PRF_NO_CRAFT_PROGRESS);complete_harvest_cycle(&ch);assert(GET_CRAFT((&ch)).craft_duration==17);
+ reset();newcraft_harvest(&ch,"");newcraft_harvest(&ch," cancel ");
+ assert(!GET_CRAFT((&ch)).craft_duration && !GET_CRAFT((&ch)).crafting_method);
+ assert(!completed && rooms[0].harvest_material_amount==3 && GET_SURVEY_ROOMS(&ch)==10);
+ assert(PRF_FLAGGED(&ch,PRF_AUTOHARVEST)); // preference retained; current loop stopped
+ newcraft_harvest(&ch,"STOP");assert(!GET_CRAFT((&ch)).craft_duration);
+ newcraft_harvest(&ch,"");newcraft_harvest(&ch,"stop");assert(!GET_CRAFT((&ch)).craft_duration);
+ GET_CRAFT((&ch)).crafting_method=SCMD_NEWCRAFT_CREATE;GET_CRAFT((&ch)).craft_duration=12;
+ newcraft_harvest(&ch,"cancel");assert(GET_CRAFT((&ch)).craft_duration==12);
+ assert(!is_harvest_cancel_request("cancel extra")&&!is_harvest_cancel_request("")&&!is_harvest_cancel_request(NULL));
  reset();GET_LEVEL(&ch)=LVL_IMMORT;complete_harvest_cycle(&ch);assert(GET_CRAFT((&ch)).craft_duration==1);
  puts("Autoharvest: repeat to depletion, failed rolls, normal timing, toggle off, impossible skill, changed/depleted node, movement, missing tool/survey and combat/rest stops passed.");
 }
@@ -77,7 +88,10 @@ int main(void) {
 update=function('void craft_update(')
 assert update.count('complete_harvest_cycle(ch);')==1
 assert update.index('if (GET_CRAFT(ch).craft_duration == 0)')<update.index('complete_harvest_cycle(ch);')
-assert 'SCMD_AUTOHARVEST' in (root/'src/interpreter.c').read_text()
+interpreter=(root/'src/interpreter.c').read_text()
+assert 'SCMD_AUTOHARVEST' in interpreter
+# Only harvest cancellation bypasses both busy-work and action-queue gates.
+assert interpreter.count('subcmd == SCMD_NEWCRAFT_HARVEST && is_harvest_cancel_request(line)')==2
 prefs=(root/'src/prefedit.c').read_text()
 assert 'ONOFF(PREFEDIT_FLAGGED(PRF_AUTOHARVEST))' in prefs
 assert 'TOGGLE_BIT_AR(PREFEDIT_GET_FLAGS, PRF_AUTOHARVEST)' in prefs

@@ -760,6 +760,8 @@ int main(int argc, char **argv)
   obj->affected[0].specific = 7;
   obj->affected[0].bonus_type = BONUS_TYPE_ENHANCEMENT;
   obj->estate_delivery_id = 123456;
+  strcpy(obj->clan_delivery_uid,"dddddddddddddddddddddddddddddddd");
+  obj->clan_delivery_amount=25;
   GET_OBJ_VAL(obj, 15) = 42;
   obj->special_abilities = calloc(1, sizeof(*obj->special_abilities));
   obj->special_abilities->ability = 11;
@@ -794,6 +796,7 @@ int main(int argc, char **argv)
     mysql_free_result(res);
     assert(!strcmp(restored->short_description, "a smith's engraved dagger"));
     assert(strstr(restored->action_description, "A second line."));
+    assert(!strcmp(restored->clan_delivery_uid,"dddddddddddddddddddddddddddddddd") && restored->clan_delivery_amount==25);
     assert(restored->estate_delivery_id == 123456 && restored->affected[0].specific == 7);
     assert(GET_OBJ_VAL(restored, 15) == 42 && GET_OBJ_BOUND_ID(restored) == (int)NOBODY);
     assert(restored->special_abilities && restored->special_abilities->next &&
@@ -803,6 +806,7 @@ int main(int argc, char **argv)
     {
       obj_save_data *database = objsave_parse_objects_db("seller", NOWHERE);
       assert(database && !database->next);
+      assert(!strcmp(database->obj->clan_delivery_uid,"dddddddddddddddddddddddddddddddd") && database->obj->clan_delivery_amount==25);
       assert(database->locate == 3 && database->db_idnum > 0 &&
              database->obj->estate_delivery_id == 123456);
       assert(strstr(database->obj->action_description, "A second line.") &&

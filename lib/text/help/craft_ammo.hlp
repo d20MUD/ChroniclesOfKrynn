@@ -9,6 +9,7 @@ CRAFT AMMO
   craft ammo material 2 <material name>
   craft ammo material 3 <material name>
   craft ammo enhancement <0-8>
+  craft ammo mote <air|dark|earth|fire|ice|light|lightning|water>
   craft ammo damage <none|fire|cold|acid|electricity|sonic> [die]
   craft ammo show
   craft ammo cost
@@ -53,6 +54,26 @@ AMMO CRAFTING ROLLS
 Half costs round UP to whole units, after combining slots using the same
 material. For example, a cost of 3 becomes 2; a cost of 1 remains 1.
 These rules include throwing bundles; fletching kits keep their normal rolls.
+
+CRAFTING TALENTS
+Ammo uses its recipe's skill: woodworking for arrows, bolts, javelins, darts
+and fletching kits; weaponsmithing for bullets and other throwing bundles.
+The matching skill talents apply:
+  Proficient: adds its skill-check bonus.
+  Rapid: reduces the crafting timer (minimum one second).
+  Insightful: increases crafting experience through the normal XP rules.
+  Expertise: each rank gives a 1% chance to upgrade a successful craft to
+             a critical success. Natural 1 failures cannot be upgraded.
+  Efficient: each rank gives a 3% chance per material type to save half
+             its cost on success, rounded down. Motes are not discounted.
+
+Expertise critical ammo has 75 uses and half material/mote costs, just like
+a natural 20. Efficient savings apply to materials still paid AFTER that
+critical discount, so the same units cannot be refunded twice. At least
+one unit of each required material remains consumed. Cancellation and
+ordinary ammo failures return the original reservation without extra savings.
+Kits receive skill/time/XP and Efficient benefits; Expertise can make them
+masterwork but does not change their quantity or give the ammo critical discount.
 
 THREE MATERIAL SLOTS
   Slot 1: shafts/handles (wood), bullet bodies (stone/metal),
@@ -115,12 +136,19 @@ Examples of grades:
   Binding: hemp 1, linen/flax 2, wool 3, silk 4, satin 5.
 
 ENHANCEMENT AND BONUS DAMAGE
-Enhancement above material quality costs fire motes, discounted by the
+Enhancement above material quality costs your selected mote type, discounted by the
 material's enhancement tier, with at least one mote for an upgrade.
 Bonus damage adds +1d4, +1d6, +1d8, +1d10, or +1d12. Omitting the die uses
 6. Choose none to remove bonus damage. Damage consumes matching motes:
 fire, ice for cold, water for acid, lightning for electricity, air for sonic.
-Fire damage and enhancement costs are added together.
+Use craft ammo mote <type> to choose the enhancement currency independently
+of bonus damage. The default is fire. This selection is saved between logins
+and applies to one-line recipes and throwing bundles too. Changing damage
+type never changes your enhancement mote selection. Extra damage always
+requires its matching mote type; you cannot substitute another type for it.
+If both upgrades use the same mote type, their costs are added together.
+Show and cost list the selected enhancement mote and total costs per type.
+Timed jobs keep the mote selection they started with, including refunds.
 
 The item level is the normal enhancement level adjustment plus the damage
 die size, with a minimum of 1 and maximum of 30. Show displays the resulting
@@ -147,6 +175,7 @@ EXAMPLE
   craft ammo material 2 steel
   craft ammo material 3 wool
   craft ammo enhancement 3
+  craft ammo mote earth
   craft ammo damage fire 6
   craft ammo show
   craft ammo begin

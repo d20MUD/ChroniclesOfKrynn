@@ -1,13 +1,14 @@
 """Private MariaDB fixture; no game configuration or network connections."""
 from contextlib import contextmanager
 from pathlib import Path
-import getpass,subprocess,tempfile,time
+import getpass,subprocess,tempfile,time,os
 ROOT=Path(__file__).resolve().parents[1]
 @contextmanager
 def database(migrations=('20261110_clan_progression_v001.sql',)):
  with tempfile.TemporaryDirectory(prefix='clan-db-') as directory:
   tmp=Path(directory);sock=tmp/'mysql.sock';log=tmp/'server.log'
-  subprocess.run(['mariadb-install-db','--no-defaults','--datadir='+str(tmp/'data'),'--auth-root-authentication-method=normal','--skip-test-db'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,check=True)
+  installed=subprocess.run(['mariadb-install-db','--no-defaults','--datadir='+str(tmp/'data'),'--tmpdir='+str(tmp),'--auth-root-authentication-method=normal','--skip-test-db'],env=dict(os.environ,TMPDIR=str(tmp)),stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
+  if installed.returncode:raise RuntimeError('Private MariaDB initialization failed: '+installed.stdout)
   process=subprocess.Popen(['mariadbd','--no-defaults','--datadir='+str(tmp/'data'),'--socket='+str(sock),'--tmpdir='+str(tmp),'--pid-file='+str(tmp/'pid'),'--skip-networking','--log-error='+str(log),'--user='+getpass.getuser()],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
   client=['mariadb','--no-defaults','--socket='+str(sock),'-uroot','--batch','--skip-column-names']
   try:

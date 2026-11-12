@@ -115,6 +115,12 @@ static int restore_persistent_object(struct obj_data *obj, const char *tag, cons
   else if (!strcmp(tag, "Recv")) obj->mob_recepient = atoi(value);
   else if (!strcmp(tag, "Drai")) obj->drainKilled = atoi(value) != 0;
   else if (!strcmp(tag, "HasS")) obj->has_spells = atoi(value) != 0;
+  else if (!strcmp(tag,"CDel")) {
+    char uid[33];int amount;
+    if(sscanf(value,"%32s %d",uid,&amount)==2 && legendary_uuid_valid(uid) && amount>0 && amount<=100) {
+      strlcpy(obj->clan_delivery_uid,uid,33);obj->clan_delivery_amount=amount;
+    } else strlcpy(obj->clan_delivery_uid,"invalid-operation",33);
+  }
   else if (!strcmp(tag, "EId ")) obj->estate_delivery_id = strtoull(value, NULL, 10);
   else if (!strcmp(tag, "Pois"))
     sscanf(value, "%d %d %d", &obj->weapon_poison.poison, &obj->weapon_poison.poison_level, &obj->weapon_poison.poison_hits);
@@ -219,6 +225,13 @@ int objsave_save_obj_record_db(struct obj_data *obj, struct char_data *ch, room_
     fputs(identity_line, fp);
 #ifdef OBJSAVE_DB
     strlcat(ins_buf, identity_line, sizeof(ins_buf));
+#endif
+  }
+  if (*obj->clan_delivery_uid) {
+    fprintf(fp,"CDel: %s %d\n",obj->clan_delivery_uid,obj->clan_delivery_amount);
+#ifdef OBJSAVE_DB
+    snprintf(line_buf,sizeof(line_buf),"CDel: %s %d\n",obj->clan_delivery_uid,obj->clan_delivery_amount);
+    strlcat(ins_buf,line_buf,sizeof(ins_buf));
 #endif
   }
   if (obj->estate_delivery_id) {
@@ -1522,9 +1535,11 @@ static int objsave_write_rentcode(FILE *fl, int rentcode, int cost_per_day, stru
   char buf[2048]; /* For MySQL insert. */
 
   snprintf(buf, sizeof(buf),
-           "update player_data set obj_save_header = '%d %ld %d %d %d %d'"
+           "update player_data set obj_save_header = '%d %ld %d %d %d %d %s %d'"
            "where name = '%s';",
-           rentcode, (long)time(0), cost_per_day, GET_GOLD(ch), GET_BANK_GOLD(ch), 0, GET_NAME(ch));
+           rentcode, (long)time(0), cost_per_day, GET_GOLD(ch), GET_BANK_GOLD(ch), 0,
+           *ch->player_specials->clan_delivery_inventory?ch->player_specials->clan_delivery_inventory:"-",
+           ch->player_specials->clan_delivery_inventory_stage, GET_NAME(ch));
   if (mysql_query(conn, buf))
   {
     log("SYSERR: Unable to INSERT obj_save_header into PLAYER_DATA: %s", mysql_error(conn));
@@ -1532,8 +1547,10 @@ static int objsave_write_rentcode(FILE *fl, int rentcode, int cost_per_day, stru
   }
 #endif
 
-  if (fprintf(fl, "%d %ld %d %d %d %d\r\n", rentcode, (long)time(0), cost_per_day, GET_GOLD(ch),
-              GET_BANK_GOLD(ch), 0) < 1)
+  if (fprintf(fl, "%d %ld %d %d %d %d %s %d\r\n", rentcode, (long)time(0), cost_per_day, GET_GOLD(ch),
+              GET_BANK_GOLD(ch), 0,
+              *ch->player_specials->clan_delivery_inventory?ch->player_specials->clan_delivery_inventory:"-",
+              ch->player_specials->clan_delivery_inventory_stage) < 1)
   {
     perror("Syserr: Writing rent code");
     return FALSE;
@@ -2782,6 +2799,16 @@ obj_save_data *objsave_parse_objects_db(char *name, room_vnum house_vnum)
   return head;
 }
 
+static void delivery_header_restore(struct char_data *ch,const char *line)
+{
+  char uid[33];int stage;
+  *ch->player_specials->clan_delivery_inventory=0;ch->player_specials->clan_delivery_inventory_stage=0;
+  if(sscanf(line,"%*d %*d %*d %*d %*d %*d %32s %d",uid,&stage)==2 && strcmp(uid,"-")) {
+    if(legendary_uuid_valid(uid) && stage>=1 && stage<=3) {
+      strlcpy(ch->player_specials->clan_delivery_inventory,uid,33);ch->player_specials->clan_delivery_inventory_stage=stage;
+    } else strlcpy(ch->player_specials->clan_delivery_inventory,"invalid-operation",33);
+  }
+}
 static int Crash_load_objs(struct char_data *ch)
 {
   FILE *fl = NULL;
@@ -2840,6 +2867,7 @@ static int Crash_load_objs(struct char_data *ch)
     /* This player has saved objects in the database */
     COPYOVER_DEBUG("Object save header found for: %s", GET_NAME(ch));
     sscanf(row[0], "%d %d %d %d %d %d", &rentcode, &timed, &netcost, &gold, &account, &nitems);
+    delivery_header_restore(ch,row[0]);
     using_db = TRUE;
   }
   else
@@ -2866,8 +2894,10 @@ static int Crash_load_objs(struct char_data *ch)
     return 1;
   }
 
-  if (!using_db && get_line(fl, line))
+  if (!using_db && get_line(fl, line)) {
     sscanf(line, "%d %d %d %d %d %d", &rentcode, &timed, &netcost, &gold, &account, &nitems);
+    delivery_header_restore(ch,line);
+  }
 
   if (rentcode == RENT_RENTED || rentcode == RENT_TIMEDOUT)
   {

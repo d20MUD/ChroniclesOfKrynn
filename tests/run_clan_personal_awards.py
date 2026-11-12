@@ -53,15 +53,11 @@ with database(migrations) as (tmp, socket, sql, client):
     assert d['cap_flags']==32 and not any(d[k] for k in ['xp_eighths','favor_eighths','account_claims','account_base_xp_eighths'])
     assert sql('SELECT supply_order_claims FROM clan_account_windows WHERE account_id=77')=='3'
     assert sql('SELECT COUNT(*) FROM clan_account_windows WHERE account_id=77')=='1'
-    # Exhausted account XP does not block expedition Favor; Favor itself is capped.
+    # Expedition Favor now requires a prepared entitlement and its dedicated
+    # SQL participant. Raw source receipts cannot bypass completion/family limits.
     sql('UPDATE clan_account_windows SET base_xp_eighths=9600,favor_eighths=4799,revision=revision+1 WHERE account_id=77')
     expedition=event(source=6,requested_xp_eighths=0,requested_influence_eighths=0,requested_favor_eighths=800)
-    run('prepare',expedition);d=complete(expedition,now=2200604802)['decision']['delta']
-    assert d['favor_eighths']==1 and d['account_claims']==1 and d['cap_flags']==64
-    capped=event(source=6,requested_xp_eighths=0,requested_influence_eighths=0,requested_favor_eighths=800)
-    run('prepare',capped);d=complete(capped,now=2200604802)['decision']['delta'];assert d['favor_eighths']==0 and d['account_claims']==1
-    capped_again=event(source=6,requested_xp_eighths=0,requested_influence_eighths=0,requested_favor_eighths=800)
-    run('prepare',capped_again);d=complete(capped_again,now=2200604802)['decision']['delta'];assert d['cap_flags']==32 and not d['account_claims']
+    run('prepare',expedition);run('personal',expedition|dict(now=2200604802),'ineligible')
     # At clan level/storage caps, another account can still accumulate Favor.
     sql(f"UPDATE clan_progression_state SET xp_eighths=304000,influence_eighths=160000,revision=revision+1 WHERE clan_uid='{B}'")
     favor=event(account_id=88,player_id=5000000010,clan_uid=B);run('prepare',favor)

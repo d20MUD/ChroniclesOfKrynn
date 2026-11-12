@@ -1,0 +1,62 @@
+-- Optional help publication; does not enable contracts.
+START TRANSACTION;
+INSERT INTO help_entries(tag,category,entry,min_level,max_level,auto_generated)
+VALUES ('CLANCONTRACTS CLANGATHERING CLANBOUNTY','general',REPLACE('CLAN GATHERING AND BOUNTY CONTRACTS
+
+clan contracts gathering list
+clan contracts gathering accept <id>
+clan contracts gathering active
+clan contracts gathering abandon
+clan contracts gathering retry
+
+Use bounty instead of gathering for bounty contracts. Deliveries continue to
+use clan deliveries. You may hold one contract from each of those three
+families. Supply orders remain separate. Acceptance requires an eligible
+accepted clan member at a quartermaster, outside combat and timed crafting.
+
+Each gathering objective requires 20 fresh BASE units of its named material
+and exact grade, collected through successful node harvesting after acceptance.
+Critical, talent, happy-hour and other bonus output does not increase contract
+credit. Failures, refining, purchases, transfers and existing inventory do not
+count. Your harvested goods are retained; completion consumes no materials.
+
+Each bounty requires 20 qualifying kills of the listed mob prototype after
+acceptance. The normal clan contribution rules decide eligibility: meaningful
+participation and suitable encounter difficulty are required. Healing, defense
+and other qualifying support can count; the killing blow is not required.
+Trivial, owned, summoned, manipulated and staff-test encounters do not count.
+A single encounter can advance an accepted bounty and award normal kill credit.
+These are separate achievements. Alts cannot claim one encounter twice.
+
+Progress and occurrence IDs are saved. Reconnect/retry cannot count an event
+or pay a completed contract twice. Active shows completed and remaining units
+or kills, expiry and pending rewards. Abandonment discards unfinished effort
+and grants no reward. An earned reward awaiting completion cannot be abandoned.
+
+Base personal credit is 100 clan XP, 50 Influence and 50 Favor, subject to the
+existing account, Favor, source and clan caps. Two DIFFERENT definitions in each
+family may be completed per account per UTC week, across alts and clan changes.
+Abandoning/reaccepting does not reset completed-definition eligibility. Contracts
+expire at the weekly UTC boundary. Expired partial progress earns no payout.
+Saved occurrences earned before expiry can recover without changing their week.
+
+The first qualifying personal bounty completion of a definition also prepares
+200 clan XP and 100 Influence for the original clan, subject to clan caps. Only
+two different shared bounty definitions may credit a clan per UTC week. Later
+members may still earn their own personal credit; the shared reward cannot
+repeat or multiply by party size. Favor remains personal.
+
+When storage is unavailable, saved occurrences wait for retry. Harvesting pauses
+rather than overwrite a pending occurrence. A bounty character with an unresolved
+saved kill cannot queue further kills until it recovers. No progress is fabricated
+from command history or an inventory total. Contract services must be enabled
+by the game; their availability does not enable clan buffs or other features.
+
+Choices rotate each Monday at 00:00 UTC, with at least two alternatives in
+supported unlock/character bands. Use list for this week''s server-owned IDs
+and next reset time. Rotation never changes accepted terms, replenishes an
+account limit or removes a committed reward. Unfinished slots expire on your
+next contract command; saved occurrences are recovered before that reset.
+',CHAR(10),CONCAT(CHAR(13),CHAR(10))),0,34,0)
+ON DUPLICATE KEY UPDATE entry=VALUES(entry),category=VALUES(category);
+COMMIT;

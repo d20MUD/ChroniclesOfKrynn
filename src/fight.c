@@ -16845,7 +16845,15 @@ int perform_attacks(struct char_data *ch, int mode, int phase)
   if ((mode == NORMAL_ATTACK_ROUTINE) && !is_action_available(ch, atSTANDARD, FALSE))
     return (0);
 
-  /* A hybrid hoopak can change modes as its opponent closes or moves away. */
+  /* Ammo exhaustion changes a bow to its melee fallback. Re-evaluate on every
+   * real attack phase so refilling the pouch restores ranged combat, including
+   * the single-attack path when no move action is available. */
+  if (mode == NORMAL_ATTACK_ROUTINE && !IS_NPC(ch) && !THROWING(ch) &&
+      is_using_ranged_weapon(ch, TRUE) &&
+      !is_throwing_weapon(ch, is_using_ranged_weapon(ch, TRUE)))
+    FIRING(ch) = can_fire_ammo(ch, TRUE);
+
+  /* Preserve the hoopak's explicit hybrid mode, including switching to melee. */
   wielded = get_wielded(ch, ATTACK_TYPE_PRIMARY);
   if (mode == NORMAL_ATTACK_ROUTINE && wielded &&
       GET_OBJ_TYPE(wielded) == ITEM_WEAPON && GET_OBJ_VAL(wielded, 0) == WEAPON_TYPE_HOOPAK)

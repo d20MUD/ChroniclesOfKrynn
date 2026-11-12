@@ -63,6 +63,14 @@ circle_SOURCES = \
 	src/clan_buff_runtime.c \
 	src/clan_buff_commands.c \
 	src/clan_combat.c \
+	src/clan_delivery.c \
+	src/clan_delivery_runtime.c \
+	src/clan_expedition_enrollment.c \
+	src/clan_expedition_runtime.c \
+	src/clan_expeditions.c \
+	src/clan_expedition_world.c \
+	src/clan_objectives.c \
+	src/clan_objective_runtime.c \
 	src/clan_sources.c \
 	src/clan_status.c \
 	src/clan_commands.c \
@@ -327,6 +335,10 @@ src/constants.c: $(filter-out src/constants.c,$(circle_SOURCES))
 
 # Extra files to distribute
 EXTRA_DIST = \
+	lib/clan/expeditions.json \
+	lib/clan/deliveries.json \
+	lib/clan/objectives.json \
+	docs/clan_progression_phase_32_33_handoff.md \
 	src/clan_progression.h \
 	src/clan_repository.h \
 	src/clan_rewards.h \
@@ -337,6 +349,19 @@ EXTRA_DIST = \
 	src/clan_buff_runtime.h \
 	src/clan_buff_commands.h \
 	src/clan_combat.h \
+	src/clan_delivery.h \
+	src/clan_delivery_runtime.h \
+	src/clan_contract_rotation.h \
+	src/clan_expedition_enrollment.h \
+	sql/20261112_clan_expeditions_v001.sql \
+	sql/20261112_clan_expeditions_v002.sql \
+	sql/20261112_clan_expeditions_help.sql \
+	docs/help/clan_expeditions.hlp \
+	docs/clan_progression_phase_34_handoff.md \
+	docs/clan_progression_phase_35_36_handoff.md \
+	src/clan_expeditions.h \
+	src/clan_objectives.h \
+	src/clan_objective_runtime.h \
 	src/clan_sources.h \
 	sql/20261111_clan_buff_lifecycle_v001.sql \
 	sql/20261111_clan_buff_activations_v001.sql \

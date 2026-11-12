@@ -5774,9 +5774,6 @@ static bool perform_manyshot_attack(struct char_data *ch, struct char_data *vict
     return TRUE;
   }
 
-  act("$n unleashes a rapid volley of arrows!", FALSE, ch, 0, 0, TO_ROOM);
-  send_to_char(ch, "You unleash a rapid volley of arrows!\r\n");
-
   /* Base three rapid shots; Improved Manyshot adds +2 */
   int max_shots = 3;
   if (!IS_NPC(ch) && has_perk(ch, PERK_RANGER_IMPROVED_MANYSHOT))
@@ -5785,13 +5782,22 @@ static bool perform_manyshot_attack(struct char_data *ch, struct char_data *vict
   {
     int shots;
     long target_id = GET_ID(vict);
+    if (!FIGHTING(ch)) GET_ATTACKS_THIS_ROUND(ch) = 0;
     for (shots = 0; shots < max_shots; shots++)
     {
-      if (find_char(target_id) != vict || GET_POS(vict) <= POS_DEAD ||
-          IN_ROOM(vict) != IN_ROOM(ch) || !can_fire_ammo(ch, TRUE))
-        break;
-      hit(ch, vict, TYPE_UNDEFINED, DAM_RESERVED_DBC, 0, ATTACK_TYPE_RANGED);
+      /* Use the actual room occupant, not the DG script UID namespace. Check
+       * membership before dereferencing: an earlier shot can extract the mob. */
+      struct char_data *live = IN_ROOM(ch) == NOWHERE ? NULL : world[IN_ROOM(ch)].people;
+      while (live && (live != vict || GET_ID(live) != target_id)) live = live->next_in_room;
+      if (!live || GET_POS(live) <= POS_DEAD || IN_ROOM(live) != IN_ROOM(ch) ||
+          !can_fire_ammo(ch, TRUE)) break;
+      if (!shots) {
+        act("$n unleashes a rapid volley of arrows!", FALSE, ch, 0, 0, TO_ROOM);
+        send_to_char(ch, "You unleash a rapid volley of arrows!\r\n");
+      }
+      hit(ch, live, TYPE_UNDEFINED, DAM_RESERVED_DBC, 0, ATTACK_TYPE_RANGED);
     }
+    if (!shots) return FALSE;
   }
 
   /* Cooldown: 2 minutes base; 1 minute with Improved Manyshot */
@@ -12200,17 +12206,25 @@ ACMD(do_fire)
 
   PREREQ_NOT_NPC();
   PREREQ_NOT_PEACEFUL_ROOM();
-  if (FIGHTING(ch) || FIRING(ch))
-  {
-    send_to_char(ch, "You are too busy fighting to try and fire right now!\r\n");
-    return;
-  }
   two_arguments(argument, arg1, sizeof(arg1), arg2, sizeof(arg2));
   if (*arg2)
   {
     send_to_char(ch, "You can only fire at targets in your current room.\r\n");
     return;
   }
+  if (FIGHTING(ch))
+  {
+    if (*arg1 && get_char_room_vis(ch, arg1, NULL) != FIGHTING(ch)) {
+      send_to_char(ch, "Finish fighting your current opponent first.\r\n");
+      return;
+    }
+    if (can_fire_ammo(ch, FALSE)) {
+      FIRING(ch) = TRUE;
+      send_to_char(ch, "You resume firing at your current opponent on your next attack.\r\n");
+    }
+    return;
+  }
+  FIRING(ch) = FALSE; /* A stale firing flag must not block a new battle. */
   if (!*arg1 && PRF_FLAGGED(ch, PRF_AUTOHIT))
   {
     /* Match auto-hit's eligible mobs without looking the chosen mob up again
@@ -12219,7 +12233,8 @@ ACMD(do_fire)
       return;
     for (vict = world[room].people; vict; vict = vict->next_in_room)
     {
-      if (!IS_NPC(vict) || AFF_FLAGGED(vict, AFF_CHARM) || vict->master == ch)
+      if (!IS_NPC(vict) || GET_POS(vict) <= POS_DEAD ||
+          AFF_FLAGGED(vict, AFF_CHARM) || vict->master == ch)
         continue;
       if (!CAN_SEE(ch, vict) && !can_blindsense_creature(ch, vict))
         continue;
@@ -12272,26 +12287,35 @@ ACMD(do_fire)
     send_to_char(ch, "There is no opponent here to fire at.\r\n");
     return;
   }
-  if (!can_fire_ammo(ch, FALSE))
-    return;
-  if (try_opening_manyshot(ch, vict))
-  {
-    FIRING(ch) = FIGHTING(ch) && can_fire_ammo(ch, TRUE);
+  if (GET_POS(vict) <= POS_DEAD) {
+    send_to_char(ch, "That opponent is already dead.\r\n");
     return;
   }
-  hit(ch, vict, TYPE_UNDEFINED, DAM_RESERVED_DBC, 0, ATTACK_TYPE_RANGED);
-  if (FIGHTING(ch) && has_perk(ch, PERK_RANGER_QUICK_DRAW) &&
-      (!is_throwing_weapon(ch, is_using_ranged_weapon(ch, TRUE)) || HAS_FEAT(ch, FEAT_QUICK_DRAW)))
+  if (!can_fire_ammo(ch, FALSE))
+    return;
+  if (!is_action_available(ch, atSTANDARD, TRUE)) return;
+  GET_ATTACKS_THIS_ROUND(ch) = 0; /* The previous battle's count is no longer current. */
+  if (!try_opening_manyshot(ch, vict))
   {
-    int qd_chance = get_ranger_quick_draw_proc_chance(ch);
-    if (qd_chance > 0 && rand_number(1, 100) <= qd_chance && can_fire_ammo(ch, TRUE))
+    hit(ch, vict, TYPE_UNDEFINED, DAM_RESERVED_DBC, 0, ATTACK_TYPE_RANGED);
+    if (FIGHTING(ch) && has_perk(ch, PERK_RANGER_QUICK_DRAW) &&
+        (!is_throwing_weapon(ch, is_using_ranged_weapon(ch, TRUE)) || HAS_FEAT(ch, FEAT_QUICK_DRAW)))
     {
-      send_to_char(ch, "Your Quick Draw lets you snap off an extra shot!\r\n");
-      act("$n snaps off an extra shot with lightning speed!", FALSE, ch, 0, 0, TO_ROOM);
-      hit(ch, FIGHTING(ch), TYPE_UNDEFINED, DAM_RESERVED_DBC, 0, ATTACK_TYPE_RANGED);
+      int qd_chance = get_ranger_quick_draw_proc_chance(ch);
+      if (qd_chance > 0 && rand_number(1, 100) <= qd_chance && can_fire_ammo(ch, TRUE))
+      {
+        send_to_char(ch, "Your Quick Draw lets you snap off an extra shot!\r\n");
+        act("$n snaps off an extra shot with lightning speed!", FALSE, ch, 0, 0, TO_ROOM);
+        hit(ch, FIGHTING(ch), TYPE_UNDEFINED, DAM_RESERVED_DBC, 0, ATTACK_TYPE_RANGED);
+      }
     }
   }
   FIRING(ch) = FIGHTING(ch) && can_fire_ammo(ch, TRUE);
+  if (!FIGHTING(ch) && IN_ROOM(ch) != NOWHERE) {
+    for (tch = world[IN_ROOM(ch)].people; tch && tch != vict; tch = tch->next_in_room) {}
+    if (tch && GET_POS(tch) > POS_DEAD)
+      send_to_char(ch, "You could not begin firing at that opponent.\r\n");
+  }
 }
 
 /* primarily useful for those with eldritch blast,

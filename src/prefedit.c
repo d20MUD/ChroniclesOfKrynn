@@ -121,14 +121,15 @@ static void prefedit_disp_main_menu(struct descriptor_data *d)
   vict = PREFEDIT_GET_CHAR;
 
   snprintf(
-      prompt_string, sizeof(prompt_string), "%s%s%s%s%s%s%s%s%s%s%s",
+      prompt_string, sizeof(prompt_string), "%s%s%s%s%s%s%s%s%s%s%s%s",
       PREFEDIT_FLAGGED(PRF_DISPHP) ? "H" : "", PREFEDIT_FLAGGED(PRF_DISPPSP) ? "M" : "",
       PREFEDIT_FLAGGED(PRF_DISPMOVE) ? "V" : "", PREFEDIT_FLAGGED(PRF_DISPEXP) ? " XP" : "",
       PREFEDIT_FLAGGED(PRF_DISPGOLD) ? " $$" : "", PREFEDIT_FLAGGED(PRF_DISPEXITS) ? " EX" : "",
       PREFEDIT_FLAGGED(PRF_DISPTIME) ? " Time" : "", PREFEDIT_FLAGGED(PRF_DISPROOM) ? " RM" : "",
       PREFEDIT_FLAGGED(PRF_DISPMEMTIME) ? " MT" : "",
       PREFEDIT_FLAGGED(PRF_DISPACTIONS) ? " AC" : "",
-      PREFEDIT_FLAGGED(PRF_SURVEY_ROOMS_PROMPT) ? " Survey" : "");
+      PREFEDIT_FLAGGED(PRF_SURVEY_ROOMS_PROMPT) ? " Survey" : "",
+      PREFEDIT_FLAGGED(PRF_DISPAMMO) ? " Ammo" : "");
 
   snprintf(color_string, sizeof(color_string), "%s",
            multi_types[(PREFEDIT_FLAGGED(PRF_COLOR_1) ? 1 : 0) +
@@ -603,20 +604,21 @@ static void prefedit_disp_toggles_menu(struct descriptor_data *d)
 static void prefedit_disp_prompt_menu(struct descriptor_data *d)
 {
   /* make sure to adjust this if you add more prompt togs */
-  char prompt_string[64] = {'\0'};
+  char prompt_string[96] = {'\0'};
 
   if (PREFEDIT_FLAGGED(PRF_DISPAUTO))
     snprintf(prompt_string, sizeof(prompt_string), "<Auto>");
   else
     snprintf(
-        prompt_string, sizeof(prompt_string), "%s%s%s%s%s%s%s%s%s%s%s",
+        prompt_string, sizeof(prompt_string), "%s%s%s%s%s%s%s%s%s%s%s%s",
         PREFEDIT_FLAGGED(PRF_DISPHP) ? "H" : "", PREFEDIT_FLAGGED(PRF_DISPPSP) ? "M" : "",
         PREFEDIT_FLAGGED(PRF_DISPMOVE) ? "V" : "", PREFEDIT_FLAGGED(PRF_DISPEXP) ? " XP" : "",
         PREFEDIT_FLAGGED(PRF_DISPGOLD) ? " $$" : "", PREFEDIT_FLAGGED(PRF_DISPEXITS) ? " EX" : "",
         PREFEDIT_FLAGGED(PRF_DISPTIME) ? " Time" : "", PREFEDIT_FLAGGED(PRF_DISPROOM) ? " RM" : "",
         PREFEDIT_FLAGGED(PRF_DISPMEMTIME) ? " MT" : "",
         PREFEDIT_FLAGGED(PRF_DISPACTIONS) ? " AC" : "",
-        PREFEDIT_FLAGGED(PRF_SURVEY_ROOMS_PROMPT) ? " Survey" : "");
+        PREFEDIT_FLAGGED(PRF_SURVEY_ROOMS_PROMPT) ? " Survey" : "",
+        PREFEDIT_FLAGGED(PRF_DISPAMMO) ? " Ammo" : "");
 
   send_to_char(d->character,
                "%sPrompt Settings\r\n"
@@ -632,6 +634,7 @@ static void prefedit_disp_prompt_menu(struct descriptor_data *d)
                "%s10%s) Toggle Gold\r\n"
                "%s11%s) Toggle Game Time\r\n"
                "%s12%s) Toggle Survey Rooms\r\n"
+               "13) Toggle Ammo/Thrown Count\r\n"
                "\r\n"
                "%sCurrent Prompt: %s%s%s\r\n\r\n"
                "%s0%s) Quit (to main menu)\r\n",
@@ -1347,7 +1350,7 @@ void prefedit_parse(struct descriptor_data *d, char *arg)
     /* Sub-menu's and flag toggle menu's */
   case PREFEDIT_PROMPT:
     number = atoi(arg);
-    if ((number < 0) || (number > 12))
+    if ((number < 0) || (number > 13))
     {
       send_to_char(d->character, "%sThat's not a valid choice!%s\r\n", CBRED(d->character, C_NRM),
                    CCNRM(d->character, C_NRM));
@@ -1444,6 +1447,8 @@ void prefedit_parse(struct descriptor_data *d, char *arg)
           else
             SET_BIT_AR(PREFEDIT_GET_FLAGS, PRF_SURVEY_ROOMS_PROMPT);
         }
+        else if (number == 13)
+          TOGGLE_BIT_AR(PREFEDIT_GET_FLAGS, PRF_DISPAMMO);
         prefedit_disp_prompt_menu(d);
       }
     }

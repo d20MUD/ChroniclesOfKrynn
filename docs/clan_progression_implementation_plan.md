@@ -1,6 +1,6 @@
 # Clan Progression Implementation Plan
 
-Status: Phases 1–27, including 4a–4c and 5a–5b, are complete as disabled foundations. Version-5 persistence and reward policy now include membership eligibility, retained-history lifecycle operations and atomic SQL creation/disbanding. Read-only progression commands and pure buff queries are implemented. Activation validation and atomic activation/replacement services are implemented behind disabled gates, with an explicit version-1 activation schema extension to core v5. Durable cancellation/expiration, runtime reconciliation and Company Vitality HP integration are complete behind disabled defaults. Prepared-caster Arcane Readiness timing and saved head-cycle snapshots are complete. Spontaneous slot recovery now shares the saved-cycle semantics. Psionic Focus now applies bounded fractional out-of-combat PSP recovery. Scholar's Encouragement now adjusts source-qualified NPC damage/kill character XP. Artisan's Guidance production checks and the initial five-family stacking audit are complete. Player-facing buff commands and the shared combat eligibility query are complete. Live kill contribution and successful supply-order turn-in hooks are implemented behind the existing disabled gates. Phase 28 delivery definitions are next. No game database migration, live award, deployment or progression enablement has occurred.
+Status: Phases 1–36, including 4a–4c and 5a–5b, are complete as disabled foundations. Version-5 persistence and reward policy now include membership eligibility, retained-history lifecycle operations and atomic SQL creation/disbanding. Read-only progression commands and pure buff queries are implemented. Activation validation and atomic activation/replacement services are implemented behind disabled gates, with an explicit version-1 activation schema extension to core v5. Durable cancellation/expiration, runtime reconciliation and Company Vitality HP integration are complete behind disabled defaults. Prepared-caster Arcane Readiness timing and saved head-cycle snapshots are complete. Spontaneous slot recovery now shares the saved-cycle semantics. Psionic Focus now applies bounded fractional out-of-combat PSP recovery. Scholar's Encouragement now adjusts source-qualified NPC damage/kill character XP. Artisan's Guidance production checks and the initial five-family stacking audit are complete. Player-facing buff commands and the shared combat eligibility query are complete. Live kill contribution and successful supply-order turn-in hooks are implemented behind the existing disabled gates. Phases 28–29 add validated delivery catalogs, accepted contracts, exact confirmation previews and recoverable material/finite-ammunition turn-ins behind disabled contracts gates. Phases 30–31 add durable fresh-gathering and contribution-qualified bounty progress, atomic personal completions and first-completion shared bounty receipts. Phases 32–33 add deterministic weekly contract rotation, retained expiry/reset handling and validated Stronghold Assault/Regional Hunt definitions with world-reference diagnostics. Phase 34 adds durable opt-in expedition enrollment, distinct-account rosters, immutable outing identity/deadlines and membership-change invalidation. Phases 35–36 add contribution-qualified expedition objectives, immutable completion entitlements and separate atomic shared/personal claims. Phase 37 broader outing reconciliation is next. No game database migration, live award, deployment or progression enablement has occurred.
 
 Design reference: [Clan Progression and Personal Favor](clan_progression_design.md).
 
@@ -515,3 +515,36 @@ A phase is complete only when its deliverable and acceptance check are satisfied
 - **Delivered:** successful supply-order turn-in hook after normal rewards/cooldown/order clearing, saved completion identity before SQL acceptance, retry/recovery and unchanged existing item-production and turn-in rules.
 - **Validation:** actual turn-in guard/reward/cooldown/duplicate tests, SQL personal source caps, saved-marker replay and failed-save integration tests.
 - **Handoff:** [Phases 26–27](clan_progression_phase_26_27_handoff.md). Next is Phase 28 delivery definitions. No live enablement or restart.
+
+### Phases 28–29 completion
+
+- **Implemented:** bounded delivery definitions and SQL-frozen acceptance, one delivery slot, account-wide distinct-definition limits, exact cap-aware previews, and recoverable goods/reward completion.
+- **Validation:** private MariaDB receipt/claim rollback and replay, actual game coordinator crash/refund recovery, compatible inventory headers and object codecs, existing award/source/lifecycle regressions, and Make/CMake builds.
+- **Handoff:** [Phases 28–29](clan_progression_phase_28_29_handoff.md). Next is Phase 30 gathering hooks. Defaults remain disabled; no live migration, enablement or restart.
+
+### Phases 30–31 completion
+
+- **Implemented:** frozen gathering/bounty definitions and independent family slots, authoritative base harvest and contribution-qualified kill hooks, saved occurrence recovery, account/event deduplication, exact remaining progress, atomic personal completions and bounded shared bounty claims.
+- **Validation:** private MariaDB transaction/crash/replay tests, live collector and saved-harvest adapters, actual harvest bonus/failure checks, ordinary source and delivery regressions, Make/CMake builds.
+- **Handoff:** [Phases 30–31](clan_progression_phase_30_31_handoff.md). Phase 32 rotation/reset behavior is next. Defaults remain disabled; no live migration, enablement or restart.
+
+
+### Phases 32–33 completion
+
+- **Implemented:** deterministic weekly server-catalog rotation with viable alternatives, explicit retained expiry, preserved pending operations and original-week claims; bounded Stronghold Assault/Regional Hunt definitions, strict quotas/alternatives/reward IDs/bands and indexed-world/reset validation with boot diagnostics.
+- **Validation:** ASan/UBSan definition/world/rotation tests, every character level across twelve weeks, private MariaDB exact-boundary reset/recovery and repeat-limit tests, actual source/command/checkpoint regressions, Make/CMake builds.
+- **Handoff:** [Phases 32–33](clan_progression_phase_32_33_handoff.md). Next is Phase 34 expedition enrollment. Defaults remain disabled; no live migration, enablement or restart.
+
+
+### Phase 34 completion
+
+- **Implemented:** gated expedition commands, durable opt-in rosters, two-account same-clan start, fixed outing identity/start/expiry, sealed-roster service and SQL protections, permanent departure/rejoin invalidation, and membership-preserving snapshot writes.
+- **Validation:** private MariaDB ASan/UBSan enrollment/command tests, concurrency/rollback/replay, roster/account/clan/level checks, exact expiry and deadline preservation, sealed SQL admission, snapshot preservation/rollback, existing solo-contract and definition regressions; Make/CMake builds.
+- **Handoff:** [Phase 34](clan_progression_phase_34_handoff.md). Next is Phase 35 combat objective tracking. Defaults remain disabled; no live migration, enablement or restart.
+
+
+### Phases 35–36 completion
+
+- **Implemented:** authoritative contribution-qualified objective events, atomic first-event roster sealing, bounded designated quotas, completion participation/final-objective checks, shared clan/week/family receipts and personal account/week/family Favor claims with durable entitlement proofs.
+- **Validation:** ASan/UBSan private SQL both-pattern scenarios, contribution roles/exclusions, replay/conflict and process crashes, final-completion rollback, half/final participation, concurrent alts, exact capped claims, lost acknowledgement and membership/reset recovery; actual collector/claim commands, prior enrollment/source/lifecycle regressions and Make/CMake builds.
+- **Handoff:** [Phases 35–36](clan_progression_phase_35_36_handoff.md). Next is Phase 37 broader outing reconciliation. Defaults remain disabled; no live migration, enablement or restart.

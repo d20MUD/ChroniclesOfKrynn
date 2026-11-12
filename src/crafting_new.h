@@ -397,6 +397,7 @@ void set_craft_level_adjust(struct char_data *ch, char *arg2);
 int craft_misc_spec_to_vnum(int s_type);
 int get_craft_wear_loc(struct char_data *ch);
 int recipe_skill_to_actual_crafting_skill(int recipe_skill);
+bool is_harvest_cancel_request(const char *argument);
 bool has_proper_harvesting_tool_equipped(struct char_data *ch);
 bool is_wearing_tool_for_crafting_ability(struct char_data *ch, int ability);
 bool is_crafting_skill_in_game(int skill);

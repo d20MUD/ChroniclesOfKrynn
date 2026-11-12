@@ -1,0 +1,7 @@
+{"version":1,"deliveries":[
+ {"id":"ash-shafts-v1","name":"Ash shaft supplies","kind":1,"resource":21,"grade":1,"quantity":50,"min_level":1,"min_enhancement":0},
+ {"id":"bronze-heads-v1","name":"Bronze head supplies","kind":1,"resource":3,"grade":2,"quantity":50,"min_level":1,"min_enhancement":0},
+ {"id":"arrows-v1","name":"Arrow reserves","kind":2,"resource":1,"grade":0,"quantity":100,"min_level":1,"min_enhancement":0},
+ {"id":"bolts-v1","name":"Bolt reserves","kind":2,"resource":2,"grade":0,"quantity":100,"min_level":1,"min_enhancement":0},
+ {"id":"enchanted-bullets-v1","name":"Enchanted bullet reserves","kind":2,"resource":3,"grade":0,"quantity":100,"min_level":6,"min_enhancement":1}
+]}

@@ -18,6 +18,7 @@
 #include "legendary_equipment.h"
 #include "structs.h"
 #include "clan_sources.h"
+#include "clan_expeditions.h"
 #include "utils.h"
 #include "db.h"
 #include "comm.h"
@@ -1171,6 +1172,7 @@ void boot_db(void)
   init_obj_rnum_hash();
 
   boot_world();
+  clan_expedition_boot_validate();
 
   log("Loading help entries.");
   index_boot(DB_BOOT_HLP);

@@ -8,6 +8,7 @@
 #include <time.h>
 #include "structs.h"
 #include "clan_sources.h"
+#include "clan_objective_runtime.h"
 #include "bool.h"
 #include "mysql.h"
 #include "utils.h"
@@ -5295,6 +5296,7 @@ static bool craft_has_pending_noncreate_project(struct char_data *ch)
 /* Ammunition batches are consumables: explicit recipes and bounded magical
  * properties, never copies of player-supplied objects or unlimited supplies. */
 #define CRAFT_AMMO_BATCH_SIZE 50
+#define AMMO_ENHANCEMENT_MOTE(ch) ((ch)->player_specials->saved.ammo_enhancement_mote)
 #define AMMO_SETTINGS(ch) ((ch)->player_specials->saved.ammo_craft_settings)
 struct ammo_craft_recipe
 {
@@ -5395,6 +5397,7 @@ struct ammo_craft_plan
   const struct ammo_craft_element *element;
   int slots[3], materials[3][2];
   int requested_enhancement, enhancement, quality_bonus, quality_points;
+  int enhancement_mote;
   int damage_die, level, dc, motes[NUM_CRAFT_MOTES];
 };
 
@@ -5455,6 +5458,9 @@ static bool ammo_material_valid(const struct ammo_craft_recipe *recipe, int slot
 static bool finish_ammo_plan(struct ammo_craft_plan *plan)
 {
   int i, j, grade_sum = 0;
+  if (plan->enhancement_mote < 0 || plan->enhancement_mote >= NUM_CRAFT_MOTES)
+    return FALSE;
+  if (!plan->enhancement_mote) plan->enhancement_mote = CRAFTING_MOTE_FIRE;
   memset(plan->materials, 0, sizeof(plan->materials));
   memset(plan->motes, 0, sizeof(plan->motes));
   plan->quality_points = 0;
@@ -5483,7 +5489,7 @@ static bool finish_ammo_plan(struct ammo_craft_plan *plan)
       get_level_adjustment_by_enhancement_bonus(MAX(0, plan->enhancement - plan->quality_bonus)) +
       plan->damage_die;
   if (plan->enhancement > plan->quality_bonus)
-    plan->motes[CRAFTING_MOTE_FIRE] +=
+    plan->motes[plan->enhancement_mote] +=
         MAX(1, craft_motes_required(0, 0, 0, plan->enhancement) -
                    (plan->quality_bonus ? craft_motes_required(0, 0, 0, plan->quality_bonus) : 0));
   if (plan->damage_die)
@@ -5547,6 +5553,15 @@ static bool plan_ammo_craft(const char *argument, struct ammo_craft_plan *plan)
   return finish_ammo_plan(plan);
 }
 
+/* The saved enhancement currency also applies to one-line recipe overrides. */
+static bool character_ammo_plan(struct char_data *ch, const char *argument,
+                                struct ammo_craft_plan *plan)
+{
+  if (!plan_ammo_craft(argument, plan)) return FALSE;
+  plan->enhancement_mote = AMMO_ENHANCEMENT_MOTE(ch);
+  return finish_ammo_plan(plan);
+}
+
 static bool saved_ammo_plan_for_recipe(struct char_data *ch, int recipe,
                                        struct ammo_craft_plan *plan)
 {
@@ -5563,7 +5578,7 @@ static bool saved_ammo_plan_for_recipe(struct char_data *ch, int recipe,
   if (!settings[5])
     snprintf(argument, sizeof(argument), "%s %d none", ammo_craft_recipes[recipe].name,
              settings[4]);
-  if (!plan_ammo_craft(argument, plan))
+  if (!character_ammo_plan(ch, argument, plan))
     return FALSE;
   for (i = 0; i < 3; i++)
     if (settings[i + 1])
@@ -5607,6 +5622,8 @@ static void show_ammo_plan(struct char_data *ch, const struct ammo_craft_plan *p
                plan->level, plan->dc);
   send_to_char(ch, "Material quality discount: %d; base DC floor 5, before magical upgrades.\r\n",
                plan->quality_points);
+  send_to_char(ch, "Enhancement mote: %s (bonus damage uses its matching mote).\r\n",
+               crafting_motes[plan->enhancement_mote]);
   for (i = 0; i < 3; i++)
     send_to_char(ch, "  Slot %d: %d %s (grade %d, DC -%d).\r\n", i + 1,
                  plan->recipe->materials[i][1], crafting_materials[plan->slots[i]],
@@ -5689,11 +5706,13 @@ static void refund_ammunition_costs(struct char_data *ch, const struct ammo_craf
 
 static bool load_ammunition_job(struct char_data *ch, struct ammo_craft_plan *plan)
 {
-  int saved[7], i;
+  int saved[7], i, saved_mote = AMMO_ENHANCEMENT_MOTE(ch);
   bool valid;
   memcpy(saved, AMMO_SETTINGS(ch), sizeof(saved));
   memcpy(AMMO_SETTINGS(ch), GET_CRAFT(ch).ammo_job, sizeof(saved));
+  AMMO_ENHANCEMENT_MOTE(ch) = GET_CRAFT(ch).ammo_job_enhancement_mote;
   valid = saved_ammo_plan(ch, plan);
+  AMMO_ENHANCEMENT_MOTE(ch) = saved_mote;
   memcpy(AMMO_SETTINGS(ch), saved, sizeof(saved));
   if (valid && GET_CRAFT(ch).ammo_job[7])
   {
@@ -5706,12 +5725,39 @@ static bool load_ammunition_job(struct char_data *ch, struct ammo_craft_plan *pl
   return valid;
 }
 
+/* Expertise upgrades successful work; natural failures remain failures. */
+static int ammo_expertise_chance(struct char_data *ch, int skill)
+{
+  switch (skill) {
+  case ABILITY_CRAFT_WOODWORKING: return get_talent_rank(ch, TALENT_WOODWORKING_EXPERTISE);
+  case ABILITY_CRAFT_WEAPONSMITHING: return get_talent_rank(ch, TALENT_WEAPONSMITHING_EXPERTISE);
+  default: return 0;
+  }
+}
+
+static void ammo_efficient_materials(struct char_data *ch, const struct ammo_craft_plan *plan,
+                                     bool critical_discount)
+{
+  int chance = get_efficient_talent_bonus(ch, plan->recipe->skill), i, total = 0;
+  if (chance <= 0) return;
+  for (i = 0; i < 3; i++) {
+    int paid = plan->materials[i][1], saved;
+    if (critical_discount) paid -= paid / 2;
+    if (paid < 2 || rand_number(1, 100) > chance) continue;
+    saved = paid / 2;
+    GET_CRAFT_MAT(ch, plan->materials[i][0]) += saved;
+    total += saved;
+  }
+  if (total) send_to_char(ch, "\tC*EFFICIENT*\tn You save %d unit%s of materials.\r\n",
+                          total, total == 1 ? "" : "s");
+}
+
 static void craft_ammunition_complete(struct char_data *ch)
 {
   struct ammo_craft_plan plan;
   struct obj_data *obj;
   int old_type, natural_roll = 0;
-  bool success, making_kit = GET_CRAFT(ch).ammo_job[7] != 0;
+  bool success, critical, making_kit = GET_CRAFT(ch).ammo_job[7] != 0;
   if (GET_CRAFT(ch).crafting_method != SCMD_NEWCRAFT_AMMO ||
       GET_CRAFT(ch).craft_duration > 0)
     return;
@@ -5719,6 +5765,7 @@ static void craft_ammunition_complete(struct char_data *ch)
   GET_CRAFT(ch).craft_duration = 0;
   GET_CRAFT(ch).crafting_method = 0;
   memset(GET_CRAFT(ch).ammo_job, 0, sizeof(GET_CRAFT(ch).ammo_job));
+  GET_CRAFT(ch).ammo_job_enhancement_mote = 0;
   if (!valid)
   {
     send_to_char(ch, "The ammunition project is invalid and has been cancelled.\r\n");
@@ -5741,7 +5788,16 @@ static void craft_ammunition_complete(struct char_data *ch)
                                      CREATE_BASE_EXP / 5, plan.dc, &natural_roll);
   GET_CRAFT(ch).crafting_item_type = old_type;
   WAIT_STATE(ch, PULSE_VIOLENCE);
-  if (!making_kit && ((!success && natural_roll != 1) || (success && natural_roll == 20)))
+  critical = success && natural_roll == 20;
+  if (success && !critical) {
+    int chance = ammo_expertise_chance(ch, plan.recipe->skill);
+    if (chance > 0 && rand_number(1, 100) <= chance) {
+      critical = TRUE;
+      SET_BIT_AR(GET_OBJ_EXTRA(obj), ITEM_MASTERWORK);
+      send_to_char(ch, "\tM[EXPERTISE]\tn Your crafting expertise turns this success into a critical success!\r\n");
+    }
+  }
+  if (!making_kit && ((!success && natural_roll != 1) || critical))
   {
     /* Costs were reserved at start. Restore all on an ordinary failure;
      * on a natural 20 retain ceil(cost/2), after combining duplicate slots. */
@@ -5757,6 +5813,7 @@ static void craft_ammunition_complete(struct char_data *ch)
   }
   if (success)
   {
+    ammo_efficient_materials(ch, &plan, critical && !making_kit);
     gain_craft_exp(ch, MAX(1, CREATE_BASE_EXP / 5) * plan.level, plan.recipe->skill, TRUE);
     obj_to_char(obj, ch);
     send_to_char(ch, "You've crafted %s.\r\n", object_short_description(obj));
@@ -5797,6 +5854,7 @@ static void craft_ammunition(struct char_data *ch, const char *argument)
       GET_CRAFT(ch).craft_duration = 0;
       GET_CRAFT(ch).crafting_method = 0;
       memset(GET_CRAFT(ch).ammo_job, 0, sizeof(GET_CRAFT(ch).ammo_job));
+      GET_CRAFT(ch).ammo_job_enhancement_mote = 0;
       send_to_char(ch, "You cancel the batch. All reserved materials and motes were returned.\r\n");
       save_char(ch, 0);
     }
@@ -5814,6 +5872,7 @@ static void craft_ammunition(struct char_data *ch, const char *argument)
         "  Slot 2: metal heads/cores (hard metal for throwing weapons). Slot 3: cloth binding.\r\n"
         "\r\n"
         "  craft ammo enhancement <0-8>\r\n"
+        "  craft ammo mote <air|dark|earth|fire|ice|light|lightning|water>\r\n"
         "  craft ammo damage <none|fire|cold|acid|electricity|sonic> [4|6|8|10|12]\r\n"
         "  craft ammo show | cost | begin | reset | cancel\r\n"
         "  craft ammo <type>: craft that type with saved settings; cost <type> previews it.\r\n"
@@ -5830,6 +5889,7 @@ static void craft_ammunition(struct char_data *ch, const char *argument)
   if (!str_cmp(command, "reset") && !*rest)
   {
     memset(AMMO_SETTINGS(ch), 0, sizeof(ch->player_specials->saved.ammo_craft_settings));
+    AMMO_ENHANCEMENT_MOTE(ch) = 0;
     save_char(ch, 0);
     send_to_char(ch, "Ammo settings reset.\r\n");
     return;
@@ -5857,6 +5917,16 @@ static void craft_ammunition(struct char_data *ch, const char *argument)
       return;
     }
     AMMO_SETTINGS(ch)[slot] = index;
+    goto changed;
+  }
+  if (!str_cmp(command, "mote"))
+  {
+    static const char *names[NUM_CRAFT_MOTES] = {
+      "none", "air", "dark", "earth", "fire", "ice", "light", "lightning", "water"};
+    for (index = 1; index < NUM_CRAFT_MOTES; index++)
+      if (!str_cmp(rest, names[index])) break;
+    if (index == NUM_CRAFT_MOTES) goto invalid;
+    AMMO_ENHANCEMENT_MOTE(ch) = index;
     goto changed;
   }
   if (!str_cmp(command, "enhancement"))
@@ -5902,7 +5972,7 @@ static void craft_ammunition(struct char_data *ch, const char *argument)
       if (!saved_ammo_plan_for_recipe(ch, index, &plan))
         goto invalid;
     }
-    else if (!plan_ammo_craft(rest, &plan))
+    else if (!character_ammo_plan(ch, rest, &plan))
       goto invalid;
     show_ammo_plan(ch, &plan);
     return;
@@ -5929,7 +5999,7 @@ static void craft_ammunition(struct char_data *ch, const char *argument)
     if (!saved_ammo_plan_for_recipe(ch, index, &plan))
       goto invalid;
   }
-  else if (!plan_ammo_craft(argument, &plan))
+  else if (!character_ammo_plan(ch, argument, &plan))
     goto invalid;
   if (ch->trade || FIGHTING(ch) || GET_POS(ch) < POS_RESTING || player_has_supply_order(ch) ||
       GET_CRAFT(ch).crafting_item_type != CRAFT_TYPE_NONE || GET_CRAFT(ch).craft_duration > 0 ||
@@ -6001,6 +6071,7 @@ static void craft_ammunition(struct char_data *ch, const char *argument)
   GET_CRAFT(ch).ammo_job[5] = plan.element - ammo_craft_elements;
   GET_CRAFT(ch).ammo_job[6] = plan.damage_die;
   GET_CRAFT(ch).ammo_job[7] = making_kit;
+  GET_CRAFT(ch).ammo_job_enhancement_mote = plan.enhancement_mote;
   GET_CRAFT(ch).craft_duration = MAX(1, CREATE_BASE_TIME -
       get_rapid_talent_bonus(ch, plan.recipe->skill));
   if (artificer_efficient_crafter_applies(ch))
@@ -7128,6 +7199,9 @@ void harvest_complete(struct char_data *ch)
   bool motes_found = FALSE;
   int num_motes, mote_type, bonus_motes, synergy_talent, synergy_rank;
   int prof_bonus = 0;
+  struct clan_objective_event clan_harvest={0};
+
+  if (!clan_objective_harvest_begin(ch,world[IN_ROOM(ch)].harvest_material,&clan_harvest)) return;
 
   if (world[IN_ROOM(ch)].harvest_material == CRAFT_MAT_NONE ||
       world[IN_ROOM(ch)].harvest_material_amount <= 0)
@@ -7381,8 +7455,24 @@ void harvest_complete(struct char_data *ch)
 
     GET_CRAFT(ch).craft_duration = 0;
     GET_CRAFT(ch).crafting_method = 0;
+    clan_objective_harvest_finish(ch,&clan_harvest,amount);
     act("$n finishes harvesting.", FALSE, ch, 0, 0, TO_ROOM);
   }
+}
+
+bool is_harvest_cancel_request(const char *argument)
+{
+  const char *end;
+  size_t length;
+  if (!argument) return FALSE;
+  while (isspace((unsigned char)*argument)) argument++;
+  end = argument;
+  while (*end && !isspace((unsigned char)*end)) end++;
+  length = end - argument;
+  if (!((length == 6 && !strncasecmp(argument, "cancel", length)) ||
+        (length == 4 && !strncasecmp(argument, "stop", length)))) return FALSE;
+  while (isspace((unsigned char)*end)) end++;
+  return !*end;
 }
 
 void newcraft_harvest(struct char_data *ch, const char *argument)
@@ -7391,10 +7481,26 @@ void newcraft_harvest(struct char_data *ch, const char *argument)
   int harvest_skill = 0;
   int rapid_reduction = 0;
 
+  if (is_harvest_cancel_request(argument))
+  {
+    if (GET_CRAFT(ch).crafting_method != SCMD_NEWCRAFT_HARVEST) {
+      send_to_char(ch, "You are not harvesting.\r\n");
+      return;
+    }
+    GET_CRAFT(ch).craft_duration = 0;
+    GET_CRAFT(ch).crafting_method = 0;
+    send_to_char(ch, "You stop harvesting.\r\n");
+    act("$n stops harvesting.", FALSE, ch, 0, 0, TO_ROOM);
+    save_char(ch, 0);
+    return;
+  }
+
+  if (!clan_objective_harvest_ready(ch)) return;
+
   if (GET_CRAFT(ch).craft_duration > 0)
   {
     send_to_char(ch, "You cannot harvest until you complete your current task. To cancel, type "
-                     "'cancel craft'.\r\n");
+                     "'harvest cancel'.\r\n");
     return;
   }
 

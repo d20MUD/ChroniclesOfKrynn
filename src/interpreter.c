@@ -56,6 +56,8 @@
 #include "mud_event.h"
 #include "race.h"
 #include "clan.h"
+#include "clan_delivery_runtime.h"
+#include "clan_objective_runtime.h"
 #include "craft.h"
 #include "treasure.h"
 #include "feats.h"
@@ -5592,6 +5594,8 @@ void command_interpreter(struct char_data *ch, char *argument)
       !legendary_earnings_recover(ch))
     return;
 
+  if (!clan_delivery_recover(ch)) return;
+
   legendary_foundations_refresh(ch);
 
   /* just drop to next line for hitting CR */
@@ -5849,7 +5853,10 @@ void command_interpreter(struct char_data *ch, char *argument)
                      "removes hidden status)\r\n");
   }
 #if defined(CAMPAIGN_DL) || defined(CAMPAIGN_FR)
-  else if (GET_CRAFT(ch).craft_duration > 0 && !is_abbrev(complete_cmd_info[cmd].command, "look") &&
+  else if (GET_CRAFT(ch).craft_duration > 0 &&
+           !(complete_cmd_info[cmd].command_pointer == do_newcraft &&
+             complete_cmd_info[cmd].subcmd == SCMD_NEWCRAFT_HARVEST && is_harvest_cancel_request(line)) &&
+           !is_abbrev(complete_cmd_info[cmd].command, "look") &&
            !is_abbrev(complete_cmd_info[cmd].command, "group") &&
            !is_abbrev(complete_cmd_info[cmd].command, "affects") &&
            !is_abbrev(complete_cmd_info[cmd].command, "gtell") &&
@@ -5975,6 +5982,8 @@ void command_interpreter(struct char_data *ch, char *argument)
       //      send_to_char(ch, "You need to wait longer before you are able to do that.\r\n");
     }
   else if (!IS_NPC(ch) &&
+           !(complete_cmd_info[cmd].command_pointer == do_newcraft &&
+             complete_cmd_info[cmd].subcmd == SCMD_NEWCRAFT_HARVEST && is_harvest_cancel_request(line)) &&
            !(complete_cmd_info[cmd].command_pointer == do_gen_cast &&
              complete_cmd_info[cmd].subcmd == SCMD_CAST_SPELL && is_aurak_energy_ray_cast(line)) &&
            ((IS_SET(complete_cmd_info[cmd].actions_required, ACTION_STANDARD) &&
@@ -6762,6 +6771,8 @@ int enter_player_game(struct descriptor_data *d)
     STATE(d) = CON_CLOSE;
     return 3;
   }
+  clan_objective_flush(d->character);
+  clan_delivery_recover(d->character);
   estate_recover(d->character);
   auction_house_collect(d->character);
 
