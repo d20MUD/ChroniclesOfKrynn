@@ -17,7 +17,7 @@ static void rejected(struct clan_progression_config *c, enum clan_progression_co
 
 static void defaults(void)
 {
-  const struct clan_progression_config *c = &clan_progression_defaults;
+  const struct clan_progression_config *c = &clan_progression_v1;
   const char *reason = "must be cleared";
   int level;
   assert(clan_progression_config_validate(c, &reason) == CLAN_CONFIG_OK && !reason);
@@ -57,7 +57,7 @@ static void identities_and_units(void)
 {
   int64_t units = -7;
   char nonterminated[CLAN_PROGRESSION_UID_SIZE];
-  struct clan_progression_config c = clan_progression_defaults;
+  struct clan_progression_config c = clan_progression_v1;
   assert(clan_progression_uid_valid(uid_a));
   assert(!clan_progression_uid_valid(NULL));
   assert(!clan_progression_uid_valid(""));
@@ -75,7 +75,7 @@ static void identities_and_units(void)
   assert(clan_progression_points_to_eighths(INT64_MAX / 8, &units) && units == (INT64_MAX / 8) * 8);
   c.controls.pilot_count = CLAN_PROGRESSION_MAX_PILOT_CLANS + 1;
   rejected(&c, CLAN_CONFIG_IDENTITY);
-  c = clan_progression_defaults; c.controls.pilot_count = 1;
+  c = clan_progression_v1; c.controls.pilot_count = 1;
   memcpy(c.controls.pilot_clans[0], nonterminated, sizeof(nonterminated));
   rejected(&c, CLAN_CONFIG_IDENTITY);
   strcpy(c.controls.pilot_clans[0], uid_a);
@@ -88,7 +88,7 @@ static void invalid_configuration(void)
   struct clan_progression_config c;
   const char *reason = NULL;
   assert(clan_progression_config_validate(NULL, &reason) == CLAN_CONFIG_MISSING && reason);
-#define BAD(change, error) do { c = clan_progression_defaults; change; rejected(&c, error); } while (0)
+#define BAD(change, error) do { c = clan_progression_v1; change; rejected(&c, error); } while (0)
   BAD(c.rules_version++, CLAN_CONFIG_VERSION);
   BAD(c.schema_version++, CLAN_CONFIG_VERSION);
   BAD(c.controls.store_mode = (enum clan_store_mode)-1, CLAN_CONFIG_CONTROLS);
@@ -156,7 +156,7 @@ static void invalid_configuration(void)
 
 static void release_gates(void)
 {
-  struct clan_progression_config c = clan_progression_defaults;
+  struct clan_progression_config c = clan_progression_v1;
   struct clan_progression_readiness ready = {true, true, true, true, CLAN_PROGRESSION_SCHEMA_VERSION};
   bool supported = clan_progression_campaign_supported();
   int feature;
@@ -204,7 +204,7 @@ static void release_gates(void)
 
 static void lookup_order(void)
 {
-  struct clan_progression_config c = clan_progression_defaults;
+  struct clan_progression_config c = clan_progression_v1;
   struct clan_buff_definition buff = c.buffs[0];
   struct clan_reward_definition reward = c.rewards[0];
   c.buffs[0] = c.buffs[4]; c.buffs[4] = buff;

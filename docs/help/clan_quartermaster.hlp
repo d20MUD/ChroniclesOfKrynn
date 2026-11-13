@@ -1,0 +1,24 @@
+CLAN QUARTERMASTER
+
+  clan quartermaster list
+  clan quartermaster buy <name>
+  clan quartermaster commission <name>
+  clan quartermaster confirm
+
+Choose an item by its displayed name or a unique part of it. For example:
+  clan quartermaster buy Abanasinia field map
+  clan quartermaster confirm
+
+Visit a quartermaster outside combat and timed crafting, with enough gold
+and room to carry the item. Buy and commission preview the price. Confirm
+within 60 seconds to accept that preview. A changed price or expired preview
+requires a new preview. Repeating confirmation never buys another copy.
+
+The list shows gold prices, character and clan levels, and required Favor.
+Favor unlocks the purchase and is never spent. Purchases bind to your
+character and have no resale value. Ordinary class, alignment, proficiency
+and level restrictions still apply. Leaving the clan does not remove gear.
+
+Accepted purchases recover automatically after reconnecting. Unconfirmed
+previews are lost on reconnect. If recovery remains pending, contact staff.
+#0

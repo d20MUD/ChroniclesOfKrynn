@@ -1,6 +1,6 @@
 # Clan Progression Implementation Plan
 
-Status: Phases 1–36, including 4a–4c and 5a–5b, are complete as disabled foundations. Version-5 persistence and reward policy now include membership eligibility, retained-history lifecycle operations and atomic SQL creation/disbanding. Read-only progression commands and pure buff queries are implemented. Activation validation and atomic activation/replacement services are implemented behind disabled gates, with an explicit version-1 activation schema extension to core v5. Durable cancellation/expiration, runtime reconciliation and Company Vitality HP integration are complete behind disabled defaults. Prepared-caster Arcane Readiness timing and saved head-cycle snapshots are complete. Spontaneous slot recovery now shares the saved-cycle semantics. Psionic Focus now applies bounded fractional out-of-combat PSP recovery. Scholar's Encouragement now adjusts source-qualified NPC damage/kill character XP. Artisan's Guidance production checks and the initial five-family stacking audit are complete. Player-facing buff commands and the shared combat eligibility query are complete. Live kill contribution and successful supply-order turn-in hooks are implemented behind the existing disabled gates. Phases 28–29 add validated delivery catalogs, accepted contracts, exact confirmation previews and recoverable material/finite-ammunition turn-ins behind disabled contracts gates. Phases 30–31 add durable fresh-gathering and contribution-qualified bounty progress, atomic personal completions and first-completion shared bounty receipts. Phases 32–33 add deterministic weekly contract rotation, retained expiry/reset handling and validated Stronghold Assault/Regional Hunt definitions with world-reference diagnostics. Phase 34 adds durable opt-in expedition enrollment, distinct-account rosters, immutable outing identity/deadlines and membership-change invalidation. Phases 35–36 add contribution-qualified expedition objectives, immutable completion entitlements and separate atomic shared/personal claims. Phase 37 broader outing reconciliation is next. No game database migration, live award, deployment or progression enablement has occurred.
+Status: Phases 1–50, including 4a–4c and 5a–5b, are complete as disabled foundations. Version-5 persistence and reward policy now include membership eligibility, retained-history lifecycle operations and atomic SQL creation/disbanding. Read-only progression commands and pure buff queries are implemented. Activation validation and atomic activation/replacement services are implemented behind disabled gates, with an explicit version-1 activation schema extension to core v5. Durable cancellation/expiration, runtime reconciliation and Company Vitality HP integration are complete behind disabled defaults. Prepared-caster Arcane Readiness timing and saved head-cycle snapshots are complete. Spontaneous slot recovery now shares the saved-cycle semantics. Psionic Focus now applies bounded fractional out-of-combat PSP recovery. Scholar's Encouragement now adjusts source-qualified NPC damage/kill character XP. Artisan's Guidance production checks and the initial five-family stacking audit are complete. Player-facing buff commands and the shared combat eligibility query are complete. Live kill contribution and successful supply-order turn-in hooks are implemented behind the existing disabled gates. Phases 28–29 add validated delivery catalogs, accepted contracts, exact confirmation previews and recoverable material/finite-ammunition turn-ins behind disabled contracts gates. Phases 30–31 add durable fresh-gathering and contribution-qualified bounty progress, atomic personal completions and first-completion shared bounty receipts. Phases 32–33 add deterministic weekly contract rotation, retained expiry/reset handling and validated Stronghold Assault/Regional Hunt definitions with world-reference diagnostics. Phase 34 adds durable opt-in expedition enrollment, distinct-account rosters, immutable outing identity/deadlines and membership-change invalidation. Phases 35–36 add contribution-qualified expedition objectives, immutable completion entitlements and separate atomic shared/personal claims. Phases 37–38 add bounded restart/reconnect reconciliation, retained-proof validation, and a world-audited ten-choice expedition roster for levels 5–30. Phases 39–41 add a budget-validated quartermaster catalog, fixed-price gold confirmations, recoverable bound-item purchases and departure/access verification. Phases 42–45 add a bounded private MSDP read model, Krynn gateway subscriptions and a responsive clan panel with receipt-backed buff controls. Phases 46–47 add saved contract/expedition progress, live quartermaster eligibility, fixed command actions and matching help/operator documentation. Phases 48–49 add integrated lifecycle and progression acceptance, including exact HP/cooldown/charge checks, two-account/alt caps, low-level mixed-role expeditions and interrupted claim recovery. Phase 50 passes migration/recovery rehearsal and the full clan/server/web validation. The staffed pilot is waived; Phase 51 now uses approved mathematical pacing implemented as rules 2/core v6, with long rank ladders and independent pacing percentages; Phase 52 has a review candidate and checklist, not deployment approval. No game database migration, live award, deployment or progression enablement has occurred.
 
 Design reference: [Clan Progression and Personal Favor](clan_progression_design.md).
 
@@ -548,3 +548,77 @@ A phase is complete only when its deliverable and acceptance check are satisfied
 - **Implemented:** authoritative contribution-qualified objective events, atomic first-event roster sealing, bounded designated quotas, completion participation/final-objective checks, shared clan/week/family receipts and personal account/week/family Favor claims with durable entitlement proofs.
 - **Validation:** ASan/UBSan private SQL both-pattern scenarios, contribution roles/exclusions, replay/conflict and process crashes, final-completion rollback, half/final participation, concurrent alts, exact capped claims, lost acknowledgement and membership/reset recovery; actual collector/claim commands, prior enrollment/source/lifecycle regressions and Make/CMake builds.
 - **Handoff:** [Phases 35–36](clan_progression_phase_35_36_handoff.md). Next is Phase 37 broader outing reconciliation. Defaults remain disabled; no live migration, enablement or restart.
+
+
+### Phases 37–38 completion
+
+- **Implemented:** bounded startup/heartbeat and reconnect reconciliation, separately committed expiry, retained ledger/proof audits, membership invalidation without identity replacement, and prepared reward recovery. Ten curated choices cover both expedition families in five character bands from levels 5–30, available at clan level 1; live alternatives and target/area names appear in commands.
+- **Validation:** private MariaDB fresh-process recovery, expiry crash boundaries, disabled-feature upkeep, corruption/partial-proof refusal, retained claims and membership transitions; real world/reset/route audit, live-world adapter sanitizer tests, existing enrollment/combat/claim regressions and server builds.
+- **Handoff:** [Phases 37–38](clan_progression_phase_37_38_handoff.md). Defaults remain disabled; no live migration, enablement or restart. Gameplay timing remains subject to staging party playtests.
+
+
+### Phases 39–41 completion
+
+- **Implemented:** seven existing-template catalog entries with explicit power budgets, coverage, prices and level/Favor gates; exact 60-second confirmation quotes; immutable SQL purchase journal, independent durable gold/item checkpoints and idempotent recovery; normal character binding with zero resale value and continued use after departure.
+- **Validation:** indexed item budgets, strict malformed catalog rejection, private MariaDB acquisition gates/rollback/concurrency/replay/schema retention, production coordinator crash/uncertain-save recovery, departure delivery/access, quote expiry/change, file/SQL object codec round-trips, inventory-header compatibility, delivery recovery and Make/CMake builds.
+- **Handoff:** [Phases 39–41](clan_progression_phase_39_40_41_handoff.md). Next is Phase 42 server read model/MSDP. Defaults remain disabled; optional schema/help SQL was not applied to the game database.
+
+
+### Phases 42–45 completion
+
+- **Implemented:** consistent bounded private `CLAN_PROGRESS` reports, initial/periodic/late-subscriber refresh and identity/storage clearing; Krynn-only gateway normalization/reconnect/copyover subscriptions; compact exact-currency clan/Favor/unlock panel; saved buff/cooldown displays and permission/lock-aware reviewed activation/replacement/cancellation through existing receipt-backed commands.
+- **Validation:** private MariaDB and sanitizer report/command tests, native initial/periodic/account-menu privacy checks, production C wire frame through fragmented gateway parsing, 127 browser/gateway regression tests including escaping/staleness/double-click/reconnect retry, TypeScript/Vite/ESLint, Make/CMake.
+- **Handoff:** [Phases 42–45](clan_progression_phase_42_45_handoff.md). Next is Phase 46 contract/expedition/quartermaster panels. Defaults remain disabled; neither repository was deployed or restarted.
+
+
+### Phases 46–47 — service panels and documentation
+
+- **Status:** complete as disabled foundations.
+- **Delivered:** private read-only contract, expedition and quartermaster snapshots; live eligibility and server preview enrichment after SQL release; bounded optional extension parsing; collapsible service panels; existing-command actions and identity-preserving confirmations; actual buff categories.
+- **Documentation:** player help and repeatable SQL help publication, actual cooldown/cost/category/currency/reset rules, operator authority/configuration/schema/recovery notes and reproducible workflows.
+- **Validation:** production SQL/runtime fixture tests, native builds and client parser/command/render regressions. See the handoff for scope and commands.
+- **Handoff:** [Phases 46–47](clan_progression_phase_46_47_handoff.md). Next is Phase 48 integrated buff lifecycle acceptance. Defaults remain disabled; no production changes were made.
+
+
+### Phases 48–49 — integrated acceptance
+
+- **Status:** complete as isolated acceptance; feature defaults remain disabled.
+- **Phase 48:** a shared SQL lifecycle scenario verifies activation/replacement, immutable receipt replay, expiry, tier/slot/officer lockout, exact cooldown edges, departure/rejoin, fresh-process login/copyover restoration, cancellation, disable/re-enable and no HP healing/compounding. Final Influence matches only successful purchases.
+- **Phase 49:** production services verify two accounts, alts, low/high/max-level contributors, exact account/source/Favor caps, duplicate events, a real level-five damage/healing expedition, separate shared/personal claims, process exits before/after COMMIT, no gold/legacy-points standing bypass and authoritative private readouts.
+- **Validation:** new ASan/UBSan integrated driver plus existing lifecycle, expedition progress/recovery, quartermaster, live-source, delivery, gathering/bounty, Scholar, preparation, psionic and Artisan regressions. Only test-adapter refinements were needed; no production balance or policy fix was indicated by these checks.
+- **Handoff:** [Phases 48–49](clan_progression_phase_48_49_handoff.md). Next is Phase 50 staging migration/rollback rehearsal and the relevant full suites. Live party timing, controlled live copyover and pilot observations remain staging/pilot work; no production enablement occurred.
+
+
+### Phases 50–52 — staging validation and release preparation
+
+- **Phase 50: complete.** All 39 clan suites, 130 client/gateway tests, CMake and Make server builds, TypeScript/Vite build and lint pass (one existing App.tsx hook warning). Real dev schema-v2 data migrates without loss to v5 plus all optional schemas in an isolated clone. Post-cutover all-table restore and coherent SQL/player/inventory checkpoint recovery pass. Unavailable storage, legacy fallback refusal, feature disable and retained receipts/timers are covered.
+- **Phase 51: pilot waived; analytical pacing approved and implemented.** The initial Favor and lifetime-Influence ladders use the approved long model. Separate pacing percentages make later shortening straightforward. The model is not a claim of measured gameplay; remaining release gates stay in the release checklist.
+- **Phase 52: candidate/checklist prepared; not approved or deployed.** The local package includes exact source/artifact hashes, both worktree identities, SQL/catalog/help inputs and passing validation. The checklist covers backups, migration/cutover, cold restart versus copyover, gateway/browser pairing, trusted controls, monitoring and post-cutover rollback. Pilot evidence, an operational trusted policy bootstrap, a concrete target/window and operator approval remain prerequisites to production release.
+- **Handoff:** [Phases 50–52](clan_progression_phase_50_52_handoff.md), [pilot review](clan_progression_pilot_review.md), [release checklist](clan_progression_release_checklist.md). Defaults remain disabled. Development testing authorization was used for read-only port/SQL checks and isolated snapshot migration; neither dev nor production was migrated or enabled.
+
+
+### Mathematical pacing revision — pilot waived
+
+The user waived a staffed pilot and specified 30-second fights, rest after ten
+fights for five minutes, and at least equal additional AFK time. The replacement
+[computed pacing proposal](clan_progression_pacing.md) uses the actual 250%
+character XP requirement setting, native-verified same-level kill awards and
+30 fights per logged hour. It supplies full CSV/JSON comparisons, six Favor and
+twenty lifetime-Influence rank proposals, lower per-kill point units and tunable
+time multipliers. Favor targets 2x the matching character milestone effort;
+clan ranks target at least 10x for three equal contributors. Caps, noncombat rewards, buff prices and lifetime accounting were recalibrated
+together in the approved rules-2 implementation below. The earlier
+release candidate remains an archived, unapproved pre-revision snapshot.
+
+
+### Approved pacing implementation (rules 2 / core v6)
+
+The user approved the computed tables. Implemented Favor thresholds are
+0/229/876/1596/2316/3036; clan ranks use the twenty approved lifetime-Influence
+thresholds ending at 22764. A full qualifying kill grants 0.250 Favor and 0.125
+Influence. Rewards/caps/prices use the smaller point scale. Rank progress reuses
+the non-spendable historical XP storage field; spending Influence cannot lower
+rank. `src/clan_pacing.h` exposes independent percentages to shorten either
+ladder later. See the pacing report for conservative reductions, all-source
+limitations, exact tuning instructions and the unused-economy migration gate.
+The previous release archive is stale; rebuilding this source does not deploy it.

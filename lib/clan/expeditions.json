@@ -2,12 +2,338 @@
   "version": 1,
   "expeditions": [
     {
-      "id": "icewall-assault-v1",
+      "id": "smugglers-assault-v1",
+      "name": "Stronghold Assault: Draconian smugglers",
+      "family": 1,
+      "min_clan_level": 1,
+      "min_player_level": 5,
+      "max_player_level": 10,
+      "shared_reward_id": "stronghold-shared-v1",
+      "personal_reward_id": "stronghold-personal-v1",
+      "objectives": [
+        {
+          "quota": 20,
+          "targets": [
+            {
+              "area": 210,
+              "mob": 21007
+            },
+            {
+              "area": 210,
+              "mob": 21015
+            },
+            {
+              "area": 210,
+              "mob": 21011
+            },
+            {
+              "area": 210,
+              "mob": 21013
+            }
+          ]
+        },
+        {
+          "quota": 1,
+          "targets": [
+            {
+              "area": 210,
+              "mob": 21004
+            },
+            {
+              "area": 210,
+              "mob": 21009
+            }
+          ]
+        },
+        {
+          "quota": 1,
+          "targets": [
+            {
+              "area": 210,
+              "mob": 21017
+            },
+            {
+              "area": 210,
+              "mob": 21019
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sewers-hunt-v1",
+      "name": "Regional Hunt: Sanction sewers and patrols",
+      "family": 2,
+      "min_clan_level": 1,
+      "min_player_level": 5,
+      "max_player_level": 10,
+      "shared_reward_id": "hunt-shared-v1",
+      "personal_reward_id": "hunt-personal-v1",
+      "objectives": [
+        {
+          "quota": 10,
+          "targets": [
+            {
+              "area": 37,
+              "mob": 3705
+            },
+            {
+              "area": 37,
+              "mob": 3708
+            }
+          ]
+        },
+        {
+          "quota": 10,
+          "targets": [
+            {
+              "area": 37,
+              "mob": 3709
+            },
+            {
+              "area": 37,
+              "mob": 3710
+            }
+          ]
+        },
+        {
+          "quota": 10,
+          "targets": [
+            {
+              "area": 65,
+              "mob": 6518
+            },
+            {
+              "area": 65,
+              "mob": 6530
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "eld-assault-v1",
+      "name": "Stronghold Assault: Eld Manor",
+      "family": 1,
+      "min_clan_level": 1,
+      "min_player_level": 11,
+      "max_player_level": 16,
+      "shared_reward_id": "stronghold-shared-v1",
+      "personal_reward_id": "stronghold-personal-v1",
+      "objectives": [
+        {
+          "quota": 20,
+          "targets": [
+            {
+              "area": 31,
+              "mob": 3102
+            },
+            {
+              "area": 31,
+              "mob": 3103
+            },
+            {
+              "area": 31,
+              "mob": 3108
+            },
+            {
+              "area": 31,
+              "mob": 3110
+            },
+            {
+              "area": 31,
+              "mob": 3111
+            }
+          ]
+        },
+        {
+          "quota": 1,
+          "targets": [
+            {
+              "area": 31,
+              "mob": 3104
+            },
+            {
+              "area": 31,
+              "mob": 3105
+            }
+          ]
+        },
+        {
+          "quota": 1,
+          "targets": [
+            {
+              "area": 31,
+              "mob": 3107
+            },
+            {
+              "area": 31,
+              "mob": 3109
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "eld-hunt-v1",
+      "name": "Regional Hunt: Eld spirits and Darken Wood",
+      "family": 2,
+      "min_clan_level": 1,
+      "min_player_level": 11,
+      "max_player_level": 16,
+      "shared_reward_id": "hunt-shared-v1",
+      "personal_reward_id": "hunt-personal-v1",
+      "objectives": [
+        {
+          "quota": 10,
+          "targets": [
+            {
+              "area": 31,
+              "mob": 3102
+            },
+            {
+              "area": 31,
+              "mob": 3103
+            }
+          ]
+        },
+        {
+          "quota": 10,
+          "targets": [
+            {
+              "area": 31,
+              "mob": 3107
+            },
+            {
+              "area": 31,
+              "mob": 3109
+            }
+          ]
+        },
+        {
+          "quota": 10,
+          "targets": [
+            {
+              "area": 3,
+              "mob": 308
+            },
+            {
+              "area": 3,
+              "mob": 321
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "valley-assault-v1",
+      "name": "Stronghold Assault: Pristine Valley invaders",
+      "family": 1,
+      "min_clan_level": 1,
+      "min_player_level": 17,
+      "max_player_level": 22,
+      "shared_reward_id": "stronghold-shared-v1",
+      "personal_reward_id": "stronghold-personal-v1",
+      "objectives": [
+        {
+          "quota": 20,
+          "targets": [
+            {
+              "area": 135,
+              "mob": 13538
+            },
+            {
+              "area": 135,
+              "mob": 13539
+            }
+          ]
+        },
+        {
+          "quota": 1,
+          "targets": [
+            {
+              "area": 135,
+              "mob": 13502
+            },
+            {
+              "area": 135,
+              "mob": 13504
+            }
+          ]
+        },
+        {
+          "quota": 1,
+          "targets": [
+            {
+              "area": 135,
+              "mob": 13503
+            },
+            {
+              "area": 135,
+              "mob": 13512
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bugbear-hunt-v1",
+      "name": "Regional Hunt: Bugbears and draconian road patrols",
+      "family": 2,
+      "min_clan_level": 1,
+      "min_player_level": 17,
+      "max_player_level": 22,
+      "shared_reward_id": "hunt-shared-v1",
+      "personal_reward_id": "hunt-personal-v1",
+      "objectives": [
+        {
+          "quota": 10,
+          "targets": [
+            {
+              "area": 17,
+              "mob": 1712
+            },
+            {
+              "area": 17,
+              "mob": 1716
+            }
+          ]
+        },
+        {
+          "quota": 10,
+          "targets": [
+            {
+              "area": 17,
+              "mob": 1717
+            },
+            {
+              "area": 17,
+              "mob": 1721
+            }
+          ]
+        },
+        {
+          "quota": 10,
+          "targets": [
+            {
+              "area": 16,
+              "mob": 1602
+            },
+            {
+              "area": 16,
+              "mob": 1608
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "icewall-approaches-assault-v1",
       "name": "Stronghold Assault: Icewall approaches",
       "family": 1,
       "min_clan_level": 1,
-      "min_player_level": 24,
-      "max_player_level": 30,
+      "min_player_level": 23,
+      "max_player_level": 26,
       "shared_reward_id": "stronghold-shared-v1",
       "personal_reward_id": "stronghold-personal-v1",
       "objectives": [
@@ -21,19 +347,35 @@
             {
               "area": 141,
               "mob": 14101
+            },
+            {
+              "area": 141,
+              "mob": 14102
+            },
+            {
+              "area": 141,
+              "mob": 14111
+            },
+            {
+              "area": 141,
+              "mob": 14112
             }
           ]
         },
         {
           "quota": 1,
           "targets": [
-            {
-              "area": 141,
-              "mob": 14001
-            },
             {
               "area": 141,
               "mob": 14103
+            },
+            {
+              "area": 141,
+              "mob": 14104
+            },
+            {
+              "area": 141,
+              "mob": 14105
             }
           ]
         },
@@ -42,23 +384,27 @@
           "targets": [
             {
               "area": 141,
-              "mob": 14000
+              "mob": 14106
             },
             {
               "area": 141,
-              "mob": 14009
+              "mob": 14107
+            },
+            {
+              "area": 141,
+              "mob": 14108
             }
           ]
         }
       ]
     },
     {
-      "id": "icewall-hunt-v1",
-      "name": "Regional Hunt: Icewall patrols",
+      "id": "icewall-approaches-hunt-v1",
+      "name": "Regional Hunt: Icewall approach patrols",
       "family": 2,
       "min_clan_level": 1,
-      "min_player_level": 24,
-      "max_player_level": 30,
+      "min_player_level": 23,
+      "max_player_level": 26,
       "shared_reward_id": "hunt-shared-v1",
       "personal_reward_id": "hunt-personal-v1",
       "objectives": [
@@ -67,11 +413,11 @@
           "targets": [
             {
               "area": 140,
-              "mob": 14012
+              "mob": 14013
             },
             {
               "area": 140,
-              "mob": 14013
+              "mob": 14014
             }
           ]
         },
@@ -80,11 +426,11 @@
           "targets": [
             {
               "area": 140,
-              "mob": 14015
+              "mob": 14016
             },
             {
               "area": 140,
-              "mob": 14016
+              "mob": 14020
             }
           ]
         },
@@ -97,7 +443,129 @@
             },
             {
               "area": 141,
+              "mob": 14107
+            },
+            {
+              "area": 141,
               "mob": 14108
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "icewall-assault-v2",
+      "name": "Stronghold Assault: Icewall Castle",
+      "family": 1,
+      "min_clan_level": 1,
+      "min_player_level": 27,
+      "max_player_level": 30,
+      "shared_reward_id": "stronghold-shared-v1",
+      "personal_reward_id": "stronghold-personal-v1",
+      "objectives": [
+        {
+          "quota": 20,
+          "targets": [
+            {
+              "area": 140,
+              "mob": 14008
+            },
+            {
+              "area": 140,
+              "mob": 14011
+            },
+            {
+              "area": 140,
+              "mob": 14017
+            }
+          ]
+        },
+        {
+          "quota": 1,
+          "targets": [
+            {
+              "area": 140,
+              "mob": 14018
+            },
+            {
+              "area": 140,
+              "mob": 14006
+            }
+          ]
+        },
+        {
+          "quota": 1,
+          "targets": [
+            {
+              "area": 140,
+              "mob": 14012
+            },
+            {
+              "area": 140,
+              "mob": 14015
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "icewall-hunt-v2",
+      "name": "Regional Hunt: Icewall Castle and gate guards",
+      "family": 2,
+      "min_clan_level": 1,
+      "min_player_level": 27,
+      "max_player_level": 30,
+      "shared_reward_id": "hunt-shared-v1",
+      "personal_reward_id": "hunt-personal-v1",
+      "objectives": [
+        {
+          "quota": 10,
+          "targets": [
+            {
+              "area": 140,
+              "mob": 14008
+            },
+            {
+              "area": 140,
+              "mob": 14011
+            },
+            {
+              "area": 140,
+              "mob": 14017
+            }
+          ]
+        },
+        {
+          "quota": 10,
+          "targets": [
+            {
+              "area": 140,
+              "mob": 14012
+            },
+            {
+              "area": 140,
+              "mob": 14015
+            }
+          ]
+        },
+        {
+          "quota": 10,
+          "targets": [
+            {
+              "area": 141,
+              "mob": 14003
+            },
+            {
+              "area": 141,
+              "mob": 14004
+            },
+            {
+              "area": 141,
+              "mob": 14005
+            },
+            {
+              "area": 141,
+              "mob": 14021
             }
           ]
         }

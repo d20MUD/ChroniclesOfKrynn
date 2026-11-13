@@ -267,6 +267,7 @@ ACMD_DECL(do_clanbuffs);
 ACMD_DECL(do_clancontracts);
 ACMD_DECL(do_clanexpeditions);
 ACMD_DECL(do_clandeliveries);
+ACMD_DECL(do_clanquartermaster);
 ACMD_DECL(do_clanprogress);
 ACMD_DECL(do_clanfavor);
 ACMD_DECL(do_claninspect);

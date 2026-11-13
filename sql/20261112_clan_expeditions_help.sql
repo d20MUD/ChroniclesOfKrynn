@@ -66,13 +66,13 @@ progress; meet the requirements with a legitimate final encounter or abandon.
 
 A completed outing closes its active slot. Use claims to find your earned
 personal completions and claim <outing-id> at a quartermaster. Personal base
-credit is 100 Favor, subject to the account Favor cap. It grants no character
+credit is 25 Favor, subject to the account Favor cap. It grants no character
 XP, clan XP or Influence. Each account can claim at most one completion per
 expedition family per UTC week, shared across alts and clans. A later eligible
 member can earn personal Favor even when the shared reward has already paid.
 
-The first qualifying completion per clan/week/family awards 600 clan XP and
-300 Influence, subject to clan caps. Repeating the outing, changing the roster
+The first qualifying completion per clan/week/family awards 37.500 lifetime Influence and
+37.500 spendable Influence, subject to clan caps. Repeating the outing, changing the roster
 or increasing party size never repeats that shared award. These are separate
 from the personal Favor limits and from ordinary kill/bounty awards.
 
@@ -83,6 +83,16 @@ pending receipt recovers with its original identity/week, including after
 membership changes or reset. Repeating a paid claim returns the same result.
 Storage outages cannot fabricate missed kills; a retained pending SQL receipt
 can be retried, while an encounter never stored successfully is not recreated.
+
+Saved outings are checked on reconnect and during server upkeep. Reconnecting
+does not extend deadlines, replace roster identities or replay missed combat.
+Expiry releases the active slot while preserving history and accepted receipts.
+Storage inconsistencies stop progress for review; they never reset your outing.
+
+List offers both expedition families in character bands 5-10, 11-16, 17-22,
+23-26 and 27-30, starting at clan level 1. Active lists target alternatives and
+areas alongside saved counters. Temporarily unavailable targets are marked;
+a listed alternative can satisfy that objective. Start rechecks availability.
 ',CHAR(10),CONCAT(CHAR(13),CHAR(10))),0,34,0)
 ON DUPLICATE KEY UPDATE entry=VALUES(entry),category=VALUES(category);
 COMMIT;

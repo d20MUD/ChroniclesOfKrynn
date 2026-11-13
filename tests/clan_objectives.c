@@ -121,7 +121,7 @@ int main(int argc, char **argv)
     r = clan_objective_reward_complete(db, s(req, "contract_uid"), n(req, "now"), &out);
   else if (!strcmp(argv[2], "generic") || !strcmp(argv[2], "shared"))
   {
-    struct clan_progression_config c = clan_progression_defaults;
+    struct clan_progression_config c = clan_progression_v1;
     struct clan_progression_readiness ready = {.schema_ready = true,
                                                .schema_version = CLAN_PROGRESSION_SCHEMA_VERSION};
     c.controls.store_mode = CLAN_STORE_MYSQL;

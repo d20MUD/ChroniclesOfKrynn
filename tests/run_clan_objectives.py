@@ -57,16 +57,16 @@ with database(migrations) as (tmp,socket,sql,client):
         run('complete',gathering|dict(fault=point),'unavailable');assert sql('SELECT COUNT(*) FROM clan_objective_claims')=='0'
         assert sql('SELECT * FROM clan_progression_state;SELECT * FROM clan_account_windows;SELECT * FROM clan_personal_favor;')==before
     run('complete',gathering|dict(fault=8),'commit-unknown');receipt=finish(gathering)
-    assert receipt['decision']['delta']['xp_eighths']==800 and finish(gathering)==receipt
+    assert receipt['decision']['delta']['xp_eighths']==50 and finish(gathering)==receipt
     run('progress',final);accept(0,expected='ineligible')
     # A bounty requires 20 unique eligible occurrences. The accepted UID remains frozen.
     for i in range(20):
         e=event(bounty);run('capture',e);run('progress',e);run('progress',e)
         assert run('active',who|dict(family=5))['progress']==i+1
-    paid=finish(bounty);assert paid['decision']['delta']['favor_eighths']==400
+    paid=finish(bounty);assert paid['decision']['delta']['favor_eighths']==100
     assert sql('SELECT COUNT(*) FROM clan_bounty_shared_claims')=='1'
     shared=sql('SELECT operation_uid FROM clan_bounty_shared_claims');sr=run('shared',dict(contract_uid=shared,now=who['now']))
-    assert sr['decision']['delta']['xp_eighths']==1600
+    assert sr['decision']['delta']['xp_eighths']==100
     assert run('shared',dict(contract_uid=shared,now=who['now']))==sr
     # A different account/member finishing this definition receives personal credit,
     # while the shared clan receipt remains unique.
@@ -74,7 +74,7 @@ with database(migrations) as (tmp,socket,sql,client):
     other=who|dict(player_id=5000000012,account_id=88)
     member=accept(3,other)
     for _ in range(20):run('progress',event(member))
-    assert finish(member)['decision']['delta']['favor_eighths']==400
+    assert finish(member)['decision']['delta']['favor_eighths']==100
     assert sql('SELECT COUNT(*) FROM clan_bounty_shared_claims')=='1'
     # Cross-alt encounter IDs do not count twice for the same account.
     second=accept(4);alt=accept(4,other|dict(account_id=77))
@@ -89,7 +89,7 @@ with database(migrations) as (tmp,socket,sql,client):
     # A third distinct clan bounty does not create a third shared reward slot.
     third_shared=accept(5,other|dict(level=17))
     for _ in range(20):run('progress',event(third_shared))
-    assert finish(third_shared)['decision']['delta']['favor_eighths']==400
+    assert finish(third_shared)['decision']['delta']['favor_eighths']==100
     assert sql('SELECT COUNT(*) FROM clan_bounty_shared_claims')=='2'
     # Weekly expiry rejects late events, but a saved in-week event can replay later.
     hemp=accept(1);expired=event(hemp,occurred_at=who['now']+604800,now=who['now']+604800)
@@ -115,7 +115,7 @@ with database(migrations) as (tmp,socket,sql,client):
         out=p.stdout.read();err=p.stderr.read();assert p.wait()==0,(out,err)
         assert json.loads(out)['result'] in ('ok','ineligible'),(out,err)
     results=[finish(ra),finish(rb)]
-    assert sum(r['decision']['delta']['favor_eighths'] for r in results)==400
+    assert sum(r['decision']['delta']['favor_eighths'] for r in results)==100
     assert sql('SELECT COUNT(*) FROM clan_objective_claims WHERE account_id=99')=='1'
     # Reset closes only unfinished slots. Pending receipts retain their old period.
     resetter=who|dict(clan_uid=B,account_id=100)

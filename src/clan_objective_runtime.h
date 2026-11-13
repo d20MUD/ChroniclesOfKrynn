@@ -11,4 +11,5 @@ bool clan_objective_bounty_capture(MYSQL *, struct char_data *, int prototype,
                                    const char *encounter, const char *clan, int64_t now,
                                    struct clan_objective_event *);
 void clan_objective_bounty_record(struct char_data *, const struct clan_objective_event *);
+bool clan_objective_catalog_load(struct clan_objective_catalog *);
 #endif

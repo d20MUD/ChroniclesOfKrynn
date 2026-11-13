@@ -63,7 +63,7 @@ static void personal(void)
   s.account.base_xp_eighths=1;assert(!clan_award_personal_project(&e,&s,&d));s.account.base_xp_eighths=0;
   s.account.base_xp_eighths=INT64_MAX-7;assert(!clan_award_personal_project(&e,&s,&d));s.account.base_xp_eighths=0;
   s.account.account_id=88;assert(!clan_award_personal_project(&e,&s,&d));s.account.account_id=77;
-  e.rules_version=2;assert(!clan_award_personal_project(&e,&s,&d));e.rules_version=1;
+  e.rules_version=3;assert(!clan_award_personal_project(&e,&s,&d));e.rules_version=1;
   for(i=CLAN_SOURCE_DELIVERY;i<=CLAN_SOURCE_BOUNTY;i++) {
     e.source=(enum clan_reward_source)i;e.requested_xp_eighths=800;
     e.requested_influence_eighths=e.requested_favor_eighths=400;
@@ -84,7 +84,7 @@ static void personal(void)
 }
 int main(void)
 {
-  const struct clan_progression_config *c=&clan_progression_defaults;
+  const struct clan_progression_config *c=&clan_progression_v1;
   personal();
   struct clan_award_projection p, sentinel;
   struct clan_progression_config bad=*c;

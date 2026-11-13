@@ -36,7 +36,7 @@ bool clan_buff_query(const struct clan_progression_config *c, const char *uid,
         !memchr(b->activation_uid, 0, sizeof(b->activation_uid)) ||
         !clan_progression_uid_valid(b->activation_uid) ||
         b->tier < 1 || b->tier > CLAN_PROGRESSION_TIER_COUNT || b->slot < 1 ||
-        b->slot > CLAN_PROGRESSION_MAX_SLOTS || b->rules_version != c->rules_version ||
+        b->slot > CLAN_PROGRESSION_MAX_SLOTS || b->rules_version != 1 ||
         b->started_at < 0 || b->started_at > now || b->expires_at <= b->started_at ||
         b->next_available_at < b->expires_at || b->paid_influence_eighths < 0) return false;
     for (j = 0; j < k; j++)

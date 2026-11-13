@@ -4,7 +4,7 @@ DELIMITER //
 DROP PROCEDURE IF EXISTS clan_buff_activation_preflight//
 CREATE PROCEDURE clan_buff_activation_preflight()
 BEGIN
- IF NOT EXISTS(SELECT 1 FROM clan_progression_schema WHERE singleton=1 AND version=5) THEN
+ IF NOT EXISTS(SELECT 1 FROM clan_progression_schema WHERE singleton=1 AND version IN (5,6)) THEN
   SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Buff activation requires core clan schema v5';
  END IF;
 END//

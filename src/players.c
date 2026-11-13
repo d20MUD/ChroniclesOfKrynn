@@ -1129,6 +1129,12 @@ int load_char(const char *name, struct char_data *ch)
           GET_CRAFT(ch).catalysts_used = MAX(0, MIN(atoi(line), CRAFT_CATALYST_MAX));
         else if (!strcmp(tag,"ClGQ")) strlcpy(ch->player_specials->clan_objective_pending[0],strlen(line)<256?line:"invalid-event",256);
         else if (!strcmp(tag,"ClBQ")) strlcpy(ch->player_specials->clan_objective_pending[1],strlen(line)<256?line:"invalid-event",256);
+        else if (!strcmp(tag,"ClQM")) {
+          char uid[33]; int paid;
+          if (sscanf(line,"%32s %d",uid,&paid)==2 && legendary_uuid_valid(uid) && (paid==0||paid==1)) {
+            strlcpy(ch->player_specials->clan_qm_lock,uid,33);ch->player_specials->clan_qm_paid=paid;
+          } else strlcpy(ch->player_specials->clan_qm_lock,"invalid-operation",33);
+        }
         else if (!strcmp(tag,"ClDv")) {
           char uid[33];int stage;
           if(sscanf(line,"%32s %d",uid,&stage)==2 && legendary_uuid_valid(uid) && stage>=0 && stage<=3) {
@@ -2668,6 +2674,8 @@ bool save_char_checked(struct char_data *ch, int mode)
     BUFFER_WRITE("ClGQ: %s\n",ch->player_specials->clan_objective_pending[0]);
   if (*ch->player_specials->clan_objective_pending[1])
     BUFFER_WRITE("ClBQ: %s\n",ch->player_specials->clan_objective_pending[1]);
+  if (*ch->player_specials->clan_qm_lock)
+    BUFFER_WRITE("ClQM: %s %d\n", ch->player_specials->clan_qm_lock, ch->player_specials->clan_qm_paid);
   if (*ch->player_specials->clan_delivery_lock)
     BUFFER_WRITE("ClDv: %s %d\n",ch->player_specials->clan_delivery_lock,ch->player_specials->clan_delivery_stage);
   if (*ch->player_specials->legendary_operation)

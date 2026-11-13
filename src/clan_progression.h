@@ -7,9 +7,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define CLAN_PROGRESSION_RULES_VERSION 1
+#define CLAN_PROGRESSION_RULES_VERSION 2
 /* Required schema contract; checked detection lives in clan_repository. */
-#define CLAN_PROGRESSION_SCHEMA_VERSION 5
+#define CLAN_PROGRESSION_SCHEMA_VERSION 6
 #define CLAN_PROGRESSION_UID_SIZE 33
 #define CLAN_PROGRESSION_MAX_LEVEL 20
 #define CLAN_PROGRESSION_MAX_SLOTS 3
@@ -70,7 +70,7 @@ struct clan_progression_state {
 struct clan_buff_state {
   char clan_uid[CLAN_PROGRESSION_UID_SIZE], activation_uid[CLAN_PROGRESSION_UID_SIZE];
   enum clan_buff_family family;
-  int tier, slot, rules_version;
+  int tier, slot, rules_version; /* Buff effect/receipt format remains version 1. */
   int64_t started_at, expires_at, next_available_at, paid_influence_eighths;
   bool canceled;
 };
@@ -109,6 +109,8 @@ struct clan_standing_definition {
   int64_t favor_points;
   int stock_clan_level;
 };
+/* Frozen contribution weights, converted to the smaller rules-2 earning scale
+ * only at the authoritative award boundary. These are not display amounts. */
 struct clan_reward_points { int64_t xp, influence, favor; };
 struct clan_reward_definition {
   enum clan_reward_source source;
@@ -147,7 +149,7 @@ struct clan_progression_config {
   int initial_slots, max_slots, third_slot_level, combat_slots;
   int64_t day_seconds, week_seconds;
   int weekly_reset_iso_weekday; /* Monday=1; UTC boundaries, not local DST. */
-  int64_t xp_points[CLAN_PROGRESSION_MAX_LEVEL]; /* index = level - 1 */
+  int64_t xp_points[CLAN_PROGRESSION_MAX_LEVEL]; /* rank thresholds; lifetime Influence in rules 2, index = rank - 1 */
   struct clan_buff_definition buffs[CLAN_PROGRESSION_BUFF_COUNT];
   struct clan_standing_definition standings[CLAN_PROGRESSION_STANDING_COUNT];
   struct clan_reward_definition rewards[CLAN_PROGRESSION_REWARD_COUNT];
@@ -164,6 +166,8 @@ struct clan_progression_readiness {
 };
 
 extern const struct clan_progression_config clan_progression_defaults;
+/* Frozen historical receipt policy; never edit or use for new events. */
+extern const struct clan_progression_config clan_progression_v1;
 /* UTC arithmetic, half-open periods, no local time/DST or wall-clock reads.
  * Occurrence time must be >=0 and the next boundary representable in int64.
  * Epoch's first week starts Monday 1969-12-29 (-259200). Outputs unchanged

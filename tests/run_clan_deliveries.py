@@ -35,7 +35,7 @@ with database(migrations) as (tmp,socket,sql,client):
     accept(definition=4,expected='ineligible')
     first=accept();accept(expected='conflict')
     active=run('active',who);assert active['definition']==cat['deliveries'][0]
-    quote=run('quote',who);assert quote['delta']['xp_eighths']==800
+    quote=run('quote',who);assert quote['delta']['xp_eighths']==50
     # Expired confirmation and tampered frozen requirements leave no receipt.
     run('prepare',dict(quote=quote,now=quote['confirm_before']),'ineligible')
     tampered=copy.deepcopy(quote);tampered['definition']['resource']=22
@@ -54,14 +54,14 @@ with database(migrations) as (tmp,socket,sql,client):
         assert sql('SELECT state FROM clan_delivery_operations')=='0'
     run('complete',dict(quote=quote,now=who['now'],fault=8),'commit-unknown')
     receipt=run('complete',dict(quote=quote,now=who['now']))
-    assert receipt['status']==1 and receipt['decision']['delta']['favor_eighths']==400
+    assert receipt['status']==1 and receipt['decision']['delta']['favor_eighths']==100
     assert run('complete',dict(quote=quote,now=who['now']+1))==receipt
     run('ack',dict(operation_uid=quote['operation_uid']))
     assert sql('SELECT state FROM clan_delivery_operations')=='2'
     accept(expected='ineligible') # Same definition cannot be farmed.
     second=accept(1);q2=run('quote',who);run('prepare',dict(quote=q2,now=who['now']))
     # A changed cap cannot silently replace the exact confirmed payout.
-    sql('UPDATE clan_account_windows SET favor_eighths=4799,revision=revision+1 WHERE account_id=77')
+    sql('UPDATE clan_account_windows SET favor_eighths=1199,revision=revision+1 WHERE account_id=77')
     run('complete',dict(quote=q2,now=who['now']),'ineligible')
     run('cancel',dict(operation_uid=q2['operation_uid'],now=who['now']))
     run('cancel',dict(operation_uid=q2['operation_uid'],now=who['now']))
@@ -80,7 +80,7 @@ with database(migrations) as (tmp,socket,sql,client):
     who['clan_uid']=B
     accept(2,expected='ineligible') # Completed definition follows account into new clan.
     accept(1)
-    sql('UPDATE clan_account_windows SET base_xp_eighths=9600,favor_eighths=4800,revision=revision+1 WHERE account_id=77')
+    sql('UPDATE clan_account_windows SET base_xp_eighths=9600,favor_eighths=1200,revision=revision+1 WHERE account_id=77')
     run('quote',who,'capacity') # No all-zero donations.
     run('abandon',who)
     # Exact-boundary reset is idempotent, keeps prepared goods recovery alive.

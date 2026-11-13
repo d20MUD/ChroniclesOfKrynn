@@ -63,6 +63,12 @@ circle_SOURCES = \
 	src/clan_buff_runtime.c \
 	src/clan_buff_commands.c \
 	src/clan_combat.c \
+	src/clan_web_content.c \
+	src/clan_web_content_runtime.c \
+	src/clan_web.c \
+	src/clan_web_runtime.c \
+	src/clan_quartermaster.c \
+	src/clan_quartermaster_runtime.c \
 	src/clan_delivery.c \
 	src/clan_delivery_runtime.c \
 	src/clan_expedition_enrollment.c \
@@ -75,6 +81,7 @@ circle_SOURCES = \
 	src/clan_status.c \
 	src/clan_commands.c \
 	src/clan_awards.c \
+	src/clan_policy.c \
 	src/clan_progression.c \
 	src/clan_repository.c \
 	src/clan_boot.c \
@@ -335,11 +342,38 @@ src/constants.c: $(filter-out src/constants.c,$(circle_SOURCES))
 
 # Extra files to distribute
 EXTRA_DIST = \
+	src/clan_web.h \
+	src/clan_web_content.h \
+	docs/clan_progression_phase_42_45_handoff.md \
+	docs/clan_progression_phase_46_47_handoff.md \
+	docs/clan_progression_phase_48_49_handoff.md \
+	docs/clan_progression_phase_50_52_handoff.md \
+	docs/clan_progression_pilot_review.md \
+	docs/clan_progression_pacing.md \
+	docs/clan_progression_pacing/pacing.json \
+	docs/clan_progression_pacing/level_comparison.csv \
+	docs/clan_progression_pacing/favor_ranks.csv \
+	docs/clan_progression_pacing/influence_ranks.csv \
+	docs/clan_progression_release_checklist.md \
+	docs/clan_progression_operator_notes.md \
+	docs/help/clan_progression.hlp \
+	sql/20261112_clan_progression_services_help.sql \
+	lib/clan/quartermaster.json \
+	src/clan_quartermaster.h \
+	sql/20261112_clan_quartermaster_v001.sql \
+	sql/20261112_clan_quartermaster_help.sql \
+	docs/help/clan_quartermaster.hlp \
+	docs/clan_progression_phase_39_40_41_handoff.md \
 	lib/clan/expeditions.json \
+	lib/clan/expeditions_legacy.json \
+	scripts/validate_clan_expedition_roster.py \
 	lib/clan/deliveries.json \
 	lib/clan/objectives.json \
 	docs/clan_progression_phase_32_33_handoff.md \
 	src/clan_progression.h \
+	src/clan_pacing.h \
+	src/clan_policy.h \
+	lib/clan/progression.json \
 	src/clan_repository.h \
 	src/clan_rewards.h \
 	src/clan_awards.h \
@@ -359,12 +393,14 @@ EXTRA_DIST = \
 	docs/help/clan_expeditions.hlp \
 	docs/clan_progression_phase_34_handoff.md \
 	docs/clan_progression_phase_35_36_handoff.md \
+	docs/clan_progression_phase_37_38_handoff.md \
 	src/clan_expeditions.h \
 	src/clan_objectives.h \
 	src/clan_objective_runtime.h \
 	src/clan_sources.h \
 	sql/20261111_clan_buff_lifecycle_v001.sql \
 	sql/20261111_clan_buff_activations_v001.sql \
+	src/clan_display.h \
 	src/clan_status.h \
 	src/clan_commands.h \
 	src/clan_persistence.h \
@@ -375,6 +411,7 @@ EXTRA_DIST = \
 	sql/20261110_clan_progression_v003.sql \
 	sql/20261110_clan_progression_v004.sql \
 	sql/20261110_clan_progression_v005.sql \
+	sql/20261113_clan_progression_v006.sql \
 	sql/20261111_clan_progression_readouts_help.sql \
 	scripts/generate_clan_schema_contract.py \
 	scripts/build_clan_repository_tool.py \

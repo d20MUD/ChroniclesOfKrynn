@@ -1,6 +1,7 @@
-/* Clan progression Phase 3. Pure configuration: deliberately not wired into
- * game events or storage. All default release controls are fail-closed. */
+/* Versioned clan policy. Historical rules stay frozen; current defaults keep
+ * every release control fail-closed. No world or SQL access occurs here. */
 #include "clan_progression.h"
+#include "clan_pacing.h"
 #include "campaign.h"
 #include <string.h>
 
@@ -11,9 +12,9 @@
 #define REWARD(id, scope, xp, influence, favor, claims) \
   {id, scope, {INT64_C(xp), INT64_C(influence), INT64_C(favor)}, claims}
 
-const struct clan_progression_config clan_progression_defaults = {
-  .rules_version = CLAN_PROGRESSION_RULES_VERSION,
-  .schema_version = CLAN_PROGRESSION_SCHEMA_VERSION,
+const struct clan_progression_config clan_progression_v1 = {
+  .rules_version = 1,
+  .schema_version = 5,
   .max_level = 20, .initial_slots = 2, .max_slots = 3, .third_slot_level = 10, .combat_slots = 1,
   .day_seconds = INT64_C(86400), .week_seconds = INT64_C(604800), .weekly_reset_iso_weekday = 1,
   .xp_points = {0, 200, 600, 1200, 2000, 3000, 4200, 5600, 7200, 9000,
@@ -48,6 +49,83 @@ const struct clan_progression_config clan_progression_defaults = {
     .account_full_xp_points = 600, .account_half_xp_points = 600, .account_favor_points = 600,
     .clan_full_xp_points = 6000, .clan_quarter_xp_points = 6000,
     .clan_weekly_influence_points = 5000, .stored_influence_points = 20000,
+    .prototype_daily_full_kills = 20, .prototype_daily_half_kills = 20,
+    .pending_per_character = 100, .pending_per_server = 10000
+  },
+  .participation = {
+    .victim_level_tolerance = 3, .member_level_tolerance = 5, .recent_seconds = 120,
+    .damage_percent = 5, .healing_percent = 10, .mitigation_percent = 5, .useful_actions = 2
+  },
+  .contracts = {
+    .personal_slots = 3, .bounty_kills = 20, .gathering_base_units = 20,
+    .delivery_material_units = 50, .delivery_ammo_shots = 100,
+    .expedition_min_accounts = 2, .expedition_max_accounts = 6, .active_outings = 1,
+    .assault_defenders = 20, .assault_named_targets = 2,
+    .hunt_categories = 3, .hunt_areas = 2, .hunt_kills_per_category = 10,
+    .personal_objective_percent = 50, .expedition_expiry_seconds = 7200
+  },
+  .controls = {
+    .store_mode = CLAN_STORE_LEGACY, .mode = CLAN_PROGRESSION_OFF,
+    .buffs = false, .contracts = false, .expeditions = false,
+    .quartermaster = false, .web = false, .public_release = false, .pilot_count = 0
+  }
+};
+
+#undef BUFF
+#define BUFF(id, cat, label, first, a, b, c) \
+  {id, cat, label, INT64_C(86400), INT64_C(43200), \
+   {TIER(first, a, 13), TIER(5, b, 19), TIER(20, c, 29)}}
+
+/* Rules 2: reward tuples remain immutable contribution weights. Award policy
+ * converts Influence weights / 8 and Favor weights / 4 before crediting.
+ * xp_points and stored xp_eighths now represent lifetime earned Influence. */
+const struct clan_progression_config clan_progression_defaults = {
+  .rules_version = CLAN_PROGRESSION_RULES_VERSION,
+  .schema_version = CLAN_PROGRESSION_SCHEMA_VERSION,
+  .max_level = 20, .initial_slots = 2, .max_slots = 3, .third_slot_level = 10, .combat_slots = 1,
+  .day_seconds = INT64_C(86400), .week_seconds = INT64_C(604800), .weekly_reset_iso_weekday = 1,
+  .xp_points = {
+    CLAN_INFLUENCE_THRESHOLD(0), CLAN_INFLUENCE_THRESHOLD(648),
+    CLAN_INFLUENCE_THRESHOLD(1358), CLAN_INFLUENCE_THRESHOLD(1716),
+    CLAN_INFLUENCE_THRESHOLD(2972), CLAN_INFLUENCE_THRESHOLD(3870),
+    CLAN_INFLUENCE_THRESHOLD(5667), CLAN_INFLUENCE_THRESHOLD(6566),
+    CLAN_INFLUENCE_THRESHOLD(8365), CLAN_INFLUENCE_THRESHOLD(9265),
+    CLAN_INFLUENCE_THRESHOLD(11064), CLAN_INFLUENCE_THRESHOLD(11964),
+    CLAN_INFLUENCE_THRESHOLD(13764), CLAN_INFLUENCE_THRESHOLD(14664),
+    CLAN_INFLUENCE_THRESHOLD(16464), CLAN_INFLUENCE_THRESHOLD(17364),
+    CLAN_INFLUENCE_THRESHOLD(19164), CLAN_INFLUENCE_THRESHOLD(20064),
+    CLAN_INFLUENCE_THRESHOLD(21864), CLAN_INFLUENCE_THRESHOLD(22764)
+  },
+  .buffs = {
+    BUFF(CLAN_BUFF_SCHOLAR, CLAN_CATEGORY_GROWTH, "Scholar's Encouragement", 1, 5, 8, 10),
+    BUFF(CLAN_BUFF_ARCANE, CLAN_CATEGORY_RECOVERY, "Arcane Readiness", 1, 10, 15, 20),
+    BUFF(CLAN_BUFF_PSIONIC, CLAN_CATEGORY_RECOVERY, "Psionic Focus", 1, 10, 20, 30),
+    BUFF(CLAN_BUFF_VITALITY, CLAN_CATEGORY_COMBAT, "Company Vitality", 1, 5, 10, 15),
+    BUFF(CLAN_BUFF_ARTISAN, CLAN_CATEGORY_CRAFT, "Artisan's Guidance", 3, 2, 3, 4)
+  },
+  .standings = {
+    {CLAN_FAVOR_UNPROVEN, "Unproven", CLAN_FAVOR_THRESHOLD(0), 1},
+    {CLAN_FAVOR_RECOGNIZED, "Recognized", CLAN_FAVOR_THRESHOLD(229), 2},
+    {CLAN_FAVOR_TRUSTED, "Trusted", CLAN_FAVOR_THRESHOLD(876), 7},
+    {CLAN_FAVOR_PROVEN, "Proven", CLAN_FAVOR_THRESHOLD(1596), 8},
+    {CLAN_FAVOR_DISTINGUISHED, "Distinguished", CLAN_FAVOR_THRESHOLD(2316), 12},
+    {CLAN_FAVOR_EXALTED, "Exalted", CLAN_FAVOR_THRESHOLD(3036), 18}
+  },
+  .rewards = {
+    REWARD(CLAN_SOURCE_KILL, CLAN_REWARD_ACCOUNT, 2, 1, 1, 200),
+    REWARD(CLAN_SOURCE_SUPPLY_ORDER, CLAN_REWARD_ACCOUNT, 100, 50, 50, 3),
+    REWARD(CLAN_SOURCE_DELIVERY, CLAN_REWARD_ACCOUNT, 100, 50, 50, 2),
+    REWARD(CLAN_SOURCE_GATHERING, CLAN_REWARD_ACCOUNT, 100, 50, 50, 2),
+    REWARD(CLAN_SOURCE_BOUNTY, CLAN_REWARD_ACCOUNT, 100, 50, 50, 2),
+    REWARD(CLAN_SOURCE_EXPEDITION_PERSONAL, CLAN_REWARD_ACCOUNT, 0, 0, 100, 2),
+    REWARD(CLAN_SOURCE_BOUNTY_SHARED, CLAN_REWARD_SHARED, 200, 100, 0, 2),
+    REWARD(CLAN_SOURCE_ASSAULT_SHARED, CLAN_REWARD_SHARED, 600, 300, 0, 1),
+    REWARD(CLAN_SOURCE_HUNT_SHARED, CLAN_REWARD_SHARED, 600, 300, 0, 1)
+  },
+  .limits = {
+    .account_full_xp_points = 600, .account_half_xp_points = 600, .account_favor_points = 150,
+    .clan_full_xp_points = 6000, .clan_quarter_xp_points = 6000,
+    .clan_weekly_influence_points = 625, .stored_influence_points = 2500,
     .prototype_daily_full_kills = 20, .prototype_daily_half_kills = 20,
     .pending_per_character = 100, .pending_per_server = 10000
   },
@@ -138,8 +216,9 @@ enum clan_progression_config_error clan_progression_config_validate(
   if (reason) *reason = NULL;
 #define REQUIRE(condition, code, message) do { if (!(condition)) return invalid(reason, code, message); } while (0)
   REQUIRE(c, CLAN_CONFIG_MISSING, "Missing clan progression configuration.");
-  REQUIRE(c->rules_version == CLAN_PROGRESSION_RULES_VERSION &&
-          c->schema_version == CLAN_PROGRESSION_SCHEMA_VERSION,
+  REQUIRE(((c->rules_version == CLAN_PROGRESSION_RULES_VERSION &&
+          c->schema_version == CLAN_PROGRESSION_SCHEMA_VERSION) ||
+          (c->rules_version == 1 && c->schema_version == 5)),
           CLAN_CONFIG_VERSION, "Unsupported clan rules or schema version.");
   REQUIRE(c->controls.store_mode >= CLAN_STORE_LEGACY && c->controls.store_mode <= CLAN_STORE_MYSQL &&
           c->controls.mode >= CLAN_PROGRESSION_OFF && c->controls.mode <= CLAN_PROGRESSION_LIVE,

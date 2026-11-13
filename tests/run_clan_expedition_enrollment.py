@@ -12,7 +12,7 @@ with database(migrations) as (tmp,socket,sql,client):
     sql('UPDATE clan_store_control SET store_mode=2;UPDATE clan_import_manifests SET import_status=2')
     flags=shlex.split(subprocess.check_output(['pkg-config','--cflags','--libs','mariadb','json-c','openssl'],text=True));binary=tmp/'enrollment'
     subprocess.run(['cc','-std=c99','-Wall','-Wextra','-Werror','-pedantic','-g','-fsanitize=address,undefined','-fno-pie','-no-pie','-Isrc',*[str(ROOT/p) for p in ['tests/clan_expedition_enrollment.c','src/clan_expedition_enrollment.c','src/clan_expeditions.c','src/clan_repository.c','src/clan_awards.c','src/clan_progression.c','src/clan_combat.c']],*flags,'-o',str(binary)],cwd=ROOT,check=True)
-    catalog=json.loads((ROOT/'lib/clan/expeditions.json').read_text())
+    catalog=json.loads((ROOT/'lib/clan/expeditions_legacy.json').read_text())
     now=2200010001;seq=9000
     def uid():
         global seq;seq+=1;return f'{seq:032x}'
@@ -24,7 +24,7 @@ with database(migrations) as (tmp,socket,sql,client):
         p=subprocess.run([str(binary),str(socket),op],input=json.dumps(base|leader|(body or {})),text=True,capture_output=True)
         assert p.returncode==0,(op,p.stdout,p.stderr)
         result=json.loads(p.stdout);assert result['result']==expected,(op,result,p.stderr);return result['data']
-    run('create',dict(disabled=1),'ineligible');run('create',dict(bad_world=1),'invalid')
+    run('create',dict(disabled=1),'ineligible');run('create',dict(bad_world=1),'ineligible')
     run('create',dict(player=5000000009,clan=B),'ineligible');run('create',dict(level=2),'ineligible')
     sql("CREATE TRIGGER ce_test_failure BEFORE INSERT ON clan_expedition_roster FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='injected roster failure'")
     run('create',expected='unavailable')

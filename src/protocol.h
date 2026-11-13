@@ -518,6 +518,7 @@ typedef enum
   eMSDP_LORE_INFO,      /**< On-demand lore results as JSON */
   eMSDP_CHARACTER_CREATION, /**< Server-authoritative character creation step */
   eMSDP_ROOM_CONTENTS, /**< Visible people and objects in the current room */
+  eMSDP_CLAN_PROGRESS, /**< Private clan progression and authorized buff choices as JSON. */
   eMSDP_AMMO_STATUS,    /**< Equipped ranged weapon ammunition summary as JSON */
   eMSDP_ROOM_QUESTS,    /**< Eligible quests offered in the current room */
   eMSDP_QUEST_ACCEPTED,  /**< Quest acceptance event as JSON string */

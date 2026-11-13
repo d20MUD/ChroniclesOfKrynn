@@ -13,6 +13,7 @@
 #include "conf.h"
 #include "sysdep.h"
 #include "structs.h"
+#include "clan_web.h"
 #include "utils.h"
 #include "comm.h"
 #include "interpreter.h"
@@ -173,6 +174,7 @@ static variable_name_t VariableNameTable[eMSDP_MAX + 1] = {
     {eMSDP_LORE_INFO, "LORE_INFO", STRING_READ_ONLY},
     {eMSDP_CHARACTER_CREATION, "CHARACTER_CREATION", STRING_READ_ONLY},
     {eMSDP_ROOM_CONTENTS, "ROOM_CONTENTS", STRING_READ_ONLY},
+    {eMSDP_CLAN_PROGRESS, "CLAN_PROGRESS", STRING_READ_ONLY},
     {eMSDP_AMMO_STATUS, "AMMO_STATUS", STRING_READ_ONLY},
     {eMSDP_ROOM_QUESTS, "ROOM_QUESTS", STRING_READ_ONLY},
     {eMSDP_QUEST_ACCEPTED, "QUEST_ACCEPTED", STRING_READ_ONLY},
@@ -2978,6 +2980,8 @@ static void ExecuteMSDPPair(descriptor_t *apDescriptor, const char *apVariable, 
       {
         if (MatchString(apValue, VariableNameTable[i].pName))
         {
+          if (i == eMSDP_CLAN_PROGRESS)
+            clan_web_descriptor_update(apDescriptor, true);
           MSDPSend(apDescriptor, (variable_t)i);
           bDone = true;
         }
@@ -2992,6 +2996,8 @@ static void ExecuteMSDPPair(descriptor_t *apDescriptor, const char *apVariable, 
         if (MatchString(apValue, VariableNameTable[i].pName))
         {
           apDescriptor->pProtocol->pVariables[i]->bReport = true;
+          if (i == eMSDP_CLAN_PROGRESS)
+            clan_web_descriptor_update(apDescriptor, true);
           apDescriptor->pProtocol->pVariables[i]->bDirty = true;
           bDone = true;
         }

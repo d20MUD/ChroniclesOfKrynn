@@ -8,7 +8,7 @@ bool clan_award_level(const struct clan_progression_config *c, int64_t xp, int *
   int64_t threshold, maximum;
   if (!out || xp < 0 || clan_progression_config_validate(c, NULL) != CLAN_CONFIG_OK ||
       !clan_progression_points_to_eighths(c->xp_points[c->max_level - 1], &maximum) ||
-      xp > maximum) return false;
+      (c->rules_version == 1 && xp > maximum)) return false;
   for (i = 1; i < c->max_level; i++) {
     if (!clan_progression_points_to_eighths(c->xp_points[i], &threshold)) return false;
     if (xp < threshold) break;
@@ -35,6 +35,12 @@ bool clan_award_project(const struct clan_progression_config *c,
       !clan_progression_points_to_eighths(c->limits.stored_influence_points, &stored_cap) ||
       !clan_progression_points_to_eighths(c->xp_points[c->max_level-1], &max_xp) ||
       influence > stored_cap || weekly_influence > week_cap) return false;
+  if (c->rules_version >= 2) {
+    /* Exact whole-eighth arithmetic, rounded down conservatively. The old XP
+     * column is the non-spendable lifetime Influence counter under rules 2. */
+    incoming_influence /= 8;
+    max_xp = INT64_MAX;
+  }
   remaining = incoming;
   if (used < full) {
     p.xp_eighths = lesser(remaining, full - used);
@@ -59,6 +65,11 @@ bool clan_award_project(const struct clan_progression_config *c,
     p.cap_flags |= CLAN_AWARD_INFLUENCE_STORED;
   p.influence_eighths = lesser(incoming_influence,
       lesser(week_cap - weekly_influence, stored_cap - influence));
+  if (c->rules_version >= 2) {
+    p.xp_eighths = p.influence_eighths;
+    p.cap_flags &= ~(CLAN_AWARD_XP_WEEK | CLAN_AWARD_XP_LEVEL);
+    if (p.xp_eighths > INT64_MAX - xp) return false;
+  }
   p.xp_after = xp + p.xp_eighths;
   p.influence_after = influence + p.influence_eighths;
   if (!clan_award_level(c, p.xp_after, &p.level_after)) return false;
@@ -79,8 +90,11 @@ static bool decide_shared(const struct clan_reward_event *e,
   int64_t expected_xp, expected_influence;
   /* Version 1 has immutable balance policy. Runtime release controls may vary,
    * but a changed balance table must get a separately supported rules version. */
-  const struct clan_progression_config *policy = &clan_progression_defaults;
-  if (!ctx || !ctx->config || e->rules_version != CLAN_PROGRESSION_RULES_VERSION ||
+  const struct clan_progression_config *policy =
+      e->rules_version == 1 ? &clan_progression_v1 : &clan_progression_defaults;
+  if (!ctx || !ctx->config ||
+      (ctx->config->rules_version >= 2 && e->rules_version != CLAN_PROGRESSION_RULES_VERSION) ||
+      (e->rules_version != 1 && e->rules_version != CLAN_PROGRESSION_RULES_VERSION) ||
       !clan_progression_feature_available(ctx->config, CLAN_FEATURE_EARNINGS,
           ctx->ready, e->clan_uid) || e->player_id || e->account_id ||
       e->requested_favor_eighths || s->clan.status != CLAN_RECORD_ACTIVE ||
@@ -143,7 +157,8 @@ const char *clan_award_explanation(int flag)
 bool clan_award_personal_project(const struct clan_reward_event *e,
     const struct clan_reward_snapshot *s, struct clan_reward_delta *out)
 {
-  const struct clan_progression_config *c = &clan_progression_defaults;
+  const struct clan_progression_config *c =
+      e && e->rules_version == 1 ? &clan_progression_v1 : &clan_progression_defaults;
   const struct clan_reward_definition *source;
   struct clan_reward_delta d;
   struct clan_award_projection clan;
@@ -211,6 +226,7 @@ bool clan_award_personal_project(const struct clan_reward_event *e,
   d.influence_eighths = clan.influence_eighths;
   d.incoming_xp_eighths = xp;
   d.cap_flags |= clan.cap_flags;
+  if (c->rules_version >= 2) favor /= 4;
   if (favor > favor_cap - s->account.favor_eighths) {
     favor = favor_cap - s->account.favor_eighths;
     d.cap_flags |= CLAN_AWARD_FAVOR_WEEK;
@@ -224,7 +240,8 @@ static bool decide_personal(const struct clan_reward_event *e,
     const struct clan_reward_snapshot *s, struct clan_reward_delta *out, void *context)
 {
   struct shared_context *ctx = context;
-  if (!ctx || !clan_progression_feature_available(ctx->config, CLAN_FEATURE_EARNINGS,
+  if (!ctx || !ctx->config || (ctx->config->rules_version >= 2 && e->rules_version != CLAN_PROGRESSION_RULES_VERSION) ||
+      !clan_progression_feature_available(ctx->config, CLAN_FEATURE_EARNINGS,
       ctx->ready, e->clan_uid)) return false;
   return clan_award_personal_project(e, s, out);
 }

@@ -110,6 +110,7 @@ static enum clan_repository_result end(MYSQL *db, enum clan_repository_result r)
   }
   return sql(db, "COMMIT") ? CLAN_REPO_OK : CLAN_REPO_COMMIT_UNKNOWN;
 }
+static enum clan_repository_result audit_outing(MYSQL *, const char *, const char *, int64_t);
 static enum clan_repository_result begin(MYSQL *db, const char *clan, int64_t now,
                                          const struct clan_progression_config *config)
 {
@@ -126,6 +127,15 @@ static enum clan_repository_result begin(MYSQL *db, const char *clan, int64_t no
     return CLAN_REPO_SCHEMA;
   if (db->server_status & SERVER_STATUS_IN_TRANS)
     return CLAN_REPO_CONFLICT;
+  /* Commit reconciliation independently: a rejected/expired command must not
+   * roll back expiry and strand the clan's active slot. */
+  if (clan_expedition_progress_ready(db))
+  {
+    enum clan_repository_result reconciled = clan_expedition_reconcile_clan(db, clan, now);
+    if (reconciled != CLAN_REPO_OK)
+      return reconciled;
+  }
+
   if (!sql(db, "START TRANSACTION"))
     return CLAN_REPO_UNAVAILABLE;
   if (!sql(db, "SELECT store_mode FROM clan_store_control WHERE singleton=1 FOR UPDATE") ||
@@ -133,7 +143,7 @@ static enum clan_repository_result begin(MYSQL *db, const char *clan, int64_t no
     return end(db, CLAN_REPO_UNAVAILABLE);
   /* Immutable end time releases the one-clan slot, never extends an outing. */
   if (!sql(db,
-           "UPDATE clan_expedition_outings SET state=4 WHERE clan_uid='%s' AND state IN (0,1) AND "
+           "UPDATE clan_expedition_outings SET state=4 WHERE active_clan='%s' AND "
            "expires_at<=%" PRId64,
            clan, now))
     return end(db, CLAN_REPO_UNAVAILABLE);
@@ -271,20 +281,25 @@ clan_expedition_create(MYSQL *db, const struct clan_expedition_catalog *catalog,
                        int64_t now, const struct clan_progression_config *config)
 {
   struct clan_reset_period week;
+  struct clan_expedition_catalog selected = {0};
   struct json_object *terms;
   char encoded[16384];
   size_t i;
   int64_t expires;
   enum clan_repository_result r;
   if (!slug(definition) || !clan_progression_uid_valid(uid) ||
-      !clan_progression_week_at(now, &week) || !m ||
-      !clan_expedition_catalog_validate(catalog, world, NULL, 0))
+      !clan_progression_week_at(now, &week) || !m || !catalog || !catalog->count ||
+      catalog->count > CLAN_EXPEDITION_MAX)
     return CLAN_REPO_INVALID;
   for (i = 0; i < catalog->count; i++)
     if (!strcmp(catalog->entries[i].id, definition))
       break;
   if (i == catalog->count)
     return CLAN_REPO_NOT_FOUND;
+  selected.count = 1;
+  selected.entries[0] = catalog->entries[i];
+  if (!clan_expedition_catalog_validate(&selected, world, NULL, 0))
+    return CLAN_REPO_INELIGIBLE;
   terms = clan_expedition_definition_json(&catalog->entries[i]);
   if (!terms)
     return CLAN_REPO_INVALID;
@@ -551,9 +566,9 @@ static bool reward_insert(MYSQL *db, const struct clan_reward_event *e, int64_t 
              "player_id,source_id,occurred_at_utc,starts_at_utc,rules_version,requested_xp_eighths,"
              "requested_influence_eighths,requested_favor_eighths,accepted_at_utc) "
              "VALUES('%s','%s','%s','%s',%" PRId64 ",%" PRId64 ",%d,%" PRId64 ",%" PRId64
-             ",1,%" PRId64 ",%" PRId64 ",%" PRId64 ",%" PRId64 ")",
+             ",%d,%" PRId64 ",%" PRId64 ",%" PRId64 ",%" PRId64 ")",
              e->operation_uid, e->event_uid, e->clan_uid, beneficiary, e->account_id, e->player_id,
-             e->source, e->occurred_at, w.starts_at, e->requested_xp_eighths,
+             e->source, e->occurred_at, w.starts_at, e->rules_version, e->requested_xp_eighths,
              e->requested_influence_eighths, e->requested_favor_eighths, now);
 }
 bool clan_expedition_progress_ready(MYSQL *db)
@@ -714,7 +729,7 @@ static bool finish_outing(MYSQL *db, struct json_object *o,
     strcpy(e.clan_uid, clan);
     e.source = d->family == 1 ? CLAN_SOURCE_ASSAULT_SHARED : CLAN_SOURCE_HUNT_SHARED;
     e.occurred_at = at;
-    e.rules_version = 1;
+    e.rules_version = CLAN_PROGRESSION_RULES_VERSION;
     e.requested_xp_eighths = 4800;
     e.requested_influence_eighths = 2400;
     if (!reward_insert(db, &e, now) ||
@@ -970,6 +985,10 @@ enum clan_repository_result clan_expedition_claim_prepare(
   r = begin(db, clan, now, config);
   if (r != CLAN_REPO_OK)
     return r;
+  r = audit_outing(db, uid, clan, now);
+  if (r != CLAN_REPO_OK)
+    return end(db, r);
+
   if (!sql(db,
            "SELECT "
            "e.operation_uid,e.state,c.family,c.week_start,c.expires_at,c.completed_at,r.inactive "
@@ -1010,7 +1029,7 @@ enum clan_repository_result clan_expedition_claim_prepare(
   e.account_id = m->account;
   e.occurred_at = completed;
   e.source = CLAN_SOURCE_EXPEDITION_PERSONAL;
-  e.rules_version = 1;
+  e.rules_version = CLAN_PROGRESSION_RULES_VERSION;
   e.requested_favor_eighths = 800;
   {
     int64_t n;
@@ -1064,6 +1083,8 @@ static bool expedition_paid(MYSQL *db, const struct clan_reward_event *e,
                             void *context)
 {
   int64_t n;
+  if (audit_outing(db, e->event_uid, e->clan_uid, e->occurred_at) != CLAN_REPO_OK)
+    return false;
   (void)s;
   (void)d;
   (void)context;
@@ -1132,4 +1153,424 @@ clan_expedition_reward_complete(MYSQL *db, const char *uid, int64_t now,
   json_object_put(receipt);
   return clan_reward_complete_objective(db, uid, now, expedition_decide, expedition_paid, NULL,
                                         out);
+}
+/* Retained-ledger validation. Never infer counters or restore missing receipts
+ * from inventory, commands, online presence or a player-file snapshot. */
+static enum clan_repository_result audit_outing(MYSQL *db, const char *uid, const char *clan,
+                                                int64_t now)
+{
+  struct json_object *o = NULL, *wrap = NULL, *defs, *events = NULL, *entitlements = NULL, *roster;
+  struct clan_expedition_catalog parsed;
+  struct clan_reset_period week;
+  enum clan_repository_result r = load(db, uid, clan, &o);
+  MYSQL_RES *res;
+  MYSQL_ROW row;
+  size_t i, j, k, nroster;
+  int counts[3] = {0}, credits[32] = {0}, total = 0;
+  uint32_t final_masks[30] = {0}, entitlement_mask = 0;
+  size_t final_count = 0;
+  int64_t completed = 0, claim_expiry = 0, n;
+  bool complete = false;
+  if (r != CLAN_REPO_OK)
+    return r;
+  r = CLAN_REPO_CONFLICT;
+  roster = get(o, "roster");
+  nroster = json_object_array_length(roster);
+  wrap = json_object_new_object();
+  defs = json_object_new_array();
+  json_object_array_add(defs, json_object_get(get(o, "definition")));
+  json_object_object_add(wrap, "version", json_object_new_int(1));
+  json_object_object_add(wrap, "expeditions", defs);
+  if (!clan_expedition_catalog_parse(wrap, &parsed, NULL, 0) || !nroster || nroster > 32 ||
+      !clan_progression_week_at(num(o, "created_at"), &week) ||
+      week.starts_at != num(o, "week_start") || num(o, "expires_at") > week.ends_at ||
+      num(o, "created_at") >= num(o, "expires_at") || num(o, "roster_locked") < 0 ||
+      num(o, "roster_locked") > 1)
+    goto done;
+  if (num(o, "started_at") && (num(o, "started_at") < num(o, "created_at") ||
+                               num(o, "started_at") >= num(o, "expires_at") ||
+                               num(o, "expires_at") - num(o, "started_at") > 7200))
+    goto done;
+  for (i = 0; i < nroster; i++)
+  {
+    struct json_object *v = json_object_array_get_idx(roster, i);
+    if (num(v, "player") < 1 || num(v, "account") < 1 ||
+        num(v, "enrolled_at") < num(o, "created_at") ||
+        num(v, "enrolled_at") >= num(o, "expires_at") || num(v, "inactive") < 0 ||
+        num(v, "inactive") > 1)
+      goto done;
+    for (j = 0; j < i; j++)
+    {
+      struct json_object *old = json_object_array_get_idx(roster, j);
+      if (num(old, "player") == num(v, "player") || num(old, "account") == num(v, "account"))
+        goto done;
+    }
+  }
+  if (!sql(db,
+           "SELECT occurred_at,area,target,objective,participants,facts FROM "
+           "clan_expedition_events WHERE outing_uid='%s' ORDER BY occurred_at,event_uid LIMIT 31",
+           uid))
+  {
+    r = CLAN_REPO_UNAVAILABLE;
+    goto done;
+  }
+  res = mysql_store_result(db);
+  if (!res)
+  {
+    r = CLAN_REPO_UNAVAILABLE;
+    goto done;
+  }
+  events = json_object_new_array();
+  while ((row = mysql_fetch_row(res)))
+  {
+    struct json_object *v = json_object_new_object();
+    const char *keys[] = {"at", "area", "target", "objective", "participants", "facts"};
+    for (i = 0; i < 6; i++)
+      json_object_object_add(
+          v, keys[i], i < 4 ? json_object_new_int64(atoll(row[i])) : json_tokener_parse(row[i]));
+    json_object_array_add(events, v);
+  }
+  mysql_free_result(res);
+  if (json_object_array_length(events) > 30)
+    goto done;
+  for (i = 0; i < json_object_array_length(events); i++)
+  {
+    struct json_object *v = json_object_array_get_idx(events, i), *p = get(v, "participants"),
+                       *f = get(v, "facts");
+    int objective = num(v, "objective");
+    bool target = false;
+    uint32_t mask = 0;
+    uint32_t fact_mask = 0;
+    if (objective < 0 || objective > 2 || !num(o, "started_at") ||
+        num(v, "at") < num(o, "started_at") || num(v, "at") >= num(o, "expires_at") ||
+        !num(o, "roster_locked") || json_object_get_type(p) != json_type_array ||
+        json_object_array_length(p) < 2 || json_object_array_length(p) > 6 ||
+        json_object_get_type(f) != json_type_array || json_object_array_length(f) > 32)
+      goto done;
+    for (j = 0; j < parsed.entries[0].objectives[objective].count; j++)
+      if (parsed.entries[0].objectives[objective].targets[j].area == num(v, "area") &&
+          parsed.entries[0].objectives[objective].targets[j].mob == num(v, "target"))
+        target = true;
+    if (!target || ++counts[objective] > parsed.entries[0].objectives[objective].quota)
+      goto done;
+    for (j = 0; j < json_object_array_length(f); j++)
+    {
+      struct json_object *fact = json_object_array_get_idx(f, j);
+      int level;
+      if (json_object_get_type(fact) != json_type_array || json_object_array_length(fact) != 3)
+        goto done;
+      for (k = 0; k < nroster; k++)
+        if (num(json_object_array_get_idx(roster, k), "player") ==
+            json_object_get_int64(json_object_array_get_idx(fact, 0)))
+          break;
+      if (k == nroster || (fact_mask & (UINT32_C(1) << k)) ||
+          num(json_object_array_get_idx(roster, k), "account") !=
+              json_object_get_int64(json_object_array_get_idx(fact, 1)))
+        goto done;
+      level = json_object_get_int(json_object_array_get_idx(fact, 2));
+      if (level < parsed.entries[0].min_player_level || level > parsed.entries[0].max_player_level)
+        goto done;
+      fact_mask |= UINT32_C(1) << k;
+    }
+    for (j = 0; j < json_object_array_length(p); j++)
+    {
+      struct json_object *player = json_object_array_get_idx(p, j);
+      if (json_object_get_type(player) != json_type_int)
+        goto done;
+      for (k = 0; k < nroster; k++)
+        if (num(json_object_array_get_idx(roster, k), "player") == json_object_get_int64(player))
+          break;
+      if (k == nroster || (mask & (UINT32_C(1) << k)) || !(fact_mask & (UINT32_C(1) << k)))
+        goto done;
+      mask |= UINT32_C(1) << k;
+      credits[k]++;
+    }
+  }
+  for (i = 0; i < 3; i++)
+    total += parsed.entries[0].objectives[i].quota;
+  if (num(o, "state") == 0 &&
+      (num(o, "started_at") || json_object_array_length(events) || num(o, "roster_locked")))
+    goto done;
+  if (num(o, "state") == 1 && !num(o, "started_at"))
+    goto done;
+  if (!sql(db,
+           "SELECT family,week_start,completed_at,expires_at,objectives FROM "
+           "clan_expedition_completions WHERE outing_uid='%s'",
+           uid))
+  {
+    r = CLAN_REPO_UNAVAILABLE;
+    goto done;
+  }
+  res = mysql_store_result(db);
+  if (!res)
+  {
+    r = CLAN_REPO_UNAVAILABLE;
+    goto done;
+  }
+  row = mysql_fetch_row(res);
+  if (row)
+  {
+    complete = true;
+    completed = atoll(row[2]);
+    claim_expiry = atoll(row[3]);
+    bool valid = num(o, "state") == 3 && atoi(row[0]) == parsed.entries[0].family &&
+                 atoll(row[1]) == week.starts_at && completed >= num(o, "started_at") &&
+                 completed < num(o, "expires_at") && claim_expiry == week.ends_at &&
+                 atoi(row[4]) == total && json_object_array_length(events) == (size_t)total;
+    mysql_free_result(res);
+    if (!valid)
+      goto done;
+  }
+  else
+    mysql_free_result(res);
+  if (!complete && json_object_array_length(events) == (size_t)total)
+    goto done;
+  if (!sql(db,
+           "SELECT player_id,account_id,operation_uid,state FROM clan_expedition_entitlements "
+           "WHERE outing_uid='%s' ORDER BY player_id LIMIT 7",
+           uid))
+  {
+    r = CLAN_REPO_UNAVAILABLE;
+    goto done;
+  }
+  res = mysql_store_result(db);
+  if (!res)
+  {
+    r = CLAN_REPO_UNAVAILABLE;
+    goto done;
+  }
+  entitlements = json_object_new_array();
+  while ((row = mysql_fetch_row(res)))
+  {
+    struct json_object *v = json_object_new_object();
+    json_object_object_add(v, "player", json_object_new_int64(atoll(row[0])));
+    json_object_object_add(v, "account", json_object_new_int64(atoll(row[1])));
+    json_object_object_add(v, "operation", json_object_new_string(row[2]));
+    json_object_object_add(v, "state", json_object_new_int(atoi(row[3])));
+    json_object_array_add(entitlements, v);
+  }
+  mysql_free_result(res);
+  if ((!complete && json_object_array_length(entitlements)) ||
+      (complete &&
+       (json_object_array_length(entitlements) < 2 || json_object_array_length(entitlements) > 6)))
+    goto done;
+  for (i = 0; i < json_object_array_length(entitlements); i++)
+  {
+    struct json_object *v = json_object_array_get_idx(entitlements, i), *receipt = NULL, *e;
+    char expected[33];
+    for (k = 0; k < nroster; k++)
+      if (num(json_object_array_get_idx(roster, k), "player") == num(v, "player"))
+        break;
+    if (k == nroster || num(json_object_array_get_idx(roster, k), "account") != num(v, "account") ||
+        credits[k] < (total + 1) / 2 || num(v, "state") < 0 || num(v, "state") > 2)
+      goto done;
+    entitlement_mask |= UINT32_C(1) << k;
+    expedition_uid(expected, "personal", uid, num(v, "player"));
+    if (strcmp(expected, str(v, "operation")))
+      goto done;
+    if (!sql(db, "SELECT COUNT(*) FROM clan_reward_receipts WHERE operation_uid='%s'", expected) ||
+        !scalar(db, &n))
+    {
+      r = CLAN_REPO_UNAVAILABLE;
+      goto done;
+    }
+    if (!num(v, "state"))
+    {
+      if (n)
+        goto done;
+      continue;
+    }
+    if (n != 1 || clan_reward_load(db, expected, &receipt) != CLAN_REPO_OK)
+      goto done;
+    e = get(receipt, "event");
+    bool valid = num(receipt, "status") == num(v, "state") - 1 &&
+                 num(e, "source") == CLAN_SOURCE_EXPEDITION_PERSONAL &&
+                 num(e, "player_id") == num(v, "player") &&
+                 num(e, "account_id") == num(v, "account") && !strcmp(str(e, "clan_uid"), clan) &&
+                 !strcmp(str(e, "event_uid"), uid) && num(e, "occurred_at") == completed &&
+                 num(e, "requested_favor_eighths") == 800 && !num(e, "requested_xp_eighths") &&
+                 !num(e, "requested_influence_eighths");
+    json_object_put(receipt);
+    if (!valid)
+      goto done;
+    if (!sql(db,
+             "SELECT COUNT(*) FROM clan_expedition_personal_claims WHERE operation_uid='%s' AND "
+             "account_id=%" PRId64 " AND week_start=%" PRId64 " AND family=%d",
+             expected, num(v, "account"), week.starts_at, parsed.entries[0].family) ||
+        !scalar(db, &n))
+    {
+      r = CLAN_REPO_UNAVAILABLE;
+      goto done;
+    }
+    if (n != 1)
+      goto done;
+  }
+  if (complete)
+  {
+    bool final = false;
+    for (i = 0; i < json_object_array_length(events); i++)
+    {
+      struct json_object *v = json_object_array_get_idx(events, i), *p = get(v, "participants");
+      uint32_t mask = 0;
+      if (num(v, "at") != completed)
+        continue;
+      for (j = 0; j < json_object_array_length(p); j++)
+        for (k = 0; k < nroster; k++)
+          if (num(json_object_array_get_idx(roster, k), "player") ==
+              json_object_get_int64(json_object_array_get_idx(p, j)))
+            mask |= UINT32_C(1) << k;
+      final_masks[final_count++] = mask;
+    }
+    for (i = 0; i < final_count; i++)
+      if ((final_masks[i] & entitlement_mask) == entitlement_mask)
+        final = true;
+    if (!final)
+      goto done;
+    if (!sql(db,
+             "SELECT COUNT(*) FROM clan_expedition_shared_claims s JOIN clan_reward_receipts r ON "
+             "r.operation_uid=s.operation_uid JOIN clan_expedition_completions c ON "
+             "c.outing_uid=r.event_uid JOIN clan_expedition_outings o ON o.outing_uid=c.outing_uid "
+             "WHERE s.clan_uid='%s' AND s.week_start=%" PRId64
+             " AND s.family=%d AND o.clan_uid=s.clan_uid AND c.family=s.family AND "
+             "c.week_start=s.week_start AND r.source_id=%d AND r.occurred_at_utc=c.completed_at "
+             "AND r.requested_xp_eighths=4800 AND r.requested_influence_eighths=2400 AND "
+             "r.requested_favor_eighths=0",
+             clan, week.starts_at, parsed.entries[0].family,
+             parsed.entries[0].family == 1 ? 8 : 9) ||
+        !scalar(db, &n))
+    {
+      r = CLAN_REPO_UNAVAILABLE;
+      goto done;
+    }
+    if (n != 1)
+      goto done;
+  }
+  (void)now;
+  r = CLAN_REPO_OK;
+done:
+  if (wrap)
+    json_object_put(wrap);
+  if (events)
+    json_object_put(events);
+  if (entitlements)
+    json_object_put(entitlements);
+  json_object_put(o);
+  return r;
+}
+static enum clan_repository_result maintenance_begin(MYSQL *db)
+{
+  int64_t n;
+  if (!clan_expedition_progress_ready(db) || clan_repository_schema_check(db) != CLAN_REPO_OK)
+    return CLAN_REPO_SCHEMA;
+  if (db->server_status & SERVER_STATUS_IN_TRANS)
+    return CLAN_REPO_CONFLICT;
+  if (!sql(db, "START TRANSACTION"))
+    return CLAN_REPO_UNAVAILABLE;
+  if (!sql(db, "SELECT store_mode FROM clan_store_control WHERE singleton=1 FOR UPDATE") ||
+      !scalar(db, &n) || n != 2)
+    return end(db, CLAN_REPO_UNAVAILABLE);
+  return CLAN_REPO_OK;
+}
+static enum clan_repository_result reconcile_one(MYSQL *db, const char *uid, const char *clan,
+                                                 int64_t now)
+{
+  enum clan_repository_result r = maintenance_begin(db);
+  if (r != CLAN_REPO_OK)
+    return r;
+  r = audit_outing(db, uid, clan, now);
+  if (r != CLAN_REPO_OK)
+    return end(db, r);
+  if (!sql(db,
+           "UPDATE clan_expedition_roster r JOIN clan_expedition_outings o ON "
+           "o.outing_uid=r.outing_uid LEFT JOIN clan_memberships m ON m.player_id=r.player_id AND "
+           "m.clan_uid=o.clan_uid LEFT JOIN clan_progression_legacy l ON l.clan_uid=m.clan_uid SET "
+           "r.inactive=1 WHERE r.outing_uid='%s' AND r.inactive=0 AND (m.player_id IS NULL OR "
+           "m.rank_id<1 OR m.rank_id>JSON_LENGTH(JSON_EXTRACT(l.details,'$.ranks')))",
+           uid) ||
+      !sql(db,
+           "UPDATE clan_expedition_outings o JOIN clan_progression_clans c ON "
+           "c.clan_uid=o.clan_uid SET o.state=IF(c.record_status=1,4,3) WHERE o.outing_uid='%s' "
+           "AND o.state IN (0,1) AND (o.expires_at<=%" PRId64 " OR c.record_status<>1)",
+           uid, now))
+    return end(db, CLAN_REPO_UNAVAILABLE);
+#ifdef CLAN_REWARD_TEST
+  if (clan_expedition_crash == 3)
+    _exit(95);
+#endif
+  r = end(db, CLAN_REPO_OK);
+#ifdef CLAN_REWARD_TEST
+  if (r == CLAN_REPO_OK && clan_expedition_crash == 4)
+    _exit(96);
+#endif
+  return r;
+}
+enum clan_repository_result clan_expedition_reconcile_clan(MYSQL *db, const char *clan, int64_t now)
+{
+  MYSQL_RES *res;
+  MYSQL_ROW row;
+  char uid[33];
+  if (!clan_progression_uid_valid(clan) || now < 0)
+    return CLAN_REPO_INVALID;
+  if (!clan_expedition_progress_ready(db))
+    return CLAN_REPO_SCHEMA;
+  if (db->server_status & SERVER_STATUS_IN_TRANS)
+    return CLAN_REPO_CONFLICT;
+  if (!sql(db, "SELECT outing_uid FROM clan_expedition_outings WHERE active_clan='%s'", clan))
+    return CLAN_REPO_UNAVAILABLE;
+  res = mysql_store_result(db);
+  if (!res)
+    return CLAN_REPO_UNAVAILABLE;
+  row = mysql_fetch_row(res);
+  if (!row)
+  {
+    mysql_free_result(res);
+    return CLAN_REPO_OK;
+  }
+  snprintf(uid, sizeof(uid), "%s", row[0]);
+  mysql_free_result(res);
+  return reconcile_one(db, uid, clan, now);
+}
+enum clan_repository_result clan_expedition_reconcile_batch(MYSQL *db, const char *after,
+                                                            size_t limit, int64_t now,
+                                                            struct json_object **out)
+{
+  MYSQL_RES *res;
+  MYSQL_ROW row;
+  char ids[32][33], clans[32][33];
+  size_t count = 0, i;
+  struct json_object *a;
+  if (!out || now < 0 || !limit || limit > 32 ||
+      (after && *after && !clan_progression_uid_valid(after)))
+    return CLAN_REPO_INVALID;
+  if (!clan_expedition_progress_ready(db))
+    return CLAN_REPO_SCHEMA;
+  if (db->server_status & SERVER_STATUS_IN_TRANS)
+    return CLAN_REPO_CONFLICT;
+  if (!sql(db,
+           "SELECT outing_uid,clan_uid FROM clan_expedition_outings FORCE INDEX(ce_active) WHERE "
+           "active_clan IS NOT NULL AND "
+           "outing_uid>'%s' ORDER BY outing_uid LIMIT %zu",
+           after ? after : "", limit))
+    return CLAN_REPO_UNAVAILABLE;
+  res = mysql_store_result(db);
+  if (!res)
+    return CLAN_REPO_UNAVAILABLE;
+  while ((row = mysql_fetch_row(res)))
+  {
+    snprintf(ids[count], 33, "%s", row[0]);
+    snprintf(clans[count], 33, "%s", row[1]);
+    count++;
+  }
+  mysql_free_result(res);
+  a = json_object_new_array();
+  for (i = 0; i < count; i++)
+  {
+    struct json_object *v = json_object_new_object();
+    enum clan_repository_result r = reconcile_one(db, ids[i], clans[i], now);
+    json_object_object_add(v, "outing_uid", json_object_new_string(ids[i]));
+    json_object_object_add(v, "result", json_object_new_string(clan_repository_result_name(r)));
+    json_object_array_add(a, v);
+  }
+  *out = a;
+  return CLAN_REPO_OK;
 }

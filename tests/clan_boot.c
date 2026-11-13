@@ -49,7 +49,7 @@ int main(int argc,char **argv)
    assert(clan_persistence_boot_buff(0,&b));assert(b.expires_at==300&&b.next_available_at==500&&!clan_repository_buff_active(&b,400));
    assert(!clan_persistence_boot_buff(2,&b));
    /* No saved progression-mode flag can enable effects at boot. */
-   assert(clan_progression_defaults.controls.mode==CLAN_PROGRESSION_OFF);
+   assert(clan_progression_v1.controls.mode==CLAN_PROGRESSION_OFF);
   }
  }
  for(i=0;i<num_of_clans;i++){free(clan_list[i].description);free(clan_list[i].abrev);}free_clan_list();free_claim_list();mysql_close(pool.conn);printf("Clan boot scenario %s passed\n",scenario);return 0;

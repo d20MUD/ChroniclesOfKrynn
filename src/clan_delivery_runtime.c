@@ -12,10 +12,12 @@
 #include "clan_buff_runtime.h"
 #include "clan_persistence.h"
 #include "crafting_new.h"
+#include "crafting_recipes.h"
 #include "constants.h"
 #include "spec_abilities.h"
 #include "mysql.h"
 #include <inttypes.h>
+#include "clan_display.h"
 #include <limits.h>
 #define PS(ch) ((ch)->player_specials)
 static struct json_object *get(struct json_object *o, const char *key)
@@ -36,11 +38,17 @@ static const char *str(struct json_object *o, const char *key)
 }
 static bool terms_valid(const struct clan_delivery_definition *d)
 {
+  if (clan_delivery_definition_valid(d) && d->kind == CLAN_DELIVERY_CRAFTED) {
+    const struct craft_recipe_data *recipe = &crafting_recipes[d->resource];
+    return recipe->name && *recipe->name &&
+      (recipe->object_type == ITEM_WEAPON || recipe->object_type == ITEM_ARMOR ||
+       recipe->object_type == ITEM_WORN || recipe->object_type == ITEM_INSTRUMENT);
+  }
   return clan_delivery_definition_valid(d) &&
          (d->kind != CLAN_DELIVERY_MATERIAL ||
           (d->resource < NUM_CRAFT_MATS && material_grade(d->resource) == d->grade));
 }
-static bool catalog_load(struct clan_delivery_catalog *c)
+bool clan_delivery_catalog_load(struct clan_delivery_catalog *c)
 {
   struct json_object *o = json_object_from_file("clan/deliveries.json");
   size_t i;
@@ -63,6 +71,52 @@ static bool ammo_eligible(struct obj_data *o, const struct clan_delivery_definit
          !obj_has_special_ability(o, WEAPON_SPECAB_RETURNING) && !*o->clan_delivery_uid &&
          !o->estate_delivery_id && !o->legendary_quarantined;
 }
+/* Match a finished recipe by its actual type/subtype, never its editable name.
+ * Reserve only directly carried, ordinary unenhanced crafted goods. */
+static bool crafted_eligible(struct obj_data *o, const struct clan_delivery_definition *d,
+                              bool reserved)
+{
+  const struct craft_recipe_data *recipe = &crafting_recipes[d->resource];
+  if (!o || GET_OBJ_TYPE(o) != recipe->object_type || !OBJ_FLAGGED(o, ITEM_CRAFTED) ||
+      OBJ_FLAGGED(o, ITEM_MOLD) || (!reserved && *o->clan_delivery_uid) ||
+      o->estate_delivery_id || o->legendary_quarantined || *o->legendary_uuid ||
+      *o->clan_qm_uid || GET_OBJ_BOUND_ID(o) || o->contains || o->sheath_primary ||
+      o->sheath_secondary || o->special_abilities || o->has_spells)
+    return false;
+  switch (recipe->object_type) {
+    case ITEM_WEAPON: return GET_OBJ_VAL(o,0) == recipe->object_subtype && GET_OBJ_VAL(o,4) == 0;
+    case ITEM_ARMOR: return GET_OBJ_VAL(o,1) == recipe->object_subtype && GET_OBJ_VAL(o,4) == 0;
+    case ITEM_INSTRUMENT: return GET_OBJ_VAL(o,0) == recipe->object_subtype;
+    case ITEM_WORN: return CAN_WEAR(o,recipe->object_subtype);
+    default: return false;
+  }
+}
+static int crafted_collect(struct char_data *ch, const struct clan_delivery_definition *d,
+                            struct obj_data **items)
+{
+  struct obj_data *o; int count=0;
+  for (o=ch->carrying;o && count<d->quantity;o=o->next_content)
+    if (crafted_eligible(o,d,false)) { if(items)items[count]=o; count++; }
+  return count;
+}
+static bool crafted_markers(struct char_data *ch, const struct clan_delivery_definition *d,
+                             const char *uid, bool refund, bool cleanup)
+{
+  struct obj_data *o,*next; int count=0;
+  for(o=ch->carrying;o;o=o->next_content) if(!strcmp(o->clan_delivery_uid,uid)) {
+    if(o->clan_delivery_amount!=1 || !crafted_eligible(o,d,true) || ++count>d->quantity)
+      return false;
+  }
+  if(count!=d->quantity)return false;
+  if(!refund && !cleanup)return true;
+  for(o=ch->carrying;o;o=next) {
+    next=o->next_content;
+    if(strcmp(o->clan_delivery_uid,uid))continue;
+    *o->clan_delivery_uid=0; o->clan_delivery_amount=0;
+    if(cleanup)extract_obj(o);
+  }
+  return true;
+}
 /* Only directly carried bundles or the equipped ammo pouch. Nested bags and
  * other containers are excluded, so the displayed source is predictable. */
 static int ammo_collect(struct char_data *ch, const struct clan_delivery_definition *d,
@@ -84,10 +138,29 @@ static int ammo_collect(struct char_data *ch, const struct clan_delivery_definit
     }
   return left ? 0 : n;
 }
-static bool goods_available(struct char_data *ch, const struct clan_delivery_definition *d)
+int clan_delivery_goods_count(struct char_data *ch, const struct clan_delivery_definition *d)
+{
+  struct obj_data *o, *pouch = GET_EQ(ch, WEAR_AMMO_POUCH);
+  int total = 0, pass;
+  if (!terms_valid(d))
+    return 0;
+  if (d->kind == CLAN_DELIVERY_CRAFTED)
+    return crafted_collect(ch,d,NULL);
+  if (d->kind == CLAN_DELIVERY_MATERIAL)
+    return MIN(d->quantity, MAX(0, GET_CRAFT_MAT(ch, d->resource)));
+  for (pass = 0; pass < 2; pass++)
+    for (o = pass ? ch->carrying : (pouch ? pouch->contains : NULL); o && total < d->quantity;
+         o = o->next_content)
+      if (ammo_eligible(o, d))
+        total += MIN(d->quantity - total, GET_OBJ_VAL(o, AMMO_VAL_QUANTITY));
+  return total;
+}
+bool clan_delivery_goods_available(struct char_data *ch, const struct clan_delivery_definition *d)
 {
   struct obj_data *items[100];
   int amounts[100];
+  if (terms_valid(d) && d->kind == CLAN_DELIVERY_CRAFTED)
+    return crafted_collect(ch,d,NULL) == d->quantity;
   return terms_valid(d) &&
          (d->kind == CLAN_DELIVERY_MATERIAL ? GET_CRAFT_MAT(ch, d->resource) >= d->quantity
                                             : ammo_collect(ch, d, items, amounts) > 0);
@@ -129,6 +202,12 @@ static bool ammo_markers(struct char_data *ch, const char *uid, bool refund, boo
     }
   return true;
 }
+static bool delivery_markers(struct char_data *ch, const struct clan_delivery_definition *d,
+                              const char *uid, bool refund, bool cleanup)
+{
+  return d->kind==CLAN_DELIVERY_CRAFTED ? crafted_markers(ch,d,uid,refund,cleanup)
+                                       : ammo_markers(ch,uid,refund,cleanup);
+}
 static bool checkpoint(struct char_data *ch, int kind)
 {
   return kind == CLAN_DELIVERY_MATERIAL ? save_char_checked(ch, 0) : Crash_crashsave_checked(ch);
@@ -138,7 +217,7 @@ static bool goods_pay(struct char_data *ch, const struct clan_delivery_definitio
 {
   struct obj_data *items[100];
   int amounts[100], i, n;
-  if (!goods_available(ch, d))
+  if (!clan_delivery_goods_available(ch, d))
     return false;
   if (d->kind == CLAN_DELIVERY_MATERIAL)
   {
@@ -147,14 +226,21 @@ static bool goods_pay(struct char_data *ch, const struct clan_delivery_definitio
   }
   else
   {
-    n = ammo_collect(ch, d, items, amounts);
-    if (!n)
-      return false;
-    for (i = 0; i < n; i++)
-    {
-      GET_OBJ_VAL(items[i], AMMO_VAL_QUANTITY) -= amounts[i];
-      strlcpy(items[i]->clan_delivery_uid, uid, 33);
-      items[i]->clan_delivery_amount = amounts[i];
+    if (d->kind == CLAN_DELIVERY_CRAFTED) {
+      n=crafted_collect(ch,d,items);
+      if(n!=d->quantity)return false;
+      for(i=0;i<n;i++) {
+        strlcpy(items[i]->clan_delivery_uid,uid,33);
+        items[i]->clan_delivery_amount=1;
+      }
+    } else {
+      n = ammo_collect(ch, d, items, amounts);
+      if (!n) return false;
+      for (i = 0; i < n; i++) {
+        GET_OBJ_VAL(items[i], AMMO_VAL_QUANTITY) -= amounts[i];
+        strlcpy(items[i]->clan_delivery_uid, uid, 33);
+        items[i]->clan_delivery_amount = amounts[i];
+      }
     }
     strlcpy(PS(ch)->clan_delivery_inventory, uid, 33);
     PS(ch)->clan_delivery_inventory_stage = 1;
@@ -231,7 +317,7 @@ bool clan_delivery_recover(struct char_data *ch)
   committed = num(receipt, "status") == 1;
   if (!committed && num(receipt, "status") == 0 && stage == 1)
   {
-    if ((d.kind == CLAN_DELIVERY_AMMO && !ammo_markers(ch, uid, false, false)) ||
+    if ((d.kind != CLAN_DELIVERY_MATERIAL && !delivery_markers(ch, &d, uid, false, false)) ||
         !checkpoint(ch, d.kind))
       goto blocked;
     if (!(connection = mysql_pool_acquire()))
@@ -267,7 +353,7 @@ bool clan_delivery_recover(struct char_data *ch)
   {
     if (stage == 1)
     {
-      if (d.kind == CLAN_DELIVERY_AMMO && !ammo_markers(ch, uid, false, true))
+      if (d.kind != CLAN_DELIVERY_MATERIAL && !delivery_markers(ch, &d, uid, false, true))
         goto blocked;
       if (d.kind == CLAN_DELIVERY_MATERIAL)
         PS(ch)->clan_delivery_stage = 3;
@@ -291,7 +377,7 @@ bool clan_delivery_recover(struct char_data *ch)
       }
       else
       {
-        if (!ammo_markers(ch, uid, true, false))
+        if (!delivery_markers(ch, &d, uid, true, false))
           goto blocked;
         PS(ch)->clan_delivery_inventory_stage = 2;
       }
@@ -345,7 +431,9 @@ blocked:
 static void requirements(struct char_data *ch, const struct clan_delivery_definition *d)
 {
   static const char *ammo[] = {"", "arrows", "bolts", "bullets"};
-  if (d->kind == CLAN_DELIVERY_MATERIAL)
+  if (d->kind == CLAN_DELIVERY_CRAFTED)
+    send_to_char(ch,"%d unenhanced crafted %s items, carried directly (unbound)",d->quantity,crafting_recipes[d->resource].name);
+  else if (d->kind == CLAN_DELIVERY_MATERIAL)
     send_to_char(ch, "%d units of %s (exact grade %d)", d->quantity,
                  crafting_materials[d->resource], d->grade);
   else
@@ -356,7 +444,7 @@ static void requirements(struct char_data *ch, const struct clan_delivery_defini
 }
 ACMDU(do_clandeliveries)
 {
-  char command[32] = "list", arg[80] = "", extra[2];
+  char command[32] = "list", arg[160] = "";
   int tokens;
   int64_t now = time(NULL);
   MYSQL_POOL_CONN *connection;
@@ -373,7 +461,7 @@ ACMDU(do_clandeliveries)
     return;
   if (!clan_delivery_recover(ch))
     return;
-  tokens = sscanf(argument ? argument : "", "%31s %79s %1s", command, arg, extra);
+  tokens = sscanf(argument ? argument : "", "%31s %159[^\r\n]", command, arg);
   if (tokens > 2)
     goto usage;
   if (!strcmp(command, "retry"))
@@ -385,7 +473,7 @@ ACMDU(do_clandeliveries)
   if (strcmp(command, "list") && strcmp(command, "active") && strcmp(command, "accept") &&
       strcmp(command, "abandon") && strcmp(command, "turnin") && strcmp(command, "confirm"))
     goto usage;
-  if ((!strcmp(command, "accept") || !strcmp(command, "confirm")) ? tokens != 2 : tokens == 2)
+  if (!strcmp(command, "accept") ? tokens != 2 : (strcmp(command, "confirm") && tokens == 2))
     goto usage;
   if (!clan_persistence_sql_authority() || !clan_persistence_ready() || !mysql_available ||
       !(connection = mysql_pool_acquire()))
@@ -393,13 +481,14 @@ ACMDU(do_clandeliveries)
     send_to_char(ch, "Clan contracts require available authoritative SQL storage.\r\n");
     return;
   }
-  ready.contracts_ready = clan_delivery_schema_ready(connection->conn) && catalog_load(&catalog);
+  ready.contracts_ready =
+      clan_delivery_schema_ready(connection->conn) && clan_delivery_catalog_load(&catalog);
   r = clan_repository_status_read(connection->conn, GET_IDNUM(ch), ch->desc->account->id, NULL,
                                   false, now, &report);
-  mysql_pool_release(connection);
   if (r != CLAN_REPO_OK || !report.full_clan_access || report.membership != CLAN_ACCESS_ACCEPTED ||
       !clan_progression_feature_available(config, CLAN_FEATURE_CONTRACTS, &ready, report.clan.uid))
   {
+    mysql_pool_release(connection);
     send_to_char(ch, "Delivery contracts are unavailable: accepted membership, enabled pilot "
                      "contracts, and validated definitions/storage are required.\r\n");
     return;
@@ -411,14 +500,16 @@ ACMDU(do_clandeliveries)
     send_to_char(ch, "Contract reset is unavailable; retry later.\r\n");
     return;
   }
+  mysql_pool_release(connection);
   clan_delivery_catalog_rotate(&catalog, now);
   if (!strcmp(command, "list"))
   {
     struct clan_reset_period rotation_week;
     if (clan_progression_week_at(now, &rotation_week))
-      send_to_char(ch, "Weekly choices rotate at UTC epoch %" PRId64
-                       ". Unfinished contracts expire; pending rewards recover in their original week.\r\n",
-                   rotation_week.ends_at);
+      send_to_char(
+          ch,
+          "\r\n\tCClan Deliveries\tn\r\n  New choices: %s\r\n",
+          clan_display_time(rotation_week.ends_at, (char[64]){0}));
     int level = 0;
     clan_award_level(config, report.clan.xp_eighths, &level);
     if (!(connection = mysql_pool_acquire()))
@@ -435,10 +526,8 @@ ACMDU(do_clandeliveries)
     }
     send_to_char(ch, "Account delivery completions this UTC week: %zu / 2.\r\n",
                  json_object_array_length(o));
-    send_to_char(ch, "Delivery contracts: one active delivery slot. Two DIFFERENT definitions per "
-                     "account per UTC week, across clans/alts.\r\n"
-                     "Base credit: 100 clan XP / 50 Influence / 50 Favor; account, clan and Favor "
-                     "caps can reduce this. Preview before confirming.\r\n");
+    send_to_char(ch, "One active delivery at a time.\r\n"
+                     "Reward: 12.5 Favor and 6.25 Influence, before limits.\r\n\r\n");
     for (i = 0; i < catalog.count; i++)
     {
       size_t j;
@@ -447,7 +536,7 @@ ACMDU(do_clandeliveries)
       for (j = 0; j < json_object_array_length(o); j++)
         if (!strcmp(d.id, json_object_get_string(json_object_array_get_idx(o, j))))
           claimed = true;
-      send_to_char(ch, "  %s - %s [clan level %d%s%s]: ", d.id, d.name, d.min_level,
+      send_to_char(ch, "  \tW%s\tn [clan level %d%s%s]\r\n    Deliver: ", d.name, d.min_level,
                    level < d.min_level ? ", locked" : "",
                    claimed                            ? ", completed this week"
                    : json_object_array_length(o) >= 2 ? ", account limit reached"
@@ -460,8 +549,9 @@ ACMDU(do_clandeliveries)
     send_to_char(
         ch,
         "Accept/turn in at a quartermaster. Purchased or transferred goods qualify. Ammo is taken "
-        "from your equipped pouch and direct inventory.\r\n"
-        "clan deliveries accept <id> | active | abandon | turnin | confirm <quote-id> | retry\r\n");
+        "from your equipped pouch and direct inventory. Crafted gear must be unbound, "
+        "unenhanced, and carried directly.\r\n"
+        "clan deliveries accept <name> | active | abandon | turnin | confirm | retry\r\n");
     return;
   }
   if (strcmp(command, "active") && strcmp(command, "abandon") &&
@@ -474,9 +564,11 @@ ACMDU(do_clandeliveries)
   if (!strcmp(command, "confirm"))
   {
     o = json_tokener_parse(PS(ch)->clan_delivery_quote);
+    if (o && !*arg) strlcpy(arg, str(o, "operation_uid"), sizeof(arg));
     if (!o || strcmp(arg, str(o, "operation_uid")) || now >= num(o, "confirm_before") ||
-        !clan_delivery_definition_parse(get(o, "definition"), &d) || !goods_available(ch, &d) ||
-        num(o, "player_id") != GET_IDNUM(ch) || num(o, "account_id") != ch->desc->account->id ||
+        !clan_delivery_definition_parse(get(o, "definition"), &d) ||
+        !clan_delivery_goods_available(ch, &d) || num(o, "player_id") != GET_IDNUM(ch) ||
+        num(o, "account_id") != ch->desc->account->id ||
         strcmp(str(o, "clan_uid"), report.clan.uid))
     {
       if (o)
@@ -519,9 +611,14 @@ ACMDU(do_clandeliveries)
   if (!strcmp(command, "accept"))
   {
     char uid[33];
-    for (i = 0; i < catalog.count; i++)
-      if (!strcmp(catalog.entries[i].id, arg))
-        break;
+    int choice = CLAN_DISPLAY_FIND(arg, catalog, struct clan_delivery_definition);
+    if (choice < 0) {
+      mysql_pool_release(connection);
+      send_to_char(ch, choice == -2 ? "That name matches several deliveries. Please use more of the name.\r\n"
+                                    : "No delivery by that name. Use clan deliveries list.\r\n");
+      return;
+    }
+    i = (size_t)choice;
     if (i == catalog.count || !clan_repository_uid_generate(uid))
       r = CLAN_REPO_INVALID;
     else
@@ -546,23 +643,23 @@ ACMDU(do_clandeliveries)
   {
     send_to_char(ch, "%s: ", d.name);
     requirements(ch, &d);
-    send_to_char(ch, ". Expires at UTC epoch %" PRId64 "%s.\r\n", num(o, "expires_at"),
+    send_to_char(ch, ".\r\n  Expires: %s%s.\r\n", clan_display_time(num(o, "expires_at"), (char[64]){0}),
                  now >= num(o, "expires_at") ? " [expired]" : "");
     if (!strcmp(command, "turnin"))
     {
       struct json_object *delta = get(o, "delta");
       const char *encoded = json_object_to_json_string_ext(o, JSON_C_TO_STRING_PLAIN);
-      if (!goods_available(ch, &d))
+      if (!clan_delivery_goods_available(ch, &d))
         send_to_char(ch, "You do not have the required eligible goods. Nothing was consumed.\r\n");
       else if (strlen(encoded) < sizeof(PS(ch)->clan_delivery_quote))
       {
         strlcpy(PS(ch)->clan_delivery_quote, encoded, sizeof(PS(ch)->clan_delivery_quote));
         send_to_char(ch,
-                     "Exact credit: %.3f clan XP / %.3f Influence / %.3f Favor%s.\r\nConfirm "
-                     "within 60 seconds: clan deliveries confirm %s\r\n",
-                     num(delta, "xp_eighths") / 8.0, num(delta, "influence_eighths") / 8.0,
+                     "Reward: %g Influence and %g Favor%s.\r\n"
+                     "Type clan deliveries confirm within 60 seconds to hand over the goods.\r\n",
+                     num(delta, "influence_eighths") / 8.0,
                      num(delta, "favor_eighths") / 8.0,
-                     num(delta, "cap_flags") ? " (reduced by caps)" : "", str(o, "operation_uid"));
+                     num(delta, "cap_flags") ? " (reduced by limits)" : "");
       }
     }
   }

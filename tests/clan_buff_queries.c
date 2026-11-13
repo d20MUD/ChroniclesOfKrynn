@@ -16,7 +16,7 @@ static struct clan_buff_family_view *family(struct clan_buff_view *v,enum clan_b
 {int i;for(i=0;i<5;i++)if(v->families[i].family==id)return &v->families[i];assert(0);return NULL;}
 int main(void)
 {
-  struct clan_progression_config c=clan_progression_defaults;
+  struct clan_progression_config c=clan_progression_v1;
   struct clan_buff_view v,sentinel,first;
   struct clan_buff_state rows[5],saved[5];
   int level,tier;

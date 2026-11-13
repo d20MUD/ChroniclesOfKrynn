@@ -87,10 +87,10 @@ with database(migrations) as (tmp,socket,sql,client):
         p=proc(dict(mode='buff-command',now=2201296000,args=args)|extra)
         assert p.returncode==0,(args,p.stdout,p.stderr)
         return json.loads(p.stdout)['text']
-    text=command('list');assert "Family 5: Artisan" in text and 'Buff slots' in text,text
+    text=command('list');assert "Artisan's Guidance" in text and 'Tier 1' in text and 'activation UID' not in text,text
     before=state();assert 'Usage' not in command('activate 2 1 1',disabled=True) and state()==before
     text=command('activate 2 1 1',disabled=True);assert 'disabled' in text,text
-    for args in ['activate 2 -1 1','activate 2 1 99999999999',"activate 2 1 1 bad uid",'cancel bad','permission -1','list extra','replace 3 1 1 bad']:
+    for args in ['activate 2 -1 1','activate 2 1 99999999999',"activate 2 1 1 bad uid",'permission -1','list extra','replace 3 1 1 bad']:
         assert 'clan buffs list' in command(args) and state()==before
     assert 'authenticated' in command('list',account=0)
     assert 'ineligible' in command('permission 2',actor=88) or 'membership' in command('permission 2',actor=88)
@@ -98,9 +98,9 @@ with database(migrations) as (tmp,socket,sql,client):
     assert 'ok' in command('permission 2')
     assert sql(f"SELECT max_rank FROM clan_buff_management WHERE clan_uid='{A}'")=='2'
     sql(f"INSERT INTO clan_memberships(player_id,clan_uid,rank_id,legacy_points) VALUES(88,'{A}',2,0)")
-    text=command(f'activate 2 1 1 {"1a"*16} {A}',actor=88);assert 'Buff operation: ok' in text,text
-    after=state();assert 'Buff operation: ok' in command(f'activate 2 1 1 {"1a"*16} {A}',actor=88) and state()==after
-    assert 'Buff operation: conflict' in command(f'activate 3 1 1 {"1a"*16} {A}',actor=88)
+    text=command(f'activate 2 1 1 {"1a"*16} {A}',actor=88);assert 'Your clan buff is active.' in text,text
+    after=state();assert 'Your clan buff is active.' in command(f'activate 2 1 1 {"1a"*16} {A}',actor=88) and state()==after
+    assert 'could not be changed' in command(f'activate 3 1 1 {"1a"*16} {A}',actor=88)
     # Occupied slots require the exact active UID before replacement.
     after=state();text=command(f'replace 3 1 1 {"8a"*16}',actor=88)
     assert 'changed' in text and state()==after,text
@@ -109,16 +109,20 @@ with database(migrations) as (tmp,socket,sql,client):
     text=command(f'activate 3 1 1 {"4a"*16} {A} {"8a"*16}',actor=88)
     assert 'changed' in text and state()==after,text
     text=command(f'activate 3 1 1 {"5a"*16} {A} {"1a"*16}',actor=88)
-    assert 'Buff operation: ok' in text,text
-    text=command(f'replace 4 1 1 {"5a"*16}',actor=88);assert 'Buff operation: ok' in text,text
-    text=command('list');assert 'next use' in text and 'UTC' in text
+    assert 'Your clan buff is active.' in text,text
+    text=command(f'replace 4 1 1 {"5a"*16}',actor=88);assert 'Your clan buff is active.' in text,text
+    text=command('list');assert 'Ready again' in text and 'UTC' in text
     # Revoke management: no refresh/cancel bypass; leader can still cancel.
     assert 'ok' in command('permission 0')
     assert 'permission' in command(f'cancel 0123456789abcdef0123456789abcdef {"2a"*16} {A}',actor=88)
-    assert 'Buff operation: ok' in command(f'cancel 0123456789abcdef0123456789abcdef {"3a"*16} {A}')
+    assert 'has been cancelled' in command(f'cancel 0123456789abcdef0123456789abcdef {"3a"*16} {A}')
     sql('DELETE FROM clan_memberships WHERE player_id=88')
-    after=state();assert 'Buff operation: ok' in command(f'activate 2 1 1 {"1a"*16} {A}',actor=88,disabled=True) and state()==after
+    after=state();assert 'Your clan buff is active.' in command(f'activate 2 1 1 {"1a"*16} {A}',actor=88,disabled=True) and state()==after
     assert 'ok' in command('permission 2')
+    named=command("activate Scholar's Encouragement 1 2",now=2202000000,generated_uid="a1"*16);assert 'Your clan buff is active.' in named,named
+    assert 'Exact retry' not in named and A not in named
+    assert 'Your clan buff is active.' in command('replace Arcane Readiness 1 2',now=2202000000,generated_uid='a2'*16)
+    assert 'has been cancelled' in command('cancel Arcane Readiness',now=2202000000,generated_uid='a3'*16)
     sql(f"UPDATE clan_progression_legacy SET details=JSON_SET(details,'$.ranks',JSON_ARRAY('Leader')) WHERE clan_uid='{A}'")
     assert 'ok' in command('permission 0')
     sql(f"UPDATE clan_progression_legacy SET details=JSON_SET(details,'$.ranks',JSON_ARRAY('Leader','Member')) WHERE clan_uid='{A}'")

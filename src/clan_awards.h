@@ -13,7 +13,8 @@ struct clan_award_projection {
   int level_before, level_after, cap_flags;
 };
 /* Pure queries; negative/corrupt/overflow inputs fail without changing output.
- * Level is derived, never independently saved. XP above the level cap is corrupt.
+ * Level is derived, never independently saved. Rules 1 use capped Clan XP;
+ * rules 2 use uncapped lifetime Influence in the historical XP storage field.
  * Incoming XP is already account-adjusted; personal projection supplies account/Favor policy. */
 bool clan_award_level(const struct clan_progression_config *, int64_t xp, int *out);
 bool clan_award_project(const struct clan_progression_config *,
@@ -22,13 +23,13 @@ bool clan_award_project(const struct clan_progression_config *,
 /* Trusted SQL service restricted to shared clan-only sources. Personal events
  * use the separate account/Favor service below. No prepare/eligibility
  * hook is connected. Pending decisions require enabled earnings/readiness and
- * frozen version-1 rules/default policy. Committed replays retain their receipt,
+ * the event's frozen versioned balance policy. Committed replays retain their receipt,
  * even after disabling earnings. Caller owns the exclusive SQL connection and
  * must refresh the runtime persistence cache after OK or COMMIT_UNKNOWN. */
 enum clan_repository_result clan_award_complete_shared(MYSQL *, const char *operation_uid,
     int64_t now, const struct clan_progression_config *,
     const struct clan_progression_readiness *, struct json_object **out);
-/* Pure version-1 personal decision for previews and locked receipt commits.
+/* Pure versioned personal decision for previews and locked receipt commits.
  * Trusted source adapters freeze eligible full/half/zero kill tuples; all other
  * sources require their exact table tuple. Daily prototype eligibility remains
  * a later source adapter's responsibility, not inferred from requested amounts.

@@ -4,4 +4,9 @@ struct char_data;
 /* First-login scan also finds SQL holds whose final file acknowledgement was
  * interrupted. Pending economic locks block command mutations until recovery. */
 bool clan_delivery_recover(struct char_data *);
+struct clan_delivery_catalog;
+struct clan_delivery_definition;
+bool clan_delivery_catalog_load(struct clan_delivery_catalog *);
+int clan_delivery_goods_count(struct char_data *, const struct clan_delivery_definition *);
+bool clan_delivery_goods_available(struct char_data *, const struct clan_delivery_definition *);
 #endif

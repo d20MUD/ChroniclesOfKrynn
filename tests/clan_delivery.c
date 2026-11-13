@@ -64,7 +64,7 @@ int main(int argc, char **argv)
     r = clan_delivery_ack(db, str(req, "operation_uid"));
   else if (!strcmp(argv[2], "generic"))
   {
-    struct clan_progression_config config = clan_progression_defaults;
+    struct clan_progression_config config = clan_progression_v1;
     struct clan_progression_readiness ready = {.schema_ready = true,
                                                .schema_version = CLAN_PROGRESSION_SCHEMA_VERSION};
     config.controls.store_mode = CLAN_STORE_MYSQL;

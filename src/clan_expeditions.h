@@ -46,4 +46,6 @@ struct json_object *clan_expedition_definition_json(const struct clan_expedition
 /* Called after world renumbering. Diagnostic only: never enables expeditions. */
 void clan_expedition_boot_validate(void);
 struct clan_expedition_world clan_expedition_world_refs(void);
+const char *clan_expedition_target_name(int mob);
+const char *clan_expedition_area_name(int area);
 #endif

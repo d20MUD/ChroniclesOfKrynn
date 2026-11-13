@@ -21,6 +21,8 @@ def database(migrations=('20261110_clan_progression_v001.sql',)):
    client.append('clan_test')
    def sql(text):return subprocess.run(client,input=text,text=True,capture_output=True,check=True).stdout.strip()
    for migration in migrations:sql((ROOT/'sql'/migration).read_text())
+   if '20261110_clan_progression_v005.sql' in migrations:
+    sql((ROOT/'sql/20261113_clan_progression_v006.sql').read_text())
    yield tmp,sock,sql,client
   finally:
    process.terminate()

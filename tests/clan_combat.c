@@ -22,7 +22,7 @@ static void reset(void)
     actions[i].round=i+1;actions[i].room=100;actions[i].amount=50;actions[i].available=1000;
   }
 }
-static void query(void){assert(clan_combat_query(&clan_progression_defaults,&e,result,5));}
+static void query(void){assert(clan_combat_query(&clan_progression_v1,&e,result,5));}
 int main(void)
 {
   reset();query();assert(!result[0].reasons);assert(result[1].reasons&CLAN_COMBAT_NO_PARTICIPATION);
@@ -73,7 +73,7 @@ int main(void)
   actions[0].amount=actions[1].amount=25;query();assert(!result[0].reasons);assert(result[3].reasons&CLAN_COMBAT_IDENTITY);assert(result[4].reasons&CLAN_COMBAT_IDENTITY);
   // Invalid facts fail closed and do not partially publish outputs.
   reset();memset(result,0x55,sizeof(result));struct clan_combat_result before[5];memcpy(before,result,sizeof(result));
-  actors[0].owner=4;actors[4].owner=0;assert(!clan_combat_query(&clan_progression_defaults,&e,result,5));assert(!memcmp(before,result,sizeof(result)));
+  actors[0].owner=4;actors[4].owner=0;assert(!clan_combat_query(&clan_progression_v1,&e,result,5));assert(!memcmp(before,result,sizeof(result)));
   reset();e.action_count=2;actions[1].application=actions[0].application;actions[0].amount=actions[1].amount=25;query();assert(result[0].reasons&CLAN_COMBAT_NO_PARTICIPATION);
   reset();e.start_max_hp=INT64_MAX;actions[0].amount=actions[0].available=INT64_MAX;query();assert(!result[0].reasons);
   puts("Phase 25: damage/heal/mitigation/support/defense, recency, difficulty, owner/account identity, exclusions, deduplication and bounds passed");

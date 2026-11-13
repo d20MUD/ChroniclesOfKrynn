@@ -23,6 +23,20 @@
 /* Global connection pool */
 MYSQL_POOL *mysql_pool = NULL;
 
+/* Apply the same strict session contract as the offline clan importer.
+ * MYSQL_INIT_COMMAND also reapplies it after a client reconnect. Preserve
+ * other server SQL modes rather than replacing the administrator's defaults. */
+static MYSQL *mysql_pool_connect(MYSQL *connection)
+{
+  if (mysql_options(connection, MYSQL_INIT_COMMAND,
+                    "SET SESSION sql_mode=CONCAT_WS(',',"
+                    "NULLIF(@@SESSION.sql_mode,''),'STRICT_TRANS_TABLES')") ||
+      mysql_options(connection, MYSQL_SET_CHARSET_NAME, "utf8mb4"))
+    return NULL;
+  return mysql_real_connect(connection, mysql_pool->host, mysql_pool->username,
+                            mysql_pool->password, mysql_pool->database, 0, NULL, 0);
+}
+
 /* Legacy connections - maintained for backwards compatibility */
 MYSQL *conn = NULL;
 MYSQL *conn2 = NULL;
@@ -107,8 +121,7 @@ void mysql_pool_init(void)
     mysql_options(pc->conn, MYSQL_OPT_WRITE_TIMEOUT, (const char *)&write_timeout);
 
     /* Connect to database */
-    if (!mysql_real_connect(pc->conn, mysql_pool->host, mysql_pool->username, mysql_pool->password,
-                            mysql_pool->database, 0, NULL, 0))
+    if (!mysql_pool_connect(pc->conn))
     {
       log("ERROR: Failed to connect MySQL connection %d: %s", i, mysql_error(pc->conn));
       mysql_close(pc->conn);
@@ -253,8 +266,7 @@ MYSQL_POOL_CONN *mysql_pool_acquire(void)
               mysql_options(pc->conn, MYSQL_OPT_READ_TIMEOUT, (const char *)&read_timeout);
               mysql_options(pc->conn, MYSQL_OPT_WRITE_TIMEOUT, (const char *)&write_timeout);
 
-              if (!mysql_real_connect(pc->conn, mysql_pool->host, mysql_pool->username,
-                                      mysql_pool->password, mysql_pool->database, 0, NULL, 0))
+              if (!mysql_pool_connect(pc->conn))
               {
                 log("ERROR: Failed to reconnect connection %d: %s", pc->id, mysql_error(pc->conn));
                 pc->state = CONN_STATE_ERROR;
@@ -395,8 +407,7 @@ void mysql_pool_health_check(void)
           mysql_options(pc->conn, MYSQL_OPT_READ_TIMEOUT, (const char *)&read_timeout);
           mysql_options(pc->conn, MYSQL_OPT_WRITE_TIMEOUT, (const char *)&write_timeout);
 
-          if (mysql_real_connect(pc->conn, mysql_pool->host, mysql_pool->username,
-                                 mysql_pool->password, mysql_pool->database, 0, NULL, 0))
+          if (mysql_pool_connect(pc->conn))
           {
             pc->state = CONN_STATE_FREE;
             pc->thread_id = mysql_thread_id(pc->conn);
@@ -479,8 +490,7 @@ void mysql_pool_expand(void)
   mysql_options(pc->conn, MYSQL_OPT_WRITE_TIMEOUT, (const char *)&write_timeout);
 
   /* Connect */
-  if (!mysql_real_connect(pc->conn, mysql_pool->host, mysql_pool->username, mysql_pool->password,
-                          mysql_pool->database, 0, NULL, 0))
+  if (!mysql_pool_connect(pc->conn))
   {
     log("ERROR: Failed to connect new connection %d: %s", new_id, mysql_error(pc->conn));
     mysql_close(pc->conn);

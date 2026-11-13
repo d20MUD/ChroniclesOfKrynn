@@ -12,7 +12,7 @@ bool clan_buff_request_valid(const struct clan_buff_request *r)
       r->family>=CLAN_BUFF_SCHOLAR && r->family<=CLAN_BUFF_ARTISAN &&
       r->tier>=1 && r->tier<=CLAN_PROGRESSION_TIER_COUNT &&
       r->slot>=1 && r->slot<=CLAN_PROGRESSION_MAX_SLOTS &&
-      r->rules_version==CLAN_PROGRESSION_RULES_VERSION;
+      r->rules_version==1;
 }
 void clan_buff_validate(const struct clan_progression_config *c,
     const struct clan_progression_readiness *ready,const struct clan_buff_request *r,

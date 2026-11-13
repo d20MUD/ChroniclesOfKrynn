@@ -33,7 +33,7 @@ or pay a completed contract twice. Active shows completed and remaining units
 or kills, expiry and pending rewards. Abandonment discards unfinished effort
 and grants no reward. An earned reward awaiting completion cannot be abandoned.
 
-Base personal credit is 100 clan XP, 50 Influence and 50 Favor, subject to the
+Base personal credit is 6.250 lifetime Influence, 6.250 spendable Influence and 12.500 Favor, subject to the
 existing account, Favor, source and clan caps. Two DIFFERENT definitions in each
 family may be completed per account per UTC week, across alts and clan changes.
 Abandoning/reaccepting does not reset completed-definition eligibility. Contracts
@@ -41,7 +41,7 @@ expire at the weekly UTC boundary. Expired partial progress earns no payout.
 Saved occurrences earned before expiry can recover without changing their week.
 
 The first qualifying personal bounty completion of a definition also prepares
-200 clan XP and 100 Influence for the original clan, subject to clan caps. Only
+12.500 lifetime Influence and 12.500 spendable Influence for the original clan, subject to clan caps. Only
 two different shared bounty definitions may credit a clan per UTC week. Later
 members may still earn their own personal credit; the shared reward cannot
 repeat or multiply by party size. Favor remains personal.

@@ -79,3 +79,5 @@ int main(int argc,char **argv)
   puts(json_object_to_json_string_ext(out,JSON_C_TO_STRING_PLAIN));
   json_object_put(out);json_object_put(request);mysql_close(pool.conn);return 0;
 }
+
+const struct clan_progression_config *clan_buff_runtime_policy(void) { return &clan_progression_defaults; }

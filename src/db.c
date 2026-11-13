@@ -19,6 +19,8 @@
 #include "structs.h"
 #include "clan_sources.h"
 #include "clan_expeditions.h"
+#include "clan_expedition_enrollment.h"
+#include "clan_quartermaster.h"
 #include "utils.h"
 #include "db.h"
 #include "comm.h"
@@ -50,6 +52,8 @@
 #include "class.h"
 #include "clan.h"
 #include "clan_persistence.h"
+#include "clan_policy.h"
+#include "clan_buff_runtime.h"
 #include "clan_economy.h"
 #include "msgedit.h"
 #include "craft.h"
@@ -1173,6 +1177,7 @@ void boot_db(void)
 
   boot_world();
   clan_expedition_boot_validate();
+  clan_qm_boot_validate();
 
   log("Loading help entries.");
   index_boot(DB_BOOT_HLP);
@@ -1300,6 +1305,31 @@ void boot_db(void)
       log("SYSERR: Clan persistence boot failed; startup aborted");
       exit(1);
     }
+
+    {
+      struct clan_progression_config policy;
+      char reason[256];
+      bool present;
+      if (!clan_policy_load("clan/progression.json",
+            clan_persistence_sql_authority() && clan_persistence_ready(),
+            &policy, &present, reason, sizeof(reason)))
+      {
+        log("SYSERR: Clan startup policy rejected: %s", reason);
+        exit(1);
+      }
+      if (!clan_buff_runtime_configure(&policy))
+      {
+        log("SYSERR: Clan startup policy could not be installed");
+        exit(1);
+      }
+      log("CLAN POLICY: %s; mode=%d buffs=%d contracts=%d expeditions=%d quartermaster=%d web=%d public=%d allowlist=%lu",
+          present ? "clan/progression.json" : "missing file, disabled defaults",
+          policy.controls.mode, policy.controls.buffs, policy.controls.contracts,
+          policy.controls.expeditions, policy.controls.quartermaster, policy.controls.web,
+          policy.controls.public_release, (unsigned long)policy.controls.pilot_count);
+    }
+
+    clan_expedition_restore((int64_t)time(NULL));
 
     log("Initializing clan economy system.");
     init_clan_economy();

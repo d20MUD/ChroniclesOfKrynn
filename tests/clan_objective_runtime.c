@@ -227,7 +227,7 @@ int main(int argc, char **argv)
   sequence += (unsigned)clock_value;
   connection.conn = mysql_init(NULL);
   assert(mysql_real_connect(connection.conn, NULL, "root", "", "clan_test", 0, argv[1], 0));
-  policy = clan_progression_defaults;
+  policy = clan_progression_v1;
   policy.controls.store_mode = CLAN_STORE_MYSQL;
   policy.controls.mode = CLAN_PROGRESSION_LIVE;
   policy.controls.public_release = true;
@@ -279,15 +279,15 @@ int main(int argc, char **argv)
     *messages = 0;
     policy.controls.contracts = true;
     do_clancontracts(&ch, "gathering list", 0, 0);
-    assert(strstr(messages, "fresh-ash-v1") && strstr(messages, "exact grade 1"));
+    assert(strstr(messages, "Fresh ash harvest") && !strstr(messages, "fresh-ash-v1") && strstr(messages, "exact grade 1"));
     *messages = 0;
     at_quartermaster = false;
-    do_clancontracts(&ch, "gathering accept fresh-ash-v1", 0, 0);
+    do_clancontracts(&ch, "gathering accept Fresh ash harvest", 0, 0);
     assert(strstr(messages, "rejected"));
     *messages = 0;
     at_quartermaster = true;
-    do_clancontracts(&ch, "gathering accept fresh-ash-v1", 0, 0);
-    assert(strstr(messages, "accept recorded"));
+    do_clancontracts(&ch, "gathering accept Fresh ash harvest", 0, 0);
+    assert(strstr(messages, "Contract accepted"));
     *messages = 0;
     GET_CRAFT_MAT((&ch), 21) = 10000;
     do_clancontracts(&ch, "gathering active", 0, 0);
@@ -300,20 +300,20 @@ int main(int argc, char **argv)
     assert(strstr(messages, "4 / 20") && strstr(messages, "16 remaining"));
     *messages = 0;
     do_clancontracts(&ch, "gathering abandon", 0, 0);
-    assert(strstr(messages, "abandon recorded"));
+    assert(strstr(messages, "Contract abandoned"));
     *messages = 0;
     do_clancontracts(&ch, "gathering accept fresh-ash-v1", 0, 0);
     do_clancontracts(&ch, "gathering active", 0, 0);
     assert(strstr(messages, "0 / 20"));
     *messages = 0;
     do_clancontracts(&ch, "bounty list", 0, 0);
-    assert(strstr(messages, "sewer-bandits-v1") && strstr(messages, "two shared bounty"));
+    assert(strstr(messages, "Hostile sewer bandits") && strstr(messages, "two bounties"));
     *messages = 0;
   }
   else if (!strncmp(mode, "expedition", 10))
   {
     struct zone_data zones[1]={{0}};zone_table=zones;zones[0].number=141;
-    struct json_object *root=json_object_from_file("clan/expeditions.json");
+    struct json_object *root=json_object_from_file("clan/expeditions_legacy.json");
     struct clan_expedition_catalog catalog;struct clan_expedition_world refs={expedition_area,expedition_target,expedition_target,NULL};
     struct clan_expedition_member members[2]={{5000000007,77,27},{5000000012,88,27}};
     char uid[33];assert(root&&clan_expedition_catalog_parse(root,&catalog,NULL,0));json_object_put(root);

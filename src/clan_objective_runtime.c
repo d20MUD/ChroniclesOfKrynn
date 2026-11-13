@@ -14,6 +14,7 @@
 #include "constants.h"
 #include "mysql.h"
 #include <inttypes.h>
+#include "clan_display.h"
 #define PENDING(ch, f)                                                                             \
   ((ch)->player_specials->clan_objective_pending[(f) == CLAN_SOURCE_GATHERING ? 0 : 1])
 static struct json_object *get(struct json_object *o, const char *key)
@@ -59,7 +60,7 @@ static bool authenticated(struct char_data *ch)
   return ch && !IS_NPC(ch) && ch->desc && STATE(ch->desc) == CON_PLAYING && ch->desc->account &&
          ch->desc->account->id > 0;
 }
-static bool catalog_load(struct clan_objective_catalog *c)
+bool clan_objective_catalog_load(struct clan_objective_catalog *c)
 {
   struct json_object *o = json_object_from_file("clan/objectives.json");
   size_t i;
@@ -125,7 +126,7 @@ bool clan_objective_flush(struct char_data *ch)
       {
         struct json_object *delta = get(get(receipt, "decision"), "delta");
         send_to_char(
-            ch, "Your %s contract is complete: %.3f clan XP, %.3f Influence, %.3f Favor%s.\r\n",
+            ch, "Your %s contract is complete: %.3f lifetime Influence, %.3f Influence, %.3f Favor%s.\r\n",
             family == CLAN_SOURCE_GATHERING ? "gathering" : "bounty",
             num(delta, "xp_eighths") / 8.0, num(delta, "influence_eighths") / 8.0,
             num(delta, "favor_eighths") / 8.0, num(delta, "cap_flags") ? " (limits applied)" : "");
@@ -260,7 +261,7 @@ void clan_objective_bounty_record(struct char_data *ch, const struct clan_object
 }
 ACMD(do_clancontracts)
 {
-  char family_arg[24] = "", command[24] = "list", id[80] = "", extra[2];
+  char family_arg[24] = "", command[24] = "list", id[80] = "";
   int family, tokens;
   int64_t now = time(NULL);
   struct clan_objective_catalog catalog;
@@ -271,7 +272,7 @@ ACMD(do_clancontracts)
   size_t i;
   if (!authenticated(ch))
     return;
-  tokens = sscanf(argument ? argument : "", "%23s %23s %79s %1s", family_arg, command, id, extra);
+  tokens = sscanf(argument ? argument : "", "%23s %23s %79[^\r\n]", family_arg, command, id);
   family = !strcmp(family_arg, "gathering") ? CLAN_SOURCE_GATHERING
            : !strcmp(family_arg, "bounty")  ? CLAN_SOURCE_BOUNTY
                                             : 0;
@@ -279,7 +280,7 @@ ACMD(do_clancontracts)
       (strcmp(command, "list") && strcmp(command, "active") && strcmp(command, "accept") &&
        strcmp(command, "abandon") && strcmp(command, "retry")))
   {
-    send_to_char(ch, "Usage: clan contracts <gathering|bounty> list | active | accept <id> | "
+    send_to_char(ch, "Usage: clan contracts <gathering|bounty> list | active | accept <name> | "
                      "abandon | retry\r\n");
     return;
   }
@@ -303,12 +304,12 @@ ACMD(do_clancontracts)
                                   false, now, &report);
   bool enabled = r == CLAN_REPO_OK && report.full_clan_access &&
                  report.membership == CLAN_ACCESS_ACCEPTED &&
-                 available(connection->conn, report.clan.uid) && catalog_load(&catalog);
+                 available(connection->conn, report.clan.uid) && clan_objective_catalog_load(&catalog);
   if (!enabled)
   {
     mysql_pool_release(connection);
-    send_to_char(ch, "Gathering/bounty contracts are unavailable: accepted membership, enabled "
-                     "pilot contracts and validated storage/catalog are required.\r\n");
+    send_to_char(ch, "Gathering/bounty contracts are unavailable: accepted membership, available "
+                     "contracts are required.\r\n");
     return;
   }
   r = clan_objective_expire(connection->conn, GET_IDNUM(ch), now);
@@ -323,9 +324,8 @@ ACMD(do_clancontracts)
   {
     struct clan_reset_period rotation_week;
     if (clan_progression_week_at(now, &rotation_week))
-      send_to_char(ch, "Weekly choices rotate at UTC epoch %" PRId64
-                       ". Unfinished contracts expire; pending rewards recover in their original week.\r\n",
-                   rotation_week.ends_at);
+      send_to_char(ch, "\r\n\tCClan Contracts\tn\r\n  New choices: %s\r\n",
+                   clan_display_time(rotation_week.ends_at, (char[64]){0}));
     r = clan_objective_claims(connection->conn, ch->desc->account->id, family, now, &claims);
     mysql_pool_release(connection);
     if (r != CLAN_REPO_OK)
@@ -335,11 +335,10 @@ ACMD(do_clancontracts)
     }
     int clan_level = 0;
     clan_award_level(clan_buff_runtime_policy(), report.clan.xp_eighths, &clan_level);
-    send_to_char(ch,
-                 "%s: one active slot; %zu / 2 different definitions completed this UTC week "
-                 "across your account.\r\nBase credit: 100 clan XP / 50 Influence / 50 Favor, "
-                 "subject to caps. Progress saves automatically; no goods are consumed.\r\n",
-                 family_arg, json_object_array_length(claims));
+    send_to_char(ch, "  %s  |  %zu / 2 completed this week\r\n"
+                     "  Reward: 12.5 Favor and 6.25 Influence, before limits.\r\n\r\n",
+                 family == CLAN_SOURCE_GATHERING ? "Gathering" : "Bounties",
+                 json_object_array_length(claims));
     for (i = 0; i < catalog.count; i++)
       if (catalog.entries[i].family == family)
       {
@@ -349,13 +348,13 @@ ACMD(do_clancontracts)
         for (j = 0; j < json_object_array_length(claims); j++)
           if (!strcmp(d->id, json_object_get_string(json_object_array_get_idx(claims, j))))
             done = true;
-        send_to_char(ch, "  %s - %s: 20 %s; ", d->id, d->name,
+        send_to_char(ch, "  \tW%s\tn\r\n    Goal: 20 %s; ", d->name,
                      family == CLAN_SOURCE_GATHERING ? "fresh base harvest units"
                                                      : "qualifying designated kills");
         if (family == CLAN_SOURCE_GATHERING)
           send_to_char(ch, "%s, exact grade %d; ", crafting_materials[d->target], d->grade);
         else
-          send_to_char(ch, "mob prototype %d; ", d->target);
+          send_to_char(ch, "the named target; ");
         send_to_char(ch, "clan level %d, character levels %d-%d%s%s.\r\n", d->min_clan_level,
                      d->min_player_level, d->max_player_level,
                      done                                    ? " [completed]"
@@ -367,20 +366,31 @@ ACMD(do_clancontracts)
                          : "");
       }
     send_to_char(
-        ch, "Accept at a quartermaster. Expires at the UTC weekly boundary. Failed/bonus harvests "
-            "do not count; bounties require contribution eligibility, not a killing blow.\r\n");
+        ch, "Accept by name: clan contracts %s accept <name>\r\n"
+            "Visit a quartermaster to accept. Failed/bonus harvests "
+            "do not count; bounties require participation, not a killing blow.\r\n", family_arg);
     if (family == CLAN_SOURCE_BOUNTY)
-      send_to_char(ch, "First qualifying completion per definition also credits the clan 200 XP / "
-                       "100 Influence, at most two shared bounty definitions per clan/week.\r\n");
+      send_to_char(ch, "The first completion of each bounty also earns 12.5 shared Influence "
+                       "(up to two bounties per clan each week).\r\n");
     json_object_put(claims);
     return;
   }
   if (!strcmp(command, "accept"))
   {
     char uid[33];
-    for (i = 0; i < catalog.count; i++)
-      if (catalog.entries[i].family == family && !strcmp(id, catalog.entries[i].id))
-        break;
+    int best = 0, choice = -1;
+    for (i = 0; i < catalog.count; i++) if (catalog.entries[i].family == family) {
+      int score = clan_display_match(id, catalog.entries[i].name, catalog.entries[i].id);
+      if (score > best) { best = score; choice = (int)i; }
+      else if (score && score == best) choice = -2;
+    }
+    if (choice < 0) {
+      mysql_pool_release(connection);
+      send_to_char(ch, choice == -2 ? "That name matches several contracts. Please use more of the name.\r\n"
+                                    : "No contract by that name. Use clan contracts %s list.\r\n", family_arg);
+      return;
+    }
+    i = (size_t)choice;
     if (!has_quartermaster_in_room(ch) || FIGHTING(ch) || GET_CRAFT(ch).craft_duration > 0)
       r = CLAN_REPO_INELIGIBLE;
     else if (i == catalog.count || !clan_repository_uid_generate(uid))
@@ -402,14 +412,14 @@ ACMD(do_clancontracts)
   else if (o)
   {
     send_to_char(ch,
-                 "%s: %" PRId64 " / 20; %" PRId64 " remaining. Expires at UTC epoch %" PRId64
+                 "\r\n\tW%s\tn\r\n  Progress: %" PRId64 " / 20  (%" PRId64 " remaining)\r\n  Expires: %s"
                  "%s%s.\r\n",
                  str(get(o, "definition"), "name"), num(o, "progress"), 20 - num(o, "progress"),
-                 num(o, "expires_at"),
+                 clan_display_time(num(o, "expires_at"), (char[64]){0}),
                  now >= num(o, "expires_at") && num(o, "state") == 0 ? " [expired]" : "",
                  num(o, "state") == 1 ? " [reward pending]" : "");
     json_object_put(o);
   }
   else
-    send_to_char(ch, "Contract %s recorded. Acceptance/abandonment grants no reward.\r\n", command);
+    send_to_char(ch, "%s\r\n", !strcmp(command, "accept") ? "Contract accepted. Your progress will save automatically." : "Contract abandoned.");
 }

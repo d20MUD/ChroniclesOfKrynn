@@ -115,6 +115,7 @@ static int restore_persistent_object(struct obj_data *obj, const char *tag, cons
   else if (!strcmp(tag, "Recv")) obj->mob_recepient = atoi(value);
   else if (!strcmp(tag, "Drai")) obj->drainKilled = atoi(value) != 0;
   else if (!strcmp(tag, "HasS")) obj->has_spells = atoi(value) != 0;
+  else if (!strcmp(tag,"CQm ")) strlcpy(obj->clan_qm_uid,legendary_uuid_valid(value)?value:"invalid-operation",33);
   else if (!strcmp(tag,"CDel")) {
     char uid[33];int amount;
     if(sscanf(value,"%32s %d",uid,&amount)==2 && legendary_uuid_valid(uid) && amount>0 && amount<=100) {
@@ -225,6 +226,13 @@ int objsave_save_obj_record_db(struct obj_data *obj, struct char_data *ch, room_
     fputs(identity_line, fp);
 #ifdef OBJSAVE_DB
     strlcat(ins_buf, identity_line, sizeof(ins_buf));
+#endif
+  }
+  if (*obj->clan_qm_uid) {
+    fprintf(fp,"CQm : %s\n",obj->clan_qm_uid);
+#ifdef OBJSAVE_DB
+    snprintf(line_buf,sizeof(line_buf),"CQm : %s\n",obj->clan_qm_uid);
+    strlcat(ins_buf,line_buf,sizeof(ins_buf));
 #endif
   }
   if (*obj->clan_delivery_uid) {
@@ -1535,11 +1543,12 @@ static int objsave_write_rentcode(FILE *fl, int rentcode, int cost_per_day, stru
   char buf[2048]; /* For MySQL insert. */
 
   snprintf(buf, sizeof(buf),
-           "update player_data set obj_save_header = '%d %ld %d %d %d %d %s %d'"
+           "update player_data set obj_save_header = '%d %ld %d %d %d %d %s %d %s'"
            "where name = '%s';",
            rentcode, (long)time(0), cost_per_day, GET_GOLD(ch), GET_BANK_GOLD(ch), 0,
            *ch->player_specials->clan_delivery_inventory?ch->player_specials->clan_delivery_inventory:"-",
-           ch->player_specials->clan_delivery_inventory_stage, GET_NAME(ch));
+           ch->player_specials->clan_delivery_inventory_stage,
+           *ch->player_specials->clan_qm_inventory?ch->player_specials->clan_qm_inventory:"-", GET_NAME(ch));
   if (mysql_query(conn, buf))
   {
     log("SYSERR: Unable to INSERT obj_save_header into PLAYER_DATA: %s", mysql_error(conn));
@@ -1547,10 +1556,11 @@ static int objsave_write_rentcode(FILE *fl, int rentcode, int cost_per_day, stru
   }
 #endif
 
-  if (fprintf(fl, "%d %ld %d %d %d %d %s %d\r\n", rentcode, (long)time(0), cost_per_day, GET_GOLD(ch),
+  if (fprintf(fl, "%d %ld %d %d %d %d %s %d %s\r\n", rentcode, (long)time(0), cost_per_day, GET_GOLD(ch),
               GET_BANK_GOLD(ch), 0,
               *ch->player_specials->clan_delivery_inventory?ch->player_specials->clan_delivery_inventory:"-",
-              ch->player_specials->clan_delivery_inventory_stage) < 1)
+              ch->player_specials->clan_delivery_inventory_stage,
+              *ch->player_specials->clan_qm_inventory?ch->player_specials->clan_qm_inventory:"-") < 1)
   {
     perror("Syserr: Writing rent code");
     return FALSE;
@@ -2053,6 +2063,7 @@ obj_save_data *objsave_parse_objects(FILE *fl)
       }
       break;
     case 'C':
+      if (!strcmp(tag,"CQm ")) { strlcpy(temp->clan_qm_uid,legendary_uuid_valid(line)?line:"invalid-operation",33); break; }
       if (!strcmp(tag, "Cost"))
         GET_OBJ_COST(temp) = num;
       break;
@@ -2578,6 +2589,7 @@ obj_save_data *objsave_parse_objects_db(char *name, room_vnum house_vnum)
         }
         break;
       case 'C':
+        if (!strcmp(tag,"CQm ")) { strlcpy(temp->clan_qm_uid,legendary_uuid_valid(*line)?*line:"invalid-operation",33); break; }
         if (!strcmp(tag, "Cost"))
           GET_OBJ_COST(temp) = num;
         break;
@@ -2801,7 +2813,10 @@ obj_save_data *objsave_parse_objects_db(char *name, room_vnum house_vnum)
 
 static void delivery_header_restore(struct char_data *ch,const char *line)
 {
-  char uid[33];int stage;
+  char uid[33],qm[33];int stage;
+  *ch->player_specials->clan_qm_inventory=0;
+  if(sscanf(line,"%*d %*d %*d %*d %*d %*d %*s %*d %32s",qm)==1 && strcmp(qm,"-"))
+    strlcpy(ch->player_specials->clan_qm_inventory,legendary_uuid_valid(qm)?qm:"invalid-operation",33);
   *ch->player_specials->clan_delivery_inventory=0;ch->player_specials->clan_delivery_inventory_stage=0;
   if(sscanf(line,"%*d %*d %*d %*d %*d %*d %32s %d",uid,&stage)==2 && strcmp(uid,"-")) {
     if(legendary_uuid_valid(uid) && stage>=1 && stage<=3) {

@@ -56,6 +56,15 @@ enum clan_repository_result clan_expedition_reward_complete(MYSQL *, const char 
                                                             int64_t now,
                                                             const struct clan_progression_config *,
                                                             struct json_object **);
+/* Maintenance never awards or rewrites history. Each outing is checked under
+ * the control lock; cursor batches commit independently and preserve failures. */
+enum clan_repository_result clan_expedition_reconcile_clan(MYSQL *, const char *clan, int64_t now);
+enum clan_repository_result clan_expedition_reconcile_batch(MYSQL *, const char *after,
+                                                            size_t limit, int64_t now,
+                                                            struct json_object **);
+struct char_data;
+void clan_expedition_restore(int64_t now);
+void clan_expedition_resume(struct char_data *, int64_t now);
 #ifdef CLAN_REWARD_TEST
 extern int clan_expedition_crash;
 #endif

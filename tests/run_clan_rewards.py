@@ -63,7 +63,7 @@ with database(migrations) as (tmp,socket,sql,client):
  assert recovered['receipt']['event']['starts_at']==old_week
  assert sql(f'SELECT COUNT(*) FROM clan_account_windows WHERE account_id=77 AND starts_at_utc={old_week+604800}')=='0'
  # Same encounter can credit a different source without duplicate ordinary kill.
- other=event(event_uid=first['event_uid'],source=5);run('prepare',other)
+ other=event(event_uid=first['event_uid'],source=2);run('prepare',other)
  run('prepare',dict(other,operation_uid=first['operation_uid']),'conflict')
  run('complete',request(other,now=delayed['now']+604800))
  shared=event(source=7,account_id=0,player_id=0,clan_uid=B,requested_favor_eighths=0);run('prepare',shared)
@@ -148,6 +148,6 @@ with database(migrations) as (tmp,socket,sql,client):
  # History and terminal proof cannot be edited/deleted, including by SQL callers.
  for mutation in ["DELETE FROM clan_reward_receipts",f"UPDATE clan_reward_receipts SET decision=JSON_OBJECT('forged',1) WHERE operation_uid='{first['operation_uid']}'",f"UPDATE clan_reward_receipts SET event_uid='{'1'*32}' WHERE operation_uid='{overflow['operation_uid']}'","DELETE FROM clan_weekly_windows"]:
   assert subprocess.run(client,input=mutation,text=True,capture_output=True).returncode!=0,mutation
- before=balances();subprocess.run(client,input=(ROOT/'sql'/migrations[-1]).read_text(),text=True,check=True);assert balances()==before
+ before=balances();subprocess.run(client,input=(ROOT/'sql'/'20261113_clan_progression_v006.sql').read_text(),text=True,check=True);assert balances()==before
  sql('DROP TRIGGER cp_reward_immutable');run('load',request(first),'schema-mismatch')
  print('Phases 8–9: clan XP/Influence policy, gated and capped receipts, durable acceptance/bounds, SQL atomicity, eight process crash boundaries, exact replay, reset recovery, concurrent claims, canceled/deleted history, overflow and migration guards passed')

@@ -1,0 +1,25 @@
+CLAN PROGRESSION
+
+  clan progress [clan name]
+  clan favor [page]
+
+Clan progress shows your clan's level, Influence, your Favor and weekly
+limits. Clan favor lists your saved standing, including former clans.
+Use a full clan name or a unique part of its name to view that standing.
+
+Lifetime Influence raises clan level. Available Influence pays for buffs;
+spending it never lowers your clan's level. Your Favor is permanent standing
+with that clan and is never spent. Legacy clan points and bank gold remain
+separate. A new clan using an old name does not inherit its progress.
+
+Account limits are shared across your characters and clans. Weekly limits
+reset Monday at midnight UTC. Suitable natural encounters and clan jobs earn
+progress; trivial, summoned or staff-created test encounters do not.
+
+Try clan buffs, clan contracts bounty list, clan contracts gathering list,
+clan deliveries list, clan expeditions list or clan quartermaster list.
+Former members can view their own Favor but not private clan balances.
+
+Staff inspection remains available through clan inspect
+<character-id> <account-id> <clan-incarnation-uid>.
+#0

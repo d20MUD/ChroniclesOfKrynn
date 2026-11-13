@@ -23,7 +23,8 @@ size_t send_to_char(struct char_data *ch,const char *format,...)
   va_start(args,format);n=vsnprintf(command_output+used,sizeof(command_output)-used,format,args);va_end(args);
   assert(n>=0&&(size_t)n<sizeof(command_output)-used);return (size_t)n;
 }
-bool legendary_uuid_generate(char out[33]){strcpy(out,"0123456789abcdef0123456789abcdef");return true;}
+static char generated_uid[33]="0123456789abcdef0123456789abcdef";
+bool legendary_uuid_generate(char out[33]){strcpy(out,generated_uid);return true;}
 struct char_data *character_list;
 struct player_special_data dummy_mob;
 bool mysql_available=true;
@@ -48,7 +49,7 @@ static int notifications;
 static void notified(const char *uid,void *context){(void)context;assert(uid&&strlen(uid)==32);notifications++;}
 static struct clan_progression_config live(void)
 {
-  struct clan_progression_config c=clan_progression_defaults;
+  struct clan_progression_config c=clan_progression_v1;
   c.controls.store_mode=CLAN_STORE_MYSQL;c.controls.mode=CLAN_PROGRESSION_LIVE;c.controls.buffs=true;c.controls.public_release=true;
   return c;
 }
@@ -189,6 +190,23 @@ int main(int argc,char **argv)
   assert(json_object_object_get_ex(input,"mode",&v));mode=json_object_get_string(v);
   assert(json_object_object_get_ex(input,"now",&v));now=json_object_get_int64(v);test_now=now;
   db=mysql_init(NULL);assert(mysql_real_connect(db,NULL,"root",NULL,"clan_test",0,argv[1],0));connection.conn=db;
+  if(!strcmp(mode,"acceptance-probe")) {
+    struct char_data ch={0};struct player_special_data ps={0};
+    struct json_object *probe=json_object_new_object();
+    ch.player_specials=&ps;GET_IDNUM((&ch))=5000000007;character_list=&ch;
+    if(json_object_object_get_ex(input,"disabled",&v))c.controls.buffs=!json_object_get_boolean(v);
+    assert(clan_buff_runtime_configure(&c));clan_buff_runtime_login_begin(&ch);
+    GET_HIT((&ch))=json_object_object_get_ex(input,"hp",&v)?json_object_get_int(v):80;
+    calculate_max_hp(&ch,false);clan_buff_runtime_login_end(&ch,now);
+    for(int i=0;i<10;i++)calculate_max_hp(&ch,false);
+    json_object_object_add(probe,"hp",json_object_new_int(GET_HIT((&ch))));
+    json_object_object_add(probe,"maximum",json_object_new_int(GET_MAX_HIT((&ch))));
+    json_object_object_add(probe,"vitality",json_object_new_int(ch.clan_vitality_percent));
+    json_object_object_add(probe,"scholar",json_object_new_int(ch.clan_scholar_percent));
+    json_object_object_add(probe,"expires_at",json_object_new_int64(ch.clan_vitality_expires_at));
+    puts(json_object_to_json_string_ext(probe,JSON_C_TO_STRING_PLAIN));
+    character_list=NULL;json_object_put(probe);json_object_put(input);mysql_close(db);return 0;
+  }
   if(!strcmp(mode,"buff-command")) {
     struct char_data ch={0};struct descriptor_data desc={0};struct account_data account={0};
     const char *args="";struct json_object *answer=json_object_new_object();
@@ -197,6 +215,7 @@ int main(int argc,char **argv)
     if(json_object_object_get_ex(input,"account",&v))account.id=json_object_get_int(v);
     if(json_object_object_get_ex(input,"disabled",&v))c.controls.buffs=!json_object_get_boolean(v);
     if(json_object_object_get_ex(input,"args",&v))args=json_object_get_string(v);
+    if(json_object_object_get_ex(input,"generated_uid",&v))snprintf(generated_uid,sizeof(generated_uid),"%s",json_object_get_string(v));
     assert(clan_buff_runtime_configure(&c));clan_buff_command(&ch,args,now);
     json_object_object_add(answer,"text",json_object_new_string(command_output));puts(json_object_to_json_string(answer));
     json_object_put(answer);json_object_put(input);mysql_close(db);return 0;
@@ -213,6 +232,8 @@ int main(int argc,char **argv)
   memset(&r,0,sizeof(r));strcpy(r.clan_uid,"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");r.actor_id=5000000007;r.family=4;r.tier=1;r.slot=1;r.rules_version=1;
   if(json_object_object_get_ex(input,"slot",&v))r.slot=json_object_get_int(v);
   if(json_object_object_get_ex(input,"family",&v))r.family=json_object_get_int(v);
+  if(json_object_object_get_ex(input,"tier",&v))r.tier=json_object_get_int(v);
+  if(json_object_object_get_ex(input,"expected_activation_uid",&v))strcpy(r.expected_activation_uid,json_object_get_string(v));
   if(json_object_object_get_ex(input,"operation_uid",&v))strcpy(r.operation_uid,json_object_get_string(v));
   if(json_object_object_get_ex(input,"actor",&v))r.actor_id=json_object_get_int64(v);
   if(!strcmp(mode,"activate"))result=clan_buff_activation_commit(db,&c,&r,now,&d,&o);

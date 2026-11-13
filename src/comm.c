@@ -13,6 +13,8 @@
 #include "conf.h"
 #include "sysdep.h"
 #include "clan_buff_runtime.h"
+#include "clan_expedition_enrollment.h"
+#include "clan_web.h"
 #include "legendary_effects.h"
 #include "legendary_techniques.h"
 #include "legendary_earnings.h"
@@ -1417,6 +1419,7 @@ void heartbeat(int heart_pulse)
     }
     clan_buff_runtime_tick((int64_t)time(NULL));
     clan_source_tick((int64_t)time(NULL));
+    clan_expedition_restore((int64_t)time(NULL));
     legendary_earnings_maintenance();
     legendary_effects_pulse();
   }
@@ -5139,6 +5142,20 @@ static void update_msdp_room_contents(struct char_data *ch)
       json_object_object_add(entry, "takeable", json_object_new_boolean(CAN_WEAR(obj, ITEM_WEAR_TAKE)));
       json_object_array_add(entries, entry);
     }
+    /* Survey knowledge reveals the room's resource without exposing unseen
+     * nodes. Refreshing the report also removes depleted/expired discoveries. */
+    if (!IS_NPC(ch) && GET_SURVEY_ROOMS(ch) > 0 &&
+        world[IN_ROOM(ch)].harvest_material > CRAFT_MAT_NONE &&
+        world[IN_ROOM(ch)].harvest_material < NUM_CRAFT_MATS &&
+        world[IN_ROOM(ch)].harvest_material_amount > 0)
+    {
+      entry = json_object_new_object();
+      snprintf(id, sizeof(id), "}h%d", GET_ROOM_VNUM(IN_ROOM(ch)));
+      json_object_object_add(entry, "target", json_object_new_string(id));
+      json_object_object_add(entry, "kind", json_object_new_string("harvest"));
+      json_object_object_add(entry, "name", json_object_new_string(harvest_node_name(IN_ROOM(ch))));
+      json_object_array_add(entries, entry);
+    }
   }
   json_object_object_add(report, "entries", entries);
   serialized = json_object_to_json_string_ext(report, JSON_C_TO_STRING_PLAIN);
@@ -5203,6 +5220,7 @@ static void update_msdp_descriptor(struct descriptor_data *d, struct char_data *
   update_msdp_room_quests(ch);
   update_msdp_room_contents(ch);
   update_msdp_ammo_status(ch);
+  clan_web_update(ch,false);
 
   update_msdp_room(ch);
   update_msdp_automap(d, ch);
@@ -5668,6 +5686,7 @@ static void msdp_update(void)
       /* Subscriptions may start after login; keep ammunition current after
        * every shot, pouch change, preference change, or weapon swap. */
       update_msdp_ammo_status(ch);
+  clan_web_update(ch,false);
 
       /* Quests */
       update_msdp_quest_info(d, ch);
@@ -5802,6 +5821,15 @@ static void msdp_update(void)
       }
 
       MSDPUpdate(d);
+    }
+
+    /* Clear the private report after logout/switching, without publishing stale
+     * values for unrelated variables while the descriptor is at an account menu. */
+    if ((!ch || IS_NPC(ch) || d->connected != CON_PLAYING) && d->pProtocol &&
+        d->pProtocol->pVariables && d->pProtocol->pVariables[eMSDP_CLAN_PROGRESS]->bReport)
+    {
+      clan_web_descriptor_update(d, false);
+      MSDPFlush(d, eMSDP_CLAN_PROGRESS);
     }
 
     /* Ideally this should be called once at startup, and again whenever

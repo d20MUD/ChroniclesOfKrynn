@@ -68,7 +68,7 @@ int main(int argc,char **argv)
  /* Real receipt award, refresh, then a legacy metadata save must retain XP. */
  {
   struct clan_reward_event e={0};struct json_object *receipt=NULL;
-  struct clan_progression_config config=clan_progression_defaults;
+  struct clan_progression_config config=clan_progression_v1;
   struct clan_progression_readiness readiness={true,false,false,false,CLAN_PROGRESSION_SCHEMA_VERSION};
   int64_t now=(int64_t)time(NULL);
   strcpy(e.operation_uid,"11111111111111111111111111111111");

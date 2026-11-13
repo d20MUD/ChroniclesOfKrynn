@@ -502,6 +502,12 @@ set(SRC_C_FILES
     src/clan_buff_runtime.c
     src/clan_buff_commands.c
     src/clan_combat.c
+    src/clan_web_content.c
+    src/clan_web_content_runtime.c
+    src/clan_web.c
+    src/clan_web_runtime.c
+    src/clan_quartermaster.c
+    src/clan_quartermaster_runtime.c
     src/clan_delivery.c
     src/clan_delivery_runtime.c
     src/clan_expedition_enrollment.c
@@ -514,6 +520,7 @@ set(SRC_C_FILES
     src/clan_status.c
     src/clan_commands.c
     src/clan_awards.c
+    src/clan_policy.c
     src/clan_progression.c
     src/clan_repository.c
     src/clan_boot.c

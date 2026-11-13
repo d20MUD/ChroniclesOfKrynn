@@ -6430,6 +6430,7 @@ struct trap_data
 /** The Object structure. */
 struct obj_data
 {
+  char clan_qm_uid[33]; /* Durable quartermaster delivery identity. */
   char clan_delivery_uid[33];
   int clan_delivery_amount; /* Reserved finite shots, persisted with object. */
   unsigned long long estate_delivery_id;
@@ -7643,6 +7644,9 @@ struct player_special_data
   long housing_house_id, housing_room_id;
   unsigned long long estate_credit_receipt, estate_debit_receipt;
   char clan_objective_pending[2][256]; /* ClGQ/ClBQ saved occurrence handoffs. */
+  char clan_qm_lock[33], clan_qm_inventory[33];
+  bool clan_qm_paid, clan_qm_checked;
+  char clan_qm_quote[4096]; /* Ephemeral exact-price confirmation. */
   char clan_delivery_lock[33],clan_delivery_inventory[33];
   int clan_delivery_stage,clan_delivery_inventory_stage;
   bool clan_delivery_checked;
@@ -8163,6 +8167,7 @@ struct txt_q
  * is the soul. */
 struct descriptor_data
 {
+  int64_t clan_web_updated_at, clan_web_player, clan_web_account;
   socket_t descriptor;               /**< file descriptor for socket */
   char host[HOST_LENGTH + 1];        /**< hostname */
   byte bad_pws;                      /**< number of bad pw attemps this login */

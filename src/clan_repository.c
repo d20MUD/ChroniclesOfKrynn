@@ -1434,7 +1434,7 @@ buff_valid(const struct clan_buff_state* b)
          clan_progression_uid_valid(b->activation_uid) && b->family >= 1 &&
          b->family <= CLAN_PROGRESSION_BUFF_COUNT && b->tier >= 1 &&
          b->tier <= 3 && b->slot >= 1 && b->slot <= 3 &&
-         b->rules_version == CLAN_PROGRESSION_RULES_VERSION &&
+         b->rules_version == 1 &&
          b->started_at >= 0 && b->expires_at > b->started_at &&
          b->next_available_at >= b->expires_at &&
          b->paid_influence_eighths >= 0;
@@ -1846,7 +1846,7 @@ clan_reward_event_valid(const struct clan_reward_event* e)
   struct clan_reset_period period;
   const struct clan_reward_definition* definition;
   if (!e || !reward_uid(e->operation_uid) || !reward_uid(e->event_uid) ||
-      !reward_uid(e->clan_uid) || e->rules_version != CLAN_PROGRESSION_RULES_VERSION ||
+      !reward_uid(e->clan_uid) || (e->rules_version != 1 && e->rules_version != CLAN_PROGRESSION_RULES_VERSION) ||
       !clan_progression_week_at(e->occurred_at, &period) || e->requested_xp_eighths < 0 ||
       e->requested_influence_eighths < 0 || e->requested_favor_eighths < 0 ||
       !(definition = clan_progression_reward(&clan_progression_defaults, e->source)))

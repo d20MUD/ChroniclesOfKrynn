@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "mode": "off",
+  "buffs": false,
+  "contracts": false,
+  "expeditions": false,
+  "quartermaster": false,
+  "web": false,
+  "public_release": false,
+  "pilot_clans": []
+}

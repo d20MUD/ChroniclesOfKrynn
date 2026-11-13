@@ -13,6 +13,7 @@
 #include "conf.h"
 #include "sysdep.h"
 #include "clan_buff_runtime.h"
+#include "clan_expedition_enrollment.h"
 #include "legendary_foundations.h"
 #include "legendary_effects.h"
 #include "legendary_equipment.h"
@@ -57,6 +58,7 @@
 #include "race.h"
 #include "clan.h"
 #include "clan_delivery_runtime.h"
+#include "clan_quartermaster.h"
 #include "clan_objective_runtime.h"
 #include "craft.h"
 #include "treasure.h"
@@ -5595,6 +5597,7 @@ void command_interpreter(struct char_data *ch, char *argument)
     return;
 
   if (!clan_delivery_recover(ch)) return;
+  if (!clan_qm_recover(ch)) return;
 
   legendary_foundations_refresh(ch);
 
@@ -6772,7 +6775,9 @@ int enter_player_game(struct descriptor_data *d)
     return 3;
   }
   clan_objective_flush(d->character);
+  clan_expedition_resume(d->character,(int64_t)time(NULL));
   clan_delivery_recover(d->character);
+  clan_qm_recover(d->character);
   estate_recover(d->character);
   auction_house_collect(d->character);
 

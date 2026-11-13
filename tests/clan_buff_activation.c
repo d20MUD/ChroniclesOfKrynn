@@ -7,7 +7,7 @@
 #include <string.h>
 static void pure(void)
 {
-  struct clan_progression_config c=clan_progression_defaults;
+  struct clan_progression_config c=clan_progression_v1;
   struct clan_progression_readiness ready={true,false,false,false,CLAN_PROGRESSION_SCHEMA_VERSION};
   struct clan_buff_request r={"11111111111111111111111111111111","aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","",77,CLAN_BUFF_SCHOLAR,1,1,1};
   struct clan_buff_activation_snapshot s,saved;
@@ -35,7 +35,7 @@ static void pure(void)
   clan_buff_validate(&c,&ready,&r,&s,now+1,&d);assert(!d.reasons && d.replaced_family==CLAN_BUFF_SCHOLAR);
   r.expected_activation_uid[0]='2';clan_buff_validate(&c,&ready,&r,&s,now+1,&d);assert(d.reasons&CLAN_BUFF_STALE);
   s=saved;r.expected_activation_uid[0]=0;r.slot=1;
-  clan_buff_validate(&clan_progression_defaults,&ready,&r,&s,now,&d);assert(d.reasons&CLAN_BUFF_DISABLED);
+  clan_buff_validate(&clan_progression_v1,&ready,&r,&s,now,&d);assert(d.reasons&CLAN_BUFF_DISABLED);
   clan_buff_validate(&c,&ready,&r,&s,INT64_MAX,&d);assert(d.reasons&CLAN_BUFF_CLOCK);
   s=saved;r.family=CLAN_BUFF_SCHOLAR;r.slot=1;r.tier=2;
   s.clan.xp_eighths=c.xp_points[4]*8;
@@ -56,7 +56,7 @@ static void pure(void)
 }
 int main(int argc,char **argv)
 {
-  MYSQL *db;struct clan_progression_config c=clan_progression_defaults;
+  MYSQL *db;struct clan_progression_config c=clan_progression_v1;
   struct clan_buff_request r;struct clan_buff_decision d;
   struct json_object *out=NULL,*root,*v,*answer;
   enum clan_repository_result result;char input[4096];int64_t now;

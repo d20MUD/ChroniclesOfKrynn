@@ -68,6 +68,6 @@ with database(migrations) as (tmp,socket,sql,client):
  assert sql('SELECT next_available_at FROM clan_recovered.clan_buff_families ORDER BY family_id')=='500\n500'
  subprocess.run([str(favor),str(socket)],check=True)
  # Current migration rerun preserves Favor and cooldown history.
- source=(ROOT/'sql'/migrations[-1]).read_text();subprocess.run(client,input=source,text=True,check=True,stdout=subprocess.DEVNULL)
+ source=(ROOT/'sql'/'20261113_clan_progression_v006.sql').read_text();subprocess.run(client,input=source,text=True,check=True,stdout=subprocess.DEVNULL)
  assert sql('SELECT COUNT(*) FROM clan_personal_favor')=='3'
  print('Phases 5a/5b/6: boot defaults/authority, import/cutover atomic retries, SQL recovery with post-cutover writes, retained timers and cumulative Favor passed')

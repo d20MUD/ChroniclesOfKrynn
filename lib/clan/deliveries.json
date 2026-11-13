@@ -1,7 +1,175 @@
-{"version":1,"deliveries":[
- {"id":"ash-shafts-v1","name":"Ash shaft supplies","kind":1,"resource":21,"grade":1,"quantity":50,"min_level":1,"min_enhancement":0},
- {"id":"bronze-heads-v1","name":"Bronze head supplies","kind":1,"resource":3,"grade":2,"quantity":50,"min_level":1,"min_enhancement":0},
- {"id":"arrows-v1","name":"Arrow reserves","kind":2,"resource":1,"grade":0,"quantity":100,"min_level":1,"min_enhancement":0},
- {"id":"bolts-v1","name":"Bolt reserves","kind":2,"resource":2,"grade":0,"quantity":100,"min_level":1,"min_enhancement":0},
- {"id":"enchanted-bullets-v1","name":"Enchanted bullet reserves","kind":2,"resource":3,"grade":0,"quantity":100,"min_level":6,"min_enhancement":1}
-]}
+{
+  "version": 1,
+  "deliveries": [
+    {
+      "id": "ash-shafts-v1",
+      "name": "Ash shaft supplies",
+      "kind": 1,
+      "resource": 21,
+      "grade": 1,
+      "quantity": 50,
+      "min_level": 1,
+      "min_enhancement": 0
+    },
+    {
+      "id": "bronze-heads-v1",
+      "name": "Bronze head supplies",
+      "kind": 1,
+      "resource": 3,
+      "grade": 2,
+      "quantity": 50,
+      "min_level": 1,
+      "min_enhancement": 0
+    },
+    {
+      "id": "arrows-v1",
+      "name": "Arrow reserves",
+      "kind": 2,
+      "resource": 1,
+      "grade": 0,
+      "quantity": 100,
+      "min_level": 1,
+      "min_enhancement": 0
+    },
+    {
+      "id": "bolts-v1",
+      "name": "Bolt reserves",
+      "kind": 2,
+      "resource": 2,
+      "grade": 0,
+      "quantity": 100,
+      "min_level": 1,
+      "min_enhancement": 0
+    },
+    {
+      "id": "enchanted-bullets-v1",
+      "name": "Enchanted bullet reserves",
+      "kind": 2,
+      "resource": 3,
+      "grade": 0,
+      "quantity": 100,
+      "min_level": 6,
+      "min_enhancement": 1
+    },
+    {
+      "id": "daggers-crafted-v1",
+      "name": "Dagger requisition",
+      "kind": 3,
+      "resource": 2,
+      "grade": 0,
+      "quantity": 5,
+      "min_level": 1,
+      "min_enhancement": 0
+    },
+    {
+      "id": "staves-crafted-v1",
+      "name": "Quarterstaff requisition",
+      "kind": 3,
+      "resource": 10,
+      "grade": 0,
+      "quantity": 5,
+      "min_level": 1,
+      "min_enhancement": 0
+    },
+    {
+      "id": "longswords-crafted-v1",
+      "name": "Longsword requisition",
+      "kind": 3,
+      "resource": 26,
+      "grade": 0,
+      "quantity": 5,
+      "min_level": 3,
+      "min_enhancement": 0
+    },
+    {
+      "id": "longbows-crafted-v1",
+      "name": "Longbow requisition",
+      "kind": 3,
+      "resource": 44,
+      "grade": 0,
+      "quantity": 5,
+      "min_level": 3,
+      "min_enhancement": 0
+    },
+    {
+      "id": "clothing-crafted-v1",
+      "name": "Clothing requisition",
+      "kind": 3,
+      "resource": 72,
+      "grade": 0,
+      "quantity": 5,
+      "min_level": 1,
+      "min_enhancement": 0
+    },
+    {
+      "id": "leather-armor-crafted-v1",
+      "name": "Leather armor requisition",
+      "kind": 3,
+      "resource": 74,
+      "grade": 0,
+      "quantity": 5,
+      "min_level": 3,
+      "min_enhancement": 0
+    },
+    {
+      "id": "small-shields-crafted-v1",
+      "name": "Small shield requisition",
+      "kind": 3,
+      "resource": 86,
+      "grade": 0,
+      "quantity": 5,
+      "min_level": 1,
+      "min_enhancement": 0
+    },
+    {
+      "id": "boots-crafted-v1",
+      "name": "Boot requisition",
+      "kind": 3,
+      "resource": 130,
+      "grade": 0,
+      "quantity": 5,
+      "min_level": 1,
+      "min_enhancement": 0
+    },
+    {
+      "id": "gloves-crafted-v1",
+      "name": "Glove requisition",
+      "kind": 3,
+      "resource": 131,
+      "grade": 0,
+      "quantity": 5,
+      "min_level": 1,
+      "min_enhancement": 0
+    },
+    {
+      "id": "cloaks-crafted-v1",
+      "name": "Cloak requisition",
+      "kind": 3,
+      "resource": 132,
+      "grade": 0,
+      "quantity": 5,
+      "min_level": 1,
+      "min_enhancement": 0
+    },
+    {
+      "id": "flutes-crafted-v1",
+      "name": "Flute requisition",
+      "kind": 3,
+      "resource": 139,
+      "grade": 0,
+      "quantity": 5,
+      "min_level": 1,
+      "min_enhancement": 0
+    },
+    {
+      "id": "drums-crafted-v1",
+      "name": "Drum requisition",
+      "kind": 3,
+      "resource": 141,
+      "grade": 0,
+      "quantity": 5,
+      "min_level": 1,
+      "min_enhancement": 0
+    }
+  ]
+}

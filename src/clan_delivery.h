@@ -6,6 +6,7 @@
 #define CLAN_DELIVERY_LIMIT 32
 #define CLAN_DELIVERY_MATERIAL 1
 #define CLAN_DELIVERY_AMMO 2
+#define CLAN_DELIVERY_CRAFTED 3
 struct clan_delivery_definition
 {
   char id[33], name[81];

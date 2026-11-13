@@ -46,7 +46,7 @@ int main(int argc,char **argv)
   status=clan_repository_disband(db,clan_uid,n(request,"revision"),n(request,"now"));
   if(status==CLAN_REPO_OK)out=json_object_new_boolean(true);
  }else if((!strcmp(argv[2],"policy") || !strcmp(argv[2],"personal"))) {
-  struct clan_progression_config config=clan_progression_defaults;
+  struct clan_progression_config config=clan_progression_v1;
   struct clan_progression_readiness ready={true,false,false,false,CLAN_PROGRESSION_SCHEMA_VERSION};
   if(!json_object_get_boolean(get(request,"disabled"))) {
    config.controls.store_mode=CLAN_STORE_MYSQL;config.controls.mode=CLAN_PROGRESSION_LIVE;

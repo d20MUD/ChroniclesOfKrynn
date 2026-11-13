@@ -1,5 +1,6 @@
 #include "clan_contract_rotation.h"
 #include "clan_delivery.h"
+#include "crafting_recipes.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -45,6 +46,9 @@ bool clan_delivery_definition_valid(const struct clan_delivery_definition *d)
   if (d->kind == CLAN_DELIVERY_MATERIAL)
     return d->resource > 0 && d->resource < 256 && d->grade >= 1 && d->grade <= 10 &&
            d->quantity == 50 && d->min_enhancement == 0;
+  if (d->kind == CLAN_DELIVERY_CRAFTED)
+    return d->resource > CRAFT_RECIPE_NONE && d->resource < NUM_CRAFTING_RECIPES &&
+           d->grade == 0 && d->quantity >= 1 && d->quantity <= 20 && d->min_enhancement == 0;
   return d->kind == CLAN_DELIVERY_AMMO && d->resource >= 1 && d->resource <= 3 && d->grade == 0 &&
          d->quantity == 100 && d->min_enhancement >= 0 && d->min_enhancement <= 8;
 }
@@ -403,7 +407,7 @@ static void event_from_quote(struct json_object *q, struct clan_reward_event *e)
   e->account_id = num(q, "account_id");
   e->occurred_at = num(q, "occurred_at");
   e->source = CLAN_SOURCE_DELIVERY;
-  e->rules_version = 1;
+  e->rules_version = CLAN_PROGRESSION_RULES_VERSION;
   e->requested_xp_eighths = 800;
   e->requested_influence_eighths = 400;
   e->requested_favor_eighths = 400;

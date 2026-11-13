@@ -29,7 +29,7 @@ as needed. Infinite and Returning ammunition does not count. Other containers
 and ammunition without a saved finite bundle size do not count. Purchased
 and transferred goods qualify; these are delivery, not gathering contracts.
 
-Base credit is 100 clan XP, 50 Influence and 50 Favor. Account, source, clan
+Base credit is 6.250 lifetime Influence, 6.250 spendable Influence and 12.500 Favor. Account, source, clan
 and Favor caps may reduce credit. Turnin previews the EXACT credit before
 charging anything. Confirm its quote ID within 60 seconds. Changed goods,
 membership, expired quotes or changed credit require a new preview. An all-zero

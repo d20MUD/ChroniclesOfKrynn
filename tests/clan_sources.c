@@ -66,7 +66,7 @@ int main(int argc,char **argv)
   assert(mysql_real_connect(connection.conn,NULL,"root","","clan_test",0,argv[1],0));
   assert(!mysql_query(connection.conn,"SET SESSION sql_mode='STRICT_ALL_TABLES,NO_ENGINE_SUBSTITUTION'"));
   for(const char *p=argv[2];*p;p++)sequence=sequence*31+(unsigned char)*p;
-  policy=clan_progression_defaults;policy.controls.store_mode=CLAN_STORE_MYSQL;
+  policy=clan_progression_v1;policy.controls.store_mode=CLAN_STORE_MYSQL;
   policy.controls.mode=CLAN_PROGRESSION_LIVE;policy.controls.public_release=true;
   account.id=77;other.id=88;
   player(&ch,&ps,&d,&account,5000000007,30);

@@ -223,7 +223,7 @@ void clan_source_death(struct char_data *v,struct char_data *killer)
       if(!legendary_uuid_generate(event.operation_uid))continue;
       strcpy(event.event_uid,e->facts.encounter_uid);strcpy(event.clan_uid,results[i].clan_uid);
       event.account_id=results[i].account_id;event.player_id=results[i].player_id;event.occurred_at=now;
-      event.source=CLAN_SOURCE_KILL;event.rules_version=1;
+      event.source=CLAN_SOURCE_KILL;event.rules_version=CLAN_PROGRESSION_RULES_VERSION;
       event.requested_xp_eighths=16;event.requested_influence_eighths=8;event.requested_favor_eighths=8;
       enum clan_repository_result r=clan_reward_prepare_kill(connection->conn,&event,e->facts.victim_prototype,now,&receipt);
       if(r==CLAN_REPO_OK)prepared(connection->conn,receipt,now);
@@ -256,7 +256,7 @@ static void supply_pending(struct char_data *ch,int64_t now)
   strcpy(event.operation_uid,GET_CRAFT(ch).clan_supply_event);strcpy(event.event_uid,event.operation_uid);
   strcpy(event.clan_uid,GET_CRAFT(ch).clan_supply_uid);event.account_id=GET_CRAFT(ch).clan_supply_account;
   event.player_id=GET_IDNUM(ch);event.occurred_at=GET_CRAFT(ch).clan_supply_at;
-  event.source=CLAN_SOURCE_SUPPLY_ORDER;event.rules_version=1;
+  event.source=CLAN_SOURCE_SUPPLY_ORDER;event.rules_version=CLAN_PROGRESSION_RULES_VERSION;
   event.requested_xp_eighths=800;event.requested_influence_eighths=400;event.requested_favor_eighths=400;
   /* Membership was captured at successful turn-in, before the durable player
    * checkpoint. A later departure must not change this saved occurrence. */

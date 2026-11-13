@@ -1,0 +1,107 @@
+{
+  "version": 1,
+  "expeditions": [
+    {
+      "id": "icewall-assault-v1",
+      "name": "Stronghold Assault: Icewall approaches",
+      "family": 1,
+      "min_clan_level": 1,
+      "min_player_level": 24,
+      "max_player_level": 30,
+      "shared_reward_id": "stronghold-shared-v1",
+      "personal_reward_id": "stronghold-personal-v1",
+      "objectives": [
+        {
+          "quota": 20,
+          "targets": [
+            {
+              "area": 141,
+              "mob": 14100
+            },
+            {
+              "area": 141,
+              "mob": 14101
+            }
+          ]
+        },
+        {
+          "quota": 1,
+          "targets": [
+            {
+              "area": 141,
+              "mob": 14001
+            },
+            {
+              "area": 141,
+              "mob": 14103
+            }
+          ]
+        },
+        {
+          "quota": 1,
+          "targets": [
+            {
+              "area": 141,
+              "mob": 14000
+            },
+            {
+              "area": 141,
+              "mob": 14009
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "icewall-hunt-v1",
+      "name": "Regional Hunt: Icewall patrols",
+      "family": 2,
+      "min_clan_level": 1,
+      "min_player_level": 24,
+      "max_player_level": 30,
+      "shared_reward_id": "hunt-shared-v1",
+      "personal_reward_id": "hunt-personal-v1",
+      "objectives": [
+        {
+          "quota": 10,
+          "targets": [
+            {
+              "area": 140,
+              "mob": 14012
+            },
+            {
+              "area": 140,
+              "mob": 14013
+            }
+          ]
+        },
+        {
+          "quota": 10,
+          "targets": [
+            {
+              "area": 140,
+              "mob": 14015
+            },
+            {
+              "area": 140,
+              "mob": 14016
+            }
+          ]
+        },
+        {
+          "quota": 10,
+          "targets": [
+            {
+              "area": 141,
+              "mob": 14106
+            },
+            {
+              "area": 141,
+              "mob": 14108
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -25,7 +25,7 @@ with database(migrations) as (tmp,socket,sql,client):
   subprocess.run([str(binary),'periods'],input='\n'.join(lines)+'\n',text=True,check=True,env=dict(os.environ,TZ=tz))
  subprocess.run([str(binary),str(socket)],check=True)
  before=sql('SELECT * FROM clan_account_windows ORDER BY account_id,starts_at_utc')
- subprocess.run(client,input=(ROOT/'sql'/migrations[-1]).read_text(),text=True,check=True)
+ subprocess.run(client,input=(ROOT/'sql'/'20261113_clan_progression_v006.sql').read_text(),text=True,check=True)
  assert sql('SELECT * FROM clan_account_windows ORDER BY account_id,starts_at_utc')==before
  # Actual SQL constraints enforce aligned UTC weeks and bounded values.
  for mutation in ["INSERT INTO clan_account_windows(account_id,starts_at_utc,updated_at_utc) VALUES(0,1704067200,1704067200)",

@@ -34,12 +34,15 @@ typedef int bitvector_t;
 #define FIND_CHAR_ROOM 1
 #define ITEM_WEAR_TAKE 1
 #define PRF_HOLYLIGHT 1
+#define CRAFT_MAT_NONE 0
+#define NUM_CRAFT_MATS 100
+#define GET_SURVEY_ROOMS(ch) ((ch)->survey)
 struct variable { bool bReport; };
 struct protocol { bool bMSDP;struct variable **pVariables; };
 struct descriptor_data { struct protocol *pProtocol; };
-struct char_data { long id;int room;bool visible,npc,dead,extracting;const char *name;struct char_data *next_in_room;struct descriptor_data *desc;struct obj_data *carrying,*equipment[NUM_WEARS]; };
+struct char_data { long id;int room,survey;bool visible,npc,dead,extracting;const char *name;struct char_data *next_in_room;struct descriptor_data *desc;struct obj_data *carrying,*equipment[NUM_WEARS]; };
 struct obj_data { long id;bool visible,takeable;const char *name,*description;struct obj_data *next_content; };
-static struct { int vnum;struct char_data *people;struct obj_data *contents; } world[2];
+static struct { int vnum,harvest_material,harvest_material_amount;struct char_data *people;struct obj_data *contents; } world[2];
 #define GET_ID(x) ((x)->id)
 #define IN_ROOM(ch) ((ch)->room)
 #define VALID_ROOM_RNUM(r) ((r)>=0 && (r)<2)
@@ -58,6 +61,7 @@ static struct { int vnum;struct char_data *people;struct obj_data *contents; } w
 #define PLR_FLAGGED(ch,f) (!(ch)->npc && (ch)->extracting)
 #define PERS(p,ch) ((p)->name)
 #define GET_OBJ_SHORT(o) ((o)->name)
+static const char *harvest_node_name(int room) { return room == 0 ? "an ice-rimed copper vein" : "a stand of ash trees"; }
 static char *response;
 static int writes;
 static void MSDPSetString(struct descriptor_data *d,int variable,const char *text) { writes++;free(response);response=strdup(text); }
@@ -138,7 +142,31 @@ int main(void) {
   update_msdp_room_contents(&player);assert(!strstr(response,"}c100") && strstr(response,"}c103"));
   mob1.extracting=false;
   update_msdp_room_contents(&player);assert(strstr(response,"}c100"));
-  variable.bReport=false;update_msdp_room_contents(&player);assert(writes==5);
+  /* Only surveyed, non-depleted real nodes are reported. Harvest uses the
+   * normal command; its UI identity is scoped to the room, not an object ID. */
+  world[0].harvest_material=21;world[0].harvest_material_amount=50;
+  update_msdp_room_contents(&player);assert(!strstr(response,"harvest"));
+  player.survey=3;
+  update_msdp_room_contents(&player);
+  report=json_tokener_parse(response);entries=field(report,"entries");
+  struct json_object *node=json_object_array_get_idx(entries,json_object_array_length(entries)-1);
+  assert(!strcmp(json_object_get_string(field(node,"kind")),"harvest"));
+  assert(!strcmp(json_object_get_string(field(node,"target")),"}h1005"));
+  assert(!strcmp(json_object_get_string(field(node,"name")),"an ice-rimed copper vein"));json_object_put(report);
+  world[0].harvest_material_amount=0;
+  update_msdp_room_contents(&player);assert(!strstr(response,"harvest"));
+  world[0].harvest_material_amount=50;player.survey=0;
+  update_msdp_room_contents(&player);assert(!strstr(response,"harvest"));
+  player.survey=3;world[0].harvest_material=CRAFT_MAT_NONE;
+  update_msdp_room_contents(&player);assert(!strstr(response,"harvest"));
+  world[0].harvest_material=NUM_CRAFT_MATS;
+  update_msdp_room_contents(&player);assert(!strstr(response,"harvest"));
+  world[0].harvest_material=21;player.npc=true;
+  update_msdp_room_contents(&player);assert(!strstr(response,"harvest"));player.npc=false;
+  player.room=1;world[1].vnum=1006;world[1].harvest_material=22;world[1].harvest_material_amount=50;
+  update_msdp_room_contents(&player);assert(strstr(response,"}h1006") && !strstr(response,"}h1005"));
+  int before_writes=writes;
+  variable.bReport=false;update_msdp_room_contents(&player);assert(writes==before_writes);
   variable.bReport=true;player.room=NOWHERE;update_msdp_room_contents(&player);
   report=json_tokener_parse(response);assert(json_object_array_length(field(report,"entries"))==0);json_object_put(report);
   free(response);puts("Room contents: visibility, short descriptions, takeable flags, duplicates, stale IDs and opt-in passed");

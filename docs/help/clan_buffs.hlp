@@ -1,42 +1,74 @@
-CLANBUFFS CLANBUFF CLANBUFFMANAGEMENT
-
 CLAN BUFFS
 
   clan buffs
-  clan buffs activate <family number> <tier> <slot>
-  clan buffs replace <family number> <tier> <slot> <current activation UID>
-  clan buffs cancel <activation UID>
+  clan buffs activate <name> <tier> <slot>
+  clan buffs replace <name> <tier> <slot>
+  clan buffs cancel <name or slot>
   clan buffs permission <maximum rank>
 
-The list shows your clan's unlocked buffs, tier prices, available slots,
-active buffs and family cooldowns. Family numbers are:
+WHAT EACH BUFF DOES
 
-  1 Scholar's Encouragement   2 Arcane Readiness   3 Psionic Focus
-  4 Company Vitality          5 Artisan's Guidance
+All values below are shown as Tier 1 / Tier 2 / Tier 3.
 
-Activation spends shared Influence. You must be a current accepted member
-with buff-management permission. A clan leader can delegate management to
-accepted ranks 1 through the chosen maximum; zero restores leader-only.
-The chosen rank must exist. Staff status does not bypass these checks.
-Buffs must be enabled for your clan by the game's trusted configuration.
+Scholar's Encouragement
+  +5% / +8% / +10% eligible combat experience.
+  Helps you level your character. It does not increase quest or crafting
+  experience, Favor, Influence, or other clan rewards.
 
-Cancelling gives no refund. Replacement also gives no refund and does not
-clear either family's cooldown. Replacing an occupied slot requires the
-active UID shown by the list:
+Arcane Readiness
+  10% / 15% / 20% shorter spell preparation and spontaneous spell-slot
+  recovery times. Each cycle receives its benefit when that cycle starts;
+  an already-running cycle keeps its timing. Queued spells do not reserve
+  the bonus before their own preparation begins.
 
-  clan buffs replace <family> <tier> <slot> <current activation UID>
+Psionic Focus
+  +10% / +20% / +30% power-point recovery outside combat.
+  Helps replenish PSP; it does not increase maximum PSP or movement recovery.
 
-The game creates an operation UID for you.
-The command prints an exact retry command before requesting a change. If
-an error says the result is uncertain, use that exact command instead of
-starting another operation. An identical retry returns the original result
-without charging again; changing its arguments produces a conflict.
+Company Vitality
+  +5% / +10% / +15% maximum hit points.
+  This raises your health ceiling without healing you. When the buff ends,
+  current health cannot exceed your normal maximum. This is a combat buff.
 
-An unoccupied activation and cancellation create the operation UID for you.
-For an explicit retry, use:
+Artisan's Guidance
+  +2 / +3 / +4 to crafting production and harvesting skill checks.
+  These are flat bonuses to checks, not percentages or extra materials.
+  It does not directly increase clan rewards.
 
-  clan buffs activate <family> <tier> <slot> <operation UID> <clan UID> [active UID]
-  clan buffs cancel <active UID> <operation UID> <clan UID>
+UNLOCKS, COSTS AND DURATION
 
-See also: CLANPROGRESSION, CLAN
+             Clan level       Influence cost
+  Tier 1     1 (Artisan: 3)        13
+  Tier 2     5                     19
+  Tier 3     20                    29
+
+Each buff lasts 24 real hours. Its family becomes available again 36 hours
+from activation: 24 hours active, followed by 12 hours of downtime. Time
+continues while you are offline. Changing tier or cancelling early does
+not reset or shorten the family's next-use time.
+
+A clan starts with two buff slots and unlocks a third at clan level 10.
+Only one combat buff may be active at once. Different tiers of the same
+buff do not stack. Benefits apply to current accepted clan members while
+the buff is active; leaving the clan removes access to its benefits.
+
+Use clan buffs to see your clan's current unlocks, prices and active buffs.
+
+ACTIVATING AND MANAGING BUFFS
+
+Use the buff's name, or a unique part of it. For example:
+  clan buffs activate Scholar 1 1
+  clan buffs cancel Scholar
+
+The list shows tier prices, clan level requirements, active buffs and when
+a family becomes available again. Activation spends shared Influence.
+Replacement and cancellation give no refund and never reset a cooldown.
+Replacement selects the active buff in the specified slot.
+
+Only accepted clan members with buff-management permission may make changes.
+A leader can delegate management with clan buffs permission <rank>.
+Use zero to restore leader-only management. Staff status does not bypass it.
+
+If a result cannot be confirmed, the game prints a recovery command. Copy
+that command exactly; it checks the original request without paying twice.
 #0

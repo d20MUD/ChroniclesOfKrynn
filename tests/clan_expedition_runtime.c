@@ -20,11 +20,12 @@ struct room_data *world;
 room_rnum top_of_world;
 struct player_special_data dummy_mob;
 bool mysql_available = true;
+static int64_t runtime_clock = 2200610101;
 time_t expedition_test_time(time_t *out)
 {
   if (out)
-    *out = 2200610101;
-  return 2200610101;
+    *out = runtime_clock;
+  return runtime_clock;
 }
 const struct clan_progression_config *clan_buff_runtime_policy(void)
 {
@@ -109,10 +110,21 @@ struct clan_expedition_world clan_expedition_world_refs(void)
   struct clan_expedition_world refs = {area, target, target, NULL};
   return refs;
 }
+const char *clan_expedition_target_name(int mob)
+{
+  (void)mob;
+  return "enemy";
+}
+const char *clan_expedition_area_name(int area)
+{
+  (void)area;
+  return "area";
+}
 static void command(struct char_data *ch, const char *s, const char *expected)
 {
   *messages = 0;
   do_clanexpeditions(ch, (char *)s, 0, 0);
+  if (!strstr(messages, expected)) fprintf(stderr,"Command %s expected %s, got: %s\n",s,expected,messages);
   assert(strstr(messages, expected));
   assert(!busy);
 }
@@ -125,10 +137,12 @@ int main(int argc, char **argv)
   struct room_data rooms[1] = {{0}};
   struct json_object *outing = NULL;
   char uid[33], join[80];
-  assert(argc == 2 || argc == 3);
+  assert(argc >= 2 && argc <= 5);
+  if (argc == 5)
+    runtime_clock = atoll(argv[4]);
   connection.conn = mysql_init(NULL);
   assert(mysql_real_connect(connection.conn, NULL, "root", "", "clan_test", 0, argv[1], 0));
-  policy = clan_progression_defaults;
+  policy = clan_progression_v1;
   policy.controls.store_mode = CLAN_STORE_MYSQL;
   policy.controls.mode = CLAN_PROGRESSION_LIVE;
   policy.controls.public_release = true;
@@ -153,13 +167,31 @@ int main(int argc, char **argv)
   GET_LEVEL((&leader)) = GET_LEVEL((&ally)) = 27;
   IN_ROOM((&leader)) = IN_ROOM((&ally)) = 0;
   GET_POS((&leader)) = GET_POS((&ally)) = POS_STANDING;
+  if (argc >= 4)
+  {
+    if (!strcmp(argv[2], "resume"))
+    {
+      clan_expedition_resume(&leader, runtime_clock);
+      assert(!strstr(messages, argv[3]) && strstr(messages, "saved progress:") && strstr(messages, "Expires "));
+    }
+    else
+    {
+      clan_expedition_restore(runtime_clock);
+      assert(clan_expedition_read(connection.conn, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", &outing) ==
+             CLAN_REPO_NOT_FOUND);
+    }
+    assert(!busy);
+    mysql_close(connection.conn);
+    puts("Expedition restart/reconnect maintenance passed.");
+    return 0;
+  }
   if (argc == 3)
   {
     char claim[80];
     policy.controls.expeditions = true;
-    command(&leader, "claims", argv[2]);
+    command(&leader, "claims", "Stronghold Assault");
     snprintf(claim, sizeof(claim), "claim %s", argv[2]);
-    command(&leader, claim, "Favor credited");
+    command(&leader, "claim Stronghold Assault", "Favor credited");
     command(&leader, claim, "Favor credited");
     mysql_close(connection.conn);
     puts("Expedition claim commands: completion discovery, exact Favor, replay and safe SQL-pool "
@@ -168,12 +200,12 @@ int main(int argc, char **argv)
   }
   command(&leader, "list", "unavailable");
   policy.controls.expeditions = true;
-  command(&leader, "list", "icewall-assault-v1");
+  command(&leader, "list", "Icewall");
   command(&leader, "create", "Usage");
   quartermaster = false;
-  command(&leader, "create icewall-assault-v1", "rejected");
+  command(&leader, "create Stronghold Assault: Icewall Castle", "rejected");
   quartermaster = true;
-  command(&leader, "create icewall-assault-v1", "created");
+  command(&leader, "create Stronghold Assault: Icewall Castle", "recruiting");
   assert(clan_expedition_read(connection.conn, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", &outing) ==
          CLAN_REPO_OK);
   {
@@ -183,12 +215,12 @@ int main(int argc, char **argv)
   }
   json_object_put(outing);
   snprintf(join, sizeof(join), "join %s", uid);
-  command(&leader, "active", uid);
+  command(&leader, "active", "Icewall");
   command(&leader, "start", "rejected");
   aa.id = 77;
   command(&ally, join, "rejected");
   aa.id = 80;
-  command(&ally, join, "join recorded");
+  command(&ally, "join", "join recorded");
   leader.next_in_room = NULL;
   command(&leader, "start", "rejected");
   leader.next_in_room = &ally;
@@ -196,7 +228,7 @@ int main(int argc, char **argv)
   command(&leader, "start", "rejected");
   GET_LEVEL((&ally)) = 27;
   command(&leader, "start", "start recorded");
-  command(&leader, "active", uid);
+  command(&leader, "active", "Icewall");
   command(&leader, "abandon", "abandon recorded");
   assert(clan_expedition_read(connection.conn, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", &outing) ==
          CLAN_REPO_NOT_FOUND);
@@ -205,3 +237,5 @@ int main(int argc, char **argv)
        "stable readout and abandonment passed.");
   return 0;
 }
+
+char *get_name_by_id(long id) { return id == 5000000007L ? "Leader" : "Ally"; }

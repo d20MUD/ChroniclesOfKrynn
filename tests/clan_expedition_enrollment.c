@@ -43,7 +43,7 @@ int main(int argc, char **argv)
   struct clan_expedition_catalog catalog;
   struct clan_expedition_world refs = {area, target, target, NULL};
   struct clan_expedition_member self, members[6];
-  struct clan_progression_config config = clan_progression_defaults;
+  struct clan_progression_config config = clan_progression_v1;
   enum clan_repository_result r = CLAN_REPO_INVALID;
   size_t i, count;
   assert(argc == 3);
@@ -60,6 +60,9 @@ int main(int argc, char **argv)
   config.controls.expeditions = !num(req, "disabled");
   refs.context = req;
   self = member(req);
+#ifdef CLAN_REWARD_TEST
+  clan_expedition_crash = num(req, "expedition_crash");
+#endif
   if (!strcmp(argv[2], "create"))
   {
     if (clan_expedition_catalog_parse(get(req, "catalog"), &catalog, NULL, 0))
@@ -83,7 +86,7 @@ int main(int argc, char **argv)
     e.normal_death = e.world_npc = true;
     e.room = 100;
     e.start_max_hp = 1000;
-    e.victim_level = 27;
+    e.victim_level = num(req, "victim_level") ? num(req, "victim_level") : 27;
     e.started_at = num(req, "now") - 10;
     e.occurred_at = num(req, "occurred_at");
     if (!e.occurred_at)
@@ -92,7 +95,8 @@ int main(int argc, char **argv)
     snprintf(e.encounter_uid, 33, "%s", str(req, "event"));
     e.owned = num(req, "owned");
     e.test = num(req, "test");
-    e.victim_level = num(req, "trivial") ? 1 : 27;
+    if (num(req, "trivial"))
+      e.victim_level = 1;
     for (i = 0; i < count; i++)
     {
       struct json_object *m = json_object_array_get_idx(get(req, "members"), i);
@@ -136,6 +140,7 @@ int main(int argc, char **argv)
   {
 #ifdef CLAN_REWARD_TEST
     clan_reward_fault = num(req, "fault");
+    clan_reward_crash = num(req, "crash");
 #endif
     r = clan_expedition_reward_complete(db, str(req, "operation"), num(req, "now"), &config, &out);
   }
@@ -146,6 +151,11 @@ int main(int argc, char **argv)
     r = clan_award_complete_personal(db, str(req, "operation"), num(req, "now"), &config, &ready,
                                      &out);
   }
+  else if (!strcmp(argv[2], "reconcile"))
+    r = clan_expedition_reconcile_clan(db, str(req, "clan"), num(req, "now"));
+  else if (!strcmp(argv[2], "batch"))
+    r = clan_expedition_reconcile_batch(db, get(req, "cursor") ? str(req, "cursor") : NULL,
+                                        num(req, "limit"), num(req, "now"), &out);
   else if (!strcmp(argv[2], "read"))
     r = clan_expedition_read(db, str(req, "clan"), &out);
   else if (!strcmp(argv[2], "start") || !strcmp(argv[2], "seal"))

@@ -492,9 +492,9 @@ static bool reward_insert(MYSQL *db, const struct clan_reward_event *e, int64_t 
              "player_id,source_id,occurred_at_utc,starts_at_utc,rules_version,requested_xp_eighths,"
              "requested_influence_eighths,requested_favor_eighths,accepted_at_utc) "
              "VALUES('%s','%s','%s','%s',%" PRId64 ",%" PRId64 ",%d,%" PRId64 ",%" PRId64
-             ",1,%" PRId64 ",%" PRId64 ",%" PRId64 ",%" PRId64 ")",
+             ",%d,%" PRId64 ",%" PRId64 ",%" PRId64 ",%" PRId64 ")",
              e->operation_uid, e->event_uid, e->clan_uid, beneficiary, e->account_id, e->player_id,
-             e->source, e->occurred_at, w.starts_at, e->requested_xp_eighths,
+             e->source, e->occurred_at, w.starts_at, e->rules_version, e->requested_xp_eighths,
              e->requested_influence_eighths, e->requested_favor_eighths, now);
 }
 enum clan_repository_result clan_objective_progress(MYSQL *db, const struct clan_objective_event *e,
@@ -574,7 +574,7 @@ enum clan_repository_result clan_objective_progress(MYSQL *db, const struct clan
     reward.player_id = e->player_id;
     reward.occurred_at = e->occurred_at;
     reward.source = e->family;
-    reward.rules_version = 1;
+    reward.rules_version = CLAN_PROGRESSION_RULES_VERSION;
     reward.requested_xp_eighths = 800;
     reward.requested_influence_eighths = 400;
     reward.requested_favor_eighths = 400;
@@ -645,7 +645,7 @@ static bool shared_bounty(MYSQL *db, const struct clan_reward_event *personal,
   snprintf(e.event_uid, 33, "%s", e.operation_uid);
   snprintf(e.clan_uid, 33, "%s", personal->clan_uid);
   e.source = CLAN_SOURCE_BOUNTY_SHARED;
-  e.rules_version = 1;
+  e.rules_version = CLAN_PROGRESSION_RULES_VERSION;
   e.occurred_at = personal->occurred_at;
   e.requested_xp_eighths = 1600;
   e.requested_influence_eighths = 800;

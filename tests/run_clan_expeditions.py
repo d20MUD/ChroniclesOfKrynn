@@ -36,7 +36,7 @@ with tempfile.TemporaryDirectory(prefix='clan-expeditions-') as tmp:
         bad=copy.deepcopy(request);bad['catalog']['expeditions'][0].update(changes);run(bad)
     for field in ['id','name','objectives','shared_reward_id']:
         bad=copy.deepcopy(request);del bad['catalog']['expeditions'][0][field];run(bad)
-    bad=copy.deepcopy(request);bad['catalog']['expeditions']*=2;run(bad,contains='duplicate ID')
+    bad=copy.deepcopy(request);bad['catalog']['expeditions'].append(bad['catalog']['expeditions'][0]);run(bad,contains='duplicate ID')
     for objective in range(3):
         bad=copy.deepcopy(request);bad['catalog']['expeditions'][0]['objectives'][objective]['quota']+=1;run(bad,contains='quota')
     bad=copy.deepcopy(request);bad['catalog']['expeditions'][0]['objectives'][1]['targets'].pop();run(bad,contains='alternatives')
@@ -50,9 +50,9 @@ with tempfile.TemporaryDirectory(prefix='clan-expeditions-') as tmp:
     bad=copy.deepcopy(request);bad['targets']=[];run(bad,contains='missing area/reset')
     bad=copy.deepcopy(request);bad['available']=[];run(bad,contains='no available alternative')
     # Missing population of one alternative is fine; missing prototype/reset is not.
-    bad=copy.deepcopy(request);missing=dict(area=141,mob=14001)
+    bad=copy.deepcopy(request);missing=catalog['expeditions'][0]['objectives'][1]['targets'][0]
     bad['available']=[t for t in targets if t!=missing];run(bad,True)
-    bad['targets']=bad['available'];run(bad,contains='141/14001')
-    for value in [None,{},[],dict(version=2,expeditions=[]),dict(version=1,expeditions=[None]),dict(version=1,expeditions=catalog['expeditions']*9)]:
+    bad['targets']=bad['available'];run(bad,contains=f"{missing['area']}/{missing['mob']}")
+    for value in [None,{},[],dict(version=2,expeditions=[]),dict(version=1,expeditions=[None]),dict(version=1,expeditions=[catalog['expeditions'][0]]*17)]:
         run(request|dict(catalog=value))
     print('Expedition definitions, indexed world resets, strict quotas/alternatives/rewards/bands, rejected malformed catalogs, and deterministic weekly rotation passed.')
