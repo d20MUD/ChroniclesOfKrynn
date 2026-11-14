@@ -4,6 +4,7 @@
 #include "sysdep.h"
 #include "legendary_equipment.h"
 #include "structs.h"
+#include "clan_access.h"
 #include "utils.h"
 #include "comm.h"
 #include "db.h"
@@ -525,6 +526,7 @@ static void listing_action(struct char_data *ch, const char *verb, long id, cons
     extract_obj(obj);
     return;
   }
+  if (buying && !clan_access_check(ch, &obj->clan_requirement, true)) goto fail;
   if (!CAN_CARRY_OBJ(ch, obj))
   {
     send_to_char(ch, "You cannot carry that item.\r\n");

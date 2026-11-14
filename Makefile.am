@@ -78,6 +78,9 @@ circle_SOURCES = \
 	src/clan_objectives.c \
 	src/clan_objective_runtime.c \
 	src/clan_sources.c \
+	src/clan_qm_services.c \
+	src/clan_enchant.c \
+	src/clan_access.c \
 	src/clan_status.c \
 	src/clan_commands.c \
 	src/clan_awards.c \
@@ -358,10 +361,16 @@ EXTRA_DIST = \
 	docs/clan_progression_operator_notes.md \
 	docs/help/clan_progression.hlp \
 	sql/20261112_clan_progression_services_help.sql \
+	lib/clan/quartermaster_services.json \
+	sql/20261113_clan_quartermaster_services_v001.sql \
+	docs/clan_progression_gear_and_quartermaster.md \
 	lib/clan/quartermaster.json \
 	src/clan_quartermaster.h \
 	sql/20261112_clan_quartermaster_v001.sql \
 	sql/20261112_clan_quartermaster_help.sql \
+	docs/help/weapon_effects.hlp \
+	docs/weapon_effects_mechanics_review.md \
+	sql/20261113_weapon_effects_help.sql \
 	docs/help/clan_quartermaster.hlp \
 	docs/clan_progression_phase_39_40_41_handoff.md \
 	lib/clan/expeditions.json \
@@ -401,6 +410,9 @@ EXTRA_DIST = \
 	sql/20261111_clan_buff_lifecycle_v001.sql \
 	sql/20261111_clan_buff_activations_v001.sql \
 	src/clan_display.h \
+	src/clan_qm_services.h \
+	src/clan_enchant.h \
+	src/clan_access.h \
 	src/clan_status.h \
 	src/clan_commands.h \
 	src/clan_persistence.h \

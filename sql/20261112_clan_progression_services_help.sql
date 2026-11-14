@@ -192,27 +192,110 @@ Replaying a paid claim never pays twice. Leaving the clan invalidates an
 unclaimed reward; accepted rewards retain their recovery history.',CHAR(10),CONCAT(CHAR(13),CHAR(10))),0,1000,FALSE),
 ('CLANQUARTERMASTER','general',REPLACE('CLAN QUARTERMASTER
 
-  clan quartermaster list
-  clan quartermaster buy <name>
-  clan quartermaster commission <name>
-  clan quartermaster confirm
+  clan quartermaster list                  Your services and remaining limits
+  clan quartermaster info                  Prices, limits and unlocks
+  clan quartermaster motes <type> <number>  Preview crafting motes
+  clan quartermaster quest <number>         Preview gold for quest points
+  clan quartermaster enhance <weapon>       Preview a random enchantment
+  clan quartermaster reroll <weapon>        Preview replacing an enchantment
+  clan quartermaster inspect <weapon>       Effect, command word and reroll
+  clan quartermaster confirm                Accept the current preview
 
-Choose an item by its displayed name or a unique part of it. For example:
-  clan quartermaster buy Abanasinia field map
-  clan quartermaster confirm
+Visit a quartermaster outside combat and timed crafting. Accepted clan
+membership is required to buy. Confirm within 60 seconds; previews disappear
+on reconnect or the weekly reset. Favor unlocks services and is never spent.
+The old quartermaster gear shop has been replaced by these services.
 
-Visit a quartermaster outside combat and timed crafting, with enough gold
-and room to carry the item. Buy and commission preview the price. Confirm
-within 60 seconds to accept that preview. A changed price or expired preview
-requires a new preview. Repeating confirmation never buys another copy.
+Weekly mote and quest-point allowances are SEPARATE FOR EACH CHARACTER,
+across all clans. They reset Monday at midnight UTC. Changing clans does not
+reset an allowance. The following are the initial limits and prices; use
+clan quartermaster info for the current settings.
 
-The list shows gold prices, character and clan levels, and required Favor.
-Favor unlocks the purchase and is never spent. Purchases bind to your
-character and have no resale value. Ordinary class, alignment, proficiency
-and level restrictions still apply. Leaving the clan does not remove gear.
+  Favor rank     Motes/week     Quest points/week
+      0              1                  5
+      1              2                 10
+      2              3                 15
+      3              4                 20
+      4              5                 25
+      5              6                 30
 
-Accepted purchases recover automatically after reconnecting. Unconfirmed
-previews are lost on reconnect. If recovery remains pending, contact staff.',CHAR(10),CONCAT(CHAR(13),CHAR(10))),0,1000,FALSE)
+Motes cost 2,500 gold each. Types: air, dark, earth, fire, ice, light,
+lightning and water. All mote types share the weekly mote allowance.
+Quest points cost 1,000 gold each and use a separate weekly allowance.
+
+A weapon enchantment costs 250,000 gold and requires Favor rank 1 or higher.
+Carry the weapon in your inventory. It must be a permanent, ordinary weapon
+without existing special abilities, spells, scripts or a legendary identity.
+Normal weapon enhancement bonuses can remain. Weapons bound to someone
+else cannot be enchanted. One clan enchantment is allowed per weapon.
+
+The roll ONLY draws effects unlocked by your CURRENT FAVOR RANK and suited
+to the weapon. Each eligible effect has weight 6 minus its minimum rank:
+rank 1 weight 5, rank 2 weight 4, rank 3 weight 3, rank 4 weight 2, rank 5
+weight 1. Thus each rank 1 effect is five times as likely as each rank 5
+one when both are eligible. Previewing never reveals or changes a roll.
+
+New effects start INACTIVE. Inspect or identify the weapon to learn its
+random command word, then equip it and UTTER <word> to toggle it on/off.
+For example, a Flaming weapon might use inferno, blaze or searing.
+Passive effects also switch off when the clan enchantment is inactive.
+
+A reroll costs 500,000 gold. It replaces the clan effect and command word,
+starts inactive, and can roll the same effect again. Each individual weapon
+can reroll ONCE PER WEEK, even if traded to another character. The initial
+enchantment does not consume that reroll. Favor unlocks still apply when
+rerolling. The weapon keeps its other properties and normal bonuses.
+
+For exact mechanics and current limitations: HELP WEAPONEFFECTS.
+Some named effects have incomplete mechanics; read that guide before rolling.
+
+Weapon effects -- number is the minimum Favor rank:
+
+  1 Anarchic        Extra damage against lawful enemies.
+  1 Axiomatic       Extra damage against chaotic enemies.
+  1 Unholy          Extra damage against good enemies.
+  1 Flaming         Fire damage on hits.
+  1 Frost           Cold damage on hits.
+  1 Ghost Touch     Effective against incorporeal enemies.
+  1 Holy            Extra damage against evil enemies.
+  1 Corrosive       Acid damage on hits.
+  1 Keen            Improves a sharp weapon''s critical threat range.
+  1 Ki Focus        Channels monk ki abilities through a melee weapon.
+  1 Shock           Electricity damage on hits.
+
+  2 Bane            Extra damage against a randomly chosen creature family.
+  2 Thundering      Sonic damage on critical hits.
+  2 Throwing        Allows an ordinary melee weapon to be thrown.
+  2 Defending       Trades weapon effectiveness for armor protection.
+  2 Disruption      Disrupts undead; blunt weapons only.
+  2 Bewildering     Can confuse enemies on critical hits.
+  2 Exhausting      Fatigues enemies and drains movement on critical hits.
+  2 Mighty Cleaving Gives access to cleave attacks and one extra cleave.
+  2 Returning       Returns a thrown weapon rather than consuming it.
+  2 Seeking         Helps ranged attacks overcome concealment.
+
+  3 Speed           Extra attack; follows normal haste stacking rules.
+  3 Dancing         An additional weapon attack during a full attack.
+  3 Vicious         Extra damage to enemies, with backlash to the wielder.
+  3 Flaming Burst   Fire damage plus a burst on critical hits.
+  3 Agile           Uses enhancement-capped Dexterity with light/finesse weapons.
+  3 Icy Burst       Cold damage plus a burst on critical hits.
+  3 Corrosive Burst Acid damage plus a burst on critical hits.
+  3 Invigorating    Recovers movement on hits and critical hits.
+  3 Shocking Burst  Electricity damage plus a burst on critical hits.
+
+  4 Wounding        Currently inactive under standard settings; see weaponeffects.
+  4 Blinding        Can blind enemies on critical hits.
+  4 Adaptive        Adds 1.5x positive Strength damage to non-thrown ranged attacks.
+  4 Vampiric        Drains living enemies and heals the wielder.
+  4 Lucky           10% chance of an enhancement-based bonus on shared d20 rolls.
+
+  5 Vorpal          5% killing-blow chance on eligible critical hits.
+
+Accepted purchases recover automatically after reconnecting, even if you
+have since left the clan. If recovery remains pending, contact staff.
+Leaving a clan does not remove an enchantment; builder-set item clan
+requirements still apply when purchasing or equipping restricted gear.',CHAR(10),CONCAT(CHAR(13),CHAR(10))),0,1000,FALSE)
 ON DUPLICATE KEY UPDATE category=VALUES(category),entry=VALUES(entry),min_level=VALUES(min_level),max_level=VALUES(max_level),auto_generated=FALSE;
 INSERT IGNORE INTO help_keywords(help_tag,keyword) VALUES
 ('CLANPROGRESSION','clanprogression'),

@@ -433,6 +433,9 @@ int write_mobile_espec(mob_vnum mvnum, struct char_data *mob, FILE *fd)
     }
   }
 
+  if (mob->clan_requirement.clan) fprintf(fd, "Clan: %d\n", mob->clan_requirement.clan);
+  if (mob->clan_requirement.rank) fprintf(fd, "ClanRank: %d\n", mob->clan_requirement.rank);
+  if (mob->clan_requirement.favor) fprintf(fd, "ClanFavorRank: %d\n", mob->clan_requirement.favor);
   if (GET_ATTACK(mob) != 0)
     fprintf(fd, "BareHandAttack: %d\n", GET_ATTACK(mob));
   if (GET_STR(mob) != 11)

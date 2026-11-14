@@ -59,7 +59,7 @@ with database(migrations) as (tmp,socket,sql,client):
     assert all(not s['enabled'] for b in unavailable['buffs'] for t in b['tiers'] for s in t['slots'])
     # Phase 46 optional schemas: exact saved progress, own outing participation,
     # private entitlements and journal holds are read without lazy-reset writes.
-    for migration in ['20261111_clan_delivery_v001.sql','20261111_clan_objectives_v001.sql','20261112_clan_expeditions_v001.sql','20261112_clan_expeditions_v002.sql','20261112_clan_quartermaster_v001.sql']:
+    for migration in ['20261111_clan_delivery_v001.sql','20261111_clan_objectives_v001.sql','20261112_clan_expeditions_v001.sql','20261112_clan_expeditions_v002.sql','20261112_clan_quartermaster_v001.sql','20261113_clan_quartermaster_services_v001.sql']:
         sql((ROOT/'sql'/migration).read_text())
     sql(f"INSERT INTO clan_memberships VALUES(1007,'{A}',1,0);INSERT INTO clan_personal_favor VALUES(1007,'{A}',12000,0,2200000000)")
     base['player']=1007
@@ -88,13 +88,12 @@ with database(migrations) as (tmp,socket,sql,client):
     def enriched(mode):
         p=subprocess.run([str(native),str(servicefile),mode],cwd=ROOT/'lib',capture_output=True,text=True);assert p.returncode==0,p.stderr;return json.loads(p.stdout)
     live=enriched('ready');c=live['content'];assert c['context_ready'] and c['contracts'][0]['active']['progress']==50
-    assert len(c['quartermaster']['choices'])==7 and c['quartermaster']['choices'][0]['actions'][0]['enabled']
-    for mode in ['away','poor','restricted','disabled']:
-        locked=enriched(mode)['content']['quartermaster']['choices'][0]['actions'][0];assert not locked['enabled'] and locked['reasons'],(mode,locked)
+    assert c['quartermaster']['choices']==[]
+    assert c['quartermaster']['actions'][0]['kind']=='quartermaster_list'
+    assert 'weekly character limits' in ' '.join(c['quartermaster']['notes'])
     assert c['expedition']['active']['objectives'][0]['progress']==1 and c['expedition']['active']['personal_required']==11
     assert len(json.dumps(live))<49152
     preview=enriched('preview');assert '100.000 lifetime Influence, 50.000 Influence and 50.000 Favor' in preview['content']['contracts'][0]['preview']['summary']
-    assert preview['content']['quartermaster']['preview']['actions'][0]['token']=='2'*32
     (ROOT/'tests/fixtures/clan_services.json').write_text(json.dumps(preview,indent=2)+'\n')
     sql(f"UPDATE clan_expedition_outings SET state=3 WHERE outing_uid='{'c'*32}';INSERT INTO clan_expedition_completions VALUES('{'c'*32}',1,{week},{now},{end},22);INSERT INTO clan_expedition_entitlements VALUES('{'c'*32}',1007,77,'{'e'*32}',0)")
     own=run()['content']['expedition']['claims'];assert len(own)==1 and own[0]['state']=='unclaimed'

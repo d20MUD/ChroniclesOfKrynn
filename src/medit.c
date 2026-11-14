@@ -802,7 +802,7 @@ static void medit_disp_menu(struct descriptor_data *d)
       "%sW%s) Copy mob\r\n"
       "%sX%s) Delete mob\r\n"
       "%sQ%s) Quit\r\n"
-      "Enter choice : ",
+      "",
 
       grn, nrm, yel, position_types[(int)GET_POS(mob)], grn, nrm, yel,
       position_types[(int)GET_DEFAULT_POS(mob)], grn, nrm, yel,
@@ -819,6 +819,11 @@ static void medit_disp_menu(struct descriptor_data *d)
       grn, nrm, cyn, flags, grn, nrm, cyn, flag2, grn, nrm, cyn, flag3, grn, nrm, cyn,
       OLC_SCRIPT(d) ? "Set." : "Not Set.", grn, nrm, cyn, path, nrm, grn, nrm, cyn,
       specname ? specname : "None", grn, nrm, grn, nrm, grn, nrm);
+  write_to_output(d, "\r\n\tCclan\tn) Clan number       : %d\r\n"
+                     "\tCrank\tn) Minimum clan rank : %d (1 is highest)\r\n"
+                     "\tCfavor\tn) Minimum Favor rank: %d\r\nEnter choice : ",
+                     OLC_MOB(d)->clan_requirement.clan, OLC_MOB(d)->clan_requirement.rank,
+                     OLC_MOB(d)->clan_requirement.favor);
   OLC_MODE(d) = MEDIT_MAIN_MENU;
 }
 
@@ -1063,7 +1068,28 @@ void medit_parse(struct descriptor_data *d, char *arg)
     }
     break;
 
+  case MEDIT_CLAN:
+  case MEDIT_CLAN_RANK:
+  case MEDIT_CLAN_FAVOR:
+    if (!*arg || strspn(arg, "0123456789") != strlen(arg) || strlen(arg) > 5 ||
+        atoi(arg) > (OLC_MODE(d) == MEDIT_CLAN ? 65534 : OLC_MODE(d) == MEDIT_CLAN_RANK ? 15 : 5)) {
+      write_to_output(d, "Enter a valid value (0 clears the requirement): "); return;
+    }
+    if (OLC_MODE(d) == MEDIT_CLAN) OLC_MOB(d)->clan_requirement.clan = atoi(arg);
+    else if (OLC_MODE(d) == MEDIT_CLAN_RANK) OLC_MOB(d)->clan_requirement.rank = atoi(arg);
+    else OLC_MOB(d)->clan_requirement.favor = atoi(arg);
+    OLC_VAL(d) = 1;
+    medit_disp_menu(d); return;
+
   case MEDIT_MAIN_MENU:
+    if (!strcasecmp(arg, "clan") || !strcasecmp(arg, "rank") || !strcasecmp(arg, "favor")) {
+      OLC_MODE(d) = !strcasecmp(arg, "clan") ? MEDIT_CLAN :
+                    !strcasecmp(arg, "rank") ? MEDIT_CLAN_RANK : MEDIT_CLAN_FAVOR;
+      write_to_output(d, "Enter %s (0 clears; officer rank 1 is highest): ",
+                      OLC_MODE(d) == MEDIT_CLAN ? "clan number (0..65534)" :
+                      OLC_MODE(d) == MEDIT_CLAN_RANK ? "minimum clan rank (0..15)" : "minimum Favor rank (0..5)");
+      return;
+    }
     i = 0;
     switch (*arg)
     {

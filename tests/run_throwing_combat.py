@@ -108,7 +108,7 @@ bonus=function(f,'int compute_attack_bonus_full(')
 assert 'wielded = get_wielded(ch, attack_type);' in bonus
 assert 'is_proficient_with_weapon(ch, GET_WEAPON_TYPE(wielded))' in bonus
 assert 'calc_bab += GET_DEX_BONUS(ch);' in bonus
-assert 'weapon_list[GET_OBJ_VAL(wielded, 0)].weaponFamily : WEAPON_FAMILY_RANGED' in bonus
+assert 'weapon_list[GET_OBJ_VAL(wielded, 0)].weaponFamily : WEAPON_FAMILY_RANGED' in ' '.join(bonus.split())
 damage=function(f,'int compute_damage_bonus(')
 a=damage.index('    if (is_throwing_weapon(ch, wielded))');b=damage.index('    else',a)
 assert 'dambonus += str_bonus;' in damage[a:b]

@@ -81,7 +81,7 @@ static bool crafted_eligible(struct obj_data *o, const struct clan_delivery_defi
       OBJ_FLAGGED(o, ITEM_MOLD) || (!reserved && *o->clan_delivery_uid) ||
       o->estate_delivery_id || o->legendary_quarantined || *o->legendary_uuid ||
       *o->clan_qm_uid || GET_OBJ_BOUND_ID(o) || o->contains || o->sheath_primary ||
-      o->sheath_secondary || o->special_abilities || o->has_spells)
+      o->sheath_secondary || o->special_abilities || o->clan_enchantment.effect || o->has_spells)
     return false;
   switch (recipe->object_type) {
     case ITEM_WEAPON: return GET_OBJ_VAL(o,0) == recipe->object_subtype && GET_OBJ_VAL(o,4) == 0;

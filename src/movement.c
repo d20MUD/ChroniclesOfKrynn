@@ -12,6 +12,7 @@
 #include "sysdep.h"
 #include "legendary_foundations.h"
 #include "structs.h"
+#include "clan_access.h"
 #include "utils.h"
 #include "comm.h"
 #include "interpreter.h"
@@ -671,6 +672,7 @@ int do_simple_move(struct char_data *ch, int dir, int need_specials_check)
     if (!IS_NPC(mob))
       continue;
 
+    block = FALSE; /* Each guard evaluates its own direction flags. */
     if (dir == NORTH && MOB_FLAGGED(mob, MOB_BLOCK_N))
       block = TRUE;
     else if (dir == EAST && MOB_FLAGGED(mob, MOB_BLOCK_E))
@@ -691,6 +693,13 @@ int do_simple_move(struct char_data *ch, int dir, int need_specials_check)
       block = TRUE;
     else if (dir == DOWN && MOB_FLAGGED(mob, MOB_BLOCK_D))
       block = TRUE;
+
+    if (block && MOB_FLAGGED(mob, MOB_BLOCK_CLAN)) {
+      if (!mob->clan_requirement.clan || clan_access_check(ch, &mob->clan_requirement, false)) {
+        block = FALSE; continue;
+      }
+      break; /* Other guard exemptions cannot bypass a clan requirement. */
+    }
 
     if (block && MOB_FLAGGED(mob, MOB_BLOCK_RACE) && GET_RACE(ch) == GET_RACE(mob))
       block = FALSE;

@@ -32,7 +32,7 @@ def public_sources(root, web=False):
         files = {'package.json', 'package-lock.json', 'index.html', 'eslint.config.js', 'vite.config.ts', 'tsconfig.json', 'tsconfig.app.json', 'tsconfig.server.json', 'ecosystem.config.cjs', 'readme.md'}
     else:
         roots = ('src/', 'lib/clan/', 'sql/', 'scripts/', 'tools/', 'tests/', 'docs/clan_progression', 'docs/help/clan_')
-        files = {'CMakeLists.txt', 'Makefile.am', 'configure.ac'}
+        files = {'CMakeLists.txt', 'Makefile.am', 'configure.ac', 'docs/help/weapon_effects.hlp', 'docs/weapon_effects_mechanics_review.md'}
         # These local build inputs are intentionally ignored by git, not secrets.
         paths += ['src/campaign.h', 'src/mud_options.h', 'src/vnums.h', 'src/conf.h']
     for name in sorted(set(paths)):

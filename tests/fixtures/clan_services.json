@@ -1544,134 +1544,11 @@
     },
     "quartermaster": {
       "ready": true,
-      "choices": [
-        {
-          "id": "field-map",
-          "name": "Abanasinia field map",
-          "details": "15 gold; clan level 2; character level 1; Favor 229. All classes; carried reference, no proficiency",
-          "actions": [
-            {
-              "kind": "quartermaster_buy",
-              "label": "Preview purchase",
-              "id": "field-map",
-              "enabled": true,
-              "reasons": []
-            }
-          ],
-          "price_gold": 15,
-          "budget": "Existing readable map; no stats, spells or activation."
-        },
-        {
-          "id": "field-knife",
-          "name": "Fishing knife",
-          "details": "140 gold; clan level 7; character level 1; Favor 876. Dagger/knife proficiency; normal weapon checks",
-          "actions": [
-            {
-              "kind": "quartermaster_buy",
-              "label": "Preview purchase",
-              "id": "field-knife",
-              "enabled": true,
-              "reasons": []
-            }
-          ],
-          "price_gold": 140,
-          "budget": "Unenchanted 1d4 knife; no ability bonuses or activated spells."
-        },
-        {
-          "id": "staff-commission",
-          "name": "Vallenwood staff commission",
-          "details": "300 gold; clan level 8; character level 1; Favor 1596. Quarterstaff; simple weapon users",
-          "actions": [
-            {
-              "kind": "quartermaster_buy",
-              "label": "Preview purchase",
-              "id": "staff-commission",
-              "enabled": false,
-              "reasons": [
-                "Your Favor standing for this clan is too low."
-              ]
-            }
-          ],
-          "price_gold": 300,
-          "budget": "Unenchanted 1d6 quarterstaff; no ability bonuses or activated spells."
-        },
-        {
-          "id": "sword-commission",
-          "name": "Copper longsword commission",
-          "details": "1470 gold; clan level 8; character level 1; Favor 1596. Longsword; martial weapon users",
-          "actions": [
-            {
-              "kind": "quartermaster_buy",
-              "label": "Preview purchase",
-              "id": "sword-commission",
-              "enabled": false,
-              "reasons": [
-                "Your Favor standing for this clan is too low."
-              ]
-            }
-          ],
-          "price_gold": 1470,
-          "budget": "Unenchanted 1d8 longsword; no ability bonuses or activated spells."
-        },
-        {
-          "id": "bow-commission",
-          "name": "Longbow commission",
-          "details": "30 gold; clan level 8; character level 5; Favor 1596. Longbow; ranged weapon users; ammunition separate",
-          "actions": [
-            {
-              "kind": "quartermaster_buy",
-              "label": "Preview purchase",
-              "id": "bow-commission",
-              "enabled": false,
-              "reasons": [
-                "Your Favor standing for this clan is too low."
-              ]
-            }
-          ],
-          "price_gold": 30,
-          "budget": "Unenchanted 1d9 longbow; no ability bonuses or activated spells."
-        },
-        {
-          "id": "hide-commission",
-          "name": "Hide tunic commission",
-          "details": "90 gold; clan level 8; character level 1; Favor 1596. Light armor; normal armor proficiency and casting restrictions",
-          "actions": [
-            {
-              "kind": "quartermaster_buy",
-              "label": "Preview purchase",
-              "id": "hide-commission",
-              "enabled": false,
-              "reasons": [
-                "Your Favor standing for this clan is too low."
-              ]
-            }
-          ],
-          "price_gold": 90,
-          "budget": "Existing hide tunic armor value 3; no ability bonuses or activated spells."
-        },
-        {
-          "id": "shield-commission",
-          "name": "Oaken shield commission",
-          "details": "1440 gold; clan level 8; character level 1; Favor 1596. Shield users; normal shield and casting restrictions",
-          "actions": [
-            {
-              "kind": "quartermaster_buy",
-              "label": "Preview purchase",
-              "id": "shield-commission",
-              "enabled": false,
-              "reasons": [
-                "Your Favor standing for this clan is too low."
-              ]
-            }
-          ],
-          "price_gold": 1440,
-          "budget": "Existing shield armor value 4; no ability bonuses or activated spells."
-        }
-      ],
+      "choices": [],
       "actions": [
         {
           "kind": "quartermaster_list",
-          "label": "List in text",
+          "label": "Browse services in text",
           "id": "",
           "enabled": true,
           "reasons": []
@@ -1686,23 +1563,9 @@
       ],
       "reasons": [],
       "notes": [
-        "Fixed gold prices; Favor is an eligibility requirement and is never spent. Purchases bind to you, have no resale value, and remain usable after departure under normal item rules."
+        "Quartermasters offer crafting motes, gold-to-quest-point exchanges, and random weapon enchantments. Use clan quartermaster info for prices, weekly character limits and Favor unlocks."
       ],
-      "purchase_pending": false,
-      "preview": {
-        "summary": "Buy Abanasinia field map for 15 gold. Favor is not spent.",
-        "expires_at": 2200000061,
-        "actions": [
-          {
-            "kind": "quartermaster_confirm",
-            "label": "Confirm purchase",
-            "id": "field-map",
-            "enabled": true,
-            "reasons": [],
-            "token": "22222222222222222222222222222222"
-          }
-        ]
-      }
+      "purchase_pending": false
     },
     "weekly_xp_eighths": 0,
     "weekly_influence_eighths": 0,

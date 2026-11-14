@@ -2,6 +2,7 @@
 """Exercise empty-launcher eligibility and non-mutating melee combat profiles."""
 from pathlib import Path
 import subprocess
+import re
 import tempfile
 root=Path(__file__).resolve().parents[1]
 weapons=(root/'src/assign_wpn_armor.c').read_text()
@@ -37,8 +38,9 @@ static int test_row;
 a=fight.index('  if (empty_launcher)\n  {',fight.index('int compute_damage_bonus('))
 b=fight.index('\n  if (wielded',a)
 code+='int damage_bonus(bool empty_launcher,int dambonus) {bool display_mode=false;\n'+fight[a:b]+'\nreturn dambonus;}\n'
-a=fight.index('  if (empty_launcher) calc_bab -= 8;')
-code+='int attack_bonus(bool empty_launcher,int calc_bab) {\n'+fight[a:fight.index('\n',a)]+'\nreturn calc_bab;}\n'
+penalty=re.search(r'  if \(empty_launcher\)\s+calc_bab -= 8;',fight)
+assert penalty
+code+='int attack_bonus(bool empty_launcher,int calc_bab) {\n'+penalty.group(0)+'\nreturn calc_bab;}\n'
 assert 'return MAX(1, dam); // min damage of 1' in function(fight,'int compute_hit_damage(')
 code+=r'''
 int main(void) {

@@ -14,6 +14,7 @@
 #include "sysdep.h"
 #include "legendary_equipment.h"
 #include "structs.h"
+#include "clan_access.h"
 #include "utils.h"
 #include "assign_wpn_armor.h"
 #include "comm.h"
@@ -88,7 +89,7 @@ static struct obj_data *get_selling_obj(struct char_data *ch, char *name, struct
 static struct obj_data *slide_obj(struct obj_data *obj, struct char_data *keeper, int shop_nr);
 static void shopping_buy(char *arg, struct char_data *ch, struct char_data *keeper, int shop_nr);
 static struct obj_data *get_purchase_obj(struct char_data *ch, char *arg, struct char_data *keeper,
-                                         int shop_nr, int msg);
+                                         int shop_nr, int msg, bool purchase);
 static struct obj_data *get_hash_obj_vis(struct char_data *ch, char *name, struct obj_data *list);
 static struct obj_data *get_slide_obj_vis(struct char_data *ch, char *name, struct obj_data *list);
 static char *customer_string(int shop_nr, int detailed);
@@ -397,6 +398,9 @@ static int same_obj(struct obj_data *obj1, struct obj_data *obj2)
 
 static int same_shop_item(struct obj_data *obj1, struct obj_data *obj2)
 {
+  if (obj1 && obj2 && (obj1->clan_requirement.clan != obj2->clan_requirement.clan ||
+      obj1->clan_requirement.rank != obj2->clan_requirement.rank ||
+      obj1->clan_requirement.favor != obj2->clan_requirement.favor)) return FALSE;
   if (!same_obj(obj1, obj2))
     return FALSE;
   if (!obj1 || !obj2 || GET_OBJ_TYPE(obj1) != ITEM_MISSILE)
@@ -505,7 +509,7 @@ static struct obj_data *get_hash_obj_vis(struct char_data *ch, char *name, struc
 }
 
 static struct obj_data *get_purchase_obj(struct char_data *ch, char *arg, struct char_data *keeper,
-                                         int shop_nr, int msg)
+                                         int shop_nr, int msg, bool purchase)
 {
   char name[MAX_INPUT_LENGTH] = {'\0'};
   struct obj_data *obj;
@@ -528,6 +532,7 @@ static struct obj_data *get_purchase_obj(struct char_data *ch, char *arg, struct
       }
       return (NULL);
     }
+    if (purchase && !clan_access_check(ch, &obj->clan_requirement, msg)) return NULL;
     if (!legendary_tree_check(ch, obj, LEG_ROUTE_TRANSFER)) return NULL;
     if (GET_OBJ_COST(obj) <= 0)
     {
@@ -615,7 +620,7 @@ static void shopping_buy(char *arg, struct char_data *ch, struct char_data *keep
     return;
   }
 
-  if (!(obj = get_purchase_obj(ch, arg, keeper, shop_nr, TRUE)))
+  if (!(obj = get_purchase_obj(ch, arg, keeper, shop_nr, TRUE, TRUE)))
     return;
 
   /* enough qp's? */
@@ -741,7 +746,7 @@ static void shopping_buy(char *arg, struct char_data *ch, struct char_data *keep
       }
 
       last_obj = obj;
-      obj = get_purchase_obj(ch, arg, keeper, shop_nr, FALSE);
+      obj = get_purchase_obj(ch, arg, keeper, shop_nr, FALSE, TRUE);
       if (!same_shop_item(obj, last_obj))
         break;
     }
@@ -779,7 +784,7 @@ static void shopping_buy(char *arg, struct char_data *ch, struct char_data *keep
       }
 
       last_obj = obj;
-      obj = get_purchase_obj(ch, arg, keeper, shop_nr, FALSE);
+      obj = get_purchase_obj(ch, arg, keeper, shop_nr, FALSE, TRUE);
       if (!same_shop_item(obj, last_obj))
         break;
     }
@@ -817,7 +822,7 @@ static void shopping_buy(char *arg, struct char_data *ch, struct char_data *keep
       }
 
       last_obj = obj;
-      obj = get_purchase_obj(ch, arg, keeper, shop_nr, FALSE);
+      obj = get_purchase_obj(ch, arg, keeper, shop_nr, FALSE, TRUE);
       if (!same_shop_item(obj, last_obj))
         break;
     }
@@ -863,7 +868,7 @@ static void shopping_buy(char *arg, struct char_data *ch, struct char_data *keep
 
       last_obj = obj;
 
-      obj = get_purchase_obj(ch, arg, keeper, shop_nr, FALSE);
+      obj = get_purchase_obj(ch, arg, keeper, shop_nr, FALSE, TRUE);
 
       if (!same_shop_item(obj, last_obj))
         break;
@@ -2016,7 +2021,7 @@ bool shopping_identify(char *arg, struct char_data *ch, struct char_data *keeper
     do_tell(keeper, buf, cmd_tell, 0);
     return TRUE;
   }
-  if (!(obj = get_purchase_obj(ch, arg, keeper, shop_nr, TRUE)))
+  if (!(obj = get_purchase_obj(ch, arg, keeper, shop_nr, TRUE, FALSE)))
     return FALSE;
 
   do_stat_object(ch, obj, ITEM_STAT_MODE_IDENTIFY_SPELL);

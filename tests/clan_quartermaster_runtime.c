@@ -350,16 +350,15 @@ int main(int argc, char **argv)
   load();
   if (!strcmp(argv[3], "begin"))
   {
-    struct json_object *quote;
-    impl_do_clanquartermaster_(&character, "buy field-map", 0, 0);
-    quote = json_tokener_parse(specials.clan_qm_quote);
-    assert(quote);
-    json_object_object_add(quote, "uid", json_object_new_string(argv[4]));
-    strlcpy(specials.clan_qm_quote, json_object_to_json_string(quote),
-            sizeof(specials.clan_qm_quote));
-    json_object_put(quote);
-    snprintf(command, sizeof(command), "confirm field-map %s", argv[4]);
-    impl_do_clanquartermaster_(&character, command, 0, 0);
+    /* Seed a pre-upgrade accepted gear receipt, then run real recovery. */
+    o=read_object(catalog.entries[0].prototype,VIRTUAL);
+    strlcpy(o->clan_qm_uid,argv[4],33);GET_OBJ_BOUND_ID(o)=1007;GET_OBJ_COST(o)=0;
+    char *payload=estate_pack(o);extract_obj(o);
+    assert(clan_qm_prepare(connection.conn,&catalog.entries[0],argv[4],
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",1007,77,10,GET_GOLD((&character)),payload,
+        clock_value,&policy)==CLAN_REPO_OK);
+    free(payload);specials.clan_qm_checked=false;
+    ok=clan_qm_recover(&character);
   }
   else if (!strcmp(argv[3], "command"))
   {
@@ -446,4 +445,10 @@ int main(int argc, char **argv)
   free(obj_index);
   mysql_close(connection.conn);
   return 0;
+}
+
+/* Legacy receipt fixture: new services have their own real coordinator suite. */
+int clan_qm_services_recover(struct char_data *ch) { (void)ch; return 0; }
+void clan_qm_services_command(struct char_data *ch,const char *argument) {
+  (void)argument; send_to_char(ch,"Gear purchases are retired; use the new services. Already accepted purchases recover automatically.\r\n");
 }

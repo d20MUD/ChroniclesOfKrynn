@@ -513,11 +513,10 @@ bool process_load_weapon(struct char_data *ch, struct obj_data *weapon, bool sil
 bool auto_reload_weapon(struct char_data *ch, bool silent_mode)
 {
   struct obj_data *wielded = is_using_ranged_weapon(ch, silent_mode);
-
-  if (!process_load_weapon(ch, wielded, silent_mode))
-    return FALSE;
-
-  return TRUE;
+  bool loaded = process_load_weapon(ch, wielded, silent_mode);
+  if (!ch->char_specials.ranged_offhand && dual_hand_crossbows(ch))
+    loaded = process_load_weapon(ch, GET_EQ(ch, WEAR_WIELD_OFFHAND), silent_mode) || loaded;
+  return loaded;
 }
 
 #define MAX_AMMO_INSIDE_WEAPON 5 // unused
@@ -637,7 +636,8 @@ int thrown_weapon_type(struct obj_data *obj)
     type = WEAPON_TYPE_DART;
   else return 0;
   return type > WEAPON_TYPE_UNARMED && type < NUM_WEAPON_TYPES &&
-         IS_SET(weapon_list[type].weaponFlags, WEAPON_FLAG_THROWN) ? type : 0;
+         (IS_SET(weapon_list[type].weaponFlags, WEAPON_FLAG_THROWN) ||
+          (GET_OBJ_TYPE(obj) == ITEM_WEAPON && obj_has_special_ability(obj, WEAPON_SPECAB_THROWING))) ? type : 0;
 }
 
 bool is_pure_thrown_weapon_type(int type)
@@ -1011,11 +1011,43 @@ bool can_fire_ammo(struct char_data *ch, bool silent)
   return TRUE;
 }
 
+/* Only hand crossbows may share wield slots with another ranged weapon. */
+bool is_hand_crossbow(struct obj_data *obj)
+{
+  return obj && GET_OBJ_TYPE(obj) == ITEM_WEAPON &&
+         GET_WEAPON_TYPE(obj) == WEAPON_TYPE_HAND_CROSSBOW;
+}
+
+bool dual_hand_crossbows(struct char_data *ch)
+{
+  return !THROWING(ch) && !IS_WILDSHAPED(ch) && !IS_MORPHED(ch) &&
+         is_hand_crossbow(GET_EQ(ch, WEAR_WIELD_1)) &&
+         is_hand_crossbow(GET_EQ(ch, WEAR_WIELD_OFFHAND));
+}
+
+bool ranged_wield_compatible(struct char_data *ch, struct obj_data *obj)
+{
+  int slots[] = {WEAR_WIELD_1, WEAR_WIELD_OFFHAND, WEAR_WIELD_2H};
+  int i;
+  if (!obj || GET_OBJ_TYPE(obj) != ITEM_WEAPON) return TRUE;
+  for (i = 0; i < 3; i++)
+  {
+    struct obj_data *other = GET_EQ(ch, slots[i]);
+    if (!other || other == obj || GET_OBJ_TYPE(other) != ITEM_WEAPON) continue;
+    if ((IS_SET(weapon_list[GET_WEAPON_TYPE(obj)].weaponFlags, WEAPON_FLAG_RANGED) ||
+         IS_SET(weapon_list[GET_WEAPON_TYPE(other)].weaponFlags, WEAPON_FLAG_RANGED)) &&
+        !(is_hand_crossbow(obj) && is_hand_crossbow(other))) return FALSE;
+  }
+  return TRUE;
+}
+
 /*check all wielded slots looking for ranged weapon*/
 struct obj_data *is_using_ranged_weapon(struct char_data *ch, bool silent_mode)
 {
   if (THROWING(ch)) return get_throwing_weapon(ch);
-  struct obj_data *wielded = GET_EQ(ch, WEAR_WIELD_2H);
+  struct obj_data *wielded = ch->char_specials.ranged_offhand
+                                 ? GET_EQ(ch, WEAR_WIELD_OFFHAND)
+                                 : GET_EQ(ch, WEAR_WIELD_2H);
 
   if (!wielded)
     wielded = GET_EQ(ch, WEAR_WIELD_1);
@@ -2949,15 +2981,18 @@ int get_defending_weapon_bonus(struct char_data *ch, bool weapon)
 
   obj = GET_EQ(ch, WEAR_WIELD_1);
   if (obj && OBJ_FLAGGED(obj, ITEM_DEFENDING))
-    bonus += GET_OBJ_VAL(obj, 1) / 2;
+    bonus += obj->clan_enchantment.active && obj->clan_enchantment.effect == WEAPON_SPECAB_DEFENDING
+                 ? MAX(1, GET_OBJ_VAL(obj, 4)) : GET_OBJ_VAL(obj, 1) / 2;
 
   obj = GET_EQ(ch, WEAR_WIELD_2H);
   if (obj && OBJ_FLAGGED(obj, ITEM_DEFENDING))
-    bonus += GET_OBJ_VAL(obj, 1) / 2;
+    bonus += obj->clan_enchantment.active && obj->clan_enchantment.effect == WEAPON_SPECAB_DEFENDING
+                 ? MAX(1, GET_OBJ_VAL(obj, 4)) : GET_OBJ_VAL(obj, 1) / 2;
 
   obj = GET_EQ(ch, WEAR_WIELD_OFFHAND);
   if (obj && OBJ_FLAGGED(obj, ITEM_DEFENDING))
-    bonus += GET_OBJ_VAL(obj, 1) / 2;
+    bonus += obj->clan_enchantment.active && obj->clan_enchantment.effect == WEAPON_SPECAB_DEFENDING
+                 ? MAX(1, GET_OBJ_VAL(obj, 4)) : GET_OBJ_VAL(obj, 1) / 2;
 
   return bonus;
 }
@@ -3068,15 +3103,15 @@ int get_lucky_weapon_bonus(struct char_data *ch)
 
   obj = GET_EQ(ch, WEAR_WIELD_1);
   if (obj && obj_has_special_ability(obj, WEAPON_SPECAB_LUCKY))
-    bonus = GET_OBJ_VAL(obj, 4);
+    bonus = (obj->clan_enchantment.active && obj->clan_enchantment.effect == WEAPON_SPECAB_LUCKY ? MAX(1, GET_OBJ_VAL(obj, 4)) : GET_OBJ_VAL(obj, 4));
 
   obj = GET_EQ(ch, WEAR_WIELD_2H);
   if (obj && obj_has_special_ability(obj, WEAPON_SPECAB_LUCKY))
-    bonus = MAX(bonus, GET_OBJ_VAL(obj, 4));
+    bonus = MAX(bonus, (obj->clan_enchantment.active && obj->clan_enchantment.effect == WEAPON_SPECAB_LUCKY ? MAX(1, GET_OBJ_VAL(obj, 4)) : GET_OBJ_VAL(obj, 4)));
 
   obj = GET_EQ(ch, WEAR_WIELD_OFFHAND);
   if (obj && obj_has_special_ability(obj, WEAPON_SPECAB_LUCKY))
-    bonus = MAX(bonus, GET_OBJ_VAL(obj, 4));
+    bonus = MAX(bonus, (obj->clan_enchantment.active && obj->clan_enchantment.effect == WEAPON_SPECAB_LUCKY ? MAX(1, GET_OBJ_VAL(obj, 4)) : GET_OBJ_VAL(obj, 4)));
 
   return bonus;
 }

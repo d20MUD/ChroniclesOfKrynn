@@ -303,6 +303,12 @@ i added this trying to debug issues with qedit-copy -zusuk
 #define OEDIT_TRAP_DETECT_DC 80
 #define OEDIT_TRAP_DISARM_DC 81
 #define OEDIT_TRAP_SAVE_DC 82
+#define OEDIT_CLAN 8801
+#define OEDIT_CLAN_RANK 8802
+#define OEDIT_CLAN_FAVOR 8803
+#define MEDIT_CLAN 8804
+#define MEDIT_CLAN_RANK 8805
+#define MEDIT_CLAN_FAVOR 8806
 
 /* Submodes of REDIT connectedness. */
 #define REDIT_MAIN_MENU 1

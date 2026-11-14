@@ -36,6 +36,9 @@
 #define NUM_HORNS_DESCRIPTORS 7
 #define NUM_SCALES_DESCRIPTORS 18
 
+const char *short_desc_feature_label(struct char_data *ch, int feature);
+const char *short_desc_adjective_label(int feature, int adjective);
+
 void HandleStateGenericDescsParseMenuChoice(struct descriptor_data *d, char *arg);
 void HandleStateGenericDescsMenu(struct descriptor_data *d, char *arg);
 void HandleStateGenericDescsAdjectives2(struct descriptor_data *d, char *arg);

@@ -1313,7 +1313,8 @@ enum zone_terrain_type {
 #define MOB_LEGENDARY_BOSS 107 /**< Marks an eligible endgame source of legendary boss materials. */
 /**********************/
 #define MOB_RANGED_ATTACK 108 /**< May attack beyond 5 feet while still auto advancing. */
-#define NUM_MOB_FLAGS 109
+#define MOB_BLOCK_CLAN 109 /* Direction guards use builder clan requirements. */
+#define NUM_MOB_FLAGS 110
 /**********************/
 /**********************/
 
@@ -6427,9 +6428,19 @@ struct trap_data
   struct trap_data *next;     /* For lists of traps in a room */
 };
 
+struct clan_requirement { int clan, rank, favor; };
+struct clan_weapon_enchantment {
+  char uid[33], receipt[33], word[24];
+  int effect, active, bane_race;
+  int64_t reroll_week;
+  struct obj_special_ability runtime; /* Synthesized, never linked or freed. */
+};
+
 /** The Object structure. */
 struct obj_data
 {
+  struct clan_requirement clan_requirement;
+  struct clan_weapon_enchantment clan_enchantment;
   char clan_qm_uid[33]; /* Durable quartermaster delivery identity. */
   char clan_delivery_uid[33];
   int clan_delivery_amount; /* Reserved finite shots, persisted with object. */
@@ -6871,6 +6882,7 @@ struct char_special_data
   struct char_data *guarding; /* target for 'guard' ability */
   bool firing;                /* is char firing missile weapon? */
   bool throwing;              /* hybrid thrown-weapon combat */
+  bool ranged_offhand;        /* transient launcher selection during offhand shots */
   bool throw_opening_round;   /* finish the opening thrown volley before melee */
   struct obj_data throwing_profile; /* transient weapon view of selected thrown ammo */
   bool manyshot_pending;      /* first bow attack of a full attack */
@@ -8059,6 +8071,7 @@ struct dialogue_quest_check
 
 struct char_data
 {
+  struct clan_requirement clan_requirement; /* Builder-authored NPC guard requirements. */
   /* Clan buff cache: checked runtime state only, never serialized as base HP. */
   int clan_vitality_percent, clan_vitality_applied, clan_buff_vnum;
   int clan_artisan_bonus;
@@ -8175,6 +8188,7 @@ struct descriptor_data
   int connected;                     /**< mode of 'connectedness'		*/
   int desc_num;                      /**< unique num assigned to desc		*/
   time_t login_time;                 /**< when the person connected		*/
+  bool web_editor_uploading, web_editor_failed; /* creation text transfer state */
   bool web_character_creation; /**< Active server-driven web creation session */
   struct output_capture *output_capture; /**< Scoped structured-output capture; normally NULL */
   char *showstr_head;                /**< for keeping track of an internal str	*/

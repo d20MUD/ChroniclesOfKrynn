@@ -16,6 +16,7 @@
 #include "legendary_foundations.h"
 #include "legendary_equipment.h"
 #include "structs.h"
+#include "clan_access.h"
 #include "mob_utils.h"
 #include "housing.h"
 #include "utils.h"
@@ -2248,6 +2249,7 @@ void equip_char(struct char_data *ch, struct obj_data *obj, int pos)
     log("SYSERR: EQUIP: Obj is in_room when equip.");
     return;
   }
+  if (!ch->legendary_serializing && !clan_access_check(ch, &obj->clan_requirement, true)) { obj_to_char(obj, ch); return; }
   if (!legendary_tree_check(ch, obj, LEG_ROUTE_OWNER)) { obj_to_char(obj, ch); return; }
   if (violates_only_equip_one(ch, obj))
   {

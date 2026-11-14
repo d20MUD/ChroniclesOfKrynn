@@ -289,14 +289,19 @@ struct json_object *clan_web_content_read(MYSQL *db, const struct clan_progressi
   if (er && !expedition(db, s, clan, player, account, now))
     unavailable(s);
   json_object_object_add(root, "expedition", s);
+  if (qr) {
+    if (!sql(db, "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name='clan_quartermaster_services' AND engine='InnoDB'") ||
+        !(res=mysql_store_result(db))) qr=false;
+    else { row=mysql_fetch_row(res); qr=row && atoi(row[0])==1; mysql_free_result(res); }
+  }
   s = section(qr);
   flag(s, "purchase_pending", false);
   if (qr)
   {
     if (!sql(db,
              "SELECT operation_uid FROM clan_quartermaster_operations WHERE active_player=%" PRId64
-             " LIMIT 1",
-             player) ||
+             " UNION ALL SELECT operation_uid FROM clan_quartermaster_services WHERE active_player=%" PRId64 " LIMIT 1",
+             player, player) ||
         !(res = mysql_store_result(db)))
       unavailable(s);
     else

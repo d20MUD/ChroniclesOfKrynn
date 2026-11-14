@@ -2995,6 +2995,10 @@ static void interpret_espec(const char *keyword, const char *value, int i, int n
   if (value)
     num_arg = atoi(value);
 
+  CASE("Clan") { RANGE(0, 65534); mob_proto[i].clan_requirement.clan = num_arg; }
+  CASE("ClanRank") { RANGE(0, 15); mob_proto[i].clan_requirement.rank = num_arg; }
+  CASE("ClanFavorRank") { RANGE(0, 5); mob_proto[i].clan_requirement.favor = num_arg; }
+
   CASE("BareHandAttack")
   {
     RANGE(0, NUM_ATTACK_TYPES - 1);
@@ -3984,6 +3988,16 @@ const char *parse_object(FILE *obj_f, int nr)
       obj_proto[i].sbinfo[j].spellname = t[0];
       obj_proto[i].sbinfo[j].pages = t[1];
       j++;
+      break;
+    case 'U': /* Clan purchase/equipment requirements. */
+      if (!get_line(obj_f, line) ||
+          sscanf(line, "%d %d %d", &obj_proto[i].clan_requirement.clan,
+                 &obj_proto[i].clan_requirement.rank, &obj_proto[i].clan_requirement.favor) != 3 ||
+          obj_proto[i].clan_requirement.clan < 0 || obj_proto[i].clan_requirement.clan > 65534 ||
+          obj_proto[i].clan_requirement.rank < 0 || obj_proto[i].clan_requirement.rank > 15 ||
+          obj_proto[i].clan_requirement.favor < 0 || obj_proto[i].clan_requirement.favor > 5) {
+        log("SYSERR: Invalid object clan requirements: %s", buf2); exit(1);
+      }
       break;
     case 'C': /* Special abilities */
       CREATE(new_specab, struct obj_special_ability, 1);

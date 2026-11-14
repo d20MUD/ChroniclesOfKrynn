@@ -23,6 +23,7 @@
 #include "conf.h"
 #include "sysdep.h"
 #include "structs.h"
+#include "clan_enchant.h"
 #include "utils.h"
 #include "comm.h"
 #include "dg_event.h"
@@ -236,9 +237,9 @@ void initialize_special_abilities(void)
 
   add_weapon_special_ability(WEAPON_SPECAB_ICY_BURST, "Icy Burst", 10,
                              ACTMTD_ON_HIT | ACTMTD_ON_CRIT | ACTMTD_COMMAND_WORD, TAR_IGNORE,
-                             FALSE, 0, EVOCATION, 2, NULL);
+                             FALSE, 0, EVOCATION, 2, weapon_specab_icy_burst);
 
-  add_weapon_special_ability(WEAPON_SPECAB_INVIGORATING, "Invigorating", 18, ACTMTD_NONE,
+  add_weapon_special_ability(WEAPON_SPECAB_INVIGORATING, "Invigorating", 18, ACTMTD_ON_HIT | ACTMTD_ON_CRIT,
                              TAR_IGNORE, FALSE, 0, NECROMANCY /* TRANSMUTATION TOO */, 5,
                              weapon_specab_invigorating);
 
@@ -304,6 +305,7 @@ void initialize_special_abilities(void)
 
 bool obj_has_special_ability(struct obj_data *obj, int ability)
 {
+  if (obj && obj->clan_enchantment.active && obj->clan_enchantment.effect == ability) return TRUE;
   struct obj_special_ability *specab = NULL;
 
   for (specab = obj->special_abilities; specab != NULL; specab = specab->next)
@@ -317,6 +319,8 @@ bool obj_has_special_ability(struct obj_data *obj, int ability)
 
 struct obj_special_ability *get_obj_special_ability(struct obj_data *obj, int ability)
 {
+  if (obj && obj->clan_enchantment.active && obj->clan_enchantment.effect == ability)
+    return clan_enchant_ability(obj);
   struct obj_special_ability *specab = NULL;
 
   for (specab = obj->special_abilities; specab != NULL; specab = specab->next)
@@ -674,6 +678,7 @@ int process_weapon_abilities(
     }
   }
 
+  activated_abilities += clan_enchant_process(weapon, ch, victim, actmtd, cmdword);
   return activated_abilities;
 }
 
@@ -1463,7 +1468,8 @@ WEAPON_SPECIAL_ABILITY(weapon_specab_vampiric)
 
 WEAPON_SPECIAL_ABILITY(weapon_specab_invigorating)
 {
-  int stamina = GET_OBJ_VAL(weapon, 4);
+  int stamina = weapon->clan_enchantment.active && weapon->clan_enchantment.effect == WEAPON_SPECAB_INVIGORATING
+                  ? MAX(2, GET_OBJ_VAL(weapon, 4)) : GET_OBJ_VAL(weapon, 4);
 
   // char buf[200]; // uncomment if we decide we want to show a message for hp healed.  Commented out because considered too spammy
   /*
@@ -1557,7 +1563,7 @@ WEAPON_SPECIAL_ABILITY(weapon_specab_bane)
   {
   case ACTMTD_ON_HIT: /* Called whenever a weapon hits an enemy. */
     if ((dice(1, 6) > 4) &&
-        ((GET_RACE(victim) == specab->value[0]) && (HAS_SUBRACE(victim, specab->value[1]))))
+        ((GET_RACE(victim) == specab->value[0]) && (!specab->value[1] || HAS_SUBRACE(victim, specab->value[1]))))
     {
       act("Your $o hums happily as you fight $N!", FALSE, ch, weapon, victim, TO_CHAR);
       act("$n's $o hums happily as $e fights you!", FALSE, ch, weapon, victim, TO_VICT);
@@ -1565,7 +1571,7 @@ WEAPON_SPECIAL_ABILITY(weapon_specab_bane)
     }
     break;
   case ACTMTD_ON_CRIT: /* Called whenever a weapon hits critically. */
-    if ((GET_RACE(victim) == specab->value[0]) && (HAS_SUBRACE(victim, specab->value[1])))
+    if ((GET_RACE(victim) == specab->value[0]) && (!specab->value[1] || HAS_SUBRACE(victim, specab->value[1])))
     {
       act("Waves of pleasure course into you from your $o as you strike $N!", FALSE, ch, weapon,
           victim, TO_CHAR);
@@ -1697,6 +1703,16 @@ WEAPON_SPECIAL_ABILITY(weapon_specab_frost)
     /* Do nothing. */
     break;
   }
+}
+
+/* Frost plus a cold burst on critical hits, parallel to Flaming Burst. */
+WEAPON_SPECIAL_ABILITY(weapon_specab_icy_burst)
+{
+  if (actmtd == ACTMTD_ON_CRIT && victim)
+    damage(ch, victim, dice(weapon ? MAX(1, weapon_list[GET_OBJ_VAL(weapon, 0)].critMult - 1) : 1, 10),
+           TYPE_SPECAB_ICY_BURST, DAM_COLD, FALSE);
+  else
+    weapon_specab_frost(specab, weapon, ch, victim, actmtd);
 }
 
 /* A weapon with the shock special ability generates cold, becoming enveloped with electric energy and dealing

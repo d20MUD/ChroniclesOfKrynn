@@ -403,81 +403,12 @@ static void expeditions(struct char_data *ch, struct json_object *root, struct j
 static void quartermaster(struct char_data *ch, struct json_object *root, struct json_object *s,
                           const struct clan_progression_config *config, int64_t now)
 {
-  struct clan_qm_catalog catalog;
-  size_t i;
-  struct json_object *base, *why, *o;
-  bool ok = clan_qm_catalog_load(&catalog);
-  int cl = num(get(root, "clan"), "level");
   const char *clan = str(get(root, "clan"), "uid");
-  gates(s, config, CLAN_FEATURE_QUARTERMASTER, clan, ok);
-  base = get(s, "reasons");
-  reason(
-      get(s, "notes"),
-      "Fixed gold prices; Favor is an eligibility requirement and is never spent. Purchases bind "
-      "to you, have no resale value, and remain usable after departure under normal item rules.");
-  action(s, "quartermaster_list", "List in text", "", copy(base));
+  gates(s, config, CLAN_FEATURE_QUARTERMASTER, clan, true);
+  reason(get(s, "notes"), "Quartermasters offer crafting motes, gold-to-quest-point exchanges, and random weapon enchantments. Use clan quartermaster info for prices, weekly character limits and Favor unlocks.");
+  action(s, "quartermaster_list", "Browse services in text", "", copy(get(s, "reasons")));
   action(s, "clan_status", "Retry recovery / check status", "", json_object_new_array());
-  if (ok)
-    for (i = 0; i < catalog.count; i++)
-    {
-      struct clan_qm_item *d = &catalog.entries[i];
-      obj_rnum n = real_object(d->prototype);
-      struct obj_data *item = n == NOTHING ? NULL : &obj_proto[n];
-      char details[420];
-      snprintf(details, sizeof(details),
-               "%d gold; clan level %d; character level %d; Favor %d. %.160s", d->price,
-               d->clan_level, d->level, clan_qm_favor_requirement(d), d->coverage);
-      o = choice(s, d->id, d->name, details);
-      integer(o, "price_gold", d->price);
-      text(o, "budget", d->budget);
-      why = write_reasons(ch, base);
-      level_reasons(why, ch, cl, d->clan_level, d->level, 30);
-      if (num(get(root, "favor"), "eighths") < (int64_t)clan_qm_favor_requirement(d) * 8)
-        reason(why, "Your Favor standing for this clan is too low.");
-      if (GET_GOLD(ch) < d->price)
-        reason(why, "You do not have enough carried gold.");
-      if (IS_CARRYING_N(ch) >= CAN_CARRY_N(ch) || IS_CARRYING_W(ch) + d->weight > CAN_CARRY_W(ch))
-        reason(why, "You cannot carry this item.");
-      if (GET_IDNUM(ch) > INT_MAX)
-        reason(why, "This character identity cannot use the existing binding field.");
-      if (!item || invalid_align(ch, item) || invalid_class(ch, item) || invalid_prof(ch, item) ||
-          !is_class_req_object(ch, item, false) || is_class_anti_object(ch, item, false))
-        reason(why, "Normal item class, alignment or proficiency restrictions are not met.");
-      if (num(s, "purchase_pending"))
-        reason(why, "An earlier purchase is awaiting recovery.");
-      action(o, "quartermaster_buy", "Preview purchase", d->id, why);
-    }
-  {
-    struct json_object *q = json_tokener_parse(ch->player_specials->clan_qm_quote);
-    if (q && num(q, "expires") > now && !strcmp(str(q, "clan"), clan) &&
-        clan_progression_uid_valid(str(q, "uid")) && ok)
-    {
-      for (i = 0; i < catalog.count; i++)
-        if (!strcmp(catalog.entries[i].id, str(get(q, "terms"), "id")))
-        {
-          struct json_object *terms = clan_qm_terms(&catalog.entries[i]);
-          if (json_object_equal(terms, get(q, "terms")))
-          {
-            struct json_object *preview = json_object_new_object(),
-                               *entry = json_object_array_get_idx(get(s, "choices"), i);
-            char summary[220];
-            snprintf(summary, sizeof(summary), "Buy %.80s for %d gold. Favor is not spent.",
-                     catalog.entries[i].name, catalog.entries[i].price);
-            text(preview, "summary", summary);
-            integer(preview, "expires_at", num(q, "expires"));
-            json_object_object_add(preview, "actions", json_object_new_array());
-            o = action(preview, "quartermaster_confirm", "Confirm purchase", catalog.entries[i].id,
-                       copy(get(json_object_array_get_idx(get(entry, "actions"), 0), "reasons")));
-            text(o, "token", str(q, "uid"));
-            json_object_object_add(s, "preview", preview);
-          }
-          json_object_put(terms);
-          break;
-        }
-    }
-    if (q)
-      json_object_put(q);
-  }
+  (void)ch; (void)now;
 }
 void clan_web_content_enrich(struct char_data *ch, struct json_object *root, int64_t now)
 {

@@ -90,6 +90,24 @@ static int restore_persistent_object(struct obj_data *obj, const char *tag, cons
       obj->legendary_uuid[32] = '\0';
     }
   }
+  else if (!strcmp(tag, "CEnc")) {
+    struct clan_weapon_enchantment *e = &obj->clan_enchantment;
+    long long week;
+    char uid[33], receipt[33], word[24]; int effect, active, race;
+    if (sscanf(value, "%32s %32s %d %d %d %lld %23s", uid, receipt, &effect, &active, &race, &week, word) == 7 &&
+        legendary_uuid_valid(uid) && (legendary_uuid_valid(receipt) || !strcmp(receipt, "-")) &&
+        effect >= 0 && effect < 65 && (active == 0 || active == 1) && week >= 0) {
+      strlcpy(e->uid, uid, sizeof(e->uid)); strlcpy(e->receipt, !strcmp(receipt,"-") ? "" : receipt, sizeof(e->receipt));
+      strlcpy(e->word, !strcmp(word,"-") ? "" : word, sizeof(e->word));
+      e->effect = effect; e->active = active; e->bane_race = race; e->reroll_week = week;
+    }
+  }
+  else if (!strcmp(tag, "CReq")) {
+    struct clan_requirement r = {0};
+    if (sscanf(value, "%d %d %d", &r.clan, &r.rank, &r.favor) == 3 &&
+        r.clan >= 0 && r.clan <= 65534 && r.rank >= 0 && r.rank <= 15 && r.favor >= 0 && r.favor <= 5)
+      obj->clan_requirement = r;
+  }
   else if (!strcmp(tag, "SpCl"))
   {
     struct obj_special_ability *node=obj->special_abilities,*next;
@@ -242,6 +260,24 @@ int objsave_save_obj_record_db(struct obj_data *obj, struct char_data *ch, room_
     strlcat(ins_buf,line_buf,sizeof(ins_buf));
 #endif
   }
+  if (*obj->clan_enchantment.uid) {
+    const struct clan_weapon_enchantment *e = &obj->clan_enchantment;
+    char enchant_line[256];
+    snprintf(enchant_line, sizeof(enchant_line), "CEnc: %s %s %d %d %d %lld %s\n", e->uid,
+             *e->receipt ? e->receipt : "-", e->effect, e->active, e->bane_race,
+             (long long)e->reroll_week, *e->word ? e->word : "-");
+    fputs(enchant_line, fp);
+#ifdef OBJSAVE_DB
+    strlcat(ins_buf, enchant_line, sizeof(ins_buf));
+#endif
+  }
+  fprintf(fp, "CReq: %d %d %d\n", obj->clan_requirement.clan,
+          obj->clan_requirement.rank, obj->clan_requirement.favor);
+#ifdef OBJSAVE_DB
+  snprintf(line_buf, sizeof(line_buf), "CReq: %d %d %d\n", obj->clan_requirement.clan,
+           obj->clan_requirement.rank, obj->clan_requirement.favor);
+  strlcat(ins_buf, line_buf, sizeof(ins_buf));
+#endif
   if (obj->estate_delivery_id) {
     fprintf(fp, "EId : %llu\n", obj->estate_delivery_id);
 #ifdef OBJSAVE_DB

@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "mote_price": 2500,
+  "quest_point_price": 1000,
+  "enhancement_price": 250000,
+  "reroll_price": 500000,
+  "weekly_motes": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+  ],
+  "weekly_quest_points": [
+    5,
+    10,
+    15,
+    20,
+    25,
+    30
+  ]
+}

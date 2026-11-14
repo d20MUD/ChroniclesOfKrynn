@@ -11,6 +11,7 @@
 #include "class.h"
 #include "clan.h"
 #include "clan_quartermaster.h"
+#include "clan_qm_services.h"
 #include "clan_awards.h"
 #include <limits.h>
 #include "clan_buff_runtime.h"
@@ -123,8 +124,11 @@ bool clan_qm_recover(struct char_data *ch)
     return true;
   if (!clan_persistence_sql_authority())
     return *PS(ch)->clan_qm_lock ? blocked(ch) : true;
-  if (!authenticated(ch) || !mysql_available || !(connection = mysql_pool_acquire()))
+  if (!authenticated(ch) || !mysql_available)
     return blocked(ch);
+  int service_recovery = clan_qm_services_recover(ch);
+  if (service_recovery) return service_recovery > 0;
+  if (!(connection = mysql_pool_acquire())) return blocked(ch);
   r = clan_qm_operation(connection->conn, GET_IDNUM(ch),
                         *PS(ch)->clan_qm_lock ? PS(ch)->clan_qm_lock : NULL, &op);
   mysql_pool_release(connection);
@@ -220,227 +224,5 @@ fail:
 }
 ACMDU(do_clanquartermaster)
 {
-  char command[32] = "list", id[160] = "", uid[33] = "";
-  int tokens, clanlevel;
-  size_t i;
-  struct clan_qm_catalog catalog;
-  struct clan_status_report report;
-  struct clan_progression_readiness ready = {0};
-  const struct clan_progression_config *config = clan_buff_runtime_policy();
-  MYSQL_POOL_CONN *connection;
-  enum clan_repository_result r;
-  struct obj_data *o;
-  char *payload;
-  struct json_object *previous = NULL;
-  int64_t now = time(NULL);
-  if (!authenticated(ch))
-    return;
-  tokens = sscanf(argument, "%31s %159[^\r\n]", command, id);
-  if (!strcmp(command, "confirm")) {
-    struct json_object *quote = json_tokener_parse(PS(ch)->clan_qm_quote);
-    if (tokens == 1 && quote) {
-      strlcpy(id, str(get(quote, "terms"), "id"), sizeof(id));
-      strlcpy(uid, str(quote, "uid"), sizeof(uid));
-      tokens = 3;
-    } else {
-      char legacy_id[64], extra[2];
-      if (sscanf(id, "%63s %32s %1s", legacy_id, uid, extra) == 2) {
-        strlcpy(id, legacy_id, sizeof(id)); tokens = 3;
-      }
-    }
-    if (quote) json_object_put(quote);
-  }
-  if (tokens > 3 || (!strcmp(command, "list") && tokens > 1) ||
-      (strcmp(command, "list") && strcmp(command, "buy") && strcmp(command, "commission") &&
-       strcmp(command, "confirm")) ||
-      ((!strcmp(command, "buy") || !strcmp(command, "commission")) && tokens != 2) ||
-      (!strcmp(command, "confirm") && (tokens != 3 || !clan_progression_uid_valid(uid))))
-  {
-    send_to_char(ch, "Usage: clan quartermaster list | buy <name> | commission <name> "
-                     "| confirm\r\n");
-    return;
-  }
-  if (!clan_qm_recover(ch))
-    return;
-  if (!clan_persistence_sql_authority() || !clan_persistence_ready() || !mysql_available ||
-      !(connection = mysql_pool_acquire()))
-  {
-    send_to_char(ch, "Quartermaster storage is unavailable.\r\n");
-    return;
-  }
-  if (!strcmp(command, "confirm"))
-  {
-    r = clan_qm_operation(connection->conn, GET_IDNUM(ch), uid, &previous);
-    if (r == CLAN_REPO_OK)
-    {
-      bool same = !strcmp(str(get(previous, "terms"), "id"), id) &&
-                  num(previous, "account") == ch->desc->account->id;
-      bool pending = num(previous, "state") == 0;
-      json_object_put(previous);
-      mysql_pool_release(connection);
-      if (same && pending)
-      {
-        PS(ch)->clan_qm_checked = false;
-        clan_qm_recover(ch);
-        return;
-      }
-      send_to_char(ch, same ? "That purchase has already been delivered; no additional gold or "
-                              "item was issued.\r\n"
-                            : "That confirmation belongs to a different purchase.\r\n");
-      return;
-    }
-    if (r != CLAN_REPO_NOT_FOUND)
-    {
-      mysql_pool_release(connection);
-      send_to_char(ch, "Purchase storage could not be verified. Retry the same confirmation.\r\n");
-      return;
-    }
-  }
-  ready.schema_ready = clan_qm_schema_ready(connection->conn);
-  ready.schema_version = CLAN_PROGRESSION_SCHEMA_VERSION;
-  ready.catalog_ready = clan_qm_catalog_load(&catalog);
-  r = clan_repository_status_read(connection->conn, GET_IDNUM(ch), ch->desc->account->id, NULL,
-                                  false, now, &report);
-  if (r != CLAN_REPO_OK || !report.full_clan_access || report.membership != CLAN_ACCESS_ACCEPTED ||
-      !clan_progression_feature_available(config, CLAN_FEATURE_QUARTERMASTER, &ready,
-                                          report.clan.uid) ||
-      !clan_award_level(config, report.clan.xp_eighths, &clanlevel))
-  {
-    mysql_pool_release(connection);
-    send_to_char(ch, "Quartermaster purchases require accepted clan membership. "
-                     "If you are a member, the service may be temporarily unavailable.\r\n");
-    return;
-  }
-  if (!strcmp(command, "list"))
-  {
-    mysql_pool_release(connection);
-    send_to_char(ch, "\r\n\tCClan Quartermaster\tn\r\n  Favor unlocks items; only gold is spent.\r\n\r\n");
-    for (i = 0; i < catalog.count; i++)
-    {
-      struct clan_qm_item *d = &catalog.entries[i];
-      send_to_char(ch,
-                   "  \tW%s\tn%s\r\n    Price: %d gold\r\n    Requires: character level %d, clan level %d, %d Favor\r\n",
-                   d->name,
-                   (clanlevel < d->clan_level || report.favor.favor_eighths < (int64_t)clan_qm_favor_requirement(d)*8 || GET_LEVEL(ch) < d->level) ? " [locked]" : "", d->price, d->level, d->clan_level, clan_qm_favor_requirement(d));
-      send_to_char(ch,"    %s\r\n\r\n",d->coverage);
-    }
-    send_to_char(ch, "Browse by name: clan quartermaster buy <name>\r\n"
-                     "Prices are fixed; Favor is never spent. Bound purchases have no resale value "
-                     "and remain usable after departure under normal item restrictions.\r\n");
-    return;
-  }
-  int choice = CLAN_DISPLAY_FIND(id, catalog, struct clan_qm_item);
-  if (choice < 0) {
-    mysql_pool_release(connection);
-    send_to_char(ch, choice == -2 ? "That name matches several items. Please use more of the name.\r\n"
-                                  : "No item by that name. Use clan quartermaster list.\r\n");
-    return;
-  }
-  i = (size_t)choice;
-  if (i == catalog.count || !has_quartermaster_in_room(ch) || FIGHTING(ch) ||
-      GET_CRAFT(ch).craft_duration > 0 || GET_IDNUM(ch) > INT_MAX ||
-      IS_CARRYING_N(ch) >= CAN_CARRY_N(ch) ||
-      IS_CARRYING_W(ch) + (i < catalog.count ? catalog.entries[i].weight : 0) > CAN_CARRY_W(ch))
-  {
-    mysql_pool_release(connection);
-    send_to_char(ch, "Visit a quartermaster outside combat/crafting, with room to carry the item, "
-                     "and choose an item by name.\r\n");
-    return;
-  }
-  o = read_object(catalog.entries[i].prototype, VIRTUAL);
-  if (!o)
-  {
-    mysql_pool_release(connection);
-    return;
-  }
-  if (GET_LEVEL(ch) < catalog.entries[i].level || invalid_align(ch, o) ||
-      !is_class_req_object(ch, o, false) || is_class_anti_object(ch, o, false) ||
-      invalid_class(ch, o) || invalid_prof(ch, o))
-  {
-    extract_obj(o);
-    mysql_pool_release(connection);
-    send_to_char(ch, "Your character does not meet the item's normal restrictions.\r\n");
-    return;
-  }
-  if (clanlevel < catalog.entries[i].clan_level ||
-      report.favor.favor_eighths < (int64_t)clan_qm_favor_requirement(&catalog.entries[i]) * 8 ||
-      GET_GOLD(ch) < catalog.entries[i].price)
-  {
-    extract_obj(o);
-    mysql_pool_release(connection);
-    send_to_char(ch, "You need more gold, clan levels or Favor for that item.\r\n");
-    return;
-  }
-  if (strcmp(command, "confirm"))
-  {
-    struct json_object *quote;
-    extract_obj(o);
-    mysql_pool_release(connection);
-    if (!clan_repository_uid_generate(uid))
-      return;
-    quote = json_object_new_object();
-    json_object_object_add(quote, "terms", clan_qm_terms(&catalog.entries[i]));
-    json_object_object_add(quote, "uid", json_object_new_string(uid));
-    json_object_object_add(quote, "clan", json_object_new_string(report.clan.uid));
-    json_object_object_add(quote, "expires", json_object_new_int64(now + 60));
-    strlcpy(PS(ch)->clan_qm_quote, json_object_to_json_string_ext(quote, JSON_C_TO_STRING_PLAIN),
-            sizeof(PS(ch)->clan_qm_quote));
-    json_object_put(quote);
-    send_to_char(ch,
-                 "%s costs %d gold; Favor is not spent. Confirm within 60 seconds: clan "
-                 "quartermaster confirm\r\n",
-                 catalog.entries[i].name, catalog.entries[i].price);
-    return;
-  }
-  else
-  {
-    struct json_object *quote = json_tokener_parse(PS(ch)->clan_qm_quote),
-                       *terms = clan_qm_terms(&catalog.entries[i]);
-    bool valid = quote && !strcmp(str(quote, "uid"), uid) &&
-                 !strcmp(str(quote, "clan"), report.clan.uid) && now < num(quote, "expires") &&
-                 json_object_equal(get(quote, "terms"), terms);
-    if (quote)
-      json_object_put(quote);
-    json_object_put(terms);
-    if (!valid)
-    {
-      extract_obj(o);
-      mysql_pool_release(connection);
-      send_to_char(
-          ch, "Preview this purchase again; its price confirmation has expired or changed.\r\n");
-      return;
-    }
-  }
-  GET_OBJ_BOUND_ID(o) = GET_IDNUM(ch);
-  GET_OBJ_COST(o) = 0;
-  strlcpy(o->clan_qm_uid, uid, 33);
-  if (!template_valid(&catalog.entries[i], o, true))
-  {
-    extract_obj(o);
-    mysql_pool_release(connection);
-    send_to_char(ch, "That item is unavailable pending catalog review.\r\n");
-    return;
-  }
-  payload = estate_pack(o);
-  extract_obj(o);
-  if (!payload)
-  {
-    mysql_pool_release(connection);
-    return;
-  }
-  r = clan_qm_prepare(connection->conn, &catalog.entries[i], uid, report.clan.uid, GET_IDNUM(ch),
-                      ch->desc->account->id, GET_LEVEL(ch), GET_GOLD(ch), payload, now, config);
-  free(payload);
-  mysql_pool_release(connection);
-  /* Even an uncertain commit is resolved from the original UID before commands
-  * resume. A rejected purchase does not touch currency or inventory. */
-  if (r == CLAN_REPO_OK || r == CLAN_REPO_UNAVAILABLE)
-  {
-    PS(ch)->clan_qm_checked = false;
-    if (!clan_qm_recover(ch))
-      return;
-  }
-  else
-    send_to_char(ch, "Purchase rejected (%s). Check gold, Favor, clan level and membership.\r\n",
-                 clan_repository_result_name(r));
+  clan_qm_services_command(ch, argument);
 }

@@ -11925,6 +11925,10 @@ ACMD(do_leap)
 ACMD(do_reload)
 {
   struct obj_data *wielded = is_using_ranged_weapon(ch, FALSE);
+  /* Repeated reload commands ready each crossbow independently. */
+  if (dual_hand_crossbows(ch) && GET_OBJ_VAL(wielded, 5) > 0 &&
+      GET_OBJ_VAL(GET_EQ(ch, WEAR_WIELD_OFFHAND), 5) <= 0)
+    wielded = GET_EQ(ch, WEAR_WIELD_OFFHAND);
 
   if (!wielded)
   {

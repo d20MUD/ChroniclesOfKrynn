@@ -19,6 +19,7 @@
 #include "legendary_equipment.h"
 #include "legendary_earnings.h"
 #include "structs.h"
+#include "clan_enchant.h"
 #include "clan_sources.h"
 #include "utils.h"
 #include "mob_utils.h"
@@ -8489,7 +8490,8 @@ int compute_damage_bonus(struct char_data *ch, struct char_data *vict, struct ob
   }
 
   /* Wilderness Warrior: Dual Strike I - off-hand weapon damage bonus */
-  if ((attack_type == ATTACK_TYPE_OFFHAND || attack_type == ATTACK_TYPE_OFFHAND_SNEAK) &&
+  if ((attack_type == ATTACK_TYPE_OFFHAND || attack_type == ATTACK_TYPE_OFFHAND_SNEAK ||
+             (attack_type == ATTACK_TYPE_RANGED && ch->char_specials.ranged_offhand)) &&
       is_dual_wielding(ch))
   {
     int dual_strike_bonus = get_ranger_dual_strike_offhand(ch);
@@ -10594,7 +10596,7 @@ int compute_hit_damage(struct char_data *ch, struct char_data *victim, int w_typ
       {
         /* Check the values in the special ability record for the NPCRACE and SUBRACE. */
         int *value = get_obj_special_ability(wielded, WEAPON_SPECAB_BANE)->value;
-        if ((GET_RACE(victim) == value[0]) && (HAS_SUBRACE(victim, value[1])))
+        if ((GET_RACE(victim) == value[0]) && (!value[1] || HAS_SUBRACE(victim, value[1])))
         {
           send_combat_roll_info(ch, "\tW[BANE]\tn ");
           send_combat_roll_info(victim, "\tR[BANE]\tn ");
@@ -11434,6 +11436,8 @@ struct obj_data *get_wielded(struct char_data *ch, /* Wielder */
 {
   if (attack_type == ATTACK_TYPE_RANGED && THROWING(ch))
     return get_throwing_weapon(ch);
+  if (attack_type == ATTACK_TYPE_RANGED && ch->char_specials.ranged_offhand)
+    return GET_EQ(ch, WEAR_WIELD_OFFHAND);
   struct obj_data *wielded = NULL;
   /* Check the primary hand location. */
   wielded = GET_EQ(ch, WEAR_WIELD_1);
@@ -11441,6 +11445,9 @@ struct obj_data *get_wielded(struct char_data *ch, /* Wielder */
   switch (attack_type)
   {
   case ATTACK_TYPE_RANGED:
+    if (!wielded) wielded = GET_EQ(ch, WEAR_WIELD_2H);
+    if (!wielded) wielded = GET_EQ(ch, WEAR_WIELD_OFFHAND);
+    break;
   case ATTACK_TYPE_PRIMARY:
   case ATTACK_TYPE_PRIMARY_SNEAK:
     if (!wielded)
@@ -11562,12 +11569,14 @@ int compute_attack_bonus_full(struct char_data *ch,     /* Attacker */
   if (is_dual_wielding(ch) && !(attack_type == ATTACK_TYPE_RANGED && THROWING(ch)))
   {
     calc_bab += dual_wielding_penalty(
-        ch, (attack_type == ATTACK_TYPE_OFFHAND || attack_type == ATTACK_TYPE_OFFHAND_SNEAK));
+        ch, (attack_type == ATTACK_TYPE_OFFHAND || attack_type == ATTACK_TYPE_OFFHAND_SNEAK ||
+             (attack_type == ATTACK_TYPE_RANGED && ch->char_specials.ranged_offhand)));
     if (display)
     {
       send_to_char(ch, "%2d: %-50s\r\n",
                    dual_wielding_penalty(ch, (attack_type == ATTACK_TYPE_OFFHAND ||
-                                              attack_type == ATTACK_TYPE_OFFHAND_SNEAK)),
+                                              attack_type == ATTACK_TYPE_OFFHAND_SNEAK ||
+                                              (attack_type == ATTACK_TYPE_RANGED && ch->char_specials.ranged_offhand))),
                    "Two Weapon Fighting");
     }
 
@@ -16871,6 +16880,47 @@ static int perform_staggered_attack(struct char_data *ch, int mode, int phase)
   return 0;
 }
 
+/* Keep ranged attack type (DEX, ammunition, effects), selecting the actual
+ * offhand launcher only for the duration of its attack/display/reload. */
+static int hand_crossbow_offhand_attacks(struct char_data *ch, int mode, int phase, int penalty)
+{
+  int i, count = 1;
+  bool previous;
+  if (!dual_hand_crossbows(ch)) return 0;
+  if (!IS_NPC(ch))
+  {
+    if (is_skilled_dualer(ch, MODE_IMP_2_WPN)) count++;
+    if (is_skilled_dualer(ch, MODE_GREAT_2_WPN)) count++;
+    if (is_skilled_dualer(ch, MODE_EPIC_2_WPN)) count++;
+  }
+  previous = ch->char_specials.ranged_offhand;
+  ch->char_specials.ranged_offhand = TRUE;
+  for (i = 0; i < count; i++)
+  {
+    int iterative = i == 3 ? 0 : -5 * i;
+    if (mode == DISPLAY_ROUTINE_POTENTIAL)
+    {
+      send_to_char(ch, "Offhand Ranged Attack Bonus:  %d; ",
+                   compute_attack_bonus(ch, ch, ATTACK_TYPE_RANGED) + penalty + iterative);
+      compute_hit_damage(ch, ch, TYPE_UNDEFINED_WTYPE, NO_DICEROLL, MODE_DISPLAY_RANGED,
+                         FALSE, ATTACK_TYPE_RANGED, 0);
+    }
+    else if (mode == NORMAL_ATTACK_ROUTINE &&
+             (phase == PHASE_0 || phase == (i + 1) % 3 + 1) && FIGHTING(ch))
+    {
+      int result;
+      if (!dual_hand_crossbows(ch) || !can_fire_ammo(ch, TRUE)) break;
+      ch->char_specials.manyshot_pending = FALSE;
+      result = hit(ch, FIGHTING(ch), TYPE_UNDEFINED, DAM_RESERVED_DBC,
+                   penalty + iterative, ATTACK_TYPE_RANGED);
+      if (!IS_NPC(ch) && PRF_FLAGGED(ch, PRF_AUTORELOAD)) auto_reload_weapon(ch, TRUE);
+      if (result == HIT_NEED_RELOAD || !FIGHTING(ch)) break;
+    }
+  }
+  ch->char_specials.ranged_offhand = previous;
+  return count;
+}
+
 int perform_attacks(struct char_data *ch, int mode, int phase)
 {
   int i = 0, penalty = 0, numAttacks = 0, bonus_mainhand_attacks = 0;
@@ -16988,6 +17038,12 @@ int perform_attacks(struct char_data *ch, int mode, int phase)
       attacks_at_max_bab++;
       send_to_char(ch, "\tW[\tCAir Embodiment grants you an extra attack!\tW]\tn\r\n");
     }
+  }
+
+  /* An awakened dancing weapon makes one extra attack in a full routine. */
+  if (clan_enchant_wielded(ch, WEAPON_SPECAB_DANCING)) {
+    bonus_mainhand_attacks++;
+    attacks_at_max_bab++;
   }
 
   /* Haste or equivalent gives one extra attack, ranged or melee, at max BAB. */
@@ -17183,6 +17239,8 @@ int perform_attacks(struct char_data *ch, int mode, int phase)
         penalty -= 4;
     }
 
+    hand_crossbow_offhand_attacks(ch, mode, phase, penalty);
+
     /** BEGIN RANGED COMBAT EXECUTION ROUTINE **/
 
     for (i = 0; i <= ranged_attacks; i++)
@@ -17304,13 +17362,14 @@ int perform_attacks(struct char_data *ch, int mode, int phase)
   else if (mode == RETURN_NUM_ATTACKS && is_using_ranged_weapon(ch, TRUE) &&
            !ranged_weapon_melee_type(ch, is_using_ranged_weapon(ch, TRUE)))
   {
-    return ranged_attacks;
+    return ranged_attacks + hand_crossbow_offhand_attacks(ch, mode, phase, penalty);
 
     /* Display Modes, not actually firing, show our routines full POWAH! */
   }
   else if (mode == DISPLAY_ROUTINE_POTENTIAL && is_using_ranged_weapon(ch, TRUE) &&
            !ranged_weapon_melee_type(ch, is_using_ranged_weapon(ch, TRUE)))
   {
+    hand_crossbow_offhand_attacks(ch, mode, phase, penalty);
     while (ranged_attacks > 0)
     {
       /* display hitroll bonus */
@@ -18171,7 +18230,7 @@ void handle_cleave(struct char_data *ch)
 
   /* Great Cleave - feat or perk */
   if ((HAS_FEAT(ch, FEAT_GREAT_CLEAVE) || has_perk(ch, PERK_FIGHTER_GREAT_CLEAVE) ||
-       has_berserker_cleaving_strikes(ch)) &&
+       has_berserker_cleaving_strikes(ch) || clan_enchant_wielded(ch, WEAPON_SPECAB_MIGHTY_CLEAVING)) &&
       !is_using_ranged_weapon(ch, TRUE))
   {
     send_to_char(ch, "You great cleave to %s!\r\n", (CAN_SEE(ch, tch)) ? GET_NAME(tch) : "someone");
@@ -18690,7 +18749,8 @@ void perform_violence(struct char_data *ch, int phase)
     /* handle cleave - now includes Cleaving Strike perks */
     if (phase == 1 &&
         (HAS_FEAT(ch, FEAT_CLEAVE) || HAS_FEAT(ch, FEAT_GREAT_CLEAVE) ||
-         has_perk(ch, PERK_FIGHTER_CLEAVING_STRIKE) || has_berserker_cleaving_strikes(ch)) &&
+         has_perk(ch, PERK_FIGHTER_CLEAVING_STRIKE) || has_berserker_cleaving_strikes(ch) ||
+         clan_enchant_wielded(ch, WEAPON_SPECAB_MIGHTY_CLEAVING)) &&
         !is_using_ranged_weapon(ch, TRUE))
       handle_cleave(ch);
   }

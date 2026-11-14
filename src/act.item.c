@@ -13,6 +13,8 @@
 #include "legendary_equipment.h"
 #include "legendary_transaction.h"
 #include "structs.h"
+#include "clan_access.h"
+#include "clan_enchant.h"
 #include "housing.h"
 #include "utils.h"
 #include "comm.h"
@@ -1506,6 +1508,22 @@ void display_item_object_values(struct char_data *ch, struct obj_data *item, int
     text_line(ch, "\tcItem-Type Specific Values:\tn", line_length, '-', '-');
 
   if (mode == ITEM_STAT_MODE_LORE_SKILL) lore_section_start = web_info_output_mark(ch);
+
+  if (item->clan_requirement.clan || item->clan_requirement.rank || item->clan_requirement.favor) {
+    clan_rnum clan = real_clan(item->clan_requirement.clan);
+    snprintf(buf, sizeof(buf), "Clan requirements: %s; officer rank %d (1 highest; 0 unrestricted); Favor rank %d.\r\n",
+             item->clan_requirement.clan ? (clan == NO_CLAN ? "an unavailable clan" : CLAN_NAME(clan)) : "any accepted clan",
+             item->clan_requirement.rank, item->clan_requirement.favor);
+    if (mode == ITEM_STAT_MODE_G_LORE) send_to_group(NULL, GROUP(ch), "%s", buf);
+    else send_to_char(ch, "%s", buf);
+  }
+  if (clan_enchant_choice(item->clan_enchantment.effect)) {
+    snprintf(buf, sizeof(buf), "Clan enchantment: %s (%s). Command word: %s.\r\n",
+             clan_enchant_choice(item->clan_enchantment.effect)->name,
+             item->clan_enchantment.active ? "active" : "inactive", item->clan_enchantment.word);
+    if (mode == ITEM_STAT_MODE_G_LORE) send_to_group(NULL, GROUP(ch), "%s", buf);
+    else send_to_char(ch, "%s", buf);
+  }
 
   switch (GET_OBJ_TYPE(item))
   {
@@ -5689,6 +5707,8 @@ void perform_wear(struct char_data *ch, struct obj_data *obj, int where)
       "You already have something equipped on your back.\r\n"};
 
   /* we are looking for some quick exits */
+  if (!clan_access_check(ch, &obj->clan_requirement, true)) return;
+
   if (IS_ANIMAL(ch))
   {
     send_to_char(ch, "You are animal, how you going to wear that?\r\n");
@@ -5721,6 +5741,13 @@ void perform_wear(struct char_data *ch, struct obj_data *obj, int where)
   if (is_class_anti_object(ch, obj, true))
   {
     // fail message sent by above function
+    return;
+  }
+
+  if ((where == WEAR_WIELD_1 || where == WEAR_WIELD_OFFHAND || where == WEAR_WIELD_2H) &&
+      !ranged_wield_compatible(ch, obj))
+  {
+    send_to_char(ch, "Only hand crossbows can be dual wielded as ranged weapons.\r\n");
     return;
   }
 
@@ -6188,17 +6215,8 @@ ACMD(do_wield)
     send_to_char(ch, "Wield what?\r\n");
   else if (!(obj = get_obj_in_list_vis(ch, arg, NULL, ch->carrying)))
     send_to_char(ch, "You don't seem to have %s %s.\r\n", AN(arg), arg);
-  /* need test to make sure we don't wield a 2nd missile weapon */
-  else if (is_using_ranged_weapon(ch, TRUE))
-  {
-    send_to_char(ch, "You are already using a ranged weapon!\r\n");
-    /* wielding a weapon, now trying to dual wield a ranged weapon */
-  }
-  else if (obj && (GET_EQ(ch, WEAR_WIELD_1) || GET_EQ(ch, WEAR_WIELD_OFFHAND)) &&
-           IS_SET(weapon_list[GET_OBJ_VAL(obj, 0)].weaponFlags, WEAPON_FLAG_RANGED))
-  {
-    send_to_char(ch, "You can't equip a ranged weapon while already wielding another weapon!\r\n");
-  }
+  else if (!ranged_wield_compatible(ch, obj))
+    send_to_char(ch, "Only hand crossbows can be dual wielded as ranged weapons.\r\n");
   else
   {
     if (*grip)

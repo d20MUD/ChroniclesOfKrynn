@@ -85,6 +85,7 @@ void web_info_output_section(struct char_data *ch, const char *section, size_t s
 void web_info_item(struct char_data *ch, const char *section, struct obj_data *obj);
 void web_info_field(struct char_data *ch, const char *section, const char *label, const char *format, ...) __attribute__((format(printf, 4, 5)));
 
+bool web_creation_editor(struct descriptor_data *d, const char *input);
 bool web_creation_begin(struct descriptor_data *d, const char *input, struct output_capture *capture);
 bool web_creation_back(struct descriptor_data *d, const char *input);
 void web_creation_finish(struct descriptor_data *d, struct output_capture *capture);

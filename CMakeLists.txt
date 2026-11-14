@@ -517,6 +517,9 @@ set(SRC_C_FILES
     src/clan_objectives.c
     src/clan_objective_runtime.c
     src/clan_sources.c
+    src/clan_qm_services.c
+    src/clan_enchant.c
+    src/clan_access.c
     src/clan_status.c
     src/clan_commands.c
     src/clan_awards.c

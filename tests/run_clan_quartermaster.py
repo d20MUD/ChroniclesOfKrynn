@@ -98,9 +98,8 @@ with database(migrations) as (tmp,socket,sql,client):
         if stop==1:sql('DELETE FROM clan_memberships WHERE player_id=1007')
         result=invoke(path,'recover',uid);assert result['ok'] and result['gold']==9985 and result['items']==1 and not result['locked'],(stop,result)
         assert invoke(path,'recover',uid)['items']==1
-        replay=invoke(path,'command',f'confirm field-map {uid}');assert replay['gold']==9985 and replay['items']==1 and 'already' in replay['messages'],replay
+        replay=invoke(path,'recover',uid);assert replay['gold']==9985 and replay['items']==1,replay
         if stop==1:
-            denial=invoke(path,'command','buy field-map');assert 'membership' in denial['messages'] and denial['items']==1,denial
             sql(f"INSERT INTO clan_memberships VALUES(1007,'{A}',1,0)")
     for failure in [1,2,3,-1,-2,-3]:
         path=tmp/f'failure-{failure}';path.mkdir();uid=f'{200+failure:032x}'
@@ -116,13 +115,7 @@ with database(migrations) as (tmp,socket,sql,client):
     saved=json.loads((path/'inventory.json').read_text());(path/'inventory.json').write_text(json.dumps(saved|dict(items=[])))
     result=invoke(path,'recover',uid);assert not result['ok'] and result['locked'] and result['items']==0 and result['gold']==9985,result
     (path/'inventory.json').write_text(json.dumps(saved));result=invoke(path,'recover',uid);assert result['ok'] and result['items']==1 and result['gold']==9985,result
-    path=tmp/'commands';path.mkdir()
-    preview=invoke(path,'command','buy field-map');assert preview['gold']==10000 and preview['items']==0 and 'quartermaster confirm' in preview['messages'] and 'confirm field-map' not in preview['messages'],preview
-    named_path=tmp/'named-commands';named_path.mkdir();invoke(named_path,'named','unused')
-    restricted=invoke(path,'restricted','unused');assert restricted['items']==0 and restricted['gold']==10000 and 'restrictions' in restricted['messages'],restricted
-    invoke(path,'world','unused')
-    invoke(path,'quotes','unused')
-    raw=invoke(path,'command','confirm field-map '+('f'*32));assert 'Preview' in raw['messages'] and raw['items']==0,raw
+    # New offerings/commands are covered by run_clan_qm_services.py.
     # Phase 50: a coherent backup captures SQL plus independent player/inventory
     # files at one quiesced crash checkpoint. Restore into another private DB.
     path=tmp/'backup-checkpoint';path.mkdir();uid=f'{700:032x}'
@@ -145,4 +138,4 @@ with database(migrations) as (tmp,socket,sql,client):
     assert all(again[k]==recovered[k] for k in ['ok','gold','items','locked']),again
     assert sql(f"SELECT state FROM clan_qm_restored.clan_quartermaster_operations WHERE operation_uid='{uid}'")=='1'
     print('Phase 50 coherent SQL/player/inventory checkpoint restore and exactly-once recovery passed.')
-    print('Quartermaster game coordinator: independent player/inventory crash recovery, uncertain checkpoint retries, durable acknowledgement, departure delivery/use, confirmation replay, item restrictions and budget drift passed.')
+    print('Legacy quartermaster receipts: independent player/inventory crash recovery, uncertain checkpoint retries, durable acknowledgement, departure delivery and receipt replay passed.')

@@ -763,6 +763,12 @@ int main(int argc, char **argv)
   strcpy(obj->clan_delivery_uid,"dddddddddddddddddddddddddddddddd");
   obj->clan_delivery_amount=25;
   strcpy(obj->clan_qm_uid,"cccccccccccccccccccccccccccccccc");
+  obj->clan_requirement = (struct clan_requirement){7, 3, 4};
+  strcpy(obj->clan_enchantment.uid,"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
+  strcpy(obj->clan_enchantment.receipt,"ffffffffffffffffffffffffffffffff");
+  strcpy(obj->clan_enchantment.word,"inferno");
+  obj->clan_enchantment.effect=9; obj->clan_enchantment.active=1;
+  obj->clan_enchantment.reroll_week=2200000000;
   GET_OBJ_VAL(obj, 15) = 42;
   obj->special_abilities = calloc(1, sizeof(*obj->special_abilities));
   obj->special_abilities->ability = 11;
@@ -799,6 +805,11 @@ int main(int argc, char **argv)
     assert(strstr(restored->action_description, "A second line."));
     assert(!strcmp(restored->clan_delivery_uid,"dddddddddddddddddddddddddddddddd") && restored->clan_delivery_amount==25);
     assert(!strcmp(restored->clan_qm_uid,"cccccccccccccccccccccccccccccccc"));
+    assert(restored->clan_requirement.clan==7 && restored->clan_requirement.rank==3 && restored->clan_requirement.favor==4);
+    assert(!strcmp(restored->clan_enchantment.uid,"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee") &&
+           !strcmp(restored->clan_enchantment.receipt,"ffffffffffffffffffffffffffffffff") &&
+           !strcmp(restored->clan_enchantment.word,"inferno") && restored->clan_enchantment.effect==9 &&
+           restored->clan_enchantment.active==1 && restored->clan_enchantment.reroll_week==2200000000);
     assert(restored->estate_delivery_id == 123456 && restored->affected[0].specific == 7);
     assert(GET_OBJ_VAL(restored, 15) == 42 && GET_OBJ_BOUND_ID(restored) == (int)NOBODY);
     assert(restored->special_abilities && restored->special_abilities->next &&
@@ -1099,3 +1110,7 @@ int main(int argc, char **argv)
   mysql_close(conn);
   return 0;
 }
+
+/* Clan access is exercised against real SQL by run_clan_qm_services.py. */
+bool clan_access_check(struct char_data *ch,const struct clan_requirement *r,bool explain)
+{ (void)ch;(void)explain;(void)r;return true; }

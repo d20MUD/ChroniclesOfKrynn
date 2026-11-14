@@ -841,6 +841,64 @@ void load_irda_form(struct char_data *ch, const char *line)
     ch->player_specials->saved.disguise_generation = form.instance;
 }
 
+/* Shared authoritative labels for web creation; no prompt parsing. */
+const char *short_desc_feature_label(struct char_data *ch, int feature)
+{
+  if ((feature == FEATURE_TYPE_FUR && !is_furry(GET_REAL_RACE(ch))) ||
+      (feature == FEATURE_TYPE_HORNS && !has_horns(GET_REAL_RACE(ch))) ||
+      (feature == FEATURE_TYPE_HAIR && race_has_no_hair(GET_REAL_RACE(ch))) ||
+      (feature == FEATURE_TYPE_SCALES && !has_scales(GET_REAL_RACE(ch)))) return NULL;
+  switch (feature)
+  {
+    case FEATURE_TYPE_EYES: return "Eyes";
+    case FEATURE_TYPE_NOSE: return "Nose";
+    case FEATURE_TYPE_EARS: return "Ears";
+    case FEATURE_TYPE_FACE: return "Face";
+    case FEATURE_TYPE_SCAR: return "Scars";
+    case FEATURE_TYPE_HAIR: return "Hair";
+    case FEATURE_TYPE_BUILD: return "Build";
+    case FEATURE_TYPE_COMPLEXION: return "Complexion";
+    case FEATURE_TYPE_FUR: return "Fur";
+    case FEATURE_TYPE_SKIN: return "Skin color";
+    case FEATURE_TYPE_HORNS: return "Horns";
+    case FEATURE_TYPE_SCALES: return "Scales";
+    default: return NULL;
+  }
+}
+
+const char *short_desc_adjective_label(int feature, int adjective)
+{
+  if (adjective < 1) return NULL;
+  switch (feature)
+  {
+    case FEATURE_TYPE_EYES:
+      return adjective < (int)(sizeof(eye_descriptions) / sizeof(eye_descriptions[0])) - 1 ? eye_descriptions[adjective] : NULL;
+    case FEATURE_TYPE_NOSE:
+      return adjective < (int)(sizeof(nose_descriptions) / sizeof(nose_descriptions[0])) - 1 ? nose_descriptions[adjective] : NULL;
+    case FEATURE_TYPE_EARS:
+      return adjective < (int)(sizeof(ear_descriptions) / sizeof(ear_descriptions[0])) - 1 ? ear_descriptions[adjective] : NULL;
+    case FEATURE_TYPE_FACE:
+      return adjective < (int)(sizeof(face_descriptions) / sizeof(face_descriptions[0])) - 1 ? face_descriptions[adjective] : NULL;
+    case FEATURE_TYPE_SCAR:
+      return adjective < (int)(sizeof(scar_descriptions) / sizeof(scar_descriptions[0])) - 1 ? scar_descriptions[adjective] : NULL;
+    case FEATURE_TYPE_HAIR:
+      return adjective < (int)(sizeof(hair_descriptions) / sizeof(hair_descriptions[0])) - 1 ? hair_descriptions[adjective] : NULL;
+    case FEATURE_TYPE_BUILD:
+      return adjective < (int)(sizeof(build_descriptions) / sizeof(build_descriptions[0])) - 1 ? build_descriptions[adjective] : NULL;
+    case FEATURE_TYPE_COMPLEXION:
+      return adjective < (int)(sizeof(complexion_descriptions) / sizeof(complexion_descriptions[0])) - 1 ? complexion_descriptions[adjective] : NULL;
+    case FEATURE_TYPE_FUR:
+      return adjective < (int)(sizeof(fur_descriptions) / sizeof(fur_descriptions[0])) - 1 ? fur_descriptions[adjective] : NULL;
+    case FEATURE_TYPE_SKIN:
+      return adjective < (int)(sizeof(skin_descriptions) / sizeof(skin_descriptions[0])) - 1 ? skin_descriptions[adjective] : NULL;
+    case FEATURE_TYPE_HORNS:
+      return adjective < (int)(sizeof(horn_descriptions) / sizeof(horn_descriptions[0])) - 1 ? horn_descriptions[adjective] : NULL;
+    case FEATURE_TYPE_SCALES:
+      return adjective < (int)(sizeof(scales_descriptions) / sizeof(scales_descriptions[0])) - 1 ? scales_descriptions[adjective] : NULL;
+    default: return NULL;
+  }
+}
+
 void short_desc_descriptors_menu(struct char_data *ch)
 {
   SEND_TO_Q(

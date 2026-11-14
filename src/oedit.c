@@ -2147,8 +2147,13 @@ static void oedit_disp_menu(struct descriptor_data *d)
     snprintf(buf5, sizeof(buf5), "Not Set");
   }
 
-  write_to_output(d, "%sY%s) Trap Setup             : %s%s\tn\r\nEnter choice : ", grn, nrm, cyn,
+  write_to_output(d, "%sY%s) Trap Setup             : %s%s\tn\r\n", grn, nrm, cyn,
                   buf5);
+  write_to_output(d, "\r\n\tCclan\tn) Clan number       : %d\r\n"
+                     "\tCrank\tn) Minimum clan rank : %d (1 is highest)\r\n"
+                     "\tCfavor\tn) Minimum Favor rank: %d\r\nEnter choice : ",
+                     OLC_OBJ(d)->clan_requirement.clan, OLC_OBJ(d)->clan_requirement.rank,
+                     OLC_OBJ(d)->clan_requirement.favor);
   OLC_MODE(d) = OEDIT_MAIN_MENU;
 }
 
@@ -2230,7 +2235,28 @@ void oedit_parse(struct descriptor_data *d, char *arg)
       return;
     }
 
+  case OEDIT_CLAN:
+  case OEDIT_CLAN_RANK:
+  case OEDIT_CLAN_FAVOR:
+    if (!*arg || strspn(arg, "0123456789") != strlen(arg) || strlen(arg) > 5 ||
+        atoi(arg) > (OLC_MODE(d) == OEDIT_CLAN ? 65534 : OLC_MODE(d) == OEDIT_CLAN_RANK ? 15 : 5)) {
+      write_to_output(d, "Enter a valid value (0 clears the requirement): "); return;
+    }
+    if (OLC_MODE(d) == OEDIT_CLAN) OLC_OBJ(d)->clan_requirement.clan = atoi(arg);
+    else if (OLC_MODE(d) == OEDIT_CLAN_RANK) OLC_OBJ(d)->clan_requirement.rank = atoi(arg);
+    else OLC_OBJ(d)->clan_requirement.favor = atoi(arg);
+    OLC_VAL(d) = 1;
+    oedit_disp_menu(d); return;
+
   case OEDIT_MAIN_MENU:
+    if (!strcasecmp(arg, "clan") || !strcasecmp(arg, "rank") || !strcasecmp(arg, "favor")) {
+      OLC_MODE(d) = !strcasecmp(arg, "clan") ? OEDIT_CLAN :
+                    !strcasecmp(arg, "rank") ? OEDIT_CLAN_RANK : OEDIT_CLAN_FAVOR;
+      write_to_output(d, "Enter %s (0 clears; officer rank 1 is highest): ",
+                      OLC_MODE(d) == OEDIT_CLAN ? "clan number (0..65534)" :
+                      OLC_MODE(d) == OEDIT_CLAN_RANK ? "minimum clan rank (0..15)" : "minimum Favor rank (0..5)");
+      return;
+    }
     /* Throw us out to whichever edit mode based on user input. */
     switch (*arg)
     {

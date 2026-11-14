@@ -6965,6 +6965,64 @@ bool web_creation_begin(struct descriptor_data *d, const char *input, struct out
   return FALSE;
 }
 
+/* JSON-quoted chunks are literal text, never string-editor commands. The
+ * existing editor retains ownership, length limits, abort backup and cleanup. */
+bool web_creation_editor(struct descriptor_data *d, const char *input)
+{
+  struct json_object *text;
+  const char *value;
+  size_t length, current;
+  char command[3];
+  if (strncmp(input,"@creation-editor-",17)) return FALSE;
+  if (!d->web_character_creation || !d->str) return TRUE;
+  switch (STATE(d))
+  {
+    case CON_PLR_DESC: case CON_PLR_BG: case CON_CHARACTER_GOALS_ENTER:
+    case CON_CHARACTER_PERSONALITY_ENTER: case CON_CHARACTER_IDEALS_ENTER:
+    case CON_CHARACTER_BONDS_ENTER: case CON_CHARACTER_FLAWS_ENTER: break;
+    default: return TRUE;
+  }
+  if (!strcmp(input,"@creation-editor-cancel"))
+  {
+    d->web_editor_uploading = d->web_editor_failed = FALSE;
+    strcpy(command,"/a"); string_add(d,command); return TRUE;
+  }
+  if (!strcmp(input,"@creation-editor-reset"))
+  {
+    if (d->web_editor_uploading) return TRUE;
+    if (!d->backstr && *d->str) d->backstr = strdup(*d->str);
+    free(*d->str); *d->str = strdup("");
+    d->web_editor_uploading = TRUE; d->web_editor_failed = FALSE;
+    return TRUE;
+  }
+  if (!strcmp(input,"@creation-editor-save"))
+  {
+    if (!d->web_editor_uploading) return TRUE;
+    d->web_editor_uploading = FALSE;
+    if (d->web_editor_failed)
+    { write_to_output(d,"Text could not be saved. Cancel to restore your previous text.\r\n"); return TRUE; }
+    strcpy(command,"/s"); string_add(d,command); return TRUE;
+  }
+  if (!strncmp(input,"@creation-editor-append ",24) && d->web_editor_uploading && !d->web_editor_failed)
+  {
+    text = json_tokener_parse(input+24);
+    if (!text || !json_object_is_type(text,json_type_string))
+    { if (text) json_object_put(text); d->web_editor_failed = TRUE; return TRUE; }
+    value = json_object_get_string(text); length = json_object_get_string_len(text);
+    current = *d->str ? strlen(*d->str) : 0;
+    if (strlen(value) != length || current + length + 1 >= d->max_str)
+      d->web_editor_failed = TRUE;
+    else
+    {
+      char *buffer = realloc(*d->str,current+length+1);
+      if (!buffer) d->web_editor_failed = TRUE;
+      else { memcpy(buffer+current,value,length+1); *d->str = buffer; smash_tilde(buffer); }
+    }
+    json_object_put(text);
+  }
+  return TRUE;
+}
+
 static bool web_creation_can_back(struct descriptor_data *d)
 {
   if (d->str) return FALSE;
@@ -7078,7 +7136,50 @@ void web_creation_finish(struct descriptor_data *d, struct output_capture *captu
     case CON_SETPREFS: step = "confirm"; title = "Recommended preferences"; break;
     case CON_RMOTD: step = "continue"; title = "Welcome to Krynn"; break;
     case CON_MENU: title = "Finish preparing your character"; break;
-    case CON_CHARACTER_AGE_SELECT: title = "Choose your age"; break;
+    case CON_CHAR_RP_MENU:
+      title = "Character details";
+      creation_choice(choices,"0","Short description","");
+      creation_choice(choices,"1","Description","");
+      creation_choice(choices,"2","Background story","");
+      creation_choice(choices,"3","Background archetype","");
+      creation_choice(choices,"4","Goals","");
+      creation_choice(choices,"5","Personality","");
+      creation_choice(choices,"6","Ideals","");
+      creation_choice(choices,"7","Bonds","");
+      creation_choice(choices,"8","Flaws","");
+      creation_choice(choices,"9","Age","");
+      creation_choice(choices,"a","Homeland","");
+      creation_choice(choices,"b","Faction","");
+      creation_choice(choices,"c","Hometown","");
+      creation_choice(choices,"d","Deity","");
+      creation_choice(choices,"q","Done","");
+      break;
+    case CON_BACKGROUND_ARCHTYPE:
+      title = "Choose a background archetype";
+      for (i = 1; i < NUM_BACKGROUNDS; i++)
+        creation_choice(choices, background_list[backgrounds_listed_alphabetically[i]].name,
+                        background_list[backgrounds_listed_alphabetically[i]].name, "");
+      creation_choice(choices,"quit","Back to character details","");
+      break;
+    case CON_CHARACTER_AGE_SELECT:
+      step = "age"; title = "Choose your age";
+      for (i = 0; i < NUM_CHARACTER_AGES; i++)
+      {
+        struct json_object *adjustments = json_object_new_array(), *choice;
+        int ability;
+        snprintf(value,sizeof(value),"%d",i+1);
+        creation_choice(choices,value,character_ages[i],"");
+        choice = json_object_array_get_idx(choices,json_object_array_length(choices)-1);
+        for (ability = 0; ability < 6; ability++)
+        {
+          struct json_object *adjustment = json_object_new_object();
+          json_object_object_add(adjustment,"ability",json_object_new_string(ability_score_names[ability]));
+          json_object_object_add(adjustment,"modifier",json_object_new_int(character_age_attributes[i][ability]));
+          json_object_array_add(adjustments,adjustment);
+        }
+        json_object_object_add(choice,"adjustments",adjustments);
+      }
+      break;
     case CON_CHARACTER_FACTION_SELECT: title = "Choose your faction"; break;
     case CON_CHARACTER_HOMETOWN_SELECT: title = "Choose your hometown"; break;
     case CON_CHARACTER_DEITY_SELECT: title = "Choose your deity"; break;
@@ -7089,11 +7190,65 @@ void web_creation_finish(struct descriptor_data *d, struct output_capture *captu
       creation_choice(choices,"2","Role-player","Enter additional character and roleplay information.");
       creation_choice(choices,"3","Decide later","Enter the game and choose your roleplay status later.");
       break;
+    case CON_GEN_DESCS_INTRO:
+    case CON_GEN_DESCS_MENU:
+      step = "short-description"; title = "Describe your character";
+      creation_choice(choices,"","Continue",""); break;
+    case CON_GEN_DESCS_DESCRIPTORS_1:
+    case CON_GEN_DESCS_DESCRIPTORS_2:
+      step = "short-description";
+      title = state == CON_GEN_DESCS_DESCRIPTORS_1 ? "Choose your first feature" : "Choose your second feature";
+      for (i = 1; i <= NUM_FEATURE_TYPES; i++)
+      {
+        const char *label = short_desc_feature_label(d->character, i);
+        if (label) { snprintf(value,sizeof(value),"%d",i); creation_choice(choices,value,label,""); }
+      }
+      break;
+    case CON_GEN_DESCS_ADJECTIVES_1:
+    case CON_GEN_DESCS_ADJECTIVES_2:
+    {
+      int feature = state == CON_GEN_DESCS_ADJECTIVES_1
+                        ? GET_PC_DESCRIPTOR_1(d->character) : GET_PC_DESCRIPTOR_2(d->character);
+      const char *label;
+      step = "short-description"; title = "Choose a describing adjective";
+      for (i = 1; (label = short_desc_adjective_label(feature, i)); i++)
+      { snprintf(value,sizeof(value),"%d",i); creation_choice(choices,value,label,""); }
+      break;
+    }
+    case CON_GEN_DESCS_MENU_PARSE:
+      step = "short-description"; title = "Review your short description";
+      creation_choice(choices,"1","Save description","");
+      creation_choice(choices,"2","Start over","");
+      if (!GET_PC_DESCRIPTOR_2(d->character)) creation_choice(choices,"3","Add a second feature","");
+      if (!d->forced_short_desc_setup) creation_choice(choices,"0","Cancel","");
+      break;
+    case CON_CHARACTER_GOALS_IDEAS: case CON_CHARACTER_PERSONALITY_IDEAS:
+    case CON_CHARACTER_IDEALS_IDEAS: case CON_CHARACTER_BONDS_IDEAS: case CON_CHARACTER_FLAWS_IDEAS:
+      step = "writing-intro"; title = "Write your character details";
+      creation_choice(choices,"q","Open editor",""); break;
     case CON_BACKGROUND_ARCHTYPE_CONFIRM: step = "confirm"; title = "Confirm your background"; break;
   }
   if (!strcmp(step,"confirm")) { creation_choice(choices,"y","Yes","");creation_choice(choices,"n","No",""); }
   if (!strcmp(step,"continue")) creation_choice(choices,"","Continue","");
-  if (d->str) { step = "editor";title = "Write your character details"; }
+  if (d->str)
+  {
+    step = "editor";
+    switch (state)
+    {
+      case CON_PLR_DESC: title = "Character description"; break;
+      case CON_PLR_BG: title = "Background story"; break;
+      case CON_CHARACTER_GOALS_ENTER: title = "Goals"; break;
+      case CON_CHARACTER_PERSONALITY_ENTER: title = "Personality"; break;
+      case CON_CHARACTER_IDEALS_ENTER: title = "Ideals"; break;
+      case CON_CHARACTER_BONDS_ENTER: title = "Bonds"; break;
+      case CON_CHARACTER_FLAWS_ENTER: title = "Flaws"; break;
+      default: title = "Character details"; break;
+    }
+    json_object_object_add(event,"editorText",json_object_new_string(*d->str ? *d->str : ""));
+    json_object_object_add(event,"editorMaxBytes",json_object_new_int64(d->max_str > 1 ? d->max_str-2 : 0));
+    json_object_object_add(event,"editorBusy",json_object_new_boolean(d->web_editor_uploading));
+    json_object_object_add(event,"editorError",json_object_new_boolean(d->web_editor_failed));
+  }
   snprintf(id,sizeof(id),"%ld:%lu",(long)time(NULL),++sequence);
   json_object_object_add(event,"id",json_object_new_string(id));
   json_object_object_add(event,"active",json_object_new_boolean(active));
@@ -7104,6 +7259,12 @@ void web_creation_finish(struct descriptor_data *d, struct output_capture *captu
   json_object_object_add(event,"name",json_object_new_string(d->character && d->character->player.name ? d->character->player.name : ""));
   json_object_object_add(event,"body",json_object_new_string(capture->text ? capture->text : ""));
   json_object_object_add(event,"truncated",json_object_new_boolean(capture->truncated));
+  if (!strcmp(step,"short-description") && d->character)
+  {
+    char *preview = current_short_desc(d->character);
+    json_object_object_add(event,"descriptionPreview",json_object_new_string(preview ? preview : ""));
+    free(preview);
+  }
   json_object_object_add(event,"choices",choices);
   serialized = json_object_to_json_string_ext(event,JSON_C_TO_STRING_PLAIN);
   MSDPSetString(d,eMSDP_CHARACTER_CREATION,serialized);
@@ -8794,7 +8955,7 @@ void nanny(struct descriptor_data *d, char *arg)
   case CON_CHARACTER_BONDS_IDEAS:
     if (*arg == 'Q' || *arg == 'q')
     {
-      show_character_ideals_edit(d);
+      show_character_bonds_edit(d);
       STATE(d) = CON_CHARACTER_BONDS_ENTER;
       return;
     }
@@ -8994,22 +9155,27 @@ void nanny(struct descriptor_data *d, char *arg)
       show_character_background_archtype_menu(d);
       break;
     case '4':
+      if (d->web_character_creation) { show_character_goal_edit(d); break; }
       show_character_goal_idea_menu(d->character);
       STATE(d) = CON_CHARACTER_GOALS_IDEAS;
       break;
     case '5':
+      if (d->web_character_creation) { show_character_personality_edit(d); break; }
       show_character_personality_idea_menu(d->character);
       STATE(d) = CON_CHARACTER_PERSONALITY_IDEAS;
       break;
     case '6':
+      if (d->web_character_creation) { show_character_ideals_edit(d); break; }
       show_character_ideals_idea_menu(d->character);
       STATE(d) = CON_CHARACTER_IDEALS_IDEAS;
       break;
     case '7':
+      if (d->web_character_creation) { show_character_bonds_edit(d); break; }
       show_character_bonds_idea_menu(d->character);
       STATE(d) = CON_CHARACTER_BONDS_IDEAS;
       break;
     case '8':
+      if (d->web_character_creation) { show_character_flaws_edit(d); break; }
       show_character_flaws_idea_menu(d->character);
       STATE(d) = CON_CHARACTER_FLAWS_IDEAS;
       break;

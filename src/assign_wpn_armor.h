@@ -146,6 +146,12 @@ bool hoopak_uses_ranged(struct char_data *ch, struct obj_data *weapon);
 /* Active melee type for an empty launcher or a melee-mode hoopak; zero otherwise. */
 int ranged_weapon_melee_type(struct char_data *ch, struct obj_data *weapon);
 
+
+/* Paired one-handed launchers. */
+bool is_hand_crossbow(struct obj_data *obj);
+bool dual_hand_crossbows(struct char_data *ch);
+bool ranged_wield_compatible(struct char_data *ch, struct obj_data *obj);
+
 #ifdef __cplusplus
 }
 #endif

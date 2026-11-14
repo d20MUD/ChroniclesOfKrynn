@@ -85,6 +85,7 @@ static int update_all_objects(struct obj_data *refobj)
       retire_new_composite_bow(obj);
 
     /* Copy game-time dependent variables over. */
+    obj->clan_enchantment = swap.clan_enchantment;
     memcpy(obj->legendary_uuid, swap.legendary_uuid, sizeof(obj->legendary_uuid));
     obj->legendary_quarantined = swap.legendary_quarantined;
     obj->legendary_record = swap.legendary_record;
@@ -320,6 +321,10 @@ int save_objects(zone_rnum zone_num)
                   "%d %d %d %d\n",
                   obj->affected[counter2].location, obj->affected[counter2].modifier,
                   obj->affected[counter2].bonus_type, obj->affected[counter2].specific);
+
+      if (obj->clan_requirement.clan || obj->clan_requirement.rank || obj->clan_requirement.favor)
+        fprintf(fp, "U\n%d %d %d\n", obj->clan_requirement.clan,
+                obj->clan_requirement.rank, obj->clan_requirement.favor);
 
       /* B:  Do we have spells? */
       if (obj->sbinfo)

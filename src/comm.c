@@ -1261,7 +1261,7 @@ void game_loop(socket_t local_mother_desc)
         {
           struct output_capture creation_capture = {0};
           bool web_creating = web_creation_begin(d, comm, &creation_capture);
-          if (web_creating && web_creation_back(d, comm))
+          if (web_creating && (web_creation_editor(d, comm) || web_creation_back(d, comm)))
             ; /* Back navigation was handled without applying a nanny choice. */
           else if (d->showstr_count) /* Reading something w/ pager */
             show_string(d, comm);

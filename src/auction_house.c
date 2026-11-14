@@ -4,6 +4,7 @@
 #include "sysdep.h"
 #include "legendary_equipment.h"
 #include "structs.h"
+#include "clan_access.h"
 #include "utils.h"
 #include "auction_house.h"
 #include "comm.h"
@@ -381,6 +382,7 @@ void auction_house_command(struct char_data *ch, const char *argument)
       send_to_char(ch, "The item could not be restored; escrow is unchanged.\r\n");
       goto fail;
     }
+    if (buying && !clan_access_check(ch, &obj->clan_requirement, true)) { extract_obj(obj); goto fail; }
     if (!CAN_CARRY_OBJ(ch, obj))
     {
       extract_obj(obj);
