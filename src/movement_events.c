@@ -46,7 +46,7 @@ void quest_room(struct char_data *ch);
 void set_expire_cooldown(room_rnum room);
 void reset_expire_cooldown(room_rnum room);
 bool is_road_room(room_rnum room, int type);
-void check_hunt_room(room_rnum room);
+void check_hunt_room(struct char_data *ch);
 void check_random_encounter(struct char_data *ch);
 bool is_covered(struct char_data *ch);
 
@@ -201,6 +201,12 @@ void process_trap_detection(struct char_data *ch)
  */
 void process_wilderness_events(struct char_data *ch, room_rnum was_in)
 {
+  /* Followers also have their own targets at this location. */
+#if defined(CAMPAIGN_DL)
+  if (is_road_room(ch->in_room, 2)) check_hunt_room(ch);
+#else
+  if (ZONE_FLAGGED(GET_ROOM_ZONE(ch->in_room), ZONE_WILDERNESS)) check_hunt_room(ch);
+#endif
   if (!ch->master)
   {
     /* Set cooldown timer on old wilderness room */
@@ -209,11 +215,9 @@ void process_wilderness_events(struct char_data *ch, room_rnum was_in)
       set_expire_cooldown(was_in);
     }
 
-    /* Check for encounters and hunts */
+    /* Check random encounters for the party leader. */
 #if defined(CAMPAIGN_DL)
     /* DragonLance campaign specific */
-    if (is_road_room(ch->in_room, 2))
-      check_hunt_room(ch->in_room);
     if (is_road_room(ch->in_room, 3))
       check_random_encounter(ch);
 #else
@@ -222,7 +226,6 @@ void process_wilderness_events(struct char_data *ch, room_rnum was_in)
     {
       check_random_encounter(ch);
       reset_expire_cooldown(ch->in_room);
-      check_hunt_room(ch->in_room);
     }
 #endif
   }

@@ -10069,7 +10069,8 @@ static const char *const hints[] = {
 #else
     "mobs in the wilderness of Lumia.  These hunt targets, when defeated, award the entire party "
 #endif
-    "quest points, gold and some nice experience.  In addition to the party-wide rewards, each "
+    "quest points, gold and some nice experience. Your character has a personal list of hunt "
+    "targets, none above your current level, refreshed every two hours. In addition to the party-wide rewards, each "
     "hunt mob also drops hunt trophies of various types: some are enhanced crafting materials, "
     "others can be exchanged for rings, pendants or bracers that give special affects when worn "
     "(eg. infravision, detect invis, haste, etc.), as well as weapon oils that can be applied to "

@@ -94,16 +94,24 @@ struct hunt_type
 };
 
 extern struct hunt_type hunt_table[NUM_HUNT_TYPES];
-extern int active_hunts[5][7];
-extern int hunt_reset_timer;
+/* Each character owns a persistent two-hour set of eligible level bands. */
+#define HUNT_REFRESH_SECONDS (2 * 60 * 60)
+struct personal_hunts {
+  long owner;
+  time_t expires_at;
+  unsigned long long revision; /* SQL compare-and-swap version; zero means new. */
+  bool needs_reload;
+  int targets[AHUNT_1][AHUNT_2];
+  struct personal_hunts *next;
+};
 
-void select_hunt_coords(int which_hunt);
-void select_reported_hunt_coords(int which_hunt, int times_called);
+void select_hunt_coords(int hunts[AHUNT_1][AHUNT_2], int which_hunt);
+void select_reported_hunt_coords(int hunts[AHUNT_1][AHUNT_2], int which_hunt, int times_called);
 void load_hunts(void);
 void create_hunts(void);
 int select_a_hunt(int level);
-void check_hunt_room(room_rnum room);
-void create_hunt_mob(room_rnum room, int which_hunt);
+void check_hunt_room(struct char_data *ch);
+void create_hunt_mob(struct char_data *owner, struct personal_hunts *hunts, int slot);
 SPECIAL_DECL(huntsmaster);
 void award_hunt_materials(struct char_data *ch, int which_hunt);
 void drop_hunt_mob_rewards(struct char_data *ch, struct char_data *hunt_mob);
@@ -113,8 +121,8 @@ int hunts_special_armor_type(int hunt_record);
 int get_hunt_armor_drop_vnum(int hunt_record);
 int get_hunt_weapon_drop_vnum(int hunt_record);
 bool is_hunt_trophy_a_trinket(int vnum);
-void remove_hunts_mob(int which_hunt);
-bool is_hunt_mob_in_room(room_rnum room, int which_hunt);
+bool remove_hunts_mob(struct char_data *mob);
+
 bool weapon_specab_desc_position(int specab);
 bool is_weapon_specab_compatible(struct char_data *ch, int weapon_type, int specab, bool output);
 int obj_vnum_to_hunt_type(int vnum);

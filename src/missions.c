@@ -440,34 +440,26 @@ void increase_mob_difficulty(struct char_data *mob, int difficulty)
 
 int select_mission_coords(int start)
 {
-  int x = 0, y = 0;
-  int terrain = 0;
-  room_rnum room = NOWHERE;
-  int room_vnum = 0;
-
-  y = dice(1, 21) - 10;
-  x = dice(1, 21) - 10;
-
-  room_vnum = get_hunt_room(start, x, y);
-  room = real_room(room_vnum);
-
-  terrain = world[room].sector_type;
-
-  switch (terrain)
+  int attempt, x, y, terrain, room_vnum;
+  room_rnum room;
+  for (attempt = 0; attempt < 1024; attempt++)
   {
-  case SECT_OCEAN:
-  case SECT_UD_NOSWIM:
-  case SECT_UD_WATER:
-  case SECT_UNDERWATER:
-  case SECT_WATER_NOSWIM:
-  case SECT_WATER_SWIM:
-  case SECT_INSIDE:
-  case SECT_INSIDE_ROOM:
-    select_hunt_coords(start);
+    y = dice(1, 21) - 10;
+    x = dice(1, 21) - 10;
+    room_vnum = get_hunt_room(start, x, y);
+    room = real_room(room_vnum);
+    if (room == NOWHERE) continue;
+    terrain = world[room].sector_type;
+    switch (terrain)
+    {
+    case SECT_OCEAN: case SECT_UD_NOSWIM: case SECT_UD_WATER:
+    case SECT_UNDERWATER: case SECT_WATER_NOSWIM: case SECT_WATER_SWIM:
+    case SECT_INSIDE: case SECT_INSIDE_ROOM:
+      continue;
+    }
     return room_vnum;
   }
-
-  return room_vnum;
+  return NOWHERE;
 }
 
 #ifdef CAMPAIGN_FR
@@ -481,6 +473,8 @@ void create_mission_mobs(char_data *ch)
   if (GET_CURRENT_MISSION(ch) > 0)
     to_room = select_mission_coords(atoi(mission_details[GET_CURRENT_MISSION(ch)][6]));
   char buf[MAX_STRING_LENGTH];
+
+  if (to_room == NOWHERE || real_room(to_room) == NOWHERE) return;
 
   for (i = 0; i < 4; i++)
   {

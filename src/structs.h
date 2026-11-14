@@ -7808,6 +7808,9 @@ struct mob_special_data
   int peaceful_timer; // used for encounter. While active hostile encounters are suspended, and the player(s) can leave the room
   bool coersion_attempted
       [5]; // used for encounters to track if they've been coerced before (intimidate, bluff, stealth and diplomacy)
+  long hunt_owner_id; /* Stable character ID; never an account or a player pointer. */
+  time_t hunt_expires_at; /* Identifies the owner's particular hunt set. */
+  int hunt_slot;
   int hunt_type; // for hunts, used to track which hunt entry it is on the huhnt table
   int hunt_cooldown; // for hunts, when hunt expires, this is set to 5 minutes, at which point it will be extracted
   int temp_feat;

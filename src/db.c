@@ -1271,7 +1271,7 @@ void boot_db(void)
 
   log("Loading hunts table.");
   load_hunts();
-  log("Spawning hunts for the first time this boot.");
+  log("Initializing personal hunt target cleanup.");
   create_hunts();
 
   log("Initializing Greyhawk ship systems...");

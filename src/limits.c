@@ -2466,6 +2466,8 @@ void proc_d20_round(void)
     {
       if (MOB_FLAGGED(i, MOB_HUNTS_TARGET))
       {
+        if (i->mob_specials.hunt_cooldown < 0 && i->mob_specials.hunt_expires_at <= time(NULL))
+          i->mob_specials.hunt_cooldown = 50;
         if (i->mob_specials.hunt_cooldown > 0)
         {
           i->mob_specials.hunt_cooldown--;

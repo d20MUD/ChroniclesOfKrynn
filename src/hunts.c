@@ -5,6 +5,7 @@
  ************************************************************************ */
 
 #include <math.h>
+#include <limits.h>
 
 #include "conf.h"
 #include "account.h"
@@ -25,6 +26,7 @@
 #include "spec_abilities.h"
 #include "assign_wpn_armor.h"
 #include "missions.h"
+#include "mysql.h"
 
 /* To Do
  *
@@ -37,13 +39,169 @@ extern struct char_data *character_list;
 extern struct room_data *world;
 
 struct hunt_type hunt_table[NUM_HUNT_TYPES];
-/* active hunts:
- * first field is the level, 0=10, 1=15, 2=20, 3=25, 4=30
- * second field, 0 = hunt type, 1 = reported x coord, 2 = reported y coord, 3 = actual x coord, 4 = actual y coord, 6 = has the hunt been loaded yet?
- */
+static struct personal_hunts *hunt_records;
 
-int active_hunts[AHUNT_1][AHUNT_2];
-int hunt_reset_timer;
+/* Cached reads avoid SQL on movement. Mutations use a versioned, atomic write;
+ * stale caches cannot overwrite a newer rotation or restore completed targets. */
+static bool save_personal_hunts(struct personal_hunts *record)
+{
+  MYSQL_POOL_CONN *connection;
+  char data[4096], query[4608];
+  size_t used = 0;
+  int i, j, length;
+  bool saved;
+  if (!mysql_available || record->owner <= 0 || record->expires_at < 0 ||
+      record->revision == ULLONG_MAX) return false;
+  for (i = 0; i < AHUNT_1; i++)
+    for (j = 0; j < AHUNT_2; j++)
+    {
+      length = snprintf(data + used, sizeof(data) - used, "%d ", record->targets[i][j]);
+      if (length < 0 || (size_t)length >= sizeof(data) - used) return false;
+      used += length;
+    }
+  /* data contains decimal integers and spaces only; no player-provided SQL. */
+  if (!record->revision)
+    length = snprintf(query, sizeof(query),
+      "INSERT INTO personal_hunt_progress (character_id,expires_at,targets,revision) "
+      "VALUES (%ld,%lld,'%s',1)", record->owner, (long long)record->expires_at, data);
+  else
+    length = snprintf(query, sizeof(query),
+      "UPDATE personal_hunt_progress SET expires_at=%lld,targets='%s',revision=revision+1 "
+      "WHERE character_id=%ld AND revision=%llu", (long long)record->expires_at, data,
+      record->owner, record->revision);
+  if (length < 0 || (size_t)length >= sizeof(query) ||
+      !(connection = mysql_pool_acquire())) return false;
+  /* Never report an uncommitted write as durable or join another operation's transaction. */
+  saved = (connection->conn->server_status & SERVER_STATUS_AUTOCOMMIT) &&
+          !(connection->conn->server_status & SERVER_STATUS_IN_TRANS) &&
+          mysql_query(connection->conn, query) == 0 && mysql_affected_rows(connection->conn) == 1;
+  if (!saved) log("SYSERR: Personal hunt SQL write failed or conflicted for character %ld", record->owner);
+  mysql_pool_release(connection);
+  if (saved) { record->revision++; record->needs_reload = false; }
+  return saved;
+}
+
+static bool parse_personal_hunt_targets(const char *data, int targets[AHUNT_1][AHUNT_2])
+{
+  char *end;
+  long value;
+  int i, j;
+  if (!data) return false;
+  for (i = 0; i < AHUNT_1; i++)
+    for (j = 0; j < AHUNT_2; j++)
+    {
+      errno = 0;
+      value = strtol(data, &end, 10);
+      if (errno || end == data || value < INT_MIN || value > INT_MAX) return false;
+      if (j == 0 && (value < HUNT_TYPE_NONE || value >= NUM_HUNT_TYPES)) return false;
+      targets[i][j] = (int)value;
+      data = end;
+    }
+  while (*data && isspace((unsigned char)*data)) data++;
+  return !*data;
+}
+
+static struct personal_hunts *load_personal_hunts(long owner)
+{
+  struct personal_hunts *record, loaded;
+  MYSQL_POOL_CONN *connection;
+  MYSQL_RES *result;
+  MYSQL_ROW row;
+  char query[256], *end;
+  long long expires;
+  bool valid = true;
+  if (owner <= 0) return NULL;
+  for (record = hunt_records; record; record = record->next)
+    if (record->owner == owner) break;
+  if (record && !record->needs_reload) return record;
+  if (!mysql_available || !(connection = mysql_pool_acquire())) return NULL;
+  snprintf(query, sizeof(query),
+    "SELECT expires_at,targets,revision FROM personal_hunt_progress WHERE character_id=%ld", owner);
+  if (mysql_query(connection->conn, query) || !(result = mysql_store_result(connection->conn)))
+  {
+    log("SYSERR: Personal hunt SQL read failed for character %ld", owner);
+    mysql_pool_release(connection);
+    return NULL;
+  }
+  memset(&loaded, 0, sizeof(loaded));
+  loaded.owner = owner;
+  row = mysql_fetch_row(result);
+  if (row)
+  {
+    valid = row[0] && row[1] && row[2];
+    if (valid)
+    {
+      errno = 0;
+      expires = strtoll(row[0], &end, 10);
+      valid = !errno && *row[0] && !*end && expires >= 0;
+      loaded.expires_at = (time_t)expires;
+      valid = valid && (long long)loaded.expires_at == expires;
+      errno = 0;
+      loaded.revision = strtoull(row[2], &end, 10);
+      valid = valid && !errno && *row[2] && !*end && loaded.revision > 0 &&
+              loaded.revision < ULLONG_MAX && parse_personal_hunt_targets(row[1], loaded.targets);
+    }
+  }
+  mysql_free_result(result);
+  mysql_pool_release(connection);
+  if (!valid) { log("SYSERR: Invalid personal hunt SQL record for character %ld", owner); return NULL; }
+  if (!record)
+  {
+    CREATE(record, struct personal_hunts, 1);
+    record->next = hunt_records;
+    hunt_records = record;
+  }
+  loaded.next = record->next;
+  *record = loaded;
+  return record;
+}
+
+static void retire_personal_hunts(long owner, time_t expires)
+{
+  struct char_data *mob;
+  for (mob = character_list; mob; mob = mob->next)
+    if (IS_NPC(mob) && MOB_FLAGGED(mob, MOB_HUNTS_TARGET) &&
+        mob->mob_specials.hunt_owner_id == owner && mob->mob_specials.hunt_expires_at == expires)
+      mob->mob_specials.hunt_cooldown = 50;
+}
+
+static struct personal_hunts *ensure_personal_hunts(struct char_data *ch, bool start)
+{
+  struct personal_hunts *record, before;
+  time_t now = time(NULL);
+  int i, type;
+  bool changed = false;
+  if (!ch || IS_NPC(ch) || !(record = load_personal_hunts(GET_IDNUM(ch)))) return NULL;
+  if (!start && !record->expires_at) return NULL;
+  before = *record;
+  if (record->expires_at <= now)
+  {
+    memset(record->targets, 0, sizeof(record->targets));
+    record->expires_at = now + HUNT_REFRESH_SECONDS;
+    for (i = 0; i < AHUNT_1; i++)
+    {
+      if (10 + i * 5 > GET_LEVEL(ch)) continue;
+      type = select_a_hunt(10 + i * 5);
+      if (type <= HUNT_TYPE_NONE || type >= NUM_HUNT_TYPES) continue;
+      record->targets[i][0] = type;
+      select_hunt_coords(record->targets, i);
+    }
+    changed = true;
+  }
+  /* Level loss must never leave an over-level target available. */
+  for (i = 0; i < AHUNT_1; i++)
+  {
+    type = record->targets[i][0];
+    if (type > HUNT_TYPE_NONE && hunt_table[type].level > GET_LEVEL(ch))
+    {
+      memset(record->targets[i], 0, sizeof(record->targets[i]));
+      changed = true;
+    }
+  }
+  if (changed && !save_personal_hunts(record)) { *record = before; record->needs_reload = true; return NULL; }
+  if (before.expires_at != record->expires_at) retire_personal_hunts(record->owner, before.expires_at);
+  return record;
+}
 
 void add_hunt(int hunt_type, int level, const char *name, const char *description,
               const char *long_description, int char_class, int alignment, int race_type,
@@ -369,101 +527,65 @@ void load_hunts(void)
 
 void create_hunts(void)
 {
-  int i = 0, j = 0;
-  int which_hunt = 0;
-  struct char_data *ch = NULL;
-
-  // let's reset the timer.  This timer is used only to show players/staff how long before the next reset
-  hunt_reset_timer = 1200;
-
-  // let's erase existing active hunt table
-  for (i = 0; i < AHUNT_1; i++)
-  {
-    for (j = 0; j < AHUNT_2; j++)
-    {
-      active_hunts[i][j] = 0;
-    }
-  }
-
-  // now let's set a cooldown timer of 5 minutes on any existing hunt mobs
-
-  for (ch = character_list; ch; ch = ch->next)
-  {
-    if (!IS_NPC(ch))
-      continue;
-    if (!MOB_FLAGGED(ch, MOB_HUNTS_TARGET))
-      continue;
-    ch->mob_specials.hunt_cooldown = 50;
-  }
-
-  // now let's load new hunts
-
-  for (i = 0; i < AHUNT_1; i++)
-  {
-    which_hunt = select_a_hunt(((i * 5) + 10));
-    if (which_hunt == NUM_HUNT_TYPES)
-      continue;
-    active_hunts[i][0] = which_hunt;
-    select_hunt_coords(i);
-  }
+  struct char_data *mob;
+  time_t now = time(NULL);
+  /* Individual sets refresh on access. Only retire expired spawned targets. */
+  for (mob = character_list; mob; mob = mob->next)
+    if (IS_NPC(mob) && MOB_FLAGGED(mob, MOB_HUNTS_TARGET) &&
+        mob->mob_specials.hunt_expires_at <= now)
+      mob->mob_specials.hunt_cooldown = 50;
 }
 
-void check_hunt_room(room_rnum room)
+void check_hunt_room(struct char_data *ch)
 {
-  if (room == NOWHERE)
-    return;
-
+  struct personal_hunts *record;
+  room_rnum room;
+  int i, type;
+  if (!ch || IS_NPC(ch) || (room = IN_ROOM(ch)) == NOWHERE ||
+      !(record = ensure_personal_hunts(ch, false))) return;
+  for (i = 0; i < AHUNT_1; i++)
+  {
+    type = record->targets[i][0];
+    if (type <= HUNT_TYPE_NONE || type >= NUM_HUNT_TYPES || hunt_table[type].level > GET_LEVEL(ch)) continue;
 #if defined(CAMPAIGN_DL)
-  int i = 0;
-
-  for (i = 0; i < AHUNT_1; i++)
-  {
-    if (real_room(active_hunts[i][1]) == room)
-    {
-      create_hunt_mob(room, active_hunts[i][0]);
-      return;
-    }
-  }
+    if (real_room(record->targets[i][1]) == room)
 #else
-  int x = 0, y = 0, i = 0;
-
-  x = world[room].coords[0];
-  y = world[room].coords[1];
-
-  for (i = 0; i < AHUNT_1; i++)
-  {
-    if (active_hunts[i][3] == x && active_hunts[i][4] == y)
-    {
-      create_hunt_mob(room, active_hunts[i][0]);
-      return;
-    }
-  }
+    if (record->targets[i][3] == world[room].coords[0] && record->targets[i][4] == world[room].coords[1])
 #endif
+      create_hunt_mob(ch, record, i);
+  }
 }
 
-void create_hunt_mob(room_rnum room, int which_hunt)
+static struct char_data *find_personal_hunt_mob(const struct personal_hunts *record, int slot)
 {
-  if (room == NOWHERE || which_hunt <= HUNT_TYPE_NONE || which_hunt >= NUM_HUNT_TYPES)
+  struct char_data *mob;
+  for (mob = character_list; mob; mob = mob->next)
+    if (IS_NPC(mob) && MOB_FLAGGED(mob, MOB_HUNTS_TARGET) &&
+        mob->mob_specials.hunt_owner_id == record->owner &&
+        mob->mob_specials.hunt_expires_at == record->expires_at &&
+        mob->mob_specials.hunt_slot == slot)
+      return mob;
+  return NULL;
+}
+
+void create_hunt_mob(struct char_data *owner, struct personal_hunts *record, int slot)
+{
+  room_rnum room;
+  int which_hunt;
+  if (!owner || IS_NPC(owner) || !record || record->owner != GET_IDNUM(owner) ||
+      slot < 0 || slot >= AHUNT_1 || record->expires_at <= time(NULL)) return;
+  room = IN_ROOM(owner);
+  which_hunt = record->targets[slot][0];
+  if (room == NOWHERE || which_hunt <= HUNT_TYPE_NONE || which_hunt >= NUM_HUNT_TYPES ||
+      hunt_table[which_hunt].level > GET_LEVEL(owner))
     return;
 
-  struct char_data *mob = NULL, *existing = NULL;
+  struct char_data *mob = NULL;
   char mob_descs[1000];
   int i = 0;
 
-  if (is_hunt_mob_in_room(room, which_hunt))
-  {
-    send_to_room(room, "\tYYou've come across a hunt target!\tn\r\n");
-    return;
-  }
-
-  /* A fleeing target still belongs to this hunt. Older reset targets have a cooldown. */
-  for (existing = character_list; existing; existing = existing->next)
-  {
-    if (IS_NPC(existing) && MOB_FLAGGED(existing, MOB_HUNTS_TARGET) &&
-        existing->mob_specials.hunt_type == which_hunt &&
-        existing->mob_specials.hunt_cooldown < 0)
-      return;
-  }
+  /* A fleeing target still belongs to this owner, set and slot. */
+  if (find_personal_hunt_mob(record, slot)) return;
 
   mob = read_mobile(HUNTS_MOB_VNUM, VIRTUAL);
   if (!mob)
@@ -508,6 +630,9 @@ void create_hunt_mob(room_rnum room, int which_hunt)
   GET_SUBRACE(mob, 2) = hunt_table[which_hunt].subrace[2];
   mob->mob_specials.hunt_cooldown = -1;
   mob->mob_specials.hunt_type = which_hunt;
+  mob->mob_specials.hunt_owner_id = record->owner;
+  mob->mob_specials.hunt_expires_at = record->expires_at;
+  mob->mob_specials.hunt_slot = slot;
 
   // set stats
   GET_CLASS(mob) = hunt_table[which_hunt].char_class;
@@ -600,7 +725,7 @@ static bool hunt_room_reaches_city(room_rnum room)
   return false;
 }
 
-void select_hunt_coords(int which_hunt)
+void select_hunt_coords(int hunts[AHUNT_1][AHUNT_2], int which_hunt)
 {
   room_rnum room = NOWHERE;
 
@@ -619,11 +744,11 @@ void select_hunt_coords(int which_hunt)
       break;
     if (hunt_room_reaches_city(room))
     {
-      active_hunts[which_hunt][1] = world[room].number;
+      hunts[which_hunt][1] = world[room].number;
       return;
     }
   }
-  active_hunts[which_hunt][0] = HUNT_TYPE_NONE;
+  hunts[which_hunt][0] = HUNT_TYPE_NONE;
 #else
 
   int x = 0, y = 0, start = 0;
@@ -651,18 +776,18 @@ void select_hunt_coords(int which_hunt)
   case SECT_INSIDE:
   case SECT_INSIDE_ROOM:
   case SECT_RIVER:
-    select_hunt_coords(which_hunt);
+    select_hunt_coords(hunts, which_hunt);
     return;
   }
 
-  active_hunts[which_hunt][1] = room_vnum;
-  active_hunts[which_hunt][2] = start;
+  hunts[which_hunt][1] = room_vnum;
+  hunts[which_hunt][2] = start;
 #endif
 }
 
 #elif defined(CAMPAIGN_FR)
 
-void select_hunt_coords(int which_hunt)
+void select_hunt_coords(int hunts[AHUNT_1][AHUNT_2], int which_hunt)
 {
   int attempt;
   int height;
@@ -697,14 +822,14 @@ void select_hunt_coords(int which_hunt)
   if (attempt == 1024)
     return;
 
-  active_hunts[which_hunt][1] = MAX(0, MIN(width - 1, x + rand_number(-5, 5)));
-  active_hunts[which_hunt][2] = MAX(0, MIN(height - 1, y + rand_number(-5, 5)));
-  active_hunts[which_hunt][3] = x;
-  active_hunts[which_hunt][4] = y;
+  hunts[which_hunt][1] = MAX(0, MIN(width - 1, x + rand_number(-5, 5)));
+  hunts[which_hunt][2] = MAX(0, MIN(height - 1, y + rand_number(-5, 5)));
+  hunts[which_hunt][3] = x;
+  hunts[which_hunt][4] = y;
 }
 #else
 
-void select_hunt_coords(int which_hunt)
+void select_hunt_coords(int hunts[AHUNT_1][AHUNT_2], int which_hunt)
 {
   int x = 0, y = 0;
   int terrain = 0;
@@ -732,25 +857,25 @@ void select_hunt_coords(int which_hunt)
   case SECT_WATER_SWIM:
   case SECT_INSIDE:
   case SECT_INSIDE_ROOM:
-    select_hunt_coords(which_hunt);
+    select_hunt_coords(hunts, which_hunt);
     return;
   }
 
-  active_hunts[which_hunt][1] = x;
-  active_hunts[which_hunt][2] = y;
+  hunts[which_hunt][1] = x;
+  hunts[which_hunt][2] = y;
 
-  select_reported_hunt_coords(which_hunt, 0);
+  select_reported_hunt_coords(hunts, which_hunt, 0);
 }
 
 #endif
 
-void select_reported_hunt_coords(int which_hunt, int times_called)
+void select_reported_hunt_coords(int hunts[AHUNT_1][AHUNT_2], int which_hunt, int times_called)
 {
   times_called++;
 
   if (times_called >= 20)
   {
-    select_hunt_coords(which_hunt);
+    select_hunt_coords(hunts, which_hunt);
     return;
   }
 
@@ -761,8 +886,8 @@ void select_reported_hunt_coords(int which_hunt, int times_called)
   x = dice(1, 11) - 6;
   y = dice(1, 11) - 6;
 
-  x += active_hunts[which_hunt][1];
-  y += active_hunts[which_hunt][2];
+  x += hunts[which_hunt][1];
+  y += hunts[which_hunt][2];
 
   room = find_room_by_coordinates(x, y);
   if (room == NOWHERE)
@@ -782,11 +907,11 @@ void select_reported_hunt_coords(int which_hunt, int times_called)
   case SECT_UNDERWATER:
   case SECT_WATER_NOSWIM:
   case SECT_WATER_SWIM:
-    select_reported_hunt_coords(which_hunt, times_called);
+    select_reported_hunt_coords(hunts, which_hunt, times_called);
     return;
   }
-  active_hunts[which_hunt][3] = x;
-  active_hunts[which_hunt][4] = y;
+  hunts[which_hunt][3] = x;
+  hunts[which_hunt][4] = y;
 }
 
 int select_a_hunt(int level)
@@ -796,16 +921,17 @@ int select_a_hunt(int level)
   int roll = 0;
   int which_hunt = NUM_HUNT_TYPES;
 
-  for (i = 0; i < NUM_HUNT_TYPES; i++)
+  for (i = 1; i < NUM_HUNT_TYPES; i++)
   {
     if (hunt_table[i].level == level)
       count++;
   }
 
+  if (!count) return HUNT_TYPE_NONE;
   roll = dice(1, count);
   count = 0;
 
-  for (i = 0; i < NUM_HUNT_TYPES; i++)
+  for (i = 1; i < NUM_HUNT_TYPES; i++)
   {
     if (hunt_table[i].level == level)
     {
@@ -869,13 +995,26 @@ SPECIAL(huntsmaster)
 
   int i = 0;
   char objdesc[200], subdesc[50];
-  int hours = 0, minutes = 0, seconds = 0;
+  int hours = 0, minutes = 0, seconds = 0, remaining = 0;
+  struct personal_hunts *record = NULL;
+  int (*hunts)[AHUNT_2] = NULL;
   char arg1[200], arg2[200];
   struct obj_data *obj1 = NULL, *obj2 = NULL, *obj3 = NULL, *next_obj = NULL;
   bool trinket = false;
   int count = 0, wear_slot = 0;
 
   half_chop(argument, arg1, arg2);
+  if (CMD_IS("hunts"))
+  {
+    record = ensure_personal_hunts(ch, true);
+    if (!record) { send_to_char(ch, "Your hunts are unavailable right now. Please try again shortly.\r\n"); return 1; }
+    hunts = record->targets;
+    remaining = MAX(0, (int)(record->expires_at - time(NULL)));
+    hours = remaining / 3600;
+    minutes = (remaining % 3600) / 60;
+    seconds = remaining % 60;
+    send_to_char(ch, "Your personal hunt targets (up to level %d):\r\n", GET_LEVEL(ch));
+  }
 
 #if defined(CAMPAIGN_DL)
   if (CMD_IS("hunts"))
@@ -886,25 +1025,23 @@ SPECIAL(huntsmaster)
     send_to_char(ch, "---------------------------------------------------------\r\n");
     for (i = 0; i < 5; i++)
     {
-      if (active_hunts[i][0] == 0)
+      if (hunts[i][0] == 0)
         continue; // hunt already defeated
+      if (real_room(hunts[i][1]) == NOWHERE) continue;
       count++;
       if (GET_LEVEL(ch) >= LVL_IMMORT)
-        snprintf(room_vnum, sizeof(room_vnum), " %d", active_hunts[i][1]);
-      send_to_char(ch, "%-20s %-5d %s%s\r\n", hunt_table[active_hunts[i][0]].name,
-                   hunt_table[active_hunts[i][0]].level,
-                   zone_table[GET_ROOM_ZONE(real_room(active_hunts[i][1]))].name, room_vnum);
+        snprintf(room_vnum, sizeof(room_vnum), " %d", hunts[i][1]);
+      send_to_char(ch, "%-20s %-5d %s%s\r\n", hunt_table[hunts[i][0]].name,
+                   hunt_table[hunts[i][0]].level,
+                   zone_table[GET_ROOM_ZONE(real_room(hunts[i][1]))].name, room_vnum);
     }
-    hours = hunt_reset_timer / 600;
-    minutes = (hunt_reset_timer - (hours * 600)) / 10;
-    seconds = hunt_reset_timer - ((hours * 600) + (minutes * 10));
 
-    send_to_char(ch, "\r\nTime until next hunt targets: %d hour(s), %d minute(s), %d seconds",
-                 hours, minutes, seconds * 6);
+    send_to_char(ch, "\r\nTime until next hunt targets: %d hour(s), %d minute(s), %d seconds\r\n",
+                 hours, minutes, seconds);
 
     if (count == 0)
     {
-      send_to_char(ch, "There are no active hunts right now.\r\n");
+      send_to_char(ch, "You have no active hunts. Targets refresh on the timer above; the minimum hunt level is 10.\r\n");
       return 1;
     }
   }
@@ -918,26 +1055,23 @@ SPECIAL(huntsmaster)
 
     for (i = 0; i < 5; i++)
     {
-      if (active_hunts[i][0] == 0)
+      if (hunts[i][0] == 0)
         continue; // hunt already defeated
       count++;
-      snprintf(reported, sizeof(reported), "%4d, %-4d", active_hunts[i][1], active_hunts[i][2]);
-      snprintf(actual, sizeof(actual), "%4d, %-d", active_hunts[i][3], active_hunts[i][4]);
-      send_to_char(ch, "%-20s %-5d %-16s %s\r\n", hunt_table[active_hunts[i][0]].name,
-                   hunt_table[active_hunts[i][0]].level, reported,
+      snprintf(reported, sizeof(reported), "%4d, %-4d", hunts[i][1], hunts[i][2]);
+      snprintf(actual, sizeof(actual), "%4d, %-d", hunts[i][3], hunts[i][4]);
+      send_to_char(ch, "%-20s %-5d %-16s %s\r\n", hunt_table[hunts[i][0]].name,
+                   hunt_table[hunts[i][0]].level, reported,
                    (GET_LEVEL(ch) >= LVL_IMMORT) ? actual : "");
     }
 
-    hours = hunt_reset_timer / 600;
-    minutes = (hunt_reset_timer - (hours * 600)) / 10;
-    seconds = hunt_reset_timer - ((hours * 600) + (minutes * 10));
 
-    send_to_char(ch, "\r\nTime until next hunt targets: %d hour(s), %d minute(s), %d seconds",
-                 hours, minutes, seconds * 6);
+    send_to_char(ch, "\r\nTime until next hunt targets: %d hour(s), %d minute(s), %d seconds\r\n",
+                 hours, minutes, seconds);
 
     if (count == 0)
     {
-      send_to_char(ch, "There are no active hunts right now.\r\n");
+      send_to_char(ch, "You have no active hunts. Targets refresh on the timer above; the minimum hunt level is 10.\r\n");
       return 1;
     }
   }
@@ -1493,35 +1627,29 @@ bool is_hunt_trophy_a_trinket(int vnum)
   return false;
 }
 
-void remove_hunts_mob(int which_hunt)
+bool remove_hunts_mob(struct char_data *mob)
 {
-  int i = 0, j = 0;
-
-  for (i = 0; i < AHUNT_1; i++)
+  struct personal_hunts *record;
+  int slot;
+  int before[AHUNT_2];
+  if (!mob) return false;
+  slot = mob->mob_specials.hunt_slot;
+  if (!IS_NPC(mob) || !MOB_FLAGGED(mob, MOB_HUNTS_TARGET) ||
+      mob->mob_specials.hunt_type <= HUNT_TYPE_NONE || mob->mob_specials.hunt_type >= NUM_HUNT_TYPES || slot < 0 || slot >= AHUNT_1 ||
+      mob->mob_specials.hunt_expires_at <= time(NULL) ||
+      !(record = load_personal_hunts(mob->mob_specials.hunt_owner_id)) ||
+      record->expires_at != mob->mob_specials.hunt_expires_at ||
+      record->targets[slot][0] != mob->mob_specials.hunt_type) return false;
+  memcpy(before, record->targets[slot], sizeof(before));
+  memset(record->targets[slot], 0, sizeof(record->targets[slot]));
+  if (!save_personal_hunts(record))
   {
-    if (active_hunts[i][0] == which_hunt)
-    {
-      for (j = 0; j < AHUNT_2; j++)
-        active_hunts[i][j] = 0;
-    }
-  }
-}
-
-bool is_hunt_mob_in_room(room_rnum room, int which_hunt)
-{
-  if (room == NOWHERE)
+    memcpy(record->targets[slot], before, sizeof(before));
+    record->needs_reload = true;
+    log("SYSERR: Unable to complete hunt for character %ld", record->owner);
     return false;
-
-  struct char_data *tch = NULL;
-
-  for (tch = world[room].people; tch; tch = tch->next_in_room)
-  {
-    if (!IS_NPC(tch) || !MOB_FLAGGED(tch, MOB_HUNTS_TARGET))
-      continue;
-    if (tch->mob_specials.hunt_type == which_hunt)
-      return true;
   }
-  return false;
+  return true;
 }
 
 // true means the description goes before : a vorpal long sword

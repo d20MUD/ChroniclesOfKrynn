@@ -3168,8 +3168,8 @@ void raw_kill(struct char_data *ch, struct char_data *killer)
     determine_treasure(find_treasure_recipient(killer), ch);
     if (IS_NPC(ch) && MOB_FLAGGED(ch, MOB_HUNTS_TARGET))
     {
-      drop_hunt_mob_rewards(killer, ch);
-      remove_hunts_mob(ch->mob_specials.hunt_type);
+      if (remove_hunts_mob(ch))
+        drop_hunt_mob_rewards(killer, ch);
     }
   }
 

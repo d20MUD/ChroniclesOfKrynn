@@ -1515,7 +1515,6 @@ void heartbeat(int heart_pulse)
     affect_update(); // affect updates transformed into "rounds"
     PERF_PROF_EXIT(pr_aff_update_);
     proc_d20_round(); /* for encounter code */
-    hunt_reset_timer--;
   }
 
   /*  Pulse_Luminari was built to throw in customized Luminari
@@ -1564,7 +1563,7 @@ void heartbeat(int heart_pulse)
     save_chars();
   }
 
-  /* every 2 hours run create hunts */
+  /* Periodic cleanup; personal hunts refresh independently on access. */
   if (!(heart_pulse % ((60 * PASSES_PER_SEC) * 60 * 2)))
   {
     create_hunts();
