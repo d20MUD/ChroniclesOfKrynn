@@ -112,54 +112,54 @@ def describe(record):
                                            sha256=hashlib.sha256(record[0]).hexdigest())
 
 
-def plan_zone(dev, live, zone):
+def plan_zone(build, live, zone):
     if not 0 <= zone <= 2147483647:
         raise PromotionError('Zone must be a nonnegative integer no greater than 2147483647.')
     source, previous, desired = {}, {}, {}
     for kind in KINDS:
-        for root in (dev, live):
+        for root in (build, live):
             folder = root / kind
             if folder.is_symlink() or not folder.is_dir():
                 raise PromotionError(f'Missing or symlinked world directory: {folder}')
         relative = Path(kind) / f'{zone}.{kind}'
-        source[relative] = read_file(dev / relative)
+        source[relative] = read_file(build / relative)
         previous[relative] = read_file(live / relative)
         desired[relative] = (source[relative][0], previous[relative][1] if previous[relative] is not None
                              else source[relative][1]) if source[relative] is not None else None
         if source[relative] is not None:
             data = source[relative][0]
             if not data.rstrip().endswith((b'$', b'$~')):
-                raise PromotionError(f'Missing world-file terminator: {dev / relative}')
+                raise PromotionError(f'Missing world-file terminator: {build / relative}')
         index = Path(kind) / 'index'
         previous[index] = read_file(live / index)
         # Validate saved source membership as well as target indexes.
-        source[index] = read_file(dev / index)
-        source_updated = index_update(source[index], zone, kind, source[relative] is not None, label='Dev')
+        source[index] = read_file(build / index)
+        source_updated = index_update(source[index], zone, kind, source[relative] is not None, label='Build')
         if source_updated != source[index][0]:
-            raise PromotionError(f'Dev {kind}/index disagrees with {relative}; save/repair it first.')
+            raise PromotionError(f'Build {kind}/index disagrees with {relative}; save/repair it first.')
         updated = index_update(previous[index], zone, kind, source[relative] is not None)
         desired[index] = updated, previous[index][1]
     for kind in ('zon', 'wld'):
         if source[Path(kind) / f'{zone}.{kind}'] is None:
-            raise PromotionError(f'Dev zone requires both {zone}.zon and {zone}.wld.')
+            raise PromotionError(f'Build zone requires both {zone}.zon and {zone}.wld.')
     zone_data = source[Path('zon') / f'{zone}.zon'][0]
     if not re.match(rb'\s*#' + str(zone).encode() + rb'\s*(?:\r?\n)', zone_data):
-        raise PromotionError('Dev zone header does not match the requested zone number.')
+        raise PromotionError('Build zone header does not match the requested zone number.')
     return source, previous, desired
 
 
-def promote(dev, live, backups, zone, actor, dry_run=False, restore_id=None):
-    dev, live, backups = (Path(p).resolve() for p in (dev, live, backups))
-    if dev == live or dev in live.parents or live in dev.parents:
-        raise PromotionError('Dev and live must be separate world directory trees.')
-    if any(backups == p or p in backups.parents or backups in p.parents for p in (dev, live)):
+def promote(build, live, backups, zone, actor, dry_run=False, restore_id=None):
+    build, live, backups = (Path(p).resolve() for p in (build, live, backups))
+    if build == live or build in live.parents or live in build.parents:
+        raise PromotionError('Build and live must be separate world directory trees.')
+    if any(backups == p or p in backups.parents or backups in p.parents for p in (build, live)):
         raise PromotionError('Backups must have a dedicated tree outside both world directories.')
-    if not dev.is_dir() or not live.is_dir():
-        raise PromotionError('Both dev and live world directories must already exist.')
+    if not build.is_dir() or not live.is_dir():
+        raise PromotionError('Both build and live world directories must already exist.')
     if not 0 <= zone <= 2147483647:
         raise PromotionError('Invalid zone number.')
     def plan():
-        return plan_restore(live, backups, zone, restore_id) if restore_id is not None else plan_zone(dev, live, zone)
+        return plan_restore(live, backups, zone, restore_id) if restore_id is not None else plan_zone(build, live, zone)
     # Preview has no filesystem side effects, including no lock/backup creation.
     if dry_run:
         _, previous, desired = plan()
@@ -177,22 +177,22 @@ def promote(dev, live, backups, zone, actor, dry_run=False, restore_id=None):
             raise PromotionError('Another zone promotion is already running.') from error
         if restore_id is not None:
             source, previous, desired = plan()
-            return apply_plan(dev, live, backups, zone, actor, source, previous, desired,
+            return apply_plan(build, live, backups, zone, actor, source, previous, desired,
                               source_root=backups / str(zone) / restore_id,
                               operation='restore', restore_from=restore_id)
-        return promote_locked(dev, live, backups, zone, actor)
+        return promote_locked(build, live, backups, zone, actor)
     finally:
         os.close(lock_fd)
 
 
-def promote_locked(dev, live, backups, zone, actor):
-    source, previous, desired = plan_zone(dev, live, zone)
-    return apply_plan(dev, live, backups, zone, actor, source, previous, desired)
+def promote_locked(build, live, backups, zone, actor):
+    source, previous, desired = plan_zone(build, live, zone)
+    return apply_plan(build, live, backups, zone, actor, source, previous, desired)
 
 
-def apply_plan(dev, live, backups, zone, actor, source, previous, desired,
+def apply_plan(build, live, backups, zone, actor, source, previous, desired,
                source_root=None, operation='promote', restore_from=None):
-    source_root = dev if source_root is None else source_root
+    source_root = build if source_root is None else source_root
     changes = [p for p in desired if desired[p] != previous[p]]
     if not changes and operation == 'promote':
         return dict(status='unchanged', changes=[])
@@ -203,7 +203,7 @@ def apply_plan(dev, live, backups, zone, actor, source, previous, desired,
     sync_dir(backups)
     backup = Path(tempfile.mkdtemp(prefix=stamp + '-', dir=zone_backups))
     sync_dir(zone_backups)
-    manifest = dict(zone=zone, actor=actor, timestamp_utc=stamp, dev_world=str(dev),
+    manifest = dict(zone=zone, actor=actor, timestamp_utc=stamp, build_world=str(build),
                     live_world=str(live), status='backing-up', files={},
                     operation=operation, restore_from=restore_from)
     receipt = backup / f'manifest.{stamp}.json'
@@ -378,12 +378,12 @@ def main():
     selection.add_argument('--restore', metavar='BACKUP_ID')
     selection.add_argument('--list-backups', action='store_true')
     args = parser.parse_args()
-    dev = Path(os.environ.get('KRYNN_DEV_WORLD', Path.home() / 'dev/mud/lib/world')).resolve()
+    build = Path(os.environ.get('KRYNN_BUILD_WORLD', Path.home() / 'build/mud/lib/world')).resolve()
     live = Path(os.environ.get('KRYNN_LIVE_WORLD', Path.home() / 'live/mud/lib/world')).resolve()
     backups = Path(os.environ.get('KRYNN_ZONE_BACKUPS', live.parent / 'zone-backups')).resolve()
     try:
-        if Path(args.from_world).resolve() not in (dev, live):
-            raise PromotionError('zpromote must run from the configured dev or live world.')
+        if Path(args.from_world).resolve() not in (build, live):
+            raise PromotionError('zpromote must run from the configured build or live world.')
         if not 0 <= args.zone <= 2147483647:
             raise PromotionError('Invalid zone number.')
         if args.list_backups:
@@ -394,14 +394,14 @@ def main():
             if not saved:
                 print('  No backups found.')
             return 0
-        result = promote(dev, live, backups, args.zone, args.actor, args.check, args.restore)
+        result = promote(build, live, backups, args.zone, args.actor, args.check, args.restore)
         if result['status'] == 'preview':
             print(f"Zone {args.zone}: {len(result['changes'])} file changes planned.")
             for name in result['changes']:
                 print(f"  {result['actions'][name]} {name}")
             print(f"Backup tree: {result['backup_root']}/{args.zone}/<UTC timestamp>/")
         elif result['status'] == 'unchanged':
-            print(f'Zone {args.zone}: dev and live files already match; nothing copied.')
+            print(f'Zone {args.zone}: build and live files already match; nothing copied.')
         else:
             print(f"Zone {args.zone} {'restored' if args.restore is not None else 'promoted'}: {len(result['changes'])} file changes.")
             print(f"Live backup: {result['backup']}")

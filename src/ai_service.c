@@ -147,6 +147,12 @@ static void derive_key_from_seed(unsigned char *key) {
  */
 void init_ai_service(void)
 {
+  if (!get_env_bool("AI_SERVICE_ENABLED", TRUE))
+  {
+    log("AI Service disabled by AI_SERVICE_ENABLED");
+    return;
+  }
+
   AI_DEBUG("Starting AI service initialization");
   AI_DEBUG("AI state at start: initialized=%d, config=%p, limiter=%p, cache_size=%d",
            ai_state.initialized, (void *)ai_state.config, (void *)ai_state.limiter,

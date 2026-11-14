@@ -107,6 +107,22 @@ int i3_initialize(void)
     log("Warning: Could not load I3 configuration, using defaults");
   }
 
+  /* An unconfigured installation must not retry empty-key authentication. */
+  if (!i3_client->api_key[0])
+  {
+    i3_log("I3 disabled: no API key configured in lib/i3_config");
+    pthread_mutex_destroy((pthread_mutex_t *)i3_client->command_mutex);
+    pthread_mutex_destroy((pthread_mutex_t *)i3_client->event_mutex);
+    pthread_mutex_destroy((pthread_mutex_t *)i3_client->state_mutex);
+    free(i3_client->thread_id);
+    free(i3_client->command_mutex);
+    free(i3_client->event_mutex);
+    free(i3_client->state_mutex);
+    free(i3_client);
+    i3_client = NULL;
+    return 0;
+  }
+
   /* Create client thread */
   thread_ptr = (pthread_t *)i3_client->thread_id;
   if (pthread_create(thread_ptr, NULL, i3_client_thread, NULL) != 0)
@@ -292,13 +308,16 @@ int i3_connect(void)
 {
   pthread_mutex_t *mutex_ptr;
 
+  if (!i3_client)
+    return -1;
+
   mutex_ptr = (pthread_mutex_t *)i3_client->state_mutex;
   pthread_mutex_lock(mutex_ptr);
   i3_client->state = I3_STATE_CONNECTING;
   pthread_mutex_unlock(mutex_ptr);
 
   i3_log("Connecting to I3 gateway at %s:%d", i3_client->gateway_host, i3_client->gateway_port);
-  i3_log("DEBUG: Using API key: %.30s...", i3_client->api_key);
+  i3_log("DEBUG: API key configured");
 
   i3_client->socket_fd = i3_socket_connect(i3_client->gateway_host, i3_client->gateway_port);
   if (i3_client->socket_fd < 0)
@@ -319,6 +338,9 @@ int i3_connect(void)
 void i3_disconnect(void)
 {
   pthread_mutex_t *mutex_ptr;
+
+  if (!i3_client)
+    return;
 
   if (i3_client->socket_fd >= 0)
   {
@@ -399,16 +421,14 @@ static int i3_authenticate(void)
   json_object *request;
   int result;
   pthread_mutex_t *mutex_ptr;
-  const char *json_str;
 
-  i3_log("DEBUG: Starting authentication with API key: %.30s...", i3_client->api_key);
+  i3_log("DEBUG: Starting authentication");
 
   params = json_object_new_object();
   json_object_object_add(params, "api_key", json_object_new_string(i3_client->api_key));
 
   request = (json_object *)i3_create_request("authenticate", params);
-  json_str = json_object_to_json_string(request);
-  i3_log("DEBUG: Sending auth request: %s", json_str);
+  i3_log("DEBUG: Sending authentication request (credentials omitted)");
 
   result = i3_send_json(request);
   i3_log("DEBUG: Auth send result: %d", result);
@@ -679,6 +699,9 @@ i3_event_t *i3_pop_event(void)
   i3_event_t *event;
   pthread_mutex_t *mutex_ptr;
 
+  if (!i3_client)
+    return NULL;
+
   mutex_ptr = (pthread_mutex_t *)i3_client->event_mutex;
   pthread_mutex_lock(mutex_ptr);
 
@@ -742,7 +765,7 @@ int i3_send_json(void *obj)
   char buffer[I3_MAX_STRING_LENGTH];
   int len, sent;
 
-  if (!obj || i3_client->socket_fd < 0)
+  if (!i3_client || !obj || i3_client->socket_fd < 0)
   {
     return -1;
   }
@@ -750,7 +773,7 @@ int i3_send_json(void *obj)
   json_str = json_object_to_json_string((json_object *)obj);
   len = snprintf(buffer, sizeof(buffer), "%s\n", json_str);
 
-  i3_log("DEBUG: Sending %d bytes: %s", len, buffer);
+  i3_log("DEBUG: Sending %d bytes", len);
 
   sent = send(i3_client->socket_fd, buffer, len, 0);
   if (sent < 0)
@@ -778,7 +801,7 @@ int i3_send_tell(const char *from_user, const char *target_mud, const char *targ
   void *sec_ctx;
   /* char sanitized_message[I3_MAX_MESSAGE_LENGTH]; */
 
-  if (!i3_client->enable_tell)
+  if (!i3_client || !i3_client->enable_tell)
   {
     /* I3_WARNING(I3_ERROR_PERMISSION, -1, "Tell functionality disabled"); */
     i3_log("I3: Tell functionality disabled");
@@ -868,7 +891,7 @@ int i3_send_channel_message(const char *channel, const char *from_user, const ch
   void *sec_ctx;
   /* char sanitized_message[I3_MAX_MESSAGE_LENGTH]; */
 
-  if (!i3_client->enable_channels)
+  if (!i3_client || !i3_client->enable_channels)
   {
     /* I3_WARNING(I3_ERROR_PERMISSION, -1, "Channel functionality disabled"); */
     i3_log("I3: Channel functionality disabled");
@@ -946,6 +969,9 @@ void i3_process_events(void)
 {
   i3_event_t *event;
   struct char_data *victim;
+
+  if (!i3_client)
+    return;
 
   while ((event = i3_pop_event()) != NULL)
   {
@@ -1080,9 +1106,14 @@ int i3_load_config(const char *filename)
   char *url_host;
   int len;
 
+  if (!i3_client)
+    return -1;
+
   fp = fopen(filename, "r");
   if (!fp)
   {
+    if (errno == ENOENT)
+      return 1; /* Optional integration is unconfigured. */
     i3_error("DEBUG: Failed to open config file: %s (errno: %d - %s)", filename, errno,
              strerror(errno));
     return -1;
@@ -1139,7 +1170,7 @@ int i3_load_config(const char *filename)
       /* Handle new I3_API_KEY format */
       else if (strcmp(key, "I3_API_KEY") == 0)
       {
-        i3_log("DEBUG: Loading API key from config (I3_API_KEY): %.30s...", value);
+        i3_log("DEBUG: API key loaded from configuration");
         strcpy(i3_client->api_key, value);
       }
       /* Handle new I3_MUD_NAME format */
@@ -1160,7 +1191,7 @@ int i3_load_config(const char *filename)
       /* Handle old api_key format */
       else if (strcmp(key, "api_key") == 0)
       {
-        i3_log("DEBUG: Loading API key from config (api_key): %.30s...", value);
+        i3_log("DEBUG: API key loaded from configuration");
         strcpy(i3_client->api_key, value);
       }
       /* Handle old mud_name format */
@@ -1197,6 +1228,9 @@ int i3_load_config(const char *filename)
 int i3_save_config(const char *filename)
 {
   FILE *fp;
+
+  if (!i3_client)
+    return -1;
 
   fp = fopen(filename, "w");
   if (!fp)

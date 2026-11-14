@@ -13,6 +13,7 @@
 #include "conf.h"
 #include "sysdep.h"
 #include "structs.h"
+#include "dotenv.h"
 #include "utils.h"
 #include "comm.h"
 #include "terrain_bridge.h"
@@ -1219,6 +1220,19 @@ struct terrain_api_server *get_terrain_api_server(void)
 /* Wrapper functions for automatic startup/shutdown */
 void terrain_api_start(void)
 {
+  int port = get_env_int("TERRAIN_API_PORT", TERRAIN_API_DEFAULT_PORT);
+
+  if (!get_env_bool("TERRAIN_API_ENABLED", TRUE))
+  {
+    log("Terrain API disabled by TERRAIN_API_ENABLED");
+    return;
+  }
+  if (port < 1 || port > 65535)
+  {
+    log("SYSERR: Invalid TERRAIN_API_PORT; API not started");
+    return;
+  }
+
   /* Debug logging for automatic startup */
   TERRAIN_DEBUG("terrain_api_start() called during initialization");
 
@@ -1230,14 +1244,14 @@ void terrain_api_start(void)
   }
 
   /* Directly call server start like the working manual command */
-  TERRAIN_DEBUG("Calling start_terrain_api_server(port=%d)", TERRAIN_API_DEFAULT_PORT);
-  if (start_terrain_api_server(TERRAIN_API_DEFAULT_PORT))
+  TERRAIN_DEBUG("Calling start_terrain_api_server(port=%d)", port);
+  if (start_terrain_api_server(port))
   {
-    log("Terrain-API Info: Automatic startup successful on port %d", TERRAIN_API_DEFAULT_PORT);
+    log("Terrain-API Info: Automatic startup successful on port %d", port);
   }
   else
   {
-    log("Terrain-API: ERROR - Automatic startup failed on port %d", TERRAIN_API_DEFAULT_PORT);
+    log("Terrain-API: ERROR - Automatic startup failed on port %d", port);
   }
 }
 

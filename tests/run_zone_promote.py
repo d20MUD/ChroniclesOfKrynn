@@ -24,10 +24,10 @@ class PromotionTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(prefix='zone-promote-test-')
         self.base = Path(self.temp.name)
-        self.dev = self.base / 'dev/lib/world'
+        self.build = self.base / 'build/lib/world'
         self.live = self.base / 'live/lib/world'
         self.backups = self.base / 'live/lib/zone-backups'
-        for root in (self.dev, self.live):
+        for root in (self.build, self.live):
             for kind in promoter.KINDS:
                 folder = root / kind
                 folder.mkdir(parents=True)
@@ -35,7 +35,7 @@ class PromotionTests(unittest.TestCase):
                 for zone in (1, 7, 99):
                     (folder / f'{zone}.{kind}').write_text(f'#{zone}\n{root.parent.parent.name} {kind}\n$~\n')
         self.before = self.snapshot(self.live)
-        self.source_before = self.snapshot(self.dev)
+        self.source_before = self.snapshot(self.build)
 
     def tearDown(self):
         self.temp.cleanup()
@@ -46,7 +46,7 @@ class PromotionTests(unittest.TestCase):
                 for p in root.rglob('*') if p.is_file()}
 
     def run_promotion(self, **kwargs):
-        return promoter.promote(self.dev, self.live, self.backups, 7, 'TestStaff', **kwargs)
+        return promoter.promote(self.build, self.live, self.backups, 7, 'TestStaff', **kwargs)
 
     def receipt(self, result):
         folder = Path(result['backup'])
@@ -72,7 +72,7 @@ class PromotionTests(unittest.TestCase):
         self.assertEqual(result['status'], 'complete')
         self.assertEqual(manifest['status'], 'complete')
         self.assertEqual(manifest['actor'], 'TestStaff')
-        self.assertEqual(self.snapshot(self.dev), self.source_before)
+        self.assertEqual(self.snapshot(self.build), self.source_before)
         after = self.snapshot(self.live)
         for kind in promoter.KINDS:
             self.assertEqual(after[f'{kind}/7.{kind}'][0], self.source_before[f'{kind}/7.{kind}'][0])
@@ -99,10 +99,10 @@ class PromotionTests(unittest.TestCase):
             self.assertIsNone(manifest['files'][f'{kind}/7.{kind}']['backup'])
             self.assertEqual((self.live / kind / 'index').read_text(), f'1.{kind}\n7.{kind}\n99.{kind}\n$\n')
 
-    def test_missing_dev_optional_files_are_backed_up_then_removed(self):
+    def test_missing_build_optional_files_are_backed_up_then_removed(self):
         for kind in ('shp', 'qst', 'hlq'):
-            (self.dev / kind / f'7.{kind}').unlink()
-            (self.dev / kind / 'index').write_text(f'1.{kind}\n99.{kind}\n$\n')
+            (self.build / kind / f'7.{kind}').unlink()
+            (self.build / kind / 'index').write_text(f'1.{kind}\n99.{kind}\n$\n')
         result = self.run_promotion()
         folder, manifest = self.receipt(result)
         for kind in ('shp', 'qst', 'hlq'):
@@ -213,7 +213,7 @@ class PromotionTests(unittest.TestCase):
     def test_timestamps_do_not_overwrite_previous_backups(self):
         first = self.run_promotion()
         first_snapshot = self.snapshot(Path(first['backup']))
-        (self.dev / 'mob/7.mob').write_text('#7\nsecond revision\n$~\n')
+        (self.build / 'mob/7.mob').write_text('#7\nsecond revision\n$~\n')
         second = self.run_promotion()
         self.assertNotEqual(first['backup'], second['backup'])
         self.assertEqual(self.snapshot(Path(first['backup'])), first_snapshot)
@@ -227,7 +227,7 @@ class PromotionTests(unittest.TestCase):
         self.assertEqual(len(list(self.backups.glob('7/*'))), backup_count)
 
     def test_symlinked_source_or_destination_files_are_rejected(self):
-        for root in (self.dev, self.live):
+        for root in (self.build, self.live):
             target = root / 'obj/7.obj'
             old = target.read_bytes()
             target.unlink()
@@ -245,7 +245,7 @@ class PromotionTests(unittest.TestCase):
                      ('shp/index', b'7.shp\n')]
         for name, bad in mutations:
             with self.subTest(name=name):
-                path = self.dev / name
+                path = self.build / name
                 original = path.read_bytes()
                 path.write_bytes(bad)
                 with self.assertRaises(promoter.PromotionError):
@@ -253,30 +253,51 @@ class PromotionTests(unittest.TestCase):
                 path.write_bytes(original)
                 self.assertEqual(self.snapshot(self.live), self.before)
                 self.assertFalse(self.backups.exists())
-        (self.dev / 'wld/7.wld').unlink()
-        (self.dev / 'wld/index').write_text('1.wld\n99.wld\n$\n')
+        (self.build / 'wld/7.wld').unlink()
+        (self.build / 'wld/index').write_text('1.wld\n99.wld\n$\n')
         with self.assertRaisesRegex(promoter.PromotionError, 'both'):
             self.run_promotion()
 
     def test_cli_rejects_unknown_origin_and_previews_both_ports_without_writes(self):
-        env = dict(os.environ, KRYNN_DEV_WORLD=str(self.dev), KRYNN_LIVE_WORLD=str(self.live),
+        env = dict(os.environ, KRYNN_BUILD_WORLD=str(self.build), KRYNN_LIVE_WORLD=str(self.live),
                    KRYNN_ZONE_BACKUPS=str(self.backups))
         command = ['python3', str(HELPER), '--zone', '7', '--actor', 'Staff', '--from-world']
         result = subprocess.run(command + [str(self.base)], env=env, capture_output=True, text=True)
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn('configured dev or live world', result.stdout)
-        for origin in (self.dev, self.live):
+        self.assertIn('configured build or live world', result.stdout)
+        for origin in (self.build, self.live):
             result = subprocess.run(command + [str(origin), '--check'], env=env, capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertIn('8 file changes planned', result.stdout)
         self.assertEqual(self.snapshot(self.live), self.before)
         self.assertFalse(self.backups.exists())
 
+    def test_cli_defaults_to_build_port_and_ignores_legacy_dev_override(self):
+        home = self.base / 'default-home'
+        build = home / 'build/mud/lib/world'
+        live = home / 'live/mud/lib/world'
+        shutil.copytree(self.build, build)
+        shutil.copytree(self.live, live)
+        env = dict(os.environ, HOME=str(home), KRYNN_DEV_WORLD=str(self.base / 'obsolete-dev'))
+        for key in ('KRYNN_BUILD_WORLD', 'KRYNN_LIVE_WORLD', 'KRYNN_ZONE_BACKUPS'):
+            env.pop(key, None)
+        command = ['python3', str(HELPER), '--zone', '7', '--actor', 'Staff', '--from-world']
+        for origin in (build, live):
+            result = subprocess.run(command + [str(origin), '--check'], env=env,
+                                    capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn('8 file changes planned', result.stdout)
+        rejected = subprocess.run(command + [str(self.build), '--check'], env=env,
+                                  capture_output=True, text=True)
+        self.assertNotEqual(rejected.returncode, 0)
+        self.assertEqual(self.snapshot(live), self.before)
+        self.assertFalse((live.parent / 'zone-backups').exists())
+
     def test_paths_cannot_overlap(self):
-        for dev, live, backups in ((self.dev, self.dev, self.backups),
-                                    (self.dev, self.live, self.live / 'backups')):
+        for build, live, backups in ((self.build, self.build, self.backups),
+                                    (self.build, self.live, self.live / 'backups')):
             with self.assertRaises(promoter.PromotionError):
-                promoter.promote(dev, live, backups, 7, 'Staff')
+                promoter.promote(build, live, backups, 7, 'Staff')
 
 
     def test_restore_backs_up_current_live_before_replacing_and_can_be_undone(self):
@@ -299,7 +320,7 @@ class PromotionTests(unittest.TestCase):
         with patch.object(promoter.os, 'replace', side_effect=checked_replace):
             result = self.run_promotion(restore_id=original_id)
         self.assertEqual(self.snapshot(self.live), self.before)
-        self.assertEqual(self.snapshot(self.dev), self.source_before)
+        self.assertEqual(self.snapshot(self.build), self.source_before)
         # The pre-restore backup is itself a normal, restorable snapshot.
         self.run_promotion(restore_id=Path(result['backup']).name)
         self.assertEqual(self.snapshot(self.live), current)
@@ -414,7 +435,7 @@ class PromotionTests(unittest.TestCase):
         folder, manifest = self.receipt(promoted)
         path = folder / manifest['files']['obj/7.obj']['backup']
         path.unlink()
-        path.symlink_to(self.dev / 'obj/7.obj')
+        path.symlink_to(self.build / 'obj/7.obj')
         current = self.snapshot(self.live)
         with self.assertRaises(OSError):
             self.run_promotion(restore_id=folder.name)
@@ -424,9 +445,9 @@ class PromotionTests(unittest.TestCase):
         promoted = self.run_promotion()
         backup_id = Path(promoted['backup']).name
         self.assertEqual(promoter.list_backups(self.backups, 7)[0]['id'], backup_id)
-        env = dict(os.environ, KRYNN_DEV_WORLD=str(self.dev), KRYNN_LIVE_WORLD=str(self.live),
+        env = dict(os.environ, KRYNN_BUILD_WORLD=str(self.build), KRYNN_LIVE_WORLD=str(self.live),
                    KRYNN_ZONE_BACKUPS=str(self.backups))
-        base = ['python3', str(HELPER), '--zone', '7', '--actor', 'Staff', '--from-world', str(self.dev)]
+        base = ['python3', str(HELPER), '--zone', '7', '--actor', 'Staff', '--from-world', str(self.build)]
         listed = subprocess.run(base + ['--list-backups'], env=env, capture_output=True, text=True)
         self.assertEqual(listed.returncode, 0, listed.stdout + listed.stderr)
         self.assertIn(backup_id, listed.stdout)
@@ -502,7 +523,7 @@ int main(void) {
   do_zpromote(&staff,"7",0,0); assert(strstr(messages,"Only senior staff")); staff.npc=0;
   for(i=0;i<sizeof(bad)/sizeof(*bad);i++) {
     messages[0]=0; do_zpromote(&staff,bad[i],0,0);
-    assert(strstr(messages,"Usage:") || strstr(messages,"existing dev zone"));
+    assert(strstr(messages,"Usage:") || strstr(messages,"existing build zone"));
   }
   assert(logged==0);
   save_list=&pending; messages[0]=0; do_zpromote(&staff,"7",0,0);

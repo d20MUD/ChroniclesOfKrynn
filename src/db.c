@@ -1950,9 +1950,9 @@ bitvector_t asciiflag_conv(const char *flag)
   for (p = flag; *p; p++)
   {
     if (islower(*p))
-      flags |= 1 << (*p - 'a');
+      flags |= (bitvector_t)1 << (*p - 'a');
     else if (isupper(*p))
-      flags |= 1 << (26 + (*p - 'A'));
+      flags |= (bitvector_t)1 << (26 + (*p - 'A'));
 
     /* Allow the first character to be a minus sign */
     if (!isdigit(*p) && (*p != '-' || p != flag))
@@ -1974,9 +1974,9 @@ static bitvector_t asciiflag_conv_aff(char *flag)
   for (p = flag; *p; p++)
   {
     if (islower(*p))
-      flags |= 1 << (*p - 'a' + 1);
+      flags |= (bitvector_t)1 << (*p - 'a' + 1);
     else if (isupper(*p))
-      flags |= 1 << (26 + (*p - 'A' + 1));
+      flags |= (bitvector_t)1 << (26 + (*p - 'A' + 1));
 
     /* Allow the first character to be a minus sign */
     if (!isdigit(*p) && (*p != '-' || p != flag))
@@ -7599,10 +7599,10 @@ static int check_object(struct obj_data *obj)
   snprintf(objname, sizeof(objname), "Object #%d (%s)", GET_OBJ_VNUM(obj), buf1);
   for (y = 0; y < TW_ARRAY_MAX; y++)
   {
-    error |= check_bitvector_names(GET_OBJ_WEAR(obj)[y], wear_bits_count, objname, "object wear");
+    error |= check_bitvector_names((bitvector_t)(unsigned int)GET_OBJ_WEAR(obj)[y], wear_bits_count, objname, "object wear");
     error |=
-        check_bitvector_names(GET_OBJ_EXTRA(obj)[y], extra_bits_count, objname, "object extra");
-    error |= check_bitvector_names(GET_OBJ_AFFECT(obj)[y], affected_bits_count, objname,
+        check_bitvector_names((bitvector_t)(unsigned int)GET_OBJ_EXTRA(obj)[y], extra_bits_count, objname, "object extra");
+    error |= check_bitvector_names((bitvector_t)(unsigned int)GET_OBJ_AFFECT(obj)[y], affected_bits_count, objname,
                                    "object affect");
   }
 
@@ -7861,7 +7861,7 @@ static int check_bitvector_names(bitvector_t bits, size_t namecount, const char 
     return (FALSE);
 
   for (flagnum = namecount; flagnum < sizeof(bitvector_t) * 8; flagnum++)
-    if ((1 << flagnum) & bits)
+    if (((bitvector_t)1 << flagnum) & bits)
     {
       log("SYSERR: %s has unknown %s flag, bit %d (0 through %d known).", whatami, whatbits,
           flagnum, (int)namecount - 1);

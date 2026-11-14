@@ -50,8 +50,8 @@ int pubsub_db_load_topics(void)
 
   /* Query all active topics */
   snprintf(query, sizeof(query),
-           "SELECT topic_id, name, description, creator_name, "
-           "UNIX_TIMESTAMP(created_at), subscriber_count, total_messages, is_active "
+           "SELECT topic_id, topic_name, description, created_by, "
+           "UNIX_TIMESTAMP(created_at), subscriber_count, message_count, is_active "
            "FROM pubsub_topics WHERE is_active = 1 ORDER BY topic_id");
 
   if (mysql_query(conn, query))
@@ -141,17 +141,16 @@ int pubsub_db_save_topic(struct pubsub_topic *topic)
     mysql_real_escape_string(conn, escaped_desc, topic->description, strlen(topic->description));
   }
 
-  /* Update existing topic */
+  /* Persist fields supported by the shared PubSub schema. */
   snprintf(query, sizeof(query),
            "UPDATE pubsub_topics SET "
-           "name = '%s', description = %s, category = %d, access_type = %d, "
-           "min_level = %d, total_messages = %d, subscriber_count = %d, "
-           "max_subscribers = %d, message_ttl = %d, is_persistent = %d, "
+           "topic_name = '%s', description = %s%s%s, "
+           "message_count = %d, subscriber_count = %d, "
            "is_active = %d WHERE topic_id = %d",
-           escaped_name, topic->description ? escaped_desc : "NULL", topic->category,
-           topic->access_type, topic->min_level, topic->total_messages, topic->subscriber_count,
-           topic->max_subscribers, topic->message_ttl, topic->is_persistent ? 1 : 0,
-           topic->is_active ? 1 : 0, topic->topic_id);
+           escaped_name, topic->description ? "'" : "",
+           topic->description ? escaped_desc : "NULL",
+           topic->description ? "'" : "", topic->total_messages,
+           topic->subscriber_count, topic->is_active ? 1 : 0, topic->topic_id);
 
   if (mysql_query(conn, query))
   {
@@ -194,11 +193,10 @@ void pubsub_cache_player_subscriptions(const char *player_name)
 
   /* Query player's active subscriptions */
   snprintf(query, sizeof(query),
-           "SELECT s.topic_id, s.handler_name, s.handler_data, s.status, "
-           "s.priority, t.name "
+           "SELECT s.topic_id, t.topic_name "
            "FROM pubsub_subscriptions s "
            "JOIN pubsub_topics t ON s.topic_id = t.topic_id "
-           "WHERE s.player_name = '%s' AND s.status = 0 AND t.is_active = 1 "
+           "WHERE s.player_name = '%s' AND s.is_active = 1 AND t.is_active = 1 "
            "ORDER BY s.topic_id",
            escaped_name);
 
@@ -232,7 +230,7 @@ void pubsub_cache_player_subscriptions(const char *player_name)
     {
       cache->subscribed_topics[i] = atoi(row[0]);
       i++;
-      pubsub_debug("Cached subscription: player %s -> topic %s", player_name, row[5]);
+      pubsub_debug("Cached subscription: player %s -> topic %s", player_name, row[1]);
     }
   }
 
@@ -365,7 +363,7 @@ int pubsub_get_player_subscription_count(const char *player_name)
 
   snprintf(query, sizeof(query),
            "SELECT COUNT(*) FROM pubsub_subscriptions "
-           "WHERE player_name = '%s' AND status = 0",
+           "WHERE player_name = '%s' AND is_active = 1",
            escaped_name);
 
   if (mysql_query(conn, query))
@@ -614,13 +612,13 @@ int pubsub_db_create_tables(void)
   snprintf(query, sizeof(query),
            "CREATE TABLE IF NOT EXISTS pubsub_topics ("
            "topic_id INT PRIMARY KEY AUTO_INCREMENT, "
-           "name VARCHAR(128) NOT NULL UNIQUE, "
+           "topic_name VARCHAR(128) NOT NULL UNIQUE, "
            "description TEXT, "
-           "creator_name VARCHAR(80), "
+           "created_by VARCHAR(80), "
            "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
            "is_active BOOLEAN DEFAULT TRUE, "
            "subscriber_count INT DEFAULT 0, "
-           "total_messages INT DEFAULT 0, "
+           "message_count INT DEFAULT 0, "
            "INDEX idx_active (is_active), "
            "INDEX idx_created_at (created_at)"
            ") ENGINE=InnoDB");
@@ -640,6 +638,7 @@ int pubsub_db_create_tables(void)
            "subscription_id INT PRIMARY KEY AUTO_INCREMENT, "
            "topic_id INT NOT NULL, "
            "player_name VARCHAR(80) NOT NULL, "
+           "handler_name VARCHAR(80) NOT NULL DEFAULT 'send_text', "
            "subscribed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
            "is_active BOOLEAN DEFAULT TRUE, "
            "UNIQUE KEY unique_subscription (topic_id, player_name), "
@@ -944,7 +943,7 @@ int pubsub_db_populate_data(void)
   {
     snprintf(query, sizeof(query),
              "INSERT IGNORE INTO pubsub_topics "
-             "(name, description, creator_name, is_active) "
+             "(topic_name, description, created_by, is_active) "
              "VALUES ('%s', '%s', '%s', TRUE)",
              default_topics[i][0], default_topics[i][1], default_topics[i][2]);
 

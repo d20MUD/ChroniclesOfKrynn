@@ -3359,7 +3359,7 @@ ACMD(do_zpromote)
   zone = strtol(number, &end, 10);
   if (errno || zone > INT_MAX || (!restore && !list && real_zone((zone_vnum)zone) == NOWHERE))
   {
-    send_to_char(ch, "Choose an existing dev zone number.\r\n");
+    send_to_char(ch, "Choose an existing build zone number.\r\n");
     return;
   }
   for (pending = save_list; pending; pending = pending->next)

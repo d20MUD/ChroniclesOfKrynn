@@ -556,10 +556,10 @@ int pubsub_subscribe(struct char_data *ch, int topic_id, const char *handler)
   /* Insert subscription record */
   snprintf(query, sizeof(query),
            "INSERT INTO pubsub_subscriptions "
-           "(topic_id, player_name, handler_name, created_at) "
+           "(topic_id, player_name, handler_name, subscribed_at) "
            "VALUES (%d, '%s', '%s', NOW()) "
            "ON DUPLICATE KEY UPDATE "
-           "handler_name = '%s', created_at = NOW()",
+           "handler_name = '%s', subscribed_at = NOW(), is_active = TRUE",
            topic_id, escaped_player, escaped_handler, escaped_handler);
 
   if (mysql_query(conn, query))

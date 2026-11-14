@@ -806,6 +806,7 @@ CREATE TABLE IF NOT EXISTS pubsub_subscriptions (
   subscription_id INT AUTO_INCREMENT PRIMARY KEY,
   topic_id INT NOT NULL,
   player_name VARCHAR(80) NOT NULL,
+  handler_name VARCHAR(80) NOT NULL DEFAULT 'send_text',
   subscribed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   is_active BOOLEAN DEFAULT TRUE,
   UNIQUE KEY unique_subscription (topic_id, player_name),

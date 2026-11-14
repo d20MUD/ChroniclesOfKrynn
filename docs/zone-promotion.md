@@ -1,6 +1,6 @@
-# Promote a saved dev zone to live
+# Promote a saved build zone to live
 
-Senior staff (`LVL_GRSTAFF`, level 33, or higher) can run these commands on dev or live:
+Senior staff (`LVL_GRSTAFF`, level 33, or higher) can run these commands on build or live:
 
 ```text
 zpromote 700 check
@@ -13,23 +13,23 @@ before promoting any files. It reports the backup directory on success.
 Promotion refuses zones with pending OLC saves. Save your edits first.
 
 The command accepts either configured world directory and is not tied to a
-hardcoded TCP port number. The source and destination remain fixed as dev to
+hardcoded TCP port number. The source and destination remain fixed as build to
 live on either port. It copies saved files, not unsaved in-memory editor contents.
 The game invokes Python directly with separate arguments, without a shell.
 
 ## Files and backups
 
 All eight zone file types are included: `wld`, `mob`, `obj`, `zon`, `trg`,
-`shp`, `qst`, and `hlq`. Both a dev `.zon` and `.wld` file are required. The
+`shp`, `qst`, and `hlq`. Both a build `.zon` and `.wld` file are required. The
 source zone number, basic file terminators and index membership are checked.
 This is a file transfer, not a complete world syntax/dependency validator.
 
-The live result mirrors this zone's saved dev file set. An optional file absent
-on dev is backed up and removed from live, including its live index entry.
+The live result mirrors this zone's saved build file set. An optional file absent
+on build is backed up and removed from live, including its live index entry.
 Indexes retain other zones' entries and add this zone when necessary. Existing
 live file permissions are retained. No other zones' data files are copied.
 
-By default, files come from `~/dev/mud/lib/world` and are promoted to
+By default, files come from `~/build/mud/lib/world` and are promoted to
 `~/live/mud/lib/world`, relative to the OS account running the MUD.
 The separate backup tree is `~/live/mud/lib/zone-backups`, for example:
 
@@ -52,7 +52,7 @@ backed up, even if only some files need replacement. The manifest records
 absent files as absent, along with the actor, UTC timestamp, original modes,
 SHA-256 hashes, source/destination paths and operation status. Timestamped
 batch directories have unique suffixes, and backup files are never overwritten.
-A no-op promotion reports that dev and live already match and creates no backup.
+A no-op promotion reports that build and live already match and creates no backup.
 
 Each backup file and its directory are synced before promotion. All new files
 are staged, then individually replaced by atomic rename. Ordinary I/O failures
@@ -71,7 +71,7 @@ live editing with the transfer: it does not lock the live server's OLC editors.
 The command does not reload rooms or prototypes in the running live server and
 does not restart it. Reload/restart live after a successful promotion before
 saving or editing that zone there, so old in-memory data cannot overwrite the
-promoted files. No dev room/prototype records are changed by promotion.
+promoted files. No build room/prototype records are changed by promotion.
 
 ## Restore a backup
 
@@ -105,7 +105,7 @@ removes files that were previously absent, and restores only this zone's
 membership in the current live indexes. It does not overwrite full indexes
 with historical copies, so later additions of other zones remain registered.
 Restoring a snapshot made before a zone first existed therefore removes that
-zone's promoted files and index membership. Current dev zone files and OLC
+zone's promoted files and index membership. Current build zone files and OLC
 saves are not required for restoration and are not changed.
 
 A restore does not reload or restart live. Reload/restart live after success
@@ -123,20 +123,20 @@ Build the server with the new `zpromote` handler and install/restart the
 server binary using the usual process. Install the helper for both ports:
 
 ```sh
-install -m 0644 lib/misc/zone_promote.py /home/krynn/dev/mud/lib/misc/zone_promote.py
+install -m 0644 lib/misc/zone_promote.py /home/krynn/build/mud/lib/misc/zone_promote.py
 install -m 0644 lib/misc/zone_promote.py /home/krynn/live/mud/lib/misc/zone_promote.py
 ```
 
 The command finds it as `misc/zone_promote.py` relative to the MUD's data
 working directory. It requires Python 3.8 or later on PATH and Unix file locking.
-The OS account running the command must be able to read dev/live files and write
+The OS account running the command must be able to read build/live files and write
 live world directories and the backup tree. The game-level command permission
 is separate from these filesystem permissions.
 
 For other installations, set service environment variables before starting each server:
 
 ```text
-KRYNN_DEV_WORLD=/absolute/path/to/dev/lib/world
+KRYNN_BUILD_WORLD=/absolute/path/to/build/lib/world
 KRYNN_LIVE_WORLD=/absolute/path/to/live/lib/world
 KRYNN_ZONE_BACKUPS=/absolute/path/to/live/lib/zone-backups
 ```

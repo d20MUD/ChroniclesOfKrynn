@@ -10,6 +10,7 @@
 #include "conf.h"
 #include "sysdep.h"
 #include "structs.h"
+#include "dotenv.h"
 #include "utils.h"
 #include "comm.h"
 #include "interpreter.h"
@@ -245,6 +246,19 @@ int parse_discord_json(const char *json_str, char *channel, char *name, char *me
 /* Initialize the Discord bridge system */
 void init_discord_bridge(void)
 {
+  int port = get_env_int("DISCORD_BRIDGE_PORT", DISCORD_BRIDGE_PORT);
+
+  if (!get_env_bool("DISCORD_BRIDGE_ENABLED", TRUE))
+  {
+    log("Discord bridge disabled by DISCORD_BRIDGE_ENABLED");
+    return;
+  }
+  if (port < 1 || port > 65535)
+  {
+    log("SYSERR: Invalid DISCORD_BRIDGE_PORT; bridge not started");
+    return;
+  }
+
   DISCORD_DEBUG("init_discord_bridge() called");
 
   if (discord_bridge)
@@ -279,16 +293,16 @@ void init_discord_bridge(void)
   load_discord_config();
 
   /* Start the server socket */
-  log("Info: Starting Discord bridge server on port %d...", DISCORD_BRIDGE_PORT);
-  if (start_discord_server(DISCORD_BRIDGE_PORT))
+  log("Info: Starting Discord bridge server on port %d...", port);
+  if (start_discord_server(port))
   {
-    log("Success: Discord bridge server started on port %d", DISCORD_BRIDGE_PORT);
+    log("Success: Discord bridge server started on port %d", port);
     DISCORD_DEBUG("Discord bridge ready - server_socket=%d, state=%d",
                   discord_bridge->server_socket, discord_bridge->state);
   }
   else
   {
-    log("ERROR: Failed to start Discord bridge server on port %d", DISCORD_BRIDGE_PORT);
+    log("ERROR: Failed to start Discord bridge server on port %d", port);
     free(discord_bridge);
     discord_bridge = NULL;
     DISCORD_DEBUG("Discord bridge structure freed, ptr set to NULL");
