@@ -17,7 +17,7 @@ migrations = tuple(f'20261110_clan_progression_v{i:03d}.sql' for i in range(1, 6
     '20261111_clan_kill_sources_v001.sql', '20261111_clan_delivery_v001.sql',
     '20261111_clan_objectives_v001.sql', '20261112_clan_expeditions_v001.sql',
     '20261112_clan_expeditions_v002.sql', '20261112_clan_quartermaster_v001.sql')
-def run(after=None):
+def run(after=None, schema_cache=False):
     with database(migrations) as (tmp, socket, sql, client):
         tool = tmp / 'repository'
         build(tool, sanitize=True)
@@ -32,7 +32,12 @@ def run(after=None):
             path = tmp / name
             if True:  # Exercise current rules in this integrated acceptance.
                 current = tmp / (name + '.c')
-                current.write_text(driver.read_text().replace('clan_progression_v1', 'clan_progression_defaults'))
+                body = driver.read_text().replace('clan_progression_v1', 'clan_progression_defaults')
+                if schema_cache:
+                    body += ('\n#include "clan_repository.h"\n'
+                             'static void __attribute__((constructor)) enable_runtime_schema_cache(void) '
+                             '{ clan_repository_schema_cache_enable(true); }\n')
+                current.write_text(body)
                 driver = current
             subprocess.run(['cc', '-std=gnu99', '-Wall', '-Wextra', '-Werror', '-g',
                             '-fsanitize=address,undefined', '-fno-pie', '-no-pie', '-Isrc',

@@ -166,7 +166,7 @@ bool clan_objective_catalog_parse(struct json_object *o, struct clan_objective_c
   *out = c;
   return true;
 }
-bool clan_objective_schema_ready(MYSQL *db)
+static bool clan_objective_schema_ready_full(MYSQL *db)
 {
   int64_t n;
   return sql(db, "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND "
@@ -200,6 +200,14 @@ bool clan_objective_schema_ready(MYSQL *db)
                  "cols='clan_uid,week_start,definition_id') OR (INDEX_NAME='co_shared_operation' "
                  "AND cols='operation_uid'))))") &&
          scalar(db, &n) && n == 8;
+}
+static enum clan_repository_result clan_objective_schema_ready_validate(MYSQL *db)
+{
+  return clan_objective_schema_ready_full(db) ? CLAN_REPO_OK : CLAN_REPO_SCHEMA;
+}
+bool clan_objective_schema_ready(MYSQL *db)
+{
+  return clan_repository_schema_extension_check(db, clan_objective_schema_ready_validate) == CLAN_REPO_OK;
 }
 static enum clan_repository_result begin(MYSQL *db)
 {

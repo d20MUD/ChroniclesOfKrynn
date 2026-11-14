@@ -1771,7 +1771,6 @@ void clan_login_notifications(struct char_data *ch)
 /* clan apply command */
 ACMD(do_clanapply)
 {
-  if (!clan_persistence_economy_available(ch)) return;
   if (!clan_persistence_access(ch)) return;
   clan_rnum c_n;
 
@@ -1809,17 +1808,28 @@ ACMD(do_clanapply)
     return;
   }
 
+  /* Free applications change membership only. Paid applications still require
+   * durable receipts before SQL and player gold can be changed together. */
+  if (clan_list[c_n].appfee != 0 && !clan_persistence_economy_available(ch)) return;
+
   if (GET_GOLD(ch) < clan_list[c_n].appfee)
   {
     send_to_char(ch, CLAN_ERR_CANNOT_AFFORD);
     return;
   }
 
-  /* Application is allowed - take application fee */
-  decrease_gold(ch, clan_list[c_n].appfee);
-  clan_list[c_n].treasure += clan_list[c_n].appfee;
-  mark_clan_modified(c_n);
-  if (!save_single_clan(c_n)) { send_to_char(ch, "Clan changes could not be saved; the operation did not complete.\r\n"); return; }
+  /* Application is allowed - take a nonzero legacy application fee. */
+  if (clan_list[c_n].appfee != 0)
+  {
+    decrease_gold(ch, clan_list[c_n].appfee);
+    clan_list[c_n].treasure += clan_list[c_n].appfee;
+    mark_clan_modified(c_n);
+    if (!save_single_clan(c_n))
+    {
+      send_to_char(ch, "Clan changes could not be saved; the operation did not complete.\r\n");
+      return;
+    }
+  }
 
   /* Set player as in the clan with no clan rank (pending) */
   if (!set_clan(ch, clan_list[c_n].vnum)) { send_to_char(ch, "Clan membership could not be saved.\r\n"); return; }

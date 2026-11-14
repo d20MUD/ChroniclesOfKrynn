@@ -14,6 +14,7 @@
 #include "comm.h"
 #include "modify.h"
 #include "mysql.h"
+#include "clan_repository.h"
 
 #include "wilderness.h"
 #include "mud_event.h"
@@ -124,6 +125,7 @@ void mysql_pool_init(void)
     if (!mysql_pool_connect(pc->conn))
     {
       log("ERROR: Failed to connect MySQL connection %d: %s", i, mysql_error(pc->conn));
+      clan_repository_schema_cache_invalidate(pc->conn);
       mysql_close(pc->conn);
       free(pc);
       continue;
@@ -184,6 +186,7 @@ void mysql_pool_destroy(void)
     /* Close MySQL connection */
     if (pc->conn)
     {
+      clan_repository_schema_cache_invalidate(pc->conn);
       mysql_close(pc->conn);
     }
 
@@ -249,6 +252,7 @@ MYSQL_POOL_CONN *mysql_pool_acquire(void)
           if (mysql_ping(pc->conn) != 0)
           {
             log("Info: Refreshing stale connection %d", pc->id);
+            clan_repository_schema_cache_invalidate(pc->conn);
             mysql_close(pc->conn);
 
             /* Reconnect */
@@ -391,6 +395,7 @@ void mysql_pool_health_check(void)
         errors++;
 
         /* Try to reconnect */
+        clan_repository_schema_cache_invalidate(pc->conn);
         mysql_close(pc->conn);
         pc->conn = mysql_init(NULL);
 
@@ -493,6 +498,7 @@ void mysql_pool_expand(void)
   if (!mysql_pool_connect(pc->conn))
   {
     log("ERROR: Failed to connect new connection %d: %s", new_id, mysql_error(pc->conn));
+    clan_repository_schema_cache_invalidate(pc->conn);
     mysql_close(pc->conn);
     free(pc);
     pthread_mutex_unlock(&mysql_pool->pool_mutex);
@@ -562,6 +568,7 @@ void mysql_pool_shrink(void)
       /* Close and free the connection */
       if (to_remove->conn)
       {
+        clan_repository_schema_cache_invalidate(to_remove->conn);
         mysql_close(to_remove->conn);
       }
       pthread_mutex_destroy(&to_remove->mutex);

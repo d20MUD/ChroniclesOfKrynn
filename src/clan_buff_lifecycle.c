@@ -42,7 +42,7 @@ static void canonical(char *out,const char *in)
   while(*in) {unsigned char c=(unsigned char)*in++;if(!isspace(c)&&c!='`'&&c!='('&&c!=')')*out++=(char)tolower(c);}
   *out=0;
 }
-enum clan_repository_result clan_buff_lifecycle_schema_check(MYSQL *db)
+static enum clan_repository_result clan_buff_lifecycle_schema_check_full(MYSQL *db)
 {
   enum clan_repository_result result=clan_buff_activation_schema_check(db);
   MYSQL_RES *res;MYSQL_ROW row;int64_t n;size_t i;bool ok;
@@ -68,6 +68,10 @@ enum clan_repository_result clan_buff_lifecycle_schema_check(MYSQL *db)
     mysql_free_result(res);if(!ok)return CLAN_REPO_SCHEMA;
   }
   return CLAN_REPO_OK;
+}
+enum clan_repository_result clan_buff_lifecycle_schema_check(MYSQL *db)
+{
+  return clan_repository_schema_extension_check(db, clan_buff_lifecycle_schema_check_full);
 }
 static enum clan_repository_result begin(MYSQL *db)
 {

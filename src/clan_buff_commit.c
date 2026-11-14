@@ -75,7 +75,7 @@ static bool contract(MYSQL *db)
   }
   return true;
 }
-enum clan_repository_result clan_buff_activation_schema_check(MYSQL *db)
+static enum clan_repository_result clan_buff_activation_schema_check_full(MYSQL *db)
 {
   int64_t n;
   enum clan_repository_result result=clan_repository_schema_check(db);
@@ -86,6 +86,10 @@ enum clan_repository_result clan_buff_activation_schema_check(MYSQL *db)
      !scalar(db,"SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS WHERE CONSTRAINT_SCHEMA=DATABASE() AND CONSTRAINT_TYPE='CHECK' AND ((TABLE_NAME='clan_buff_activations' AND CONSTRAINT_NAME IN ('cba_uid','cba_request','cba_expected','cba_json')) OR (TABLE_NAME='clan_buff_management' AND CONSTRAINT_NAME IN ('cbm_privilege','cbm_rank')))",&n)||n!=6)
     return CLAN_REPO_SCHEMA;
   return contract(db)?CLAN_REPO_OK:CLAN_REPO_SCHEMA;
+}
+enum clan_repository_result clan_buff_activation_schema_check(MYSQL *db)
+{
+  return clan_repository_schema_extension_check(db, clan_buff_activation_schema_check_full);
 }
 static struct json_object *receipt(const struct clan_buff_request *r,const struct clan_buff_decision *d,int64_t balance)
 {

@@ -32,6 +32,16 @@ bool
 clan_repository_uid_generate(char out[33]);
 bool
 clan_repository_record_valid(const struct clan_repository_record* record);
+/* Runtime-only successful schema cache; disabled by default for offline tools.
+ * Every call still checks connection/session/database/schema-version identity.
+ * Invalidate before closing a connection or applying an intentional migration;
+ * NULL invalidates every entry. Full metadata proofs expire after 60 seconds. */
+void clan_repository_schema_cache_enable(bool enabled);
+void clan_repository_schema_cache_invalidate(MYSQL* db);
+/* Optional metadata proofs share the runtime cache and its invalidation rules.
+ * Validators must inspect schema only, never mutable balances or receipts. */
+enum clan_repository_result clan_repository_schema_extension_check(
+    MYSQL* db, enum clan_repository_result (*validate)(MYSQL*));
 enum clan_repository_result
 clan_repository_schema_check(MYSQL* db);
 enum clan_repository_result

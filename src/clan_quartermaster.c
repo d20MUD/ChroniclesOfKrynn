@@ -160,7 +160,7 @@ static bool scalar(MYSQL *db, int64_t *v)
   mysql_free_result(r);
   return ok;
 }
-bool clan_qm_schema_ready(MYSQL *db)
+static bool clan_qm_schema_ready_full(MYSQL *db)
 {
   int64_t n;
   return sql(db, "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND "
@@ -189,6 +189,14 @@ bool clan_qm_schema_ready(MYSQL *db)
                  "AND TABLE_NAME='clan_quartermaster_operations' AND INDEX_NAME='PRIMARY' AND "
                  "COLUMN_NAME='operation_uid' AND NON_UNIQUE=0") &&
          scalar(db, &n) && n == 1;
+}
+static enum clan_repository_result clan_qm_schema_ready_validate(MYSQL *db)
+{
+  return clan_qm_schema_ready_full(db) ? CLAN_REPO_OK : CLAN_REPO_SCHEMA;
+}
+bool clan_qm_schema_ready(MYSQL *db)
+{
+  return clan_repository_schema_extension_check(db, clan_qm_schema_ready_validate) == CLAN_REPO_OK;
 }
 static enum clan_repository_result end(MYSQL *db, enum clan_repository_result r)
 {

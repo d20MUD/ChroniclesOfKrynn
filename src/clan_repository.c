@@ -11,6 +11,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
+#include <time.h>
 
 static bool
 query(MYSQL* db, const char* fmt, ...)
@@ -160,8 +162,8 @@ static enum clan_repository_result schema_failure(MYSQL *db, int line)
 #endif
   return CLAN_REPO_SCHEMA;
 }
-enum clan_repository_result
-clan_repository_schema_check(MYSQL* db)
+static enum clan_repository_result
+schema_validate_full(MYSQL* db)
 {
   MYSQL_RES* result;
   MYSQL_ROW row;
@@ -333,6 +335,195 @@ clan_repository_schema_check(MYSQL* db)
     return schema_failure(db, __LINE__);
   return CLAN_REPO_OK;
 }
+/* Only the runtime opts into caching. Offline validation/import tools retain
+ * full checks. Never cache connection/session health or an unsuccessful proof. */
+#ifndef CLAN_SCHEMA_CACHE_TTL
+#define CLAN_SCHEMA_CACHE_TTL 60
+#endif
+#define CLAN_SCHEMA_CACHE_SLOTS 32
+#define CLAN_SCHEMA_EXTENSION_SLOTS 16
+struct schema_extension_proof {
+  enum clan_repository_result (*validate)(MYSQL*);
+  time_t validated_at;
+};
+struct schema_cache_entry {
+  MYSQL *db;
+  unsigned long connection_id;
+  char database[256];
+  time_t validated_at;
+  struct schema_extension_proof extensions[CLAN_SCHEMA_EXTENSION_SLOTS];
+};
+static struct schema_cache_entry schema_cache[CLAN_SCHEMA_CACHE_SLOTS];
+static bool schema_cache_enabled;
+static pthread_mutex_t schema_cache_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+void clan_repository_schema_cache_enable(bool enabled)
+{
+  pthread_mutex_lock(&schema_cache_mutex);
+  schema_cache_enabled = enabled;
+  memset(schema_cache, 0, sizeof(schema_cache));
+  pthread_mutex_unlock(&schema_cache_mutex);
+}
+
+void clan_repository_schema_cache_invalidate(MYSQL *db)
+{
+  size_t i;
+  pthread_mutex_lock(&schema_cache_mutex);
+  for (i = 0; i < CLAN_SCHEMA_CACHE_SLOTS; ++i)
+    if (!db || schema_cache[i].db == db)
+      memset(&schema_cache[i], 0, sizeof(schema_cache[i]));
+  pthread_mutex_unlock(&schema_cache_mutex);
+}
+
+enum clan_repository_result clan_repository_schema_check(MYSQL *db)
+{
+  bool enabled, hit = false, valid;
+  my_bool reconnect = 0;
+  MYSQL_RES *res;
+  MYSQL_ROW row;
+  char database[256];
+  time_t now;
+  size_t i, slot = 0;
+  unsigned long connection_id;
+  enum clan_repository_result result;
+
+  pthread_mutex_lock(&schema_cache_mutex);
+  enabled = schema_cache_enabled;
+  pthread_mutex_unlock(&schema_cache_mutex);
+  if (!enabled)
+    return schema_validate_full(db);
+
+  if (!db || mysql_options(db, MYSQL_OPT_RECONNECT, &reconnect) || mysql_ping(db)) {
+    clan_repository_schema_cache_invalidate(db);
+    return CLAN_REPO_UNAVAILABLE;
+  }
+  /* These cheap checks remain mandatory even on a cache hit. DATABASE() also
+   * detects mysql_select_db()/USE on a pooled connection. */
+  if (!query(db, "SELECT DATABASE(),@@SESSION.sql_mode,@@autocommit,"
+                 "(SELECT version FROM clan_progression_schema WHERE singleton=1)") ||
+      !(res = mysql_store_result(db))) {
+    clan_repository_schema_cache_invalidate(db);
+    return schema_failure(db, __LINE__);
+  }
+  row = mysql_fetch_row(res);
+  valid = row && row[0] && strlen(row[0]) < sizeof(database) && row[1] &&
+          (strstr(row[1], "STRICT_ALL_TABLES") || strstr(row[1], "STRICT_TRANS_TABLES")) &&
+          row[2] && !strcmp(row[2], "1") && row[3] &&
+          atoi(row[3]) == CLAN_PROGRESSION_SCHEMA_VERSION;
+  if (valid)
+    strcpy(database, row[0]);
+  mysql_free_result(res);
+  if (!valid) {
+    clan_repository_schema_cache_invalidate(db);
+    return schema_failure(db, __LINE__);
+  }
+  connection_id = mysql_thread_id(db);
+  now = time(NULL);
+  pthread_mutex_lock(&schema_cache_mutex);
+  for (i = 0; i < CLAN_SCHEMA_CACHE_SLOTS; ++i) {
+    if (schema_cache[i].db == db) {
+      hit = schema_cache[i].connection_id == connection_id &&
+            !strcmp(schema_cache[i].database, database) && now != (time_t)-1 &&
+            now >= schema_cache[i].validated_at &&
+            now - schema_cache[i].validated_at < CLAN_SCHEMA_CACHE_TTL;
+      break;
+    }
+  }
+  pthread_mutex_unlock(&schema_cache_mutex);
+  if (hit)
+    return CLAN_REPO_OK;
+
+  /* A stale successful entry must not survive any subsequent validation error. */
+  clan_repository_schema_cache_invalidate(db);
+  result = schema_validate_full(db);
+  if (result != CLAN_REPO_OK || now == (time_t)-1)
+    return result;
+  pthread_mutex_lock(&schema_cache_mutex);
+  if (schema_cache_enabled) {
+    for (i = 0; i < CLAN_SCHEMA_CACHE_SLOTS; ++i) {
+      if (!schema_cache[i].db || schema_cache[i].db == db) {
+        slot = i;
+        break;
+      }
+      if (schema_cache[i].validated_at < schema_cache[slot].validated_at)
+        slot = i;
+    }
+    schema_cache[slot].db = db;
+    schema_cache[slot].connection_id = connection_id;
+    strcpy(schema_cache[slot].database, database);
+    schema_cache[slot].validated_at = now;
+  }
+  pthread_mutex_unlock(&schema_cache_mutex);
+  return result;
+}
+
+enum clan_repository_result clan_repository_schema_extension_check(
+    MYSQL *db, enum clan_repository_result (*validate)(MYSQL*))
+{
+  bool enabled, hit = false;
+  time_t now;
+  size_t i, j, slot;
+  unsigned long connection_id;
+  enum clan_repository_result result;
+  if (!validate)
+    return CLAN_REPO_INVALID;
+  pthread_mutex_lock(&schema_cache_mutex);
+  enabled = schema_cache_enabled;
+  pthread_mutex_unlock(&schema_cache_mutex);
+  if (!enabled)
+    return validate(db);
+  result = clan_repository_schema_check(db);
+  if (result != CLAN_REPO_OK)
+    return result;
+  now = time(NULL);
+  connection_id = mysql_thread_id(db);
+  pthread_mutex_lock(&schema_cache_mutex);
+  for (i = 0; i < CLAN_SCHEMA_CACHE_SLOTS; ++i) {
+    if (schema_cache[i].db != db || schema_cache[i].connection_id != connection_id)
+      continue;
+    for (j = 0; j < CLAN_SCHEMA_EXTENSION_SLOTS; ++j) {
+      struct schema_extension_proof *proof = &schema_cache[i].extensions[j];
+      if (proof->validate == validate) {
+        hit = now != (time_t)-1 && now >= proof->validated_at &&
+              now - proof->validated_at < CLAN_SCHEMA_CACHE_TTL;
+        /* Discard an expired proof before running its validator. */
+        if (!hit)
+          memset(proof, 0, sizeof(*proof));
+        break;
+      }
+    }
+    break;
+  }
+  pthread_mutex_unlock(&schema_cache_mutex);
+  if (hit)
+    return CLAN_REPO_OK;
+  result = validate(db);
+  if (result != CLAN_REPO_OK || now == (time_t)-1)
+    return result;
+  pthread_mutex_lock(&schema_cache_mutex);
+  if (schema_cache_enabled) {
+    for (i = 0; i < CLAN_SCHEMA_CACHE_SLOTS; ++i) {
+      if (schema_cache[i].db != db || schema_cache[i].connection_id != connection_id)
+        continue;
+      slot = 0;
+      for (j = 0; j < CLAN_SCHEMA_EXTENSION_SLOTS; ++j) {
+        struct schema_extension_proof *proof = &schema_cache[i].extensions[j];
+        if (!proof->validate || proof->validate == validate) {
+          slot = j;
+          break;
+        }
+        if (proof->validated_at < schema_cache[i].extensions[slot].validated_at)
+          slot = j;
+      }
+      schema_cache[i].extensions[slot].validate = validate;
+      schema_cache[i].extensions[slot].validated_at = now;
+      break;
+    }
+  }
+  pthread_mutex_unlock(&schema_cache_mutex);
+  return result;
+}
+
 static enum clan_repository_result
 load_where(MYSQL* db, const char* where, struct clan_repository_record* out)
 {

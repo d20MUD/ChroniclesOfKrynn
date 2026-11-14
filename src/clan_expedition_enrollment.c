@@ -74,7 +74,7 @@ static bool encode(struct json_object *o, char *out, size_t cap)
   out[n * 2] = 0;
   return true;
 }
-bool clan_expedition_schema_ready(MYSQL *db)
+static bool clan_expedition_schema_ready_full(MYSQL *db)
 {
   int64_t n;
   return sql(db, "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND "
@@ -100,6 +100,14 @@ bool clan_expedition_schema_ready(MYSQL *db)
                  "cols='outing_uid,player_id') OR (INDEX_NAME='ce_account' AND "
                  "cols='outing_uid,account_id'))))") &&
          scalar(db, &n) && n == 4;
+}
+static enum clan_repository_result clan_expedition_schema_ready_validate(MYSQL *db)
+{
+  return clan_expedition_schema_ready_full(db) ? CLAN_REPO_OK : CLAN_REPO_SCHEMA;
+}
+bool clan_expedition_schema_ready(MYSQL *db)
+{
+  return clan_repository_schema_extension_check(db, clan_expedition_schema_ready_validate) == CLAN_REPO_OK;
 }
 static enum clan_repository_result end(MYSQL *db, enum clan_repository_result r)
 {
@@ -571,7 +579,7 @@ static bool reward_insert(MYSQL *db, const struct clan_reward_event *e, int64_t 
              e->source, e->occurred_at, w.starts_at, e->rules_version, e->requested_xp_eighths,
              e->requested_influence_eighths, e->requested_favor_eighths, now);
 }
-bool clan_expedition_progress_ready(MYSQL *db)
+static bool clan_expedition_progress_ready_full(MYSQL *db)
 {
   int64_t n;
   return clan_expedition_schema_ready(db) &&
@@ -607,6 +615,14 @@ bool clan_expedition_progress_ready(MYSQL *db)
                  "cols='account_id,week_start,family') OR (INDEX_NAME='ce_personal_operation' AND "
                  "cols='operation_uid'))))") &&
          scalar(db, &n) && n == 9;
+}
+static enum clan_repository_result clan_expedition_progress_ready_validate(MYSQL *db)
+{
+  return clan_expedition_progress_ready_full(db) ? CLAN_REPO_OK : CLAN_REPO_SCHEMA;
+}
+bool clan_expedition_progress_ready(MYSQL *db)
+{
+  return clan_repository_schema_extension_check(db, clan_expedition_progress_ready_validate) == CLAN_REPO_OK;
 }
 static void expedition_uid(char out[33], const char *kind, const char *outing, int64_t player)
 {

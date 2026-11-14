@@ -1134,7 +1134,10 @@ char *get_char_account_name(char *name)
 void save_account(struct account_data *account)
 {
   char buf[2048];
-  int i = 0;
+  int i = 0, kind, written;
+  size_t used;
+  const int *unlocks;
+  const char *table, *column;
   struct descriptor_data *j, *next_desc;
 
   if (account == NULL)
@@ -1182,7 +1185,7 @@ void save_account(struct account_data *account)
 
     snprintf(buf, sizeof(buf),
              "UPDATE player_data SET account_id = %d "
-             "WHERE lower(name) = lower('%s');",
+             "WHERE name = '%s';",
              account->id, escaped_name);
     if (mysql_query(conn, buf))
     {
@@ -1192,34 +1195,36 @@ void save_account(struct account_data *account)
     }
   }
 
-  /* save unlocked races */
-  for (i = 0; i < MAX_UNLOCKED_RACES; i++)
+  /* Persist the same unlock entries with two round trips instead of 100.
+   * Preserve duplicates/sentinel values and the existing UPSERT semantics. */
+  for (kind = 0; kind < 2; kind++)
   {
-    buf[0] = '\0';
-    snprintf(buf, sizeof(buf),
-             "INSERT into unlocked_races (account_id, race_id) "
-             "VALUES (%d, %d)"
-             "on duplicate key update race_id = VALUES(race_id);",
-             account->id, account->races[i]);
-    if (mysql_query(conn, buf))
+    table = kind == 0 ? "unlocked_races" : "unlocked_classes";
+    column = kind == 0 ? "race_id" : "class_id";
+    unlocks = kind == 0 ? account->races : account->classes;
+    used = snprintf(buf, sizeof(buf), "INSERT INTO %s (account_id, %s) VALUES ",
+                    table, column);
+    for (i = 0; i < (kind == 0 ? MAX_UNLOCKED_RACES : MAX_UNLOCKED_CLASSES); i++)
     {
-      log("SYSERR: Unable to UPSERT unlocked_races: %s", mysql_error(conn));
+      written = snprintf(buf + used, sizeof(buf) - used, "%s(%d,%d)",
+                         i ? "," : "", account->id, unlocks[i]);
+      if (written < 0 || (size_t)written >= sizeof(buf) - used)
+      {
+        log("SYSERR: Account unlock batch exceeds query buffer; %s not saved", table);
+        return;
+      }
+      used += written;
+    }
+    written = snprintf(buf + used, sizeof(buf) - used,
+                       " ON DUPLICATE KEY UPDATE %s = VALUES(%s);", column, column);
+    if (written < 0 || (size_t)written >= sizeof(buf) - used)
+    {
+      log("SYSERR: Account unlock batch exceeds query buffer; %s not saved", table);
       return;
     }
-  }
-
-  /* save unlocked classes */
-  for (i = 0; i < MAX_UNLOCKED_CLASSES; i++)
-  {
-    buf[0] = '\0';
-    snprintf(buf, sizeof(buf),
-             "INSERT into unlocked_classes (account_id, class_id) "
-             "VALUES (%d, %d)"
-             "on duplicate key update class_id = VALUES(class_id);",
-             account->id, account->classes[i]);
     if (mysql_query(conn, buf))
     {
-      log("SYSERR: Unable to UPSERT unlocked_classes: %s", mysql_error(conn));
+      log("SYSERR: Unable to UPSERT %s: %s", table, mysql_error(conn));
       return;
     }
   }

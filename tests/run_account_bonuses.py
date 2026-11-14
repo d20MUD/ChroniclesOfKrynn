@@ -39,6 +39,14 @@ size_t send_to_char(struct char_data *ch,const char *fmt,...) {
   va_list ap; va_start(ap,fmt); size_t used=strlen(output); int n=vsnprintf(output+used,sizeof(output)-used,fmt,ap); va_end(ap); return n;
 }
 void basic_mud_log(const char *fmt,...) {}
+bool web_info_begin(struct char_data *ch,int variable,struct output_capture *capture) { return false; }
+void web_info_finish(struct char_data *ch,int variable,struct output_capture *capture,const char *topic) {}
+void web_info_field(struct char_data *ch,const char *section,const char *label,const char *fmt,...) {
+  va_list ap;va_start(ap,fmt);size_t used=strlen(output);
+  vsnprintf(output+used,sizeof(output)-used,fmt,ap);va_end(ap);
+}
+char *show_pers(struct char_data *ch,struct char_data *vict) { return "test character"; }
+
 int is_abbrev(const char *a,const char *b) { return *a && !strncasecmp(a,b,strlen(a)); }
 bool ensure_mysql_connection(MYSQL *c,const char *caller) { return !mysql_ping(c); }
 int mysql_query_safe(MYSQL *c,const char *q) { return mysql_query(c,q); }
@@ -63,6 +71,12 @@ code+=function((root/'src/treasure.c').read_text(),'void determine_treasure(stru
 checks=r'''
 static void free_account(struct account_data *account) {
   free(account->name); free(account->email);
+}
+static unsigned long long query_number(const char *query) {
+  MYSQL_RES *res; MYSQL_ROW row; unsigned long long result;
+  sql(query); res=mysql_store_result(conn); assert(res); row=mysql_fetch_row(res);
+  assert(row && row[mysql_num_fields(res)-1]);
+  result=strtoull(row[mysql_num_fields(res)-1],NULL,10);mysql_free_result(res);return result;
 }
 int main(int argc,char **argv) {
   struct account_data account={0}, alt_account={0}, other_account={0}, reloaded={0};
@@ -132,7 +146,29 @@ int main(int argc,char **argv) {
   assert(!get_account_reward_bonus(&ch,ACCOUNT_BONUS_GOLD));
   assert(apply_account_reward_bonus(&ch,1000,ACCOUNT_BONUS_GOLD)==1000);
   REMOVE_BIT_AR(MOB_FLAGS(&ch),MOB_ISNPC);
+  /* Saving must preserve all unlocks and case-insensitive character links,
+   * while avoiding the previous 100 per-entry unlock statements. */
+  sql("CREATE TABLE player_data (name VARCHAR(30) COLLATE utf8mb4_general_ci PRIMARY KEY, account_id INT NULL)");
+  sql("INSERT INTO player_data VALUES ('MixedHero',NULL),('Unrelated',99)");
+  account.character_names[0]="mixedhero";
+  for(int i=0;i<MAX_UNLOCKED_RACES;i++) account.races[i]=i%7;
+  for(int i=0;i<MAX_UNLOCKED_CLASSES;i++) account.classes[i]=i%3;
+  account.races[0]=-1;account.races[1]=INT_MAX;
+  account.classes[0]=-1;account.classes[1]=INT_MIN;
+  unsigned long long queries_before=query_number("SHOW SESSION STATUS LIKE 'Questions'");
   save_account(&account);
+  unsigned long long queries_used=query_number("SHOW SESSION STATUS LIKE 'Questions'")-queries_before;
+  assert(queries_used==5); /* account + character + two batches + status query */
+  assert(query_number("SELECT account_id FROM player_data WHERE name='MixedHero'")== (unsigned long long)account.id);
+  assert(query_number("SELECT account_id FROM player_data WHERE name='Unrelated'")==99);
+  char check_sql[256];
+  snprintf(check_sql,sizeof(check_sql),"SELECT COUNT(*) FROM unlocked_races WHERE account_id=%d",account.id);
+  assert(query_number(check_sql)==9);
+  snprintf(check_sql,sizeof(check_sql),"SELECT COUNT(*) FROM unlocked_classes WHERE account_id=%d",account.id);
+  assert(query_number(check_sql)==5);
+  queries_before=query_number("SHOW SESSION STATUS LIKE 'Questions'");
+  save_account(&account); /* duplicates remain idempotent */
+  assert(query_number("SHOW SESSION STATUS LIKE 'Questions'")-queries_before==5);
   assert(!load_account("bonustest",&reloaded));
   assert(reloaded.experience==20000);
   for(int i=0;i<4;i++) assert(reloaded.reward_bonus_pct[i]==10);
@@ -152,6 +188,17 @@ int main(int argc,char **argv) {
   /* A stale cached balance cannot bypass the SQL affordability condition. */
   sql("UPDATE account_data SET experience=0 WHERE name='other'");
   purchase_account_reward_bonus(&other,"gold"); assert(other_account.reward_bonus_pct[2]==0);
+  /* Worst-case integer text must fit without truncation for all 50 entries. */
+  struct account_data bounds={0};
+  bounds.id=INT_MAX;bounds.name="batchbounds";
+  for(int i=0;i<MAX_UNLOCKED_RACES;i++) bounds.races[i]=INT_MIN;
+  for(int i=0;i<MAX_UNLOCKED_CLASSES;i++) bounds.classes[i]=INT_MAX;
+  queries_before=query_number("SHOW SESSION STATUS LIKE 'Questions'");
+  save_account(&bounds);
+  assert(query_number("SHOW SESSION STATUS LIKE 'Questions'")-queries_before==4);
+  assert(query_number("SELECT COUNT(*) FROM unlocked_races WHERE account_id=2147483647 AND race_id=-2147483648")==1);
+  assert(query_number("SELECT COUNT(*) FROM unlocked_classes WHERE account_id=2147483647 AND class_id=2147483647")==1);
+  puts("Account save: 100 unlock statements reduced to 2; exact sets, duplicates, integer bounds and mixed-case links passed.");
   free_account(&account); free_account(&alt_account); free_account(&other_account); free_account(&reloaded);
   mysql_close(conn);
   puts("Account rewards: atomic purchases, all four caps, persistence, alt synchronization, rounding, saturation, and failure paths passed.");

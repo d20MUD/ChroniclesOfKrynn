@@ -109,6 +109,7 @@ clan_persistence_boot(const char* selection)
     return clan_persistence_configure(requested);
   }
   clan_persistence_pin_mysql();
+  clan_repository_schema_cache_enable(true);
   timer_count = 0;
   if (!mysql_available || !(connection = mysql_pool_acquire()))
     return false;

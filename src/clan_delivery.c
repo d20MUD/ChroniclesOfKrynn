@@ -161,7 +161,7 @@ static bool encode(struct json_object *o, char *out, size_t cap)
   out[n * 2] = 0;
   return true;
 }
-bool clan_delivery_schema_ready(MYSQL *db)
+static bool clan_delivery_schema_ready_full(MYSQL *db)
 {
   int64_t n;
   return sql(db, "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() "
@@ -192,6 +192,14 @@ bool clan_delivery_schema_ready(MYSQL *db)
              "cols='account_id,week_start,definition_id') OR (INDEX_NAME='cp_delivery_claim' AND "
              "cols='operation_uid'))))") &&
          scalar(db, &n) && n == 7;
+}
+static enum clan_repository_result clan_delivery_schema_ready_validate(MYSQL *db)
+{
+  return clan_delivery_schema_ready_full(db) ? CLAN_REPO_OK : CLAN_REPO_SCHEMA;
+}
+bool clan_delivery_schema_ready(MYSQL *db)
+{
+  return clan_repository_schema_extension_check(db, clan_delivery_schema_ready_validate) == CLAN_REPO_OK;
 }
 enum clan_repository_result clan_delivery_claim_history(MYSQL *db, int64_t account, int64_t now,
                                                         struct json_object **out)
