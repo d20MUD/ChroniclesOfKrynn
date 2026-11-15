@@ -1127,11 +1127,15 @@ void display_faction_menu(struct descriptor_data *d)
 
   send_to_char(ch, "0) %-25s A) Help on %s\r\n", "Adventurer/No Faction", "Adventurer/No Faction");
 
-  for (i = 1; i <= num_of_clans; i++)
+  for (i = 0; i < num_of_clans; i++)
   {
-    c_n = real_clan(i);
-    send_to_char(ch, "%d) %-25s %c) Help on %s\r\n", i, CLAN_NAME(c_n), alphabet[i],
-                 CLAN_NAME(c_n));
+    c_n = i;
+    if (clan_list[c_n].vnum <= 0 || !clan_list[c_n].clan_name) continue;
+    if (i + 1 < (int)sizeof(alphabet))
+      send_to_char(ch, "%d) %-25s %c) Help on %s\r\n", clan_list[c_n].vnum,
+                   CLAN_NAME(c_n), alphabet[i + 1], CLAN_NAME(c_n));
+    else
+      send_to_char(ch, "%d) %s\r\n", clan_list[c_n].vnum, CLAN_NAME(c_n));
   }
 
   send_to_char(ch, "Enter your faction choice: ");
@@ -1152,7 +1156,7 @@ void HandleStateCharacterFactionParseMenuChoice(struct descriptor_data *d, char 
 
   if (is_clan)
   {
-    if (clan < 0 || clan > num_of_clans)
+    if (clan < 0 || (clan != 0 && real_clan(clan) == NO_CLAN))
     {
       send_to_char(ch, "That is an invalid selection.\r\n");
       return;
@@ -1197,22 +1201,22 @@ void HandleStateCharacterFactionParseMenuChoice(struct descriptor_data *d, char 
       break;
     default:
       letter = UPPER(*arg);
-      for (i = 1; i < 24; i++)
+      for (i = 1; i < (int)sizeof(alphabet); i++)
       {
         if (letter == alphabet[i])
           break;
       }
-      if (i >= 24)
+      if (i >= (int)sizeof(alphabet))
       {
         send_to_char(ch, "That is an invalid selection.\r\n");
         return;
       }
-      if (i < 0 || i > num_of_clans)
+      if (i < 1 || i > num_of_clans)
       {
         send_to_char(ch, "That is an invalid selection.\r\n");
         return;
       }
-      c_n = real_clan(i);
+      c_n = i - 1;
       send_to_char(ch, "Clan Description for %s:\r\n\r\n%s\r\n\r\n", CLAN_NAME(c_n),
                    clan_list[c_n].description);
       break;
@@ -1335,7 +1339,7 @@ void HandleStateCharacterDeityParseMenuChoice(struct descriptor_data *d, char *a
   int deity = atoi(arg);
 
 
-  if (deity >= 0 && deity < NUM_DEITIES)
+  if (deity >= 0 && deity < NUM_DEITIES && deity_list[deity].pantheon != DEITY_PANTHEON_NONE)
   {
     GET_DEITY(ch) = deity;
     display_deity_info(d);

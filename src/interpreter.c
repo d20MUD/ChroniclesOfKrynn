@@ -7065,6 +7065,9 @@ bool web_creation_back(struct descriptor_data *d, const char *input)
     case CON_QALIGN:
       GET_PREMADE_BUILD_CLASS(d->character) = -1;
       STATE(d) = CON_CONFIRM_PREMADE; write_to_output(d,"Choose a premade or custom build.\r\n"); break;
+    case CON_QREGION_HELP:
+      GET_REGION(d->character) = REGION_NONE;
+      STATE(d) = CON_QREGION; write_to_output(d,"Choose your homeland.\r\n"); break;
     case CON_CHARACTER_DEITY_CONFIRM: case CON_BACKGROUND_ARCHTYPE_CONFIRM:
     {
       char reject[] = "n";
@@ -7086,6 +7089,65 @@ static void creation_choice(struct json_object *choices, const char *value, cons
   json_object_object_add(choice, "label", json_object_new_string(label ? label : value));
   json_object_object_add(choice, "description", json_object_new_string(description ? description : ""));
   json_object_array_add(choices, choice);
+}
+
+static void creation_field_guidance(struct json_object *event, int state)
+{
+  const char *description = NULL, *first = NULL, *second = NULL;
+  struct json_object *guidance, *examples;
+  switch (state)
+  {
+    case CON_GEN_DESCS_INTRO: case CON_GEN_DESCS_DESCRIPTORS_1: case CON_GEN_DESCS_DESCRIPTORS_2:
+    case CON_GEN_DESCS_ADJECTIVES_1: case CON_GEN_DESCS_ADJECTIVES_2: case CON_GEN_DESCS_MENU: case CON_GEN_DESCS_MENU_PARSE:
+      description = "Your short description is a brief phrase that identifies your character's appearance to others.";
+      first = "A blue-eyed human with braided hair."; break;
+    case CON_PLR_DESC:
+      description = "Describe what others see when they look at your character: appearance, clothing, posture, and distinctive features.";
+      first = "A weathered traveler wears a patched cloak and keeps her dark hair in a loose braid."; break;
+    case CON_PLR_BG:
+      description = "Tell your character's story so far: where they came from, important experiences, and why they became an adventurer.";
+      first = "Raised by a village healer, I left home to find the teacher who disappeared during the war."; break;
+    case CON_BACKGROUND_ARCHTYPE: case CON_BACKGROUND_ARCHTYPE_CONFIRM:
+      description = "Your background archetype represents your life before adventuring. It grants skill bonuses and a special ability; choose one that fits your story.";
+      first = "An entertainer who earned a living performing for crowds.";
+      second = "A scholar who studied old texts before taking to the road."; break;
+    case CON_CHARACTER_GOALS_IDEAS: case CON_CHARACTER_GOALS_ENTER:
+      description = "Goals are things your character hopes to accomplish. Include a near-term aim or a larger ambition to guide your adventures.";
+      first = "Find my missing brother."; second = "Earn enough coin to rebuild my village."; break;
+    case CON_CHARACTER_PERSONALITY_IDEAS: case CON_CHARACTER_PERSONALITY_ENTER:
+      description = "Personality describes how your character usually behaves, speaks, and reacts to others. A few habits or traits make roleplay easier.";
+      first = "I greet strangers warmly, but become quiet when someone mentions the war.";
+      second = "I turn every setback into a joke."; break;
+    case CON_CHARACTER_IDEALS_IDEAS: case CON_CHARACTER_IDEALS_ENTER:
+      description = "Ideals are the beliefs and principles that guide your character's choices, especially when doing the right thing is difficult.";
+      first = "Freedom: no one should be forced to serve a tyrant.";
+      second = "Duty: I keep my promises even when it costs me."; break;
+    case CON_CHARACTER_BONDS_IDEAS: case CON_CHARACTER_BONDS_ENTER:
+      description = "Bonds are the people, places, groups, or promises your character cares deeply about. They give your character reasons to act.";
+      first = "I owe my life to the mentor who took me in.";
+      second = "I will protect the village where I grew up."; break;
+    case CON_CHARACTER_FLAWS_IDEAS: case CON_CHARACTER_FLAWS_ENTER:
+      description = "Flaws are weaknesses, fears, temptations, or bad habits that can complicate your character's life. Choose something interesting to roleplay.";
+      first = "My pride makes it hard to ask for help.";
+      second = "I trust a convincing story too easily."; break;
+    case CON_CHARACTER_AGE_SELECT:
+      description = "Choose your character's stage of life. Age affects your character concept and the ability adjustments shown with each option."; break;
+    case CON_QREGION: case CON_QREGION_HELP:
+      description = "Your homeland is the region your character comes from. It helps establish your culture and grants an associated language."; break;
+    case CON_CHARACTER_FACTION_SELECT:
+      description = "Choose the faction your character belongs to. This connects your character to a group with a shared identity and interests."; break;
+    case CON_CHARACTER_HOMETOWN_SELECT:
+      description = "Your hometown determines your recall destination and donation pit, and supports some background abilities. Choose a city that fits your character's story."; break;
+    case CON_CHARACTER_DEITY_SELECT: case CON_CHARACTER_DEITY_CONFIRM:
+      description = "Choose the deity your character worships or follows. Consider how that faith shapes your character's beliefs and actions."; break;
+  }
+  if (!description) return;
+  guidance = json_object_new_object(); examples = json_object_new_array();
+  json_object_object_add(guidance,"description",json_object_new_string(description));
+  if (first) json_object_array_add(examples,json_object_new_string(first));
+  if (second) json_object_array_add(examples,json_object_new_string(second));
+  json_object_object_add(guidance,"examples",examples);
+  json_object_object_add(event,"guidance",guidance);
 }
 
 void web_creation_finish(struct descriptor_data *d, struct output_capture *capture)
@@ -7142,6 +7204,9 @@ void web_creation_finish(struct descriptor_data *d, struct output_capture *captu
       creation_choice(choices,"1","Description","");
       creation_choice(choices,"2","Background story","");
       creation_choice(choices,"3","Background archetype","");
+      if (d->character && GET_BACKGROUND(d->character) > BACKGROUND_NONE)
+        json_object_object_add(json_object_array_get_idx(choices,3),"blockedReason",
+          json_object_new_string("You have already chosen a background archetype. To choose another, you must respec your character."));
       creation_choice(choices,"4","Goals","");
       creation_choice(choices,"5","Personality","");
       creation_choice(choices,"6","Ideals","");
@@ -7149,11 +7214,50 @@ void web_creation_finish(struct descriptor_data *d, struct output_capture *captu
       creation_choice(choices,"8","Flaws","");
       creation_choice(choices,"9","Age","");
       creation_choice(choices,"a","Homeland","");
+      if (d->character && GET_REGION(d->character) > REGION_NONE)
+        json_object_object_add(json_object_array_get_idx(choices,10),"blockedReason",
+          json_object_new_string("You have already chosen a homeland. Contact a staff member if you need to change it."));
       creation_choice(choices,"b","Faction","");
+      if (d->character && GET_CLAN(d->character) > 0)
+        json_object_object_add(json_object_array_get_idx(choices,11),"blockedReason",
+          json_object_new_string("You have already chosen a faction. Resign in-game or contact a staff member if you need to change it."));
       creation_choice(choices,"c","Hometown","");
+      if (d->character && GET_HOMETOWN(d->character) > 0)
+        json_object_object_add(json_object_array_get_idx(choices,12),"blockedReason",
+          json_object_new_string("You have already chosen a hometown. Contact a staff member if you need to change it."));
       creation_choice(choices,"d","Deity","");
+      if (d->character && GET_DEITY(d->character) > 0)
+        json_object_object_add(json_object_array_get_idx(choices,13),"blockedReason",
+          json_object_new_string("You have already chosen a deity. Contact a staff member if you need to change it."));
       creation_choice(choices,"q","Done","");
       break;
+    case CON_QREGION:
+      step = "homeland"; title = "Choose your homeland";
+      for (i = 1; i < NUM_REGIONS; i++)
+      {
+        if (!is_selectable_region(i)) continue;
+        snprintf(value,sizeof(value),"%d",i);
+        creation_choice(choices,value,regions[i],"");
+      }
+      break;
+    case CON_QREGION_HELP:
+    {
+      int region = d->character ? GET_REGION(d->character) : REGION_NONE;
+      step = "confirm"; title = "Confirm your homeland";
+      if (region > REGION_NONE && region < NUM_REGIONS && is_selectable_region(region))
+      {
+        int language = get_region_language(region);
+        struct json_object *details = json_object_new_object();
+#if defined(CAMPAIGN_FR)
+        language -= SKILL_LANG_LOW;
+#endif
+        json_object_object_add(details,"name",json_object_new_string(regions[region]));
+        json_object_object_add(details,"description",json_object_new_string(get_region_info(region)));
+        json_object_object_add(details,"language",json_object_new_string(languages[language]));
+        json_object_object_add(event,"homeland",details);
+      }
+      break;
+    }
     case CON_BACKGROUND_ARCHTYPE:
       title = "Choose a background archetype";
       for (i = 1; i < NUM_BACKGROUNDS; i++)
@@ -7180,10 +7284,60 @@ void web_creation_finish(struct descriptor_data *d, struct output_capture *captu
         json_object_object_add(choice,"adjustments",adjustments);
       }
       break;
-    case CON_CHARACTER_FACTION_SELECT: title = "Choose your faction"; break;
-    case CON_CHARACTER_HOMETOWN_SELECT: title = "Choose your hometown"; break;
-    case CON_CHARACTER_DEITY_SELECT: title = "Choose your deity"; break;
-    case CON_CHARACTER_DEITY_CONFIRM: step = "confirm"; title = "Confirm your deity"; break;
+    case CON_CHARACTER_FACTION_SELECT:
+      step = "faction"; title = "Choose your faction";
+      creation_choice(choices,"0","Adventurer / No faction",
+        "Adventurers belong to no specific faction. They choose their own allies and follow their own goals.");
+      for (i = 0; i < num_of_clans; i++)
+      {
+        if (clan_list[i].vnum <= 0 || !clan_list[i].clan_name) continue;
+        snprintf(value,sizeof(value),"%d",clan_list[i].vnum);
+        creation_choice(choices,value,clan_list[i].clan_name,
+                        clan_list[i].description ? clan_list[i].description : "No faction description is available.");
+      }
+      break;
+    case CON_CHARACTER_HOMETOWN_SELECT:
+      step = "hometown"; title = "Choose your hometown";
+#if defined(CAMPAIGN_DL)
+      creation_choice(choices,"1",cities[1],"Home of the Knights of Solamnia and Forces of Whitestone.");
+      creation_choice(choices,"2",cities[2],"Home of the Dragonarmies.");
+      creation_choice(choices,"3",cities[3],"A free city with no direct allegiances.");
+#elif defined(CAMPAIGN_FR)
+      creation_choice(choices,"1",cities[1],"A northern Sword Coast city ruled by the Pirate Captains and the Arcane Brotherhood.");
+#else
+      creation_choice(choices,"1",cities[1],"A bustling port city known for its trade and diverse population.");
+#endif
+      break;
+    case CON_CHARACTER_DEITY_SELECT:
+      step = "deity"; title = "Choose your deity";
+      for (i = 0; i < NUM_DEITIES; i++)
+      {
+        struct json_object *choice;
+        if (deity_list[i].pantheon == DEITY_PANTHEON_NONE) continue;
+        snprintf(value,sizeof(value),"%d",i);
+        creation_choice(choices,value,deity_list[i].name,deity_list[i].portfolio);
+        choice = json_object_array_get_idx(choices,json_object_array_length(choices)-1);
+        json_object_object_add(choice,"alignment",json_object_new_string(GET_ALIGN_STRING(deity_list[i].ethos,deity_list[i].alignment)));
+        json_object_object_add(choice,"alignmentGroup",json_object_new_string(
+          deity_list[i].alignment > 250 ? "good" : deity_list[i].alignment < -250 ? "evil" : "neutral"));
+      }
+      break;
+    case CON_CHARACTER_DEITY_CONFIRM:
+    {
+      int deity = d->character ? GET_DEITY(d->character) : -1;
+      step = "confirm"; title = "Confirm your deity";
+      if (deity >= 0 && deity < NUM_DEITIES && deity_list[deity].pantheon != DEITY_PANTHEON_NONE)
+      {
+        struct json_object *details = json_object_new_object();
+        json_object_object_add(details,"name",json_object_new_string(deity_list[deity].name));
+        json_object_object_add(details,"pantheon",json_object_new_string(pantheons[deity_list[deity].pantheon]));
+        json_object_object_add(details,"alignment",json_object_new_string(GET_ALIGN_STRING(deity_list[deity].ethos,deity_list[deity].alignment)));
+        json_object_object_add(details,"portfolio",json_object_new_string(deity_list[deity].portfolio));
+        json_object_object_add(details,"description",json_object_new_string(deity_list[deity].description));
+        json_object_object_add(event,"deity",details);
+      }
+      break;
+    }
     case CON_CHAR_RP_DECIDE:
       step = "roleplay"; title = "Choose your roleplay status";
       creation_choice(choices,"1","Non-role-player","Enter the game as a non-role-player.");
@@ -7226,7 +7380,28 @@ void web_creation_finish(struct descriptor_data *d, struct output_capture *captu
     case CON_CHARACTER_IDEALS_IDEAS: case CON_CHARACTER_BONDS_IDEAS: case CON_CHARACTER_FLAWS_IDEAS:
       step = "writing-intro"; title = "Write your character details";
       creation_choice(choices,"q","Open editor",""); break;
-    case CON_BACKGROUND_ARCHTYPE_CONFIRM: step = "confirm"; title = "Confirm your background"; break;
+    case CON_BACKGROUND_ARCHTYPE_CONFIRM:
+    {
+      int background = d->character ? GET_BACKGROUND(d->character) : BACKGROUND_NONE;
+      step = "confirm"; title = "Confirm your background";
+      if (background > BACKGROUND_NONE && background < NUM_BACKGROUNDS)
+      {
+        struct json_object *details = json_object_new_object(), *skills = json_object_new_array();
+        json_object_object_add(details,"name",json_object_new_string(background_list[background].name));
+        json_object_object_add(details,"description",json_object_new_string(background_list[background].desc));
+        json_object_object_add(details,"ability",json_object_new_string(feat_list[background_list[background].feat].description));
+        for (i = 0; i < 2; i++)
+        {
+          struct json_object *skill = json_object_new_object();
+          json_object_object_add(skill,"name",json_object_new_string(ability_names[background_list[background].skills[i]]));
+          json_object_object_add(skill,"bonus",json_object_new_int(2));
+          json_object_array_add(skills,skill);
+        }
+        json_object_object_add(details,"skills",skills);
+        json_object_object_add(event,"background",details);
+      }
+      break;
+    }
   }
   if (!strcmp(step,"confirm")) { creation_choice(choices,"y","Yes","");creation_choice(choices,"n","No",""); }
   if (!strcmp(step,"continue")) creation_choice(choices,"","Continue","");
@@ -7265,6 +7440,7 @@ void web_creation_finish(struct descriptor_data *d, struct output_capture *captu
     json_object_object_add(event,"descriptionPreview",json_object_new_string(preview ? preview : ""));
     free(preview);
   }
+  creation_field_guidance(event,state);
   json_object_object_add(event,"choices",choices);
   serialized = json_object_to_json_string_ext(event,JSON_C_TO_STRING_PLAIN);
   MSDPSetString(d,eMSDP_CHARACTER_CREATION,serialized);
@@ -8395,6 +8571,7 @@ void nanny(struct descriptor_data *d, char *arg)
 
     if (is_abbrev(arg, "quit") || is_abbrev(arg, "Quit"))
     {
+      GET_REGION(d->character) = REGION_NONE;
       write_to_output(d, "Homeland region selection aborted.\r\n");
       STATE(d) = CON_CHAR_RP_MENU;
       show_character_rp_menu(d);
@@ -8431,6 +8608,7 @@ void nanny(struct descriptor_data *d, char *arg)
     }
     else
     {
+      GET_REGION(d->character) = REGION_NONE;
 #ifdef CAMPAIGN_DL
       write_to_output(d, "\tcRegions of Krynn\tn\r\n\r\n");
 #else

@@ -1546,7 +1546,7 @@
 
 // ******** DAM_ *********
 
-#define DAMAGE_CAP 1499
+#define DAMAGE_CAP 2500
 #define NPC_DAMAGE_CAP 250
 
 #define DAM_RESERVED_DBC 0 // reserve

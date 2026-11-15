@@ -34,7 +34,7 @@ code=r'''
 struct output_capture { char *text; bool truncated; };
 struct variable { bool bReport,bDirty; };
 struct protocol { bool bMSDP;struct variable **pVariables; };
-struct char_data { struct { char *name; } player;int premade,race,classnum; };
+struct char_data { struct { char *name; } player;int premade,race,classnum,background,region,clan,hometown,deity; };
 struct descriptor_data { int state;void *account;char **str;char *backstr;size_t max_str;bool web_editor_uploading,web_editor_failed;struct protocol *pProtocol;struct output_capture *output_capture;bool web_character_creation,forced_short_desc_setup;struct char_data *character; };
 static struct { bool is_pc,locked,unlocked;const char *name,*type,*descrip; } race_list[3]={
  {true,false,false,"human","Human","Versatile"},{true,true,false,"irda","Irda","Ancient magic"},{false,false,false,"dragon","Dragon","Not playable"}};
@@ -81,11 +81,42 @@ for signature in ['const char *short_desc_feature_label(', 'const char *short_de
 code+=r'''
 #define NUM_CHARACTER_AGES 5
 #define NUM_BACKGROUNDS 2
+#define BACKGROUND_NONE 0
+#define GET_BACKGROUND(ch) ((ch)->background)
+#define REGION_NONE 0
+#define NUM_REGIONS 4
+#define GET_REGION(ch) ((ch)->region)
+#define GET_CLAN(ch) ((ch)->clan)
+#define GET_HOMETOWN(ch) ((ch)->hometown)
+#define GET_DEITY(ch) ((ch)->deity)
+#define NUM_DEITIES 4
+#define DEITY_PANTHEON_NONE 0
+#define GET_ALIGN_STRING(e,a) ((e)==1?"Lawful Good":"Chaotic Evil")
+static const char *cities[]={"None","Palanthas","Sanction","Solace"};
+static const char *pantheons[]={"None","Gods of Light","Gods of Darkness"};
+static struct {const char *name;int ethos,alignment,pantheon;const char *portfolio,*description;} deity_list[]={
+ {"none",0,0,0,"",""},{"Paladine",1,1000,1,"Good dragons, protection","Paladine description from game data."},
+ {"Takhisis",2,-1000,2,"Evil dragons, conquest","Takhisis description from game data."},{"Gilean",0,0,1,"Knowledge","Gilean description."}};
+
+static int num_of_clans=2;
+static struct { int vnum;const char *clan_name,*description; } clan_list[]={
+ {2,"Forces of Whitestone","Whitestone description from game data."},
+ {17,"Dragonarmies","Dragonarmy description from game data."}};
+
+static const char *regions[]={"None","Abanasinia","Blood Sea Isles","Outer Planes"};
+static const char *languages[]={"Abanasinian","Kalinese"};
+static bool is_selectable_region(int region){return region!=3;}
+static int get_region_language(int region){return region==2?1:0;}
+static const char *get_region_info(int region){return region==2?"Island region description.":"Plains region description.";}
+
 static const char *character_ages[]={"adult","adolescent","middle-aged","old-aged","venerable"};
 static const int character_age_attributes[5][6]={{0},{-1,2,0,0,-1,0},{-1,-1,-1,1,1,1},{-2,-2,-2,2,2,2},{-3,-3,-3,3,3,3}};
 static const char *ability_score_names[]={"Strength","Dexterity","Constitution","Intelligence","Wisdom","Charisma"};
 static const int backgrounds_listed_alphabetically[]={0,1};
-static struct {const char *name;} background_list[]={{"none"},{"Scholar"}};
+static struct {const char *name,*desc;int skills[2],feat;} background_list[]={
+ {"none","",{0,0},0},{"Scholar","Background description from game data.",{0,1},1}};
+static const char *ability_names[]={"Knowledge (arcana)","Research"};
+static struct {const char *description;} feat_list[]={{""},{"Special ability from game data."}};
 static void smash_tilde(char *text){for(;*text;text++)if(*text=='~')*text='-';}
 static int editor_saves,editor_aborts;
 static void string_add(struct descriptor_data *d,char *command){
@@ -95,7 +126,7 @@ static void string_add(struct descriptor_data *d,char *command){
  d->str=NULL;d->state=CON_CHAR_RP_MENU;
 }
 '''
-for signature in ['bool web_creation_begin(', 'bool web_creation_editor(', 'static bool web_creation_can_back(', 'bool web_creation_back(', 'static void creation_choice(', 'void web_creation_finish(']:code+=function(signature)+'\n'
+for signature in ['bool web_creation_begin(', 'bool web_creation_editor(', 'static bool web_creation_can_back(', 'bool web_creation_back(', 'static void creation_choice(', 'static void creation_field_guidance(', 'void web_creation_finish(']:code+=function(signature)+'\n'
 code+=r'''
 static struct json_object *field(struct json_object *o,const char *name){struct json_object *v;assert(json_object_object_get_ex(o,name,&v));return v;}
 static struct json_object *snapshot(struct descriptor_data *d,int state){
@@ -172,6 +203,73 @@ int main(void){
  web_creation_editor(&d,"@creation-editor-append \"This text is too long\"");
  web_creation_editor(&d,"@creation-editor-save");assert(d.str&&d.web_editor_failed);
  web_creation_editor(&d,"@creation-editor-cancel");assert(!strcmp(editing,"Keep me")&&editor_aborts==1);free(editing);
+ ch.background=1;
+ event=snapshot(&d,CON_BACKGROUND_ARCHTYPE_CONFIRM);
+ struct json_object *background=field(event,"background"),*skills=field(background,"skills");
+ assert(!strcmp(json_object_get_string(field(background,"name")),"Scholar"));
+ assert(!strcmp(json_object_get_string(field(background,"description")),"Background description from game data."));
+ assert(!strcmp(json_object_get_string(field(background,"ability")),"Special ability from game data."));
+ assert(json_object_array_length(skills)==2);
+ assert(!strcmp(json_object_get_string(field(json_object_array_get_idx(skills,0),"name")),"Knowledge (arcana)"));
+ assert(json_object_get_int(field(json_object_array_get_idx(skills,1),"bonus"))==2);
+ assert(json_object_array_length(field(event,"choices"))==2);
+ json_object_put(event);
+ event=snapshot(&d,CON_CHAR_RP_MENU);assert(!json_object_object_get_ex(event,"background",&background));json_object_put(event);
+ ch.background=NUM_BACKGROUNDS;event=snapshot(&d,CON_BACKGROUND_ARCHTYPE_CONFIRM);
+ assert(!json_object_object_get_ex(event,"background",&background));json_object_put(event);
+ for(int state=CON_CHARACTER_GOALS_IDEAS;state<=CON_CHARACTER_FLAWS_ENTER;state++) {
+  event=snapshot(&d,state);struct json_object *guidance=field(event,"guidance");
+  assert(strlen(json_object_get_string(field(guidance,"description")))>20);
+  assert(json_object_array_length(field(guidance,"examples"))==2);json_object_put(event);
+ }
+ ch.background=1;event=snapshot(&d,CON_CHAR_RP_MENU);
+ assert(strstr(json_object_get_string(field(json_object_array_get_idx(field(event,"choices"),3),"blockedReason")),"already chosen"));json_object_put(event);
+ ch.background=0;event=snapshot(&d,CON_CHAR_RP_MENU);
+ struct json_object *blocked=NULL;assert(!json_object_object_get_ex(json_object_array_get_idx(field(event,"choices"),3),"blockedReason",&blocked));json_object_put(event);
+ event=snapshot(&d,CON_QREGION);choices=field(event,"choices");
+ assert(!strcmp(json_object_get_string(field(event,"step")),"homeland"));
+ assert(json_object_array_length(choices)==2);
+ assert(!strcmp(json_object_get_string(field(json_object_array_get_idx(choices,0),"value")),"1"));
+ assert(!strcmp(json_object_get_string(field(json_object_array_get_idx(choices,1),"label")),"Blood Sea Isles"));json_object_put(event);
+ ch.region=2;event=snapshot(&d,CON_QREGION_HELP);
+ struct json_object *homeland=field(event,"homeland");
+ assert(!strcmp(json_object_get_string(field(homeland,"name")),"Blood Sea Isles"));
+ assert(!strcmp(json_object_get_string(field(homeland,"language")),"Kalinese"));
+ assert(!strcmp(json_object_get_string(field(homeland,"description")),"Island region description."));
+ assert(json_object_array_length(field(event,"choices"))==2);json_object_put(event);
+ assert(web_creation_back(&d,"@creation-back"));assert(d.state==CON_QREGION && !ch.region);
+ ch.region=1;event=snapshot(&d,CON_CHAR_RP_MENU);
+ assert(strstr(json_object_get_string(field(json_object_array_get_idx(field(event,"choices"),10),"blockedReason")),"already chosen"));json_object_put(event);
+ ch.region=3;event=snapshot(&d,CON_QREGION_HELP);assert(!json_object_object_get_ex(event,"homeland",&homeland));json_object_put(event);
+ event=snapshot(&d,CON_CHARACTER_FACTION_SELECT);choices=field(event,"choices");
+ assert(!strcmp(json_object_get_string(field(event,"step")),"faction"));
+ assert(json_object_array_length(choices)==3);
+ assert(!strcmp(json_object_get_string(field(json_object_array_get_idx(choices,0),"value")),"0"));
+ assert(!strcmp(json_object_get_string(field(json_object_array_get_idx(choices,2),"value")),"17"));
+ assert(!strcmp(json_object_get_string(field(json_object_array_get_idx(choices,2),"description")),"Dragonarmy description from game data."));json_object_put(event);
+ ch.clan=17;event=snapshot(&d,CON_CHAR_RP_MENU);
+ assert(strstr(json_object_get_string(field(json_object_array_get_idx(field(event,"choices"),11),"blockedReason")),"already chosen"));json_object_put(event);
+ event=snapshot(&d,CON_CHARACTER_HOMETOWN_SELECT);choices=field(event,"choices");
+ assert(!strcmp(json_object_get_string(field(event,"step")),"hometown"));
+ assert(json_object_array_length(choices)==3);
+ assert(!strcmp(json_object_get_string(field(json_object_array_get_idx(choices,2),"label")),"Solace"));json_object_put(event);
+ event=snapshot(&d,CON_CHARACTER_DEITY_SELECT);choices=field(event,"choices");
+ assert(!strcmp(json_object_get_string(field(event,"step")),"deity"));
+ assert(json_object_array_length(choices)==3);
+ assert(!strcmp(json_object_get_string(field(json_object_array_get_idx(choices,0),"alignmentGroup")),"good"));
+ assert(!strcmp(json_object_get_string(field(json_object_array_get_idx(choices,1),"alignmentGroup")),"evil"));
+ assert(!strcmp(json_object_get_string(field(json_object_array_get_idx(choices,2),"alignmentGroup")),"neutral"));
+ assert(!strcmp(json_object_get_string(field(json_object_array_get_idx(choices,0),"value")),"1"));
+ assert(!strcmp(json_object_get_string(field(json_object_array_get_idx(choices,0),"alignment")),"Lawful Good"));json_object_put(event);
+ ch.deity=2;event=snapshot(&d,CON_CHARACTER_DEITY_CONFIRM);struct json_object *deity=field(event,"deity");
+ assert(!strcmp(json_object_get_string(field(deity,"name")),"Takhisis"));
+ assert(!strcmp(json_object_get_string(field(deity,"pantheon")),"Gods of Darkness"));
+ assert(!strcmp(json_object_get_string(field(deity,"description")),"Takhisis description from game data."));
+ assert(json_object_array_length(field(event,"choices"))==2);json_object_put(event);
+ ch.deity=0;event=snapshot(&d,CON_CHARACTER_DEITY_CONFIRM);assert(!json_object_object_get_ex(event,"deity",&deity));json_object_put(event);
+ ch.hometown=1;ch.deity=1;event=snapshot(&d,CON_CHAR_RP_MENU);
+ assert(strstr(json_object_get_string(field(json_object_array_get_idx(field(event,"choices"),12),"blockedReason")),"hometown"));
+ assert(strstr(json_object_get_string(field(json_object_array_get_idx(field(event,"choices"),13),"blockedReason")),"deity"));json_object_put(event);
  assert(editor_saves==7);
  assert(writes==flushes && writes>=6);free(response);
  puts("Web creation: account opt-in, unlocked races/classes, alignment rules, Previous navigation, editor safety and completion passed");
