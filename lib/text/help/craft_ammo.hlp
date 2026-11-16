@@ -24,7 +24,7 @@ materials but keeps your enhancement and damage selections. Reset restores
 ordinary arrows and all default settings. Configuration and previews cost
 nothing; begin starts a timed job using your saved recipe.
 
-Ammo, throwing bundles and fletching kits take 60 seconds to craft before
+Ammo, throwing bundles and fletching kits take 30 seconds to craft before
 rapid-crafting talent reductions. Progress messages show time remaining.
 The skill roll and finished item arrive only when the timer ends. Your
 active recipe and remaining time are saved between logins.

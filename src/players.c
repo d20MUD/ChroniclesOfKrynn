@@ -1012,6 +1012,10 @@ int load_char(const char *name, struct char_data *ch)
           ch->char_specials.saved.combat_feats[i][2] = asciiflag_conv(f3);
           ch->char_specials.saved.combat_feats[i][3] = asciiflag_conv(f4);
         }
+        else if (!strcmp(tag, "CSp1"))
+          GET_CRAFT(ch).craft_specialization[0] = atoi(line);
+        else if (!strcmp(tag, "CSp2"))
+          GET_CRAFT(ch).craft_specialization[1] = atoi(line);
         else if (!strcmp(tag, "Cfpt"))
           load_class_feat_points(fl, ch);
         else if (!strcmp(tag, "Cha "))
@@ -2039,10 +2043,6 @@ int load_char(const char *name, struct char_data *ch)
           GET_CRAFT(ch).resize_mat_type = atoi(line);
         else if (!strcmp(tag, "RSMN"))
           GET_CRAFT(ch).resize_mat_num = atoi(line);
-        else if (!strcmp(tag, "CSp1"))
-          GET_CRAFT(ch).craft_specialization[0] = atoi(line);
-        else if (!strcmp(tag, "CSp2"))
-          GET_CRAFT(ch).craft_specialization[1] = atoi(line);
         break;
 
       case 'S':

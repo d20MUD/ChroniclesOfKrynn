@@ -1669,7 +1669,7 @@ void assign_feats(void)
   feat_prereq_bab(FEAT_IMPROVED_PRECISE_SHOT, 11);
   feato(FEAT_RAPID_RELOAD, "rapid reload", TRUE, TRUE, FALSE, FEAT_TYPE_COMBAT,
         "reload hand/light crossbows freely and heavy crossbows as a move action",
-        "Reduce hand and light crossbow reloads to free actions, heavy crossbows to move actions. This game's feat also retains sling and repeating crossbow support.");
+        "Reduce hand and light crossbow reloads to free actions, heavy crossbows to move actions. Light repeating crossbows also reload freely; heavy repeating crossbows reload as a move action. Slings reload freely.");
   feato(FEAT_DEFLECT_ARROWS, "deflect arrows", TRUE, TRUE, FALSE, FEAT_TYPE_COMBAT,
         "can deflect one ranged attack per round",
         "You must have at least one hand free to use this feat. "

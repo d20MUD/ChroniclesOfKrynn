@@ -6885,6 +6885,7 @@ struct char_special_data
   bool ranged_offhand;        /* transient launcher selection during offhand shots */
   bool throw_opening_round;   /* finish the opening thrown volley before melee */
   struct obj_data throwing_profile; /* transient weapon view of selected thrown ammo */
+  bool repeater_bonus_checked; /* one repeater bonus roll per combat round */
   bool manyshot_pending;      /* first bow attack of a full attack */
   bool ranged_touch_roll;     /* do not borrow equipped weapon/ammo bonuses for rays */
   bool blasting;              /* is char eldritch blasting? */

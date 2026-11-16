@@ -1137,6 +1137,12 @@ ACMD(do_imbuearrow)
     return;
   }
 
+  if (GET_OBJ_VAL(arrow, 0) != AMMO_TYPE_ARROW || GET_OBJ_VAL(arrow, 1))
+  {
+    send_to_char(ch, "Choose arrows that are not already imbued.\r\n");
+    return;
+  }
+
   /* confirm we have a valid spell */
   spell_num = find_skill_num(arg2);
   if (spell_num < 1 || spell_num > MAX_SPELLS)

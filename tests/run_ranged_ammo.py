@@ -33,7 +33,7 @@ static int roll;
 int rand_number(int low, int high) { assert(low<=high); return roll ? high : low; }
 struct obj_data *create_obj(void) { return calloc(1,sizeof(struct obj_data)); }
 static void obj_from_obj(struct obj_data *o) { assert(o->in_obj); o->in_obj->contains=o->next_content; o->in_obj=NULL; o->next_content=NULL; }
-''' + function('bool is_throwing_weapon(') + '\n' + function('bool ammunition_is_unlimited(') + '\n' + function('int ammunition_remaining(') + '\n' + function('void format_ammunition_quantity(') + '\n' + function('bool usable_ammunition(') + '\n' + function('bool has_ammo_in_pouch(') + '\n' + function('struct obj_data *take_ammo_projectile(')
+''' + function('bool is_throwing_weapon(') + '\n' + function('bool ammunition_is_unlimited(') + '\n' + function('int ammunition_remaining(') + '\n' + function('void format_ammunition_quantity(') + '\n' + function('bool usable_ammunition(') + '\n' + function('struct obj_data *select_ammo_in_pouch(') + '\n' + function('bool has_ammo_in_pouch(') + '\n' + function('struct obj_data *take_ammo_projectile(')
 utils_source = (root/'src/utils.c').read_text()
 a_label = utils_source.index('char *object_short_description(')
 code += '\nstruct obj_data *obj_proto; obj_rnum top_of_objt = -1;\nstatic const struct obj_data *fired_projectile;\nbool is_ranged_projectile(const struct obj_data *obj) { return obj && obj==fired_projectile; }\n' + utils_source[a_label:utils_source.index('\n}', a_label)+2]
@@ -98,10 +98,13 @@ int main(void) {
   assert(!same_listed_object(&ammo,&other));
   GET_OBJ_VAL(&other,AMMO_VAL_QUANTITY)=2;assert(same_listed_object(&ammo,&other));
   roll=1;initialize(&ammo);assert(GET_OBJ_VAL(&ammo,AMMO_VAL_QUANTITY)==5);
+  GET_OBJ_VAL(&ammo,1)=42;
   for(int i=5;i>1;i--) {
     assert(has_ammo_in_pouch(&ch,&weapon,true));
     struct obj_data *shot=take_ammo_projectile(&ammo,&weapon);
     assert(shot!=&ammo && pouch.contains==&ammo);
+    assert(GET_OBJ_VAL(shot,1)==(i==5?42:0));
+    assert(GET_OBJ_VAL(&ammo,1)==0);
     assert(GET_OBJ_VAL(&ammo,AMMO_VAL_QUANTITY)==i-1);
     assert(GET_OBJ_VAL(shot,4)==3 && GET_OBJ_VAL(shot,AMMO_VAL_DAMAGE_TYPE)==1);
     assert(GET_OBJ_VAL(shot,AMMO_VAL_DAMAGE_DIE)==6);
@@ -116,10 +119,13 @@ int main(void) {
   format_ammunition_quantity(&ammo,label,sizeof(label));assert(!strcmp(label," (0)"));
   GET_OBJ_VAL(&ammo,AMMO_VAL_UNLIMITED)=1;
   format_ammunition_quantity(&ammo,label,sizeof(label));assert(!strcmp(label," (unlimited)"));
+  GET_OBJ_VAL(&ammo,1)=42;
   for(int i=0;i<100;i++) {
     assert(has_ammo_in_pouch(&ch,&weapon,true));
     struct obj_data *shot=take_ammo_projectile(&ammo,&weapon);
     assert(shot!=&ammo && ammo.in_obj==&pouch);
+    assert(GET_OBJ_VAL(shot,1)==(i==0?42:0));
+    assert(GET_OBJ_VAL(&ammo,1)==0);
     assert(!GET_OBJ_VAL(shot,AMMO_VAL_UNLIMITED));
     assert(GET_OBJ_VAL(&ammo,AMMO_VAL_QUANTITY)==0);
     assert(GET_OBJ_VAL(shot,4)==3 && GET_OBJ_VAL(shot,AMMO_VAL_DAMAGE_DIE)==6);

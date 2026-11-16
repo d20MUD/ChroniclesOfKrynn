@@ -5684,6 +5684,8 @@ ACMDCHECK(can_arrowswarm)
   ACMDCHECK_TEMPFAIL_IF(!can_fire_ammo(ch, TRUE),
                         "You have to be using a ranged weapon with ammo ready to "
                         "fire in your ammo pouch to do this!\r\n");
+  ACMDCHECK_TEMPFAIL_IF(GET_OBJ_VAL(GET_EQ(ch, WEAR_AMMO_POUCH)->contains, 0) != AMMO_TYPE_ARROW,
+                        "This ability requires a bow and arrows.\r\n");
   return CAN_CMD;
 }
 
@@ -5841,7 +5843,8 @@ ACMD(do_manyshot)
 static int arrowswarm_callback(struct char_data *ch, struct char_data *tch, void *data)
 {
   /* ammo check! */
-  if (can_fire_ammo(ch, TRUE))
+  if (can_fire_ammo(ch, TRUE) &&
+      combat_attack_in_range(ch, tch, ATTACK_TYPE_RANGED, get_wielded(ch, ATTACK_TYPE_RANGED)))
   {
     /* FIRE! */
     hit(ch, tch, TYPE_UNDEFINED, DAM_RESERVED_DBC, 0, ATTACK_TYPE_RANGED);
@@ -5869,12 +5872,13 @@ ACMD(do_arrowswarm)
   PREREQ_NOT_PEACEFUL_ROOM();
   PREREQ_NOT_SINGLEFILE_ROOM();
   PREREQ_HAS_USES(FEAT_SWARM_OF_ARROWS,
-                  "You must recover before you can use another death arrow.\r\n");
+                  "You must recover before you can use another swarm of arrows.\r\n");
 
   send_to_char(ch, "You open up a barrage of fire!\r\n");
   act("$n opens up a barrage of fire!", FALSE, ch, 0, 0, TO_ROOM);
 
-  aoe_effect(ch, -1, arrowswarm_callback, NULL);
+  if (!aoe_effect(ch, -1, arrowswarm_callback, NULL))
+    return;
 
   if (!IS_NPC(ch))
     start_daily_use_cooldown(ch, FEAT_SWARM_OF_ARROWS);
@@ -9546,6 +9550,8 @@ ACMDCHECK(can_deatharrow)
   ACMDCHECK_TEMPFAIL_IF(!can_fire_ammo(ch, TRUE),
                         "You have to be using a ranged weapon with ammo ready to "
                         "fire in your ammo pouch to do this!\r\n");
+  ACMDCHECK_TEMPFAIL_IF(GET_OBJ_VAL(GET_EQ(ch, WEAR_AMMO_POUCH)->contains, 0) != AMMO_TYPE_ARROW,
+                        "This ability requires a bow and arrows.\r\n");
   return CAN_CMD;
 }
 
@@ -11085,6 +11091,13 @@ void perform_seekerarrow(struct char_data *ch, struct char_data *vict)
     return;
   }
 
+  if (!can_fire_ammo(ch, TRUE) ||
+      !combat_attack_in_range(ch, vict, ATTACK_TYPE_RANGED, get_wielded(ch, ATTACK_TYPE_RANGED)))
+  {
+    send_to_char(ch, "Your target is beyond your bow range.\r\n");
+    return;
+  }
+
   start_daily_use_cooldown(ch, FEAT_SEEKER_ARROW);
 
   /* As a free action once per day per rank of the seeker arrow feat, the arcane
@@ -11100,6 +11113,8 @@ ACMDCHECK(can_seekerarrow)
   ACMDCHECK_TEMPFAIL_IF(!can_fire_ammo(ch, TRUE),
                         "You have to be using a ranged weapon with ammo ready to "
                         "fire in your ammo pouch to do this!\r\n");
+  ACMDCHECK_TEMPFAIL_IF(GET_OBJ_VAL(GET_EQ(ch, WEAR_AMMO_POUCH)->contains, 0) != AMMO_TYPE_ARROW,
+                        "This ability requires a bow and arrows.\r\n");
   return CAN_CMD;
 }
 
@@ -11951,7 +11966,6 @@ ACMD(do_reload)
   switch (GET_OBJ_VAL(wielded, 0))
   {
   case WEAPON_TYPE_HEAVY_REP_XBOW:
-  case WEAPON_TYPE_LIGHT_REP_XBOW:
   case WEAPON_TYPE_HEAVY_CROSSBOW:
     if (HAS_FEAT(ch, FEAT_RAPID_RELOAD))
     {
@@ -11992,6 +12006,7 @@ ACMD(do_reload)
     break;
   case WEAPON_TYPE_HAND_CROSSBOW:
   case WEAPON_TYPE_LIGHT_CROSSBOW:
+  case WEAPON_TYPE_LIGHT_REP_XBOW:
   case WEAPON_TYPE_SLING:
     if (HAS_FEAT(ch, FEAT_RAPID_RELOAD))
       reload_weapon(ch, wielded, FALSE);

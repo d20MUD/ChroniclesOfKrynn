@@ -58,7 +58,7 @@ static void obj_to_char(struct obj_data *obj,struct char_data *ch) {obj->carried
 struct obj_data *create_obj(void) {struct obj_data *obj=calloc(1,sizeof(*obj));IN_ROOM(obj)=NOWHERE;return obj;}
 int dice(int number,int size) {return number*size;}
 '''
-for name in ['bool is_throwing_weapon(','bool ammunition_is_unlimited(','bool throwing_allows_full_attack(','bool usable_ammunition(','bool has_ammo_in_pouch(','struct obj_data *take_ammo_projectile(','bool reload_weapon(','bool ready_to_reload(']:
+for name in ['bool is_throwing_weapon(','bool ammunition_is_unlimited(','bool throwing_allows_full_attack(','bool usable_ammunition(','struct obj_data *select_ammo_in_pouch(', 'bool has_ammo_in_pouch(','struct obj_data *take_ammo_projectile(','bool reload_weapon(','bool ready_to_reload(']:
     code+='\n'+function(weapons,name)
 code+=r'''
 bool can_fire_ammo(struct char_data *ch,bool silent) {
@@ -180,15 +180,16 @@ int main(void) {
   assert(volley_count(&ch,1)==2 && volley_penalty==0);
 
   /* A free reload is what permits successive shots with a light crossbow. */
-  int crossbows[]={WEAPON_TYPE_HAND_CROSSBOW,WEAPON_TYPE_LIGHT_CROSSBOW,WEAPON_TYPE_HEAVY_CROSSBOW};
-  for(int i=0;i<3;i++) {
+  int crossbows[]={WEAPON_TYPE_HAND_CROSSBOW,WEAPON_TYPE_LIGHT_CROSSBOW,WEAPON_TYPE_HEAVY_CROSSBOW,WEAPON_TYPE_LIGHT_REP_XBOW,WEAPON_TYPE_HEAVY_REP_XBOW};
+  for(int i=0;i<5;i++) {
     GET_OBJ_VAL(&bow,0)=crossbows[i];GET_OBJ_VAL(&bow,5)=0;
     move_ready=standard_ready=true;move_used=standard_used=0;feats[FEAT_RAPID_RELOAD]=0;
     assert(ready_to_reload(&ch,&bow,true));
-    assert(move_used==1 && standard_used==(i==2));
+    assert(move_used==1 && standard_used==(i==2 || i==4));
     GET_OBJ_VAL(&bow,5)=0;move_ready=standard_ready=true;move_used=standard_used=0;
     feats[FEAT_RAPID_RELOAD]=1;assert(ready_to_reload(&ch,&bow,true));
-    assert(move_used==(i==2) && !standard_used);
+    assert(move_used==(i==2 || i==4) && !standard_used);
+    assert(GET_OBJ_VAL(&bow,5)==(i>=3?5:1));
   }
   puts("PASS: PBS 30-foot boundary, BAB-scaled Deadly Aim, Far Shot increments, partial/total concealment, bow-only Manyshot with two ammo/one roll/no extra critical or precision, separate DR/resistance and Rapid Reload actions.");
 }

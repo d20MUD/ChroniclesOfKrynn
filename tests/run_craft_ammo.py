@@ -7,13 +7,14 @@ s = (root/'src/crafting_new.c').read_text()
 def function(signature):
     start=s.index(signature+'\n{')
     return s[start:s.index('\n}',start)+2]
-headers='\n'.join('#include "'+h+'"' for h in ['conf.h','sysdep.h','structs.h','utils.h','comm.h','db.h','constants.h','crafting_new.h','assign_wpn_armor.h','spells.h','interpreter.h','vnums.h','talents.h'])
+headers='\n'.join('#include "'+h+'"' for h in ['conf.h','sysdep.h','structs.h','utils.h','comm.h','db.h','constants.h','crafting_new.h','assign_wpn_armor.h','spells.h','interpreter.h','vnums.h','talents.h','spec_abilities.h'])
 defines='\n'.join(re.findall(r'^#define CRAFT_MOTES_REQ_.*$',s,re.M))+'\n#define CREATE_BASE_DC 10\n#define CREATE_BASE_EXP 50\n#define CREATE_BASE_TIME 60\n'
 players=(root/'src/players.c').read_text();a=players.index('static void load_ammo_craft_settings(struct char_data *ch, const char *line)\n{');loader=players[a:players.index('\n}',a)+2]
 code=s[s.index('#define CRAFT_AMMO_BATCH_SIZE'):s.index('static bool obj_has_catalyst_target(',s.index('#define CRAFT_AMMO_BATCH_SIZE'))]
 stubs=r'''
 #include <assert.h>
 struct player_special_data dummy_mob;
+bool obj_has_special_ability(struct obj_data *obj,int ability) {return false;}
 void basic_mud_log(const char *f,...) {assert(0);}
 char *CAP(char *s) {if(*s) *s=toupper((unsigned char)*s);return s;}
 #undef HAS_FEAT
@@ -78,7 +79,7 @@ static void craft_and_wait(struct char_data *ch, const char *argument) {
  int attempts=rolls;
  craft_ammunition(ch,argument);
  if(GET_CRAFT(ch).crafting_method==SCMD_NEWCRAFT_AMMO) {
-   assert(GET_CRAFT(ch).craft_duration==60);
+   assert(GET_CRAFT(ch).craft_duration==30);
    assert(!delivered && rolls==attempts);
    int settings[7];memcpy(settings,AMMO_SETTINGS(ch),sizeof(settings));
    memset(AMMO_SETTINGS(ch),0,sizeof(settings)); /* settings changes cannot alter pending job */
@@ -286,7 +287,7 @@ int main(void) {
  for(int m=0;m<NUM_CRAFT_MATS;m++)original_materials[m]=GET_CRAFT_MAT((&ch),m);
  for(int m=0;m<NUM_CRAFT_MOTES;m++)original_motes[m]=GET_CRAFT_MOTES((&ch),m);
  craft_ammunition(&ch,"arrows");
- assert(GET_CRAFT((&ch)).craft_duration==60 && !delivered && rolls==old_rolls);
+ assert(GET_CRAFT((&ch)).craft_duration==30 && !delivered && rolls==old_rolls);
  craft_ammunition_complete(&ch);assert(!delivered && rolls==old_rolls);
  int pending[8];memcpy(pending,GET_CRAFT((&ch)).ammo_job,sizeof(pending));
  int remaining_wood=GET_CRAFT_MAT((&ch),pending[1]);
@@ -300,7 +301,7 @@ int main(void) {
  craft_ammunition(&ch,"cancel");
  for(int m=0;m<NUM_CRAFT_MATS;m++)assert(GET_CRAFT_MAT((&ch),m)==original_materials[m]);
  craft_ammunition_complete(&ch);assert(!delivered && rolls==old_rolls);
- rapid=15;craft_ammunition(&ch,"arrows");assert(GET_CRAFT((&ch)).craft_duration==45);
+ rapid=15;craft_ammunition(&ch,"arrows");assert(GET_CRAFT((&ch)).craft_duration==15);
  craft_ammunition(&ch,"cancel");
  rapid=100;craft_ammunition(&ch,"kit");assert(GET_CRAFT((&ch)).craft_duration==1);
  craft_ammunition(&ch,"cancel");rapid=0;

@@ -155,8 +155,8 @@ Deadly Aim is a toggle: -1/+2 attack/damage, increasing by another -1/+2 at BAB
 +4 and every +4 thereafter. It does not use the shared numeric Power Attack
 value. Its damage applies to ranged weapons, not spells or touch attacks.
 Rapid Reload retains existing action costs (hand/light crossbow free with the
-feat; heavy crossbow move with the feat), including this MUD's broader support
-for slings and repeating crossbows.
+feat; heavy crossbow move with the feat), including free reloads for slings and light repeaters, and move-action reloads
+for heavy repeaters.
 
 Feat prerequisites were corrected to PF1 values: Precise Shot requires PBS;
 Manyshot requires Dex 17, PBS, Rapid Shot, BAB 6; Improved Precise Shot requires
@@ -182,3 +182,44 @@ on the existing concealment system.
 Validation adds `python3 tests/run_ranged_feats.py` for the 30-foot PBS boundary,
 Deadly Aim scaling, Far Shot, concealment, thrown volleys/Quick Draw/Rapid Shot,
 Manyshot ammo and secondary damage, and reload action costs.
+
+## Arcane Archer abilities
+
+Enhance Arrow applies its rank bonus to attack and damage for arrows, including
+special shots and Manyshot. Other ammunition and spell attack rolls receive no
+bonus. Seeker Arrow, Swarm of Arrows, and Arrow of Death require usable arrows.
+Seeker Arrow checks weapon range before spending its daily use. Swarm uses the
+normal ranged attack pipeline for each eligible foe; no eligible targets spends
+no use or action.
+
+Imbue Arrow enchants the next projectile from the selected supply. Its spell
+transfers once on firing, including from unlimited supplies, and activates even
+on a miss. Manyshot does not duplicate it. Already imbued supplies cannot be
+overwritten.
+
+A readied Arrow of Death survives melee attacks, spell rolls, and other ammo
+types. Its next arrow hit or miss consumes it. The death save uses DC 10 +
+Arcane Archer level + the higher Intelligence/Charisma modifier, subject to the
+existing target level limit and death-magic immunity.
+
+Validation: `python3 tests/run_arcane_archer.py`, plus the ammunition,
+ranged-feat, ranged-resolution, and combat-distance regression scripts.
+
+## Repeating crossbows
+
+Light and heavy repeating crossbows each hold five shots. A light repeater
+refills as a move action, or a free action with Rapid Reload. A heavy repeater
+refills as a full-round action, or a move action with Rapid Reload. Manual reload
+and autoreload use the same costs. Reloading resets the loaded count; each shot
+still consumes matching bolts from the equipped ammo pouch.
+
+A proficient repeater wielder has a 10% chance per full attack round to fire one
+extra shot, at the current attack's bonus and penalties. The bonus uses the normal
+ranged hit pipeline and consumes a loaded shot and ammunition. It requires a
+living valid opponent in range and a loaded weapon after normal autoreload. It
+cannot chain, reroll on later attacks or combat phases, trigger from spell rolls,
+or trigger from a single standard-action attack. The roll resets at the normal
+combat-round boundary. Capacity and damage do not scale with this chance.
+
+Validation: `python3 tests/run_repeating_crossbows.py` and
+`python3 tests/run_ranged_feats.py`.

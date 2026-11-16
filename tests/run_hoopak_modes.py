@@ -43,7 +43,7 @@ int MIN(int a,int b) {return a<b?a:b;}
 static struct obj_data *shot;
 #define ranged_ammunition(ch) shot
 '''
-for sig in ['int current_weapon_type(', 'bool is_throwing_weapon(', 'bool ammunition_is_unlimited(', 'bool usable_ammunition(', 'bool hoopak_uses_ranged(', 'int ranged_weapon_melee_type(', 'bool has_ammo_in_pouch(', 'struct obj_data *is_using_ranged_weapon(', 'bool can_fire_ammo(']:
+for sig in ['int current_weapon_type(', 'bool is_throwing_weapon(', 'bool ammunition_is_unlimited(', 'bool usable_ammunition(', 'bool hoopak_uses_ranged(', 'int ranged_weapon_melee_type(', 'struct obj_data *select_ammo_in_pouch(', 'bool has_ammo_in_pouch(', 'struct obj_data *is_using_ranged_weapon(', 'bool can_fire_ammo(']:
     code+=function(weapons,sig)+'\n'
 a=fight.index('/* Distances are symmetric');b=fight.index('/* Departure/extraction clears',a)
 code+=fight[a:b]+'\n'

@@ -12,7 +12,7 @@ def function(name):
 a=fight.index('struct ranged_shot_context\n')
 b=fight.index('bool manyshot_ready(',a)
 context=fight[a:b]
-a=fight.index('      if (!victim_is_dead && attack_type == ATTACK_TYPE_RANGED &&\n          ammo_damage_type')
+a=fight.index('      if (!victim_is_dead && attack_type == ATTACK_TYPE_RANGED && ammo_damage_type')
 b=fight.index('      if (!victim_is_dead && current_shot',a)
 bonus=fight[a:b]
 code=r'''

@@ -356,7 +356,6 @@ bool ready_to_reload(struct char_data *ch, struct obj_data *wielded, bool silent
   switch (GET_OBJ_VAL(wielded, 0))
   {
   case WEAPON_TYPE_HEAVY_REP_XBOW:
-  case WEAPON_TYPE_LIGHT_REP_XBOW:
   case WEAPON_TYPE_HEAVY_CROSSBOW:
 
     /* RAPID RELOAD! */
@@ -411,6 +410,7 @@ bool ready_to_reload(struct char_data *ch, struct obj_data *wielded, bool silent
     break;
   case WEAPON_TYPE_HAND_CROSSBOW:
   case WEAPON_TYPE_LIGHT_CROSSBOW:
+  case WEAPON_TYPE_LIGHT_REP_XBOW:
   case WEAPON_TYPE_SLING:
 
     /* RAPID RELOAD! */
@@ -531,7 +531,7 @@ bool reload_weapon(struct char_data *ch, struct obj_data *wielded, bool silent_m
     load_amount = 5;
     break;
   case WEAPON_TYPE_LIGHT_REP_XBOW:
-    load_amount = 3;
+    load_amount = 5;
     break;
   case WEAPON_TYPE_HAND_CROSSBOW:
   case WEAPON_TYPE_HEAVY_CROSSBOW:
@@ -660,7 +660,7 @@ struct obj_data *get_throwing_source(struct char_data *ch)
     if (GET_OBJ_TYPE(obj) == ITEM_MISSILE && !ammunition_is_unlimited(obj, NULL) &&
         ammunition_remaining(obj) <= 0) continue;
     if (!first) first = obj;
-    if (preference && GET_OBJ_VNUM(obj) == preference - 1) return obj;
+    if (preference && GET_OBJ_VNUM(obj) == (obj_vnum)(preference - 1)) return obj;
   }
   if (first) return first;
   /* A normal equipped throwable can be thrown without an ammunition supply. */
@@ -856,11 +856,26 @@ bool usable_ammunition(struct char_data *ch, struct obj_data *wielded,
   return TRUE;
 }
 
+/* Read-only selection shared by combat and ammo displays. Keep the saved
+ * preference so newly replenished preferred stacks take priority again. */
+struct obj_data *select_ammo_in_pouch(struct char_data *ch, struct obj_data *weapon)
+{
+  struct obj_data *pouch = GET_EQ(ch, WEAR_AMMO_POUCH), *ammo, *first = NULL;
+  int preference = IS_NPC(ch) ? 0 : GET_PREFERRED_AMMO(ch);
+  if (!pouch || !weapon) return NULL;
+  for (ammo = pouch->contains; ammo; ammo = ammo->next_content)
+  {
+    if (!usable_ammunition(ch, weapon, ammo, TRUE)) continue;
+    if (!first) first = ammo;
+    if (preference > 0 && GET_OBJ_VNUM(ammo) == (obj_vnum)(preference - 1)) return ammo;
+  }
+  return first;
+}
+
 bool has_ammo_in_pouch(struct char_data *ch, struct obj_data *wielded, bool silent)
 {
   struct obj_data *ammo_pouch = GET_EQ(ch, WEAR_AMMO_POUCH);
-  struct obj_data *ammo, *previous = NULL, *selected = NULL, *selected_previous = NULL;
-  int preference = IS_NPC(ch) ? 0 : GET_PREFERRED_AMMO(ch);
+  struct obj_data *previous, *selected;
   if (!wielded)
   {
     if (!silent)
@@ -886,13 +901,7 @@ bool has_ammo_in_pouch(struct char_data *ch, struct obj_data *wielded, bool sile
   }
 
 
-  for (ammo = ammo_pouch->contains; ammo; previous = ammo, ammo = ammo->next_content)
-  {
-    if (!usable_ammunition(ch, wielded, ammo, TRUE)) continue;
-    if (!selected) { selected = ammo; selected_previous = previous; }
-    if (preference > 0 && GET_OBJ_VNUM(ammo) == preference - 1)
-    { selected = ammo; selected_previous = previous; break; }
-  }
+  selected = select_ammo_in_pouch(ch, wielded);
   if (!selected)
   {
     usable_ammunition(ch, wielded, ammo_pouch->contains, silent);
@@ -901,9 +910,11 @@ bool has_ammo_in_pouch(struct char_data *ch, struct obj_data *wielded, bool sile
   }
   /* Existing shot/Manyshot code consumes the head of the pouch. Reorder only
    * its links; containment, weights and bundle quantities remain unchanged. */
-  if (selected_previous)
+  if (selected != ammo_pouch->contains)
   {
-    selected_previous->next_content = selected->next_content;
+    for (previous = ammo_pouch->contains; previous->next_content != selected;
+         previous = previous->next_content) {}
+    previous->next_content = selected->next_content;
     selected->next_content = ammo_pouch->contains;
     ammo_pouch->contains = selected;
   }
@@ -1741,13 +1752,13 @@ void load_weapons(void)
             WEAPON_FLAG_EXOTIC | WEAPON_FLAG_RANGED | WEAPON_FLAG_REPEATING, 400,
             DAMAGE_TYPE_PIERCING, 12, 120, WEAPON_FAMILY_CROSSBOW, SIZE_MEDIUM, MATERIAL_WOOD,
             HANDLE_TYPE_HANDLE, HEAD_TYPE_BOW,
-            "The repeating heavy crossbow holds 5 crossbow bolts. As long as it holds bolts, you "
-            "can reload it by pulling the reloading lever (a free action).");
+            "This repeating crossbow holds 5 shots. Bolts are consumed from your ammo pouch when fired. "
+            "A proficient wielder has a 10 percent chance per full attack round of one extra shot.");
   setweapon(WEAPON_TYPE_LIGHT_REP_XBOW, "light repeating crossbow", 1, 8, 1, 2,
-            WEAPON_FLAG_EXOTIC | WEAPON_FLAG_RANGED, 250, DAMAGE_TYPE_PIERCING, 6, 80,
+            WEAPON_FLAG_EXOTIC | WEAPON_FLAG_RANGED | WEAPON_FLAG_REPEATING, 250, DAMAGE_TYPE_PIERCING, 6, 80,
             WEAPON_FAMILY_CROSSBOW, SIZE_MEDIUM, MATERIAL_WOOD, HANDLE_TYPE_HANDLE, HEAD_TYPE_BOW,
-            "The repeating heavy crossbow holds 5 crossbow bolts. As long as it holds bolts, you "
-            "can reload it by pulling the reloading lever (a free action).");
+            "This repeating crossbow holds 5 shots. Bolts are consumed from your ammo pouch when fired. "
+            "A proficient wielder has a 10 percent chance per full attack round of one extra shot.");
   setweapon(
       WEAPON_TYPE_BOLA, "bola", 1, 4, 0, 2,
       WEAPON_FLAG_EXOTIC | WEAPON_FLAG_THROWN | WEAPON_FLAG_TRIP, 5, DAMAGE_TYPE_BLUDGEONING, 2, 10,
@@ -3233,6 +3244,9 @@ struct obj_data *take_ammo_projectile(struct obj_data *ammo, struct obj_data *we
   shot->short_description = strdup(ammo->short_description ? ammo->short_description : "ammunition");
   shot->description = strdup(ammo->description ? ammo->description : "A projectile lies here.");
   shot->obj_flags = ammo->obj_flags;
+  /* An imbued spell belongs to the next projectile, never the whole supply. */
+  if (GET_OBJ_TYPE(ammo) == ITEM_MISSILE)
+    GET_OBJ_VAL(ammo, 1) = 0;
   memcpy(shot->affected, ammo->affected, sizeof(shot->affected));
   shot->weapon_poison = ammo->weapon_poison;
   /* All emitted shots are transient and destroyed after attack resolution. */

@@ -110,14 +110,29 @@ Manyshot arrow remains tracked until its turn to be released, allowing an
 extraction callback to invalidate it safely. Aliased shots are freed once.
 
 Other compatible stacks become fallback ammo; a replacement of the preferred
-type can be selected later using the saved ID. The sanitizer harness
+type can be selected later using the saved ID. Combat and the web ammo HUD use
+one read-only selection rule: the first usable preferred stack, otherwise the
+first usable compatible supply in pouch order. Empty bundles and incompatible
+ammo cannot block fallback. The web HUD shows the active supply and labels it
+"Fallback ammo" while the saved preference is unavailable. The optional ammo
+prompt reports the active supply's total with `(fallback)`, for example
+`Ammo:25(fallback)`, and displays `unlimited` for inexhaustible supplies. Throwing
+mode reports the actual selected throwing supply. Display updates never consume
+ammo, reorder the pouch, or clear the saved preference.
+
+The HUD's `AMMO_STATUS` JSON marks `preferred` only when the active supply
+matches the saved preference; `fallback` marks an active replacement. No usable
+supply reports an empty name and zero quantity. Restocking preferred ammunition
+restores its priority automatically.
+
+The sanitizer harness
 `tests/run_ammo_cleanup.py` covers depletion, fallback, nested contexts,
 Manyshot, extraction callbacks and early projectile removal.
 
 ### Timed ammo jobs
 
 Ammo, throwing bundles, and portable fletching kits use `craft_update` with
-`SCMD_NEWCRAFT_AMMO`. The base duration is 60 seconds, reduced by the rapid
+`SCMD_NEWCRAFT_AMMO`. The base duration is 30 seconds, reduced by the rapid
 talent for the recipe skill (minimum one second). Ingredients and motes are
 consumed at start; the roll, crafting XP and result are deferred until completion.
 `craft ammo cancel` and `craft throwing cancel` stop the job and refund all reserved costs.

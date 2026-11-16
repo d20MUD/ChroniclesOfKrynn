@@ -42,7 +42,7 @@ void MSDPSetString(struct descriptor_data *d,variable_t var,const char *text) {
  assert(var==eMSDP_AMMO_STATUS);free(response);response=strdup(text);reports++;
 }
 '''
-for sig in ['bool is_throwing_weapon(', 'bool ammunition_is_unlimited(', 'int ammunition_remaining(', 'bool usable_ammunition(']:
+for sig in ['bool is_throwing_weapon(', 'bool ammunition_is_unlimited(', 'int ammunition_remaining(', 'int thrown_weapon_type(', 'struct obj_data *get_throwing_source(', 'bool usable_ammunition(', 'struct obj_data *select_ammo_in_pouch(']:
     code += function('src/assign_wpn_armor.c', sig)
 code += function('src/comm.c', 'static void update_msdp_ammo_status(')
 code += r'''
@@ -79,9 +79,20 @@ int main(void) {
  pouch.contains=&c;c.next_content=&a;a.next_content=&b;
  check(&player,30,"arrows",false);
  assert(pouch.contains==&c && c.next_content==&a && a.next_content==&b && !FIRING(&player));
- GET_PREFERRED_AMMO((&player))=103;check(&player,0,"steel arrows",true);
+ GET_PREFERRED_AMMO((&player))=103;check(&player,30,"arrows",false);
+ struct json_object *fallback=json_tokener_parse(response);
+ assert(json_object_get_boolean(field(fallback,"fallback")));json_object_put(fallback);
+ assert(GET_PREFERRED_AMMO(&player)==103);
+ GET_PREFERRED_AMMO((&player))=102;check(&player,30,"arrows",false); // preferred bolts cannot feed a bow
  GET_PREFERRED_AMMO((&player))=101;check(&player,30,"arrows",true);
  GET_OBJ_VAL(&a,AMMO_VAL_QUANTITY)=0;check(&player,20,"arrows",true);
+ // An empty preferred stack cannot hide a usable fallback, even behind bolts.
+ GET_OBJ_RNUM(&a)=2;a.short_description="steel arrows";GET_PREFERRED_AMMO(&player)=103;
+ check(&player,20,"arrows",false);
+ assert(pouch.contains==&c && c.next_content==&a && a.next_content==&b);
+ GET_OBJ_VAL(&a,AMMO_VAL_QUANTITY)=7;check(&player,7,"steel arrows",true);
+ GET_OBJ_VAL(&a,AMMO_VAL_QUANTITY)=0;GET_PREFERRED_AMMO(&player)=101;
+
  GET_OBJ_VAL(&b,AMMO_VAL_UNLIMITED)=1;update_msdp_ammo_status(&player);
  struct json_object *o=json_tokener_parse(response);assert(json_object_get_boolean(field(o,"unlimited")));json_object_put(o);
  GET_EQ(&player,WEAR_AMMO_POUCH)=NULL;update_msdp_ammo_status(&player);
@@ -89,6 +100,15 @@ int main(void) {
  GET_EQ(&player,WEAR_WIELD_2H)=NULL;update_msdp_ammo_status(&player);assert(!strcmp(response,"{\"ranged\":false}"));
  GET_EQ(&player,WEAR_WIELD_2H)=&bow;GET_OBJ_VAL(&bow,0)=WEAPON_TYPE_HOOPAK;update_msdp_ammo_status(&player);
  o=json_tokener_parse(response);assert(json_object_get_boolean(field(o,"ranged")));json_object_put(o);
+ // Throwing has its own read-only source selection, even with a bow equipped.
+ GET_EQ(&player,WEAR_AMMO_POUCH)=&pouch;THROWING(&player)=true;
+ weapon_list[WEAPON_TYPE_THROWING_KNIFE].weaponFlags=WEAPON_FLAG_THROWN;
+ GET_OBJ_VAL(&a,0)=AMMO_TYPE_THROWN;GET_OBJ_VAL(&a,AMMO_VAL_WEAPON_TYPE)=WEAPON_TYPE_THROWING_KNIFE;
+ GET_OBJ_VAL(&a,AMMO_VAL_QUANTITY)=9;a.short_description="throwing knives";
+ check(&player,9,"throwing knives",false);
+ GET_PREFERRED_AMMO(&player)=103;check(&player,9,"throwing knives",true);
+ GET_OBJ_VAL(&a,AMMO_VAL_QUANTITY)=0;check(&player,0,"",false);
+ THROWING(&player)=false;
  GET_OBJ_VAL(&bow,0)=NUM_WEAPON_TYPES;update_msdp_ammo_status(&player);assert(!strcmp(response,"{\"ranged\":false}"));
  int before=reports;variable.bReport=false;update_msdp_ammo_status(&player);assert(reports==before);
  free(response);puts("Ammo HUD: matching stack totals, preferred exhaustion, unlimited ammo, missing pouch, weapon removal, hoopak and opt-in passed.");

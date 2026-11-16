@@ -20,7 +20,7 @@ assert 'clear_combat_distances(ch, TRUE);' in function((root/'src/handler.c').re
 turn=function(fight,'void perform_violence(')
 assert turn.index('auto_advance_mob(ch, phase);') < turn.index('epic_summon_combat_turn(ch)')
 assert 'combat_distance(ch, FIGHTING(ch)) > 5' in turn
-assert 'combat_attack_in_range(ch, victim, attack_type, wielded)' in function(fight,'static int resolve_weapon_hit(struct char_data *ch, struct char_data *victim, int type, int dam_type')
+assert 'combat_attack_in_range(ch, victim, attack_type, wielded)' in function(fight,'static int resolve_weapon_hit(struct char_data *ch, struct char_data *victim, int type,\n                              int dam_type, int penalty, int attack_type)\n{')
 assert 'do_combat_advance, 0, 0' in (root/'src/interpreter.c').read_text()
 headers='\n'.join('#include "'+h+'"' for h in ['conf.h','sysdep.h','structs.h','utils.h','spells.h','assign_wpn_armor.h','fight.h','interpreter.h','mud_event.h','actions.h'])
 code=headers+r'''

@@ -7152,6 +7152,8 @@ void init_char(struct char_data *ch)
     CREATE(ch->player_specials, struct player_special_data, 1);
 
   /* Initialize crafting data */
+  GET_CRAFT(ch).craft_specialization[0] = -1;
+  GET_CRAFT(ch).craft_specialization[1] = -1;
   ch->player_specials->saved.craft_data.craft_variant = -1; /* -1 means no variant set */
   ch->player_specials->saved.craft_data.supply_active_slot = -1; /* -1 means no active slot */
 

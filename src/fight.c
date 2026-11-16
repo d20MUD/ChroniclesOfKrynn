@@ -8607,10 +8607,12 @@ int compute_damage_bonus(struct char_data *ch, struct char_data *vict, struct ob
                            ? get_char_affect_modifier(ch, SPELL_GREATER_MAGIC_WEAPON, APPLY_SPECIAL)
                            : 0));
 
-    if (HAS_FEAT(ch, FEAT_ENHANCE_ARROW_MAGIC) && display_mode)
+    if (GET_OBJ_VAL(ammo, 0) == AMMO_TYPE_ARROW &&
+        HAS_FEAT(ch, FEAT_ENHANCE_ARROW_MAGIC) && display_mode)
       send_to_char(ch, "Enhance ammo magic bonus: \tR%d\tn\r\n",
                    HAS_FEAT(ch, FEAT_ENHANCE_ARROW_MAGIC));
-    dambonus += HAS_FEAT(ch, FEAT_ENHANCE_ARROW_MAGIC);
+    if (GET_OBJ_VAL(ammo, 0) == AMMO_TYPE_ARROW)
+      dambonus += HAS_FEAT(ch, FEAT_ENHANCE_ARROW_MAGIC);
 
     /* favored enemy */
     if (vict && vict != ch && !IS_NPC(ch) && CLASS_LEVEL(ch, CLASS_RANGER))
@@ -12010,6 +12012,13 @@ int compute_attack_bonus_full(struct char_data *ch,     /* Attacker */
         MAX(bonuses[BONUS_TYPE_ENHANCEMENT], GET_ENHANCEMENT_BONUS(ammo));
     if (display && GET_ENHANCEMENT_BONUS(ammo) > 0)
       send_to_char(ch, "%2d: %-50s\r\n", GET_ENHANCEMENT_BONUS(ammo), "Ammo Enhancement");
+    if (GET_OBJ_VAL(ammo, 0) == AMMO_TYPE_ARROW)
+    {
+      calc_bab += HAS_FEAT(ch, FEAT_ENHANCE_ARROW_MAGIC);
+      if (display && HAS_FEAT(ch, FEAT_ENHANCE_ARROW_MAGIC))
+        send_to_char(ch, "%2d: %-50s\r\n", HAS_FEAT(ch, FEAT_ENHANCE_ARROW_MAGIC),
+                     "Enhance Arrow");
+    }
   }
   if (IS_WILDSHAPED(ch) || IS_MORPHED(ch))
   {
@@ -13706,7 +13715,9 @@ void handle_missed_attack(struct char_data *ch, struct char_data *victim, int ty
     affect_from_char(ch, SKILL_STUNNING_FIST);
   }
 
-  if (affected_by_spell(ch, SKILL_DEATH_ARROW))
+  if (attack_type == ATTACK_TYPE_RANGED && missile &&
+      GET_OBJ_VAL(missile, 0) == AMMO_TYPE_ARROW &&
+      affected_by_spell(ch, SKILL_DEATH_ARROW))
   {
     send_to_char(ch, "You fail to land your death arrow attack!  ");
     affect_from_char(ch, SKILL_DEATH_ARROW);
@@ -14394,8 +14405,8 @@ int handle_successful_attack(struct char_data *ch, struct char_data *victim,
   {
     int deatharrow_dc =
         10 + CLASS_LEVEL(ch, CLASS_ARCANE_ARCHER) + MAX(GET_CHA_BONUS(ch), GET_INT_BONUS(ch));
-    (void)deatharrow_dc; /* DC computed for future use or debugging */
-    if (attack_type == ATTACK_TYPE_RANGED && missile)
+    if (attack_type == ATTACK_TYPE_RANGED && missile &&
+        GET_OBJ_VAL(missile, 0) == AMMO_TYPE_ARROW)
     {
       if (!IS_NPC(ch) && PRF_FLAGGED(ch, PRF_CONDENSED))
       {
@@ -14418,8 +14429,9 @@ int handle_successful_attack(struct char_data *ch, struct char_data *victim,
 
       /* apply death arrow affect, muahahahah */
       if (GET_LEVEL(ch) >= GET_LEVEL(victim) &&
-          !savingthrow(ch, victim, SAVING_FORT, 0, CAST_INNATE,
-                       CLASS_LEVEL(ch, CLASS_ARCANE_ARCHER), NOSCHOOL))
+          !is_immune_death_magic(ch, victim, false) &&
+          !savingthrow_flatdc(ch, victim, SAVING_FORT, 0, deatharrow_dc,
+                             CAST_INNATE, NOSCHOOL, SKILL_DEATH_ARROW))
       {
         /*GRAND SLAM!*/
         act("$N \tRstops suddenly, then keels over\tn as soon as $p makes contact!", FALSE, ch,
@@ -16921,6 +16933,33 @@ static int hand_crossbow_offhand_attacks(struct char_data *ch, int mode, int pha
   return count;
 }
 
+/* A repeater can accelerate one full attack per round, never chain procs.
+ * Called only after an ordinary ranged attack; displays and single standard
+ * attacks never roll. The extra shot still needs a loaded weapon and ammo. */
+static void try_repeater_bonus_attack(struct char_data *ch, int penalty)
+{
+  struct obj_data *weapon = is_using_ranged_weapon(ch, TRUE);
+  if (ch->char_specials.repeater_bonus_checked || !weapon ||
+      GET_OBJ_TYPE(weapon) != ITEM_WEAPON ||
+      (GET_WEAPON_TYPE(weapon) != WEAPON_TYPE_LIGHT_REP_XBOW &&
+       GET_WEAPON_TYPE(weapon) != WEAPON_TYPE_HEAVY_REP_XBOW) ||
+      !is_proficient_with_weapon(ch, GET_WEAPON_TYPE(weapon)) ||
+      !FIGHTING(ch) || !valid_fight_cond(ch, FALSE) || AFF_FLAGGED(ch, AFF_STAGGERED))
+    return;
+
+  ch->char_specials.repeater_bonus_checked = TRUE;
+  if (GET_OBJ_VAL(weapon, 5) <= 0 || !can_fire_ammo(ch, TRUE) ||
+      !combat_attack_in_range(ch, FIGHTING(ch), ATTACK_TYPE_RANGED, weapon) ||
+      rand_number(1, 100) > 10)
+    return;
+
+  send_to_char(ch, "Your repeater's mechanism lets you snap off an extra shot!\r\n");
+  ch->char_specials.manyshot_pending = FALSE;
+  hit(ch, FIGHTING(ch), TYPE_UNDEFINED, DAM_RESERVED_DBC, penalty, ATTACK_TYPE_RANGED);
+  if (!IS_NPC(ch) && PRF_FLAGGED(ch, PRF_AUTORELOAD))
+    auto_reload_weapon(ch, TRUE);
+}
+
 int perform_attacks(struct char_data *ch, int mode, int phase)
 {
   int i = 0, penalty = 0, numAttacks = 0, bonus_mainhand_attacks = 0;
@@ -17314,6 +17353,9 @@ int perform_attacks(struct char_data *ch, int mode, int phase)
           {
             auto_reload_weapon(ch, TRUE);
           }
+
+          if (wpn_reload_status != HIT_NEED_RELOAD)
+            try_repeater_bonus_attack(ch, penalty);
 
           /* bail if our hit() caused a need-reload return value */
           if (wpn_reload_status == HIT_NEED_RELOAD)
@@ -18154,7 +18196,10 @@ EVENTFUNC(event_combat_round)
   }
 
   if (phase == 1)
+  {
     GET_ATTACKS_THIS_ROUND(ch) = 0;
+    ch->char_specials.repeater_bonus_checked = FALSE;
+  }
 
   /* action queue system */
   execute_next_action(ch);
@@ -18289,7 +18334,10 @@ void perform_violence(struct char_data *ch, int phase)
   /* Reset combat data */
   GET_TOTAL_AOO(ch) = 0;
   if (phase == 0)
+  {
     GET_ATTACKS_THIS_ROUND(ch) = 0;
+    ch->char_specials.repeater_bonus_checked = FALSE;
+  }
   HAS_PERFORMED_DEMORALIZING_STRIKE(ch) = FALSE;
   REMOVE_BIT_AR(AFF_FLAGS(ch), AFF_FLAT_FOOTED);
 

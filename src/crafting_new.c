@@ -5296,6 +5296,7 @@ static bool craft_has_pending_noncreate_project(struct char_data *ch)
 /* Ammunition batches are consumables: explicit recipes and bounded magical
  * properties, never copies of player-supplied objects or unlimited supplies. */
 #define CRAFT_AMMO_BATCH_SIZE 50
+#define CRAFT_AMMO_BASE_TIME 30
 #define AMMO_ENHANCEMENT_MOTE(ch) ((ch)->player_specials->saved.ammo_enhancement_mote)
 #define AMMO_SETTINGS(ch) ((ch)->player_specials->saved.ammo_craft_settings)
 struct ammo_craft_recipe
@@ -6072,7 +6073,7 @@ static void craft_ammunition(struct char_data *ch, const char *argument)
   GET_CRAFT(ch).ammo_job[6] = plan.damage_die;
   GET_CRAFT(ch).ammo_job[7] = making_kit;
   GET_CRAFT(ch).ammo_job_enhancement_mote = plan.enhancement_mote;
-  GET_CRAFT(ch).craft_duration = MAX(1, CREATE_BASE_TIME -
+  GET_CRAFT(ch).craft_duration = MAX(1, CRAFT_AMMO_BASE_TIME -
       get_rapid_talent_bonus(ch, plan.recipe->skill));
   if (artificer_efficient_crafter_applies(ch))
     GET_CRAFT(ch).craft_duration = MAX(1, GET_CRAFT(ch).craft_duration * 90 / 100);
@@ -6841,6 +6842,8 @@ void set_craft_specialization(struct char_data *ch, const char *arg)
                  ability_names[skill_num]);
     send_to_char(ch, "\tYYou have used both specialization slots.\tn\r\n");
   }
+
+  save_char(ch, 0);
 }
 
 void newcraft_create(struct char_data *ch, const char *argument)

@@ -1740,39 +1740,56 @@ static bool prompt_ranged_weapon(struct obj_data *obj)
 }
 static void prompt_ammo_indicator(struct char_data *ch, char *buffer, size_t size)
 {
-  struct obj_data *pouch, *obj, *selected = NULL;
-  bool ranged = false, thrown = false;
+  struct obj_data *pouch, *obj, *selected = NULL, *weapon = NULL;
+  bool ranged = false, thrown = false, unlimited = false, fallback = false;
   long long quantity = 0;
   int slot, preference;
   if (!buffer || !size) return;
   *buffer = 0;
   if (!ch || IS_NPC(ch) || !(pouch = GET_EQ(ch, WEAR_AMMO_POUCH))) return;
   for (slot = 0; slot < NUM_WEARS; slot++)
-    if (prompt_ranged_weapon(GET_EQ(ch, slot))) ranged = true;
+    if (prompt_ranged_weapon(GET_EQ(ch, slot)))
+    { ranged = true; if (!weapon) weapon = GET_EQ(ch, slot); }
   for (obj = ch->carrying; obj; obj = obj->next_content)
-    if (prompt_ranged_weapon(obj)) ranged = true;
+    if (prompt_ranged_weapon(obj))
+    { ranged = true; if (!weapon) weapon = obj; }
   preference = GET_PREFERRED_AMMO(ch);
-  for (obj = pouch->contains; obj; obj = obj->next_content)
-  {
-    if (GET_OBJ_TYPE(obj) != ITEM_MISSILE && !thrown_weapon_type(obj)) continue;
-    if (thrown_weapon_type(obj)) ranged = true;
-    if (!selected) selected = obj;
-    if (preference > 0 && GET_OBJ_VNUM(obj) == (obj_vnum)(preference - 1))
-    { selected = obj; break; }
-  }
+  if (THROWING(ch))
+    selected = get_throwing_source(ch);
+  else if (weapon && !IS_SET(weapon_list[GET_OBJ_VAL(weapon, 0)].weaponFlags, WEAPON_FLAG_THROWN))
+    selected = select_ammo_in_pouch(ch, weapon);
+  else
+    for (obj = pouch->contains; obj; obj = obj->next_content)
+    {
+      if (GET_OBJ_TYPE(obj) != ITEM_MISSILE && !thrown_weapon_type(obj)) continue;
+      if (GET_OBJ_TYPE(obj) == ITEM_MISSILE && !ammunition_is_unlimited(obj, weapon) &&
+          ammunition_remaining(obj) <= 0) continue;
+      if (thrown_weapon_type(obj)) ranged = true;
+      if (!selected) selected = obj;
+      if (preference > 0 && GET_OBJ_VNUM(obj) == (obj_vnum)(preference - 1))
+      { selected = obj; break; }
+    }
   if (!ranged) return;
   if (selected)
   {
     thrown = thrown_weapon_type(selected) != 0;
+    fallback = preference > 0 && GET_OBJ_VNUM(selected) != (obj_vnum)(preference - 1);
     for (obj = pouch->contains; obj; obj = obj->next_content)
       if (GET_OBJ_TYPE(obj) == GET_OBJ_TYPE(selected) &&
           GET_OBJ_VNUM(obj) == GET_OBJ_VNUM(selected) &&
           (GET_OBJ_VNUM(selected) != NOTHING ||
            (GET_OBJ_VAL(obj, 0) == GET_OBJ_VAL(selected, 0) &&
             GET_OBJ_VAL(obj, AMMO_VAL_WEAPON_TYPE) == GET_OBJ_VAL(selected, AMMO_VAL_WEAPON_TYPE))))
+      {
         quantity += GET_OBJ_TYPE(obj) == ITEM_MISSILE ? ammunition_remaining(obj) : 1;
+        if (ammunition_is_unlimited(obj, weapon)) unlimited = true;
+      }
   }
-  snprintf(buffer, size, "%s:%lld ", thrown ? "Thrown" : "Ammo", quantity);
+  if (selected && GET_OBJ_TYPE(selected) == ITEM_WEAPON && quantity == 0) quantity = 1;
+  if (unlimited)
+    snprintf(buffer, size, "%s:unlimited%s ", thrown ? "Thrown" : "Ammo", fallback ? "(fallback)" : "");
+  else
+    snprintf(buffer, size, "%s:%lld%s ", thrown ? "Thrown" : "Ammo", quantity, fallback ? "(fallback)" : "");
 }
 
 static char *make_prompt(struct descriptor_data *d)
@@ -5057,42 +5074,38 @@ static void update_msdp_ammo_status(struct char_data *ch)
           (IS_SET(weapon_list[type].weaponFlags, WEAPON_FLAG_RANGED) || type == WEAPON_TYPE_HOOPAK)) break;
       weapon = NULL;
     }
-  if (!weapon)
+  if (!weapon && !THROWING(ch))
   {
     MSDPSetString(d, eMSDP_AMMO_STATUS, "{\"ranged\":false}");
     return;
   }
   pouch = GET_EQ(ch, WEAR_AMMO_POUCH);
   preference = GET_PREFERRED_AMMO(ch);
-  if (preference > 0)
-  {
-    obj_rnum prototype = real_object(preference - 1);
-    ammo_vnum = preference - 1;
-    name = prototype != NOTHING ? obj_proto[prototype].short_description : "Unavailable preferred ammunition";
-  }
-  for (ammo = pouch ? pouch->contains : NULL; ammo; ammo = ammo->next_content)
-  {
-    if (GET_OBJ_TYPE(ammo) != ITEM_MISSILE) continue;
-    if (preference > 0 ? GET_OBJ_VNUM(ammo) == ammo_vnum : usable_ammunition(ch, weapon, ammo, TRUE))
-    { selected = ammo; break; }
-  }
+  selected = THROWING(ch) ? get_throwing_source(ch) : select_ammo_in_pouch(ch, weapon);
   if (selected)
   {
     ammo_vnum = GET_OBJ_VNUM(selected);
     name = selected->short_description;
-    for (ammo = pouch->contains; ammo; ammo = ammo->next_content)
-      if (GET_OBJ_TYPE(ammo) == ITEM_MISSILE && GET_OBJ_VNUM(ammo) == ammo_vnum &&
+    for (ammo = pouch ? pouch->contains : NULL; ammo; ammo = ammo->next_content)
+      if (GET_OBJ_TYPE(ammo) == GET_OBJ_TYPE(selected) && GET_OBJ_VNUM(ammo) == ammo_vnum &&
           (ammo_vnum != NOTHING || (GET_OBJ_VAL(ammo, 0) == GET_OBJ_VAL(selected, 0) &&
            !strcmp(ammo->short_description, selected->short_description))))
       {
-        quantity += ammunition_remaining(ammo);
+        quantity += GET_OBJ_TYPE(ammo) == ITEM_MISSILE ? ammunition_remaining(ammo) : 1;
         if (ammunition_is_unlimited(ammo, weapon)) unlimited = TRUE;
       }
+  }
+  if (selected && GET_OBJ_TYPE(selected) == ITEM_WEAPON && quantity == 0)
+  {
+    quantity = 1;
+    unlimited = ammunition_is_unlimited(selected, weapon);
   }
   status = json_object_new_object();
   json_object_object_add(status, "ranged", json_object_new_boolean(TRUE));
   json_object_object_add(status, "pouch", json_object_new_boolean(pouch != NULL));
-  json_object_object_add(status, "preferred", json_object_new_boolean(preference > 0));
+  json_object_object_add(status, "preferred", json_object_new_boolean(selected && preference > 0 && ammo_vnum == preference - 1));
+  json_object_object_add(status, "fallback",
+                         json_object_new_boolean(selected && preference > 0 && ammo_vnum != preference - 1));
   json_object_object_add(status, "name", json_object_new_string(name ? name : ""));
   json_object_object_add(status, "quantity", json_object_new_int64(quantity));
   json_object_object_add(status, "unlimited", json_object_new_boolean(unlimited));
