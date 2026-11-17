@@ -7,17 +7,18 @@ import tempfile
 
 root = Path(__file__).resolve().parents[1]
 source = (root / 'src/movement_validation.c').read_text()
-start = source.index('static bool is_natural_swimmer(')
+start = source.index('bool is_natural_swimmer(')
 end = source.index('/* Simple function to determine if char can fly.', start)
 code = source[start:end]
 headers = '\n'.join('#include "' + h + '"' for h in
-                    ['conf.h', 'sysdep.h', 'structs.h', 'utils.h', 'spells.h', 'db.h', 'comm.h'])
+                    ['conf.h', 'sysdep.h', 'structs.h', 'utils.h', 'spells.h', 'db.h', 'comm.h', 'class.h', 'bloodlines.h'])
 stubs = r'''
 #include <assert.h>
 struct room_data *world;
 room_rnum top_of_world;
 struct zone_data *zone_table;
-static int rolls, actions, skill, die = 1;
+static int rolls, actions, skill, die = 1, water_heritage;
+bool bloodline_elemental_movement(struct char_data *ch, int element) { return water_heritage && element == BLOODLINE_ELEMENT_WATER; }
 #define ZONE_MINLVL(rnum) (zone_table[(rnum)].min_level)
 #define USE_MOVE_ACTION(ch) (actions++)
 bool is_flying(struct char_data *ch) { return FALSE; }
@@ -68,6 +69,10 @@ int main(void) {
   /* Aquatic subtype data cannot grant a PC a swimming benefit. */
   REMOVE_BIT_AR(MOB_FLAGS(&ch), MOB_ISNPC); GET_SUBRACE(&ch, 0) = SUBRACE_AQUATIC;
   assert(!is_natural_swimmer(&ch));
+  water_heritage = 1; rooms[0].sector_type = SECT_WATER_SWIM;
+  assert(is_natural_swimmer(&ch) && has_boat(&ch, 0));
+  rooms[0].sector_type = SECT_WATER_NOSWIM; assert(!has_boat(&ch, 0));
+  assert(rolls == 2);
   return 0;
 }
 '''

@@ -13,7 +13,7 @@ def function(text, signature):
     return text[a:text.index('\n}', a) + 2] + '\n'
 headers = ''.join('#include "' + h + '"\n' for h in [
     'conf.h', 'sysdep.h', 'structs.h', 'utils.h', 'comm.h', 'db.h', 'spells.h',
-    'perks.h', 'constants.h', 'class.h', 'spell_prep.h', 'domains_schools.h'])
+    'perks.h', 'constants.h', 'class.h', 'bloodlines.h', 'spell_prep.h', 'domains_schools.h'])
 code = r'''
 #include <assert.h>
 struct player_special_data dummy_mob;
@@ -38,6 +38,18 @@ bool has_epic_power(struct char_data *ch, int spell) { return false; }
 int is_domain_spell_of_ch(struct char_data *ch, int spell) { return false; }
 bool isAurakMagic(struct char_data *ch, int spell) { return racial; }
 '''
+bloodlines = (root / 'src/class.c').read_text()
+a = bloodlines.index('const struct sorcerer_bloodline extended_bloodlines[')
+# The table closes on its final initializer line.
+b = bloodlines.index('};', a) + 2
+code += bloodlines[a:b] + '\n'
+for signature in [
+    'const struct sorcerer_bloodline *extended_bloodline_by_feat(int feat)',
+    'const struct sorcerer_bloodline *extended_bloodline_by_type(int type)',
+    'int extended_bloodline_spell_circle(struct char_data *ch, int spellnum)',
+]:
+    code += function(bloodlines, signature)
+code += function(prep, 'bool has_sorc_bloodline_spell(struct char_data *ch, int spellnum)')
 for name in ['spell_bonus', 'ranger_slots', 'paladin_slots', 'cleric_slots', 'druid_slots',
              'wizard_slots', 'sorcerer_slots', 'sorcerer_known', 'bard_slots',
              'alchemist_slots', 'summoner_slots', 'inquisitor_slots']:

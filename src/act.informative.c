@@ -32,6 +32,7 @@
 #include "mail.h" /**< For the has_mail function */
 #include "act.h"
 #include "class.h"
+#include "bloodlines.h"
 #include "race.h"
 #include "mob_spellslots.h"
 #include "fight.h"
@@ -1512,19 +1513,19 @@ void look_at_room_number(struct char_data *ch, int ignore_brief, long room_numbe
     return;
   if (room_number < 0)
     return;
-  if (IS_SET_AR(ROOM_FLAGS(room_number), ROOM_FOG) && GET_LEVEL(ch) < LVL_IMMORT)
+  if (IS_SET_AR(ROOM_FLAGS(room_number), ROOM_FOG) && GET_LEVEL(ch) < LVL_IMMORT && !bloodline_sees_weather(ch))
   {
     send_to_char(ch, "A fog makes it impossible to look far.\r\n");
     return;
   }
 
-  if (ROOM_FLAGGED(room_number, ROOM_MAGICDARK) ||
+  if ((ROOM_FLAGGED(room_number, ROOM_MAGICDARK) && !bloodline_sees_magical_dark(ch)) ||
       (IS_DARK(room_number) && !CAN_SEE_IN_DARK(ch) && !char_has_infra(ch)))
   {
     send_to_char(ch, "\tLIt is pitch black...\tn\r\n");
     return;
   }
-  if (ROOM_FLAGGED(ch->in_room, ROOM_MAGICDARK) ||
+  if ((ROOM_FLAGGED(ch->in_room, ROOM_MAGICDARK) && !bloodline_sees_magical_dark(ch)) ||
       (IS_DARK(ch->in_room) && !CAN_SEE_IN_DARK(ch) && !char_has_infra(ch)))
   {
     send_to_char(ch, "\tLIt is pitch black...\tn\r\n");
@@ -1633,7 +1634,7 @@ void look_at_room(struct char_data *ch, int ignore_brief)
 
   show_hidden_magic_hint(ch);
 
-  if (ROOM_FLAGGED(target_room, ROOM_FOG) && GET_LEVEL(ch) < LVL_IMMORT)
+  if (ROOM_FLAGGED(target_room, ROOM_FOG) && GET_LEVEL(ch) < LVL_IMMORT && !bloodline_sees_weather(ch))
   {
     send_to_char(ch, "A thick fog obscures the room and its contents.\r\n");
     return;
@@ -1927,7 +1928,7 @@ void look_at_room(struct char_data *ch, int ignore_brief)
 
   /* Show available exits (unless fog blocks view) */
   if (!IS_NPC(ch) && PRF_FLAGGED(ch, PRF_AUTOEXIT) &&
-      (!IS_SET_AR(ROOM_FLAGS(target_room), ROOM_FOG) || GET_LEVEL(ch) >= LVL_IMMORT))
+      (!IS_SET_AR(ROOM_FLAGS(target_room), ROOM_FOG) || GET_LEVEL(ch) >= LVL_IMMORT || bloodline_sees_weather(ch)))
     do_auto_exits(ch);
 
   /* Special hazard: acid pool (blocks seeing contents) */
@@ -1976,7 +1977,7 @@ void look_at_room(struct char_data *ch, int ignore_brief)
 
 static void look_in_direction(struct char_data *ch, int dir)
 {
-  if (IS_SET_AR(ROOM_FLAGS(IN_ROOM(ch)), ROOM_FOG) && GET_LEVEL(ch) < LVL_IMMORT)
+  if (IS_SET_AR(ROOM_FLAGS(IN_ROOM(ch)), ROOM_FOG) && GET_LEVEL(ch) < LVL_IMMORT && !bloodline_sees_weather(ch))
   {
     send_to_char(ch, "A fog makes it impossible to look far.\r\n");
     return;
@@ -5196,6 +5197,16 @@ ACMD(do_score_text)
   {
     /* Undead bloodline */
     send_to_char(ch, "\tcSorcerer Bloodline: \tnUndead.\r\n");
+    draw_line(ch, line_length, '-', '-');
+  }
+
+  else if (extended_bloodline_by_feat(get_sorcerer_bloodline_type(ch)))
+  {
+    send_to_char(ch, "\tcSorcerer Bloodline: \tn%s",
+                 extended_bloodline_by_feat(get_sorcerer_bloodline_type(ch))->name);
+    if (HAS_REAL_FEAT(ch, FEAT_SORCERER_BLOODLINE_ELEMENTAL))
+      send_to_char(ch, " (%s)", bloodline_element_name(GET_BLOODLINE_SUBTYPE(ch)));
+    send_to_char(ch, ".\r\n");
     draw_line(ch, line_length, '-', '-');
   }
 
@@ -9943,12 +9954,12 @@ ACMD(do_scan)
     send_to_char(ch, "You can't see anything but stars!\r\n");
     return;
   }
-  if (IS_SET_AR(ROOM_FLAGS(scanned_room), ROOM_FOG) && GET_LEVEL(ch) < LVL_IMMORT)
+  if (IS_SET_AR(ROOM_FLAGS(scanned_room), ROOM_FOG) && GET_LEVEL(ch) < LVL_IMMORT && !bloodline_sees_weather(ch))
   {
     send_to_char(ch, "A fog makes it impossible to look far.\r\n");
     return;
   }
-  if (IS_SET_AR(ROOM_FLAGS(scanned_room), ROOM_MAGICDARK))
+  if (IS_SET_AR(ROOM_FLAGS(scanned_room), ROOM_MAGICDARK) && !bloodline_sees_magical_dark(ch))
   {
     send_to_char(ch, "Its too dark to see.\r\n");
     return;
@@ -9979,7 +9990,7 @@ ACMD(do_scan)
       {
         scanned_room = world[scanned_room].dir_option[door]->to_room;
 
-        if (ROOM_FLAGGED(scanned_room, ROOM_FOG) && GET_LEVEL(ch) < LVL_IMMORT)
+        if (ROOM_FLAGGED(scanned_room, ROOM_FOG) && GET_LEVEL(ch) < LVL_IMMORT && !bloodline_sees_weather(ch))
         {
           send_to_char(ch, "%s: A thick fog obscures your view.\r\n", dirs[door]);
           found = TRUE;
@@ -10105,7 +10116,7 @@ ACMD(do_survey)
     return;
   }
 
-  if (IS_SET_AR(ROOM_FLAGS(IN_ROOM(ch)), ROOM_FOG) && GET_LEVEL(ch) < LVL_IMMORT)
+  if (IS_SET_AR(ROOM_FLAGS(IN_ROOM(ch)), ROOM_FOG) && GET_LEVEL(ch) < LVL_IMMORT && !bloodline_sees_weather(ch))
   {
     send_to_char(ch, "A fog makes the task of surveying impossible!\r\n");
     return;
@@ -10522,7 +10533,7 @@ ACMD(do_exits)
     return;
   }
 
-  if (IS_SET_AR(ROOM_FLAGS(IN_ROOM(ch)), ROOM_FOG) && GET_LEVEL(ch) < LVL_IMMORT)
+  if (IS_SET_AR(ROOM_FLAGS(IN_ROOM(ch)), ROOM_FOG) && GET_LEVEL(ch) < LVL_IMMORT && !bloodline_sees_weather(ch))
   {
     send_to_char(ch, "A fog makes any exits indistinguishable.\r\n");
     return;

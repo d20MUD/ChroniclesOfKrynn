@@ -25,6 +25,7 @@
 #include "mud_event.h"
 #include "spec_procs.h"
 #include "class.h"
+#include "bloodlines.h"
 #include "actions.h"
 #include "assign_wpn_armor.h"
 #include "domains_schools.h"
@@ -175,6 +176,8 @@ bool concentration_check(struct char_data *ch, int spellnum)
   {
     spell_level = MIN_SPELL_LVL(spellnum, CLASS_INQUISITOR, GET_1ST_DOMAIN(ch));
   }
+  if (CASTING_CLASS(ch) == CLASS_SORCERER && extended_bloodline_spell_circle(ch, spellnum))
+    spell_level = 2 * extended_bloodline_spell_circle(ch, spellnum);
   concentration_dc += spell_level;
 
   if (spellnum > 0 && spellnum < NUM_SPELLS && HAS_FEAT(ch, FEAT_COMBAT_CASTING))
@@ -1181,6 +1184,9 @@ SAVING_WILL here...  */
   {
     consume_spell_slot(caster, spellnum);
   }
+
+  if (casttype == CAST_SPELL && GET_CASTING_CLASS(caster) == CLASS_SORCERER)
+    bloodline_cast_arcana(caster, spellnum, cvict);
 
   /* now we actually process the spell based on the appropate routine */
 
@@ -4181,7 +4187,8 @@ return;
     }
   }
   else if (
-      !cleric_spontaneous_casting && !canCastAtWill(ch, spellnum) && GET_LEVEL(ch) < LVL_IMMORT &&
+      !cleric_spontaneous_casting && !canCastAtWill(ch, spellnum) &&
+      !has_sorc_bloodline_spell(ch, spellnum) && GET_LEVEL(ch) < LVL_IMMORT &&
       subcmd != SCMD_CAST_SHADOW &&
       (BONUS_CASTER_LEVEL(ch, CLASS_WIZARD) + CLASS_LEVEL(ch, CLASS_WIZARD) <
            SINFO.min_level[CLASS_WIZARD] &&
@@ -6640,6 +6647,48 @@ void mag_assign_spells(void)
   spello(ABILITY_AUGMENT_PHYSICALITY, "augment physicality", 0, 0, 0, POS_FIGHTING,
          TAR_IGNORE, FALSE, 0, "Your augmented body and equipment return to their normal size.",
          1, 1, TRANSMUTATION, FALSE);
+  spello(AFFECT_ABYSSAL_CLAWS, "abyssal claws", 0, 0, 0, POS_FIGHTING, TAR_IGNORE, FALSE, 0,
+         "Your abyssal claws effect fades.", 1, 1, NOSCHOOL, FALSE);
+  spello(AFFECT_ELEMENTAL_RAY, "elemental ray", 0, 0, 0, POS_FIGHTING, TAR_IGNORE, FALSE, 0,
+         "Your elemental ray effect fades.", 1, 1, NOSCHOOL, FALSE);
+  spello(AFFECT_ELEMENTAL_BLAST, "elemental blast", 0, 0, 0, POS_FIGHTING, TAR_IGNORE, FALSE, 0,
+         "Your elemental blast effect fades.", 1, 1, NOSCHOOL, FALSE);
+  spello(AFFECT_ELEMENTAL_VULNERABILITY, "elemental vulnerability", 0, 0, 0, POS_FIGHTING, TAR_IGNORE, FALSE, 0,
+         "Your elemental vulnerability effect fades.", 1, 1, NOSCHOOL, FALSE);
+  spello(AFFECT_ELEMENTAL_CONVERSION, "elemental conversion", 0, 0, 0, POS_FIGHTING, TAR_IGNORE, FALSE, 0,
+         "Your elemental conversion effect fades.", 1, 1, NOSCHOOL, FALSE);
+  spello(AFFECT_HEAVENLY_FIRE, "heavenly fire", 0, 0, 0, POS_FIGHTING, TAR_IGNORE, FALSE, 0,
+         "Your heavenly fire effect fades.", 1, 1, NOSCHOOL, FALSE);
+  spello(AFFECT_WINGS_OF_HEAVEN, "wings of heaven", 0, 0, 0, POS_FIGHTING, TAR_IGNORE, FALSE, 0,
+         "Your wings of heaven effect fades.", 1, 1, NOSCHOOL, FALSE);
+  spello(AFFECT_CELESTIAL_CONVICTION, "celestial conviction", 0, 0, 0, POS_FIGHTING, TAR_IGNORE, FALSE, 0,
+         "Your celestial conviction effect fades.", 1, 1, NOSCHOOL, FALSE);
+  spello(AFFECT_BLOODLINE_SUMMON_WARD, "bloodline summon ward", 0, 0, 0, POS_FIGHTING, TAR_IGNORE, FALSE, 0,
+         "Your bloodline summon ward effect fades.", 1, 1, NOSCHOOL, FALSE);
+  spello(AFFECT_ABYSSAL_SUMMON_BOOST, "abyssal summon boost", 0, 0, 0, POS_FIGHTING, TAR_IGNORE, FALSE, 0,
+         "Your demonic summoning enhancement fades.", 1, 1, NOSCHOOL, FALSE);
+
+  spello(AFFECT_SHADOW_ARCANA, "shadow arcana", 0, 0, 0, POS_FIGHTING, TAR_IGNORE, FALSE, 0,
+         "Your shadow arcana effect fades.", 1, 1, NOSCHOOL, FALSE);
+  spello(AFFECT_SHADOWSTRIKE, "shadowstrike", 0, 0, 0, POS_FIGHTING, TAR_IGNORE, FALSE, 0,
+         "Your shadowstrike effect fades.", 1, 1, NOSCHOOL, FALSE);
+  spello(AFFECT_SHADOW_WELL, "shadow well", 0, 0, 0, POS_FIGHTING, TAR_IGNORE, FALSE, 0,
+         "Your shadow well effect fades.", 1, 1, NOSCHOOL, FALSE);
+  spello(AFFECT_ENVELOPING_DARKNESS, "enveloping darkness", 0, 0, 0, POS_FIGHTING, TAR_IGNORE, FALSE, 0,
+         "Your enveloping darkness effect fades.", 1, 1, NOSCHOOL, FALSE);
+  spello(AFFECT_THUNDERSTAFF, "thunderstaff", 0, 0, 0, POS_FIGHTING, TAR_IGNORE, FALSE, 0,
+         "Your thunderstaff effect fades.", 1, 1, NOSCHOOL, FALSE);
+  spello(AFFECT_THUNDERBOLT, "thunderbolt", 0, 0, 0, POS_FIGHTING, TAR_IGNORE, FALSE, 0,
+         "Your thunderbolt effect fades.", 1, 1, NOSCHOOL, FALSE);
+  spello(AFFECT_TOUCH_OF_DESTINY, "touch of destiny", 0, 0, 0, POS_FIGHTING, TAR_IGNORE, FALSE, 0,
+         "Your touch of destiny effect fades.", 1, 1, NOSCHOOL, FALSE);
+  spello(AFFECT_DESTINED_ARCANA, "destined arcana", 0, 0, 0, POS_FIGHTING, TAR_IGNORE, FALSE, 0,
+         "Your destined arcana effect fades.", 1, 1, NOSCHOOL, FALSE);
+  spello(AFFECT_DESTINED_REROLL, "destined reroll", 0, 0, 0, POS_FIGHTING, TAR_IGNORE, FALSE, 0,
+         "Your destined reroll effect fades.", 1, 1, NOSCHOOL, FALSE);
+  spello(AFFECT_DESTINY_PENETRATION, "destiny penetration", 0, 0, 0, POS_FIGHTING, TAR_IGNORE, FALSE, 0,
+         "Your destiny penetration effect fades.", 1, 1, NOSCHOOL, FALSE);
+
   spello(ABILITY_MIRAGE_FLARE, "mirage flare", 0, 0, 0, POS_FIGHTING,
          TAR_IGNORE, TRUE, 0, "You are no longer dazed by Mirage Flare.",
          1, 1, ILLUSION, FALSE);

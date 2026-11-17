@@ -340,6 +340,10 @@ lib/text/help/*
 !lib/text/help/stalls.hlp
 !lib/text/help/infuse.hlp
 !lib/text/help/craft_ammo.hlp
+!lib/text/help/sorcerer_bloodlines.hlp
+!lib/text/help/shadow_bloodline.hlp
+!lib/text/help/stormborn_bloodline.hlp
+!lib/text/help/destined_bloodline.hlp
 
 ####################
 # Unit Tests
@@ -424,3 +428,11 @@ unittests/CuTest/vessel_stress_test
 !lib/text/help/ammopref.hlp
 !lib/text/help/hoopak.hlp
 !lib/text/help/throw.hlp
+
+# Authored planar sorcerer bloodline help
+!lib/text/help/abyssal_bloodline.hlp
+!lib/text/help/elemental_bloodline.hlp
+!lib/text/help/celestial_bloodline.hlp
+
+# Authored directional blocker help
+!lib/text/help/block_stealth.hlp

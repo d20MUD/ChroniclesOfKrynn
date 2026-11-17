@@ -21,6 +21,7 @@
 #include "constants.h"
 #include "act.h"
 #include "class.h"
+#include "bloodlines.h"
 #include "feats.h"
 #include "perks.h"
 #include "race.h"
@@ -64,6 +65,16 @@ int get_speed(struct char_data *ch, sbyte to_display)
     else
       speed = 50;
   }
+
+  if (bloodline_elemental_movement(ch, BLOODLINE_ELEMENT_AIR) ||
+      affected_by_spell(ch, AFFECT_WINGS_OF_HEAVEN))
+    speed = MAX(speed, 60);
+  if (bloodline_elemental_movement(ch, BLOODLINE_ELEMENT_FIRE) && !is_flying(ch))
+    speed += 30;
+  if (bloodline_elemental_movement(ch, BLOODLINE_ELEMENT_WATER) &&
+      (SECT(IN_ROOM(ch)) == SECT_WATER_SWIM || SECT(IN_ROOM(ch)) == SECT_WATER_NOSWIM ||
+       SECT(IN_ROOM(ch)) == SECT_UNDERWATER || SECT(IN_ROOM(ch)) == SECT_UD_WATER))
+    speed = MAX(speed, 60);
 
   // yes, 400 is intentional :)
   if (affected_by_spell(ch, SPELL_SHADOW_WALK))
@@ -153,6 +164,19 @@ int get_speed(struct char_data *ch, sbyte to_display)
   return speed;
 }
 
+static bool bloodline_burrowing_sector(int sector)
+{
+  switch (sector)
+  {
+  case SECT_WATER_SWIM: case SECT_WATER_NOSWIM: case SECT_UNDERWATER:
+  case SECT_UD_WATER: case SECT_UD_NOSWIM: case SECT_OCEAN:
+  case SECT_FLYING: case SECT_UD_NOGROUND: case SECT_LAVA:
+    return FALSE;
+  default:
+    return TRUE;
+  }
+}
+
 /**
  * Calculate the movement point cost for moving from one room to another
  *
@@ -166,6 +190,9 @@ int calculate_movement_cost(struct char_data *ch, room_rnum from_room, room_rnum
                             int riding)
 {
   int need_movement;
+  bool earth_movement = !riding && !is_flying(ch) &&
+      bloodline_elemental_movement(ch, BLOODLINE_ELEMENT_EARTH) &&
+      bloodline_burrowing_sector(SECT(from_room)) && bloodline_burrowing_sector(SECT(to_room));
 
   /* Special case: woodland stride reduces outdoor movement to 1 */
   if (OUTDOORS(ch) && HAS_FEAT(riding ? RIDING(ch) : ch, FEAT_WOODLAND_STRIDE))
@@ -186,8 +213,12 @@ int calculate_movement_cost(struct char_data *ch, room_rnum from_room, room_rnum
   if (ROOM_FLAGGED(from_room, ROOM_ROAD))
     need_movement--;
 
+  /* Earth heritage burrows through difficult land, respecting normal exits. */
+  /* Apply the flat ten-point discount after converting to movement points. */
+
   /* Difficult terrain doubles cost */
-  if (ROOM_AFFECTED(to_room, RAFF_DIFFICULT_TERRAIN))
+  if (ROOM_AFFECTED(to_room, RAFF_DIFFICULT_TERRAIN) &&
+      !earth_movement)
   {
     bool natural_env = OUTDOORS(ch);
     int wstride_rank = get_inquisitor_wilderness_stride_rank(ch);
@@ -224,6 +255,8 @@ int calculate_movement_cost(struct char_data *ch, room_rnum from_room, room_rnum
 
   /* New movement system multiplier */
   need_movement *= 10;
+  if (earth_movement)
+    need_movement -= 10;
 
   /* Skill-based reduction */
   int skill_bonus = skill_roll(ch, riding ? MAX(ABILITY_RIDE, ABILITY_SURVIVAL) : ABILITY_SURVIVAL);

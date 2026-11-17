@@ -25,6 +25,7 @@
 #include "handler.h"
 #include "interpreter.h"
 #include "class.h"
+#include "bloodlines.h"
 #include "race.h"
 #include "act.h"
 #include "spec_procs.h" // for compute_ability
@@ -1496,6 +1497,9 @@ int is_immune_to_crits(struct char_data *attacker, struct char_data *target)
       return FALSE; /* immune to this crit this pass! */
   }
 
+  if (HAS_FEAT(target, FEAT_ELEMENTAL_BLOODLINE_BODY))
+    return TRUE;
+
   /* now to normal conditions for critical immunity */
 
   /* undead immune to crits, not vital organs */
@@ -2567,7 +2571,7 @@ bool can_see_hidden(struct char_data *ch, struct char_data *hider)
 /* function to calculate a skill roll for given ch */
 int skill_roll(struct char_data *ch, int skillnum)
 {
-  int roll = d20(ch);
+  int roll = bloodline_conviction_roll(ch, d20(ch), BLOODLINE_ROLL_SKILL);
   int guidance = 0;
 
   if (affected_by_spell(ch, SPELL_GUIDANCE))
@@ -4585,6 +4589,9 @@ bool char_has_infra(struct char_data *ch)
 /* simple test to check if the given ch has ultra (perfect dark vision) */
 bool char_has_ultra(struct char_data *ch)
 {
+  if (HAS_FEAT(ch, FEAT_NIGHTEYE) || HAS_FEAT(ch, FEAT_SHADOW_BLOODLINE_MASTER) ||
+      affected_by_spell(ch, AFFECT_ENVELOPING_DARKNESS))
+    return TRUE;
   if (AFF_FLAGGED(ch, AFF_ULTRAVISION))
     return TRUE;
 
@@ -5958,6 +5965,37 @@ int get_daily_uses(struct char_data *ch, int featnum)
 
   switch (featnum)
   {
+  case FEAT_ABYSSAL_CLAWS:
+  case FEAT_ELEMENTAL_RAY:
+  case FEAT_HEAVENLY_FIRE:
+  case FEAT_SHADOWSTRIKE:
+  case FEAT_THUNDERSTAFF:
+  case FEAT_TOUCH_OF_DESTINY:
+    daily_uses = MAX(1, 3 + GET_CHA_BONUS(ch));
+    break;
+  case FEAT_ELEMENTAL_BLAST:
+  case FEAT_SHADOW_WELL:
+  case FEAT_THUNDERBOLT:
+    daily_uses = CLASS_LEVEL(ch, CLASS_SORCERER) >= 20 ? 3 :
+                 (CLASS_LEVEL(ch, CLASS_SORCERER) >= 17 ? 2 : 1);
+    break;
+  case FEAT_WINGS_OF_HEAVEN:
+    daily_uses = MAX(1, CLASS_LEVEL(ch, CLASS_SORCERER));
+    break;
+  case FEAT_CELESTIAL_CONVICTION:
+  case FEAT_DESTINED_BLOODLINE_ARCANA:
+    daily_uses = 1;
+    break;
+  case FEAT_IT_WAS_MEANT_TO_BE:
+    daily_uses = CLASS_LEVEL(ch, CLASS_SORCERER) >= 20 ? 3 : (CLASS_LEVEL(ch, CLASS_SORCERER) >= 10 ? 2 : 1);
+    break;
+  case FEAT_ENVELOPING_DARKNESS:
+  case FEAT_RIDE_THE_LIGHTNING:
+  case FEAT_STORM_LORD:
+  case FEAT_WITHIN_REACH:
+  case FEAT_DESTINY_REALIZED:
+    daily_uses = 1;
+    break;
   case FEAT_QUICK_CHANT:
   case FEAT_QUICK_MIND:
     daily_uses = 2;
@@ -6300,7 +6338,9 @@ int start_daily_use_cooldown(struct char_data *ch, int featnum)
   {
     /* No event - so attach one. */
     uses = 1;
-    attach_mud_event(new_mud_event(iId, ch, "uses:1"), (SECS_PER_MUD_DAY / daily_uses) RL_SEC);
+    int window = bloodline_cooldown_seconds(featnum);
+    attach_mud_event(new_mud_event(iId, ch, "uses:1"),
+                     (window ? window : MAX(1, SECS_PER_MUD_DAY / daily_uses)) RL_SEC);
   }
 
   return uses;
@@ -7367,7 +7407,8 @@ bool can_speak_language(struct char_data *ch, int language)
   if (GET_LEVEL(ch) >= LVL_IMMORT)
     return true;
   /* Tongue of the Sun and Moon grants both universal speech and comprehension. */
-  if (HAS_FEAT(ch, FEAT_TONGUE_OF_THE_SUN_AND_MOON))
+  if (HAS_FEAT(ch, FEAT_TONGUE_OF_THE_SUN_AND_MOON) || HAS_FEAT(ch, FEAT_DEMONIC_MIGHT) ||
+      HAS_FEAT(ch, FEAT_CELESTIAL_ASCENSION))
     return true;
   if (language == LANG_COMMON)
     return true;
@@ -7784,6 +7825,8 @@ bool is_flying(struct char_data *ch)
 {
   if (!ch)
     return FALSE;
+  if (bloodline_elemental_movement(ch, BLOODLINE_ELEMENT_AIR))
+    return TRUE;
 
   if (AFF_FLAGGED(ch, AFF_FLYING))
     return TRUE;
@@ -8237,11 +8280,11 @@ int d20(struct char_data *ch)
 
   // critical failure always returns a roll of one
   if (roll == 1)
-    return 1;
+    return bloodline_reroll(ch, 1);
 
   // critical success will always rerturn 20
   if (roll == 20)
-    return 20;
+    return bloodline_reroll(ch, 20);
 
   if (roll <= 5 && HAS_REAL_FEAT(ch, FEAT_FORTUNE_OF_THE_MANY))
   {
@@ -8295,7 +8338,7 @@ int d20(struct char_data *ch)
   roll = MIN(20, roll);
   roll = MAX(1, roll);
 
-  return roll;
+  return bloodline_reroll(ch, roll);
 }
 
 const char *get_wearoff(int abilnum)
@@ -8688,6 +8731,8 @@ bool can_blindsense_creature(struct char_data *ch, struct char_data *target)
 // returns true if the target doesn't have immunity to poison
 bool can_poison(struct char_data *ch)
 {
+  if (HAS_FEAT(ch, FEAT_DEMONIC_MIGHT))
+    return FALSE;
   if (affected_by_spell(ch, SPELL_PANACEA))
     return false;
   if (affected_by_spell(ch, PSIONIC_OAK_BODY))

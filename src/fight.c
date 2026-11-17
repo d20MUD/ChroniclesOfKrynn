@@ -34,6 +34,7 @@
 #include "dg_scripts.h"
 #include "act.h"
 #include "class.h"
+#include "bloodlines.h"
 #include "fight.h"
 #include "shop.h"
 #include "quest.h"
@@ -2092,6 +2093,10 @@ static int compute_armor_class_with_decoy(struct char_data *attacker, struct cha
 
   bonuses[BONUS_TYPE_DEFLECTION] =
       legendary_foundation_deflection(ch, bonuses[BONUS_TYPE_DEFLECTION]);
+
+  if (HAS_FEAT(ch, FEAT_FATED) &&
+      (AFF_FLAGGED(ch, AFF_FLAT_FOOTED) || !AWAKE(ch) || (attacker && !CAN_SEE(ch, attacker))))
+    bonuses[BONUS_TYPE_LUCK] = MAX(bonuses[BONUS_TYPE_LUCK], bloodline_fated_bonus(ch));
 
   /* Add up all the bonuses */
   if (is_touch)
@@ -4452,6 +4457,8 @@ int compute_energy_absorb(struct char_data *ch, int dam_type)
       dam_reduction += 5;
     break;
   case DAM_ELECTRIC:
+    if (HAS_FEAT(ch, FEAT_STORMCHILD))
+      dam_reduction += 5;
     if (affected_by_spell(ch, SPELL_RESIST_ENERGY))
       dam_reduction += 3;
     if (affected_by_spell(ch, SPELL_PROTECTION_FROM_ENERGY))
@@ -4502,6 +4509,8 @@ int compute_energy_absorb(struct char_data *ch, int dam_type)
   case DAM_FORCE:
     break;
   case DAM_SOUND:
+    if (HAS_FEAT(ch, FEAT_STORMCHILD))
+      dam_reduction += 5;
     if (affected_by_spell(ch, SPELL_PROTECTION_FROM_ENERGY))
       dam_reduction += get_char_affect_modifier(ch, SPELL_PROTECTION_FROM_ENERGY, APPLY_SPECIAL);
     break;
@@ -4542,6 +4551,7 @@ int compute_energy_absorb(struct char_data *ch, int dam_type)
     break;
   }
 
+  dam_reduction += bloodline_energy_resistance(ch, dam_type);
   return (MIN(MAX_ENERGY_ABSORB, dam_reduction));
 }
 
@@ -5144,6 +5154,9 @@ int compute_damtype_reduction(struct char_data *ch, int dam_type, struct char_da
     }
   }
 
+  if (bloodline_energy_immunity(ch, dam_type))
+    damtype_reduction = MAX(100, damtype_reduction);
+
   /* caps */
   if (damtype_reduction < -999)
     damtype_reduction = -999; /* 10x vulnerability? */
@@ -5707,7 +5720,7 @@ int compute_concealment(struct char_data *ch, struct char_data *attacker)
       else if (can_see_invis || can_strike_ethereal)
         blink_concealment = 20;
 
-      return MIN(MAX_CONCEAL, blink_concealment);
+      return bloodline_reduce_concealment(attacker, MIN(MAX_CONCEAL, blink_concealment));
     }
 
     return 0;
@@ -5717,7 +5730,7 @@ int compute_concealment(struct char_data *ch, struct char_data *attacker)
     concealment += 50;
 
   /* these shouldn't stack, should be sorted from top to bottom by highest concealment % */
-  if (AFF_FLAGGED(ch, AFF_DISPLACE))
+  if (AFF_FLAGGED(ch, AFF_DISPLACE) || affected_by_spell(ch, AFFECT_SHADOW_WELL))
     concealment += 50;
   else if (HAS_EVOLUTION(ch, EVOLUTION_SHADOW_BLEND) && !room_is_daylit(IN_ROOM(ch)))
   {
@@ -5749,12 +5762,15 @@ int compute_concealment(struct char_data *ch, struct char_data *attacker)
   else if (AFF_FLAGGED(ch, AFF_BLUR))
     concealment += 20;
 
-  if (ROOM_AFFECTED(IN_ROOM(ch), RAFF_OBSCURING_MIST))
-    concealment += 20;
-  if (ROOM_AFFECTED(IN_ROOM(ch), RAFF_FOG_CLOUD))
-    concealment += 50; /* Fog cloud provides total concealment (50% miss chance) */
-  if (ROOM_AFFECTED(IN_ROOM(ch), RAFF_SOLID_FOG))
-    concealment += 50; /* Solid fog provides total concealment (50% miss chance) */
+  if (!bloodline_sees_weather(attacker))
+  {
+    if (ROOM_AFFECTED(IN_ROOM(ch), RAFF_OBSCURING_MIST))
+      concealment += 20;
+    if (ROOM_AFFECTED(IN_ROOM(ch), RAFF_FOG_CLOUD))
+      concealment += 50;
+    if (ROOM_AFFECTED(IN_ROOM(ch), RAFF_SOLID_FOG))
+      concealment += 50;
+  }
   if (HAS_FEAT(ch, FEAT_OUTSIDER))
     concealment += 15;
   if (HAS_FEAT(ch, FEAT_SELF_CONCEALMENT))
@@ -5776,7 +5792,7 @@ int compute_concealment(struct char_data *ch, struct char_data *attacker)
       concealment_cap += 75;
   }
 
-  return (concealment_cap);
+  return bloodline_reduce_concealment(attacker, concealment_cap);
 }
 
 int ranged_concealment(struct char_data *ch, struct char_data *victim, int attack_type)
@@ -7139,6 +7155,7 @@ static int resolve_damage(struct char_data *ch, struct char_data *victim, int da
     legendary_native_observe(ch, victim, dam);
   }
 #endif
+  dam = bloodline_modify_damage(victim, dam, w_type, dam_type);
   clan_source_damage(ch, victim, dam, !origin);
   GET_HIT(victim) -= dam;
   if (!origin && ch && IS_EPIC_SPELL(w_type))
@@ -9802,9 +9819,9 @@ int compute_dam_dice(struct char_data *ch, struct char_data *victim, struct obj_
 
 /* simple test for testing (confirming) critical hit */
 int is_critical_hit(struct char_data *ch, struct obj_data *wielded, int diceroll, int calc_bab,
-                    int victim_ac, struct char_data *victim)
+                    int victim_ac, struct char_data *victim, int spell_threat)
 {
-  int threat_range, confirm_roll = d20(ch) + calc_bab;
+  int threat_range, confirm_die = bloodline_conviction_roll(ch, d20(ch), BLOODLINE_ROLL_ATTACK), confirm_roll = confirm_die + calc_bab;
   int powerful_being = 0;
 
   /* Critical Awareness perk bonuses (Fighter) */
@@ -9881,7 +9898,7 @@ int is_critical_hit(struct char_data *ch, struct obj_data *wielded, int diceroll
     /* we get here, the powerful being beat it */
   }
 
-  threat_range = determine_threat_range(ch, wielded, victim);
+  threat_range = spell_threat ? spell_threat : determine_threat_range(ch, wielded, victim);
 
   if (diceroll >= threat_range)
   { /* critical potential? */
@@ -9907,7 +9924,10 @@ int is_critical_hit(struct char_data *ch, struct obj_data *wielded, int diceroll
       confirm_roll += (GET_LEVEL(ch) - 30) * 2;
     }
 
-    if (confirm_roll >= victim_ac ||
+    if (victim && HAS_FEAT(victim, FEAT_DESTINY_REALIZED))
+      return confirm_die == 20;
+    if ((spell_threat && HAS_FEAT(ch, FEAT_DESTINY_REALIZED)) ||
+        confirm_roll >= victim_ac ||
         affected_by_spell(ch, AFFECT_PLANAR_SOUL_SURGE)) /* confirm critical */
       return 1;                                          /* yep, critical! */
   }
@@ -10875,6 +10895,9 @@ bool weapon_bypasses_dr(struct obj_data *weapon, struct damage_reduction_type *d
             get_effective_draconic_bloodline_level(ch) >= 7)
           passed = TRUE;
         if (HAS_EVOLUTION(ch, EVOLUTION_MAGIC_ATTACKS))
+          passed = TRUE;
+        if (HAS_FEAT(ch, FEAT_ABYSSAL_CLAWS) && CLASS_LEVEL(ch, CLASS_SORCERER) >= 5 &&
+            affected_by_spell(ch, AFFECT_ABYSSAL_CLAWS) && attack_type == ATTACK_TYPE_UNARMED)
           passed = TRUE;
         /* Hardened Constructs II: summon attacks count as magic */
         if (AFF2_FLAGGED(ch, AFF2_MAGIC_ATTACKS))
@@ -12290,6 +12313,9 @@ int compute_attack_bonus_full(struct char_data *ch,     /* Attacker */
     }
   }
 
+  bonuses[BONUS_TYPE_INSIGHT] = MAX(bonuses[BONUS_TYPE_INSIGHT],
+                                    bloodline_affect_bonus(ch, AFFECT_TOUCH_OF_DESTINY));
+
   /* epic weapon specialization */
   if (HAS_FEAT(ch, FEAT_EPIC_WEAPON_SPECIALIZATION))
   {
@@ -13226,7 +13252,7 @@ static int perform_attack_roll(struct char_data *ch,     /* Attacker */
     attack_bonus += 3;
 
   attack_bonus += extra_bonus;
-  int diceroll = d20(ch);
+  int diceroll = bloodline_conviction_roll(ch, d20(ch), BLOODLINE_ROLL_ATTACK);
   int result = ((attack_bonus + diceroll) - victim_ac);
 
   if (show_roll)
@@ -13321,9 +13347,9 @@ int attack_roll_with_critical(struct char_data *ch,     /* Attacker */
     attack_bonus += get_artificer_tactical_directives_rank(ch->master);
   }
 
-  int diceroll = d20(ch);
+  int diceroll = bloodline_conviction_roll(ch, d20(ch), BLOODLINE_ROLL_ATTACK);
   if (diceroll >= critical_threshold &&
-      is_critical_hit(ch, NULL, diceroll, attack_bonus, victim_ac, victim) &&
+      is_critical_hit(ch, NULL, diceroll, attack_bonus, victim_ac, victim, critical_threshold) &&
       !IS_IMMUNE_CRITS(ch, victim))
     return 999;
   int result = ((attack_bonus + diceroll) - victim_ac);
@@ -14273,7 +14299,7 @@ int handle_successful_attack(struct char_data *ch, struct char_data *victim,
         act("$n performs a \tYstunning fist\tn attack on $N!", ACT_CONDENSE_VALUE, ch, wielded,
             victim, TO_NOTVICT);
 
-        if (!char_has_mud_event(victim, eSTUNNED))
+        if (!HAS_FEAT(victim, FEAT_STORM_LORD) && !char_has_mud_event(victim, eSTUNNED))
         {
           attach_mud_event(new_mud_event(eSTUNNED, victim, NULL), 6 * PASSES_PER_SEC);
         }
@@ -14846,7 +14872,7 @@ int handle_successful_attack(struct char_data *ch, struct char_data *victim,
                 TO_NOTVICT);
 
             /* Apply the 1 round stun */
-            if (!char_has_mud_event(victim, eSTUNNED))
+            if (!HAS_FEAT(victim, FEAT_STORM_LORD) && !char_has_mud_event(victim, eSTUNNED))
             {
               attach_mud_event(new_mud_event(eSTUNNED, victim, NULL), 6 * PASSES_PER_SEC);
             }
@@ -15090,6 +15116,16 @@ int handle_successful_attack(struct char_data *ch, struct char_data *victim,
       if (resolve_damage(ch, victim, dam, w_type, dam_type, attack_type, LEG_ORIGIN_NORMAL,
                          technique) < 0)
         victim_is_dead = TRUE;
+
+      if (!victim_is_dead && !DEAD(ch) && dam > 0 && wielded &&
+          attack_type != ATTACK_TYPE_RANGED && affected_by_spell(ch, AFFECT_THUNDERSTAFF))
+      {
+        int shock = dice(1, 6);
+        if (is_critical && bloodline_affect_bonus(ch, AFFECT_THUNDERSTAFF) >= 9)
+          shock += dice(1, 10);
+        if (damage(ch, victim, shock, AFFECT_THUNDERSTAFF, DAM_ELECTRIC, attack_type) < 0)
+          victim_is_dead = TRUE;
+      }
 
       if (!victim_is_dead && attack_type == ATTACK_TYPE_RANGED && ammo_damage_type > 0 &&
           ammo_damage_type < NUM_DAM_TYPES && ammo_damage_die > 0)
@@ -16044,11 +16080,11 @@ static int resolve_weapon_hit(struct char_data *ch, struct char_data *victim, in
       (void)legendary_signature_dodge(victim, true);
     calc_bab += MIN(technique_bonus, MAX(0, get_attack_bonus_cap(ch) - calc_bab));
   }
-  diceroll = d20(ch);
+  diceroll = bloodline_conviction_roll(ch, d20(ch), BLOODLINE_ROLL_ATTACK);
   weapon_training_bonus = HAS_FEAT(ch, FEAT_WEAPON_TRAINING);
   modified_diceroll = diceroll + weapon_training_bonus;
 
-  if (is_critical_hit(ch, wielded, diceroll, calc_bab, victim_ac, victim) &&
+  if (is_critical_hit(ch, wielded, diceroll, calc_bab, victim_ac, victim, FALSE) &&
       !IS_IMMUNE_CRITS(ch, victim))
   {
     can_hit = TRUE;

@@ -6738,7 +6738,15 @@ void free_char(struct char_data *ch)
     }
 
     if (ch->player_specials)
+    {
+      struct blocker_stealth_check *check, *next;
+      for (check = ch->player_specials->blocker_stealth_checks; check; check = next)
+      {
+        next = check->next;
+        free(check);
+      }
       free(ch->player_specials);
+    }
 
     if (ch->bags)
       free(ch->bags);

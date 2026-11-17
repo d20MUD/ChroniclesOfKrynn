@@ -1,0 +1,23 @@
+SORCERER-BLOODLINES BLOODLINES BLOODLINE
+
+Sorcerers choose one bloodline in study. Benefits are shown before confirmation.
+Arcane, Draconic and Elemental offer heritage suboptions. Dragon Disciples
+must choose Draconic. There are ten bloodlines in total.
+
+Bloodline use limits now recover per five real minutes. Each full pool resets
+five minutes after its first use, without extending the timer on retries.
+Conviction instead recovers every 30 seconds and can select attack, save,
+skill or any eligible roll. Stored cooldowns survive logout.
+
+Shadow Well grants concealment to yourself or a grouped ally in darkness.
+Destined rerolls and spell penetration now trigger passively. Type bloodline
+for the six new bloodlines' powers and remaining uses; use feat info <power>
+for exact rules. Original bloodlines retain their command families.
+
+The six new bloodlines grant bonus spells at sorcerer levels 3, 5, 7, 9, 11,
+13, 15, 17 and 19. These consume normal slots without Study spell selections.
+
+See also: SHADOW-BLOODLINE, STORMBORN-BLOODLINE, DESTINED-BLOODLINE,
+ABYSSAL-BLOODLINE, ELEMENTAL-BLOODLINE, CELESTIAL-BLOODLINE, STUDY
+#0
+$

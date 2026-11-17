@@ -1,0 +1,40 @@
+CELESTIAL-BLOODLINE CELESTIAL HEAVENLY-FIRE WINGS-OF-HEAVEN CONVICTION
+
+- 9) CELESTIAL
+  - Focus: Protective summons, healing, wings and conviction.
+  - Class skill: Medicine.
+  - Heritage suboptions: None.
+  - Level 1 - Celestial Arcana: Summoned creatures gain DR 5/evil, bypassed by
+    evil-aligned attacks. Normal non-stacking DR rules apply.
+  - Level 1 - Heavenly Fire: Ranged touch deals 1d12 + half level holy damage to an evil
+    enemy, using native holy defenses. Instead heals a good grouped ally, or yourself if
+    good. Neutral targets are unaffected.
+    - Each recipient can receive healing once per five minutes across all casters. Owned
+      companions share their player master's receipt limit.
+    - Uses: 3 + Charisma bonus per five minutes, minimum 1. Uses a swift action.
+  - Level 3 - Celestial Resistances: Acid and cold resistance 5, increasing to 10 at
+    level 9.
+  - Level 9 - Wings of Heaven: Flight speed 60 for ten rounds per activation. Uses per
+    five minutes equal your sorcerer level. Wings can be retracted.
+  - Level 15 - Conviction: Arm a reroll of your next attack, skill check or saving throw
+    within ten rounds. Swift action. You can specify whether it applies to an attack
+    roll, saving throw or skill check. Other roll categories do not consume it. Defaults
+    to any eligible category. Keep the second result, even if worse. Usable once per 30
+    seconds.
+  - Level 20 - Ascension: Acid and cold immunity, fire and electricity resistance 10, +4
+    poison saves, universal speech and comprehension, and unlimited Wings of Heaven.
+  - Bonus spells: Bless, resist energy, circle against evil, remove curse, flame strike,
+    greater dispelling, banish, sunburst, gate.
+  - Bonus feat choices: Dodge, Extend Spell, Iron Will, Mobility, Mounted Combat,
+    Ride-By Attack, Skill Focus, Weapon Finesse.
+  - Commands:
+    - bloodline heavenly-fire <target>
+    - bloodline wings [off]
+    - bloodline conviction [attack/save/skill/any]
+  - Alignment/deity: No requirement. Celestial influence is inherited innate magic.
+
+All listed use limits recover per five real minutes; Conviction is every
+30 seconds. Full pools reset from first use without extending on retries.
+See also: SORCERER-BLOODLINES, STUDY, FEATS, SPELLS
+#0
+$

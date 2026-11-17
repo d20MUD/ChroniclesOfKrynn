@@ -1,0 +1,344 @@
+SORCERER BLOODLINES AND HERITAGE OPTIONS
+Chronicles of Krynn - current codebase overview
+
+- General notes
+  - There are 10 bloodlines, numbered as they appear in Study.
+  - Arcane, Draconic and Elemental have heritage suboptions. The others do not.
+  - All levels below refer to sorcerer levels.
+  - Bonus feat lists are available choices, not automatic grants of every feat.
+  - For Shadow, Stormborn, Destined, Abyssal, Elemental and Celestial, the nine bonus
+    spells listed become known at levels 3, 5, 7, 9, 11, 13, 15, 17 and 19,
+    respectively. They use normal spell slots, without using Study choices.
+  - The original four bloodlines retain their existing bonus-spell rules.
+  - Study shows benefits before asking you to accept or reject a bloodline.
+  - All use limits below are per five real minutes unless explicitly stated otherwise.
+    Each pool resets five minutes after its first use; retries do not restart the timer.
+    Conviction instead recovers every 30 seconds.
+
+- 0) ARCANE
+  - Focus: Metamagic, spell versatility and school specialization.
+  - Class skill: Appraise.
+  - Heritage suboptions: Choose one school. School Power at level 15 grants +2 spell
+    save DC for that school, stacking with Spell Focus.
+    - 1) Abjuration: Protective magic, wards and dispelling.
+    - 2) Conjuration: Summoning and conjured effects.
+    - 3) Divination: Detection, information and magical sight.
+    - 4) Enchantment: Charms, compulsions and mental influence.
+    - 5) Evocation: Direct magical energy and destructive effects.
+    - 6) Illusion: Deception, invisibility and illusory effects.
+    - 7) Necromancy: Death magic, life draining and undead effects.
+    - 8) Transmutation: Changing creatures, objects and physical capabilities.
+  - Level 1 - Arcane Arcana: Metamagic-enhanced spells gain +1 save DC.
+  - Level 1 - Improved Familiar: Grants one familiar improvement rank: +1 AC, +10 HP and
+    +1 Strength, Dexterity and Constitution.
+  - Level 3 - Metamagic Adept: Can negate metamagic's extra casting time when activated
+    during casting. Example: cast maximize metamagicadept 'fireball'.
+  - Level 9 - New Arcana: Additional spell-slot benefits for circles 1-3; improves at
+    level 13 to circles 1-6 and level 17 to circles 1-9.
+  - Level 15 - School Power: +2 save DC for your chosen school's spells.
+  - Level 20 - Arcane Apotheosis: Automatically removes extra metamagic casting time.
+    Can expend spell slots to conserve charges from items such as wands and staves;
+    three levels of spell slots conserve one charge.
+  - Bloodline spells: Identify, invisibility, dispel magic, minor globe, feeblemind,
+    true seeing, teleport, power word stun, timestop.
+  - Bonus feat choices: Combat Casting, Improved Counterspell, Improved Initiative, Iron
+    Will, Scribe Scroll, Skill Focus, Spell Focus, Still Spell.
+
+- 1) DRACONIC
+  - Focus: Dragon heritage, elemental damage and physical defenses.
+  - Class skill: Perception.
+  - Heritage suboptions: Determines breath energy, energy resistance, elemental claw
+    damage and the matching-spell damage bonus.
+    - 1) Black: Acid.
+    - 2) Blue: Electricity.
+    - 3) Green: Poison in this codebase.
+    - 4) Red: Fire.
+    - 5) White: Cold.
+    - 6) Brass: Fire.
+    - 7) Bronze: Electricity.
+    - 8) Copper: Acid.
+    - 9) Silver: Cold.
+    - 10) Gold: Fire.
+  - Level 1 - Draconic Arcana: Matching-energy spells gain +1 damage per die.
+  - Level 1 - Draconic Claws: Two attacks dealing 1d4 + Strength bonus each.
+    - Uses: 3 + Charisma modifier per five minutes.
+    - Level 7: Claws count as magical for damage reduction.
+    - Level 9: Base damage increases to 1d6.
+    - Level 11: Each hit adds 1d6 heritage energy damage.
+  - Level 3 - Draconic Resistances: Heritage energy resistance 5 and natural armor +1.
+    - Level 9: Resistance 10 and natural armor +2.
+    - Level 15: Natural armor +4.
+  - Level 9 - Draconic Breath Weapon: 1d6 heritage energy damage per level.
+  - Level 15 - Draconic Wings: Extend or retract wings for flight speed 60.
+  - Level 20 - Power of Wyrms: Sleep, paralysis and heritage energy immunity; gains
+    blindsense.
+  - Bloodline spells: Mage armor, resist energy, fly, wizard eye, telekinesis, true
+    seeing, waves of exhaustion, mass domination, polymorph.
+  - Bonus feat choices: Blind Fight, Great Fortitude, Improved Initiative, Power Attack,
+    Quicken Spell, Skill Focus, Toughness.
+  - Commands: dracclaws, dracbreath, dracwings.
+  - Restriction: Dragon Disciples must choose Draconic.
+
+- 2) FEY
+  - Focus: Enchantment, concealment and wilderness magic.
+  - Class skill: Survival.
+  - Heritage suboptions: None.
+  - Level 1 - Fey Arcana: Enchantment spells gain +2 save DC.
+  - Level 1 - Laughing Touch: Target can take only a move action for one round. Swift
+    action; 3 + Charisma modifier uses per five minutes.
+  - Level 3 - Wilderness Stride: Reduces wilderness movement penalties.
+  - Level 9 - Fleeting Glance: Greater invisibility three times per five minutes.
+  - Level 15 - Fey Magic: Roll twice to overcome spell resistance and keep the better
+    result.
+  - Level 20 - Soul of the Fey: Poison immunity, +3 damage reduction, animals do not
+    automatically attack you, and shadow walk once per five minutes.
+  - Bloodline spells: Charm, hideous laughter, deep slumber, charm monster, feeblemind,
+    true seeing, prismatic spray, irresistible dance, polymorph.
+  - Bonus feat choices: Dodge, Improved Initiative, Lightning Reflexes, Mobility, Point
+    Blank Shot, Precise Shot, Quicken Spell, Skill Focus.
+  - Commands: fey, feymagic.
+
+- 3) UNDEAD
+  - Focus: Fear, grave magic and undead defenses.
+  - Class skill: Intimidate.
+  - Heritage suboptions: None.
+  - Level 1 - Undead Arcana: Your mind-affecting spells can affect undead.
+  - Level 1 - Grave Touch: Move-action touch causes shaken for half your level in
+    rounds. Uses: 3 + Charisma modifier per five minutes.
+  - Level 3 - Death's Gift: Cold resistance 20, nonlethal resistance 30 and DR 1/-.
+    - Level 9: Cold resistance 40, nonlethal resistance 50 and DR 2/-.
+  - Level 9 - Grasp of the Dead: Skeletal arms attack enemies in the room for 1d6
+    slashing damage per level. Reflex halves; failed saves also prevent movement for one
+    round. Requires a solid surface.
+    - Save DC: 10 + half sorcerer level + Charisma modifier.
+    - Uses: 1 per five minutes, 2 per five minutes at level 17, 3 per five minutes at
+      level 20.
+  - Level 15 - Incorporeal Form: Become incorporeal for three rounds, generally halving
+    incoming non-spell damage and your outgoing physical damage against corporeal
+    targets. Ghost touch and incorporeal opponents affect these rules. Uses: sorcerer
+    level divided by 3 per five minutes.
+  - Level 20 - One of Us: Cold and nonlethal immunity, DR 5/-, sleep and paralysis
+    immunity, and +4 morale on saves against undead spellcasters. Undead NPCs do not
+    automatically attack you.
+  - Bloodline spells: Chill touch, false life, vampiric touch, animate dead, waves of
+    fatigue, undeath to death, finger of death, horrid wilting, energy drain.
+  - Bonus feat choices: Combat Casting, Diehard, Endurance, Iron Will, Spell Focus,
+    Still Spell, Toughness, Skill Focus.
+
+- 4) SHADOW
+  - Focus: Stealth, darkness and shadow control.
+  - Class skill: Stealth.
+  - Heritage suboptions: None.
+  - Level 1 - Shadow Arcana: Casting darkness, shadow shield, shadow walk or shadow jump
+    grants a competence Stealth bonus equal to spell circle for 5 minutes.
+  - Level 1 - Shadowstrike: Melee touch deals 1d4 + half level damage. Targets without
+    darkvision or low-light vision are dazzled for ten rounds. Cannot reduce a target
+    below 1 HP. Undead and constructs are immune. Uses: 3 + Charisma bonus per five
+    minutes, minimum 1. Uses a swift action.
+  - Level 3 - Nighteye: See in natural darkness.
+  - Level 9 - Shadow Well: Draw shadows around yourself or a grouped ally, making their
+    outline difficult to follow.
+    - Command: bloodline shadow-well [group ally] - defaults to yourself.
+    - Requirement: You and the target must be in the same dark room when activated.
+    - Effect: Grants 50% concealment against attacks for half your sorcerer level in
+      rounds.
+    - Uses: 1 per five minutes, increasing to 2 per five minutes at level 17 and 3 per
+      five minutes at level 20.
+    - Action: Standard action.
+    - Stacking: Uses the strongest applicable concealment effect; does not add another
+      50% to existing concealment.
+    - Counters: Uses the game's normal concealment bypass rules. Does not prevent area
+      damage or effects that do not check concealment.
+    - Existing passive benefit: Retain the ability to hide while observed in darkness.
+  - Level 15 - Enveloping Darkness: Darkens the room and entangles eligible enemies for
+    15 rounds; you see through the darkness. Freedom of movement prevents the
+    entanglement. Once per five minutes.
+  - Level 20 - Shadow Master: See through magical darkness, gain +2 illusion save DC and
+    extend shadow shield duration by 20%.
+  - Bonus spells: Ray of enfeeblement, infravision, darkness, greater invisibility,
+    shadow shield, shadow walk, power word blind, scint pattern, weird.
+  - Bonus feat choices: Acrobatic, Blind Fight, Dodge, Quick Draw, Silent Spell, Skill
+    Focus, Stealthy, Weapon Finesse.
+  - Commands:
+    - bloodline shadowstrike <enemy>
+    - bloodline shadow-well <group ally>
+    - bloodline enveloping-darkness
+
+- 5) STORMBORN
+  - Focus: Electricity, thunder and storm mobility.
+  - Class skill: Nature.
+  - Heritage suboptions: None.
+  - Level 1 - Stormborn Arcana: Electricity and sonic spells gain +1 save DC.
+  - Level 1 - Thunderstaff: Your or a grouped ally's wielded melee attacks gain +1d6
+    electricity damage for half your level in rounds, minimum 1.
+    - From level 9: Critical hits add another 1d10 electricity
+    - Uses: 3 + Charisma bonus per five minutes, minimum 1.
+  - Level 3 - Stormchild: Electricity and sonic resistance 5, and protection against
+    wind knockdown, including +4 defense against other forms of knockdown.
+  - Level 9: See through fog and mist. Combat target's concealment is reduced by 10% for
+    you alone.
+  - Level 9 - Thunderbolt: Room attack deals 1d6/level, capped at 30d6, split between
+    electricity and sonic. Reflex halves; failed saves also deafen for one round.
+    - Save DC: 10 + half sorcerer level + Charisma bonus.
+    - Uses: 1 per five minutes, 2 per five minutes at level 17, 3 per five minutes at
+      level 20.
+  - Level 15 - Ride the Lightning: Travel through one legal adjacent exit and release a
+    thunderbolt on arrival. Requires being out of combat; once per five minutes.
+    Respects doors and normal movement restrictions. Cannot pass blocker mobs you
+    normally couldn't pass.
+  - Level 20 - Storm Lord: Stun, deafness and wind-knockdown immunity. Automatically
+    absorbs the first electricity or sonic damage and heals one-third of its remaining
+    damage after defenses. On a 5 minute cooldown.
+  - Bonus spells: Shocking grasp, gust of wind, lightning bolt, thunderclap, overland
+    flight, chain lightning, control weather, whirlwind, storm of vengeance.
+  - Bonus feat choices: Deadly Aim, Dodge, Enlarge Spell, Far Shot, Great Fortitude,
+    Point Blank Shot, Skill Focus, Mobility.
+  - Commands:
+    - bloodline thunderstaff [group ally]
+    - bloodline thunderbolt
+    - bloodline ride-the-lightning <direction>
+
+- 6) DESTINED
+  - Focus: Luck, ally support, rerolls and survival.
+  - Class skill: History.
+  - Heritage suboptions: None.
+  - Level 1 - Destined Arcana: A personal-range sorcerer ability grants a luck bonus to
+    saves equal to its circle for one minute. Usable once per 5 mins.
+  - Level 1 - Touch of Destiny: Yourself or a grouped ally gains an insight bonus equal
+    to half your level, minimum 1, on attacks, saves and skill checks for 3 rounds.
+    Uses: 3 + Charisma bonus per five minutes, minimum 1.
+  - Level 3 - Fated: +1 luck to saves, and to AC while flat-footed or unaware. Increases
+    at levels 7, 11, 15 and 19, reaching +5.
+  - Level 9 - It Was Meant to Be: Every d20 roll has a 1% chance to reroll, keeping the
+    second result. Passive; no arming required. Maximum procs per five minutes: 1,
+    increasing to 2 at level 10 and 3 at level 20.
+  - Level 15 - Within Reach: Once per five minutes, lethal damage triggers a DC 20 Will
+    save. Success leaves you at 1 HP; failure still spends the use.
+  - Level 20 - Destiny Realized: Criticals against you require a natural 20
+    confirmation. Your spell critical threats automatically confirm. 5% chance on a
+    failed spell resistance check to reroll the check.
+  - Bonus spells: True strike, blur, protection from energy, free movement, greater
+    dispelling, greater heroism, spell turning, protection from spells, timestop.
+  - Bonus feat choices: Combat Casting, Diehard, Endurance, Leadership, Lightning
+    Reflexes, Maximize Spell, Skill Focus, Weapon Focus.
+  - Commands:
+    - bloodline touch-of-destiny [group ally]
+    - Reroll and penetration now trigger passively; legacy commands explain this.
+
+- 7) ABYSSAL
+  - Focus: Demonic claws, Strength and enhanced summons.
+  - Class skill: Arcana.
+  - Heritage suboptions: None.
+  - Level 1 - Abyssal Arcana: Summoned creatures gain 5/good DR, bypassed by
+    good-aligned attacks. Normal non-stacking DR rules apply.
+  - Level 1 - Abyssal Claws: Swift action with both hands free makes two claw attacks,
+    each dealing 1d4 + Strength bonus.
+    - Level 5: Claws count as magical for damage reduction.
+    - Level 7: Base damage increases to 1d6.
+    - Level 11: Each hit adds 1d6 fire damage.
+    - Smaller bodies use smaller damage dice.
+    - Uses: 3 + Charisma bonus per five minutes, minimum 1.
+  - Level 3 - Demon Resistances: Electricity resistance 5 and +2 poison saves.
+    - Level 9: Resistance 10 and poison save bonus +4.
+  - Level 9 - Strength of the Abyss: +2 inherent Strength, improving to +4 at level 13
+    and +6 at level 17. Normal stat caps and inherent bonus stacking rules apply.
+  - Level 15 - Added Summonings: Summon creature spells calling evil aligned creatures
+    gain +2 to AC, attack and damage.
+  - Level 20 - Demonic Might: Electricity and poison immunity; acid, cold and fire
+    resistance 10; universal speech and comprehension.
+  - Bonus spells: Cause fear, strength, rage, stoneskin, dismissal, transformation,
+    teleport, protection from spells, summon creature IX.
+  - Bonus feat choices: Augment Summoning, Cleave, Empower Spell, Great Fortitude,
+    Improved Bull Rush, Improved Sunder, Power Attack, Skill Focus.
+  - Command: bloodline abyssal-claws <enemy>.
+  - Alignment: No requirement.
+
+- 8) ELEMENTAL
+  - Focus: Energy specialization, conversion and elemental movement.
+  - Class skill: Arcana.
+  - Heritage suboptions: Permanent choice determining energy attacks, conversion,
+    resistance, immunity and level-15 movement.
+    - 1) Air:
+      - Energy: Electricity.
+      - Level 15: Permanent flight at speed 60.
+    - 2) Earth:
+      - Energy: Acid.
+      - Level 15: Land movement cost reduced by 10 points; ignores difficult terrain.
+        Normal minimum movement costs still apply. Uses legal exits and respects doors.
+        Does not burrow through water, lava, open-air sectors or walls.
+    - 3) Fire:
+      - Energy: Fire.
+      - Level 15: +30 ground speed.
+    - 4) Water:
+      - Energy: Cold.
+      - Level 15: Natural swimming at speed 60. Does not grant water breathing or bypass
+        boat-only sectors.
+  - Level 1 - Elemental Arcana: Toggle conversion of your sorcerer spells' fire, cold,
+    acid, electricity or sonic damage into your heritage energy. Burning hands and
+    scorching ray always use heritage energy.
+  - Level 1 - Elemental Ray: Ranged touch deals 1d6 + half level heritage energy damage.
+    Uses: 3 + Charisma bonus per five minutes, minimum 1. Uses a swift action.
+  - Level 3 - Elemental Resistance: Heritage energy resistance 10, increasing to 20 at
+    level 9.
+  - Level 9 - Elemental Blast: Room attack deals 1d6/level, capped at 30d6. Reflex
+    halves. Failed saves cause 50% vulnerability to heritage energy for two rounds,
+    applied after the blast.
+    - Save DC: 10 + half sorcerer level + Charisma bonus.
+    - Uses: 1 per five minutes, 2 per five minutes at level 17, 3 per five minutes at
+      level 20.
+  - Level 15 - Elemental Movement: Grants the benefit listed under heritage.
+  - Level 20 - Elemental Body: Immunity to heritage energy, critical hits and sneak
+    attacks, using native immunity rules.
+  - Bonus spells: Burning hands, scorching ray, protection from energy, stoneskin, fire
+    shield, transformation, spell mantle, summon creature VIII, elemental swarm.
+  - Bonus feat choices: Dodge, Empower Spell, Great Fortitude, Improved Initiative,
+    Lightning Reflexes, Power Attack, Skill Focus, Weapon Finesse.
+  - Commands:
+    - bloodline energy-conversion [on/off]
+    - bloodline elemental-ray <enemy>
+    - bloodline elemental-blast
+
+- 9) CELESTIAL
+  - Focus: Protective summons, healing, wings and conviction.
+  - Class skill: Medicine.
+  - Heritage suboptions: None.
+  - Level 1 - Celestial Arcana: Summoned creatures gain DR 5/evil, bypassed by
+    evil-aligned attacks. Normal non-stacking DR rules apply.
+  - Level 1 - Heavenly Fire: Ranged touch deals 1d12 + half level holy damage to an evil
+    enemy, using native holy defenses. Instead heals a good grouped ally, or yourself if
+    good. Neutral targets are unaffected.
+    - Each recipient can receive healing once per five minutes across all casters. Owned
+      companions share their player master's receipt limit.
+    - Uses: 3 + Charisma bonus per five minutes, minimum 1. Uses a swift action.
+  - Level 3 - Celestial Resistances: Acid and cold resistance 5, increasing to 10 at
+    level 9.
+  - Level 9 - Wings of Heaven: Flight speed 60 for ten rounds per activation. Uses per
+    five minutes equal your sorcerer level. Wings can be retracted.
+  - Level 15 - Conviction: Arm a reroll of your next attack, skill check or saving throw
+    within ten rounds. Swift action. You can specify whether it applies to an attack
+    roll, saving throw or skill check. Other roll categories do not consume it. Defaults
+    to any eligible category. Keep the second result, even if worse. Usable once per 30
+    seconds.
+  - Level 20 - Ascension: Acid and cold immunity, fire and electricity resistance 10, +4
+    poison saves, universal speech and comprehension, and unlimited Wings of Heaven.
+  - Bonus spells: Bless, resist energy, circle against evil, remove curse, flame strike,
+    greater dispelling, banish, sunburst, gate.
+  - Bonus feat choices: Dodge, Extend Spell, Iron Will, Mobility, Mounted Combat,
+    Ride-By Attack, Skill Focus, Weapon Finesse.
+  - Commands:
+    - bloodline heavenly-fire <target>
+    - bloodline wings [off]
+    - bloodline conviction [attack/save/skill/any]
+  - Alignment/deity: No requirement. Celestial influence is inherited innate magic.
+
+- Additional implementation notes
+  - The new bloodlines adapt Pathfinder powers to the existing MUD's rooms, combat,
+    movement and spell catalogue; some bonus spells are substitutions.
+  - Bloodline powers respect normal legal-target, group, peaceful-room, action and
+    movement rules as applicable.
+  - Type bloodline to list unlocked powers and uses per five minutes for the six new
+    bloodlines. Use feat info <power name> for descriptions.
+  - New power cooldowns and Heavenly Fire receipt limits survive logout.
+  - Abyssal and Celestial summon wards are reapplied to restored living conjured
+    companions with fixed DR 5 and the owner's applicable summon bonuses. Purchased
+    pets, undead and constructs are excluded from this restoration bonus.

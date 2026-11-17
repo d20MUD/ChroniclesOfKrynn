@@ -24,6 +24,7 @@
 #include "mud_event.h"
 #include "actions.h"
 #include "class.h"
+#include "bloodlines.h"
 #include "spec_procs.h"
 #include "movement_validation.h"
 
@@ -44,6 +45,9 @@ bool is_natural_swimmer(struct char_data *ch)
     for (i = 0; i < 3; i++)
       if (GET_SUBRACE(ch, i) == SUBRACE_AQUATIC)
         return TRUE;
+
+  if (bloodline_elemental_movement(ch, BLOODLINE_ELEMENT_WATER))
+    return TRUE;
 
   /* The stored base race is a char; extended race IDs can exceed 127. */
   race = IS_WILDSHAPED(ch) ? GET_DISGUISE_RACE(ch) : (unsigned char)GET_REAL_RACE(ch);

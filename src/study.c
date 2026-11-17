@@ -18,6 +18,7 @@
 #include "spells.h"
 #include "feats.h"
 #include "class.h"
+#include "bloodlines.h"
 #include "handler.h"
 #include "constants.h"
 #include "assign_wpn_armor.h"
@@ -516,6 +517,9 @@ void finalize_study(struct descriptor_data *d)
       }
     }
   } /* for loop running through feats */
+
+  /* A bloodline first chosen in study needs its current-level powers immediately. */
+  grant_extended_bloodline_powers(ch);
 
   // Assign sorcerer bloodline subtype if necessary
   if (LEVELUP(ch)->sorcerer_bloodline_subtype > 0)
@@ -1280,7 +1284,7 @@ void sorc_study_menu(struct descriptor_data *d, int circle)
     if (compute_spells_circle(d->character, CLASS_SORCERER, counter, METAMAGIC_NONE,
                               DOMAIN_UNDEFINED) == circle)
     {
-      if (is_sorc_bloodline_spell(get_sorc_bloodline(d->character), counter))
+      if (has_sorc_bloodline_spell(d->character, counter))
         write_to_output(d, "%s%3d%s)%s+B%-19.19s %s", grn, counter, nrm, cyn,
                         spell_info[counter].name, !(++columns % 3) ? "\r\n" : "");
       else if (is_a_known_spell(d->character, CLASS_SORCERER, counter))
@@ -2231,6 +2235,69 @@ char *levelup_show_necromancer_cast_type(struct char_data *ch)
   return "Not Chosen";
 }
 
+/* Preview powers without granting the pending bloodline or changing its heritage. */
+static void display_bloodline_benefits(struct descriptor_data *d)
+{
+  static const struct
+  {
+    int bloodline;
+    int powers[7];
+  } benefits[] = {
+      {FEAT_SORCERER_BLOODLINE_ARCANE,
+       {FEAT_ARCANE_BLOODLINE_ARCANA, FEAT_IMPROVED_FAMILIAR, FEAT_METAMAGIC_ADEPT,
+        FEAT_NEW_ARCANA, FEAT_SCHOOL_POWER, FEAT_ARCANE_APOTHEOSIS, 0}},
+      {FEAT_SORCERER_BLOODLINE_DRACONIC,
+       {FEAT_DRACONIC_BLOODLINE_ARCANA, FEAT_DRACONIC_HERITAGE_CLAWS,
+        FEAT_DRACONIC_HERITAGE_DRAGON_RESISTANCES, FEAT_DRACONIC_HERITAGE_BREATHWEAPON,
+        FEAT_DRACONIC_HERITAGE_WINGS, FEAT_DRACONIC_HERITAGE_POWER_OF_WYRMS, 0}},
+      {FEAT_SORCERER_BLOODLINE_FEY,
+       {FEAT_FEY_BLOODLINE_ARCANA, FEAT_LAUGHING_TOUCH, FEAT_WOODLAND_STRIDE,
+        FEAT_FLEETING_GLANCE, FEAT_FEY_MAGIC, FEAT_SOUL_OF_THE_FEY, 0}},
+      {FEAT_SORCERER_BLOODLINE_UNDEAD,
+       {FEAT_UNDEAD_BLOODLINE_ARCANA, FEAT_GRAVE_TOUCH, FEAT_DEATHS_GIFT,
+        FEAT_GRASP_OF_THE_DEAD, FEAT_INCORPOREAL_FORM, FEAT_ONE_OF_US, 0}}};
+  static const int levels[] = {1, 1, 3, 9, 15, 20};
+  size_t i;
+  int j, feat;
+  const struct sorcerer_bloodline *bl =
+      extended_bloodline_by_feat(LEVELUP(d->character)->tempFeat);
+
+  if (bl)
+  {
+    if (bl->feat == FEAT_SORCERER_BLOODLINE_ELEMENTAL)
+      write_to_output(d, "\r\nPermanent elemental heritage: %s\r\n",
+                      bloodline_element_name(LEVELUP(d->character)->sorcerer_bloodline_subtype));
+    write_to_output(d, "\r\nBloodline benefits (unlocked as you gain sorcerer levels):\r\n");
+    for (j = 0; j < 6; j++)
+      write_to_output(d, "\r\nLevel %d - %s:\r\n%s\r\n", levels[j],
+                      feat_list[bl->powers[j]].name, feat_list[bl->powers[j]].description);
+    write_to_output(d, "\r\nFree bloodline spells:\r\n");
+    for (j = 0; j < 9; j++)
+      write_to_output(d, "  Level %d: %s\r\n", 3 + 2 * j, spell_info[bl->spells[j]].name);
+    write_to_output(d, "\r\nBonus feat choices: ");
+    for (j = 0; j < 8; j++)
+      write_to_output(d, "%s%s", j ? ", " : "", feat_list[bl->bonus_feats[j]].name);
+    write_to_output(d, "\r\nClass skill: %s\r\n\r\n", ability_names[bl->skill]);
+    return;
+  }
+
+  for (i = 0; i < sizeof(benefits) / sizeof(benefits[0]); i++)
+  {
+    if (benefits[i].bloodline != LEVELUP(d->character)->tempFeat)
+      continue;
+
+    write_to_output(d, "\r\nBloodline benefits (unlocked as you gain sorcerer levels):\r\n");
+    for (j = 0; benefits[i].powers[j]; j++)
+    {
+      feat = benefits[i].powers[j];
+      write_to_output(d, "\r\nLevel %d - %s:\r\n%s\r\n", levels[j],
+                      feat_list[feat].name, feat_list[feat].description);
+    }
+    write_to_output(d, "\r\n");
+    return;
+  }
+}
+
 static void set_sorcerer_bloodline(struct descriptor_data *d)
 {
   get_char_colors(d->character);
@@ -2243,6 +2310,12 @@ static void set_sorcerer_bloodline(struct descriptor_data *d)
                   "%s 1%s) Draconic\r\n"
                   "%s 2%s) Fey\r\n"
                   "%s 3%s) Undead\r\n"
+                  "%s 4%s) Shadow\r\n"
+                  "%s 5%s) Stormborn\r\n"
+                  "%s 6%s) Destined\r\n"
+                  "%s 7%s) Abyssal\r\n"
+                  "%s 8%s) Elemental\r\n"
+                  "%s 9%s) Celestial\r\n"
                   "\r\n"
                   "%s Q%s) Quit\r\n"
                   "\r\n"
@@ -2258,6 +2331,12 @@ static void set_sorcerer_bloodline(struct descriptor_data *d)
                   /* empty line */
                   grn, nrm,
                   /* empty line */
+                  grn, nrm,
+                  grn, nrm,
+                  grn, nrm,
+                  grn, nrm,
+                  grn, nrm,
+                  grn, nrm,
                   grn, nrm
                   /* empty line */
   );
@@ -4565,7 +4644,7 @@ void study_parse(struct descriptor_data *d, char *arg)
               do_help(d->character, buf, 0, 0);
               return;
             }
-            if (is_sorc_bloodline_spell(get_sorc_bloodline(ch), counter))
+            if (has_sorc_bloodline_spell(ch, counter))
             {
               write_to_output(d, "That spell is granted by your bloodline and does not use a spell selection.\r\n");
               break;
@@ -5521,11 +5600,38 @@ void study_parse(struct descriptor_data *d, char *arg)
         set_bloodline_draconic(d);
         OLC_MODE(d) = SET_BLOODLINE_DRACONIC;
         return;
+      case 4:
+      case 5:
+      case 6:
+      case 7:
+      case 8:
+      case 9:
+      {
+        const struct sorcerer_bloodline *bl = &extended_bloodlines[number - 4];
+        LEVELUP(ch)->tempFeat = bl->feat;
+        LEVELUP(ch)->sorcerer_bloodline_subtype = 0;
+        if (bl->feat == FEAT_SORCERER_BLOODLINE_ELEMENTAL)
+        {
+          write_to_output(d, "\r\nChoose your permanent elemental heritage:\r\n"
+                            "1) Air - electricity, flight\r\n2) Earth - acid, burrowing\r\n"
+                            "3) Fire - fire, speed\r\n4) Water - cold, swimming\r\n"
+                            "Q) Return to bloodlines\r\nEnter choice: ");
+          OLC_MODE(d) = STUDY_SET_ELEMENTAL_BLOODLINE;
+          return;
+        }
+        write_to_output(d, "\r\n%s bloodline:\r\n%s\r\n", bl->name,
+                        feat_list[bl->feat].description);
+        display_bloodline_benefits(d);
+        write_to_output(d, "Choose the %s bloodline? (Y/N): ", bl->name);
+        OLC_MODE(d) = STUDY_CONFIRM_BLOODLINE;
+        return;
+      }
       case 2:
         LEVELUP(ch)->tempFeat = FEAT_SORCERER_BLOODLINE_FEY;
         OLC_MODE(d) = STUDY_CONFIRM_BLOODLINE;
         write_to_output(d, "\r\n%s%s:\r\n%s%s\r\n\r\n", nrm, feat_list[LEVELUP(ch)->tempFeat].name,
                         nrm, feat_list[LEVELUP(ch)->tempFeat].description);
+        display_bloodline_benefits(d);
         write_to_output(d, "Choose the fey bloodline? (Y/N): ");
         return;
       case 3:
@@ -5533,6 +5639,7 @@ void study_parse(struct descriptor_data *d, char *arg)
         OLC_MODE(d) = STUDY_CONFIRM_BLOODLINE;
         write_to_output(d, "\r\n%s%s:\r\n%s%s\r\n\r\n", nrm, feat_list[LEVELUP(ch)->tempFeat].name,
                         nrm, feat_list[LEVELUP(ch)->tempFeat].description);
+        display_bloodline_benefits(d);
         write_to_output(d, "Choose the undead bloodline? (Y/N): ");
         return;
       default:
@@ -5563,12 +5670,13 @@ void study_parse(struct descriptor_data *d, char *arg)
     LEVELUP(ch)->sorcerer_bloodline_subtype = number;
     /* Display the description of the bloodline, and give the player an option. */
     write_to_output(d,
-                    "%s%s%s: %s\r\nDraconic Heritage: %s dragon - %s energy type\r\n"
-                    "Choose this bloodline and heritage? (y/n) : ",
+                    "%s%s%s: %s\r\nDraconic Heritage: %s dragon - %s energy type\r\n",
                     nrm, feat_list[LEVELUP(ch)->tempFeat].name, nrm,
                     feat_list[LEVELUP(ch)->tempFeat].description,
                     DRCHRTLIST_NAME(LEVELUP(ch)->sorcerer_bloodline_subtype),
                     DRCHRT_ENERGY_TYPE(LEVELUP(ch)->sorcerer_bloodline_subtype));
+    display_bloodline_benefits(d);
+    write_to_output(d, "Choose this bloodline and heritage? (y/n) : ");
     OLC_MODE(d) = STUDY_CONFIRM_BLOODLINE;
     break;
 
@@ -5733,13 +5841,33 @@ void study_parse(struct descriptor_data *d, char *arg)
     LEVELUP(ch)->sorcerer_bloodline_subtype = number;
     /* Display the description of the bloodline, and give the player an option. */
     write_to_output(d,
-                    "%s%s%s: %s\r\nArcane Heritage: %s school of arcane magic\r\n"
-                    "Choose this bloodline and heritage? (y/n) : ",
+                    "%s%s%s: %s\r\nArcane Heritage: %s school of arcane magic\r\n",
                     nrm, feat_list[LEVELUP(ch)->tempFeat].name, nrm,
                     feat_list[LEVELUP(ch)->tempFeat].description,
                     spell_schools[LEVELUP(ch)->sorcerer_bloodline_subtype]);
+    display_bloodline_benefits(d);
+    write_to_output(d, "Choose this bloodline and heritage? (y/n) : ");
     OLC_MODE(d) = STUDY_CONFIRM_BLOODLINE;
     break;
+
+  case STUDY_SET_ELEMENTAL_BLOODLINE:
+    if (*arg == 'q' || *arg == 'Q')
+    {
+      set_sorcerer_bloodline(d);
+      return;
+    }
+    if (strlen(arg) != 1 || *arg < '1' || *arg > '4')
+    {
+      write_to_output(d, "Choose 1-4, or Q to return: ");
+      return;
+    }
+    LEVELUP(ch)->tempFeat = FEAT_SORCERER_BLOODLINE_ELEMENTAL;
+    LEVELUP(ch)->sorcerer_bloodline_subtype = *arg - '0';
+    display_bloodline_benefits(d);
+    write_to_output(d, "Choose the %s elemental bloodline? (Y/N): ",
+                    bloodline_element_name(LEVELUP(ch)->sorcerer_bloodline_subtype));
+    OLC_MODE(d) = STUDY_CONFIRM_BLOODLINE;
+    return;
 
   case STUDY_CONFIRM_BLOODLINE:
     switch (*arg)
@@ -5750,6 +5878,14 @@ void study_parse(struct descriptor_data *d, char *arg)
       break;
     case 'y':
     case 'Y':
+      if (LEVELUP(ch)->tempFeat == FEAT_SORCERER_BLOODLINE_ELEMENTAL &&
+          (LEVELUP(ch)->sorcerer_bloodline_subtype < BLOODLINE_ELEMENT_AIR ||
+           LEVELUP(ch)->sorcerer_bloodline_subtype > BLOODLINE_ELEMENT_WATER))
+      {
+        write_to_output(d, "You must choose an elemental heritage first.\r\n");
+        set_sorcerer_bloodline(d);
+        break;
+      }
       if (CLASS_LEVEL(ch, CLASS_DRAGON_DISCIPLE) > 0 &&
           LEVELUP(ch)->tempFeat != FEAT_SORCERER_BLOODLINE_DRACONIC)
       {

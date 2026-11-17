@@ -44,6 +44,7 @@
 
 /* Include movement system header */
 #include "movement.h"
+#include "blocker_stealth.h"
 
 /* Include vessel system for ship interior movement */
 #include "vessels.h"
@@ -52,6 +53,75 @@
 
 
 /***** start file body *****/
+
+/* Cache both outcomes per player/prototype, across directions and mob respawns. */
+void prune_blocker_stealth_checks(struct char_data *ch, time_t now)
+{
+  struct blocker_stealth_check **link, *check;
+  if (!ch || IS_NPC(ch) || !ch->player_specials)
+    return;
+  for (link = &ch->player_specials->blocker_stealth_checks; *link; )
+  {
+    check = *link;
+    if (check->expires <= now)
+    {
+      *link = check->next;
+      free(check);
+    }
+    else
+      link = &check->next;
+  }
+}
+
+void remember_blocker_stealth_check(struct char_data *ch, mob_vnum guard_vnum,
+                                  time_t expires, bool passed)
+{
+  struct blocker_stealth_check *check;
+  time_t now = time(NULL);
+  if (!ch || IS_NPC(ch) || !ch->player_specials || guard_vnum == NOBODY ||
+      expires <= now || expires > now + BLOCKER_STEALTH_SECONDS)
+    return;
+  prune_blocker_stealth_checks(ch, now);
+  for (check = ch->player_specials->blocker_stealth_checks; check; check = check->next)
+    if (check->guard_vnum == guard_vnum)
+      return; /* Duplicate file tags cannot replace an unexpired outcome. */
+  CREATE(check, struct blocker_stealth_check, 1);
+  check->guard_vnum = guard_vnum;
+  check->expires = expires;
+  check->passed = passed;
+  check->next = ch->player_specials->blocker_stealth_checks;
+  ch->player_specials->blocker_stealth_checks = check;
+}
+
+bool blocker_stealth_passes(struct char_data *ch, struct char_data *guard)
+{
+  struct blocker_stealth_check *check;
+  mob_vnum guard_vnum;
+  int stealth, perception;
+  bool passed;
+  time_t now = time(NULL);
+  if (!ch || !guard || IS_NPC(ch) || !IS_NPC(guard) || !ch->player_specials ||
+      !MOB_FLAGGED(guard, MOB_BLOCK_STEALTH) || MOB_FLAGGED(guard, MOB_NO_BLOCK_BYPASS) ||
+      MOB_FLAGGED(guard, MOB_BLOCK_CLAN) || PRF_FLAGGED(ch, PRF_NOHASSLE) ||
+      (!AFF_FLAGGED(ch, AFF_SNEAK) && !AFF_FLAGGED(ch, AFF_HIDE)))
+    return FALSE;
+  guard_vnum = GET_MOB_VNUM(guard);
+  if (guard_vnum == NOBODY)
+    return FALSE;
+  prune_blocker_stealth_checks(ch, now);
+  for (check = ch->player_specials->blocker_stealth_checks; check; check = check->next)
+    if (check->guard_vnum == guard_vnum)
+      return check->passed;
+  stealth = skill_roll(ch, ABILITY_STEALTH);
+  perception = skill_roll(guard, ABILITY_PERCEPTION);
+  passed = stealth > perception; /* A tie lets the guard notice the attempt. */
+  remember_blocker_stealth_check(ch, guard_vnum, now + BLOCKER_STEALTH_SECONDS, passed);
+  if (passed)
+    act("You slip past $N unnoticed.", FALSE, ch, 0, guard, TO_CHAR);
+  else
+    act("$N notices your attempt to slip past and bars your way.", FALSE, ch, 0, guard, TO_CHAR);
+  return passed;
+}
 
 static void begin_deferred_room_msdp_update(struct char_data *ch)
 {
@@ -732,6 +802,9 @@ int do_simple_move(struct char_data *ch, int dir, int need_specials_check)
         block = FALSE;
       }
     }
+
+    if (block && blocker_stealth_passes(ch, mob))
+      block = FALSE;
 
     if (block)
       break;

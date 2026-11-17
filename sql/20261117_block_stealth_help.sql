@@ -1,0 +1,30 @@
+-- Install builder documentation for the optional stealth blocker flag.
+-- Safe to apply again; no existing mob flags are changed.
+INSERT INTO help_entries(tag, category, entry, min_level, max_level, auto_generated)
+VALUES ('BLOCK-STEALTH', 'general', REPLACE('BLOCK-STEALTH
+
+Builder mobile flag: Block-Stealth
+
+Enable this flag together with a directional blocking flag to allow hidden
+or sneaking players to try to pass the guard. Player Stealth must beat the
+guard''s Perception; ties favor the guard. Without Block-Stealth, Sneak and
+Hide do not bypass that guard. Invisibility alone does not qualify.
+
+Success and failure are remembered for five real minutes per player and
+guard mob vnum. Retrying, changing direction, toggling stealth, or replacing
+the guard with another copy does not grant another roll. Normal logout does
+not reset the timer. A cached success still requires Sneak or Hide.
+
+No-Block-Bypass prevents stealth passage. Block-Clan access requirements
+remain mandatory. Other existing guard exemptions retain their behavior.
+Each blocking guard must allow passage; this flag does not bypass doors or
+other movement restrictions.
+
+See also: SNEAK, HIDE, MEDIT
+', CHAR(10), CONCAT(CHAR(13), CHAR(10))), 0, 1000, FALSE)
+ON DUPLICATE KEY UPDATE category=VALUES(category), entry=VALUES(entry),
+  min_level=VALUES(min_level), max_level=VALUES(max_level), auto_generated=FALSE;
+
+INSERT IGNORE INTO help_keywords(help_tag, keyword) VALUES
+('BLOCK-STEALTH', 'block-stealth'),
+('BLOCK-STEALTH', 'stealth-blockers');

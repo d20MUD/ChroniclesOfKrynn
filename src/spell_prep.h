@@ -655,6 +655,7 @@ bool is_sorc_bloodline_spell(int bloodline, int spellnum);
      * Returns: SORC_BLOODLINE_* constant or SORC_BLOODLINE_NONE
      */
 int get_sorc_bloodline(struct char_data *ch);
+bool has_sorc_bloodline_spell(struct char_data *ch, int spellnum);
 
 /* CALCULATION FUNCTIONS - For computing spell circles and slots */
 

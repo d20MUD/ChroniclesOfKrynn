@@ -823,6 +823,7 @@ cpp_extern const struct command_info cmd_info[] = {
      ACTION_NONE,
      {0, 0},
      can_blinding_speed},
+    {"bloodline", "bloodline", POS_FIGHTING, do_bloodline, 1, 0, FALSE, ACTION_NONE, {0, 0}, NULL},
     {"blooddrain",
      "blooddrain",
      POS_RESTING,

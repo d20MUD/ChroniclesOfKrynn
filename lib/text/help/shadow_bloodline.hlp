@@ -1,0 +1,46 @@
+SHADOW-BLOODLINE SHADOWSTRIKE NIGHTEYE SHADOW-WELL ENVELOPING-DARKNESS SHADOW
+
+- 4) SHADOW
+  - Focus: Stealth, darkness and shadow control.
+  - Class skill: Stealth.
+  - Heritage suboptions: None.
+  - Level 1 - Shadow Arcana: Casting darkness, shadow shield, shadow walk or shadow jump
+    grants a competence Stealth bonus equal to spell circle for 5 minutes.
+  - Level 1 - Shadowstrike: Melee touch deals 1d4 + half level damage. Targets without
+    darkvision or low-light vision are dazzled for ten rounds. Cannot reduce a target
+    below 1 HP. Undead and constructs are immune. Uses: 3 + Charisma bonus per five
+    minutes, minimum 1. Uses a swift action.
+  - Level 3 - Nighteye: See in natural darkness.
+  - Level 9 - Shadow Well: Draw shadows around yourself or a grouped ally, making their
+    outline difficult to follow.
+    - Command: bloodline shadow-well [group ally] - defaults to yourself.
+    - Requirement: You and the target must be in the same dark room when activated.
+    - Effect: Grants 50% concealment against attacks for half your sorcerer level in
+      rounds.
+    - Uses: 1 per five minutes, increasing to 2 per five minutes at level 17 and 3 per
+      five minutes at level 20.
+    - Action: Standard action.
+    - Stacking: Uses the strongest applicable concealment effect; does not add another
+      50% to existing concealment.
+    - Counters: Uses the game's normal concealment bypass rules. Does not prevent area
+      damage or effects that do not check concealment.
+    - Existing passive benefit: Retain the ability to hide while observed in darkness.
+  - Level 15 - Enveloping Darkness: Darkens the room and entangles eligible enemies for
+    15 rounds; you see through the darkness. Freedom of movement prevents the
+    entanglement. Once per five minutes.
+  - Level 20 - Shadow Master: See through magical darkness, gain +2 illusion save DC and
+    extend shadow shield duration by 20%.
+  - Bonus spells: Ray of enfeeblement, infravision, darkness, greater invisibility,
+    shadow shield, shadow walk, power word blind, scint pattern, weird.
+  - Bonus feat choices: Acrobatic, Blind Fight, Dodge, Quick Draw, Silent Spell, Skill
+    Focus, Stealthy, Weapon Finesse.
+  - Commands:
+    - bloodline shadowstrike <enemy>
+    - bloodline shadow-well <group ally>
+    - bloodline enveloping-darkness
+
+All listed use limits recover per five real minutes; Conviction is every
+30 seconds. Full pools reset from first use without extending on retries.
+See also: SORCERER-BLOODLINES, STUDY, FEATS, SPELLS
+#0
+$

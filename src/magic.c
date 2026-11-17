@@ -25,6 +25,7 @@
 #include "constants.h"
 #include "dg_scripts.h"
 #include "class.h"
+#include "bloodlines.h"
 #include "fight.h"
 #include "utils.h"
 #include "mud_event.h"
@@ -251,8 +252,8 @@ int mag_resistance(struct char_data *ch, struct char_data *vict, int modifier)
       HAS_FEAT(vict, FEAT_WOOD_GOLEM_IMMUNITY))
     return TRUE;
 
-  int challenge = d20(ch), resist = compute_spell_res(ch, vict, modifier);
-
+  int penetration_die = d20(ch);
+  int challenge = penetration_die, resist = compute_spell_res(ch, vict, modifier);
   // should be modified - zusuk
   challenge += CASTER_LEVEL(ch);
 
@@ -324,6 +325,8 @@ int mag_resistance(struct char_data *ch, struct char_data *vict, int modifier)
     challenge += HAS_REAL_FEAT(ch, FEAT_ADVANCED_CHANNELLING) * 2;
     challenge += HAS_REAL_FEAT(ch, FEAT_GREATER_CHANNELLING) * 2;
   }
+
+  challenge = bloodline_retry_spell_resistance(ch, challenge, resist, penetration_die);
 
   // success?
   if (resist > challenge)
@@ -455,6 +458,8 @@ int compute_mag_saves(struct char_data *vict, int type, int modifier)
     saves += modifier;
   }
 
+  saves += MAX(bloodline_fated_bonus(vict), bloodline_affect_bonus(vict, AFFECT_DESTINED_ARCANA));
+  saves += bloodline_affect_bonus(vict, AFFECT_TOUCH_OF_DESTINY);
   return MIN(99, saves);
 }
 
@@ -503,7 +508,7 @@ int savingthrow_full(struct char_data *ch, struct char_data *vict, int type, int
                      int casttype, int level, int school, int spellnum)
 {
   int challenge = 10, // 10 is base DC
-      diceroll = d20(vict), stat_bonus = 0, savethrow = 0;
+      diceroll = bloodline_conviction_roll(vict, d20(vict), BLOODLINE_ROLL_SAVE), stat_bonus = 0, savethrow = 0;
   struct affected_type *af = NULL;
 
   /* Most power effects use savingthrow(), which has no spell number argument.
@@ -774,6 +779,14 @@ int savingthrow_full(struct char_data *ch, struct char_data *vict, int type, int
   if (ch && IS_UNDEAD(ch) && HAS_FEAT(vict, FEAT_ONE_OF_US))
     challenge += 4;
 
+  if (ch)
+  {
+    int bloodline_spell = spellnum ? spellnum : CASTING_SPELLNUM(ch);
+    challenge += bloodline_spell_dc_bonus(ch, bloodline_spell);
+    if (HAS_FEAT(ch, FEAT_SHADOW_BLOODLINE_MASTER) && school == ILLUSION)
+      challenge += 2;
+  }
+
   if (ch && HAS_FEAT(ch, FEAT_FEY_BLOODLINE_ARCANA) && school == ENCHANTMENT)
     challenge += 2;
 
@@ -1029,6 +1042,9 @@ int savingthrow_full(struct char_data *ch, struct char_data *vict, int type, int
     if (affected_by_aura_of_righteousness(vict))
       savethrow += 4;
   }
+
+  if (type == SAVING_POISON || casttype == CAST_WEAPON_POISON || is_poison_spell(spellnum))
+    savethrow += bloodline_poison_save_bonus(vict);
 
   /* Berserker Pain Tolerance - bonus vs poison, disease, and mind-affecting (enchantment) */
   if (!IS_NPC(vict) && has_berserker_pain_tolerance(vict))
@@ -3369,6 +3385,9 @@ int mag_damage(int level, struct char_data *ch, struct char_data *victim, struct
   {
     element = get_master_of_elements_override(ch, element);
   }
+
+  if (casttype == CAST_SPELL && GET_CASTING_CLASS(ch) == CLASS_SORCERER)
+    element = bloodline_convert_energy(ch, spellnum, element);
 
   /* Apply Energy Specialization DC bonus for energy-type powers */
   if (!IS_NPC(ch) && (spellnum >= PSIONIC_POWER_START && spellnum <= PSIONIC_POWER_END))
@@ -9707,21 +9726,21 @@ void mag_affects_full(int level, struct char_data *ch, struct char_data *victim,
 
     af[0].location = APPLY_AC_NEW;
     af[0].modifier = 5;
-    af[0].duration = level * 5;
+    af[0].duration = level * (HAS_FEAT(ch, FEAT_SHADOW_BLOODLINE_MASTER) ? 6 : 5);
     af[0].bonus_type = BONUS_TYPE_SHIELD;
 
     af[1].location = APPLY_RES_NEGATIVE;
     af[1].modifier = 100;
-    af[1].duration = level * 5;
+    af[1].duration = level * (HAS_FEAT(ch, FEAT_SHADOW_BLOODLINE_MASTER) ? 6 : 5);
     af[1].bonus_type = BONUS_TYPE_RESISTANCE;
 
     af[2].location = APPLY_DR;
     af[2].modifier = 12;
-    af[2].duration = level * 5;
+    af[2].duration = level * (HAS_FEAT(ch, FEAT_SHADOW_BLOODLINE_MASTER) ? 6 : 5);
 
     CREATE(new_dr, struct damage_reduction_type, 1);
 
-    new_dr->duration = level * 5; /* Initialize duration field - CRITICAL FIX */
+    new_dr->duration = level * (HAS_FEAT(ch, FEAT_SHADOW_BLOODLINE_MASTER) ? 6 : 5); /* Initialize duration field - CRITICAL FIX */
     new_dr->bypass_cat[0] = DR_BYPASS_CAT_MATERIAL;
     new_dr->bypass_val[0] = MATERIAL_ADAMANTINE;
 
@@ -12853,6 +12872,9 @@ void mag_summons(int level, struct char_data *ch, struct obj_data *obj, int spel
   /* bring the mob into existence! */
   for (i = 0; i < num; i++)
   {
+    /* Recheck after each follower: extra summons cannot exceed control limits. */
+    if (i > 0 && !can_add_follower(ch, mob_num))
+      break;
     if (!(mob = read_mobile(mob_num, VIRTUAL)))
     {
       send_to_char(ch, "You don't quite remember how to make that creature.\r\n");
@@ -13302,6 +13324,8 @@ void mag_summons(int level, struct char_data *ch, struct obj_data *obj, int spel
       GET_HIT(mob) = MIN(GET_HIT(mob), GET_MAX_HIT(mob));
     }
 
+    if (casttype == CAST_SPELL)
+      bloodline_summon_benefits(ch, mob, spellnum);
     act(mag_summon_msgs[msg], FALSE, ch, 0, mob, TO_ROOM);
     act(mag_summon_to_msgs[msg], FALSE, ch, 0, mob, TO_CHAR);
     load_mtrigger(mob);
@@ -15175,6 +15199,9 @@ void mag_room(int level, struct char_data *ch, struct obj_data *obj, int spellnu
         send_to_char(tch, "The gust of wind scatters the summoned swarm around you!\r\n");
         cleared_something = TRUE;
       }
+
+      if (HAS_FEAT(tch, FEAT_STORMCHILD) || HAS_FEAT(tch, FEAT_STORM_LORD))
+        continue;
 
       /* Knock down flying creatures */
       if (AFF_FLAGGED(tch, AFF_FLYING))

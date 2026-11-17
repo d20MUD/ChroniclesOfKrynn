@@ -19,6 +19,7 @@
 #include "feats.h"
 #include "mysql.h"
 #include "class.h"
+#include "bloodlines.h"
 #include "mud_event.h"
 #include "assign_wpn_armor.h"
 #include "domains_schools.h"
@@ -3181,7 +3182,7 @@ void assign_feats(void)
         "considered magical when attempting to bypass certain damage reduction types. "
         "At level 9 the damage increases to 1d6, and at level 11, they deal an extra "
         "1d6 damage of the element type associated with your draconic heritage bloodline. "
-        "These claw attacks can be used a # of times per day equal to 3 + your "
+        "These claw attacks can be used a # of times per five minutes equal to 3 + your "
         "charisma modifier");
   feato(FEAT_DRACONIC_HERITAGE_DRAGON_RESISTANCES, "draconic resistances", TRUE, FALSE, FALSE,
         FEAT_TYPE_CLASS_ABILITY, "draconic bloodline, sorcerer level 3",
@@ -3239,6 +3240,203 @@ void assign_feats(void)
         "slots used, one less charge will be expended.  See the apotheosis command and HELP "
         "APOTHEOSIS for more information.");
 
+
+  /* Additional PF1 sorcerer bloodlines (room-based adaptations). */
+  feato(FEAT_SORCERER_BLOODLINE_SHADOW, "shadow bloodline", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "sorcerer bloodline power",
+        "A heritage of shadow grants stealth, darkvision, shadow rescue and darkness control. "
+        "Use bloodline for powers and remaining uses.");
+  feato(FEAT_SHADOW_BLOODLINE_ARCANA, "shadow arcana", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "sorcerer bloodline power",
+        "Casting darkness, shadow shield, shadow walk or shadow jump grants a competence bonus to "
+        "Stealth equal to spell circle for five minutes. Competence skill bonuses do not stack.");
+  feato(FEAT_SHADOWSTRIKE, "shadowstrike", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "sorcerer bloodline power",
+        "bloodline shadowstrike <enemy>: swift-action melee touch dealing 1d4 + half sorcerer level "
+        "damage; cannot reduce the target below 1 HP. Undead and constructs are immune. Targets "
+        "without darkvision or low-light vision are dazzled for 10 rounds. Uses: 3 + Charisma bonus "
+        "per five minutes, minimum 1.");
+  feato(FEAT_NIGHTEYE, "nighteye", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "sorcerer bloodline power",
+        "At level 3, see in natural darkness. MUD vision works by room rather than distance.");
+  feato(FEAT_SHADOW_WELL, "shadow well", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "sorcerer bloodline power",
+        "At level 9, hide while observed in darkness. bloodline shadow-well [group ally] grants "
+        "yourself or a grouped ally 50% concealment for half sorcerer level rounds. Requires the "
+        "same dark room when activated; standard action. Uses the strongest concealment effect and "
+        "normal concealment counters, not protection from area damage. Uses: 1 per five minutes, 2 "
+        "at level 17, 3 at level 20.");
+  feato(FEAT_ENVELOPING_DARKNESS, "enveloping darkness", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "sorcerer bloodline power",
+        "At level 15, bloodline enveloping-darkness darkens the room and entangles legal "
+        "enemies for 15 rounds unless protected by freedom of movement. You see through the "
+        "darkness. Once per five minutes.");
+  feato(FEAT_SHADOW_BLOODLINE_MASTER, "shadow bloodline master", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "sorcerer bloodline power",
+        "At level 20, see through magical darkness. Shadow shield lasts 20% longer; illusion "
+        "spells gain +2 save DC. These replace tabletop shadow-conjuration realism in this MUD.");
+  feato(FEAT_SORCERER_BLOODLINE_STORMBORN, "stormborn bloodline", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "sorcerer bloodline power",
+        "Storm spirits grant electricity and sonic spell prowess, weapon lightning, storm "
+        "resistance and storm attacks. Use bloodline for powers and remaining uses.");
+  feato(FEAT_STORMBORN_BLOODLINE_ARCANA, "stormborn arcana", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "sorcerer bloodline power",
+        "Electricity and sonic spells gain +1 saving throw DC.");
+  feato(FEAT_THUNDERSTAFF, "thunderstaff", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "sorcerer bloodline power",
+        "bloodline thunderstaff [group ally]: wielded melee attacks gain +1d6 electricity damage "
+        "for half sorcerer level rounds, minimum 1. From level 9, critical hits add another 1d10 "
+        "electricity without reducing duration. Uses: 3 + Charisma bonus per five minutes, minimum "
+        "1.");
+  feato(FEAT_STORMCHILD, "stormchild", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "sorcerer bloodline power",
+        "At level 3, gain electricity and sonic resistance 5, immunity to gust-of-wind knockdown, "
+        "and +4 defense against other knockdown attempts. At level 9, see through fog and mist and "
+        "reduce the combat target's concealment by 10 percentage points for your attacks.");
+  feato(FEAT_THUNDERBOLT, "thunderbolt", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "sorcerer bloodline power",
+        "At level 9, bloodline thunderbolt strikes legal enemies in your room for 1d6 damage "
+        "per sorcerer level, split between electricity and sonic. Reflex halves; failure also "
+        "deafens for 1 round. Uses: 1 per five minutes, 2 at level 17, 3 at level 20.");
+  feato(FEAT_RIDE_THE_LIGHTNING, "ride the lightning", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "sorcerer bloodline power",
+        "At level 15, bloodline ride-the-lightning <direction> travels one open, permitted "
+        "adjacent exit and strikes legal enemies there as thunderbolt. Cannot escape combat or "
+        "bypass doors and movement restrictions. Once per five minutes.");
+  feato(FEAT_STORM_LORD, "storm lord", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "sorcerer bloodline power",
+        "At level 20, gain stun, deafness and wind-knockdown immunity, and see through fog. "
+        "Automatically absorb the first electricity or sonic damage packet after recovery, healing "
+        "one third of its remaining damage. Five-minute cooldown.");
+  feato(FEAT_SORCERER_BLOODLINE_DESTINED, "destined bloodline", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "sorcerer bloodline power",
+        "Prophecy protects you through luck, supportive insight, rerolls and a chance to "
+        "survive a killing blow. Use bloodline for powers and remaining uses.");
+  feato(FEAT_DESTINED_BLOODLINE_ARCANA, "destined arcana", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "sorcerer bloodline power",
+        "Casting a personal-range sorcerer spell grants a luck bonus equal to its circle on saves "
+        "for one minute. Automatically triggers at most once per five minutes. Does not stack with "
+        "Fated.");
+  feato(FEAT_TOUCH_OF_DESTINY, "touch of destiny", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "sorcerer bloodline power",
+        "bloodline touch-of-destiny [group ally]: yourself or a grouped ally gains an insight bonus "
+        "equal to half sorcerer level, minimum 1, to attacks, saves and skill checks for three "
+        "rounds. Uses: 3 + Charisma bonus per five minutes, minimum 1.");
+  feato(FEAT_FATED, "fated", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "sorcerer bloodline power",
+        "At level 3, gain +1 luck to saves and, while flat-footed or unaware, AC. Increases "
+        "every four sorcerer levels, up to +5 at level 19.");
+  feato(FEAT_IT_WAS_MEANT_TO_BE, "it was meant to be", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "sorcerer bloodline power",
+        "At level 9, every d20 roll has a 1% chance to be rerolled, keeping the second result. "
+        "Passive; no arming required. Maximum procs per five minutes: 1, increasing to 2 at level "
+        "10 and 3 at level 20.");
+  feato(FEAT_WITHIN_REACH, "within reach", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "sorcerer bloodline power",
+        "At level 15, once per five minutes a lethal damaging blow allows a DC 20 Will save. "
+        "Success leaves you alive with 1 HP; failure also spends the use.");
+  feato(FEAT_DESTINY_REALIZED, "destiny realized", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "sorcerer bloodline power",
+        "At level 20, critical hits against you require a natural 20 confirmation and your spell "
+        "critical threats confirm automatically. A failed spell-resistance check has a 5% chance to "
+        "be rerolled, keeping the second result. Passive; no arming required.");
+
+
+  /* Abyssal, Elemental and Celestial bloodline powers. */
+  feato(FEAT_SORCERER_BLOODLINE_ABYSSAL, "abyssal bloodline", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "sorcerer bloodline power",
+        "Demonic ancestry grants paired claw strikes, resistance, inherent Strength and enhanced "
+        "evil-aligned summons. Your alignment remains your own.");
+  feato(FEAT_ABYSSAL_BLOODLINE_ARCANA, "abyssal arcana", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "sorcerer bloodline power",
+        "Your summoned creatures gain non-stacking DR 5/good, bypassed by good-aligned attacks.");
+  feato(FEAT_ABYSSAL_CLAWS, "abyssal claws", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "sorcerer bloodline power",
+        "bloodline abyssal-claws <enemy>: swift action with both hands free makes two melee claw "
+        "attacks, each dealing 1d4 + Strength bonus slashing damage (1d6 from level 7). Claws count "
+        "as magical for DR from level 5; each hit adds 1d6 fire from level 11. Smaller bodies use "
+        "smaller dice. Uses: 3 + Charisma bonus per five minutes, minimum 1.");
+  feato(FEAT_DEMON_RESISTANCES, "demon resistances", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "sorcerer bloodline power",
+        "At level 3 gain electricity resistance 5 and +2 on poison saves. At level 9 these "
+        "improve to resistance 10 and +4 on poison saves.");
+  feato(FEAT_STRENGTH_OF_THE_ABYSS, "strength of the abyss", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "sorcerer bloodline power",
+        "Gain +2 inherent Strength at sorcerer level 9, +4 at 13 and +6 at 17. Does not stack "
+        "with other inherent Strength bonuses; normal stat caps apply.");
+  feato(FEAT_ADDED_SUMMONINGS, "added summonings", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "sorcerer bloodline power",
+        "At level 15, evil-aligned creatures called by summon creature spells gain +2 AC, attack "
+        "and damage. This does not add extra summoned creatures.");
+  feato(FEAT_DEMONIC_MIGHT, "demonic might", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "sorcerer bloodline power",
+        "At level 20 gain immunity to electricity and poison, acid/cold/fire resistance 10, and "
+        "universal speech and comprehension as the MUD adaptation of telepathy.");
+  feato(FEAT_SORCERER_BLOODLINE_ELEMENTAL, "elemental bloodline", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "sorcerer bloodline power",
+        "Choose Air (electricity), Earth (acid), Fire or Water (cold). This permanent heritage "
+        "grants energy conversion, attacks, resistance and movement powers.");
+  feato(FEAT_ELEMENTAL_BLOODLINE_ARCANA, "elemental arcana", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "sorcerer bloodline power",
+        "bloodline energy-conversion toggles conversion of your sorcerer spells dealing fire, "
+        "cold, acid, electricity or sonic damage into your heritage energy. Burning hands and "
+        "scorching ray always use that energy.");
+  feato(FEAT_ELEMENTAL_RAY, "elemental ray", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "sorcerer bloodline power",
+        "bloodline elemental-ray <enemy>: swift-action ranged touch dealing 1d6 + half sorcerer "
+        "level heritage energy damage. Uses: 3 + Charisma bonus per five minutes, minimum 1.");
+  feato(FEAT_ELEMENTAL_BLOODLINE_RESISTANCE, "elemental bloodline resistance", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "sorcerer bloodline power",
+        "At sorcerer level 3 gain resistance 10 against your heritage energy, increasing to 20 "
+        "at level 9.");
+  feato(FEAT_ELEMENTAL_BLAST, "elemental blast", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "sorcerer bloodline power",
+        "At level 9, bloodline elemental-blast strikes legal enemies in your room for 1d6 "
+        "heritage energy damage per sorcerer level (maximum 30d6). Reflex halves, DC 10 + half "
+        "sorcerer level + Charisma bonus. Failure causes 50% vulnerability to that energy for 2 "
+        "rounds. Uses: 1 per five minutes, 2 at level 17, 3 at level 20.");
+  feato(FEAT_ELEMENTAL_BLOODLINE_MOVEMENT, "elemental movement", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "sorcerer bloodline power",
+        "At level 15, Air grants permanent flight at speed 60; Fire adds 30 ground speed; Water "
+        "grants natural swimming at speed 60; Earth reduces land movement cost by 10 movement "
+        "points and ignores difficult terrain. Normal minimum movement costs, exits, doors and "
+        "movement restrictions apply.");
+  feato(FEAT_ELEMENTAL_BLOODLINE_BODY, "elemental bloodline body", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "sorcerer bloodline power",
+        "At level 20 become immune to your heritage energy, critical hits and sneak attacks.");
+  feato(FEAT_SORCERER_BLOODLINE_CELESTIAL, "celestial bloodline", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "sorcerer bloodline power",
+        "Inherited celestial influence grants protective summons, heavenly fire, resistances, "
+        "wings and conviction. It is innate magic and does not require a particular alignment "
+        "or deity.");
+  feato(FEAT_CELESTIAL_BLOODLINE_ARCANA, "celestial arcana", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "sorcerer bloodline power",
+        "Your summoned creatures gain non-stacking DR 5/evil, bypassed by evil-aligned attacks.");
+  feato(FEAT_HEAVENLY_FIRE, "heavenly fire", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "sorcerer bloodline power",
+        "bloodline heavenly-fire <target>: swift-action ranged touch dealing 1d12 + half sorcerer "
+        "level holy damage to evil enemies, using native holy defenses. Instead heals a good group "
+        "ally or yourself if good for the same amount. Neutral creatures are unaffected. Each "
+        "recipient can receive healing once per five minutes across all casters; owned companions "
+        "share their player master's limit. Uses: 3 + Charisma bonus per five minutes, minimum 1.");
+  feato(FEAT_CELESTIAL_BLOODLINE_RESISTANCES, "celestial resistances", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "sorcerer bloodline power",
+        "Gain acid and cold resistance 5 at sorcerer level 3, increasing to 10 at level 9.");
+  feato(FEAT_WINGS_OF_HEAVEN, "wings of heaven", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "sorcerer bloodline power",
+        "bloodline wings grants flight at speed 60 for 10 rounds, using one of sorcerer level uses "
+        "per five minutes. bloodline wings off retracts them. At level 20 flight is unlimited.");
+  feato(FEAT_CELESTIAL_CONVICTION, "celestial conviction", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "sorcerer bloodline power",
+        "At level 15, bloodline conviction [attack/save/skill/any] readies a reroll of the next "
+        "matching roll within 10 rounds. Other roll categories do not consume it. Keep the second "
+        "result even if worse. Swift action; once per 30 seconds. Defaults to any eligible "
+        "category.");
+  feato(FEAT_CELESTIAL_ASCENSION, "celestial ascension", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
+        "sorcerer bloodline power",
+        "At level 20 gain acid and cold immunity, electricity and fire resistance 10, +4 on "
+        "poison saves, universal speech and comprehension, and unlimited wings of heaven.");
+
   // Sorcerer Fey Bloodline
   feato(FEAT_SORCERER_BLOODLINE_FEY, "fey bloodline", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
         "level one sorcerer",
@@ -3252,14 +3450,14 @@ void assign_feats(void)
   feato(FEAT_LAUGHING_TOUCH, "laughing touch", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
         "fey bloodline",
         "Cause a target to burst out laughing for one round, during which they can only take "
-        "a move action.  Useable as a swift action (3 + charisma modifier) times per day. "
+        "a move action.  Useable as a swift action (3 + charisma modifier) times per five minutes. "
         "Uses the 'fey' command.");
   feato(FEAT_WOODLAND_STRIDE, "wilderness stride", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
         "fey bloodline or druid level 2",
         "Reduced movement penalty when moving through wilderness areas.");
   feato(FEAT_FLEETING_GLANCE, "fleeting glance", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
         "fey bloodline, sorcerer level 9",
-        "Can cast greater invisibility 3 times per day. Uses the 'fey' command.");
+        "Can cast greater invisibility 3 times per five minutes. Uses the 'fey' command.");
   feato(
       FEAT_FEY_MAGIC, "fey magic", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
       "fey bloodline, sorcerer level 15",
@@ -3270,7 +3468,7 @@ void assign_feats(void)
   feato(FEAT_SOUL_OF_THE_FEY, "soul of the fey", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
         "fey bloodline, sorcerer level 20",
         "Gain immunity to poison and +3 damage reduction. Creatures of the animal type will not "
-        "aggro you. Can cast 'shadow walk' once per day using the 'fey' command.");
+        "aggro you. Can cast 'shadow walk' once per five minutes using the 'fey' command.");
 
   // Sorcerer Undead Bloodline
   feato(
@@ -3289,7 +3487,7 @@ void assign_feats(void)
         "undead bloodline selected",
         "Use a move action to touch another being causing them to be shaken for a number "
         "of rounds equal to your sorcerer level divided by two.  Useable a number of times "
-        "per day equal to your charisma modifier plus three.");
+        "per five minutes equal to your charisma modifier plus three.");
   feato(FEAT_DEATHS_GIFT, "death's gift", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
         "undead bloodline selected, level 3 sorcerer",
         "At sorcerer level 3 you gain 20 cold resist, 30 nonlethal resist and DR 1/- against all "
@@ -3304,8 +3502,8 @@ void assign_feats(void)
         "per sorcerer level. Victims can make a reflex save for half damage.  Those who fail "
         "their save are also unable to move for 1 round. The dc for this ability is 10 + 1/2 "
         "sorcerer level + your charisma modifier. You must be on a solid surface for this to work. "
-        "At sorcerer level 9 this is useable once per day.  At sorcerer level 17, it can be "
-        "used twice per day, and at sorcerer level 20, it can be used three times per day.");
+        "At sorcerer level 9 this is useable once per five minutes.  At sorcerer level 17, it can be "
+        "used twice per five minutes, and at sorcerer level 20, it can be used three times per five minutes.");
   feato(
       FEAT_INCORPOREAL_FORM, "incorporeal form (undead bloodline)", TRUE, FALSE, FALSE,
       FEAT_TYPE_CLASS_ABILITY, "undead bloodline selected, sorcerer level 15",
@@ -3313,7 +3511,7 @@ void assign_feats(void)
       "except spells, unless "
       "the weapon is a ghost touch weapon or your opponent is incorporeal as well.  Likewise, your "
       "non-spell attacks only deal 1/2 damage to corporeal opponents.  This ability can be used "
-      "a number of times per day equal to your sorcerer level / 3. Using a ghost touch weapon will "
+      "a number of times per five minutes equal to your sorcerer level / 3. Using a ghost touch weapon will "
       "bypass "
       "this damage reduction for melee attacks.");
   feato(FEAT_ONE_OF_US, "one of us", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
@@ -6453,6 +6651,26 @@ void assign_feats(void)
   dailyfeat(FEAT_AURA_OF_PROTECTION, eAURA_OF_PROTECTION);
   dailyfeat(FEAT_BATTLE_RAGE, eBATTLE_RAGE);
   dailyfeat(FEAT_DRACONIC_HERITAGE_BREATHWEAPON, eDRACBREATH);
+  dailyfeat(FEAT_SHADOWSTRIKE, eBLOODLINE_SHADOWSTRIKE);
+  dailyfeat(FEAT_SHADOW_WELL, eBLOODLINE_SHADOW_WELL);
+  dailyfeat(FEAT_ENVELOPING_DARKNESS, eBLOODLINE_ENVELOPING_DARKNESS);
+  dailyfeat(FEAT_THUNDERSTAFF, eBLOODLINE_THUNDERSTAFF);
+  dailyfeat(FEAT_THUNDERBOLT, eBLOODLINE_THUNDERBOLT);
+  dailyfeat(FEAT_RIDE_THE_LIGHTNING, eBLOODLINE_RIDE_THE_LIGHTNING);
+  dailyfeat(FEAT_STORM_LORD, eBLOODLINE_STORM_LORD);
+  dailyfeat(FEAT_TOUCH_OF_DESTINY, eBLOODLINE_TOUCH_OF_DESTINY);
+  dailyfeat(FEAT_IT_WAS_MEANT_TO_BE, eBLOODLINE_DESTINED_REROLL);
+  dailyfeat(FEAT_WITHIN_REACH, eBLOODLINE_WITHIN_REACH);
+  /* Destiny Realized now rerolls failed SR checks passively. */
+  dailyfeat(FEAT_ABYSSAL_CLAWS, eBLOODLINE_ABYSSAL_CLAWS);
+  dailyfeat(FEAT_ELEMENTAL_RAY, eBLOODLINE_ELEMENTAL_RAY);
+  dailyfeat(FEAT_ELEMENTAL_BLAST, eBLOODLINE_ELEMENTAL_BLAST);
+  dailyfeat(FEAT_HEAVENLY_FIRE, eBLOODLINE_HEAVENLY_FIRE);
+  dailyfeat(FEAT_WINGS_OF_HEAVEN, eBLOODLINE_WINGS_OF_HEAVEN);
+  dailyfeat(FEAT_CELESTIAL_CONVICTION, eBLOODLINE_CELESTIAL_CONVICTION);
+  dailyfeat(FEAT_DESTINED_BLOODLINE_ARCANA, eBLOODLINE_DESTINED_ARCANA);
+
+
   dailyfeat(FEAT_DRACONIC_HERITAGE_CLAWS, eDRACCLAWS);
   dailyfeat(FEAT_METAMAGIC_ADEPT, eARCANEADEPT);
   dailyfeat(FEAT_MUTAGEN, eMUTAGEN);
@@ -9518,6 +9736,13 @@ int is_class_feat(int featnum, int class, struct char_data *ch)
   // Sorcerer bloodline class feats
   if (class == CLASS_SORCERER)
   {
+    int i, j;
+    for (i = 0; i < NUM_EXTENDED_BLOODLINES; i++)
+      if (HAS_FEAT(ch, extended_bloodlines[i].feat) ||
+          (!IS_NPC(ch) && LEVELUP(ch) && LEVELUP(ch)->feats[extended_bloodlines[i].feat]))
+        for (j = 0; j < 8; j++)
+          if (extended_bloodlines[i].bonus_feats[j] == featnum)
+            return TRUE;
     if (HAS_FEAT(ch, FEAT_SORCERER_BLOODLINE_DRACONIC))
     {
       switch (featnum)
@@ -10126,7 +10351,10 @@ int get_draconic_heritage_subfeat(int feat)
 
 int get_sorcerer_bloodline_type(struct char_data *ch)
 {
-  int bl = 0;
+  int bl = 0, i;
+  for (i = 0; i < NUM_EXTENDED_BLOODLINES; i++)
+    if (HAS_FEAT(ch, extended_bloodlines[i].feat))
+      return extended_bloodlines[i].feat;
   if (HAS_FEAT(ch, (bl = FEAT_SORCERER_BLOODLINE_DRACONIC)))
     return bl;
   else if (HAS_FEAT(ch, (bl = FEAT_SORCERER_BLOODLINE_ARCANE)))
@@ -10142,7 +10370,10 @@ int get_sorcerer_bloodline_type(struct char_data *ch)
 
 int get_levelup_sorcerer_bloodline_type(struct char_data *ch)
 {
-  int bl = FEAT_SORCERER_BLOODLINE_DRACONIC;
+  int i, bl = FEAT_SORCERER_BLOODLINE_DRACONIC;
+  for (i = 0; i < NUM_EXTENDED_BLOODLINES; i++)
+    if (LEVELUP(ch)->feats[extended_bloodlines[i].feat] > 0)
+      return extended_bloodlines[i].feat;
   if (LEVELUP(ch)->feats[bl] > 0)
     return bl;
   bl = FEAT_SORCERER_BLOODLINE_ARCANE;
@@ -10159,6 +10390,8 @@ int get_levelup_sorcerer_bloodline_type(struct char_data *ch)
 
 bool isSorcBloodlineFeat(int featnum)
 {
+  if (extended_bloodline_by_feat(featnum))
+    return TRUE;
   switch (featnum)
   {
   case FEAT_SORCERER_BLOODLINE_DRACONIC:

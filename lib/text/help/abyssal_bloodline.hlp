@@ -1,0 +1,35 @@
+ABYSSAL-BLOODLINE ABYSSAL ABYSSAL-CLAWS DEMONIC-MIGHT
+
+- 7) ABYSSAL
+  - Focus: Demonic claws, Strength and enhanced summons.
+  - Class skill: Arcana.
+  - Heritage suboptions: None.
+  - Level 1 - Abyssal Arcana: Summoned creatures gain 5/good DR, bypassed by
+    good-aligned attacks. Normal non-stacking DR rules apply.
+  - Level 1 - Abyssal Claws: Swift action with both hands free makes two claw attacks,
+    each dealing 1d4 + Strength bonus.
+    - Level 5: Claws count as magical for damage reduction.
+    - Level 7: Base damage increases to 1d6.
+    - Level 11: Each hit adds 1d6 fire damage.
+    - Smaller bodies use smaller damage dice.
+    - Uses: 3 + Charisma bonus per five minutes, minimum 1.
+  - Level 3 - Demon Resistances: Electricity resistance 5 and +2 poison saves.
+    - Level 9: Resistance 10 and poison save bonus +4.
+  - Level 9 - Strength of the Abyss: +2 inherent Strength, improving to +4 at level 13
+    and +6 at level 17. Normal stat caps and inherent bonus stacking rules apply.
+  - Level 15 - Added Summonings: Summon creature spells calling evil aligned creatures
+    gain +2 to AC, attack and damage.
+  - Level 20 - Demonic Might: Electricity and poison immunity; acid, cold and fire
+    resistance 10; universal speech and comprehension.
+  - Bonus spells: Cause fear, strength, rage, stoneskin, dismissal, transformation,
+    teleport, protection from spells, summon creature IX.
+  - Bonus feat choices: Augment Summoning, Cleave, Empower Spell, Great Fortitude,
+    Improved Bull Rush, Improved Sunder, Power Attack, Skill Focus.
+  - Command: bloodline abyssal-claws <enemy>.
+  - Alignment: No requirement.
+
+All listed use limits recover per five real minutes; Conviction is every
+30 seconds. Full pools reset from first use without extending on retries.
+See also: SORCERER-BLOODLINES, STUDY, FEATS, SPELLS
+#0
+$

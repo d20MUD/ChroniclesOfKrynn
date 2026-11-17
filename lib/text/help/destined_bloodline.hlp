@@ -1,0 +1,34 @@
+DESTINED-BLOODLINE TOUCH-OF-DESTINY FATED IT-WAS-MEANT-TO-BE WITHIN-REACH DESTINY-REALIZED DESTINED
+
+- 6) DESTINED
+  - Focus: Luck, ally support, rerolls and survival.
+  - Class skill: History.
+  - Heritage suboptions: None.
+  - Level 1 - Destined Arcana: A personal-range sorcerer ability grants a luck bonus to
+    saves equal to its circle for one minute. Usable once per 5 mins.
+  - Level 1 - Touch of Destiny: Yourself or a grouped ally gains an insight bonus equal
+    to half your level, minimum 1, on attacks, saves and skill checks for 3 rounds.
+    Uses: 3 + Charisma bonus per five minutes, minimum 1.
+  - Level 3 - Fated: +1 luck to saves, and to AC while flat-footed or unaware. Increases
+    at levels 7, 11, 15 and 19, reaching +5.
+  - Level 9 - It Was Meant to Be: Every d20 roll has a 1% chance to reroll, keeping the
+    second result. Passive; no arming required. Maximum procs per five minutes: 1,
+    increasing to 2 at level 10 and 3 at level 20.
+  - Level 15 - Within Reach: Once per five minutes, lethal damage triggers a DC 20 Will
+    save. Success leaves you at 1 HP; failure still spends the use.
+  - Level 20 - Destiny Realized: Criticals against you require a natural 20
+    confirmation. Your spell critical threats automatically confirm. 5% chance on a
+    failed spell resistance check to reroll the check.
+  - Bonus spells: True strike, blur, protection from energy, free movement, greater
+    dispelling, greater heroism, spell turning, protection from spells, timestop.
+  - Bonus feat choices: Combat Casting, Diehard, Endurance, Leadership, Lightning
+    Reflexes, Maximize Spell, Skill Focus, Weapon Focus.
+  - Commands:
+    - bloodline touch-of-destiny [group ally]
+    - Reroll and penetration now trigger passively; legacy commands explain this.
+
+All listed use limits recover per five real minutes; Conviction is every
+30 seconds. Full pools reset from first use without extending on retries.
+See also: SORCERER-BLOODLINES, STUDY, FEATS, SPELLS
+#0
+$

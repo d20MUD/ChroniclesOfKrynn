@@ -25,6 +25,7 @@
 #include "act.h"
 #include "spec_procs.h"
 #include "class.h"
+#include "bloodlines.h"
 #include "fight.h"
 #include "modify.h"
 #include "house.h"
@@ -1228,6 +1229,8 @@ int compute_ability_full(struct char_data *ch, int abilityNum, bool recursive)
     return -1;
 
   legendary_foundations_refresh(ch);
+  value += bloodline_affect_bonus(ch, AFFECT_TOUCH_OF_DESTINY);
+
 
   /* this dummy check was added to to possible problems with checking
    affected_by_spell on a target that just died */
@@ -1329,6 +1332,7 @@ int compute_ability_full(struct char_data *ch, int abilityNum, bool recursive)
   /* Check for armor proficiency? */
 
   struct affected_type *af = NULL;
+  int competence = abilityNum == ABILITY_STEALTH ? bloodline_affect_bonus(ch, AFFECT_SHADOW_ARCANA) : 0;
 
   for (af = ch->affected; af; af = af->next)
   {
@@ -1337,7 +1341,12 @@ int compute_ability_full(struct char_data *ch, int abilityNum, bool recursive)
       if (af->spell == SKILL_INSPIRING_COGNATOGEN)
         value += af->modifier;
       else if (af->specific == abilityNum)
-        value += af->modifier;
+      {
+        if (af->bonus_type == BONUS_TYPE_COMPETENCE && af->modifier > 0)
+          competence = MAX(competence, af->modifier);
+        else
+          value += af->modifier;
+      }
     }
   }
 
@@ -1350,13 +1359,16 @@ int compute_ability_full(struct char_data *ch, int abilityNum, bool recursive)
       if (GET_EQ(ch, i) && GET_EQ(ch, i)->affected[j].location == APPLY_SKILL &&
           GET_EQ(ch, i)->affected[j].specific == abilityNum)
       {
-        if (GET_EQ(ch, i)->affected[j].modifier > high_eq)
+        if (GET_EQ(ch, i)->affected[j].bonus_type == BONUS_TYPE_COMPETENCE &&
+            GET_EQ(ch, i)->affected[j].modifier > 0)
+          competence = MAX(competence, GET_EQ(ch, i)->affected[j].modifier);
+        else if (GET_EQ(ch, i)->affected[j].modifier > high_eq)
           high_eq = GET_EQ(ch, i)->affected[j].modifier;
       }
     }
   }
 
-  value += high_eq;
+  value += high_eq + competence;
 
   /* Check for crafting tool bonuses */
   for (i = 0; i < NUM_WEARS; i++)

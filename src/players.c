@@ -50,6 +50,8 @@
 #include "missions.h"
 #include "evolutions.h"
 #include "class.h"
+#include "bloodlines.h"
+#include "blocker_stealth.h"
 #include "perks.h"
 #include "oasis.h"
 #include "crafting_new.h"
@@ -944,7 +946,16 @@ int load_char(const char *name, struct char_data *ch)
         break;
 
       case 'B':
-        if (!strcmp(tag, "Badp"))
+        if (!strcmp(tag, "BStl"))
+        {
+          int passed;
+          long long guard_vnum, expires;
+          if (sscanf(line, "%lld %lld %d", &guard_vnum, &expires, &passed) == 3 &&
+              guard_vnum >= 0 && guard_vnum <= IDXTYPE_MAX &&
+              (mob_vnum)guard_vnum != NOBODY && (passed == 0 || passed == 1))
+            remember_blocker_stealth_check(ch, (mob_vnum)guard_vnum, (time_t)expires, passed);
+        }
+        else if (!strcmp(tag, "Badp"))
           GET_BAD_PWS(ch) = atoi(line);
         else if (!strcmp(tag, "BGnd"))
           GET_BACKGROUND(ch) = atoi(line);
@@ -1305,7 +1316,7 @@ int load_char(const char *name, struct char_data *ch)
         else if (!strcmp(tag, "FrgC"))
           GET_FORAGE_COOLDOWN(ch) = atoi(line);
         else if (!strcmp(tag, "FLGT"))
-          FLEETING_GLANCE_TIMER(ch) = atoi(line);
+          FLEETING_GLANCE_TIMER(ch) = MIN(atoi(line), BLOODLINE_WINDOW_SECONDS / BLOODLINE_ROUND_SECONDS);
         else if (!strcmp(tag, "Flaw"))
           ch->player.flaws = fread_string(fl, buf2);
         else if (!strcmp(tag, "FdBn"))
@@ -1315,7 +1326,7 @@ int load_char(const char *name, struct char_data *ch)
         else if (!strcmp(tag, "Ftpt"))
           GET_FEAT_POINTS(ch) = atoi(line);
         else if (!strcmp(tag, "FSWT"))
-          FEY_SHADOW_WALK_TIMER(ch) = atoi(line);
+          FEY_SHADOW_WALK_TIMER(ch) = MIN(atoi(line), BLOODLINE_WINDOW_SECONDS / BLOODLINE_ROUND_SECONDS);
         else if (!strcmp(tag, "FSWU"))
           FEY_SHADOW_WALK_USES(ch) = atoi(line);
         else if (!strcmp(tag, "FstH"))
@@ -1350,11 +1361,11 @@ int load_char(const char *name, struct char_data *ch)
         else if (!strcmp(tag, "GjTp"))
           ch->player_specials->inq_greater_judgment_type = atoi(line);
         else if (!strcmp(tag, "GTCT"))
-          GRAVE_TOUCH_TIMER(ch) = atoi(line);
+          GRAVE_TOUCH_TIMER(ch) = MIN(atoi(line), BLOODLINE_WINDOW_SECONDS / BLOODLINE_ROUND_SECONDS);
         else if (!strcmp(tag, "GTCU"))
           GRAVE_TOUCH_USES(ch) = atoi(line);
         else if (!strcmp(tag, "GODT"))
-          GRASP_OF_THE_DEAD_TIMER(ch) = atoi(line);
+          GRASP_OF_THE_DEAD_TIMER(ch) = MIN(atoi(line), BLOODLINE_WINDOW_SECONDS / BLOODLINE_ROUND_SECONDS);
         else if (!strcmp(tag, "GODU"))
           GRASP_OF_THE_DEAD_USES(ch) = atoi(line);
         else if (!strcmp(tag, "Goal"))
@@ -1414,7 +1425,7 @@ int load_char(const char *name, struct char_data *ch)
         else if (!strcmp(tag, "Invs"))
           GET_INVIS_LEV(ch) = atoi(line);
         else if (!strcmp(tag, "InFT"))
-          INCORPOREAL_FORM_TIMER(ch) = atoi(line);
+          INCORPOREAL_FORM_TIMER(ch) = MIN(atoi(line), BLOODLINE_WINDOW_SECONDS / BLOODLINE_ROUND_SECONDS);
         else if (!strcmp(tag, "InFU"))
           INCORPOREAL_FORM_USES(ch) = atoi(line);
         else if (!strcmp(tag, "ITtl"))
@@ -1471,7 +1482,7 @@ int load_char(const char *name, struct char_data *ch)
         else if (!strcmp(tag, "Lnew"))
           GET_LAST_NEWS(ch) = atoi(line);
         else if (!strcmp(tag, "LTCT"))
-          LAUGHING_TOUCH_TIMER(ch) = atoi(line);
+          LAUGHING_TOUCH_TIMER(ch) = MIN(atoi(line), BLOODLINE_WINDOW_SECONDS / BLOODLINE_ROUND_SECONDS);
         else if (!strcmp(tag, "LTCU"))
           LAUGHING_TOUCH_USES(ch) = atoi(line);
         else if (!strcmp(tag, "LstR"))
@@ -2629,6 +2640,14 @@ bool save_char_checked(struct char_data *ch, int mode)
   if (!player_write_string_field(fl, "Idel", ch->player.ideals)) goto restore_character;
   if (!player_write_string_field(fl, "Bond", ch->player.bonds)) goto restore_character;
   if (!player_write_string_field(fl, "Flaw", ch->player.flaws)) goto restore_character;
+  /* Persist only live stealth-blocker outcomes; expiry uses real wall time. */
+  {
+    struct blocker_stealth_check *check;
+    prune_blocker_stealth_checks(ch, time(NULL));
+    for (check = ch->player_specials->blocker_stealth_checks; check; check = check->next)
+      BUFFER_WRITE("BStl: %lld %lld %d\n", (long long)check->guard_vnum,
+                   (long long)check->expires, check->passed ? 1 : 0);
+  }
   if (BLASTING(ch))
     BUFFER_WRITE("Blst: 1\n");
   if (POOFIN(ch))
@@ -4294,6 +4313,15 @@ bool save_char_checked(struct char_data *ch, int mode)
       BUFFER_WRITE("%d %ld %d\n", pMudEvent->iId, event_time(pMudEvent->pEvent),
                    get_daily_uses(ch, FEAT_TRUE_LORE) - daily_uses_remaining(ch, FEAT_TRUE_LORE));
 
+    /* The new bloodline cooldowns use the same persisted daily-use events. */
+    for (i = eBLOODLINE_SHADOWSTRIKE; i <= eBLOODLINE_DESTINED_ARCANA; i++)
+      if ((pMudEvent = char_has_mud_event(ch, i)))
+      {
+        int used = 0;
+        if (pMudEvent->sVariables)
+          sscanf(pMudEvent->sVariables, "uses:%d", &used);
+        BUFFER_WRITE("%d %ld %d\n", pMudEvent->iId, event_time(pMudEvent->pEvent), used);
+      }
     BUFFER_WRITE("-1 -1\n");
   }
 
@@ -6502,6 +6530,11 @@ static struct char_data *load_char_pets_filtered(struct char_data *ch, int reviv
     GET_REAL_AC(mob) = (mob->mob_specials.purchased_pet || companion_training_kind(mob)) ? LIMIT(atoi(row[7]), -32768, 32767) : MIN(100, atoi(row[7]));
     GET_REAL_MAX_HIT(mob) = atoi(row[3]);
     GET_HIT(mob) = revive_id > 0 ? GET_REAL_MAX_HIT(mob) : atoi(row[2]);
+    /* Pet rows retain summon lifetime but not arbitrary spell affects. Reapply
+     * planar bloodline arcana only to living conjured summons, not bought pets,
+     * undead, clones or constructs. The owner's current bloodline powers are used. */
+    if (purge_timer > 0 && isSummonMob(GET_MOB_VNUM(mob)) && !IS_UNDEAD(mob) && !IS_CONSTRUCT(mob))
+      bloodline_summon_benefits(ch, mob, SPELL_SUMMON_CREATURE_1);
     if (revive_id > 0)
       GET_POS(mob) = POS_STANDING;
     affect_total(mob);

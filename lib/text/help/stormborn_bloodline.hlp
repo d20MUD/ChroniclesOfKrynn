@@ -1,0 +1,41 @@
+STORMBORN-BLOODLINE THUNDERSTAFF STORMCHILD THUNDERBOLT RIDE-THE-LIGHTNING STORM-LORD STORMBORN
+
+- 5) STORMBORN
+  - Focus: Electricity, thunder and storm mobility.
+  - Class skill: Nature.
+  - Heritage suboptions: None.
+  - Level 1 - Stormborn Arcana: Electricity and sonic spells gain +1 save DC.
+  - Level 1 - Thunderstaff: Your or a grouped ally's wielded melee attacks gain +1d6
+    electricity damage for half your level in rounds, minimum 1.
+    - From level 9: Critical hits add another 1d10 electricity
+    - Uses: 3 + Charisma bonus per five minutes, minimum 1.
+  - Level 3 - Stormchild: Electricity and sonic resistance 5, and protection against
+    wind knockdown, including +4 defense against other forms of knockdown.
+  - Level 9: See through fog and mist. Combat target's concealment is reduced by 10% for
+    you alone.
+  - Level 9 - Thunderbolt: Room attack deals 1d6/level, capped at 30d6, split between
+    electricity and sonic. Reflex halves; failed saves also deafen for one round.
+    - Save DC: 10 + half sorcerer level + Charisma bonus.
+    - Uses: 1 per five minutes, 2 per five minutes at level 17, 3 per five minutes at
+      level 20.
+  - Level 15 - Ride the Lightning: Travel through one legal adjacent exit and release a
+    thunderbolt on arrival. Requires being out of combat; once per five minutes.
+    Respects doors and normal movement restrictions. Cannot pass blocker mobs you
+    normally couldn't pass.
+  - Level 20 - Storm Lord: Stun, deafness and wind-knockdown immunity. Automatically
+    absorbs the first electricity or sonic damage and heals one-third of its remaining
+    damage after defenses. On a 5 minute cooldown.
+  - Bonus spells: Shocking grasp, gust of wind, lightning bolt, thunderclap, overland
+    flight, chain lightning, control weather, whirlwind, storm of vengeance.
+  - Bonus feat choices: Deadly Aim, Dodge, Enlarge Spell, Far Shot, Great Fortitude,
+    Point Blank Shot, Skill Focus, Mobility.
+  - Commands:
+    - bloodline thunderstaff [group ally]
+    - bloodline thunderbolt
+    - bloodline ride-the-lightning <direction>
+
+All listed use limits recover per five real minutes; Conviction is every
+30 seconds. Full pools reset from first use without extending on retries.
+See also: SORCERER-BLOODLINES, STUDY, FEATS, SPELLS
+#0
+$

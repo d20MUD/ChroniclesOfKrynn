@@ -1314,7 +1314,8 @@ enum zone_terrain_type {
 /**********************/
 #define MOB_RANGED_ATTACK 108 /**< May attack beyond 5 feet while still auto advancing. */
 #define MOB_BLOCK_CLAN 109 /* Direction guards use builder clan requirements. */
-#define NUM_MOB_FLAGS 110
+#define MOB_BLOCK_STEALTH 110 /**< Allows hidden/sneaking PCs to contest directional blocking. */
+#define NUM_MOB_FLAGS 111
 /**********************/
 /**********************/
 
@@ -3157,9 +3158,51 @@ enum zone_terrain_type {
 #define FEAT_IRDA_CHANGE_SHAPE 1281
 #define FEAT_AUGMENT_PHYSICALITY 1282
 #define FEAT_MIRAGE_FLARE 1283
-#define FEAT_LAST_FEAT 1284
+#define FEAT_SORCERER_BLOODLINE_SHADOW 1284
+#define FEAT_SHADOW_BLOODLINE_ARCANA 1285
+#define FEAT_SHADOWSTRIKE 1286
+#define FEAT_NIGHTEYE 1287
+#define FEAT_SHADOW_WELL 1288
+#define FEAT_ENVELOPING_DARKNESS 1289
+#define FEAT_SHADOW_BLOODLINE_MASTER 1290
+#define FEAT_SORCERER_BLOODLINE_STORMBORN 1291
+#define FEAT_STORMBORN_BLOODLINE_ARCANA 1292
+#define FEAT_THUNDERSTAFF 1293
+#define FEAT_STORMCHILD 1294
+#define FEAT_THUNDERBOLT 1295
+#define FEAT_RIDE_THE_LIGHTNING 1296
+#define FEAT_STORM_LORD 1297
+#define FEAT_SORCERER_BLOODLINE_DESTINED 1298
+#define FEAT_DESTINED_BLOODLINE_ARCANA 1299
+#define FEAT_TOUCH_OF_DESTINY 1300
+#define FEAT_FATED 1301
+#define FEAT_IT_WAS_MEANT_TO_BE 1302
+#define FEAT_WITHIN_REACH 1303
+#define FEAT_DESTINY_REALIZED 1304
+#define FEAT_SORCERER_BLOODLINE_ABYSSAL 1305
+#define FEAT_ABYSSAL_BLOODLINE_ARCANA 1306
+#define FEAT_ABYSSAL_CLAWS 1307
+#define FEAT_DEMON_RESISTANCES 1308
+#define FEAT_STRENGTH_OF_THE_ABYSS 1309
+#define FEAT_ADDED_SUMMONINGS 1310
+#define FEAT_DEMONIC_MIGHT 1311
+#define FEAT_SORCERER_BLOODLINE_ELEMENTAL 1312
+#define FEAT_ELEMENTAL_BLOODLINE_ARCANA 1313
+#define FEAT_ELEMENTAL_RAY 1314
+#define FEAT_ELEMENTAL_BLOODLINE_RESISTANCE 1315
+#define FEAT_ELEMENTAL_BLAST 1316
+#define FEAT_ELEMENTAL_BLOODLINE_MOVEMENT 1317
+#define FEAT_ELEMENTAL_BLOODLINE_BODY 1318
+#define FEAT_SORCERER_BLOODLINE_CELESTIAL 1319
+#define FEAT_CELESTIAL_BLOODLINE_ARCANA 1320
+#define FEAT_HEAVENLY_FIRE 1321
+#define FEAT_CELESTIAL_BLOODLINE_RESISTANCES 1322
+#define FEAT_WINGS_OF_HEAVEN 1323
+#define FEAT_CELESTIAL_CONVICTION 1324
+#define FEAT_CELESTIAL_ASCENSION 1325
+#define FEAT_LAST_FEAT 1326
 /** FEAT_LAST_FEAT + 1 ***/
-#define NUM_FEATS 1285
+#define NUM_FEATS 1327
 /** absolute cap **/
 #define MAX_FEATS 1500
 /*****/
@@ -7651,8 +7694,18 @@ struct weird_science_level
 /** Specials needed only by PCs, not NPCs.  Space for this structure is
  * not allocated in memory for NPCs, but it is for PCs and the portion
  * of it labelled 'saved' is saved in the players file. */
+/* Absolute expiry keeps directional guard checks stable across logout/copyover. */
+struct blocker_stealth_check
+{
+  mob_vnum guard_vnum;
+  time_t expires;
+  bool passed;
+  struct blocker_stealth_check *next;
+};
+
 struct player_special_data
 {
+  struct blocker_stealth_check *blocker_stealth_checks;
   char appearance_cast_args[MAX_INPUT_LENGTH]; /* Per-caster choices survive delayed casting. */
   long housing_house_id, housing_room_id;
   unsigned long long estate_credit_receipt, estate_debit_receipt;

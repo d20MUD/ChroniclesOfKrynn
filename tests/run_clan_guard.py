@@ -21,6 +21,7 @@ bool has_ghost(struct char_data *ch){return true;}
 bool clan_access_check(struct char_data *ch,const struct clan_requirement *r,bool explain){
  return (!r->clan || r->clan==clan) && (!r->rank || rank<=r->rank) && (!r->favor || favor>=r->favor);
 }
+bool blocker_stealth_passes(struct char_data *ch,struct char_data *guard){return false;}
 static bool blocked(struct char_data *ch,int dir){
  struct char_data *mob;bool block=false;
 '''+s[a:b]+r'''

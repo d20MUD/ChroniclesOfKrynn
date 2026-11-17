@@ -30,6 +30,7 @@
 #include "constants.h"
 #include "spec_procs.h"
 #include "class.h"
+#include "bloodlines.h"
 #include "mudlim.h"
 #include "actions.h"
 #include "actionqueues.h"
@@ -1752,6 +1753,7 @@ bool perform_knockdown(struct char_data *ch, struct char_data *vict, int skill, 
     attack_check += legendary_technique_maneuver(ch,COMBAT_MANEUVER_TYPE_KNOCKDOWN,false);
     defense_check += legendary_technique_maneuver(vict,COMBAT_MANEUVER_TYPE_KNOCKDOWN,true);
     defense_check += legendary_foundation_value(vict, LEG_F13, 0);
+    defense_check += bloodline_knockdown_bonus(vict);
 
     /* Root cantrip: +3 resistance vs trip/knockdown/grapple */
     if (affected_by_spell(vict, SPELL_ROOT))
@@ -7670,7 +7672,7 @@ ACMD(do_fey_magic)
     USE_STANDARD_ACTION(victim);
 
     if (LAUGHING_TOUCH_TIMER(ch) <= 0)
-      LAUGHING_TOUCH_TIMER(ch) = 150;
+      LAUGHING_TOUCH_TIMER(ch) = BLOODLINE_WINDOW_SECONDS / BLOODLINE_ROUND_SECONDS;
     LAUGHING_TOUCH_USES(ch)
     --;
     return; // end laughing touch
@@ -7713,7 +7715,7 @@ ACMD(do_fey_magic)
     call_magic(ch, ch, NULL, SPELL_GREATER_INVIS, 0, compute_arcane_level(ch), CAST_INNATE);
 
     if (FLEETING_GLANCE_TIMER(ch) <= 0)
-      FLEETING_GLANCE_TIMER(ch) = 150;
+      FLEETING_GLANCE_TIMER(ch) = BLOODLINE_WINDOW_SECONDS / BLOODLINE_ROUND_SECONDS;
     FLEETING_GLANCE_USES(ch)
     --;
 
@@ -7757,7 +7759,7 @@ ACMD(do_fey_magic)
     call_magic(ch, ch, NULL, SPELL_SHADOW_WALK, 0, compute_arcane_level(ch), CAST_INNATE);
 
     if (FEY_SHADOW_WALK_TIMER(ch) <= 0)
-      FEY_SHADOW_WALK_TIMER(ch) = 150;
+      FEY_SHADOW_WALK_TIMER(ch) = BLOODLINE_WINDOW_SECONDS / BLOODLINE_ROUND_SECONDS;
     FEY_SHADOW_WALK_USES(ch)
     --;
 
@@ -7907,7 +7909,7 @@ ACMD(do_grave_magic)
     }
 
     if (GRAVE_TOUCH_TIMER(ch) <= 0)
-      GRAVE_TOUCH_TIMER(ch) = 150;
+      GRAVE_TOUCH_TIMER(ch) = BLOODLINE_WINDOW_SECONDS / BLOODLINE_ROUND_SECONDS;
     GRAVE_TOUCH_USES(ch)
     --;
     return; // end GRAVE touch
@@ -7951,7 +7953,7 @@ ACMD(do_grave_magic)
     call_magic(ch, ch, NULL, SPELL_GRASP_OF_THE_DEAD, 0, compute_arcane_level(ch), CAST_INNATE);
 
     if (GRASP_OF_THE_DEAD_TIMER(ch) <= 0)
-      GRASP_OF_THE_DEAD_TIMER(ch) = 150;
+      GRASP_OF_THE_DEAD_TIMER(ch) = BLOODLINE_WINDOW_SECONDS / BLOODLINE_ROUND_SECONDS;
     GRASP_OF_THE_DEAD_USES(ch)
     --;
 
@@ -8010,7 +8012,7 @@ ACMD(do_grave_magic)
     act("$n suddenly becomes incorporeal.", false, ch, 0, 0, TO_ROOM);
 
     if (INCORPOREAL_FORM_TIMER(ch) <= 0)
-      INCORPOREAL_FORM_TIMER(ch) = 150;
+      INCORPOREAL_FORM_TIMER(ch) = BLOODLINE_WINDOW_SECONDS / BLOODLINE_ROUND_SECONDS;
     INCORPOREAL_FORM_USES(ch)--;
 
     return; // end incorporeal form
@@ -17061,4 +17063,465 @@ ACMD(do_midnight_edict)
   }
 
   USE_STANDARD_ACTION(ch);
+}
+
+/* Shared player command for the additional sorcerer bloodlines. */
+static bool bloodline_hostile_target(struct char_data *ch, struct char_data *vict)
+{
+  return vict && vict != ch && !DEAD(vict) && !is_player_grouped(ch, vict) &&
+         vict != ch->master && vict->master != ch &&
+         !(IS_NPC(vict) && MOB_FLAGGED(vict, MOB_NOKILL)) &&
+         is_mission_mob(ch, vict) &&
+         ((IS_NPC(vict) && (!vict->master || IS_NPC(vict->master))) ||
+          pvp_ok(ch, vict, FALSE));
+}
+
+static void bloodline_timed_affect(struct char_data *vict, int spell, int duration,
+                                   int modifier, int flag)
+{
+  struct affected_type af;
+  new_affect(&af);
+  af.spell = spell;
+  af.duration = duration;
+  af.modifier = modifier;
+  if (flag >= 0)
+    SET_BIT_AR(af.bitvector, flag);
+  affect_from_char(vict, spell);
+  affect_to_char(vict, &af);
+}
+
+static int bloodline_thunderbolt_target(struct char_data *ch, struct char_data *vict, void *data)
+{
+  int level = CLASS_LEVEL(ch, CLASS_SORCERER), dam, sonic;
+  bool saved;
+  (void)data;
+  if (DEAD(ch) || !bloodline_hostile_target(ch, vict))
+    return 0;
+  saved = savingthrow_flatdc(ch, vict, SAVING_REFL, 0,
+                             10 + level / 2 + GET_CHA_BONUS(ch), CAST_INNATE, EVOCATION,
+                             AFFECT_THUNDERBOLT);
+  dam = dice(MIN(level, 30), 6);
+  if (saved)
+    dam /= 2;
+  sonic = dam / 2;
+  if (!saved && !HAS_FEAT(vict, FEAT_STORM_LORD))
+    bloodline_timed_affect(vict, AFFECT_THUNDERBOLT, 1, 0, AFF_DEAF);
+  if (damage(ch, vict, dam - sonic, AFFECT_THUNDERBOLT, DAM_ELECTRIC, FALSE) < 0)
+    return 1;
+  if (!DEAD(ch) && !DEAD(vict))
+    damage(ch, vict, sonic, AFFECT_THUNDERBOLT, DAM_SOUND, FALSE);
+  return 1;
+}
+
+static int bloodline_darkness_target(struct char_data *ch, struct char_data *vict, void *data)
+{
+  (void)data;
+  if (!bloodline_hostile_target(ch, vict) || AFF_FLAGGED(vict, AFF_FREE_MOVEMENT))
+    return 0;
+  bloodline_timed_affect(vict, AFFECT_ENVELOPING_DARKNESS, 15, 0, AFF_ENTANGLED);
+  if (!FIGHTING(vict))
+    set_fighting(vict, ch);
+  if (!FIGHTING(ch))
+    set_fighting(ch, vict);
+  act("Shadows coil around $N, entangling $M!", FALSE, ch, NULL, vict, TO_CHAR);
+  send_to_char(vict, "The enveloping darkness entangles you!\r\n");
+  return 1;
+}
+
+static int bloodline_elemental_blast_target(struct char_data *ch, struct char_data *vict, void *data)
+{
+  int level = CLASS_LEVEL(ch, CLASS_SORCERER), energy = bloodline_element_damage(ch), dam;
+  bool saved;
+  (void)data;
+  if (DEAD(ch) || !energy || !bloodline_hostile_target(ch, vict))
+    return 0;
+  saved = savingthrow_flatdc(ch, vict, SAVING_REFL, 0,
+                             10 + level / 2 + GET_CHA_BONUS(ch), CAST_INNATE, EVOCATION,
+                             AFFECT_ELEMENTAL_BLAST);
+  dam = dice(MIN(level, 30), 6);
+  if (saved)
+    dam /= 2;
+  if (damage(ch, vict, dam, AFFECT_ELEMENTAL_BLAST, energy, FALSE) < 0)
+    return 1;
+  if (!saved && !DEAD(ch) && !DEAD(vict))
+    bloodline_timed_affect(vict, AFFECT_ELEMENTAL_VULNERABILITY, 2, energy, -1);
+  return 1;
+}
+
+ACMD(do_bloodline)
+{
+  char power[MAX_INPUT_LENGTH], target[MAX_INPUT_LENGTH];
+  const struct sorcerer_bloodline *bl;
+  struct char_data *vict, *heal_limit_target;
+  int feat = 0, level, i, dir, category;
+  bool swift = FALSE, unlimited = FALSE;
+
+  if (IS_NPC(ch))
+  {
+    send_to_char(ch, "This bloodline command is for player sorcerers.\r\n");
+    return;
+  }
+  bl = extended_bloodline_by_feat(get_sorcerer_bloodline_type(ch));
+  if (!bl)
+  {
+    send_to_char(ch, "This command supports Shadow, Stormborn, Destined, Abyssal, Elemental and Celestial bloodlines.\r\n");
+    return;
+  }
+  two_arguments(argument, power, sizeof(power), target, sizeof(target));
+  level = CLASS_LEVEL(ch, CLASS_SORCERER);
+  if (!*power)
+  {
+    send_to_char(ch, "%s bloodline powers", bl->name);
+    if (bl->feat == FEAT_SORCERER_BLOODLINE_ELEMENTAL)
+      send_to_char(ch, " (%s)", bloodline_element_name(bloodline_element(ch)));
+    send_to_char(ch, ":\r\n");
+    for (i = 0; i < 6; i++)
+      if (HAS_FEAT(ch, bl->powers[i]))
+      {
+        feat = bl->powers[i];
+        send_to_char(ch, "  %s%s", feat_list[feat].name,
+                     feat_list[feat].event || feat == FEAT_ELEMENTAL_BLOODLINE_ARCANA ? "" : " (passive)");
+        if (feat == FEAT_WINGS_OF_HEAVEN && HAS_FEAT(ch, FEAT_CELESTIAL_ASCENSION))
+          send_to_char(ch, " - unlimited");
+        else if (feat_list[feat].event)
+          send_to_char(ch, " - %d/%d uses available", daily_uses_remaining(ch, feat),
+                       get_daily_uses(ch, feat));
+        send_to_char(ch, "\r\n");
+      }
+    send_to_char(ch, "Limited powers refresh every five minutes; Conviction every 30 seconds.\r\n");
+    send_to_char(ch, "Syntax: bloodline <power> [target/direction]\r\n"
+                     "Shadow: shadowstrike, shadow-well, enveloping-darkness\r\n"
+                     "Stormborn: thunderstaff, thunderbolt, ride-the-lightning\r\n"
+                     "Destined: touch-of-destiny (rerolls and penetration are passive)\r\n"
+                     "Abyssal: abyssal-claws\r\n"
+                     "Elemental: energy-conversion [on/off], elemental-ray, elemental-blast\r\n"
+                     "Celestial: heavenly-fire, wings [off], conviction [attack/save/skill/any]\r\n"
+                     "Use feat info <power name> for details.\r\n");
+    return;
+  }
+
+  if (!str_cmp(power, "shadowstrike")) { feat = FEAT_SHADOWSTRIKE; swift = TRUE; }
+  else if (!str_cmp(power, "shadow-well")) feat = FEAT_SHADOW_WELL;
+  else if (!str_cmp(power, "enveloping-darkness")) feat = FEAT_ENVELOPING_DARKNESS;
+  else if (!str_cmp(power, "thunderstaff")) feat = FEAT_THUNDERSTAFF;
+  else if (!str_cmp(power, "thunderbolt")) feat = FEAT_THUNDERBOLT;
+  else if (!str_cmp(power, "ride-the-lightning")) feat = FEAT_RIDE_THE_LIGHTNING;
+  else if (!str_cmp(power, "touch-of-destiny")) feat = FEAT_TOUCH_OF_DESTINY;
+  else if (!str_cmp(power, "reroll")) { feat = FEAT_IT_WAS_MEANT_TO_BE; swift = TRUE; }
+  else if (!str_cmp(power, "penetration")) { feat = FEAT_DESTINY_REALIZED; swift = TRUE; }
+  else if (!str_cmp(power, "abyssal-claws")) { feat = FEAT_ABYSSAL_CLAWS; swift = TRUE; }
+  else if (!str_cmp(power, "elemental-ray")) { feat = FEAT_ELEMENTAL_RAY; swift = TRUE; }
+  else if (!str_cmp(power, "elemental-blast")) feat = FEAT_ELEMENTAL_BLAST;
+  else if (!str_cmp(power, "energy-conversion")) { feat = FEAT_ELEMENTAL_BLOODLINE_ARCANA; swift = TRUE; }
+  else if (!str_cmp(power, "heavenly-fire")) { feat = FEAT_HEAVENLY_FIRE; swift = TRUE; }
+  else if (!str_cmp(power, "wings")) feat = FEAT_WINGS_OF_HEAVEN;
+  else if (!str_cmp(power, "conviction")) { feat = FEAT_CELESTIAL_CONVICTION; swift = TRUE; }
+  if (!feat || !HAS_REAL_FEAT(ch, feat))
+  {
+    send_to_char(ch, "You have not unlocked that bloodline power. Type bloodline for your powers.\r\n");
+    return;
+  }
+  /* In addition to feat ownership, require that the power belongs to this bloodline. */
+  for (i = 0; i < 6 && bl->powers[i] != feat; i++) {}
+  if (i == 6)
+    return;
+  if (feat == FEAT_IT_WAS_MEANT_TO_BE || feat == FEAT_DESTINY_REALIZED)
+  {
+    send_to_char(ch, "That destiny power now triggers passively; it does not need to be readied.\r\n");
+    return;
+  }
+  if (feat == FEAT_WINGS_OF_HEAVEN && !str_cmp(target, "off"))
+  {
+    affect_from_char(ch, AFFECT_WINGS_OF_HEAVEN);
+    send_to_char(ch, "You retract your heavenly wings.\r\n");
+    return;
+  }
+  unlimited = feat == FEAT_ELEMENTAL_BLOODLINE_ARCANA ||
+              (feat == FEAT_WINGS_OF_HEAVEN && HAS_FEAT(ch, FEAT_CELESTIAL_ASCENSION));
+  PREREQ_CAN_FIGHT();
+  if (!is_action_available(ch, swift ? atSWIFT : atSTANDARD, TRUE))
+    return;
+  if (!unlimited && daily_uses_remaining(ch, feat) <= 0)
+  {
+    send_to_char(ch, "You have no uses of that power left in its current recovery window.\r\n");
+    return;
+  }
+  if (ROOM_AFFECTED(IN_ROOM(ch), RAFF_ANTI_MAGIC))
+  {
+    send_to_char(ch, "The antimagic here suppresses your bloodline power.\r\n");
+    return;
+  }
+
+  switch (feat)
+  {
+  case FEAT_ELEMENTAL_BLOODLINE_ARCANA:
+    if (*target && str_cmp(target, "on") && str_cmp(target, "off"))
+    {
+      send_to_char(ch, "Use bloodline energy-conversion [on/off].\r\n");
+      return;
+    }
+    if (!bloodline_element_damage(ch))
+    {
+      send_to_char(ch, "You must have a valid permanent elemental heritage.\r\n");
+      return;
+    }
+    if (!str_cmp(target, "off") ||
+        (!*target && affected_by_spell(ch, AFFECT_ELEMENTAL_CONVERSION)))
+    {
+      affect_from_char(ch, AFFECT_ELEMENTAL_CONVERSION);
+      send_to_char(ch, "Optional elemental spell conversion is off.\r\n");
+    }
+    else
+    {
+      bloodline_timed_affect(ch, AFFECT_ELEMENTAL_CONVERSION, -1, 0, -1);
+      send_to_char(ch, "Your sorcerer energy spells will use your %s heritage.\r\n",
+                   bloodline_element_name(bloodline_element(ch)));
+    }
+    break;
+  case FEAT_WINGS_OF_HEAVEN:
+    if (affected_by_spell(ch, AFFECT_WINGS_OF_HEAVEN))
+    {
+      send_to_char(ch, "Your wings are already extended.\r\n");
+      return;
+    }
+    bloodline_timed_affect(ch, AFFECT_WINGS_OF_HEAVEN, unlimited ? -1 : 10, 0, AFF_FLYING);
+    send_to_char(ch, "Feathery wings unfold from your back and bear you aloft.\r\n");
+    break;
+  case FEAT_CELESTIAL_CONVICTION:
+    category = BLOODLINE_ROLL_ANY;
+    if (!str_cmp(target, "attack")) category = BLOODLINE_ROLL_ATTACK;
+    else if (!str_cmp(target, "save")) category = BLOODLINE_ROLL_SAVE;
+    else if (!str_cmp(target, "skill")) category = BLOODLINE_ROLL_SKILL;
+    else if (*target && str_cmp(target, "any"))
+    {
+      send_to_char(ch, "Use bloodline conviction [attack/save/skill/any].\r\n");
+      return;
+    }
+    if (affected_by_spell(ch, AFFECT_CELESTIAL_CONVICTION))
+    {
+      send_to_char(ch, "Your conviction is already readied.\r\n");
+      return;
+    }
+    bloodline_timed_affect(ch, AFFECT_CELESTIAL_CONVICTION, 10, category, -1);
+    send_to_char(ch, "You ready your celestial conviction for your next %s roll.\r\n",
+                 category == BLOODLINE_ROLL_ATTACK ? "attack" :
+                 (category == BLOODLINE_ROLL_SAVE ? "saving throw" :
+                 (category == BLOODLINE_ROLL_SKILL ? "skill" : "eligible")));
+    break;
+  case FEAT_ELEMENTAL_BLAST:
+    PREREQ_NOT_PEACEFUL_ROOM();
+    if (!bloodline_element_damage(ch))
+    {
+      send_to_char(ch, "You must have a valid permanent elemental heritage.\r\n");
+      return;
+    }
+    start_daily_use_cooldown(ch, feat);
+    USE_STANDARD_ACTION(ch);
+    send_to_char(ch, "You unleash a blast of your %s heritage energy!\r\n",
+                 bloodline_element_name(bloodline_element(ch)));
+    aoe_effect(ch, SPELL_BURNING_HANDS, bloodline_elemental_blast_target, NULL);
+    return;
+  case FEAT_HEAVENLY_FIRE:
+    vict = *target ? get_char_room_vis(ch, target, NULL) : ch;
+    if (!vict)
+    {
+      send_to_char(ch, "Choose a target in this room.\r\n");
+      return;
+    }
+    if (IS_GOOD(vict))
+    {
+      if (vict != ch && !is_player_grouped(ch, vict))
+      {
+        send_to_char(ch, "Choose yourself or a willing good group ally.\r\n");
+        return;
+      }
+      /* Pet events are not independently saved; share the owning player's
+       * receipt limit so dismissing/reloading a companion cannot reset it. */
+      heal_limit_target = IS_NPC(vict) && vict->master && !IS_NPC(vict->master) ? vict->master : vict;
+      if (char_has_mud_event(heal_limit_target, eBLOODLINE_HEAVENLY_HEAL_RECEIVED))
+      {
+        send_to_char(ch, "That recipient has already received heavenly fire healing within five minutes.\r\n");
+        return;
+      }
+      if (GET_HIT(vict) >= GET_MAX_HIT(vict))
+      {
+        send_to_char(ch, "That recipient does not need healing.\r\n");
+        return;
+      }
+      if (!process_healing(ch, vict, AFFECT_HEAVENLY_FIRE, dice(1, 12) + level / 2, 0, 0))
+        return;
+      attach_mud_event(new_mud_event(eBLOODLINE_HEAVENLY_HEAL_RECEIVED, heal_limit_target, "uses:1"),
+                       BLOODLINE_WINDOW_SECONDS RL_SEC);
+      break;
+    }
+    if (!IS_EVIL(vict))
+    {
+      send_to_char(ch, "Heavenly fire neither harms nor heals neutral creatures.\r\n");
+      return;
+    }
+    /* Evil targets use the normal offensive ranged-touch path below. */
+    /* fall through */
+  case FEAT_ELEMENTAL_RAY:
+    if (feat == FEAT_ELEMENTAL_RAY)
+      vict = *target ? get_char_room_vis(ch, target, NULL) : FIGHTING(ch);
+    PREREQ_NOT_PEACEFUL_ROOM();
+    if (!bloodline_hostile_target(ch, vict))
+    {
+      send_to_char(ch, "Choose an enemy you may attack in this room.\r\n");
+      return;
+    }
+    if (feat == FEAT_ELEMENTAL_RAY && !bloodline_element_damage(ch))
+    {
+      send_to_char(ch, "You must have a valid permanent elemental heritage.\r\n");
+      return;
+    }
+    start_daily_use_cooldown(ch, feat);
+    USE_SWIFT_ACTION(ch);
+    if (!FIGHTING(ch)) set_fighting(ch, vict);
+    if (!FIGHTING(vict)) set_fighting(vict, ch);
+    if (attack_roll(ch, vict, ATTACK_TYPE_RANGED, TRUE, 1) < 0)
+    {
+      send_to_char(ch, "Your bloodline ray misses.\r\n");
+      return;
+    }
+    damage(ch, vict, dice(1, feat == FEAT_ELEMENTAL_RAY ? 6 : 12) + level / 2,
+           feat == FEAT_ELEMENTAL_RAY ? AFFECT_ELEMENTAL_RAY : AFFECT_HEAVENLY_FIRE,
+           feat == FEAT_ELEMENTAL_RAY ? bloodline_element_damage(ch) : DAM_HOLY, FALSE);
+    return;
+  case FEAT_ABYSSAL_CLAWS:
+    PREREQ_NOT_PEACEFUL_ROOM();
+    vict = *target ? get_char_room_vis(ch, target, NULL) : FIGHTING(ch);
+    if (!bloodline_hostile_target(ch, vict))
+    {
+      send_to_char(ch, "Choose an enemy you may attack with your claw strikes.\r\n");
+      return;
+    }
+    if (GET_EQ(ch, WEAR_WIELD_1) || GET_EQ(ch, WEAR_WIELD_OFFHAND) || GET_EQ(ch, WEAR_WIELD_2H) ||
+        GET_EQ(ch, WEAR_SHIELD) || GET_EQ(ch, WEAR_HOLD_1) || GET_EQ(ch, WEAR_HOLD_2) ||
+        GET_EQ(ch, WEAR_HOLD_2H))
+    {
+      send_to_char(ch, "Free both hands before growing your abyssal claws.\r\n");
+      return;
+    }
+    start_daily_use_cooldown(ch, feat);
+    USE_SWIFT_ACTION(ch);
+    bloodline_timed_affect(ch, AFFECT_ABYSSAL_CLAWS, 1, 0, -1);
+    if (!FIGHTING(ch)) set_fighting(ch, vict);
+    if (!FIGHTING(vict)) set_fighting(vict, ch);
+    send_to_char(ch, "Demonic claws grow from your fingers as you strike twice!\r\n");
+    for (i = 0; i < 2 && !DEAD(ch) && !DEAD(vict); i++)
+    {
+      int size = level >= 7 ? 6 : 4;
+      int claw_damage;
+      if (GET_SIZE(ch) <= SIZE_SMALL)
+        size = level >= 7 ? 4 : 3;
+      if (attack_roll(ch, vict, ATTACK_TYPE_UNARMED, FALSE, i + 1) < 0)
+        continue;
+      claw_damage = MAX(0, dice(1, size) + GET_STR_BONUS(ch));
+      claw_damage = apply_damage_reduction(ch, vict, NULL, claw_damage, FALSE, ATTACK_TYPE_UNARMED);
+      if (damage(ch, vict, claw_damage, AFFECT_ABYSSAL_CLAWS, DAM_SLASHING, FALSE) < 0)
+        break;
+      if (level >= 11 && !DEAD(ch) && !DEAD(vict) &&
+          damage(ch, vict, dice(1, 6), AFFECT_ABYSSAL_CLAWS, DAM_FIRE, FALSE) < 0)
+        break;
+    }
+    return;
+  case FEAT_THUNDERSTAFF:
+  case FEAT_TOUCH_OF_DESTINY:
+    vict = *target ? get_char_room_vis(ch, target, NULL) : ch;
+    if (!vict || (vict != ch && !is_player_grouped(ch, vict)))
+    {
+      send_to_char(ch, "Choose yourself or a willing group ally in this room.\r\n");
+      return;
+    }
+    if (feat == FEAT_THUNDERSTAFF &&
+        !(GET_EQ(vict, WEAR_WIELD_1) && GET_OBJ_TYPE(GET_EQ(vict, WEAR_WIELD_1)) == ITEM_WEAPON) &&
+        !(GET_EQ(vict, WEAR_WIELD_2H) && GET_OBJ_TYPE(GET_EQ(vict, WEAR_WIELD_2H)) == ITEM_WEAPON))
+    {
+      send_to_char(ch, "Your target must be wielding a melee weapon.\r\n");
+      return;
+    }
+    bloodline_timed_affect(vict, feat == FEAT_THUNDERSTAFF ? AFFECT_THUNDERSTAFF : AFFECT_TOUCH_OF_DESTINY,
+                           feat == FEAT_THUNDERSTAFF ? MAX(1, level / 2) : 3,
+                           feat == FEAT_THUNDERSTAFF ? level : MAX(1, level / 2), -1);
+    send_to_char(vict, feat == FEAT_THUNDERSTAFF ? "Lightning dances along your weapons!\r\n" :
+                                                "Destiny guides your next actions!\r\n");
+    break;
+  case FEAT_SHADOW_WELL:
+    vict = *target ? get_char_room_vis(ch, target, NULL) : ch;
+    if (!vict || (vict != ch && !is_player_grouped(ch, vict)) || !IS_DARK(IN_ROOM(ch)))
+    {
+      send_to_char(ch, "Choose yourself or a willing group ally in the same dark room.\r\n");
+      return;
+    }
+    bloodline_timed_affect(vict, AFFECT_SHADOW_WELL, MAX(1, level / 2), 0, -1);
+    send_to_char(vict, "Shadows wrap around you, concealing your outline.\r\n");
+    break;
+  case FEAT_SHADOWSTRIKE:
+    PREREQ_NOT_PEACEFUL_ROOM();
+    vict = *target ? get_char_room_vis(ch, target, NULL) : FIGHTING(ch);
+    if (!bloodline_hostile_target(ch, vict))
+    {
+      send_to_char(ch, "Choose an enemy you may attack in this room.\r\n");
+      return;
+    }
+    if (IS_UNDEAD(vict) || IS_CONSTRUCT(vict))
+    {
+      send_to_char(ch, "That creature is immune to your nonlethal shadowstrike.\r\n");
+      return;
+    }
+    /* Spend the action and use before damage callbacks can interrupt the attack. */
+    start_daily_use_cooldown(ch, feat);
+    USE_SWIFT_ACTION(ch);
+    if (!FIGHTING(ch)) set_fighting(ch, vict);
+    if (!FIGHTING(vict)) set_fighting(vict, ch);
+    if (attack_roll(ch, vict, ATTACK_TYPE_UNARMED, TRUE, 1) < 0)
+    {
+      send_to_char(ch, "Your shadowstrike misses.\r\n");
+      return;
+    }
+    if (!char_has_ultra(vict) && !char_has_infra(vict))
+      bloodline_timed_affect(vict, AFFECT_SHADOWSTRIKE, 10, 0, AFF_DAZZLED);
+    damage(ch, vict, dice(1, 4) + level / 2, AFFECT_SHADOWSTRIKE, DAM_ILLUSION, FALSE);
+    return;
+  case FEAT_ENVELOPING_DARKNESS:
+    PREREQ_NOT_PEACEFUL_ROOM();
+    if (call_magic(ch, ch, NULL, SPELL_DARKNESS, 0, level, CAST_INNATE) <= 0)
+      return;
+    bloodline_timed_affect(ch, AFFECT_ENVELOPING_DARKNESS, 15, 0, -1);
+    start_daily_use_cooldown(ch, feat);
+    USE_STANDARD_ACTION(ch);
+    aoe_effect(ch, SPELL_DARKNESS, bloodline_darkness_target, NULL);
+    return;
+  case FEAT_RIDE_THE_LIGHTNING:
+    PREREQ_NOT_PEACEFUL_ROOM();
+    dir = search_block(target, dirs, FALSE);
+    if (dir < 0 || dir >= NUM_OF_DIRS || FIGHTING(ch) ||
+        !EXIT(ch, dir) || EXIT(ch, dir)->to_room == NOWHERE ||
+        EXIT_FLAGGED(EXIT(ch, dir), EX_CLOSED) || EXIT_FLAGGED(EXIT(ch, dir), EX_HIDDEN) ||
+        ROOM_FLAGGED(EXIT(ch, dir)->to_room, ROOM_PEACEFUL) ||
+        !is_action_available(ch, atMOVE, TRUE))
+    {
+      send_to_char(ch, "Choose an open exit to a non-peaceful room while out of combat.\r\n");
+      return;
+    }
+    if (!perform_move_full(ch, dir, 1, FALSE))
+      return;
+    if (DEAD(ch) || ROOM_FLAGGED(IN_ROOM(ch), ROOM_PEACEFUL))
+      return;
+    USE_MOVE_ACTION(ch);
+    /* fall through */
+  case FEAT_THUNDERBOLT:
+    PREREQ_NOT_PEACEFUL_ROOM();
+    start_daily_use_cooldown(ch, feat);
+    USE_STANDARD_ACTION(ch);
+    send_to_char(ch, "You unleash a crashing stroke of lightning and thunder!\r\n");
+    act("$n unleashes a crashing stroke of lightning and thunder!", FALSE, ch, NULL, NULL, TO_ROOM);
+    aoe_effect(ch, SPELL_LIGHTNING_BOLT, bloodline_thunderbolt_target, NULL);
+    return;
+  }
+  if (!unlimited)
+    start_daily_use_cooldown(ch, feat);
+  if (swift) USE_SWIFT_ACTION(ch);
+  else USE_STANDARD_ACTION(ch);
 }

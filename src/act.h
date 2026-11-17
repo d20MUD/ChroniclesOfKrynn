@@ -545,6 +545,7 @@ ACMD_DECL(do_hit);
 #define SCMD_FREE_METAMAGIC_EMPOWER 2
 ACMD_DECL(do_process_attack);
 ACMD_DECL(do_fey_magic);
+ACMD_DECL(do_bloodline);
 ACMDCHECK(can_fey_magic);
 ACMD_DECL(do_grave_magic);
 ACMDCHECK(can_grave_magic);

@@ -30,6 +30,7 @@
 #include "dg_event.h"
 #include "act.h"
 #include "class.h"
+#include "bloodlines.h"
 #include "fight.h"
 #include "assign_wpn_armor.h"
 #include "quest.h"
@@ -420,6 +421,9 @@ int calculate_best_mod(struct char_data *ch, int location, int bonus_type, int e
   /* Skip stackable bonus types and bonus types without a modifier. */
   if ((location == APPLY_NONE) || (location == APPLY_DR) || (BONUS_TYPE_STACKS(bonus_type)))
     return 0;
+
+  if (location == APPLY_STR && bonus_type == BONUS_TYPE_INHERENT)
+    best = bloodline_strength_bonus(ch);
 
   /* Check affect structures */
   for (af = ch->affected; af; af = af->next)
@@ -1064,6 +1068,8 @@ void affect_total_plus(struct char_data *ch, int at_armor)
     // affect_modify_ar(ch, i, modifier, empty_bits, TRUE);
   }
 
+  bloodline_restore_summon_ward(ch);
+
   /* Apply perk bonuses (Step 6) - non-stacking bonuses applied here */
   /* NOTE: Weapon bonuses (hitroll/damroll) are applied in fight.c functions */
   /* NOTE: HP bonuses are applied in calculate_max_hp() */
@@ -1263,6 +1269,12 @@ void affect_to_char(struct char_data *ch, struct affected_type *af)
   CREATE(affected_alloc, struct affected_type, 1);
 
   *affected_alloc = *af;
+  if (HAS_FEAT(ch, FEAT_STORM_LORD))
+  {
+    REMOVE_BIT_AR(affected_alloc->bitvector, AFF_STUN);
+    REMOVE_BIT_AR(affected_alloc->bitvector, AFF_DEAF);
+    af = affected_alloc;
+  }
   affected_alloc->next = ch->affected;
   ch->affected = affected_alloc;
 

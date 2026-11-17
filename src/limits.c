@@ -675,7 +675,7 @@ void regen_update(struct char_data *ch)
     }
 
     /* poison immunity feat */
-    if (!IS_NPC(ch) && (HAS_FEAT(ch, FEAT_POISON_IMMUNITY) || HAS_FEAT(ch, FEAT_SOUL_OF_THE_FEY)))
+    if (!IS_NPC(ch) && (HAS_FEAT(ch, FEAT_POISON_IMMUNITY) || HAS_FEAT(ch, FEAT_SOUL_OF_THE_FEY) || HAS_FEAT(ch, FEAT_DEMONIC_MIGHT)))
     {
       send_to_char(ch, "Your poison immunity purges the poison!\r\n");
       act("$n appears better as their body purges away some poison.", TRUE, ch, 0, 0, TO_ROOM);

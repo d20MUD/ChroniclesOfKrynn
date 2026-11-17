@@ -26,6 +26,7 @@
 #include "mudlim.h"
 #include "feats.h"
 #include "class.h"
+#include "bloodlines.h"
 #include "assign_wpn_armor.h"
 #include "pfdefaults.h"
 #include "domains_schools.h"
@@ -2102,6 +2103,12 @@ int modify_class_ability(struct char_data *ch, int ability, int class)
       ability_value = CA;
   }
 
+  {
+    int i;
+    for (i = 0; i < NUM_EXTENDED_BLOODLINES; i++)
+      if (HAS_FEAT(ch, extended_bloodlines[i].feat) && ability == extended_bloodlines[i].skill)
+        ability_value = CA;
+  }
   return ability_value;
 }
 
@@ -3639,6 +3646,7 @@ void process_conditional_class_level_feats(struct char_data *ch, int class)
   switch (class)
   {
   case CLASS_SORCERER:
+    grant_extended_bloodline_powers(ch);
     //  Mostly Bloodlines
     if (HAS_FEAT(ch, FEAT_SORCERER_BLOODLINE_DRACONIC))
     {
@@ -10825,5 +10833,497 @@ ACMD(do_racefix)
 #undef EXP_MAX
 #undef MODE_CLASSLIST_NORMAL
 #undef MODE_CLASSLIST_RESPEC
+
+/* PF1 bloodlines adapted to Krynn's room-based combat and existing spell catalogue.
+ * Keep this table authoritative for study, progression and free spell knowledge. */
+const struct sorcerer_bloodline extended_bloodlines[NUM_EXTENDED_BLOODLINES] = {
+    {FEAT_SORCERER_BLOODLINE_SHADOW, SORC_BLOODLINE_SHADOW, ABILITY_STEALTH, "Shadow",
+     {FEAT_SHADOW_BLOODLINE_ARCANA, FEAT_SHADOWSTRIKE, FEAT_NIGHTEYE,
+      FEAT_SHADOW_WELL, FEAT_ENVELOPING_DARKNESS, FEAT_SHADOW_BLOODLINE_MASTER},
+     {SPELL_RAY_OF_ENFEEBLEMENT, SPELL_INFRAVISION, SPELL_DARKNESS, SPELL_GREATER_INVIS,
+      SPELL_SHADOW_SHIELD, SPELL_SHADOW_WALK, SPELL_POWER_WORD_BLIND,
+      SPELL_SCINT_PATTERN, SPELL_WEIRD},
+     {FEAT_ACROBATIC, FEAT_BLIND_FIGHT, FEAT_DODGE, FEAT_QUICK_DRAW,
+      FEAT_SILENT_SPELL, FEAT_SKILL_FOCUS, FEAT_STEALTHY, FEAT_WEAPON_FINESSE}},
+    {FEAT_SORCERER_BLOODLINE_STORMBORN, SORC_BLOODLINE_STORMBORN, ABILITY_NATURE, "Stormborn",
+     {FEAT_STORMBORN_BLOODLINE_ARCANA, FEAT_THUNDERSTAFF, FEAT_STORMCHILD,
+      FEAT_THUNDERBOLT, FEAT_RIDE_THE_LIGHTNING, FEAT_STORM_LORD},
+     {SPELL_SHOCKING_GRASP, SPELL_GUST_OF_WIND, SPELL_LIGHTNING_BOLT, SPELL_THUNDERCLAP,
+      SPELL_OVERLAND_FLIGHT, SPELL_CHAIN_LIGHTNING, SPELL_CONTROL_WEATHER,
+      SPELL_WHIRLWIND, SPELL_STORM_OF_VENGEANCE},
+     {FEAT_DEADLY_AIM, FEAT_DODGE, FEAT_ENLARGE_SPELL, FEAT_FAR_SHOT,
+      FEAT_GREAT_FORTITUDE, FEAT_POINT_BLANK_SHOT, FEAT_SKILL_FOCUS, FEAT_MOBILITY}},
+    {FEAT_SORCERER_BLOODLINE_DESTINED, SORC_BLOODLINE_DESTINED, ABILITY_HISTORY, "Destined",
+     {FEAT_DESTINED_BLOODLINE_ARCANA, FEAT_TOUCH_OF_DESTINY, FEAT_FATED,
+      FEAT_IT_WAS_MEANT_TO_BE, FEAT_WITHIN_REACH, FEAT_DESTINY_REALIZED},
+     {SPELL_TRUE_STRIKE, SPELL_BLUR, SPELL_PROTECTION_FROM_ENERGY, SPELL_FREE_MOVEMENT,
+      SPELL_GREATER_DISPELLING, SPELL_GREATER_HEROISM, SPELL_SPELL_TURNING,
+      SPELL_PROTECT_FROM_SPELLS, SPELL_TIMESTOP},
+     {FEAT_COMBAT_CASTING, FEAT_DIEHARD, FEAT_ENDURANCE, FEAT_LEADERSHIP,
+      FEAT_LIGHTNING_REFLEXES, FEAT_MAXIMIZE_SPELL, FEAT_SKILL_FOCUS, FEAT_WEAPON_FOCUS}},
+    {FEAT_SORCERER_BLOODLINE_ABYSSAL, SORC_BLOODLINE_ABYSSAL, ABILITY_ARCANA, "Abyssal",
+     {FEAT_ABYSSAL_BLOODLINE_ARCANA, FEAT_ABYSSAL_CLAWS, FEAT_DEMON_RESISTANCES,
+      FEAT_STRENGTH_OF_THE_ABYSS, FEAT_ADDED_SUMMONINGS, FEAT_DEMONIC_MIGHT},
+     {SPELL_FEAR, SPELL_STRENGTH, SPELL_RAGE, SPELL_STONESKIN, SPELL_DISMISSAL,
+      SPELL_TRANSFORMATION, SPELL_TELEPORT, SPELL_PROTECT_FROM_SPELLS, SPELL_SUMMON_CREATURE_9},
+     {FEAT_AUGMENT_SUMMONING, FEAT_CLEAVE, FEAT_EMPOWER_SPELL, FEAT_GREAT_FORTITUDE,
+      FEAT_IMPROVED_BULL_RUSH, FEAT_IMPROVED_SUNDER, FEAT_POWER_ATTACK, FEAT_SKILL_FOCUS}},
+    {FEAT_SORCERER_BLOODLINE_ELEMENTAL, SORC_BLOODLINE_ELEMENTAL, ABILITY_ARCANA, "Elemental",
+     {FEAT_ELEMENTAL_BLOODLINE_ARCANA, FEAT_ELEMENTAL_RAY, FEAT_ELEMENTAL_BLOODLINE_RESISTANCE,
+      FEAT_ELEMENTAL_BLAST, FEAT_ELEMENTAL_BLOODLINE_MOVEMENT, FEAT_ELEMENTAL_BLOODLINE_BODY},
+     {SPELL_BURNING_HANDS, SPELL_SCORCHING_RAY, SPELL_PROTECTION_FROM_ENERGY,
+      SPELL_STONESKIN, SPELL_FIRE_SHIELD, SPELL_TRANSFORMATION, SPELL_SPELL_MANTLE,
+      SPELL_SUMMON_CREATURE_8, SPELL_ELEMENTAL_SWARM},
+     {FEAT_DODGE, FEAT_EMPOWER_SPELL, FEAT_GREAT_FORTITUDE, FEAT_IMPROVED_INITIATIVE,
+      FEAT_LIGHTNING_REFLEXES, FEAT_POWER_ATTACK, FEAT_SKILL_FOCUS, FEAT_WEAPON_FINESSE}},
+    {FEAT_SORCERER_BLOODLINE_CELESTIAL, SORC_BLOODLINE_CELESTIAL, ABILITY_MEDICINE, "Celestial",
+     {FEAT_CELESTIAL_BLOODLINE_ARCANA, FEAT_HEAVENLY_FIRE, FEAT_CELESTIAL_BLOODLINE_RESISTANCES,
+      FEAT_WINGS_OF_HEAVEN, FEAT_CELESTIAL_CONVICTION, FEAT_CELESTIAL_ASCENSION},
+     {SPELL_BLESS, SPELL_RESIST_ENERGY, SPELL_CIRCLE_A_EVIL, SPELL_REMOVE_CURSE,
+      SPELL_FLAME_STRIKE, SPELL_GREATER_DISPELLING, SPELL_BANISH, SPELL_SUNBURST, SPELL_GATE},
+     {FEAT_DODGE, FEAT_EXTEND_SPELL, FEAT_IRON_WILL, FEAT_MOBILITY,
+      FEAT_MOUNTED_COMBAT, FEAT_RIDE_BY_ATTACK, FEAT_SKILL_FOCUS, FEAT_WEAPON_FINESSE}}};
+
+const struct sorcerer_bloodline *extended_bloodline_by_feat(int feat)
+{
+  int i;
+  for (i = 0; i < NUM_EXTENDED_BLOODLINES; i++)
+    if (extended_bloodlines[i].feat == feat)
+      return &extended_bloodlines[i];
+  return NULL;
+}
+
+const struct sorcerer_bloodline *extended_bloodline_by_type(int type)
+{
+  int i;
+  for (i = 0; i < NUM_EXTENDED_BLOODLINES; i++)
+    if (extended_bloodlines[i].type == type)
+      return &extended_bloodlines[i];
+  return NULL;
+}
+
+void grant_extended_bloodline_powers(struct char_data *ch)
+{
+  static const int levels[] = {1, 1, 3, 9, 15, 20};
+  int i, j, feat;
+  for (i = 0; i < NUM_EXTENDED_BLOODLINES; i++)
+  {
+    if (!HAS_REAL_FEAT(ch, extended_bloodlines[i].feat))
+      continue;
+    for (j = 0; j < 6; j++)
+    {
+      feat = extended_bloodlines[i].powers[j];
+      if (CLASS_LEVEL(ch, CLASS_SORCERER) >= levels[j] && !HAS_REAL_FEAT(ch, feat))
+      {
+        SET_FEAT(ch, feat, 1);
+        send_to_char(ch, "You have gained the %s bloodline power!\r\n", feat_list[feat].name);
+      }
+    }
+  }
+}
+
+int bloodline_affect_bonus(struct char_data *ch, int spell)
+{
+  struct affected_type *af;
+  int bonus = 0;
+  if (!ch)
+    return 0;
+  for (af = ch->affected; af; af = af->next)
+    if (af->spell == spell)
+      bonus = MAX(bonus, af->modifier);
+  return bonus;
+}
+
+int bloodline_fated_bonus(struct char_data *ch)
+{
+  if (!ch || !HAS_FEAT(ch, FEAT_FATED))
+    return 0;
+  return MIN(5, 1 + MAX(0, CLASS_LEVEL(ch, CLASS_SORCERER) - 3) / 4);
+}
+
+/* All calls to d20 pass through this once, including natural 1 and 20.
+ * Roll the replacement directly so a proc cannot recursively trigger itself. */
+int bloodline_reroll(struct char_data *ch, int roll)
+{
+  if (!ch || !HAS_FEAT(ch, FEAT_IT_WAS_MEANT_TO_BE) ||
+      daily_uses_remaining(ch, FEAT_IT_WAS_MEANT_TO_BE) <= 0 || rand_number(1, 100) != 1)
+    return roll;
+  start_daily_use_cooldown(ch, FEAT_IT_WAS_MEANT_TO_BE);
+  send_to_char(ch, "Fate intervenes: your roll of %d is rolled again.\r\n", roll);
+  return dice(1, 20);
+}
+
+int bloodline_retry_spell_resistance(struct char_data *ch, int challenge, int resistance, int first_die)
+{
+  if (ch && resistance > challenge && HAS_FEAT(ch, FEAT_DESTINY_REALIZED) &&
+      rand_number(1, 100) <= 5)
+  {
+    send_to_char(ch, "Your destiny grants a second attempt to overcome spell resistance.\r\n");
+    return challenge + d20(ch) - first_die;
+  }
+  return challenge;
+}
+
+/* A bloodline's full pool resets after its first use, rather than recovering
+ * individual charges at the generic daily-use rate. Other classes are unchanged. */
+int bloodline_cooldown_seconds(int feat)
+{
+  int i, j;
+  if (feat == FEAT_CELESTIAL_CONVICTION)
+    return 30;
+  for (i = 0; i < NUM_EXTENDED_BLOODLINES; i++)
+    for (j = 0; j < 6; j++)
+      if (extended_bloodlines[i].powers[j] == feat)
+        return BLOODLINE_WINDOW_SECONDS;
+  switch (feat)
+  {
+  case FEAT_DRACONIC_HERITAGE_CLAWS: case FEAT_DRACONIC_HERITAGE_BREATHWEAPON:
+  case FEAT_METAMAGIC_ADEPT: case FEAT_LAUGHING_TOUCH: case FEAT_FLEETING_GLANCE:
+  case FEAT_SOUL_OF_THE_FEY: case FEAT_GRAVE_TOUCH: case FEAT_GRASP_OF_THE_DEAD:
+  case FEAT_INCORPOREAL_FORM:
+    return BLOODLINE_WINDOW_SECONDS;
+  default: return 0;
+  }
+}
+
+int bloodline_reduce_concealment(struct char_data *attacker, int concealment)
+{
+  if (attacker && HAS_FEAT(attacker, FEAT_STORMCHILD) && CLASS_LEVEL(attacker, CLASS_SORCERER) >= 9)
+    return MAX(0, concealment - 10);
+  return concealment;
+}
+
+int bloodline_knockdown_bonus(struct char_data *ch)
+{
+  return ch && HAS_FEAT(ch, FEAT_STORMCHILD) ? 4 : 0;
+}
+
+int bloodline_shadow_spell(int spellnum)
+{
+  return spellnum == SPELL_DARKNESS || spellnum == SPELL_SHADOW_SHIELD ||
+         spellnum == SPELL_SHADOW_WALK || spellnum == SPELL_SHADOW_JUMP;
+}
+
+int bloodline_spell_dc_bonus(struct char_data *ch, int spellnum)
+{
+  if (!ch || !HAS_FEAT(ch, FEAT_STORMBORN_BLOODLINE_ARCANA))
+    return 0;
+  switch (spellnum)
+  {
+  case SPELL_SHOCKING_GRASP: case SPELL_LIGHTNING_BOLT: case SPELL_BALL_OF_LIGHTNING:
+  case SPELL_CHAIN_LIGHTNING: case SPELL_CALL_LIGHTNING: case SPELL_CALL_LIGHTNING_STORM:
+  case SPELL_THUNDERCLAP: case SPELL_STORM_OF_VENGEANCE:
+  case SPELL_JOLT: case SPELL_HORIZIKAULS_BOOM: case SPELL_WAIL_OF_THE_BANSHEE:
+    return 1;
+  default:
+    return 0;
+  }
+}
+
+void bloodline_cast_arcana(struct char_data *ch, int spellnum, struct char_data *target)
+{
+  struct affected_type af;
+  int circle;
+  if (!ch || IS_NPC(ch) || CLASS_LEVEL(ch, CLASS_SORCERER) < 1)
+    return;
+  circle = compute_spells_circle(ch, CLASS_SORCERER, spellnum, METAMAGIC_NONE, DOMAIN_UNDEFINED);
+  if (circle < 1 || circle > 9)
+    return;
+  new_affect(&af);
+  af.modifier = circle;
+  if (HAS_FEAT(ch, FEAT_SHADOW_BLOODLINE_ARCANA) && bloodline_shadow_spell(spellnum))
+  {
+    af.spell = AFFECT_SHADOW_ARCANA;
+    af.duration = BLOODLINE_WINDOW_SECONDS / BLOODLINE_ROUND_SECONDS;
+    af.bonus_type = BONUS_TYPE_COMPETENCE;
+  }
+  else if (HAS_FEAT(ch, FEAT_DESTINED_BLOODLINE_ARCANA) && target == ch &&
+           IS_SET(spell_info[spellnum].targets, TAR_SELF_ONLY))
+  {
+    if (daily_uses_remaining(ch, FEAT_DESTINED_BLOODLINE_ARCANA) <= 0)
+      return;
+    start_daily_use_cooldown(ch, FEAT_DESTINED_BLOODLINE_ARCANA);
+    af.spell = AFFECT_DESTINED_ARCANA;
+    af.duration = 60 / BLOODLINE_ROUND_SECONDS;
+  }
+  else
+    return;
+  affect_from_char(ch, af.spell);
+  affect_to_char(ch, &af);
+}
+
+int bloodline_modify_damage(struct char_data *victim, int dam, int w_type, int dam_type)
+{
+  if (dam > 0 && bloodline_affect_bonus(victim, AFFECT_ELEMENTAL_VULNERABILITY) == dam_type)
+    dam += dam / 2;
+  if (dam > 0 && HAS_FEAT(victim, FEAT_STORM_LORD) &&
+      (dam_type == DAM_ELECTRIC || dam_type == DAM_SOUND) &&
+      daily_uses_remaining(victim, FEAT_STORM_LORD) > 0)
+  {
+    start_daily_use_cooldown(victim, FEAT_STORM_LORD);
+    GET_HIT(victim) = MIN(GET_MAX_HIT(victim), GET_HIT(victim) + dam / 3);
+    send_to_char(victim, "You absorb the storm's energy and are healed!\r\n");
+    dam = 0;
+  }
+  if (dam > 0 && w_type != AFFECT_SHADOWSTRIKE && GET_HIT(victim) > 0 && GET_HIT(victim) - dam <= 0 &&
+      HAS_FEAT(victim, FEAT_WITHIN_REACH) &&
+      daily_uses_remaining(victim, FEAT_WITHIN_REACH) > 0)
+  {
+    start_daily_use_cooldown(victim, FEAT_WITHIN_REACH);
+    if (savingthrow_flatdc(victim, victim, SAVING_WILL, 0, 20, CAST_INNATE, NOSCHOOL, 0))
+    {
+      dam = GET_HIT(victim) - 1;
+      send_to_char(victim, "Your destiny is within reach! You survive the killing blow.\r\n");
+    }
+  }
+  /* Shadowstrike is nonlethal: it cannot reduce a living target below 1 HP. */
+  if (w_type == AFFECT_SHADOWSTRIKE)
+    dam = MIN(dam, MAX(0, GET_HIT(victim) - 1));
+  return dam;
+}
+
+int extended_bloodline_spell_circle(struct char_data *ch, int spellnum)
+{
+  const struct sorcerer_bloodline *bl = extended_bloodline_by_type(get_sorc_bloodline(ch));
+  int i;
+  if (bl)
+    for (i = 0; i < 9; i++)
+      if (bl->spells[i] == spellnum)
+        return i + 1;
+  return 0;
+}
+
+bool bloodline_sees_weather(struct char_data *ch)
+{
+  return ch && (HAS_FEAT(ch, FEAT_STORM_LORD) ||
+      (HAS_FEAT(ch, FEAT_STORMCHILD) && CLASS_LEVEL(ch, CLASS_SORCERER) >= 9));
+}
+
+bool bloodline_sees_magical_dark(struct char_data *ch)
+{
+  return ch && (HAS_FEAT(ch, FEAT_SHADOW_BLOODLINE_MASTER) ||
+      affected_by_spell(ch, AFFECT_ENVELOPING_DARKNESS));
+}
+
+
+/* Elemental heritage uses the existing saved bloodline subtype field. */
+int bloodline_element(struct char_data *ch)
+{
+  int element = 0;
+  if (!ch)
+    return 0;
+  if (HAS_FEAT(ch, FEAT_SORCERER_BLOODLINE_ELEMENTAL))
+    element = GET_BLOODLINE_SUBTYPE(ch);
+  else if (!IS_NPC(ch) && LEVELUP(ch) &&
+           LEVELUP(ch)->feats[FEAT_SORCERER_BLOODLINE_ELEMENTAL])
+    element = LEVELUP(ch)->sorcerer_bloodline_subtype;
+  return element >= BLOODLINE_ELEMENT_AIR && element <= BLOODLINE_ELEMENT_WATER ? element : 0;
+}
+
+const char *bloodline_element_name(int element)
+{
+  switch (element)
+  {
+  case BLOODLINE_ELEMENT_AIR: return "Air";
+  case BLOODLINE_ELEMENT_EARTH: return "Earth";
+  case BLOODLINE_ELEMENT_FIRE: return "Fire";
+  case BLOODLINE_ELEMENT_WATER: return "Water";
+  default: return "Unchosen";
+  }
+}
+
+int bloodline_element_damage(struct char_data *ch)
+{
+  switch (bloodline_element(ch))
+  {
+  case BLOODLINE_ELEMENT_AIR: return DAM_ELECTRIC;
+  case BLOODLINE_ELEMENT_EARTH: return DAM_ACID;
+  case BLOODLINE_ELEMENT_FIRE: return DAM_FIRE;
+  case BLOODLINE_ELEMENT_WATER: return DAM_COLD;
+  default: return DAM_RESERVED_DBC;
+  }
+}
+
+bool bloodline_elemental_movement(struct char_data *ch, int element)
+{
+  return ch && HAS_FEAT(ch, FEAT_ELEMENTAL_BLOODLINE_MOVEMENT) &&
+         bloodline_element(ch) == element;
+}
+
+int bloodline_convert_energy(struct char_data *ch, int spellnum, int element)
+{
+  int heritage;
+  if (!ch || !HAS_FEAT(ch, FEAT_ELEMENTAL_BLOODLINE_ARCANA))
+    return element;
+  heritage = bloodline_element_damage(ch);
+  if (!heritage || (element != DAM_FIRE && element != DAM_COLD && element != DAM_ACID &&
+                   element != DAM_ELECTRIC && element != DAM_SOUND))
+    return element;
+  if (spellnum == SPELL_BURNING_HANDS || spellnum == SPELL_SCORCHING_RAY ||
+      affected_by_spell(ch, AFFECT_ELEMENTAL_CONVERSION))
+    return heritage;
+  return element;
+}
+
+int bloodline_energy_resistance(struct char_data *ch, int element)
+{
+  int resist = 0, level;
+  if (!ch)
+    return 0;
+  level = CLASS_LEVEL(ch, CLASS_SORCERER);
+  if (HAS_FEAT(ch, FEAT_DEMON_RESISTANCES) && element == DAM_ELECTRIC)
+    resist = level >= 9 ? 10 : 5;
+  if (HAS_FEAT(ch, FEAT_DEMONIC_MIGHT) &&
+      (element == DAM_ACID || element == DAM_COLD || element == DAM_FIRE))
+    resist = MAX(resist, 10);
+  if (HAS_FEAT(ch, FEAT_ELEMENTAL_BLOODLINE_RESISTANCE) &&
+      bloodline_element_damage(ch) == element)
+    resist = MAX(resist, level >= 9 ? 20 : 10);
+  if (HAS_FEAT(ch, FEAT_CELESTIAL_BLOODLINE_RESISTANCES) &&
+      (element == DAM_ACID || element == DAM_COLD))
+    resist = MAX(resist, level >= 9 ? 10 : 5);
+  if (HAS_FEAT(ch, FEAT_CELESTIAL_ASCENSION) && (element == DAM_FIRE || element == DAM_ELECTRIC))
+    resist = MAX(resist, 10);
+  return resist;
+}
+
+bool bloodline_energy_immunity(struct char_data *ch, int element)
+{
+  if (!ch)
+    return FALSE;
+  return (HAS_FEAT(ch, FEAT_DEMONIC_MIGHT) && (element == DAM_ELECTRIC || element == DAM_POISON)) ||
+         (HAS_FEAT(ch, FEAT_CELESTIAL_ASCENSION) && (element == DAM_ACID || element == DAM_COLD)) ||
+         (HAS_FEAT(ch, FEAT_ELEMENTAL_BLOODLINE_BODY) && bloodline_element_damage(ch) == element &&
+          element != DAM_RESERVED_DBC);
+}
+
+int bloodline_poison_save_bonus(struct char_data *ch)
+{
+  int bonus = 0;
+  if (HAS_FEAT(ch, FEAT_DEMON_RESISTANCES))
+    bonus = CLASS_LEVEL(ch, CLASS_SORCERER) >= 9 ? 4 : 2;
+  if (HAS_FEAT(ch, FEAT_CELESTIAL_ASCENSION))
+    bonus = MAX(bonus, 4);
+  return bonus;
+}
+
+int bloodline_strength_bonus(struct char_data *ch)
+{
+  int level;
+  if (!ch || !HAS_FEAT(ch, FEAT_STRENGTH_OF_THE_ABYSS))
+    return 0;
+  level = CLASS_LEVEL(ch, CLASS_SORCERER);
+  return level >= 17 ? 6 : (level >= 13 ? 4 : 2);
+}
+
+int bloodline_conviction_roll(struct char_data *ch, int roll, int category)
+{
+  int selected = bloodline_affect_bonus(ch, AFFECT_CELESTIAL_CONVICTION);
+  if (ch && HAS_FEAT(ch, FEAT_CELESTIAL_CONVICTION) &&
+      affected_by_spell(ch, AFFECT_CELESTIAL_CONVICTION) &&
+      (selected == BLOODLINE_ROLL_ANY || selected == category))
+  {
+    affect_from_char(ch, AFFECT_CELESTIAL_CONVICTION);
+    send_to_char(ch, "Your celestial conviction grants a second roll; you must keep it.\r\n");
+    return d20(ch);
+  }
+  return roll;
+}
+
+bool bloodline_summon_creature_spell(int spellnum)
+{
+  switch (spellnum)
+  {
+  case SPELL_SUMMON_CREATURE_1: case SPELL_SUMMON_CREATURE_2: case SPELL_SUMMON_CREATURE_3:
+  case SPELL_SUMMON_CREATURE_4: case SPELL_SUMMON_CREATURE_5: case SPELL_SUMMON_CREATURE_6:
+  case SPELL_SUMMON_CREATURE_7: case SPELL_SUMMON_CREATURE_8: case SPELL_SUMMON_CREATURE_9:
+    return TRUE;
+  default: return FALSE;
+  }
+}
+
+bool bloodline_summoning_spell(int spellnum)
+{
+  switch (spellnum)
+  {
+  case SPELL_SUMMON_CREATURE_1: case SPELL_SUMMON_CREATURE_2: case SPELL_SUMMON_CREATURE_3:
+  case SPELL_SUMMON_CREATURE_4: case SPELL_SUMMON_CREATURE_5: case SPELL_SUMMON_CREATURE_6:
+  case SPELL_SUMMON_CREATURE_7: case SPELL_SUMMON_CREATURE_8: case SPELL_SUMMON_CREATURE_9:
+  case SPELL_SUMMON_NATURES_ALLY_1: case SPELL_SUMMON_NATURES_ALLY_2: case SPELL_SUMMON_NATURES_ALLY_3:
+  case SPELL_SUMMON_NATURES_ALLY_4: case SPELL_SUMMON_NATURES_ALLY_5: case SPELL_SUMMON_NATURES_ALLY_6:
+  case SPELL_SUMMON_NATURES_ALLY_7: case SPELL_SUMMON_NATURES_ALLY_8: case SPELL_SUMMON_NATURES_ALLY_9:
+  case SPELL_ELEMENTAL_SWARM: case SPELL_SHAMBLER: case SPELL_PHANTOM_STEED:
+  case SPELL_GHOST_WOLF: case SPELL_SUMMON_SOLAR: case SPELL_DRAGON_KNIGHT:
+    return TRUE;
+  default: return FALSE;
+  }
+}
+
+/* The affect holds the ward's strength/alignment. Rebuild its normal DR node
+ * during recalculation. The pet loader reapplies the owner's arcana on restore. */
+void bloodline_restore_summon_ward(struct char_data *mob)
+{
+  struct affected_type *af;
+  struct damage_reduction_type *dr, **link;
+  for (af = mob->affected; af && af->spell != AFFECT_BLOODLINE_SUMMON_WARD; af = af->next) {}
+  for (link = &GET_DR(mob); *link; )
+  {
+    dr = *link;
+    if (dr->spell == AFFECT_BLOODLINE_SUMMON_WARD)
+    {
+      *link = dr->next;
+      free(dr);
+    }
+    else
+      link = &dr->next;
+  }
+  if (!af || af->modifier <= 0)
+    return;
+  CREATE(dr, struct damage_reduction_type, 1);
+  dr->spell = AFFECT_BLOODLINE_SUMMON_WARD;
+  dr->duration = -1;
+  dr->amount = af->modifier;
+  dr->max_damage = -1;
+  dr->bypass_cat[0] = DR_BYPASS_CAT_ALIGNMENT;
+  dr->bypass_val[0] = af->specific;
+  dr->next = GET_DR(mob);
+  GET_DR(mob) = dr;
+}
+
+void bloodline_summon_benefits(struct char_data *ch, struct char_data *mob, int spellnum)
+{
+  struct affected_type af;
+  int alignment;
+  if (!ch || !mob || !bloodline_summoning_spell(spellnum))
+    return;
+  if (HAS_FEAT(ch, FEAT_ABYSSAL_BLOODLINE_ARCANA))
+    alignment = DR_ALIGNTYPE_GOOD;
+  else if (HAS_FEAT(ch, FEAT_CELESTIAL_BLOODLINE_ARCANA))
+    alignment = DR_ALIGNTYPE_EVIL;
+  else
+    return;
+  new_affect(&af);
+  af.spell = AFFECT_BLOODLINE_SUMMON_WARD;
+  af.duration = -1;
+  af.modifier = 5;
+  af.specific = alignment;
+  affect_from_char(mob, af.spell);
+  affect_to_char(mob, &af);
+  if (HAS_FEAT(ch, FEAT_ADDED_SUMMONINGS) && IS_EVIL(mob) &&
+      bloodline_summon_creature_spell(spellnum))
+  {
+    affect_from_char(mob, AFFECT_ABYSSAL_SUMMON_BOOST);
+    new_affect(&af);
+    af.spell = AFFECT_ABYSSAL_SUMMON_BOOST;
+    af.duration = -1;
+    af.modifier = 2;
+    af.location = APPLY_AC_NEW;
+    affect_to_char(mob, &af);
+    af.location = APPLY_HITROLL;
+    affect_to_char(mob, &af);
+    af.location = APPLY_DAMROLL;
+    affect_to_char(mob, &af);
+  }
+}
 
 /* EOF */

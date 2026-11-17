@@ -1,0 +1,52 @@
+ELEMENTAL-BLOODLINE ELEMENTAL ELEMENTAL-RAY ELEMENTAL-BLAST ENERGY-CONVERSION
+
+- 8) ELEMENTAL
+  - Focus: Energy specialization, conversion and elemental movement.
+  - Class skill: Arcana.
+  - Heritage suboptions: Permanent choice determining energy attacks, conversion,
+    resistance, immunity and level-15 movement.
+    - 1) Air:
+      - Energy: Electricity.
+      - Level 15: Permanent flight at speed 60.
+    - 2) Earth:
+      - Energy: Acid.
+      - Level 15: Land movement cost reduced by 10 points; ignores difficult terrain.
+        Normal minimum movement costs still apply. Uses legal exits and respects doors.
+        Does not burrow through water, lava, open-air sectors or walls.
+    - 3) Fire:
+      - Energy: Fire.
+      - Level 15: +30 ground speed.
+    - 4) Water:
+      - Energy: Cold.
+      - Level 15: Natural swimming at speed 60. Does not grant water breathing or bypass
+        boat-only sectors.
+  - Level 1 - Elemental Arcana: Toggle conversion of your sorcerer spells' fire, cold,
+    acid, electricity or sonic damage into your heritage energy. Burning hands and
+    scorching ray always use heritage energy.
+  - Level 1 - Elemental Ray: Ranged touch deals 1d6 + half level heritage energy damage.
+    Uses: 3 + Charisma bonus per five minutes, minimum 1. Uses a swift action.
+  - Level 3 - Elemental Resistance: Heritage energy resistance 10, increasing to 20 at
+    level 9.
+  - Level 9 - Elemental Blast: Room attack deals 1d6/level, capped at 30d6. Reflex
+    halves. Failed saves cause 50% vulnerability to heritage energy for two rounds,
+    applied after the blast.
+    - Save DC: 10 + half sorcerer level + Charisma bonus.
+    - Uses: 1 per five minutes, 2 per five minutes at level 17, 3 per five minutes at
+      level 20.
+  - Level 15 - Elemental Movement: Grants the benefit listed under heritage.
+  - Level 20 - Elemental Body: Immunity to heritage energy, critical hits and sneak
+    attacks, using native immunity rules.
+  - Bonus spells: Burning hands, scorching ray, protection from energy, stoneskin, fire
+    shield, transformation, spell mantle, summon creature VIII, elemental swarm.
+  - Bonus feat choices: Dodge, Empower Spell, Great Fortitude, Improved Initiative,
+    Lightning Reflexes, Power Attack, Skill Focus, Weapon Finesse.
+  - Commands:
+    - bloodline energy-conversion [on/off]
+    - bloodline elemental-ray <enemy>
+    - bloodline elemental-blast
+
+All listed use limits recover per five real minutes; Conviction is every
+30 seconds. Full pools reset from first use without extending on retries.
+See also: SORCERER-BLOODLINES, STUDY, FEATS, SPELLS
+#0
+$

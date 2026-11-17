@@ -61,6 +61,7 @@
 #include "spec_procs.h"
 #include "mud_event.h"
 #include "class.h"
+#include "bloodlines.h"
 #include "spells.h"
 #include "spell_prep.h"
 #include "domains_schools.h"
@@ -1590,7 +1591,7 @@ int count_known_spells_by_circle(struct char_data *ch, int class, int circle)
     {
     case CLASS_SORCERER:
       if (compute_spells_circle(ch, class, current->spell, 0, 0) == circle &&
-          !is_sorc_bloodline_spell(get_sorc_bloodline(ch), current->spell))
+          !has_sorc_bloodline_spell(ch, current->spell))
         counter++;
       break;
     case CLASS_WARLOCK:
@@ -1976,7 +1977,7 @@ bool is_a_known_spell(struct char_data *ch, int class, int spellnum)
   {
   /* bloodline system for sorcerer */
   case CLASS_SORCERER:
-    if (is_sorc_bloodline_spell(get_sorc_bloodline(ch), spellnum))
+    if (has_sorc_bloodline_spell(ch, spellnum))
       return TRUE;
     break;
   case CLASS_INQUISITOR:
@@ -2309,6 +2310,15 @@ static int check_campaign_spell_override(int spellnum)
  */
 bool is_sorc_bloodline_spell(int bloodline, int spellnum)
 {
+  const struct sorcerer_bloodline *bl = extended_bloodline_by_type(bloodline);
+  int i;
+  if (bl)
+  {
+    for (i = 0; i < 9; i++)
+      if (bl->spells[i] == spellnum)
+        return TRUE;
+    return FALSE;
+  }
   switch (bloodline)
   {
   case SORC_BLOODLINE_DRACONIC:
@@ -2396,12 +2406,17 @@ bool is_sorc_bloodline_spell(int bloodline, int spellnum)
 int get_sorc_bloodline(struct char_data *ch)
 {
   struct level_data *pending;
+  int i;
 
   if (!ch)
     return SORC_BLOODLINE_NONE;
 
   /* Study stores a newly chosen bloodline here until its final save. */
   pending = IS_NPC(ch) ? NULL : LEVELUP(ch);
+  for (i = 0; i < NUM_EXTENDED_BLOODLINES; i++)
+    if (HAS_FEAT(ch, extended_bloodlines[i].feat) ||
+        (pending && pending->feats[extended_bloodlines[i].feat] > 0))
+      return extended_bloodlines[i].type;
 
   if (HAS_FEAT(ch, FEAT_SORCERER_BLOODLINE_DRACONIC) ||
       (pending && pending->feats[FEAT_SORCERER_BLOODLINE_DRACONIC] > 0))
@@ -2460,6 +2475,13 @@ int compute_spells_circle(struct char_data *ch, int char_class, int spellnum, in
   if (isAurakMagic(ch, spellnum) &&
       (spellnum == SPELL_AURAK_ENERGY_RAY || spellnum == SPELL_AURAK_BREATH))
     return 1 + calculate_metamagic_modifier(ch, char_class, metamagic);
+
+  if (char_class == CLASS_SORCERER)
+  {
+    int bloodline_circle = extended_bloodline_spell_circle(ch, spellnum);
+    if (bloodline_circle)
+      return bloodline_circle + calculate_metamagic_modifier(ch, char_class, metamagic);
+  }
 
   /* Validate spell number for class */
   if (!validate_spell_for_class(char_class, spellnum))
@@ -5826,3 +5848,13 @@ int class_to_spell_prep_scmd(int class_name)
 #undef DEBUGMODE
 
 /* EOF */
+
+/* PF1 bonus spells arrive at sorcerer levels 3, 5, ... 19. Preserve the existing
+ * bloodlines' knowledge rules, and allow study to see a pending new bloodline. */
+bool has_sorc_bloodline_spell(struct char_data *ch, int spellnum)
+{
+  int circle = extended_bloodline_spell_circle(ch, spellnum);
+  if (circle)
+    return CLASS_LEVEL(ch, CLASS_SORCERER) >= 2 * circle + 1;
+  return is_sorc_bloodline_spell(get_sorc_bloodline(ch), spellnum);
+}

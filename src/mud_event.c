@@ -41,6 +41,7 @@
 #include "conf.h"
 #include "sysdep.h"
 #include "structs.h"
+#include "bloodlines.h"
 #include "utils.h"
 #include "db.h"
 #include "dg_event.h"
@@ -400,6 +401,13 @@ EVENTFUNC(event_daily_use_cooldown)
   /* Get feat and daily uses from the table */
   featnum = mud_event_index[pMudEvent->iId].feat_num;
   nonfeat_daily_uses = mud_event_index[pMudEvent->iId].daily_uses;
+
+  if (bloodline_cooldown_seconds(featnum) > 0)
+  {
+    if (ch)
+      send_to_char(ch, "%s: all uses have recovered.\r\n", mud_event_index[pMudEvent->iId].event_name);
+    return 0; /* Full bloodline pool refreshes at the end of its window. */
+  }
 
   /* Send recovery message from table if available */
   if (mud_event_index[pMudEvent->iId].recovery_msg && ch)
