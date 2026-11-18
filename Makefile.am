@@ -511,3 +511,7 @@ EXTRA_DIST += tests/run_eidolon_study_access.py
 EXTRA_DIST += tests/run_familiar_study_access.py
 
 EXTRA_DIST += tests/run_nimble_escape.py docs/NIMBLE_ESCAPE.md
+
+EXTRA_DIST += tests/run_domain_spells.py docs/CLERIC_DOMAIN_SPELLS.md
+
+EXTRA_DIST += tests/run_domains_command.py

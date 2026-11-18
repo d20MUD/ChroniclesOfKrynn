@@ -1527,7 +1527,7 @@ cpp_extern const struct command_info cmd_info[] = {
      ACTION_NONE,
      {0, 0},
      can_disarm},
-    {"domain", "domain", POS_DEAD, do_domain, 0, 0, TRUE, ACTION_NONE, {0, 0}, NULL},
+    {"domains", "domains", POS_DEAD, do_domains, 0, 0, TRUE, ACTION_NONE, {0, 0}, NULL},
     {"disguise", "disguise", POS_RESTING, do_disguise, 1, 0, FALSE, ACTION_STANDARD, {6, 0}, NULL},
     {"masterofelements",
      "masterofelements",

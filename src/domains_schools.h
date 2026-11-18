@@ -132,7 +132,7 @@ int is_domain_spell_of_ch(struct char_data *ch, int spellnum);
 
 /******************************************/
 
-ACMD_DECL(do_domain);
+ACMD_DECL(do_domains);
 
 ACMD_DECL(do_lightningarc);
 ACMD_DECL(do_aciddart);

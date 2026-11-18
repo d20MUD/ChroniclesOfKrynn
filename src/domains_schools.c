@@ -454,11 +454,11 @@ void assign_domains(void)
   add_domain_powers(DOMAIN_CHAOS, DOMAIN_POWER_CURSE_TOUCH, DOMAIN_POWER_CHAOTIC_WEAPON,
                     DOMAIN_POWER_UNDEFINED, DOMAIN_POWER_UNDEFINED, DOMAIN_POWER_UNDEFINED);
   /* 1st circle */ /* 2nd circle */
-  add_domain_spells(DOMAIN_CHAOS, SPELL_RESERVED_DBC, SPELL_HIDEOUS_LAUGHTER,
+  add_domain_spells(DOMAIN_CHAOS, SPELL_BANE, SPELL_HIDEOUS_LAUGHTER,
                     /* 3rd circle */ /* 4th circle */ /* 5th circle */
-                    SPELL_RESERVED_DBC, SPELL_RESERVED_DBC, SPELL_WAVES_OF_FATIGUE,
+                    SPELL_DISPEL_MAGIC, SPELL_CONFUSION, SPELL_WAVES_OF_FATIGUE,
                     /* 6th circle */ /* 7th circle */ /* 8th circle */
-                    SPELL_RESERVED_DBC, SPELL_WAVES_OF_EXHAUSTION, SPELL_RESERVED_DBC,
+                    SPELL_GREATER_BLACK_TENTACLES, SPELL_WAVES_OF_EXHAUSTION, SPELL_IRRESISTIBLE_DANCE,
                     /* 9th circle */
                     SPELL_ENFEEBLEMENT);
 
@@ -470,11 +470,11 @@ void assign_domains(void)
                     DOMAIN_POWER_DESTRUCTIVE_AURA, DOMAIN_POWER_UNDEFINED, DOMAIN_POWER_UNDEFINED,
                     DOMAIN_POWER_UNDEFINED);
   /* 1st circle */ /* 2nd circle */
-  add_domain_spells(DOMAIN_DESTRUCTION, SPELL_TRUE_STRIKE, SPELL_RESERVED_DBC,
+  add_domain_spells(DOMAIN_DESTRUCTION, SPELL_TRUE_STRIKE, SPELL_ACID_ARROW,
                     /* 3rd circle */ /* 4th circle */ /* 5th circle */
-                    SPELL_RAGE, SPELL_RESERVED_DBC, SPELL_CLOUDKILL,
+                    SPELL_RAGE, SPELL_BLIGHT, SPELL_CLOUDKILL,
                     /* 6th circle */ /* 7th circle */ /* 8th circle */
-                    SPELL_SYMBOL_OF_PAIN, SPELL_RESERVED_DBC, SPELL_EARTHQUAKE,
+                    SPELL_SYMBOL_OF_PAIN, SPELL_FINGER_OF_DEATH, SPELL_EARTHQUAKE,
                     /* 9th circle */
                     SPELL_HORRID_WILTING);
 
@@ -487,9 +487,9 @@ void assign_domains(void)
   /* 1st circle */ /* 2nd circle */
   add_domain_spells(DOMAIN_EVIL, SPELL_PROT_FROM_GOOD, SPELL_CIRCLE_A_GOOD,
                     /* 3rd circle */ /* 4th circle */ /* 5th circle */
-                    SPELL_LITANY_OF_DAMNATION, SPELL_RESERVED_DBC, SPELL_SYMBOL_OF_PAIN,
+                    SPELL_LITANY_OF_DAMNATION, SPELL_CURSE, SPELL_SYMBOL_OF_PAIN,
                     /* 6th circle */ /* 7th circle */ /* 8th circle */
-                    SPELL_RESERVED_DBC, SPELL_EYEBITE, SPELL_RESERVED_DBC,
+                    SPELL_DISPEL_GOOD, SPELL_EYEBITE, SPELL_GREATER_ANIMATION,
                     /* 9th circle */
                     SPELL_WAIL_OF_THE_BANSHEE);
 
@@ -499,11 +499,11 @@ void assign_domains(void)
   add_domain_powers(DOMAIN_GOOD, DOMAIN_POWER_GOOD_TOUCH, DOMAIN_POWER_GOOD_LANCE,
                     DOMAIN_POWER_UNDEFINED, DOMAIN_POWER_UNDEFINED, DOMAIN_POWER_UNDEFINED);
   /* 1st circle */ /* 2nd circle */
-  add_domain_spells(DOMAIN_GOOD, SPELL_PROT_FROM_EVIL, SPELL_RESERVED_DBC,
+  add_domain_spells(DOMAIN_GOOD, SPELL_PROT_FROM_EVIL, SPELL_GIRD_ALLIES,
                     /* 3rd circle */ /* 4th circle */ /* 5th circle */
-                    SPELL_HEROISM, SPELL_RESERVED_DBC, SPELL_CIRCLE_A_EVIL,
+                    SPELL_HEROISM, SPELL_AID, SPELL_CIRCLE_A_EVIL,
                     /* 6th circle */ /* 7th circle */ /* 8th circle */
-                    SPELL_RESERVED_DBC, SPELL_INTERPOSING_HAND, SPELL_HOLY_AURA,
+                    SPELL_DISPEL_EVIL, SPELL_INTERPOSING_HAND, SPELL_HOLY_AURA,
                     /* 9th circle */
                     SPELL_PROTECT_FROM_SPELLS);
 
@@ -514,13 +514,13 @@ void assign_domains(void)
   add_domain_powers(DOMAIN_HEALING, DOMAIN_POWER_HEALING_TOUCH, DOMAIN_POWER_EMPOWERED_HEALING,
                     DOMAIN_POWER_UNDEFINED, DOMAIN_POWER_UNDEFINED, DOMAIN_POWER_UNDEFINED);
   /* 1st circle */ /* 2nd circle */
-  add_domain_spells(DOMAIN_HEALING, SPELL_RESERVED_DBC, SPELL_RESERVED_DBC,
+  add_domain_spells(DOMAIN_HEALING, SPELL_CURE_LIGHT, SPELL_CURE_MODERATE,
                     /* 3rd circle */ /* 4th circle */ /* 5th circle */
-                    SPELL_FALSE_LIFE, SPELL_RESERVED_DBC, SPELL_VAMPIRIC_TOUCH,
+                    SPELL_FALSE_LIFE, SPELL_CURE_CRITIC, SPELL_VAMPIRIC_TOUCH,
                     /* 6th circle */ /* 7th circle */ /* 8th circle */
-                    SPELL_RESERVED_DBC, SPELL_RESERVED_DBC, SPELL_HOLY_AURA,
+                    SPELL_HEAL, SPELL_MASS_CURE_CRIT, SPELL_HOLY_AURA,
                     /* 9th circle */
-                    SPELL_RESERVED_DBC);
+                    SPELL_GROUP_HEAL);
 
   /* Knowledge Domain */
   add_domain(DOMAIN_KNOWLEDGE, "Knowledge", WEAPON_TYPE_SICKLE,
@@ -529,11 +529,11 @@ void assign_domains(void)
   add_domain_powers(DOMAIN_KNOWLEDGE, DOMAIN_POWER_KNOWLEDGE, DOMAIN_POWER_EYE_OF_KNOWLEDGE,
                     DOMAIN_POWER_UNDEFINED, DOMAIN_POWER_UNDEFINED, DOMAIN_POWER_UNDEFINED);
   /* 1st circle */ /* 2nd circle */
-  add_domain_spells(DOMAIN_KNOWLEDGE, SPELL_IDENTIFY, SPELL_RESERVED_DBC,
+  add_domain_spells(DOMAIN_KNOWLEDGE, SPELL_IDENTIFY, SPELL_AUGURY,
                     /* 3rd circle */ /* 4th circle */ /* 5th circle */
-                    SPELL_CLAIRVOYANCE, SPELL_RESERVED_DBC, SPELL_WIZARD_EYE,
+                    SPELL_CLAIRVOYANCE, SPELL_LOCATE_CREATURE, SPELL_WIZARD_EYE,
                     /* 6th circle */ /* 7th circle */ /* 8th circle */
-                    SPELL_RESERVED_DBC, SPELL_WALL_OF_FORCE, SPELL_LOCATE_OBJECT,
+                    SPELL_TRUE_SEEING, SPELL_WALL_OF_FORCE, SPELL_LOCATE_OBJECT,
                     /* 9th circle */
                     SPELL_MASS_DOMINATION);
 
@@ -544,11 +544,11 @@ void assign_domains(void)
   add_domain_powers(DOMAIN_LAW, DOMAIN_POWER_BLESSED_TOUCH, DOMAIN_POWER_LAWFUL_WEAPON,
                     DOMAIN_POWER_UNDEFINED, DOMAIN_POWER_UNDEFINED, DOMAIN_POWER_UNDEFINED);
   /* 1st circle */ /* 2nd circle */
-  add_domain_spells(DOMAIN_LAW, SPELL_RESERVED_DBC, SPELL_ENCHANT_ITEM,
+  add_domain_spells(DOMAIN_LAW, SPELL_BLESS, SPELL_ENCHANT_ITEM,
                     /* 3rd circle */ /* 4th circle */ /* 5th circle */
-                    SPELL_RESERVED_DBC, SPELL_SLOW, SPELL_RESERVED_DBC,
+                    SPELL_CONTROL_SUMMONED_CREATURE, SPELL_SLOW, SPELL_DOMINATE_PERSON,
                     /* 6th circle */ /* 7th circle */ /* 8th circle */
-                    SPELL_INTERPOSING_HAND, SPELL_RESERVED_DBC, SPELL_FAITHFUL_HOUND,
+                    SPELL_INTERPOSING_HAND, SPELL_GRASPING_HAND, SPELL_FAITHFUL_HOUND,
                     /* 9th circle */
                     SPELL_MASS_HOLD_PERSON);
 
@@ -561,7 +561,7 @@ void assign_domains(void)
   /* 1st circle */ /* 2nd circle */
   add_domain_spells(DOMAIN_TRICKERY, SPELL_DISGUISE_SELF, SPELL_DETECT_INVIS,
                     /* 3rd circle */ /* 4th circle */ /* 5th circle */
-                    SPELL_INVISIBLE, SPELL_RESERVED_DBC, SPELL_INVISIBILITY_SPHERE,
+                    SPELL_INVISIBLE, SPELL_RAINBOW_PATTERN, SPELL_INVISIBILITY_SPHERE,
                     /* 6th circle */ /* 7th circle */ /* 8th circle */
                     SPELL_SHRINK_PERSON, SPELL_MIND_FOG, SPELL_GREATER_INVIS,
                     /* 9th circle */
@@ -581,7 +581,7 @@ void assign_domains(void)
                     /* 3rd circle */ /* 4th circle */ /* 5th circle */
                     SPELL_PROTECTION_FROM_ENERGY, SPELL_HOLD_PERSON, SPELL_HOLD_MONSTER,
                     /* 6th circle */ /* 7th circle */ /* 8th circle */
-                    SPELL_MINOR_GLOBE, SPELL_RESERVED_DBC, SPELL_ANTI_MAGIC_FIELD,
+                    SPELL_MINOR_GLOBE, SPELL_SPELL_RESISTANCE, SPELL_ANTI_MAGIC_FIELD,
                     /* 9th circle */
                     SPELL_REFUGE);
 
@@ -592,11 +592,11 @@ void assign_domains(void)
   add_domain_powers(DOMAIN_TRAVEL, DOMAIN_POWER_ETH_SHIFT, DOMAIN_POWER_UNDEFINED,
                     DOMAIN_POWER_UNDEFINED, DOMAIN_POWER_UNDEFINED, DOMAIN_POWER_UNDEFINED);
   /* 1st circle */ /* 2nd circle */
-  add_domain_spells(DOMAIN_TRAVEL, SPELL_EXPEDITIOUS_RETREAT, SPELL_RESERVED_DBC,
+  add_domain_spells(DOMAIN_TRAVEL, SPELL_EXPEDITIOUS_RETREAT, SPELL_SPIDER_CLIMB,
                     /* 3rd circle */ /* 4th circle */ /* 5th circle */
-                    SPELL_PHANTOM_STEED, SPELL_RESERVED_DBC, SPELL_MASS_FLY,
+                    SPELL_PHANTOM_STEED, SPELL_FREE_MOVEMENT, SPELL_MASS_FLY,
                     /* 6th circle */ /* 7th circle */ /* 8th circle */
-                    SPELL_TELEPORT, SPELL_RESERVED_DBC, SPELL_PORTAL,
+                    SPELL_TELEPORT, SPELL_WORD_OF_RECALL, SPELL_PORTAL,
 #if defined(CAMPAIGN_FR) || defined(CAMPAIGN_DL)
                     /* 9th circle */
                     SPELL_TIMESTOP);
@@ -614,9 +614,9 @@ void assign_domains(void)
   /* 1st circle */ /* 2nd circle */
   add_domain_spells(DOMAIN_WAR, SPELL_TRUE_STRIKE, SPELL_SPIRITUAL_WEAPON,
                     /* 3rd circle */ /* 4th circle */ /* 5th circle */
-                    SPELL_MAGIC_VESTMENT, SPELL_DIVINE_POWER, SPELL_RESERVED_DBC,
+                    SPELL_MAGIC_VESTMENT, SPELL_DIVINE_POWER, SPELL_FLAME_STRIKE,
                     /* 6th circle */ /* 7th circle */ /* 8th circle */
-                    SPELL_RESERVED_DBC, SPELL_POWER_WORD_BLIND, SPELL_POWER_WORD_STUN,
+                    SPELL_GREATER_HEROISM, SPELL_POWER_WORD_BLIND, SPELL_POWER_WORD_STUN,
                     /* 9th circle */
                     SPELL_POWER_WORD_KILL);
 
@@ -695,16 +695,17 @@ int is_domain_spell_of_ch(struct char_data *ch, int spellnum)
   return FALSE;
 }
 
-ACMD(do_domain)
+ACMD(do_domains)
 {
   int i = 0, j = 0;
   char buf[MAX_STRING_LENGTH] = {'\0'};
   char arg[MAX_INPUT_LENGTH] = {'\0'};
   size_t len = 0;
 
-  one_argument(argument, arg, sizeof(arg));
+  const char *name = one_argument(argument, arg, sizeof(arg));
+  skip_spaces_c(&name);
 
-  /* "domain spells" - list the spells granted by the character's OWN domains,
+  /* "domains spells" - list the spells granted by the character's OWN domains,
      with the circle each falls in and whether the character can prepare it yet. */
   if (*arg && is_abbrev(arg, "spells"))
   {
@@ -765,56 +766,62 @@ ACMD(do_domain)
     return;
   }
 
-  /* 0-value is undefined, it is used in the code, but not displayed */
-  for (i = 1; i < NUM_DOMAINS; i++)
+  if (!*arg)
   {
-    len += snprintf(buf + len, sizeof(buf) - len,
-                    "%sDomain:%s %-20s %sFavored Weapon:%s %-22s\r\n%sDescription:%s %s\r\n", QCYN,
-                    QNRM, domain_list[i].name, QCYN, QNRM,
-                    weapon_list[domain_list[i].favored_weapon].name, QCYN, QNRM,
-                    domain_list[i].description);
-    /*
-    send_to_char(ch, "%sDomain:%s %-20s %sFavored Weapon:%s %-22s\r\n%sDescription:%s %s\r\n",
-                 QCYN, QNRM, domain_list[i].name,
-                 QCYN, QNRM, weapon_list[domain_list[i].favored_weapon].name,
-                 QCYN, QNRM, domain_list[i].description
-                );*/
-
-    len += snprintf(buf + len, sizeof(buf) - len, "%sGranted powers: |%s", QCYN, QNRM);
-
-    /*                    send_to_char(ch, "%sGranted powers: |%s", QCYN, QNRM);*/
-
-    for (j = 0; j < MAX_GRANTED_POWERS; j++)
+    send_to_char(ch, "%sCleric domains%s\r\n\r\n", QCYN, QNRM);
+    for (i = 1; i < NUM_DOMAINS; i++)
     {
-      if (domain_list[i].granted_powers[j] != DOMAIN_POWER_UNDEFINED)
-      {
-        len += snprintf(buf + len, sizeof(buf) - len, "%s%s|%s",
-                        domainpower_names[domain_list[i].granted_powers[j]], QCYN, QNRM);
-        /*send_to_char(ch, "%s%s|%s", domainpower_names[domain_list[i].granted_powers[j]], QCYN, QNRM);*/
-      }
+      send_to_char(ch, "  %-22s%s", domain_list[i].name,
+                   (i % 3 == 0 || i == NUM_DOMAINS - 1) ? "\r\n" : "");
     }
-    len += snprintf(buf + len, sizeof(buf) - len, "\r\n");
-    /*send_to_char(ch, "\r\n");*/
-
-    len += snprintf(buf + len, sizeof(buf) - len, "%sGranted spells: |%s", QCYN, QNRM);
-    /*send_to_char(ch, "%sGranted spells: |%s", QCYN, QNRM);*/
-    for (j = 0; j < MAX_DOMAIN_SPELLS; j++)
-    {
-      if (domain_list[i].domain_spells[j] != SPELL_RESERVED_DBC)
-      {
-        len += snprintf(buf + len, sizeof(buf) - len, "%s%s|%s",
-                        spell_info[domain_list[i].domain_spells[j]].name, QCYN, QNRM);
-        /*send_to_char(ch, "%s%s|%s", spell_info[domain_list[i].domain_spells[j]].name, QCYN, QNRM);*/
-      }
-    }
-    len += snprintf(buf + len, sizeof(buf) - len, "\r\n\r\n");
-    /*send_to_char(ch, "\r\n\r\n");*/
+    send_to_char(ch, "\r\nUse 'domains info <name>' for a domain's benefits and spells.\r\n"
+                     "Use 'domains spells' for spells granted by your own domains.\r\n");
+    return;
   }
 
-  len +=
-      snprintf(buf + len, sizeof(buf) - len,
-               "%sType '%sdomain spells%s' to list the spells granted by your own domains.%s\r\n",
-               QCYN, QYEL, QCYN, QNRM);
+  if (!is_abbrev(arg, "info") || !*name)
+  {
+    send_to_char(ch, "Usage: domains | domains info <name> | domains spells\r\n");
+    return;
+  }
 
-  page_string(ch->desc, buf, 1);
+  /* Require an unambiguous name, while accepting case-insensitive abbreviations. */
+  int selected = DOMAIN_UNDEFINED;
+  for (i = 1; i < NUM_DOMAINS; i++)
+  {
+    if (!str_cmp(name, domain_list[i].name))
+    {
+      selected = i;
+      break;
+    }
+    if (is_abbrev(name, domain_list[i].name))
+    {
+      if (selected != DOMAIN_UNDEFINED)
+      {
+        send_to_char(ch, "That domain name is ambiguous. Use 'domains' to see the names.\r\n");
+        return;
+      }
+      selected = i;
+    }
+  }
+  if (selected == DOMAIN_UNDEFINED)
+  {
+    send_to_char(ch, "No such domain. Use 'domains' to see the available names.\r\n");
+    return;
+  }
+
+  send_to_char(ch, "%sDomain:%s %s\r\n%sFavored weapon:%s %s\r\n"
+                   "%sDescription:%s %s\r\n\r\n%sGranted powers:%s\r\n",
+               QCYN, QNRM, domain_list[selected].name, QCYN, QNRM,
+               weapon_list[domain_list[selected].favored_weapon].name,
+               QCYN, QNRM, domain_list[selected].description, QCYN, QNRM);
+  for (j = 0; j < MAX_GRANTED_POWERS; j++)
+    if (domain_list[selected].granted_powers[j] != DOMAIN_POWER_UNDEFINED)
+      send_to_char(ch, "  %s\r\n", domainpower_names[domain_list[selected].granted_powers[j]]);
+
+  send_to_char(ch, "\r\n%sGranted spells:%s\r\n", QCYN, QNRM);
+  for (j = 0; j < MAX_DOMAIN_SPELLS; j++)
+    if (domain_list[selected].domain_spells[j] != SPELL_RESERVED_DBC)
+      send_to_char(ch, "  Circle %d: %s\r\n", j + 1,
+                   spell_info[domain_list[selected].domain_spells[j]].name);
 }
