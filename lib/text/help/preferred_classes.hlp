@@ -7,8 +7,10 @@ Use STUDY, option A (Preferred Classes), to select:
   Divine:  Cleric, Druid or Inquisitor.
   Martial: Warrior, Berserker, Paladin, Blackguard, Ranger or Monk.
 
-When a class has two distinct perk-tree assignments, each assignment uses
-its matching preferred class. Arcane Archer uses the preferred arcane and
+Prestige classes use the matching preferred class for each perk-tree
+assignment, including classes that award both points to a single tree.
+Weapon Master, Stalwart Defender and Dragonrider use preferred martial.
+Shifter uses preferred divine. Arcane Archer uses the preferred arcane and
 martial classes. Mystic Theurge uses preferred arcane and divine classes.
 Duelist uses preferred martial plus its fixed Rogue assignment. Sacred
 Fist uses preferred martial and divine classes.
@@ -31,11 +33,15 @@ your earned XP stages can advance normally; no partial awards are lost.
 Only the preferences used by that class are required, not all three.
 
 The existing award timing is unchanged: two perk points per completed
-quarter-level XP stage (stages 1-3). Classes with a single perk-tree
-assignment continue receiving both points in that tree. Loremaster keeps
-its existing spellcasting-progression routing. Dragon Disciple retains
-its two-highest-base-class selection, applying preferences when those
-assignments differ.
+quarter-level XP stage (stages 1-3). Base classes keep their own awards.
+Single-tree prestige classes award both points to the preferred tree.
+Loremaster uses the preference category of its advanced casting class.
+Dragon Disciple keeps its two-highest-base-class selection before applying
+preferences. Fixed trees without a preference category remain unchanged.
+
+Warrior Weapon Focus and Weapon Specialization bonuses apply to ranged
+weapon attacks as well as melee attacks. Other classes retain their own
+weapon restrictions.
 
 Choices are saved and can be changed for future awards. Already earned
 points and purchased perks are retained and remain accessible. Historical

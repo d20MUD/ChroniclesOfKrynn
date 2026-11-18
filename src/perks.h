@@ -17,6 +17,7 @@ extern const char *perk_category_names[];
 void init_perks(void);
 int count_defined_perks(void);
 int class_to_perk_class(int class_type, int which_perk);
+int get_warrior_weapon_bonus(struct char_data *ch, int effect_type);
 enum preferred_class_kind { PREFERRED_ARCANE = 1, PREFERRED_DIVINE, PREFERRED_MARTIAL };
 bool valid_preferred_class(int kind, int class_id);
 void auto_select_preferred_classes(struct char_data *ch);

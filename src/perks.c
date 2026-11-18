@@ -9,13 +9,11 @@
 #include "conf.h"
 #include "sysdep.h"
 #include "structs.h"
-
-/* Workaround for class.h using NUM_ABILITIES instead of MAX_ABILITIES */
-#ifndef NUM_ABILITIES
-#define NUM_ABILITIES MAX_ABILITIES
-#endif
-
 #include "utils.h"
+
+/* class.h embeds NUM_ABILITIES in its table layout. Use the canonical
+ * spells.h definition so class_list indexes match the rest of the server. */
+#include "spells.h"
 #include "comm.h"
 #include "db.h"
 #include "handler.h"
@@ -23,10 +21,6 @@
 #include "perks.h"
 #include "assign_wpn_armor.h"
 
-/* Undefine NUM_ABILITIES before including spells.h to avoid redefinition warning */
-#undef NUM_ABILITIES
-
-#include "spells.h"
 #include "psionics.h"
 #include "domains_schools.h"
 #include "mud_event.h"
@@ -7550,7 +7544,7 @@ void define_fighter_perks(void)
   perk = &perk_list[PERK_FIGHTER_WEAPON_SPEC_1];
   perk->id = PERK_FIGHTER_WEAPON_SPEC_1;
   perk->name = strdup("Weapon Specialization I");
-  perk->description = strdup("+1 damage with all melee weapons");
+  perk->description = strdup("+1 damage with melee and ranged weapons");
   perk->associated_class = CLASS_WARRIOR;
   perk->perk_category = PERK_CATEGORY_WEAPON_SPECIALIST;
   perk->cost = 1;
@@ -7566,7 +7560,7 @@ void define_fighter_perks(void)
   perk = &perk_list[PERK_FIGHTER_WEAPON_SPEC_2];
   perk->id = PERK_FIGHTER_WEAPON_SPEC_2;
   perk->name = strdup("Weapon Specialization II");
-  perk->description = strdup("+2 damage with all melee weapons");
+  perk->description = strdup("+2 damage with melee and ranged weapons");
   perk->associated_class = CLASS_WARRIOR;
   perk->perk_category = PERK_CATEGORY_WEAPON_SPECIALIST;
   perk->cost = 2;
@@ -7582,7 +7576,7 @@ void define_fighter_perks(void)
   perk = &perk_list[PERK_FIGHTER_WEAPON_SPEC_3];
   perk->id = PERK_FIGHTER_WEAPON_SPEC_3;
   perk->name = strdup("Weapon Specialization III");
-  perk->description = strdup("+3 damage with all melee weapons");
+  perk->description = strdup("+3 damage with melee and ranged weapons");
   perk->associated_class = CLASS_WARRIOR;
   perk->perk_category = PERK_CATEGORY_WEAPON_SPECIALIST;
   perk->cost = 3;
@@ -19682,7 +19676,7 @@ bool perk_preferences_ready(struct char_data *ch, int class_id, bool notify)
   if (class_id < 0 || class_id >= NUM_CLASSES) return FALSE;
   auto_select_preferred_classes(ch);
   get_base_award_perk_classes(ch, class_id, &first, &second);
-  if (first == second) return TRUE;
+  if (first == second && !CLSLIST_PRESTIGE(class_id)) return TRUE;
   if (selected_perk_class(ch, first) == CLASS_UNDEFINED)
     missing |= 1 << perk_preference_kind(first);
   if (selected_perk_class(ch, second) == CLASS_UNDEFINED)
@@ -19703,7 +19697,8 @@ void get_award_perk_classes(struct char_data *ch, int class_id, int *first, int 
   int a, b;
   auto_select_preferred_classes(ch);
   get_base_award_perk_classes(ch, class_id, &a, &b);
-  if (ch && !IS_NPC(ch) && a != b)
+  if (ch && !IS_NPC(ch) &&
+      (a != b || (class_id >= 0 && class_id < NUM_CLASSES && CLSLIST_PRESTIGE(class_id))))
   {
     /* Resolve atomically: an unset preference must never lose half an award. */
     if (!perk_preferences_ready(ch, class_id, FALSE)) a = b = CLASS_UNDEFINED;
@@ -21054,6 +21049,25 @@ int get_perk_skill_bonus(struct char_data *ch, int skill_num)
     break;
   }
 
+  return bonus;
+}
+
+/* Ranged attacks receive Warrior weapon perks without enabling melee-only
+ * perks from other classes or their precision/song proc effects. */
+int get_warrior_weapon_bonus(struct char_data *ch, int effect_type)
+{
+  struct char_perk_data *owned;
+  struct perk_data *perk;
+  int bonus = 0;
+  if (!ch || IS_NPC(ch) ||
+      (effect_type != PERK_EFFECT_WEAPON_DAMAGE && effect_type != PERK_EFFECT_WEAPON_TOHIT))
+    return 0;
+  for (owned = ch->player_specials->saved.perks; owned; owned = owned->next)
+  {
+    perk = get_perk_by_id(owned->perk_id);
+    if (perk && perk->associated_class == CLASS_WARRIOR && perk->effect_type == effect_type)
+      bonus += perk->effect_value * owned->current_rank;
+  }
   return bonus;
 }
 

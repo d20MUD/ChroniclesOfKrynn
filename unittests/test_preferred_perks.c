@@ -40,6 +40,11 @@ static void fixture(void)
   { class_names[i] = "test class"; class_list[i].name = "test class"; }
   for (i = 0; i < MAX_LOREMASTER_LEVELS; i++)
     GET_LOREMASTER_CASTER_CLASS((&pc), i) = CLASS_UNDEFINED;
+  class_list[CLASS_WEAPON_MASTER].prestige_class = TRUE;
+  class_list[CLASS_STALWART_DEFENDER].prestige_class = TRUE;
+  class_list[CLASS_DRAGONRIDER].prestige_class = TRUE;
+  class_list[CLASS_SHIFTER].prestige_class = TRUE;
+  class_list[CLASS_LOREMASTER].prestige_class = TRUE;
   notices = 0;
 }
 
@@ -93,7 +98,7 @@ static void routing(void)
   CLASS_LEVEL((&pc), CLASS_SORCERER) = 10;
   CLASS_LEVEL((&pc), CLASS_WARRIOR) = 5;
   expect_award(CLASS_DRAGON_DISCIPLE, CLASS_WIZARD, CLASS_RANGER);
-  expect_award(CLASS_LOREMASTER, CLASS_SORCERER, CLASS_SORCERER);
+  expect_award(CLASS_LOREMASTER, CLASS_WIZARD, CLASS_WIZARD);
   CLASS_LEVEL((&pc), CLASS_SORCERER) = CLASS_LEVEL((&pc), CLASS_WARRIOR) = 0;
   GET_PREFERRED_ARCANE(&pc) = CLASS_UNDEFINED;
   GET_PREFERRED_DIVINE(&pc) = CLASS_UNDEFINED;
@@ -108,7 +113,8 @@ static void routing(void)
   GET_PREFERRED_ARCANE(&pc) = CLASS_UNDEFINED;
   GET_PREFERRED_DIVINE(&pc) = CLASS_UNDEFINED;
   expect_award(CLASS_WARRIOR, CLASS_WARRIOR, CLASS_WARRIOR);
-  expect_award(CLASS_WEAPON_MASTER, CLASS_WARRIOR, CLASS_WARRIOR);
+  assert(!perk_preferences_ready(&pc, CLASS_WEAPON_MASTER, FALSE));
+  expect_award(CLASS_WEAPON_MASTER, CLASS_UNDEFINED, CLASS_UNDEFINED);
   expect_award(CLASS_SORCERER, CLASS_SORCERER, CLASS_SORCERER);
   assert(perk_preferences_ready(&pc, CLASS_WARRIOR, FALSE));
   assert(!perk_preferences_ready(&pc, NUM_CLASSES, FALSE));
@@ -192,9 +198,66 @@ static void automatic_preferences(void)
   assert(GET_PREFERRED_MARTIAL(&pc) == CLASS_UNDEFINED);
 }
 
+static void single_tree_prestige(void)
+{
+  fixture();
+  assert(!perk_preferences_ready(&pc, CLASS_WEAPON_MASTER, FALSE));
+  GET_PREFERRED_MARTIAL(&pc) = CLASS_RANGER;
+  expect_award(CLASS_WEAPON_MASTER, CLASS_RANGER, CLASS_RANGER);
+  expect_award(CLASS_STALWART_DEFENDER, CLASS_RANGER, CLASS_RANGER);
+  expect_award(CLASS_DRAGONRIDER, CLASS_RANGER, CLASS_RANGER);
+  award_stage_perk_points(&pc, CLASS_WEAPON_MASTER);
+  assert(saved.saved.perk_points[CLASS_RANGER] == 2);
+  assert(!saved.saved.perk_points[CLASS_WARRIOR]);
+  assert(!perk_preferences_ready(&pc, CLASS_SHIFTER, FALSE));
+  GET_PREFERRED_DIVINE(&pc) = CLASS_INQUISITOR;
+  expect_award(CLASS_SHIFTER, CLASS_INQUISITOR, CLASS_INQUISITOR);
+  GET_PREFERRED_ARCANE(&pc) = CLASS_BARD;
+  expect_award(CLASS_LOREMASTER, CLASS_BARD, CLASS_BARD);
+  expect_award(CLASS_WARRIOR, CLASS_WARRIOR, CLASS_WARRIOR);
+  fixture();
+  CLASS_LEVEL((&pc), CLASS_MONK) = 2;
+  assert(perk_preferences_ready(&pc, CLASS_WEAPON_MASTER, FALSE));
+  expect_award(CLASS_WEAPON_MASTER, CLASS_MONK, CLASS_MONK);
+}
+
+static void warrior_weapon_bonuses(void)
+{
+  struct char_perk_data damage = {0}, focus = {0}, other = {0};
+  struct perk_data *perk;
+  fixture();
+  /* Define only the production fields consumed by the bonus resolver. */
+  extern struct perk_data perk_list[NUM_PERKS];
+  perk = &perk_list[PERK_FIGHTER_WEAPON_SPEC_1];
+  perk->id = PERK_FIGHTER_WEAPON_SPEC_1;
+  perk->associated_class = CLASS_WARRIOR;
+  perk->effect_type = PERK_EFFECT_WEAPON_DAMAGE;
+  perk->effect_value = 2;
+  damage.perk_id = perk->id; damage.current_rank = 3; damage.next = &focus;
+  perk = &perk_list[PERK_FIGHTER_WEAPON_FOCUS_1];
+  perk->id = PERK_FIGHTER_WEAPON_FOCUS_1;
+  perk->associated_class = CLASS_WARRIOR;
+  perk->effect_type = PERK_EFFECT_WEAPON_TOHIT;
+  perk->effect_value = 1;
+  focus.perk_id = perk->id; focus.current_rank = 2; focus.next = &other;
+  perk = &perk_list[PERK_CLERIC_DIVINE_FAVOR_1];
+  perk->id = PERK_CLERIC_DIVINE_FAVOR_1;
+  perk->associated_class = CLASS_CLERIC;
+  perk->effect_type = PERK_EFFECT_WEAPON_DAMAGE;
+  perk->effect_value = 99;
+  other.perk_id = perk->id; other.current_rank = 1;
+  saved.saved.perks = &damage;
+  assert(get_warrior_weapon_bonus(&pc, PERK_EFFECT_WEAPON_DAMAGE) == 6);
+  assert(get_warrior_weapon_bonus(&pc, PERK_EFFECT_WEAPON_TOHIT) == 2);
+  assert(!get_warrior_weapon_bonus(&pc, PERK_EFFECT_HP));
+  assert(!get_warrior_weapon_bonus(NULL, PERK_EFFECT_WEAPON_DAMAGE));
+  saved.saved.perks = NULL;
+  assert(!get_warrior_weapon_bonus(&pc, PERK_EFFECT_WEAPON_DAMAGE));
+}
+
 int main(void)
 {
-  routing(); awards_and_stages(); automatic_preferences();
+  routing(); awards_and_stages(); automatic_preferences(); single_tree_prestige(); warrior_weapon_bonuses();
   puts("Preferred perk routing: prerequisites, atomic awards, stage catch-up and preserved pools passed.");
   return 0;
 }

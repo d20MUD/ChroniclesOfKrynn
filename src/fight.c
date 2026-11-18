@@ -9080,10 +9080,12 @@ int compute_damage_bonus(struct char_data *ch, struct char_data *vict, struct ob
     dambonus += GET_LEVEL(ch) / 5;
   }
 
-  /* Add perk weapon damage bonuses (Step 6) - only for melee/unarmed attacks */
-  if (!IS_NPC(ch) && attack_type != ATTACK_TYPE_RANGED)
+  /* Warrior weapon damage perks apply to ranged weapons too. */
+  if (!IS_NPC(ch))
   {
-    int perk_bonus = get_perk_weapon_damage_bonus(ch, wielded);
+    int perk_bonus = attack_type == ATTACK_TYPE_RANGED
+                         ? get_warrior_weapon_bonus(ch, PERK_EFFECT_WEAPON_DAMAGE)
+                         : get_perk_weapon_damage_bonus(ch, wielded);
     if (perk_bonus != 0)
     {
       dambonus += perk_bonus;
@@ -12724,10 +12726,12 @@ int compute_attack_bonus_full(struct char_data *ch,     /* Attacker */
     send_to_char(ch, "-%2d: %-50s\r\n",
                  get_char_affect_modifier(ch, AFFECT_LEVEL_DRAIN, APPLY_SPECIAL), "Level Drain");
 
-  /* Add perk weapon bonuses (Step 6) - only for melee/unarmed attacks */
-  if (!IS_NPC(ch) && attack_type != ATTACK_TYPE_RANGED)
+  /* Warrior weapon accuracy perks apply to ranged weapons too. */
+  if (!IS_NPC(ch))
   {
-    int perk_bonus = get_perk_weapon_tohit_bonus(ch, wielded);
+    int perk_bonus = attack_type == ATTACK_TYPE_RANGED
+                         ? get_warrior_weapon_bonus(ch, PERK_EFFECT_WEAPON_TOHIT)
+                         : get_perk_weapon_tohit_bonus(ch, wielded);
     if (perk_bonus != 0)
     {
       bonuses[BONUS_TYPE_UNDEFINED] += perk_bonus;
