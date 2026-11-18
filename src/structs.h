@@ -8051,6 +8051,7 @@ struct damage_reduction_type
 
 struct level_data
 {
+  int study_initial_settings[13 + MAX_ENEMIES]; /* live choices at Study entry */
   struct epic_feat_choices epic_choices;
   int epic_pending[2];
   int epic_choice_step;

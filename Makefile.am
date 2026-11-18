@@ -501,3 +501,13 @@ EXTRA_DIST += src/epic_feats.h src/epic_feats2.h src/epic_feats3.h unittests/tes
 EXTRA_DIST += unittests/test_preferred_perks.c unittests/test_preferred_perks.sh \
 	docs/PREFERRED_CLASS_PERKS.md lib/text/help/preferred_classes.hlp \
 	sql/20261118_preferred_classes_help.sql
+
+EXTRA_DIST += lib/text/help/far_shot.hlp sql/20261118_far_shot_help.sql
+
+EXTRA_DIST += tests/run_study_summary.py docs/STUDY_REVIEW.md
+
+EXTRA_DIST += tests/run_eidolon_study_access.py
+
+EXTRA_DIST += tests/run_familiar_study_access.py
+
+EXTRA_DIST += tests/run_nimble_escape.py docs/NIMBLE_ESCAPE.md

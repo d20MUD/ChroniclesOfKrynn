@@ -10669,6 +10669,9 @@ sbyte has_eidolon_choices_unchosen(struct char_data *ch)
   if (IS_NPC(ch))
     return false;
 
+  if (CLASS_LEVEL(ch, CLASS_SUMMONER) <= 0 && CLASS_LEVEL(ch, CLASS_NECROMANCER) <= 0)
+    return false;
+
   if (!GET_EIDOLON_BASE_FORM(ch))
     return TRUE;
 

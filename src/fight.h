@@ -57,6 +57,7 @@ int compute_damtype_reduction(struct char_data *ch, int dam_type, struct char_da
                               int w_type);
 int compute_energy_absorb(struct char_data *ch, int dam_type);
 void perform_flee(struct char_data *ch);
+void perform_flee_direction(struct char_data *ch, int direction);
 void appear(struct char_data *ch, bool forced);
 void check_killer(struct char_data *ch, struct char_data *vict);
 int perform_attacks(struct char_data *ch, int mode, int phase);
@@ -103,6 +104,7 @@ int skill_message(int dam, struct char_data *ch, struct char_data *vict, int att
 void stop_fighting(struct char_data *ch);
 int point_blank_shot_bonus(struct char_data *ch, struct char_data *victim);
 int deadly_aim_step(struct char_data *ch);
+int ranged_weapon_increment(struct char_data *ch, struct obj_data *weapon);
 int ranged_range_penalty(struct char_data *ch, struct char_data *victim, struct obj_data *weapon);
 int ranged_concealment(struct char_data *ch, struct char_data *victim, int attack_type);
 int combat_distance(struct char_data *ch, struct char_data *victim);

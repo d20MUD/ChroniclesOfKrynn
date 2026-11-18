@@ -67,7 +67,7 @@ bool can_fire_ammo(struct char_data *ch,bool silent) {
 '''
 a=fight.index('struct ranged_shot_context\n');b=fight.index('/* Distances are symmetric',a)
 code+='\n'+fight[a:b]
-for name in ['int point_blank_shot_bonus(','int deadly_aim_step(','int ranged_range_penalty(','int ranged_concealment(']:
+for name in ['int point_blank_shot_bonus(','int deadly_aim_step(','int ranged_weapon_increment(','int ranged_range_penalty(','int ranged_concealment(']:
     code+='\n'+function(fight,name)
 code+=r'''
 int compute_hit_damage(struct char_data *ch,struct char_data *victim,int w_type,int roll,
@@ -127,7 +127,28 @@ int main(void) {
   distance=100;assert(!ranged_range_penalty(&ch,&victim,&bow));
   distance=101;assert(ranged_range_penalty(&ch,&victim,&bow)==-2);
   distance=201;assert(ranged_range_penalty(&ch,&victim,&bow)==-4);
-  feats[FEAT_FAR_SHOT]=1;assert(ranged_range_penalty(&ch,&victim,&bow)==-2);
+  feats[FEAT_FAR_SHOT]=1;assert(ranged_weapon_increment(&ch,&bow)==150);
+  assert(ranged_range_penalty(&ch,&victim,&bow)==-1);
+  distance=150;assert(!ranged_range_penalty(&ch,&victim,&bow));
+  distance=151;assert(ranged_range_penalty(&ch,&victim,&bow)==-1);
+  distance=301;assert(ranged_range_penalty(&ch,&victim,&bow)==-2);
+  weapon_list[WEAPON_TYPE_LONG_BOW].range=101;
+  assert(ranged_weapon_increment(&ch,&bow)==151);
+  weapon_list[WEAPON_TYPE_LONG_BOW].range=255;
+  assert(ranged_weapon_increment(&ch,&bow)==382);
+  weapon_list[WEAPON_TYPE_LONG_BOW].range=100;
+  GET_OBJ_VAL(&bow,0)=WEAPON_TYPE_DAGGER;
+  weapon_list[WEAPON_TYPE_DAGGER].range=10;
+  weapon_list[WEAPON_TYPE_DAGGER].weaponFlags=WEAPON_FLAG_THROWN;
+  THROWING(&ch)=TRUE;
+  assert(ranged_weapon_increment(&ch,&bow)==20);
+  distance=20;assert(!ranged_range_penalty(&ch,&victim,&bow));
+  distance=21;assert(ranged_range_penalty(&ch,&victim,&bow)==-1);
+  feats[FEAT_FAR_SHOT]=0;assert(ranged_weapon_increment(&ch,&bow)==10);
+  assert(ranged_range_penalty(&ch,&victim,&bow)==-4);
+  assert(!ranged_weapon_increment(&ch,NULL));
+  GET_OBJ_VAL(&bow,0)=NUM_WEAPON_TYPES;assert(!ranged_weapon_increment(&ch,&bow));
+  GET_OBJ_VAL(&bow,0)=WEAPON_TYPE_LONG_BOW;THROWING(&ch)=FALSE;
   concealment=20;assert(ranged_concealment(&ch,&victim,ATTACK_TYPE_RANGED)==20);
   feats[FEAT_IMPROVED_PRECISE_SHOT]=1;
   assert(!ranged_concealment(&ch,&victim,ATTACK_TYPE_RANGED));

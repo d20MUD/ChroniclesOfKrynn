@@ -280,6 +280,22 @@ int deadly_aim_step(struct char_data *ch)
              : 0;
 }
 
+/* One effective increment drives both accuracy and maximum weapon range. */
+int ranged_weapon_increment(struct char_data *ch, struct obj_data *weapon)
+{
+  int type, base;
+  int increment;
+  if (!weapon || GET_OBJ_TYPE(weapon) != ITEM_WEAPON) return 0;
+  type = GET_OBJ_VAL(weapon, 0);
+  if (type < 0 || type >= NUM_WEAPON_TYPES) return 0;
+  base = weapon_list[type].range;
+  if (base <= 0) return 0;
+  increment = base;
+  if (ch && HAS_FEAT(ch, FEAT_FAR_SHOT))
+    increment += is_throwing_weapon(ch, weapon) ? base : base / 2;
+  return increment;
+}
+
 int ranged_range_penalty(struct char_data *ch, struct char_data *victim, struct obj_data *weapon)
 {
   int type, increment, distance = combat_distance(ch, victim);
@@ -288,7 +304,7 @@ int ranged_range_penalty(struct char_data *ch, struct char_data *victim, struct 
   type = GET_OBJ_VAL(weapon, 0);
   if (type < 0 || type >= NUM_WEAPON_TYPES)
     return 0;
-  increment = weapon_list[type].range;
+  increment = ranged_weapon_increment(ch, weapon);
   if (increment <= 0)
     return 0;
   return -((distance - 1) / increment) * (HAS_FEAT(ch, FEAT_FAR_SHOT) ? 1 : 2);
@@ -328,7 +344,7 @@ bool combat_attack_in_range(struct char_data *ch, struct char_data *victim, int 
       int type = GET_OBJ_VAL(weapon, 0);
       if (type >= 0 && type < NUM_WEAPON_TYPES && weapon_list[type].range > 0)
         return (long)distance <=
-               (long)weapon_list[type].range * (is_throwing_weapon(ch, weapon) ? 5 : 10);
+               (long)ranged_weapon_increment(ch, weapon) * (is_throwing_weapon(ch, weapon) ? 5 : 10);
     }
     return TRUE;
   }
@@ -870,8 +886,18 @@ void guard_check(struct char_data *ch, struct char_data *vict)
    the engine for fleeing */
 void perform_flee(struct char_data *ch)
 {
+  perform_flee_direction(ch, -1);
+}
+
+/* Both random and chosen-direction retreats must use the same action,
+ * movement and combat-cleanup rules. Negative direction means random. */
+void perform_flee_direction(struct char_data *ch, int direction)
+{
   int i, found = 0, fleeOptions[DIR_COUNT];
   struct char_data *k, *temp;
+
+  if (direction < -1 || direction >= DIR_COUNT)
+    return;
 
   if (legendary_grounded(ch))
   {
@@ -913,7 +939,7 @@ void perform_flee(struct char_data *ch)
   // first find which directions are fleeable
   for (i = 0; i < DIR_COUNT; i++)
   {
-    if (CAN_GO(ch, i))
+    if ((direction < 0 || direction == i) && CAN_GO(ch, i))
     {
       fleeOptions[found] = i;
       found++;

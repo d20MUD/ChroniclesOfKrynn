@@ -140,7 +140,9 @@ and ammo enhancement use the higher value, not their sum. Standalone ranged
 touch rolls do not borrow an equipped weapon's ammo, enhancement, or range.
 
 Physical attacks use each weapon subtype's range increment, with -2 for each
-additional increment (-1 with Far Shot). The first increment is inclusive;
+additional increment (-1 with Far Shot). Far Shot also increases projectile
+increments by 50% (rounded down) and doubles thrown increments. Both penalties
+and maximum range use that effective increment. The first increment is inclusive;
 five increments is the thrown maximum, ten the projectile maximum. Room size
 and same-room targeting still apply. Weapon range does not limit spell rays.
 
@@ -223,3 +225,23 @@ combat-round boundary. Capacity and damage do not scale with this chance.
 
 Validation: `python3 tests/run_repeating_crossbows.py` and
 `python3 tests/run_ranged_feats.py`.
+
+### Far Shot with effective weapon increments
+
+Far Shot remains a passive, one-rank combat feat requiring Point-Blank Shot.
+For physical projectile weapons, multiply the subtype range increment by 1.5
+and round down; thrown attacks double the increment. It also retains -1
+per additional effective increment instead of -2. A 100-foot bow increment
+becomes 150 feet, with a 1500-foot maximum; a thrown dagger's 10-foot increment
+becomes 20 feet, with a 100-foot maximum. The first increment and the final
+maximum are inclusive. Room size and same-room targeting still bound attacks.
+No equipment values are changed, so changing feats or throwing mode immediately
+changes the computed range. Point-Blank Shot stays at 30 feet, melee reach is
+unchanged, and spell/power rays do not inherit weapon increments. Ammunition,
+reload and attack-action requirements are unchanged.
+
+`ranged_weapon_increment()` supplies both `ranged_range_penalty()` and
+`combat_attack_in_range()`. Tests in `run_ranged_feats.py` and
+`run_combat_distance.py` exercise rounding, first/second increment boundaries,
+projectile/thrown maximum ranges, feat loss, and the 255-foot stored range
+limit without overflowing the effective range.

@@ -793,10 +793,11 @@ void assign_feats(void)
         "Gains a +1 to hit and +2 to damage against targets that are larger than you.",
         "Gains a +1 to hit and +2 to damage against targets that are larger than you.");
   feato(FEAT_NIMBLE_ESCAPE, "nimble escape", TRUE, FALSE, FALSE, FEAT_TYPE_INNATE_ABILITY,
-        "Can specify the direction you wish to flee when using the flee command, and can always "
-        "flee regardless of movement speed.",
-        "Can specify the direction you wish to flee when using the flee command, and can always "
-        "flee regardless of movement speed.");
+        "Choose your flee direction and ignore encounter escape speed checks.",
+        "Use flee for a random retreat, or flee <direction> to choose your exit. You ignore "
+        "enemy movement-speed checks when fleeing encounters. Both forms use normal flee "
+        "movement and action costs, require a usable exit, and end combat after a successful "
+        "retreat. Effects that prevent movement still prevent escape.");
   feato(FEAT_STUBBORN_MIND, "stubborn mind", TRUE, FALSE, FALSE, FEAT_TYPE_INNATE_ABILITY,
         "Gets a +2 to saving throws against mind affecting effects.",
         "Gets a +2 to saving throws against mind affecting effects.");
@@ -1644,8 +1645,8 @@ void assign_feats(void)
         "+1 ranged attack and damage within 30 feet",
         "Gain +1 on ranged attack and damage rolls against targets within 30 feet.");
   feato(FEAT_FAR_SHOT, "far shot", TRUE, TRUE, FALSE, FEAT_TYPE_COMBAT,
-        "range increment penalties are -1 instead of -2",
-        "Reduce the penalty per additional weapon range increment to -1. Targets must remain in the same room.");
+        "+50% projectile range increments, double thrown increments, and reduced range penalties",
+        "Your physical projectile weapon range increments increase by 50% (rounded down), and thrown weapon increments double. Beyond the first effective increment, each additional increment imposes -1 to hit instead of -2. Maximum range is ten effective increments for projectile weapons or five for thrown weapons. For example, a 100-foot bow increment becomes 150 feet (1500-foot maximum), and a 10-foot thrown dagger increment becomes 20 feet (100-foot maximum). Room size and same-room targeting still apply. No effect on melee reach, spell rays, psionic powers or Point-Blank Shot's 30-foot limit. Passive, one rank; requires Point-Blank Shot.");
   feat_prereq_feat(FEAT_FAR_SHOT, FEAT_POINT_BLANK_SHOT, 1);
   feato(FEAT_RAPID_SHOT, "rapid shot", TRUE, TRUE, FALSE, FEAT_TYPE_COMBAT,
         "one extra ranged full-attack shot at -2 to all attacks",

@@ -60,12 +60,15 @@ static bool loremaster_finalize_ready(struct descriptor_data *d);
 
 void init_study(struct descriptor_data *d, int class);
 void finalize_study(struct descriptor_data *d);
+static void study_setting_values(struct char_data *ch, int *values);
 int compute_ability(struct char_data *ch, int abilityNum);
 /*-------------------------------------------------------------------*/
 
 extern const char *cross_names[];
 
-#define MENU_OPT(i) ((i) ? grn : "\tD"), ((i) ? nrm : "\tD")
+/* Disabled rows must reset legacy ANSI headings even when protocol color
+ * tokens are unavailable; otherwise they inherit the heading's magenta. */
+#define MENU_OPT(i) ((i) ? grn : nrm), ((i) ? nrm : "\tD")
 
 /* feat types */
 #define FEAT_TYPE_NORMAL 1
@@ -226,6 +229,7 @@ void init_study(struct descriptor_data *d, int class)
   }
 
   CREATE(LEVELUP(ch), struct level_data, 1);
+  study_setting_values(ch, LEVELUP(ch)->study_initial_settings);
 
   STATE(d) = CON_STUDY;
 
@@ -3198,78 +3202,294 @@ void show_dragon_rider_bond_menu(struct descriptor_data *d)
   OLC_MODE(d) = STUDY_DRAGON_RIDER_BOND_TYPE;
 }
 
+/* These older options are live edits rather than staged training choices. */
+static void study_setting_values(struct char_data *ch, int *values)
+{
+  int i;
+  values[0] = GET_PREFERRED_ARCANE(ch);
+  values[1] = GET_PREFERRED_DIVINE(ch);
+  values[2] = GET_PREFERRED_MARTIAL(ch);
+  values[3] = GET_1ST_DOMAIN(ch);
+  values[4] = GET_2ND_DOMAIN(ch);
+  values[5] = GET_SPECIALTY_SCHOOL(ch);
+  values[6] = GET_1ST_RESTRICTED_SCHOOL(ch);
+  values[7] = GET_2ND_RESTRICTED_SCHOOL(ch);
+  values[8] = GET_FAMILIAR(ch);
+  values[9] = GET_ANIMAL_COMPANION(ch);
+  for (i = 0; i < 3; i++)
+    values[10 + i] = NEW_ARCANA_SLOT(ch, i);
+  for (i = 0; i < MAX_ENEMIES; i++)
+    values[13 + i] = GET_FAVORED_ENEMY(ch, i);
+}
+
+static const char *study_setting_name(int field, int value)
+{
+  mob_rnum mob;
+  if (field <= 2)
+    return value >= 0 && value < NUM_CLASSES ? CLSLIST_NAME(value) : "Not set";
+  if (field <= 4)
+    return value >= 0 && value < NUM_DOMAINS ? domain_list[value].name : "Not set";
+  if (field <= 7)
+    return value >= 0 && value < NUM_SCHOOLS ? school_names[value] : "Not set";
+  if (value <= 0)
+    return "None";
+  mob = real_mobile(value);
+  return mob != NOBODY ? mob_proto[mob].player.short_descr : "None";
+}
+
+static void study_changes_summary(struct descriptor_data *d)
+{
+  struct char_data *ch = d->character;
+  struct level_data *pending = LEVELUP(ch);
+  static const char *stats[] = {"Strength",     "Dexterity", "Constitution",
+                                "Intelligence", "Wisdom",    "Charisma"};
+  static const char *settings[] = {"Preferred arcane class",
+                                   "Preferred divine class",
+                                   "Preferred martial class",
+                                   "First domain",
+                                   "Second domain",
+                                   "Specialty school",
+                                   "First restricted school",
+                                   "Second restricted school",
+                                   "Familiar",
+                                   "Animal companion"};
+  int before[6], after[6], live[13 + MAX_ENEMIES], i, j, type, count = 0, applied = 0;
+  before[0] = GET_REAL_STR(ch);
+  before[1] = GET_REAL_DEX(ch);
+  before[2] = GET_REAL_CON(ch);
+  before[3] = GET_REAL_INT(ch);
+  before[4] = GET_REAL_WIS(ch);
+  before[5] = GET_REAL_CHA(ch);
+  after[0] = pending->str;
+  after[1] = pending->dex;
+  after[2] = pending->con;
+  after[3] = pending->inte;
+  after[4] = pending->wis;
+  after[5] = pending->cha;
+  write_to_output(d, "\r\n\tcStudy changes to save\tn\r\n");
+#define CHANGE(...)                                                                                \
+  do                                                                                               \
+  {                                                                                                \
+    write_to_output(d, "  - " __VA_ARGS__);                                                        \
+    count++;                                                                                       \
+  } while (0)
+  for (i = 0; i < 6; i++)
+  {
+    after[i] += pending->boosts[i] > 0;
+    after[i] +=
+        pending->feats[(int[]){FEAT_GREAT_STRENGTH, FEAT_GREAT_DEXTERITY, FEAT_GREAT_CONSTITUTION,
+                               FEAT_GREAT_INTELLIGENCE, FEAT_GREAT_WISDOM, FEAT_GREAT_CHARISMA}[i]];
+    if (before[i] != after[i])
+      CHANGE("%s: %d -> %d\r\n", stats[i], before[i], after[i]);
+  }
+  for (i = START_GENERAL_ABILITIES; i <= END_GENERAL_ABILITIES; i++)
+    if (pending->skills[i])
+      CHANGE("%s: %d -> %d trained ranks\r\n", ability_names[i], GET_ABILITY(ch, i),
+             GET_ABILITY(ch, i) + pending->skills[i]);
+  for (i = 1; i < NUM_FEATS; i++)
+    if (pending->feats[i])
+    {
+      CHANGE("Feat: %s (+%d rank%s)\r\n", feat_list[i].name, pending->feats[i],
+             pending->feats[i] == 1 ? "" : "s");
+      type = feat_to_cfeat(i);
+      if (type >= 0)
+        for (j = 0; j < NUM_WEAPON_TYPES; j++)
+          if (HAS_LEVELUP_COMBAT_FEAT(ch, type, j))
+            write_to_output(d, "      Weapon: %s\r\n", weapon_list[j].name);
+      type = feat_to_sfeat(i);
+      if (type >= 0)
+        for (j = 1; j < NUM_SCHOOLS; j++)
+          if (HAS_LEVELUP_SCHOOL_FEAT(ch, type, j))
+            write_to_output(d, "      School: %s\r\n", school_names[j]);
+      type = feat_to_skfeat(i);
+      if (type >= 0)
+        for (j = 0; j <= MAX_ABILITIES; j++)
+          if (pending->skill_focus[j][type])
+            write_to_output(d, "      Skill: %s\r\n", ability_names[j]);
+    }
+  for (i = 0; i < NUM_CLASSES; i++)
+    if (pending->practiced_spellcaster_classes[i])
+      CHANGE("Practiced Spellcaster: %s\r\n", CLSLIST_NAME(i));
+  for (i = 1; i < MAX_SPELLS; i++)
+    if (pending->spells_learned[i])
+      CHANGE("Learn: %s\r\n", spell_info[i].name);
+  for (i = 0; i < NUM_ALC_DISCOVERIES; i++)
+    if (pending->discoveries[i] && !ch->player_specials->saved.discoveries[i])
+      CHANGE("Discovery: %s\r\n", alchemical_discovery_names[i]);
+  for (i = 0; i < NUM_PALADIN_MERCIES; i++)
+    if (pending->paladin_mercies[i] && !KNOWS_MERCY(ch, i))
+      CHANGE("Mercy: %s\r\n", paladin_mercies[i]);
+  for (i = 0; i < NUM_BLACKGUARD_CRUELTIES; i++)
+    if (pending->blackguard_cruelties[i] && !KNOWS_CRUELTY(ch, i))
+      CHANGE("Cruelty: %s\r\n", blackguard_cruelties[i]);
+  for (i = 0; i < NUM_LANGUAGES; i++)
+    if (pending->languages[i] && !ch->player_specials->saved.languages_known[i])
+      CHANGE("Language: %s\r\n", languages[i]);
+  for (i = 1; i < NUM_EVOLUTIONS; i++)
+  {
+    if (pending->eidolon_evolutions[i] != KNOWS_EVOLUTION(ch, i))
+      CHANGE("Eidolon %s: %d -> %d\r\n", evolution_list[i].name, KNOWS_EVOLUTION(ch, i),
+             pending->eidolon_evolutions[i]);
+    if (pending->summoner_aspects[i] != HAS_REAL_EVOLUTION(ch, i))
+      CHANGE("Aspect %s: %d -> %d\r\n", evolution_list[i].name, HAS_REAL_EVOLUTION(ch, i),
+             pending->summoner_aspects[i]);
+  }
+  if (pending->eidolon_base_form != GET_EIDOLON_BASE_FORM(ch))
+    CHANGE("Eidolon base form: %d -> %d\r\n", GET_EIDOLON_BASE_FORM(ch),
+           pending->eidolon_base_form);
+  if (pending->necromancer_bonus_levels != NECROMANCER_CAST_TYPE(ch))
+    CHANGE("Necromancer progression: %s\r\n",
+           pending->necromancer_bonus_levels == 1 ? "Arcane" : "Divine");
+  if (pending->dragon_rider_dragon_type != GET_DRAGON_RIDER_DRAGON_TYPE(ch))
+    CHANGE("Dragon type: %s\r\n", draconic_heritage_names[pending->dragon_rider_dragon_type]);
+  if (pending->dragon_rider_bond_type != GET_DRAGON_BOND_TYPE(ch))
+    CHANGE("Dragon bond: %s\r\n", dragon_bond_types[pending->dragon_rider_bond_type]);
+  if (pending->high_elf_cantrip > 0 &&
+      pending->high_elf_cantrip != ch->player_specials->saved.high_elf_cantrip)
+    CHANGE("High elf cantrip: %s\r\n", spell_info[pending->high_elf_cantrip].name);
+  if (pending->dragonborn_draconic_ancestry > 0 &&
+      pending->dragonborn_draconic_ancestry !=
+          ch->player_specials->saved.dragonborn_draconic_ancestry)
+    CHANGE("Dragonborn ancestry: %s\r\n", DRCHRTLIST_NAME(pending->dragonborn_draconic_ancestry));
+  if (pending->sorcerer_bloodline_subtype > 0 &&
+      pending->sorcerer_bloodline_subtype != ch->player_specials->saved.sorcerer_bloodline_subtype)
+  {
+    const char *heritage = NULL;
+    if (has_feat_requirement_check(ch, FEAT_SORCERER_BLOODLINE_ELEMENTAL))
+      heritage = bloodline_element_name(pending->sorcerer_bloodline_subtype);
+    else if (has_feat_requirement_check(ch, FEAT_SORCERER_BLOODLINE_DRACONIC))
+      heritage = DRCHRTLIST_NAME(pending->sorcerer_bloodline_subtype);
+    else if (pending->sorcerer_bloodline_subtype < NUM_SCHOOLS)
+      heritage = school_names[pending->sorcerer_bloodline_subtype];
+    if (heritage)
+      CHANGE("Bloodline heritage: %s\r\n", heritage);
+    else
+      CHANGE("Bloodline heritage: option %d\r\n", pending->sorcerer_bloodline_subtype);
+  }
+  for (i = 0; i < 6; i++)
+    if (pending->epic_choices.powers[i] != EPIC_CHOICES(ch).powers[i] &&
+        pending->epic_choices.powers[i] > 0)
+      CHANGE("Epic bonus power: %s\r\n", spell_info[pending->epic_choices.powers[i]].name);
+  if (pending->epic_choices.discipline != EPIC_CHOICES(ch).discipline)
+    CHANGE("Epic discipline: %s\r\n",
+           (const char *[]){"None", "Clairsentience", "Metacreativity", "Psychokinesis",
+                            "Psychometabolism", "Psychoportation",
+                            "Telepathy"}[pending->epic_choices.discipline]);
+  if (pending->epic_choices.anatomy_weapon != EPIC_CHOICES(ch).anatomy_weapon &&
+      pending->epic_choices.anatomy_weapon > 0)
+    CHANGE("Anatomical Savant weapon: %s\r\n",
+           weapon_list[pending->epic_choices.anatomy_weapon - 1].name);
+  if (pending->epic_choices.capacity_class != EPIC_CHOICES(ch).capacity_class &&
+      pending->epic_choices.capacity_class > 0)
+    CHANGE("Epic spell capacity class: %s\r\n",
+           CLSLIST_NAME(pending->epic_choices.capacity_class - 1));
+  if (pending->epic_choices.craft_category != EPIC_CHOICES(ch).craft_category)
+    CHANGE("Epic crafting: %s\r\n",
+           pending->epic_choices.craft_category == 1 ? "Wondrous items" : "Arms and armor");
+  if (pending->epic_choices.summon_doctrine != EPIC_CHOICES(ch).summon_doctrine)
+    CHANGE("Summon doctrine: %s\r\n",
+           pending->epic_choices.summon_doctrine == 1 ? "Aquatic" : "Watchful");
+  if (pending->epic_choices.companion_element != EPIC_CHOICES(ch).companion_element)
+    CHANGE("Companion element: %s\r\n",
+           (const char *[]){"None", "Acid", "Cold", "Electricity",
+                            "Fire"}[pending->epic_choices.companion_element]);
+  if (pending->class == CLASS_LOREMASTER)
+  {
+    for (i = 0; i < MAX_LOREMASTER_LEVELS; i++)
+      if (GET_LEVELUP_LOREMASTER_CASTER_CLASS(ch, i) != GET_LOREMASTER_CASTER_CLASS(ch, i) &&
+          GET_LEVELUP_LOREMASTER_CASTER_CLASS(ch, i) >= 0)
+        CHANGE("Loremaster level %d advances %s\r\n", i + 1,
+               CLSLIST_NAME(GET_LEVELUP_LOREMASTER_CASTER_CLASS(ch, i)));
+    for (i = 0; i < NUM_LOREMASTER_SECRETS; i++)
+      if (KNOWS_LEVELUP_LOREMASTER_SECRET(ch, i) && !KNOWS_LOREMASTER_SECRET(ch, i))
+        CHANGE("Loremaster secret: %s\r\n", loremaster_secret_name(i));
+    if (GET_LEVELUP_LOREMASTER_INSTANT_MASTERY_SKILL(ch) !=
+            GET_LOREMASTER_INSTANT_MASTERY_SKILL(ch) &&
+        GET_LEVELUP_LOREMASTER_INSTANT_MASTERY_SKILL(ch) >= 0)
+      CHANGE("Instant Mastery: %s\r\n",
+             ability_names[GET_LEVELUP_LOREMASTER_INSTANT_MASTERY_SKILL(ch)]);
+    if (GET_LEVELUP_LOREMASTER_APPLICABLE_KNOWLEDGE_FEAT(ch) !=
+            GET_LOREMASTER_APPLICABLE_KNOWLEDGE_FEAT(ch) &&
+        GET_LEVELUP_LOREMASTER_APPLICABLE_KNOWLEDGE_FEAT(ch) > 0)
+      CHANGE("Applicable Knowledge: %s\r\n",
+             feat_list[GET_LEVELUP_LOREMASTER_APPLICABLE_KNOWLEDGE_FEAT(ch)].name);
+    if (GET_LEVELUP_LOREMASTER_NEWFOUND_CLASS(ch) != GET_LOREMASTER_NEWFOUND_CLASS(ch) &&
+        GET_LEVELUP_LOREMASTER_NEWFOUND_CLASS(ch) >= 0)
+      CHANGE("Newfound Arcana: %s\r\n", CLSLIST_NAME(GET_LEVELUP_LOREMASTER_NEWFOUND_CLASS(ch)));
+    if (GET_LEVELUP_LOREMASTER_MORE_NEWFOUND_CLASS(ch) != GET_LOREMASTER_MORE_NEWFOUND_CLASS(ch) &&
+        GET_LEVELUP_LOREMASTER_MORE_NEWFOUND_CLASS(ch) >= 0)
+      CHANGE("More Newfound Arcana: %s\r\n",
+             CLSLIST_NAME(GET_LEVELUP_LOREMASTER_MORE_NEWFOUND_CLASS(ch)));
+  }
+  if (!count)
+    write_to_output(d, "  No pending training changes.\r\n");
+  write_to_output(d,
+                  "\r\nPoints remaining: skills %d, training %d, boosts %d; feats %d general / %d "
+                  "class; epic feats %d general / %d class.\r\n",
+                  pending->practices, pending->trains, pending->num_boosts, pending->feat_points,
+                  pending->class_feat_points, pending->epic_feat_points,
+                  pending->epic_class_feat_points);
+#undef CHANGE
+  study_setting_values(ch, live);
+  for (i = 0; i < 13 + MAX_ENEMIES; i++)
+    if (live[i] != pending->study_initial_settings[i])
+    {
+      if (!applied++)
+        write_to_output(d, "\r\nSettings already applied during this visit (not undone by "
+                           "discarding training):\r\n");
+      if (i < 10)
+        write_to_output(d, "  - %s: %s -> %s\r\n", settings[i],
+                        study_setting_name(i, pending->study_initial_settings[i]),
+                        study_setting_name(i, live[i]));
+      else if (i < 13)
+        write_to_output(d, "  - New Arcana slot %d: circle %d -> %d\r\n", i - 9,
+                        pending->study_initial_settings[i], live[i]);
+      else
+        write_to_output(d, "  - Favored enemy slot %d: option %d -> %d\r\n", i - 12,
+                        pending->study_initial_settings[i], live[i]);
+    }
+  write_to_output(d, "\r\n");
+}
+
 static void generic_main_disp_menu(struct descriptor_data *d)
 {
   struct char_data *ch = d->character;
-  get_char_colors(d->character);
+  get_char_colors(ch);
   clear_screen(d);
+  write_to_output(d, "\r\n-- %sStudy Menu%s\r\n\r\n", mgn, nrm);
 
-  write_to_output(
-      d,
-      "\r\n-- %sStudy Menu\r\n"
-      "\r\n"
-      "%s 0%s) Skills%s\r\n"
-      "%s 1%s) Ability Score Boosts%s\r\n"
-      "%s 2%s) Feats%s\r\n"
-      "%s 3%s) Known Spells%s\r\n"
-      "%s 4%s) Known Psionic Powers%s\r\n"
-      "%s 5%s) Choose Familiar%s\r\n"
-      "%s 6%s) Animal Companion%s\r\n"
-      "%s 7%s) Ranger Favored Enemy%s\r\n"
-      "%s 8%s) Cleric Domain Selection%s\r\n"
-      "%s 9%s) Wizard School Selection%s\r\n"
-      "%s A%s) Preferred Classes (Prestige)%s\r\n"
-      "%s B%s) Sorcerer Bloodline Selection%s\r\n"
-      "%s C%s) Alchemist Discoveries Selection%s\r\n"
-      "%s D%s) Paladin Mercies%s\r\n"
-      "%s E%s) Blackguard Cruelties%s\r\n"
-      "%s F%s) Summoner Eidolons%s\r\n"
-      "%s G%s) Racial Abilities Selection%s\r\n"
-      "%s H%s) Necromancer Casting Type%s\r\n"
-      "%s I%s) Languages%s\r\n"
-      "%s J%s) Dragon Riders%s\r\n"
-      "%s K%s) Loremaster Spellcasting Advancement%s\r\n"
-      "%s L%s) Loremaster Secret%s\r\n"
-      "\r\n"
-      "%s R%s) Reset Character%s\r\n"
-      "%s Q%s) Quit\r\n"
-      "\r\n"
-      "* - An asterisk indicates you don't have access to this option.  %s\r\n"
-      "Enter Choice : ",
-
-      mgn, MENU_OPT(CAN_STUDY_SKILLS(ch)), (CAN_STUDY_SKILLS(ch)) ? "" : "*",          // 0
-      MENU_OPT(CAN_STUDY_BOOSTS(ch)), CAN_STUDY_BOOSTS(ch) ? "" : "*",                 // 1
-      MENU_OPT(CAN_STUDY_FEATS(ch)), CAN_STUDY_FEATS(ch) ? "" : "*",                   // 2
-      MENU_OPT(CAN_STUDY_KNOWN_SPELLS(ch)), CAN_STUDY_KNOWN_SPELLS(ch) ? "" : "*",     // 3
-      MENU_OPT(CAN_STUDY_KNOWN_PSIONICS(ch)), CAN_STUDY_KNOWN_PSIONICS(ch) ? "" : "*", // 4
-      MENU_OPT(CAN_STUDY_FAMILIAR(ch)), CAN_STUDY_FAMILIAR(ch) ? "" : "*",             // 5
-      MENU_OPT(CAN_STUDY_COMPANION(ch)), CAN_STUDY_COMPANION(ch) ? "" : "*",           // 6
-      MENU_OPT(CAN_STUDY_FAVORED_ENEMY(ch)), CAN_STUDY_FAVORED_ENEMY(ch) ? "" : "*",   // 7
-      MENU_OPT(CAN_SET_DOMAIN(ch)), CAN_SET_DOMAIN(ch) ? "" : "*",                     // 8
-      MENU_OPT(CAN_SET_SCHOOL(ch)), CAN_SET_SCHOOL(ch) ? "" : "*",                     // 9
-      MENU_OPT(CAN_SET_P_CASTER(ch)), CAN_SET_P_CASTER(ch) ? "" : "*",                 // A
-      MENU_OPT(CAN_SET_S_BLOODLINE(ch)), CAN_SET_S_BLOODLINE(ch) ? "" : "*",           // B
-      MENU_OPT(has_alchemist_discoveries_unchosen(ch)),
-      has_alchemist_discoveries_unchosen(ch) ? "" : "*",                                       // C
-      MENU_OPT(has_paladin_mercies_unchosen(ch)), has_paladin_mercies_unchosen(ch) ? "" : "*", // D
-      MENU_OPT(has_blackguard_cruelties_unchosen(ch)),
-      has_blackguard_cruelties_unchosen(ch) ? "" : "*",                                        // E
-      MENU_OPT(has_eidolon_choices_unchosen(ch)), has_eidolon_choices_unchosen(ch) ? "" : "*", // F
-      MENU_OPT(has_racial_abils_unchosen(ch)), has_racial_abils_unchosen(ch) ? "" : "*",       // G
-      MENU_OPT(has_necromancer_cast_type_unchosen(ch)),
-      has_necromancer_cast_type_unchosen(ch) ? "" : "*",                                 // H
-      MENU_OPT(has_unchosen_languages(ch)), has_unchosen_languages(ch) ? "" : "*",       // I
-      MENU_OPT(has_unchosen_dragon_rider(ch)), has_unchosen_dragon_rider(ch) ? "" : "*", // J
-      MENU_OPT(LEVELUP(ch) && LEVELUP(ch)->class == CLASS_LOREMASTER),
-      (LEVELUP(ch) && LEVELUP(ch)->class == CLASS_LOREMASTER) ? "" : "*", // K
-      MENU_OPT(LEVELUP(ch) && LEVELUP(ch)->class == CLASS_LOREMASTER),
-      (LEVELUP(ch) && LEVELUP(ch)->class == CLASS_LOREMASTER) ? "" : "*", // L
-      MENU_OPT(GET_LEVEL(ch) == 1), GET_LEVEL(ch) == 1 ? "" : "*",                       // R
-      grn, nrm,
-      (GET_PREMADE_BUILD_CLASS(ch) != CLASS_UNDEFINED)
-          ? "(You are using premade build, options are limited!)"
-          : "");
-
+  /* Keep shortcut keys stable as options appear and disappear. */
+#define STUDY_OPTION(key, allowed, label) \
+  do { if (allowed) write_to_output(d, "%s %s%s) %s\r\n", grn, key, nrm, label); } while (0)
+  STUDY_OPTION("0", CAN_STUDY_SKILLS(ch) > 0, "Skills");
+  STUDY_OPTION("1", CAN_STUDY_BOOSTS(ch), "Ability Score Boosts");
+  STUDY_OPTION("2", CAN_STUDY_FEATS(ch), "Feats");
+  STUDY_OPTION("3", CAN_STUDY_KNOWN_SPELLS(ch), "Known Spells");
+  STUDY_OPTION("4", CAN_STUDY_KNOWN_PSIONICS(ch), "Known Psionic Powers");
+  STUDY_OPTION("5", CAN_STUDY_FAMILIAR(ch), "Choose Familiar");
+  STUDY_OPTION("6", CAN_STUDY_COMPANION(ch), "Animal Companion");
+  STUDY_OPTION("7", CAN_STUDY_FAVORED_ENEMY(ch), "Ranger Favored Enemy");
+  STUDY_OPTION("8", CAN_SET_DOMAIN(ch), "Cleric Domain Selection");
+  STUDY_OPTION("9", CAN_SET_SCHOOL(ch), "Wizard School Selection");
+  STUDY_OPTION("A", CAN_SET_P_CASTER(ch), "Preferred Classes (Prestige)");
+  STUDY_OPTION("B", CAN_SET_S_BLOODLINE(ch), "Sorcerer Bloodline Selection");
+  STUDY_OPTION("C", has_alchemist_discoveries_unchosen(ch), "Alchemist Discoveries Selection");
+  STUDY_OPTION("D", has_paladin_mercies_unchosen(ch), "Paladin Mercies");
+  STUDY_OPTION("E", has_blackguard_cruelties_unchosen(ch), "Blackguard Cruelties");
+  STUDY_OPTION("F", has_eidolon_choices_unchosen(ch), "Summoner Eidolons");
+  STUDY_OPTION("G", has_racial_abils_unchosen(ch), "Racial Abilities Selection");
+  STUDY_OPTION("H", has_necromancer_cast_type_unchosen(ch), "Necromancer Casting Type");
+  STUDY_OPTION("I", has_unchosen_languages(ch), "Languages");
+  STUDY_OPTION("J", has_unchosen_dragon_rider(ch), "Dragon Riders");
+  STUDY_OPTION("K", LEVELUP(ch) && LEVELUP(ch)->class == CLASS_LOREMASTER, "Loremaster Spellcasting Advancement");
+  STUDY_OPTION("L", LEVELUP(ch) && LEVELUP(ch)->class == CLASS_LOREMASTER, "Loremaster Secret");
+  write_to_output(d, "\r\n");
+  STUDY_OPTION("R", GET_LEVEL(ch) == 1, "Reset Character");
+  STUDY_OPTION("Q", TRUE, "Quit");
+#undef STUDY_OPTION
+  if (GET_PREMADE_BUILD_CLASS(ch) != CLASS_UNDEFINED)
+    write_to_output(d, "\r\nYou are using a premade build; options are limited.\r\n");
+  write_to_output(d, "\r\nEnter Choice : ");
   OLC_MODE(d) = STUDY_GEN_MAIN_MENU;
 }
 
@@ -3510,7 +3730,8 @@ void study_parse(struct descriptor_data *d, char *arg)
       }
       write_to_output(d, "You can currently study as much as you want per level.\r\n");
       /* in the future we will probably change study to be limited to 1/ level ?*/
-      write_to_output(d, "Do you wish to save your changes? : ");
+      study_changes_summary(d);
+      write_to_output(d, "Do you wish to save your changes? (Y/N): ");
       OLC_MODE(d) = STUDY_CONFIRM_SAVE;
       break;
     case '0':
@@ -3748,7 +3969,13 @@ void study_parse(struct descriptor_data *d, char *arg)
 
     case 'F':
     case 'f':
-      study_eidolon_main_menu_select(d);
+      if (has_eidolon_choices_unchosen(ch))
+        study_eidolon_main_menu_select(d);
+      else
+      {
+        write_to_output(d, "That is an invalid choice!\r\n");
+        generic_main_disp_menu(d);
+      }
       break;
 
     case 'G':

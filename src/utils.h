@@ -1695,7 +1695,10 @@ void reconcile_alter_self(struct char_data *ch);
 #define CAN_STUDY_KNOWN_SPELLS(ch) (can_study_known_spells(ch))
 #define CAN_STUDY_KNOWN_PSIONICS(ch) (can_study_known_psionics(ch))
 
-#define CAN_STUDY_FAMILIAR(ch) (HAS_FEAT(ch, FEAT_SUMMON_FAMILIAR) ? 1 : 0)
+#define CAN_STUDY_FAMILIAR(ch) \
+  ((ch) && !IS_NPC(ch) && \
+   (CLASS_LEVEL((ch), CLASS_WIZARD) > 0 || CLASS_LEVEL((ch), CLASS_SORCERER) > 0 || \
+    CLASS_LEVEL((ch), CLASS_WARLOCK) > 0) && HAS_FEAT(ch, FEAT_SUMMON_FAMILIAR))
 #define CAN_STUDY_COMPANION(ch) (HAS_FEAT(ch, FEAT_ANIMAL_COMPANION) ? 1 : 0)
 #define CAN_STUDY_FAVORED_ENEMY(ch) (HAS_FEAT(ch, FEAT_FAVORED_ENEMY_AVAILABLE) ? 1 : 0)
 /* study - setting preferred caster class, for prestige classes such as arcane archer */

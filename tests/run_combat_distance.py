@@ -48,7 +48,8 @@ static struct char_data *selected;
 struct room_data *world;
 room_rnum top_of_world;
 struct weapon_table weapon_list[NUM_WEAPON_TYPES];
-int get_feat_value(struct char_data *ch,int feat) {return 0;}
+static bool far_shot;
+int get_feat_value(struct char_data *ch,int feat) {return feat==FEAT_FAR_SHOT && far_shot;}
 int BAB(struct char_data *ch) {return 0;}
 int MAX(int a,int b) {return a>b?a:b;}
 int MIN(int a,int b) {return a<b?a:b;}
@@ -164,6 +165,20 @@ int main(void) {
   assert(combat_distance(&pc,&mob)==INT_MAX);
   assert(advance_combat_distance(&mob,&pc,5)==12 && !move_ready);
   reset_pairs();
+  /* Effective increments set the inclusive maximum as well as penalties. */
+  reset_pairs(); rooms[0].room_size=1001;
+  weapon_list[WEAPON_TYPE_LONG_BOW].range=100;
+  assert(!combat_attack_in_range(&pc,&mob,ATTACK_TYPE_RANGED,&bow));
+  far_shot=true;assert(combat_attack_in_range(&pc,&mob,ATTACK_TYPE_RANGED,&bow));
+  rooms[0].room_size=1500;assert(combat_attack_in_range(&pc,&mob,ATTACK_TYPE_RANGED,&bow));
+  rooms[0].room_size=1501;assert(!combat_attack_in_range(&pc,&mob,ATTACK_TYPE_RANGED,&bow));
+  GET_OBJ_VAL(&bow,0)=WEAPON_TYPE_DAGGER;
+  weapon_list[WEAPON_TYPE_DAGGER].range=10;
+  weapon_list[WEAPON_TYPE_DAGGER].weaponFlags=WEAPON_FLAG_THROWN|WEAPON_FLAG_RANGED;
+  rooms[0].room_size=100;assert(combat_attack_in_range(&pc,&mob,ATTACK_TYPE_RANGED,&bow));
+  rooms[0].room_size=101;assert(!combat_attack_in_range(&pc,&mob,ATTACK_TYPE_RANGED,&bow));
+  far_shot=false;rooms[0].room_size=51;
+  assert(!combat_attack_in_range(&pc,&mob,ATTACK_TYPE_RANGED,&bow));
   puts("PASS: ranged/melee starts, symmetric multi-opponent distance, per-round mob/charmie movement, ranged mob flag, 5/10-foot reach, advance actions, immobilization, cleanup and staff authorization.");
 }
 '''

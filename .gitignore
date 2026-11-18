@@ -337,6 +337,7 @@ lib/text/help/*
 !lib/text/help/stats.hlp
 !lib/text/help/epicspells.hlp
 !lib/text/help/epic_expansion.hlp
+!lib/text/help/far_shot.hlp
 !lib/text/help/preferred_classes.hlp
 !lib/text/help/practiced_spellcaster.hlp
 !lib/text/help/stalls.hlp

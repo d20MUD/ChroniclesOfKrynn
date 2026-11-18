@@ -5394,24 +5394,9 @@ ACMD(do_flee)
     if ((i = search_block(arg, dirs, FALSE)) >= 0)
     {
       if (CAN_GO(ch, i))
-      {
-        if (do_simple_move(ch, i, 3))
-        {
-          send_to_char(ch, "You make a tactical retreat from battle!\r\n");
-          act("$n makes a tactical retreat from the battle!", TRUE, ch, 0, 0, TO_ROOM);
-          USE_MOVE_ACTION(ch);
-        }
-        else
-        {
-          send_to_char(ch, "You can't escape that direction!\r\n");
-          return;
-        }
-      }
+        perform_flee_direction(ch, i);
       else
-      {
         send_to_char(ch, "You can't escape that direction!\r\n");
-        return;
-      }
     }
     else
     {

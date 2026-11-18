@@ -107,7 +107,11 @@ Weapons have their own range increments. Beyond the first increment, each
 additional increment gives -2 to hit; Far Shot reduces this to -1. Thrown
 weapons can reach up to five increments, other ranged weapons up to ten.
 The room also limits distance, and you can never shoot through an exit.
-For example, a dagger's increment is 10 feet and a javelin's is 30 feet.
+Far Shot also extends projectile increments by 50% (rounded down) and
+doubles thrown increments. Penalties and maximum ranges use these effective
+increments. A 100-foot bow increment becomes 150 feet (1500-foot maximum);
+a thrown dagger's 10-foot increment becomes 20 feet (100-foot maximum).
+Point-Blank Shot still applies only within 30 feet. See HELP FAR SHOT.
 
 POSITION AND FEATS
 Point-Blank Shot grants +1 to ranged attack and damage rolls within 30 feet.
