@@ -5,6 +5,7 @@
 #include "structs.h"
 #include "clan_sources.h"
 #include "utils.h"
+#include "epic_feats2.h"
 #include "comm.h"
 #include "db.h"
 #include "handler.h"
@@ -484,10 +485,17 @@ bool legendary_effect_consume(struct char_data *target,int key)
  * survives ordinary healing, and cannot be serialized as permanent health. */
 int legendary_temporary_remaining(struct char_data *ch)
 {struct effect *e;sweep();e=best(ch,LEG_S08,LEG_EFFECT_TEMP_HP,0,0,false);return e?e->spec.magnitude:0;}
+void legendary_temporary_clear(struct char_data *ch)
+{
+  struct effect *e;
+  sweep();e=best(ch,LEG_S08,LEG_EFFECT_TEMP_HP,0,0,false);
+  if(e) e->revoked=true;
+  sweep();
+}
 int legendary_temporary_hp(const struct legendary_activation *a,int amount,int duration)
 {
   struct legendary_effect_spec s={0};struct effect *e;int old,grant;
-  sweep();e=best(a->target,LEG_S08,LEG_EFFECT_TEMP_HP,0,0,false);old=e?e->spec.magnitude:0;
+  sweep();e=best(a->target,LEG_S08,LEG_EFFECT_TEMP_HP,0,0,false);old=MAX(e?e->spec.magnitude:0,epic_temporary_remaining(a->target));
   if(amount<=old)return 0;
   /* Allocate/attach first; no allowance is spent for an impossible grant. */
   s.key=LEG_S08;s.kind=LEG_EFFECT_TEMP_HP;s.magnitude=0;s.duration=duration;s.flags=LEG_EFFECT_ROOM_BOUND|LEG_EFFECT_GROUP;
@@ -496,6 +504,7 @@ int legendary_temporary_hp(const struct legendary_activation *a,int amount,int d
   if(!grant){effects->revoked=true;sweep();return 0;}
   effects->spec.magnitude=old+grant;
   if(e)e->revoked=true;
+  epic_temporary_clear(a->target);
   clan_source_support(a->source,a->target,CLAN_COMBAT_HEAL,grant);
   legendary_record_support(a->source,a->target,LEG_ACTION_HEAL,grant);
   sweep();return grant;

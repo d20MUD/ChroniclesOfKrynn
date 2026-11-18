@@ -13,6 +13,7 @@
 #include "legendary_equipment.h"
 #include "structs.h"
 #include "utils.h"
+#include "epic_feats3.h"
 #include "epic_magic.h"
 #include "string.h"
 #include "comm.h"
@@ -547,7 +548,7 @@ void perform_dispel(struct char_data *ch, struct char_data *vict, struct obj_dat
   else
   {
     attempt = d20(ch) + CASTER_LEVEL(ch);
-    challenge = d20(vict) + CASTER_LEVEL(vict);
+    challenge = d20(vict) + epic_third_dispel_cl(ch,vict);
 
     if (spellnum == SPELL_GREATER_DISPELLING || spellnum == WARLOCK_VORACIOUS_DISPELLING ||
         spellnum == WARLOCK_DEVOUR_MAGIC)
@@ -579,7 +580,7 @@ void perform_dispel(struct char_data *ch, struct char_data *vict, struct obj_dat
           }
         }
         attempt = d20(ch) + CASTER_LEVEL(ch);
-        challenge = d20(vict) + CASTER_LEVEL(vict);
+        challenge = d20(vict) + epic_third_dispel_cl(ch,vict);
       }
       if (msg)
       {

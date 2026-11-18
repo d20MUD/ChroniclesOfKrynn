@@ -16,6 +16,8 @@
 #include "legendary_techniques.h"
 #include "structs.h"
 #include "utils.h"
+#include "epic_feats2.h"
+#include "epic_feats.h"
 #include "epic_magic.h"
 #include "comm.h"
 #include "interpreter.h"
@@ -344,7 +346,6 @@ void perform_quiveringpalm(struct char_data *ch)
   new_affect(&af);
   af.spell = SKILL_QUIVERING_PALM;
   af.duration = 24;
-
   affect_to_char(ch, &af);
 
   if (!IS_NPC(ch))
@@ -1754,6 +1755,7 @@ bool perform_knockdown(struct char_data *ch, struct char_data *vict, int skill, 
     defense_check += legendary_technique_maneuver(vict,COMBAT_MANEUVER_TYPE_KNOCKDOWN,true);
     defense_check += legendary_foundation_value(vict, LEG_F13, 0);
     defense_check += bloodline_knockdown_bonus(vict);
+    defense_check += epic_chassis_bonus(vict, COMBAT_MANEUVER_TYPE_KNOCKDOWN);
 
     /* Root cantrip: +3 resistance vs trip/knockdown/grapple */
     if (affected_by_spell(vict, SPELL_ROOT))
@@ -2966,6 +2968,8 @@ void perform_smite(struct char_data *ch, int smite_type)
       start_daily_use_cooldown(ch, FEAT_DESTRUCTIVE_SMITE);
     break;
   }
+  if (smite_type == SMITE_TYPE_EVIL || smite_type == SMITE_TYPE_GOOD)
+    epic_second_smite(ch, af.spell);
   af.duration = 24;
 
   affect_to_char(ch, &af);

@@ -17,6 +17,7 @@
 #include "clan_enchant.h"
 #include "housing.h"
 #include "utils.h"
+#include "epic_feats.h"
 #include "comm.h"
 #include "screen.h"
 #include "interpreter.h"
@@ -9196,6 +9197,7 @@ void use_wand(struct char_data *ch, char *argument)
   if (metamagic > 0)
   {
     charges_needed += calculate_metamagic_charge_cost(metamagic, spell_level);
+    charges_needed = epic_trigger_cost(ch, charges_needed, FALSE);
     get_metamagic_description(metamagic, metamagic_desc, sizeof(metamagic_desc));
 
     if (STORED_WANDS(ch, spellnum) < charges_needed)
@@ -9223,6 +9225,7 @@ void use_wand(struct char_data *ch, char *argument)
   }
   else
   {
+    (void)epic_trigger_cost(ch, 1 + calculate_metamagic_charge_cost(metamagic, spell_level), TRUE);
     STORED_WANDS(ch, spellnum) -= charges_needed;
   }
 
@@ -9296,6 +9299,7 @@ void invoke_staff(struct char_data *ch, char *argument)
   if (metamagic > 0)
   {
     charges_needed += calculate_metamagic_charge_cost(metamagic, spell_level);
+    charges_needed = epic_trigger_cost(ch, charges_needed, FALSE);
     get_metamagic_description(metamagic, metamagic_desc, sizeof(metamagic_desc));
 
     if (STORED_STAVES(ch, spellnum) < charges_needed)
@@ -9324,6 +9328,7 @@ void invoke_staff(struct char_data *ch, char *argument)
   }
   else
   {
+    (void)epic_trigger_cost(ch, 1 + calculate_metamagic_charge_cost(metamagic, spell_level), TRUE);
     STORED_STAVES(ch, spellnum) -= charges_needed;
   }
 

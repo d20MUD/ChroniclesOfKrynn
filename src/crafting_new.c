@@ -12,6 +12,7 @@
 #include "bool.h"
 #include "mysql.h"
 #include "utils.h"
+#include "epic_feats.h"
 #include "comm.h"
 #include "spells.h"
 #include "interpreter.h"
@@ -3841,12 +3842,9 @@ void begin_current_craft(struct char_data *ch)
   int seconds = CREATE_BASE_TIME;
   int rapid_reduction = get_rapid_talent_bonus(ch, skill);
 
-  /* Apply rapid talent reduction, but don't go below 1 second */
-  seconds -= rapid_reduction;
-  if (artificer_efficient_crafter_applies(ch))
-    seconds = (seconds * 90) / 100;
-  if (seconds < 1)
-    seconds = 1;
+  seconds = epic_craft_seconds(ch, seconds, rapid_reduction,
+      crafting_recipes[GET_CRAFT(ch).crafting_recipe].epic_creation_category,
+      artificer_efficient_crafter_applies(ch));
 
   GET_CRAFT(ch).craft_duration = seconds;
   GET_CRAFT(ch).crafting_method = SCMD_NEWCRAFT_CREATE;
@@ -4362,6 +4360,10 @@ static bool create_craft_skill_check_with_roll(struct char_data *ch, struct obj_
     send_to_char(ch, "You don't have the skill to craft %s.\r\n", object_short_description(obj));
     return FALSE;
   }
+
+  if (GET_CRAFT(ch).crafting_recipe > CRAFT_RECIPE_NONE)
+    roll = epic_artisan_roll(ch, roll, skill_mod, dc, TRUE);
+  if (natural_roll) *natural_roll = roll;
 
   // critical failure. Lose the item, materials and motes.
   if (roll == 1)
@@ -13968,6 +13970,7 @@ void craft_golem_complete(struct char_data *ch)
   roll = d20(ch);
   dc = GET_CRAFT(ch).dc;
   skill = compute_ability(ch, ABILITY_ARCANA);
+  roll = epic_artisan_roll(ch, roll, skill, dc, FALSE);
 
   send_to_char(ch, "You rolled %d + your Arcana skill of %d = total of %d vs. dc %d.\r\n", roll,
                skill, roll + skill, dc);

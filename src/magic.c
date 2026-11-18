@@ -16,6 +16,9 @@
 #include "structs.h"
 #include "clan_sources.h"
 #include "utils.h"
+#include "epic_feats3.h"
+#include "epic_feats2.h"
+#include "epic_feats.h"
 #include "epic_magic.h"
 #include "comm.h"
 #include "spells.h"
@@ -28,6 +31,8 @@
 #include "bloodlines.h"
 #include "fight.h"
 #include "utils.h"
+#include "epic_feats3.h"
+#include "epic_feats2.h"
 #include "mud_event.h"
 #include "act.h" //perform_wildshapes
 #include "mudlim.h"
@@ -326,7 +331,8 @@ int mag_resistance(struct char_data *ch, struct char_data *vict, int modifier)
     challenge += HAS_REAL_FEAT(ch, FEAT_GREATER_CHANNELLING) * 2;
   }
 
-  challenge = bloodline_retry_spell_resistance(ch, challenge, resist, penetration_die);
+  challenge += epic_device_penetration(ch);
+  if(!ch->epic_reaction_depth) challenge = bloodline_retry_spell_resistance(ch, challenge, resist, penetration_die);
 
   // success?
   if (resist > challenge)
@@ -356,6 +362,7 @@ int compute_mag_saves(struct char_data *vict, int type, int modifier)
   {
   case SAVING_FORT:
     saves += GET_CON_BONUS(vict);
+    if (epic_feat_rank(vict, FEAT_EPIC_FORTITUDE)) saves += 4;
     if (!IS_NPC(vict) && HAS_FEAT(vict, FEAT_GREAT_FORTITUDE))
       saves += 2;
     if (!IS_NPC(vict) && GET_SKILL(vict, SKILL_EPIC_FORTITUDE))
@@ -365,6 +372,7 @@ int compute_mag_saves(struct char_data *vict, int type, int modifier)
     break;
   case SAVING_REFL:
     saves += GET_DEX_BONUS(vict);
+    if (epic_feat_rank(vict, FEAT_EPIC_REFLEXES)) saves += 4;
     if (!IS_NPC(vict) && HAS_FEAT(vict, FEAT_LIGHTNING_REFLEXES))
       saves += 2;
     if (!IS_NPC(vict) && HAS_FEAT(vict, FEAT_GRACE))
@@ -392,6 +400,7 @@ int compute_mag_saves(struct char_data *vict, int type, int modifier)
 
   case SAVING_WILL:
     saves += GET_WIS_BONUS(vict);
+    if (epic_feat_rank(vict, FEAT_EPIC_WILL)) saves += 4;
     if (!IS_NPC(vict) && HAS_FEAT(vict, FEAT_IRON_WILL))
       saves += 2;
     if (!IS_NPC(vict) && GET_SKILL(vict, SKILL_EPIC_WILL))
@@ -509,6 +518,7 @@ int savingthrow_full(struct char_data *ch, struct char_data *vict, int type, int
 {
   int challenge = 10, // 10 is base DC
       diceroll = bloodline_conviction_roll(vict, d20(vict), BLOODLINE_ROLL_SAVE), stat_bonus = 0, savethrow = 0;
+  int retry_insight = bloodline_affect_bonus(vict, AFFECT_TOUCH_OF_DESTINY);
   struct affected_type *af = NULL;
 
   /* Most power effects use savingthrow(), which has no spell number argument.
@@ -769,6 +779,8 @@ int savingthrow_full(struct char_data *ch, struct char_data *vict, int type, int
       challenge += HAS_FEAT(ch, FEAT_EPIC_PSIONICS) *
                    (affected_by_spell(ch, PSIONIC_ABILITY_PSIONIC_FOCUS) ? 2 : 1);
     }
+    if (ch && casttype == CAST_SPELL)
+      challenge += epic_discipline_dc(ch, spellnum);
     /* Psionicist: Mind Spike I applies +1 DC to Telepathy powers */
     if (ch && psionic_powers[spellnum].power_type == TELEPATHY)
     {
@@ -1078,6 +1090,16 @@ int savingthrow_full(struct char_data *ch, struct char_data *vict, int type, int
     }
   }
 
+  {
+    int epic_spell = spellnum ? spellnum : (ch ? ch->epic_spell_context : 0);
+    if (ch && epic_spell == WARLOCK_ELDRITCH_BLAST &&
+        (GET_ELDRITCH_ESSENCE(ch) == WARLOCK_FRIGHTFUL_BLAST ||
+         GET_ELDRITCH_ESSENCE(ch) == WARLOCK_BEWITCHING_BLAST))
+      epic_spell = GET_ELDRITCH_ESSENCE(ch);
+    savethrow += epic_mind_save_bonus(vict, type, epic_spell);
+    savethrow += epic_planar_save_bonus(vict, type, epic_spell);
+  }
+
   /* Artificer Flash Insight I: +bonus to next saving throw, then consumed */
   if (!IS_NPC(vict) && vict->player_specials->saved.flash_insight_bonus > 0 &&
       vict->player_specials->saved.flash_insight_expires > time(0))
@@ -1089,6 +1111,7 @@ int savingthrow_full(struct char_data *ch, struct char_data *vict, int type, int
 
     if (!survival_only || survival_save)
     {
+      retry_insight = MAX(retry_insight, insight_bonus);
       savethrow += insight_bonus;
       vict->player_specials->saved.flash_insight_bonus = 0;
       vict->player_specials->saved.flash_insight_expires = 0;
@@ -1115,6 +1138,11 @@ int savingthrow_full(struct char_data *ch, struct char_data *vict, int type, int
       }
     }
 
+  if (diceroll==1 || (diceroll!=20 && savethrow<challenge))
+  {
+    int sentinel=epic_third_sentinel(vict,spellnum?spellnum:(ch?ch->epic_spell_context:0),type,savethrow-diceroll,challenge,retry_insight);
+    if(sentinel>=0) return sentinel;
+  }
   if (diceroll != 1 && (savethrow >= challenge || diceroll == 20))
   {
     if (diceroll == 20)
@@ -1212,6 +1240,8 @@ int savingthrow_full(struct char_data *ch, struct char_data *vict, int type, int
 
     return (TRUE);
   }
+
+  epic_third_failed_save(ch,vict,spellnum?spellnum:(ch?ch->epic_spell_context:0),type,challenge);
 
   /* failed! */
   if (diceroll == 1)
@@ -4084,6 +4114,7 @@ void mag_affects_full(int level, struct char_data *ch, struct char_data *victim,
   if (victim == NULL || ch == NULL)
     return;
 
+  victim->epic_last_save_dc=0;victim->epic_last_save_spell=0;
   level = MAX(1, level);
 
   if (is_moon_phase_affected(ch))
@@ -10847,6 +10878,7 @@ void mag_affects_full(int level, struct char_data *ch, struct char_data *victim,
         if (KNOWS_DISCOVERY(ch, ALC_DISC_EXTEND_POTION))
           af[i].duration *= 2;
       if(IS_SET_AR(af[i].bitvector,AFF_FEAR)||IS_SET_AR(af[i].bitvector,AFF_BLEED))legendary_condition_origin(&af[i],ch);
+      epic_third_provenance(ch,victim,af+i,spellnum,level,recursive_call?CAST_INNATE:casttype);
       affect_join(victim, af + i, accum_duration, FALSE, accum_affect, FALSE);
       if (af[i].duration > 0 && affected_by_spell(victim, spellnum)) legendary_applied = true;
     }
@@ -13344,6 +13376,7 @@ void mag_summons(int level, struct char_data *ch, struct obj_data *obj, int spel
         this_summon_duration = MAX(1, summon_duration / 3);
 
       attach_mud_event(new_mud_event(ePURGEMOB, mob, NULL), this_summon_duration);
+      epic_summon_created(ch,mob,spellnum,MAX(1,this_summon_duration/PASSES_PER_SEC));
     }
 
     /* Hardened Constructs I: temp HP = manifester level and +1 AC for shambler */
@@ -13456,15 +13489,20 @@ void mag_summons(int level, struct char_data *ch, struct obj_data *obj, int spel
    in - ch is causing the heal, victim is receiving the heal, healing is the amount of HP restored, move is the amount of movement points restored
    out - TRUE if successful, FALSE if failed
    */
+static bool process_healing_internal(struct char_data *,struct char_data *,int,int,int,int,bool);
+bool process_construct_repair(struct char_data *ch,struct char_data *victim,int amount)
+{ return process_healing_internal(ch,victim,0,amount,0,0,TRUE); }
 bool process_healing(struct char_data *ch, struct char_data *victim, int spellnum, int healing,
                      int move, int psp)
+{ return process_healing_internal(ch,victim,spellnum,healing,move,psp,FALSE); }
+static bool process_healing_internal(struct char_data *ch,struct char_data *victim,int spellnum,int healing,int move,int psp,bool repair)
 {
   int start_hp = GET_HIT(victim);
   int start_mv = GET_MOVE(victim);
   int start_psp = GET_PSP(victim);
 
   /* Golems receive half healing efficiency from healing spells */
-  if (IS_NPC(victim) && MOB_FLAGGED(victim, MOB_GOLEM))
+  if (!repair && IS_NPC(victim) && MOB_FLAGGED(victim, MOB_GOLEM))
     healing = healing / 2;
 
   /* black mantle reduces effectiveness of healing by 20% */
@@ -13472,7 +13510,7 @@ bool process_healing(struct char_data *ch, struct char_data *victim, int spellnu
     healing = (float)healing * 0.8;
 
   /* healing domain */
-  if (HAS_FEAT(ch, FEAT_EMPOWERED_HEALING))
+  if (!repair && HAS_FEAT(ch, FEAT_EMPOWERED_HEALING))
     healing = (float)healing * 1.50;
 
   // vampire bonuses / penalties for feeding

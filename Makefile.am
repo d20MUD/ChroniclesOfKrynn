@@ -187,6 +187,7 @@ circle_SOURCES = \
 	src/epic_magic.c \
 	src/mail.c \
 	src/medit.c \
+	src/epic_feats.c src/epic_feats2.c src/epic_feats3.c \
 	src/metamagic_science.c \
 	src/missions.c \
 	src/mob_act.c \
@@ -460,6 +461,7 @@ EXTRA_DIST = \
 # Run unit tests
 test: check
 	./cutest
+	$(SHELL) $(srcdir)/unittests/test_epic_feats.sh
 
 # Additional cleanup for distclean
 # Removes autotools-generated files and build artifacts
@@ -491,3 +493,7 @@ scrub: clean
 	rm -f src/*~ src/*.swp src/*.swo
 	rm -f *.tmp *.temp
 	rm -f test_*.out test_*.log
+
+EXTRA_DIST += src/epic_feats.h src/epic_feats2.h src/epic_feats3.h unittests/test_epic_feats.c unittests/test_epic_feats.sh \
+	docs/EPIC_FEAT_FIRST_BATCH.md docs/EPIC_FEAT_SECOND_BATCH.md docs/EPIC_FEAT_THIRD_BATCH.md lib/text/help/epic_expansion.hlp \
+	lib/text/help/epicfeats.hlp sql/20261118_epicfeats_help.sql

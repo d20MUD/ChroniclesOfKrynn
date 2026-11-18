@@ -9,6 +9,9 @@
 #include "sysdep.h"
 #include "structs.h"
 #include "utils.h"
+#include "epic_feats3.h"
+#include "epic_feats2.h"
+#include "epic_feats.h"
 #include "comm.h"
 #include "interpreter.h"
 #include "handler.h"
@@ -353,6 +356,7 @@ ACMD(do_perform)
 #ifdef EVENT_RAN
     if (char_has_mud_event(ch, eBARDIC_PERFORMANCE))
     {
+      epic_third_stop_music(ch);
       event_cancel_specific(ch, eBARDIC_PERFORMANCE);
       act("You stopped your performance.", FALSE, ch, 0, 0, TO_CHAR);
       act("$n stops performing.", TRUE, ch, 0, 0, TO_ROOM);
@@ -361,6 +365,7 @@ ACMD(do_perform)
 #else
     if (IS_PERFORMING(ch))
     {
+      epic_third_stop_music(ch);
       IS_PERFORMING(ch) = FALSE;
       act("You stopped your performance.", FALSE, ch, 0, 0, TO_CHAR);
       act("$n stops performing.", TRUE, ch, 0, 0, TO_ROOM);
@@ -389,6 +394,7 @@ ACMD(do_perform)
     if (!IS_NPC(ch) && has_bard_master_of_motifs(ch) && GET_PERFORMANCE_VAR(ch, 2) >= 0)
     {
       /* They have 2 performances, stop both */
+      epic_third_stop_music(ch);
       IS_PERFORMING(ch) = FALSE;
       GET_PERFORMING(ch) = -1;
       GET_PERFORMANCE_VAR(ch, 2) = -1;
@@ -398,6 +404,7 @@ ACMD(do_perform)
     else
     {
       /* Only 1 performance, stop it normally */
+      epic_third_stop_music(ch);
       IS_PERFORMING(ch) = FALSE;
       GET_PERFORMING(ch) = -1;
       GET_PERFORMANCE_VAR(ch, 2) = -1;
@@ -547,10 +554,10 @@ int performance_effects(struct char_data *ch, struct char_data *tch, int spellnu
 
   case SKILL_DANCE_OF_PROTECTION:
     af[0].location = APPLY_AC_NEW;
-    af[0].modifier = MAX(1, (effectiveness + 1) / 7);
+    af[0].modifier = MAX(1, (effectiveness + 1) / 7) + epic_feat_rank(ch, FEAT_EPIC_INSPIRATION);
 
     af[1].location = APPLY_SAVING_WILL;
-    af[1].modifier = MAX(1, effectiveness / 6);
+    af[1].modifier = MAX(1, effectiveness / 6) + epic_feat_rank(ch, FEAT_EPIC_INSPIRATION);
 
     af[2].location = APPLY_DR;
     af[2].modifier = MAX(1, effectiveness / 13);
@@ -559,10 +566,10 @@ int performance_effects(struct char_data *ch, struct char_data *tch, int spellnu
 
   case SKILL_SONG_OF_HEROISM:
     af[0].location = APPLY_HITROLL;
-    af[0].modifier = MAX(1, 1 + effectiveness / 10);
+    af[0].modifier = MAX(1, 1 + effectiveness / 10) + epic_feat_rank(ch, FEAT_EPIC_INSPIRATION);
 
     af[1].location = APPLY_DAMROLL;
-    af[1].modifier = MAX(1, effectiveness / 10);
+    af[1].modifier = MAX(1, effectiveness / 10) + epic_feat_rank(ch, FEAT_EPIC_INSPIRATION);
 
     af[2].location = APPLY_STR;
     af[2].modifier = MAX(1, effectiveness / 10);
@@ -806,6 +813,7 @@ int performance_effects(struct char_data *ch, struct char_data *tch, int spellnu
     if (HAS_FEAT(ch, FEAT_LINGERING_SONG))
       af[i].duration += 3;
 
+    epic_third_performance(ch,af+i,i);
     /* attach the affections! */
     affect_join(tch, af + i, FALSE, FALSE, FALSE, FALSE);
   }

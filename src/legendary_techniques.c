@@ -3,6 +3,7 @@
 #include "sysdep.h"
 #include "structs.h"
 #include "utils.h"
+#include "epic_feats.h"
 #include "comm.h"
 #include "db.h"
 #include "handler.h"
@@ -224,7 +225,7 @@ void legendary_track(struct char_data *ch)
       (!room_is_dark(IN_ROOM(a.target))||CAN_SEE_IN_DARK(ch))){send_to_char(ch,"Your marked quarry is %s.\r\n",dirs[dir]);return;}
   send_to_char(ch,"Your quarry's direction is obscured.\r\n");
 }
-struct payment {struct payment *next;struct char_data *ch;int spell,cost;bool paid,effect;char id[33];};
+struct payment {struct payment *next;struct char_data *ch;int spell,cost,epic_discount;bool paid,effect;char id[33];};
 static struct payment *payments;
 void legendary_cast_clear(struct char_data *ch)
 {struct payment **at=&payments,*p;while((p=*at))if(p->ch==ch){*at=p->next;free(p);}else at=&p->next;}
@@ -232,7 +233,7 @@ bool legendary_cast_queue(struct char_data *ch,int spell,int cost)
 {
   struct payment *p;if(IS_CASTING(ch))return false;legendary_cast_clear(ch);if(IS_NPC(ch)||cost<0)return false;
   p=calloc(1,sizeof(*p));if(!p)return false;p->ch=ch;p->spell=spell;p->cost=cost;
-  if(!legendary_uuid_generate(p->id)){free(p);return false;}p->next=payments;payments=p;return true;
+  if(!legendary_uuid_generate(p->id)){free(p);return false;}p->epic_discount=epic_augmentation_discount(ch,spell,GET_AUGMENT_PSP(ch));p->next=payments;payments=p;return true;
 }
 static int discount_power(struct char_data *ch,int cost,int *discount)
 {
@@ -255,15 +256,33 @@ int legendary_technique_pay(struct char_data *ch,int spell,int cost)
   if(paid>=0&&paid<cost&&key)legendary_effect_consume(ch,key);
   (void)spell;return paid;
 }
-bool legendary_cast_commit(struct char_data *ch,int spell)
+bool legendary_cast_commit(struct char_data *ch, int spell)
 {
-  struct payment *p;for(p=payments;p;p=p->next)if(p->ch==ch&&p->spell==spell){
-    if(p->paid)return true;
-    if(p->cost>0){int paid=legendary_technique_pay(ch,spell,p->cost);if(paid<0)return false;p->cost=paid;}
-    p->paid=true;return true;
-  }
+  struct payment *p;
+  for (p=payments; p; p=p->next)
+    if (p->ch==ch && p->spell==spell)
+    {
+      if (p->paid) return true;
+      if (p->cost>0)
+      {
+        int discount=0, paid;
+        (void)discount_power(ch,p->cost,&discount);
+        discount=MIN(discount,legendary_budget_available(ch,LEG_BUDGET_RESOURCE));
+        /* One discount family: a passive feat never consumes the legendary
+         * resource budget, and the two reductions never add together. */
+        if (p->epic_discount>discount)
+          paid=legendary_resource_pay(ch,MAX(1,p->cost-p->epic_discount),0);
+        else
+          paid=legendary_technique_pay(ch,spell,p->cost);
+        if (paid<0) return false;
+        p->cost=paid;
+      }
+      p->paid=true;
+      return true;
+    }
   return true; /* Prepared/Vancian and item spells never invent a point payment. */
 }
+
 void legendary_cast_failed(struct char_data *ch,int spell)
 {
   struct payment *p;struct legendary_activation a;

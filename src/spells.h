@@ -782,6 +782,11 @@
 #define AFFECT_CELESTIAL_CONVICTION 1341
 #define AFFECT_BLOODLINE_SUMMON_WARD 1342
 #define AFFECT_ABYSSAL_SUMMON_BOOST 1343
+#define AFFECT_EPIC_EIDOLON_WARD 1344
+#define AFFECT_EPIC_SHARED_VIGOR 1345
+#define AFFECT_EPIC_CONTINGENCY 1346
+#define AFFECT_EPIC_SENTINEL 1347
+#define AFFECT_EPIC_INTERCESSION 1348
 
 // 1470 to 1493 are poisons with room saved for more poisons up to 1498
 
@@ -1912,6 +1917,7 @@ int aoeOK(struct char_data *ch, struct char_data *tch, int spellnum);
 int aoe_effect(struct char_data *ch, int spellnum,
                int (*callback)(struct char_data *ch, struct char_data *tch, void *data),
                void *callback_data);
+bool process_construct_repair(struct char_data *,struct char_data *,int);
 bool process_healing(struct char_data *ch, struct char_data *victim, int spellnum, int healing,
                      int move, int psp);
 

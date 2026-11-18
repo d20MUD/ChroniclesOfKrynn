@@ -17,6 +17,8 @@
 #include "dg_scripts.h"
 #include "modify.h"
 #include "feats.h"
+#include "epic_feats.h"
+#include "epic_feats2.h"
 #include "mysql.h"
 #include "class.h"
 #include "bloodlines.h"
@@ -4991,8 +4993,8 @@ void assign_feats(void)
   feat_prereq_class_level(FEAT_EPIC_SHAMBLER, CLASS_PSIONICIST, 20);
 
   feato(FEAT_EPIC_POWER_PENETRATION, "epic power penetration", TRUE, TRUE, FALSE, FEAT_TYPE_PSIONIC,
-        "save dcs for manifested powers are at +6.",
-        "DC's against your manifestions are calculated with a +6 bonus.");
+        "+6 to checks to penetrate power resistance.",
+        "Your checks to penetrate power resistance gain +6. This does not modify manifestation saving throw DCs.");
   feat_prereq_class_level(FEAT_EPIC_POWER_PENETRATION, CLASS_PSIONICIST, 20);
 
   feato(FEAT_EPIC_POWER_DAMAGE, "epic power damage", TRUE, TRUE, FALSE, FEAT_TYPE_PSIONIC,
@@ -5805,34 +5807,14 @@ void assign_feats(void)
         "actions",
         "as improved combat challenge, but both regular challenges and challenge all are minor "
         "actions");
-  feato(FEAT_EPIC_DODGE, "epic dodge", FALSE, TRUE, FALSE, FEAT_TYPE_COMBAT,
-        "automatically dodge first attack against you each round",
-        "automatically dodge first attack against you each round");
+  feato(FEAT_EPIC_DODGE,"epic dodge",TRUE,TRUE,FALSE,FEAT_TYPE_COMBAT,
+        "Avoid one otherwise successful noncritical physical weapon attack per 30 seconds.",
+        "Level 21+, permanent DEX 23, Dodge, Mobility, trained Acrobatics 23. One rank. "
+        "Once per 30 seconds, the first otherwise successful noncritical physical weapon or natural "
+        "attack misses before its on-hit packets. Must stand conscious, able to move, without "
+        "grapple or entanglement. Native concealment, images and deflection resolve first. "
+        "No spells, rays, AoE, traps, scripts, counterattack or prevention of critical hits.");
 
-  /****/
-  /* class feats */
-  /*****/
-  /* feat-number | name | in game? | learnable? | stackable? | feat-type | short-descrip | long descrip */
-
-  /* ranger */
-  /* in this form, these ranger feats are not in the game, they are just given both sets of feats for free now */
-  /* unfinished */ feato(
-      FEAT_COMBAT_STYLE, "combat style", FALSE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
-      "Either Rapid Shot or Two Weapon Fighting, depending on the chosen combat style.",
-      "Either Rapid Shot or Two Weapon Fighting, depending on the chosen combat style.");
-  /* unfinished */ feato(
-      FEAT_IMPROVED_COMBAT_STYLE, "improved combat style", FALSE, FALSE, FALSE,
-      FEAT_TYPE_CLASS_ABILITY,
-      "Either Manyshot or Improved Two Weapon Fighting, depending on the chosen combat style.",
-      "Either Manyshot or Improved Two Weapon Fighting, depending on the chosen combat style.");
-  /* unfinished */ feato(FEAT_COMBAT_STYLE_MASTERY, "combat style master", FALSE, FALSE, FALSE,
-                         FEAT_TYPE_CLASS_ABILITY,
-                         "Either Improved Precise Shot or Greater Two Weapon Fighting, depending "
-                         "on the chosen combat style.",
-                         "Either Improved Precise Shot or Greater Two Weapon Fighting, depending "
-                         "on the chosen combat style.");
-
-  /* Bard */
   feato(FEAT_EXTRA_MUSIC, "extra music", FALSE, TRUE, FALSE, FEAT_TYPE_GENERAL,
         "4 extra bard music uses per day", "4 extra bard music uses per day");
 
@@ -5853,11 +5835,15 @@ void assign_feats(void)
 
   /* paladin / champion of torm [shared] */
   /* epic */
-  feato(FEAT_GREAT_SMITING, "great smiting", FALSE, TRUE, TRUE, FEAT_TYPE_COMBAT,
-        "For each rank in this feat you add your level in damage to all smite attacks",
-        "For each rank in this feat you add your level in damage to all smite attacks");
+  feato(FEAT_GREAT_SMITING, "great smiting", TRUE, TRUE, FALSE, FEAT_TYPE_COMBAT,
+        "Arm one native smite for an additional class-level physical damage packet.",
+        "Level 21+, Paladin 20 with Smite Evil or Blackguard 20 with Smite Good; permanent CHA 23.\r\n"
+        "epic great-smite: swift action, once per 300 seconds, armed 18 seconds. Your next manual "
+        "native smite spends its normal use and action. Its next ordinary attack consumes this arm, "
+        "hit or miss. If it hits an eligible alignment, add the supplying class level as a separate "
+        "physical packet subject to DR, without critical multiplication. One rank; no refunds or "
+        "bonus to subsequent attacks against the marked target.");
 
-  /* berserker */
   feato(FEAT_EXTEND_RAGE, "extend rage", FALSE, TRUE, FALSE, FEAT_TYPE_COMBAT,
         "Each of the uses of your rage or frenzy ability lasts an additional 5 rounds beyond its "
         "normal duration.",
@@ -6506,7 +6492,280 @@ void assign_feats(void)
         "3). However, when any of your devices break, they explode dealing 1d6 force damage per "
         "spell circle to you and all party members in the same room.");
 
+  feato(FEAT_EPIC_POWER_KNOWLEDGE, "epic power knowledge", TRUE, TRUE, TRUE, FEAT_TYPE_PSIONIC,
+        "Exact effect: Learn two additional ordinary powers from the native psionicist catalogue at circles you can manifest. Normal discipline/list restrictions apply. These selections do ",
+        "Character level 21+. Cost: one general or eligible class epic feat point.\r\nPrerequisites: "
+        "Psionicist 20, INT 21, trained Spellcraft 20, ninth-circle psionic access.\r\nExact effect: Learn"
+        " two additional ordinary powers from the native psionicist catalogue at circles you can "
+        "manifest. Normal discipline/list restrictions apply. These selections do not consume normal "
+        "known-power choices and grant no PSP or epic-power unlocks.\r\nRanks/actions: Up to three ranks, "
+        "with additional total-level gates 24 and 27. Passive. Select two different powers per rank in "
+        "Study; no duplicate or already-known choices. On respec, remove only these tagged grants; if a "
+        "power later becomes known normally it remains known.");
+  epicfeat(FEAT_EPIC_POWER_KNOWLEDGE);
+  feato(FEAT_EPIC_AUGMENTATION_EFFICIENCY, "epic augmentation efficiency", TRUE, TRUE, FALSE, FEAT_TYPE_PSIONIC,
+        "Exact effect: Reduce the PSP paid for an ordinary power's augmentation by 2, never its base PSP cost. The selected augmentation must first fit both the native manifester allowance ",
+        "Character level 21+. Cost: one general or eligible class epic feat point.\r\nPrerequisites: "
+        "Psionicist 20, INT 21, Expert Augmenting.\r\nExact effect: Reduce the PSP paid for an ordinary "
+        "power's augmentation by 2, never its base PSP cost. The selected augmentation must first fit "
+        "both the native manifester allowance and that power's maximum/step size. Example: base cost 7 "
+        "plus 6 legal augmentation costs 11 instead of 13, with exactly the original +6 augmentation "
+        "effect.\r\nLimits/actions: Passive. Across this feat and any existing perk/item discount applying"
+        " to augmentation, use the largest augmentation discount, not their sum. This feat's maximum "
+        "discount is 2. No PSP refunds or bonus augmentation points.");
+  epicfeat(FEAT_EPIC_AUGMENTATION_EFFICIENCY);
+  feato(FEAT_EPIC_FOCUS_CONTINUITY, "epic focus continuity", TRUE, TRUE, FALSE, FEAT_TYPE_PSIONIC,
+        "Exact effect: A normal successful activation of your existing psionic focus lasts 18 rounds instead of 12. It retains all native conditions and suppression rules.",
+        "Character level 21+. Cost: one general or eligible class epic feat point.\r\nPrerequisites: "
+        "Psionicist 20, Psionic Focus, trained Concentration 20.\r\nExact effect: A normal successful "
+        "activation of your existing psionic focus lasts 18 rounds instead of 12. It retains all native "
+        "conditions and suppression rules.\r\nLimits/actions: Passive upgrade to that activation. Does not"
+        " refresh an already active focus, reduce its cooldown, restore a use, stack duration from "
+        "multiple activations or alter perks that consume the focus affect.");
+  epicfeat(FEAT_EPIC_FOCUS_CONTINUITY);
+  feato(FEAT_EPIC_MENTAL_BASTION, "epic mental bastion", TRUE, TRUE, FALSE, FEAT_TYPE_PSIONIC,
+        "Exact effect: Gain a +4 insight bonus on native saves against charm, domination, confusion and fear. A failed or absent save is never converted into immunity. Does not help against",
+        "Character level 21+. Cost: one general or eligible class epic feat point.\r\nPrerequisites: "
+        "Psionicist 20, WIS 19, trained Concentration 20.\r\nExact effect: Gain a +4 insight bonus on "
+        "native saves against charm, domination, confusion and fear. A failed or absent save is never "
+        "converted into immunity. Does not help against unrelated death effects, energy damage or "
+        "generic Will saves.\r\nLimits/actions: Passive. Highest applicable insight save bonus wins, "
+        "including Touch of Destiny. Stacks with Epic Will's separate feat bonus when a Will save is "
+        "actually made.");
+  epicfeat(FEAT_EPIC_MENTAL_BASTION);
+  feato(FEAT_EPIC_MANIFESTING_POISE, "epic manifesting poise", TRUE, TRUE, FALSE, FEAT_TYPE_PSIONIC,
+        "Exact effect: Gain +4 circumstance to Concentration checks caused by taking damage while manifesting an ordinary power. If one hit causes multiple typed damage packets, this bonus ",
+        "Character level 21+. Cost: one general or eligible class epic feat point.\r\nPrerequisites: "
+        "Psionicist 20, Combat Manifestation, trained Concentration 20.\r\nExact effect: Gain +4 "
+        "circumstance to Concentration checks caused by taking damage while manifesting an ordinary "
+        "power. If one hit causes multiple typed damage packets, this bonus is applied to the native "
+        "check, not repeatedly per packet.\r\nLimits/actions: Passive. No change to manifestation "
+        "duration, actions, interruption DC or damage. Does not help checks for spells, item activations"
+        " or other classes. Combines with Combat Manifestation; does not stack another circumstance "
+        "bonus on that same check.");
+  epicfeat(FEAT_EPIC_MANIFESTING_POISE);
+  feato(FEAT_EPIC_ARTISANS_INSIGHT, "epic artisan's insight", TRUE, TRUE, FALSE, FEAT_TYPE_CRAFT,
+        "Exact effect: The next failed d20 check for a normal recipe craft or native golem construction/repair rolls a second d20 with the same modifiers and DC, keeping the second result. ",
+        "Character level 21+. Cost: one general or eligible class epic feat point.\r\nPrerequisites: "
+        "Artificer 20, INT 23, Craft Wondrous Item, trained Arcana 20.\r\nActivation: epic artisan-"
+        "insight; swift, 1/300s, out of combat. Arm for ten rounds.\r\nExact effect: The next failed d20 "
+        "check for a normal recipe craft or native golem construction/repair rolls a second d20 with the"
+        " same modifiers and DC, keeping the second result. Consume the arm on that failure. Resolve the"
+        " recipe's success/failure material consumption exactly once after the reroll.\r\nLimits: No "
+        "reroll of random item quality, salvage yield, gathering, device instability, or prerequisite "
+        "validation. Does not waive recipes, skill minimums, materials or item caps. The player must "
+        "start the check while the arm is active. Commit-time state prevents disconnect/retry rerolls.");
+  epicfeat(FEAT_EPIC_ARTISANS_INSIGHT);
+  feato(FEAT_EPIC_EFFICIENT_ITEM_CREATION, "epic efficient item creation", TRUE, TRUE, FALSE, FEAT_TYPE_CRAFT,
+        "Exact effect: Choose one of those owned item-creation categories at Study. Reduce eligible normal recipe completion time by 20 percentage points of the unmodified recipe time. Add ",
+        "Character level 21+. Cost: one general or eligible class epic feat point.\r\nPrerequisites: "
+        "Artificer 23, Craft Wondrous Item or Craft Magical Arms and Armor, trained Arcana 23.\r\nExact "
+        "effect: Choose one of those owned item-creation categories at Study. Reduce eligible normal "
+        "recipe completion time by 20 percentage points of the unmodified recipe time. Add this to other"
+        " time reductions, but cap their combined reduction at 50%; final duration is rounded up to "
+        "whole seconds, minimum one second.\r\nRanks/actions: One rank, passive. Applies only to newly "
+        "started crafts whose recipe explicitly records the chosen category. Unclassified recipes "
+        "receive no reduction until categorized.\r\nLimits/overlap: Efficient Crafter's existing 10% "
+        "reduction participates in the same cap. No material/gold discount, instant completion, recharge"
+        " benefit, golem construction speed bonus or change to invention/matrix rebuilding. Cancelling "
+        "retains normal penalties.");
+  epicfeat(FEAT_EPIC_EFFICIENT_ITEM_CREATION);
+  feato(FEAT_EPIC_METAMAGIC_SCIENCE, "epic metamagic science", TRUE, TRUE, FALSE, FEAT_TYPE_CRAFT,
+        "Exact effect: The next legal manually activated wand/staff spell with a positive Metamagic Science charge surcharge pays one fewer surcharge charge. Base activation charges are unc",
+        "Character level 21+. Cost: one general or eligible class epic feat point.\r\nPrerequisites: "
+        "Artificer 23, Metamagic Science, trained Use Magic Device 23; three metamagic feats.\r\n"
+        "Activation: epic efficient-trigger; swift, 1/60s, arm for three rounds.\r\nExact effect: The next"
+        " legal manually activated wand/staff spell with a positive Metamagic Science charge surcharge "
+        "pays one fewer surcharge charge. Base activation charges are unchanged; total charge payment "
+        "cannot fall below that base. Consume on activation commitment, even if resisted or interrupted."
+        "\r\nLimits: No reduction in item-use DC, final spell circle, action cost or target restrictions. "
+        "Other charge discounts and this feat use the single largest discount, not their sum. No "
+        "potions, scrolls, Weird Science devices or free activation when base charges are unavailable.");
+  epicfeat(FEAT_EPIC_METAMAGIC_SCIENCE);
+  feato(FEAT_EPIC_DEVICE_PENETRATION, "epic device penetration", TRUE, TRUE, FALSE, FEAT_TYPE_CRAFT,
+        "Exact effect: The next manual Weird Science device activation gains +4 circumstance on its first spell-resistance check. Consume the arm when the activation commits, even if no res",
+        "Character level 21+. Cost: one general or eligible class epic feat point.\r\nPrerequisites: "
+        "Artificer 20, Weird Science, Spell Penetration, Greater Spell Penetration, trained Use Magic "
+        "Device 20.\r\nActivation: epic pierce-device; swift, 1/60s, arm for three rounds.\r\nExact effect: "
+        "The next manual Weird Science device activation gains +4 circumstance on its first spell-"
+        "resistance check. Consume the arm when the activation commits, even if no resistance check "
+        "occurs. A multi-spell device receives the bonus on only the first check in native spell-"
+        "list/target order.\r\nLimits/overlap: Existing Combat Calibration applies normally subject to "
+        "bonus typing; no save DC, caster level, immunity bypass or overcharge reliability bonus. No "
+        "cascade, proc, echo or automatically triggered activation benefits.");
+  epicfeat(FEAT_EPIC_DEVICE_PENETRATION);
+  feato(FEAT_EPIC_ANCHORED_CHASSIS, "epic anchored chassis", TRUE, TRUE, FALSE, FEAT_TYPE_CRAFT,
+        "Exact effect: Your active crafted golem gains +4 circumstance to defensive checks or saves specifically against trip, knockdown, bull rush or forced directional movement. If an eff",
+        "Character level 21+. Cost: one general or eligible class epic feat point.\r\nPrerequisites: "
+        "Artificer 20, Construct Stone Golem, INT 21.\r\nExact effect: Your active crafted golem gains +4 "
+        "circumstance to defensive checks or saves specifically against trip, knockdown, bull rush or "
+        "forced directional movement. If an effect has no defensive roll, this feat grants no new roll "
+        "or immunity.\r\nRanks/actions: One rank, passive. Apply once through the defensive contest, not "
+        "both a skill check and a subsequent save for the same attempt. Highest circumstance bonus "
+        "applies.\r\nLimits/overlap: No ordinary AC, damage reduction, grappling escape, teleport "
+        "protection or player-owner bonus. Complements existing chassis HP/AC perks without copying "
+        "them. Ownership changes remove it.");
+  epicfeat(FEAT_EPIC_ANCHORED_CHASSIS);
+  feato(FEAT_EPIC_EVOLUTION_RESERVE, "epic evolution reserve", TRUE, TRUE, TRUE, FEAT_TYPE_SPELLCASTING,
+        "Exact effect: Gain 2 permanent evolution points per rank for the primary eidolon's normal Study evolution budget. All native costs, rank gates, form prerequisites and incompatibili",
+        "Character level 21+. Cost: one general or eligible class epic feat point.\r\nPrerequisites: "
+        "Summoner 20, CHA 21, Eidolon class feature.\r\nExact effect: Gain 2 permanent evolution points "
+        "per rank for the primary eidolon's normal Study evolution budget. All native costs, rank gates,"
+        " form prerequisites and incompatibilities still apply.\r\nRanks/actions: Two ranks, second at "
+        "total level 27. Passive; maximum +4 points. This budget explicitly adds to existing evolution-"
+        "pool perks; it does not grant another Aspect selection or another eidolon. Twin creation uses "
+        "its normal mirroring rules, not a separate editable +4 pool.\r\nPersistence: Removing the feat "
+        "requires a valid evolution respec before finalization; do not leave an overspent creature. "
+        "Recalculation grants no current HP or resource refill.");
+  epicfeat(FEAT_EPIC_EVOLUTION_RESERVE);
+  feato(FEAT_EPIC_ADAPTIVE_EIDOLON_WARD, "epic adaptive eidolon ward", TRUE, TRUE, FALSE, FEAT_TYPE_SPELLCASTING,
+        "Exact effect: The primary gains 20 flat resistance to the selected energy for ten rounds. Selecting another energy cannot preserve the previous ward.",
+        "Character level 21+. Cost: one general or eligible class epic feat point.\r\nPrerequisites: "
+        "Summoner 20, CHA 21, trained Spellcraft 20.\r\nActivation: epic eidolon-ward "
+        "<acid|cold|electricity|fire|sonic>; swift, 1/120s. Primary eidolon must be in your room.\r\nExact"
+        " effect: The primary gains 20 flat resistance to the selected energy for ten rounds. Selecting "
+        "another energy cannot preserve the previous ward.\r\nStacking/counters: Use the highest "
+        "applicable flat resistance against that energy, not +20 on top of native/perk resistance. No "
+        "immunity, additional HP, natural armor or mind-affecting protection. Thus it does not reproduce"
+        " Planar Unity. Dispelling or suppression works normally; dismissing/resummoning does not "
+        "restore its spent use or duration.");
+  epicfeat(FEAT_EPIC_ADAPTIVE_EIDOLON_WARD);
+  feato(FEAT_EPIC_PLANAR_ANCHORAGE, "epic planar anchorage", TRUE, TRUE, FALSE, FEAT_TYPE_SPELLCASTING,
+        "Exact effect: Your primary eidolon and normal conjured creatures gain +4 circumstance on saves specifically against hostile banishment, dismissal and effects that sever your contro",
+        "Character level 21+. Cost: one general or eligible class epic feat point.\r\nPrerequisites: "
+        "Summoner 20, CHA 21, trained Spellcraft 20.\r\nExact effect: Your primary eidolon and normal "
+        "conjured creatures gain +4 circumstance on saves specifically against hostile banishment, "
+        "dismissal and effects that sever your control. If such an effect instead uses an opposed "
+        "caster-level check, add +4 to the defender's check or DC, not both.\r\nLimits/actions: Passive; "
+        "applies while the creature remains yours. No protection against its ordinary duration expiring,"
+        " your dismissal, death/extraction or an effect that grants no save/check. No general spell "
+        "resistance, mind-affecting immunity or follower-limit exemption. Highest circumstance bonus "
+        "applies.");
+  epicfeat(FEAT_EPIC_PLANAR_ANCHORAGE);
+  feato(FEAT_EPIC_FORTITUDE, "epic fortitude", TRUE, TRUE, FALSE, FEAT_TYPE_GENERAL,
+        "Exact effect: Passive +4 feat bonus to Fortitude saves. This adds to Great Fortitude but not another copy of Epic Fortitude. Does not increase the game's separately typed Poison or",
+        "Character level 21+. Cost: one general or eligible class epic feat point.\r\nPrerequisites: CON "
+        "21, Great Fortitude.\r\nExact effect: Passive +4 feat bonus to Fortitude saves. This adds to "
+        "Great Fortitude but not another copy of Epic Fortitude. Does not increase the game's separately"
+        " typed Poison or Death saves unless the actual incoming check uses Fortitude. No action, "
+        "resource, duration or repeat ranks.");
+  epicfeat(FEAT_EPIC_FORTITUDE);
+  feato(FEAT_EPIC_REFLEXES, "epic reflexes", TRUE, TRUE, FALSE, FEAT_TYPE_GENERAL,
+        "Exact effect: Passive +4 feat bonus to Reflex saves, adding to Lightning Reflexes. No automatic success, evasion, damage reduction or saving throw against an effect that normally h",
+        "Character level 21+. Cost: one general or eligible class epic feat point.\r\nPrerequisites: DEX "
+        "21, Lightning Reflexes.\r\nExact effect: Passive +4 feat bonus to Reflex saves, adding to "
+        "Lightning Reflexes. No automatic success, evasion, damage reduction or saving throw against an "
+        "effect that normally has none. Once selectable; no action/resource/duration.");
+  epicfeat(FEAT_EPIC_REFLEXES);
+  feato(FEAT_EPIC_WILL, "epic will", TRUE, TRUE, FALSE, FEAT_TYPE_GENERAL,
+        "Exact effect: Passive +4 feat bonus to Will saves, adding to Iron Will. No mind-affecting immunity and no bonus to separately typed Death saves unless they actually resolve as Will",
+        "Character level 21+. Cost: one general or eligible class epic feat point.\r\nPrerequisites: WIS "
+        "21, Iron Will.\r\nExact effect: Passive +4 feat bonus to Will saves, adding to Iron Will. No "
+        "mind-affecting immunity and no bonus to separately typed Death saves unless they actually "
+        "resolve as Will. Once selectable; no action/resource/duration.\r\nOverlap: P07 can combine only "
+        "for its narrow categories because its bonus is insight, not another feat copy.");
+  epicfeat(FEAT_EPIC_WILL);
+  feato(FEAT_SUPERIOR_INITIATIVE, "superior initiative", TRUE, TRUE, FALSE, FEAT_TYPE_GENERAL,
+        "Exact effect: Increase Improved Initiative's contribution by +4, for +8 total from that feat chain. Other independently legal initiative modifiers retain their native stacking.",
+        "Character level 21+. Cost: one general or eligible class epic feat point.\r\nPrerequisites: DEX "
+        "21, Improved Initiative.\r\nExact effect: Increase Improved Initiative's contribution by +4, for "
+        "+8 total from that feat chain. Other independently legal initiative modifiers retain their "
+        "native stacking.\r\nLimits/actions: Passive. Does not reset existing combat timers, grant a free "
+        "opening attack, clear surprise/flat-footed state or bypass action cooldowns. One rank.");
+  epicfeat(FEAT_SUPERIOR_INITIATIVE);
+  feato(FEAT_LEGENDARY_ATHLETE, "legendary athlete", TRUE, TRUE, FALSE, FEAT_TYPE_GENERAL,
+        "Exact effect: Gain +6 competence on native climbing and ordinary swimming skill checks. For normal successful movement involving a required climb/swim check, reduce final movement-",
+        "Character level 21+. Cost: one general or eligible class epic feat point.\r\nPrerequisites: STR "
+        "19, CON 19, trained Athletics 20, Endurance.\r\nExact effect: Gain +6 competence on native "
+        "climbing and ordinary swimming skill checks. For normal successful movement involving a "
+        "required climb/swim check, reduce final movement-point cost by 10, retaining the normal cost "
+        "floor.\r\nLimits: Passive. No automatic success, new exit, wall climbing, water breathing, flight"
+        " or passage through boat-only sectors. No discount if mounted, flying over the obstacle, "
+        "teleported, or already receiving a lower final cost from a non-stacking movement discount; "
+        "apply the strongest flat movement discount.");
+  epicfeat(FEAT_LEGENDARY_ATHLETE);
+  feato(FEAT_IMPROVED_SPELL_CAPACITY, "improved spell capacity", TRUE, TRUE, TRUE, FEAT_TYPE_GENERAL,
+        "Exact effect: Choose one casting class at purchase. Gain one additional maximum slot at that class's highest normal circle. Learn/prepare spells through existing rules; this feat g",
+        "Character level 21+. Cost: one general or eligible class epic feat point.\r\nPrerequisites: "
+        "Trained Spellcraft 20; maximum normal spell circle already unlocked in the chosen casting "
+        "class. For Summoner this is circle six, not nine.\r\nExact effect: Choose one casting class at "
+        "purchase. Gain one additional maximum slot at that class's highest normal circle. Learn/prepare"
+        " spells through existing rules; this feat grants no spell knowledge, immediate charged slot or "
+        "circle above the class's normal maximum.\r\nRanks/actions: Two ranks, second at total level 27; "
+        "both must choose the same class. Passive. Never adds a tenth circle, grants an epic spell, or "
+        "increases PSP. Normal replenishment fills the extra capacity.\r\nOverlap: Existing New Arcana and"
+        " slot bonuses remain separate and capped by their own rules.");
+  epicfeat(FEAT_IMPROVED_SPELL_CAPACITY);
+  feato(FEAT_RUINOUS_RAGE, "ruinous rage", TRUE, TRUE, FALSE, FEAT_TYPE_COMBAT,
+        "Exact effect: While native rage is active, your own manual melee weapon attacks ignore up to five points of the target's applicable physical damage reduction. Effective DR cannot b",
+        "Character level 21+. Cost: one general or eligible class epic feat point.\r\nPrerequisites: "
+        "Berserker 20, STR 23, Greater Rage, Power Attack.\r\nExact effect: While native rage is active, "
+        "your own manual melee weapon attacks ignore up to five points of the target's applicable "
+        "physical damage reduction. Effective DR cannot become negative. If several DR layers could "
+        "apply, use the native selected layer; do not subtract five from every layer.\r\nRanks/actions: "
+        "One rank, passive. Multiple flat DR-penetration features use the largest applicable value, not "
+        "their sum.\r\nLimits: No AC reduction, energy resistance penetration, spell or companion benefit,"
+        " immunity bypass, extra attack, or permission to destroy protected scenery/doors. Does not "
+        "change rage cost, exhaustion, duration or legality.");
+  epicfeat(FEAT_RUINOUS_RAGE);
+
   /* self explanatory */
+  feato(FEAT_EPIC_RESISTANCE_REBUTTAL, "epic resistance rebuttal", TRUE, TRUE, FALSE, FEAT_TYPE_GENERAL, "Activation: epic psi-rebuttal; swift, 5 PSP, 1/60s; armed for three rounds.", "Character level 21+. Cost: one general or eligible class epic feat point.\r\nPrerequisites: Psionicist 20, Greater Power Penetration, trained Spellcraft 20.\r\nActivation: epic psi-rebuttal; swift, 5 PSP, 1/60s; armed for three rounds.\r\nExact effect: The next ordinary power encountering positive power resistance rolls its penetration d20 twice and keeps the better result. Apply the native fixed penetration modifiers once. The arm is consumed at that resistance check, including failure; it is not consumed by a power that encounters no resistance.\r\nStacking: If an existing ability already gives advantage on the same check, do not roll a third die. Does not bypass resistance automatically or change save DC. Scope is the next target's check, not every target in an AoE.");
+  epicfeat(FEAT_EPIC_RESISTANCE_REBUTTAL);
+  feato(FEAT_SHARED_PSIONIC_MANTLE, "shared psionic mantle", TRUE, TRUE, FALSE, FEAT_TYPE_GENERAL, "Activation: epic psi-mantle <ally> <power>; standard, 1/60s; pay the power's unaugmented base PSP cost plus 8 PSP.", "Character level 21+. Cost: one general or eligible class epic feat point.\r\nPrerequisites: Psionicist 23, INT 23; know inertial armor, biofeedback or vigor.\r\nActivation: epic psi-mantle <ally> <power>; standard, 1/60s; pay the power's unaugmented base PSP cost plus 8 PSP.\r\nExact effect: Manifest one of those three named powers on one visible grouped ally in your room, including an owned grouped companion. This is an explicit exception to those powers' self-only targeting. Use your current ML, no augmentation/metamagic, duration at most ten rounds.\r\nLimits: Does not also affect you; no copying an existing buff, spell reflection or refund. All native stacking, dispel, suppression and temporary-HP rules apply. It cannot duplicate a summon, heal, offensive power or epic ward.\r\nNative rules: Shared Vigor supplies 5 finite temporary HP, without raising maximum HP or healing; the strongest true temporary HP pool replaces weaker pools.");
+  epicfeat(FEAT_SHARED_PSIONIC_MANTLE);
+  feato(FEAT_EPIC_CHARGE_FED_REPAIR, "epic charge-fed repair", TRUE, TRUE, FALSE, FEAT_TYPE_GENERAL, "Activation: epic charge-repair <golem> <wand>; standard, 1/300s; consumes three charges from a carried ordinary charged wand with a native spell of circle 1-3. All three must be available.", "Character level 21+. Cost: one general or eligible class epic feat point.\r\nPrerequisites: Artificer 20, Construct Stone Golem, trained Use Magic Device 20.\r\nActivation: epic charge-repair <golem> <wand>; standard, 1/300s; consumes three charges from a carried ordinary charged wand with a native spell of circle 1-3. All three must be available.\r\nExact effect: Repair your active crafted golem for min(60, 10 + 2 x Artificer level) HP, capped at its missing HP. May be used in combat. It is a construct repair, with native healing suppression checks; the wand's spell is not cast.\r\nLimits: No destroyed golem recovery, charges from devices/staves/infinite-use items, discount from A03, spell procs, or charge refunds on overhealing. Reject a full-HP golem before commitment. Native out-of-combat material repairs remain available and unchanged.\r\nNative rules: Construct repair bypasses the golem penalty for healing spells and Empowered Healing. Native Blackmantle and feeding adjustments still apply.");
+  epicfeat(FEAT_EPIC_CHARGE_FED_REPAIR);
+  feato(FEAT_EPIC_GOLEM_AEGIS, "epic golem aegis", TRUE, TRUE, FALSE, FEAT_TYPE_GENERAL, "Activation: epic golem-aegis; standard, 1/120s. Your same-room active crafted golem must have at least 31 HP.", "Character level 21+. Cost: one general or eligible class epic feat point.\r\nPrerequisites: Artificer 23, Construct Stone Golem, INT 23.\r\nActivation: epic golem-aegis; standard, 1/120s. Your same-room active crafted golem must have at least 31 HP.\r\nExact effect: Deduct 30 HP directly from the golem and give yourself 30 temporary HP for three rounds. The golem payment cannot kill it and bypasses damage redirection, mitigation and damage-triggered effects. The shield follows shared temporary-HP rules.\r\nLimits/overlap: No payment from shields, no repair to owner/golem and no Fortress Engine transfer or Soulbound Infusion trigger from the payment. Reject an already active Aegis shield before spending. Leaving the golem's room or losing ownership removes the remaining shield.");
+  epicfeat(FEAT_EPIC_GOLEM_AEGIS);
+  feato(FEAT_EPIC_CONSTRUCTBANE_INFUSION, "epic constructbane infusion", TRUE, TRUE, FALSE, FEAT_TYPE_GENERAL, "Activation: epic constructbane <wielded weapon>; standard, 1/60s. Duration three rounds; only one weapon per owner may carry this feat.", "Character level 21+. Cost: one general or eligible class epic feat point.\r\nPrerequisites: Artificer 25, Craft Magical Arms and Armor, trained Arcana 23.\r\nActivation: epic constructbane <wielded weapon>; standard, 1/60s. Duration three rounds; only one weapon per owner may carry this feat.\r\nExact effect: Your first successful manual weapon hit each six-second interval against a native construct deals an additional 2d6 untyped physical damage. The packet undergoes ordinary physical DR; this is not precision damage and does not require a critical-vulnerable target.\r\nLimits: Weapon must remain wielded by you. Transfer, disarm, unwield or expiry ends the effect. No follower attacks, spell attacks, retaliation, extra item bonus slots, salvage-value change or permanent enchantment. The six-second proc timer belongs to the owner and cannot be reset by changing weapons.");
+  epicfeat(FEAT_EPIC_CONSTRUCTBANE_INFUSION);
+  feato(FEAT_EPIC_RESILIENT_BOND, "epic resilient bond", TRUE, TRUE, FALSE, FEAT_TYPE_GENERAL, "Exact effect: If a damage packet would kill the primary eidolon after its normal Life Link survival attempt has failed, allow it one DC 20 Will save. On success reduce only that packet enough to leave it at 1 HP; on failure resolve death normally. Consume the owner's 1/300s use before the save, either way.", "Character level 21+. Cost: one general or eligible class epic feat point.\r\nPrerequisites: Summoner 23, CHA 23, Life Link class feature.\r\nExact effect: If a damage packet would kill the primary eidolon after its normal Life Link survival attempt has failed, allow it one DC 20 Will save. On success reduce only that packet enough to leave it at 1 HP; on failure resolve death normally. Consume the owner's 1/300s use before the save, either way.\r\nLimits/actions: Passive. No protection against extraction, scripted death, dismissal, starvation or voluntary sacrifice. No second Life Link retry, healing, invulnerability duration or companion resurrection. Does not trigger for the Twin Eidolon mirror.\r\nAdaptation: The tabletop's owner-unconsciousness persistence becomes a bounded damage-survival retry. Eternal Bond's fast healing/recall benefits remain separate.");
+  epicfeat(FEAT_EPIC_RESILIENT_BOND);
+  feato(FEAT_EPIC_SPELL_SHARING, "epic spell sharing", TRUE, TRUE, FALSE, FEAT_TYPE_GENERAL, "Activation: epic shared-cast <spell> [normal spell option]; normal spellcasting action, 1/60s. Cast using a Summoner slot one circle higher than normal; final slot must be circle six or lower.", "Character level 21+. Cost: one general or eligible class epic feat point.\r\nPrerequisites: Summoner 20, trained Spellcraft 20; know one qualifying spell.\r\nActivation: epic shared-cast <spell> [normal spell option]; normal spellcasting action, 1/60s. Cast using a Summoner slot one circle higher than normal; final slot must be circle six or lower.\r\nExact effect: Cast barkskin, blur, resist energy or stoneskin on both yourself and the same-room primary eidolon from that one slot. Resolve each target's stacking/immunity separately. Preserve the selected resist-energy type; use your normal CL and ordinary spell duration. Pay all native material/resource costs once.\r\nLimits: Both targets must be valid before commitment. No healing, temporary-HP grant, offensive spell, summon, epic spell, Twin mirror or third target. Does not duplicate cast-trigger procs or restore missing HP. If interrupted, neither buff is applied.\r\nNative rules: Native Resist Energy currently protects against all energy types and has no selectable element; this feat preserves that behavior.");
+  epicfeat(FEAT_EPIC_SPELL_SHARING);
+  feato(FEAT_EPIC_CONJURATION_COMMAND, "epic conjuration command", TRUE, TRUE, FALSE, FEAT_TYPE_GENERAL, "Activation: epic conjuration-command <own summon>; swift, 1/30s. One normal conjured creature in your room; no eidolon or mirror.", "Character level 21+. Cost: one general or eligible class epic feat point.\r\nPrerequisites: Summoner 20, CHA 21, Augment Summoning.\r\nActivation: epic conjuration-command <own summon>; swift, 1/30s. One normal conjured creature in your room; no eidolon or mirror.\r\nExact effect: Its next ordinary weapon/natural attack roll within two rounds gains +4 morale to hit. If that attack hits, the primary physical damage packet gains +8 flat damage, not multiplied on a critical. Miss or hit consumes the order.\r\nLimits: Grants neither an immediate attack nor an action reset. Does not affect spell attacks, each claw separately, AoE, extra damage packets or subsequent attacks. Highest morale attack bonus applies. Existing Beast Commander and stat bonuses retain their own rules; this is a short, one-attack command.");
+  epicfeat(FEAT_EPIC_CONJURATION_COMMAND);
+  feato(FEAT_EPIC_PLANAR_TRIAGE, "epic planar triage", TRUE, TRUE, FALSE, FEAT_TYPE_GENERAL, "Activation: epic planar-triage; standard, expend one available sixth-circle Summoner slot, 1/300s. Primary eidolon must be alive, injured and in your room.", "Character level 21+. Cost: one general or eligible class epic feat point.\r\nPrerequisites: Summoner 20, sixth-circle Summoner access, CHA 21.\r\nActivation: epic planar-triage; standard, expend one available sixth-circle Summoner slot, 1/300s. Primary eidolon must be alive, injured and in your room.\r\nExact effect: Heal the primary for min(100, floor(0.20 x its max HP)), minimum 1 before the normal healing pipeline. It receives no stat change or temporary HP. Native healing penalties may reduce the result.\r\nLimits: No use on a mirror, purchased pet, other player's eidolon or dismissed/dead creature. No resurrection, lost-slot refund, cooldown reset or extra heal from Life Bond. If native healing suppression rejects all healing before commitment, reject the command without spending a slot.\r\nOverlap: This is an emergency slot conversion, not additional Eternal Bond fast healing.");
+  epicfeat(FEAT_EPIC_PLANAR_TRIAGE);
+  feato(FEAT_EPIC_EVOLVED_SUMMONS, "epic evolved summons", TRUE, TRUE, FALSE, FEAT_TYPE_GENERAL, "Exact effect: Choose one doctrine at Study: Aquatic or Watchful. Newly created normal conjured creatures receive that doctrine for their original remaining summon lifetime. Aquatic grants native natural-swimmer status and underwater breathing; Watchful grants +4 competence Perception and native scent detection.", "Character level 21+. Cost: one general or eligible class epic feat point.\r\nPrerequisites: Summoner 23, Improved Augment Summoning, trained Spellcraft 23.\r\nExact effect: Choose one doctrine at Study: Aquatic or Watchful. Newly created normal conjured creatures receive that doctrine for their original remaining summon lifetime. Aquatic grants native natural-swimmer status and underwater breathing; Watchful grants +4 competence Perception and native scent detection.\r\nLimits/actions: Passive. No extra attacks, spellcasting, bonus follower slot, additional summon, increased duration or swimming through boat-only exits. Do not grant a second copy of an ability already possessed. Existing stronger competence Perception wins. Choose once, changed only through a normal feat respec.\r\nPersistence: Store provenance and original summon expiry, so pet restore can reapply the doctrine without creating fresh lifetime or benefits for purchased pets. This uses a restricted doctrine rather than an unrestricted evolution editor on every summoned mob.");
+  epicfeat(FEAT_EPIC_EVOLVED_SUMMONS);
+  feato(FEAT_EPIC_TRAILMASTER, "epic trailmaster", TRUE, TRUE, FALSE, FEAT_TYPE_GENERAL, "Exact effect: Gain +6 competence to the native tracking check. While following an already recorded trail through a water or flying sector, ignore up to 10 points of its terrain-related tracking penalty. Do not remove age, concealment or magical anti-tracking penalties.", "Character level 21+. Cost: one general or eligible class epic feat point.\r\nPrerequisites: WIS 21, Track, trained Nature 23, trained Perception 20.\r\nExact effect: Gain +6 competence to the native tracking check. While following an already recorded trail through a water or flying sector, ignore up to 10 points of its terrain-related tracking penalty. Do not remove age, concealment or magical anti-tracking penalties.\r\nLimits: Passive. Does not fabricate a trail, reveal a hidden room/exit, report a remote player's live location or track through teleportation. Where the engine records no trail at all, it provides only the skill bonus. Existing trail visibility, age limits and builder restrictions remain.\r\nIntegration/overlap: This deliberately uses a different name from the existing Inquisitor Legendary Tracker perk; it grants no extension to that perk's tracking distance. Highest competence bonus applies. Add explicit terrain-penalty classification before implementing that second clause. This is a bounded room-trail adaptation, not omniscient tracking across surfaces.\r\nNative rules: Native tracking has no recorded room trails or separate terrain penalties; currently only the +6 competence tracking bonus applies, without changing native range or lookup.");
+  epicfeat(FEAT_EPIC_TRAILMASTER);
+  feato(FEAT_EPIC_INSPIRATION, "epic inspiration", TRUE, TRUE, TRUE, FEAT_TYPE_GENERAL, "Exact effect: Increase Dance of Protection's AC and Will-save contributions and Song of Heroism's attack-roll and damage-roll contributions by +1 per rank. Modify each original contribution, retaining its native inherent type, targeting and duration. These four numeric components are the complete whitelist.", "Character level 21+. Cost: one general or eligible class epic feat point.\r\nPrerequisites: Bard 20, CHA 23, Bardic Music; trained Perform 20.\r\nExact effect: Increase Dance of Protection's AC and Will-save contributions and Song of Heroism's attack-roll and damage-roll contributions by +1 per rank. Modify each original contribution, retaining its native inherent type, targeting and duration. These four numeric components are the complete whitelist.\r\nRanks/actions: Two ranks, second requires total level 27 and Bard 23. Passive; at most +2 to an eligible contribution. Duplicate singers still use normal highest-bonus rules.\r\nMUD boundary: The tabletop morale/competence/dodge wording is replaced deliberately because these native songs use inherent bonuses. No extra hit dice, ability scores, DR, haste, healing, spell damage, duration, skill success chance or hostile-song DC. Song of Heroism's existing haste bit is unchanged.");
+  epicfeat(FEAT_EPIC_INSPIRATION);
+  feato(FEAT_POSITIVE_ENERGY_BULWARK, "positive energy bulwark", TRUE, TRUE, FALSE, FEAT_TYPE_GENERAL, "Activation: epic positive-bulwark; standard, 1/300s, plus one available native Channel Energy use. Three-round duration.", "Character level 21+. Cost: one general or eligible class epic feat point.\r\nPrerequisites: Cleric 20 or Paladin 20, CHA 21, Channel Energy, native permission to channel positive energy.\r\nActivation: epic positive-bulwark; standard, 1/300s, plus one available native Channel Energy use. Three-round duration.\r\nExact effect: At commitment and six and twelve seconds later, deal 2d6 positive-energy damage to each legal hostile undead in your room, using the native channel-undead damage path. Each pulse allows Will half, DC 10 + floor(qualifying class level / 2) + CHAmod. Snapshot the qualifying class and modifier at activation; if both classes qualify choose the higher class level, not their sum.\r\nLimits: No living targets, healing pulses, automatic turning/destruction, negative levels or channel-use refunds. Recheck PvP, room and target legality each pulse. Aura ends on death, unconsciousness or extraction, cannot overlap itself, and generates no secondary channel procs. Do not inherit damage increases from unrelated active Channel Energy uses.");
+  epicfeat(FEAT_POSITIVE_ENERGY_BULWARK);
+  feato(FEAT_LEGENDARY_COMPANION_ELEMENTAL_BOND, "legendary companion: elemental bond", TRUE, TRUE, FALSE, FEAT_TYPE_GENERAL, "Exact effect: Permanently choose acid, cold, electricity or fire at Study. Your single active native animal companion's first successful normal melee attack each six-second interval deals an additional 1d6 of that energy. Snapshot the type from the owner's feat, not a rerolled summon template.", "Character level 21+. Cost: one general or eligible class epic feat point.\r\nPrerequisites: Druid 20 or Ranger 20, Animal Companion, WIS 21, trained Nature/Survival 20.\r\nExact effect: Permanently choose acid, cold, electricity or fire at Study. Your single active native animal companion's first successful normal melee attack each six-second interval deals an additional 1d6 of that energy. Snapshot the type from the owner's feat, not a rerolled summon template.\r\nRanks/actions: One rank, passive. Owner-level six-second timer persists across pet dismissal, replacement and restoration. No extra attack, follower slot, new companion type or rider on spell/proc/retaliation attacks.\r\nOverlap: Existing Ranger/Druid companion HP, armor, speed and attack perks remain separate; this adds only the typed packet. Secondary companions, eidolons, crafted golems and charmed pets receive no benefit. All normal energy defenses apply; this does not make the creature a magical beast for targeting or immunities.");
+  epicfeat(FEAT_LEGENDARY_COMPANION_ELEMENTAL_BOND);
+  feato(FEAT_EPIC_AUGMENTED_ALCHEMY, "epic augmented alchemy", TRUE, TRUE, FALSE, FEAT_TYPE_GENERAL, "Activation: epic augment-bomb <prepared bomb slot> <sacrificial bomb slot>; swift, 1/60s. Both slots must contain prepared normal fire bombs and be distinct. Consume the sacrificial bomb immediately and bind the other slot for three rounds.", "Character level 21+. Cost: one general or eligible class epic feat point.\r\nPrerequisites: Alchemist 20, INT 23, native bomb feature; trained Craft (Alchemy) 20.\r\nActivation: epic augment-bomb <prepared bomb slot> <sacrificial bomb slot>; swift, 1/60s. Both slots must contain prepared normal fire bombs and be distinct. Consume the sacrificial bomb immediately and bind the other slot for three rounds.\r\nExact effect: Your next manual throw of the bound bomb uses its normal action, attack and consumption rules. On a successful direct hit, add 4d6 fire damage to the primary target only. Use the bomb's normal direct-hit save outcome, if any, for the extra packet. A miss still consumes the bomb and feat use.\r\nLimits/overlap: Splash, sticky ticks, chain reactions and secondary targets gain nothing. Expiry discards the bonus, not the bound bomb; the sacrificed bomb is never restored. Discarding/changing the bound slot cancels the arm. Existing bomb perks apply to the original attack, not a second proc chain. No bonus to healing/control bombs, extra prepared slots or exception to native bomb-making recovery. Slot identity and prepaid sacrifice require atomic saved state.");
+  epicfeat(FEAT_EPIC_AUGMENTED_ALCHEMY);
+
+  feato(FEAT_EPIC_PSIONIC_CONTINGENCY, "epic psionic contingency", TRUE, TRUE, FALSE, FEAT_TYPE_GENERAL, "Activation: epic psi-contingency <power>; full round, 1/300s. Prepay that power's unaugmented PSP cost plus 5 PSP. Store it for 300 seconds. No metamagic or augmentation.", "Level 21+. One general or eligible class epic feat point.\r\nPrerequisites: Psionicist 23, INT 23, trained Spellcraft 23; know at least one of inertial armor, biofeedback or vigor.\r\nActivation: epic psi-contingency <power>; full round, 1/300s. Prepay that power's unaugmented PSP cost plus 5 PSP. Store it for 300 seconds. No metamagic or augmentation.\r\nExact effect: After a hostile damage packet leaves you alive at or below 25% max HP, automatically manifest the stored power on yourself once, at the lesser of your current and armed ML. It uses normal buff stacking and a maximum duration of ten rounds. It cannot prevent that packet from killing you.\r\nCounters: Suppression delays the trigger until another eligible packet while unsuppressed; expiry still runs. Dispelling the armed effect cancels it. The trigger does not count as a manual cast for procs or PSP recovery. No resurrection, offensive stored power or resource refund.");
+  epicfeat(FEAT_EPIC_PSIONIC_CONTINGENCY);
+  feato(FEAT_EPIC_SENTINEL_MIND, "epic schism: sentinel mind", TRUE, TRUE, FALSE, FEAT_TYPE_GENERAL, "Activation: epic sentinel-mind; swift, 15 PSP, 1/300s; lasts ten rounds.", "Level 21+. One general or eligible class epic feat point.\r\nPrerequisites: Psionicist 25, INT 25, trained Concentration 23.\r\nActivation: epic sentinel-mind; swift, 15 PSP, 1/300s; lasts ten rounds.\r\nExact effect: On the first failed save against charm, domination, confusion or fear while armed, make one new save against the same snapshotted DC and save type, with an extra +2 insight bonus on the retry. Keep the second result. Consume the sentinel before retrying so it cannot recursively trigger itself.\r\nCounters: Effects without a save, scripted control, stun, paralysis and death effects are excluded. The sentinel can be dispelled or suppressed. Other retry effects cannot retry this same failure again; let the player select this or an existing armed retry before the first roll, not after the result.");
+  epicfeat(FEAT_EPIC_SENTINEL_MIND);
+  feato(FEAT_EPIC_EIDOLON_INTERCESSION, "epic eidolon intercession", TRUE, TRUE, FALSE, FEAT_TYPE_GENERAL, "Activation: epic intercession <group ally>; standard, 1/60s. Choose a player group ally other than yourself; ally and primary eidolon must be in your room. Arm for three rounds.", "Level 21+. One general or eligible class epic feat point.\r\nPrerequisites: Summoner 23, Greater Shield Ally, CHA 23.\r\nActivation: epic intercession <group ally>; standard, 1/60s. Choose a player group ally other than yourself; ally and primary eidolon must be in your room. Arm for three rounds.\r\nExact effect: On that ally's next positive hostile damage packet, after ordinary defenses, absorb up to 20 remaining damage and deduct that amount directly from the primary eidolon's HP as a resource cost. Trigger only if the eidolon has more HP than the amount. If not, wait for another packet until expiry. Consume the arm before applying the reduction.\r\nLimits: No redirected damage packet, Life Link/Life Bond chain, proc, lifesteal, critical multiplication or self/group farming. Cannot protect you, another companion, or an ally in another room. One intercession arm per owner and one intercession reduction per packet; strongest eligible arm wins. The trigger uses no additional action.");
+  epicfeat(FEAT_EPIC_EIDOLON_INTERCESSION);
+  feato(FEAT_EPIC_ADAPTIVE_ASPECT, "epic adaptive aspect", TRUE, TRUE, FALSE, FEAT_TYPE_GENERAL, "Activation: epic adaptive-aspect <current aspect> <replacement>; full round, out of combat, 1/300s; duration ten rounds.", "Level 21+. One general or eligible class epic feat point.\r\nPrerequisites: Summoner 23, Aspect class feature, trained Spellcraft 20.\r\nActivation: epic adaptive-aspect <current aspect> <replacement>; full round, out of combat, 1/300s; duration ten rounds.\r\nExact effect: Temporarily replace one evolution currently assigned to your own Aspect with gills, swim, scent or flight. The replacement's native point cost cannot exceed the replaced choice's cost; all native prerequisites and form restrictions apply. Restore the original choice at expiry.\r\nLimits: No extra evolution points, Aspect slots, eidolon edits, natural attacks, size/stat changes or bonus spellcasting. Cannot change while another temporary aspect replacement is active. Dismissing an eidolon does not extend the timer. Native movement legality still applies when temporary flight/swimming expires.\r\nOverlap: Adds tactical swapping rather than reproducing Aspect Master or Evolution Surge Enhancement's extra budget.");
+  epicfeat(FEAT_EPIC_ADAPTIVE_ASPECT);
+  feato(FEAT_EPIC_SPELL_OPPORTUNITY, "epic spell opportunity", TRUE, TRUE, FALSE, FEAT_TYPE_GENERAL, "Activation: epic spell-opportunity <enemy> <spell>; swift, 1/60s. Prepay one ordinary first- or second-circle spell slot from one eligible class; arm for three rounds.", "Level 21+. One general or eligible class epic feat point.\r\nPrerequisites: Trained Spellcraft 23, Combat Reflexes, ability to cast third-circle ordinary spells.\r\nActivation: epic spell-opportunity <enemy> <spell>; swift, 1/60s. Prepay one ordinary first- or second-circle spell slot from one eligible class; arm for three rounds.\r\nExact effect: When that legal enemy completes an ordinary hostile spell in your room, after its full resolution, cast the reserved magic missile, shocking grasp or ray of enfeeblement at it once, if you are alive, able to cast, can still see it, know that spell in the paying class and it remains a legal target. Use normal CL, attack checks, resistance and saves, without metamagic.\r\nLimits: The triggering spell is not cancelled. No feat/proc echo can trigger another opportunity. Cannot use a power, item, epic spell or AoE. Interrupted/suppressed/disqualified reactions expire without refund. Reserve is consumed at arming, not recreated by the reaction. Reconnecting cancels this reservation without refund.");
+  epicfeat(FEAT_EPIC_SPELL_OPPORTUNITY);
+  feato(FEAT_EPIC_SPELL_STOWAWAY, "epic spell stowaway", TRUE, TRUE, FALSE, FEAT_TYPE_GENERAL, "Activation: epic stowaway <ally> <spell>; swift, 1/300s. Choose one visible grouped player ally and blur, resist energy or fly; arm for three rounds.", "Level 21+. One general or eligible class epic feat point.\r\nPrerequisites: Trained Spellcraft 23, ability to cast fifth-circle spells.\r\nActivation: epic stowaway <ally> <spell>; swift, 1/300s. Choose one visible grouped player ally and blur, resist energy or fly; arm for three rounds.\r\nExact effect: When that ally manually casts the selected spell on themselves in your room, also apply it to you, at half its resulting duration, rounded down to at least one round. Use the original caster's CL and chosen energy option. The normal slot remains paid once by that caster.\r\nLimits: No enemy spell theft, haste/teleport, healing, temporary HP, summoned creature, epic ward, item, echo or propagation to another stowaway. One copied target, no copied cast procs. Normal stacking, suppression and dispelling apply. The arm is consumed only by the qualifying cast or its expiry; invalid remote casts do not trigger it.");
+  epicfeat(FEAT_EPIC_SPELL_STOWAWAY);
+  feato(FEAT_TENACIOUS_WARDS, "tenacious wards", TRUE, TRUE, FALSE, FEAT_TYPE_GENERAL, "Exact effect: Your manually cast mage armor, shield, barkskin, blur, fly, resist energy and protection from energy gain +4 effective CL solely when a hostile dispel check tries to remove them. Preserve ordinary duration, damage absorption, spell circle and other CL scaling.", "Level 21+. One general or eligible class epic feat point.\r\nPrerequisites: Trained Spellcraft 23, ability to cast fifth-circle spells.\r\nExact effect: Your manually cast mage armor, shield, barkskin, blur, fly, resist energy and protection from energy gain +4 effective CL solely when a hostile dispel check tries to remove them. Preserve ordinary duration, damage absorption, spell circle and other CL scaling.\r\nLimits/actions: Passive. It raises the native dispel DC; it is not immunity and does not restore a successfully removed buff. Antimagic, expiry, voluntary removal, scripts and source extraction retain their normal effects. No bonus to epic wards or item-cast buffs.\r\nIntegration: Store the original caster/feat snapshot on eligible affects; do not use the target's feats or let the benefit follow an unrelated recast.");
+  epicfeat(FEAT_TENACIOUS_WARDS);
+  feato(FEAT_EPIC_HEROIC_RECOVERY, "epic heroic recovery", TRUE, TRUE, FALSE, FEAT_TYPE_GENERAL, "Activation: epic recover <effect>; standard, 1/300s. You must be able to act.", "Level 21+. One general or eligible class epic feat point.\r\nPrerequisites: CON 21, Endurance, Diehard, trained Discipline 20.\r\nActivation: epic recover <effect>; standard, 1/300s. You must be able to act.\r\nExact effect: Choose one current poison, disease, sickened or fatigued effect whose original application allowed Fortitude or the native Poison save. Attempt that original save type against its stored original DC, with a +4 circumstance bonus. Success removes the selected condition component; failure leaves it unchanged. Either consumes the use.\r\nLimits: No reroll against instantaneous damage, effects without a save, effects lacking reliable stored DC, sleep, paralysis, stun, death or an affliction's unrelated other components. Does not restore ability damage, HP or lost resources. No automatic cure and no recursive use of other recovery feats on this retry.");
+  epicfeat(FEAT_EPIC_HEROIC_RECOVERY);
+  feato(FEAT_LASTING_INSPIRATION, "lasting inspiration", TRUE, TRUE, FALSE, FEAT_TYPE_GENERAL, "Exact effect: When you voluntarily stop performing, existing AC and Will-save components of Dance of Protection, and attack-roll and damage-roll components of Song of Heroism remain on their current legal same-room group recipients for three additional rounds beyond the expiry they would otherwise have at that stop. Apply once per performance instance, not on every pulse. Track that baseline expiry without this feat.", "Level 21+. One general or eligible class epic feat point.\r\nPrerequisites: Bard 23, CHA 23, Bardic Music; trained Perform 23.\r\nExact effect: When you voluntarily stop performing, existing AC and Will-save components of Dance of Protection, and attack-roll and damage-roll components of Song of Heroism remain on their current legal same-room group recipients for three additional rounds beyond the expiry they would otherwise have at that stop. Apply once per performance instance, not on every pulse. Track that baseline expiry without this feat.\r\nRanks/actions: One rank, passive. Starting the same performance again replaces its tail with the normal active effect, never adds another copy.\r\nLimits: No tail on silence, incapacitation, death, extraction, lost eligibility, dispelling or forced cancellation. Recipients leaving the singer's room/group lose the tail. No retained flight, revelation, healing pulses, ability-score changes, max-HP effects, hostile effects or resource generation. Existing duration perks modify the baseline only once.");
+  epicfeat(FEAT_LASTING_INSPIRATION);
+  feato(FEAT_EPIC_ANATOMICAL_SAVANT, "epic anatomical savant", TRUE, TRUE, FALSE, FEAT_TYPE_GENERAL, "Exact effect: Choose one Weapon Focus weapon type at Study. On your first otherwise valid sneak attack hit with that weapon against a target whose ordinary anatomical immunity would cancel sneak damage, roll d100: 01–50 allows the usual sneak damage; 51–100 cancels it normally. Consume the opportunity on that qualifying hit, success or failure; recover after six seconds.", "Level 21+. One general or eligible class epic feat point.\r\nPrerequisites: Rogue 20 or Assassin 8, native sneak attack of at least 8d6, DEX 23, Weapon Focus with the chosen weapon type. Total level 21 still applies.\r\nExact effect: Choose one Weapon Focus weapon type at Study. On your first otherwise valid sneak attack hit with that weapon against a target whose ordinary anatomical immunity would cancel sneak damage, roll d100: 01–50 allows the usual sneak damage; 51–100 cancels it normally. Consume the opportunity on that qualifying hit, success or failure; recover after six seconds.\r\nRanks/actions: One rank, passive; owner timer shared by all targets, hands and attacks. Normal concealment, positioning and sneak eligibility checks must pass first. This feat does not itself enable sneak attack.\r\nLimits: Never bypass named boss/plot immunity, critical immunity as such, damage immunity, or a separate fortification roll. No additional chance reduction to fortification, critical multiplier or precision dice. If a second feature offers the same anatomical bypass, use the highest single success chance, not multiple rolls. Native anatomical immunity is Essence of Undeath; swarms, legendary bosses and no-kill mobs are excluded.");
+  epicfeat(FEAT_EPIC_ANATOMICAL_SAVANT);
+  feato(FEAT_EPIC_DISCIPLINE_FOCUS, "epic discipline focus", TRUE, TRUE, TRUE, FEAT_TYPE_GENERAL,
+        "+1 save DC per rank for one chosen psionic discipline; maximum +2.",
+        "Level 21+, Psionicist 20, permanent INT 23 and trained Spellcraft 20. Choose one native discipline in Study. Ordinary manifested powers of that discipline gain +1 save DC per rank, maximum two ranks; rank two requires total level 27 and retains the same discipline. Passive. No weapon, epic power, item, resistance-check or no-save benefit. Adds once to existing DC bonuses. Each rank costs one general or eligible class epic feat point.");
+  epicfeat(FEAT_EPIC_DISCIPLINE_FOCUS);
+
   feato(FEAT_LAST_FEAT, "do not take me", FALSE, FALSE, FALSE, FEAT_TYPE_NONE, "placeholder feat",
         "placeholder feat");
 
@@ -6952,6 +7211,9 @@ int feat_is_available(struct char_data *ch, int featnum, int iarg, char *sarg)
 {
   struct feat_prerequisite *prereq = NULL;
 
+  if (is_expansion_epic(featnum))
+    return feat_list[featnum].in_game && epic_feat_available(ch, featnum);
+
   if (CLASS_LEVEL(ch, CLASS_ALCHEMIST) > 0 &&
       (featnum == FEAT_ARMORED_SPELLCASTING || featnum == FEAT_SPELL_PENETRATION ||
        featnum == FEAT_ENHANCED_SPELL_DAMAGE))
@@ -7232,13 +7494,6 @@ int feat_is_available(struct char_data *ch, int featnum, int iarg, char *sarg)
         return false;
       return true;
 
-    case FEAT_EPIC_DODGE:
-      if (ch->real_abils.dex >= 25 && has_feat_requirement_check(ch, FEAT_DODGE) &&
-          has_feat_requirement_check(ch, FEAT_DEFENSIVE_ROLL) &&
-          GET_ABILITY(ch, ABILITY_ACROBATICS) >= 30)
-        return TRUE;
-      return FALSE;
-
     case FEAT_IMPROVED_SNEAK_ATTACK:
       if (has_feat_requirement_check(ch, FEAT_SNEAK_ATTACK) >= 8)
         return TRUE;
@@ -7260,11 +7515,6 @@ int feat_is_available(struct char_data *ch, int featnum, int iarg, char *sarg)
       if (!has_feat_requirement_check(ch, FEAT_ENDURANCE))
         return FALSE;
       return TRUE;
-
-    case FEAT_GREAT_SMITING:
-      if (ch->real_abils.cha >= 25 && has_feat_requirement_check(ch, FEAT_SMITE_EVIL))
-        return TRUE;
-      return FALSE;
 
     case FEAT_DIVINE_MIGHT:
     case FEAT_DIVINE_SHIELD:
@@ -9720,6 +9970,12 @@ void list_feats(struct char_data *ch, const char *arg, int list_type, struct cha
 
 int is_class_feat(int featnum, int class, struct char_data *ch)
 {
+  if (featnum==FEAT_EPIC_ANATOMICAL_SAVANT) return class==CLASS_ROGUE || class==CLASS_ASSASSIN;
+  if (featnum==FEAT_GREAT_SMITING) return class==CLASS_PALADIN || class==CLASS_BLACKGUARD;
+  if (featnum==FEAT_POSITIVE_ENERGY_BULWARK) return class==CLASS_CLERIC || class==CLASS_PALADIN;
+  if (featnum==FEAT_LEGENDARY_COMPANION_ELEMENTAL_BOND) return class==CLASS_DRUID || class==CLASS_RANGER;
+  if (is_expansion_epic(featnum))
+    return epic_feat_class(featnum) == class;
   struct class_feat_assign *feat_assign = NULL;
 
   /* we now traverse the class's list of class-feats to see if 'featnum' matches */
@@ -9883,6 +10139,8 @@ int find_feat_num(const char *name)
  *
  * (NOTE: The headers of the sections above will be colored
  * differently, making them stand out.) */
+static void epic_browser_requirements(int feat, char *out, size_t size);
+
 bool display_feat_info(struct char_data *ch, const char *featname)
 {
   int feat = -1, i = 0, j = 0;
@@ -9921,7 +10179,15 @@ bool display_feat_info(struct char_data *ch, const char *featname)
   draw_line(ch, line_length, '-', '-');
 
   /*  Here display the prerequisites */
-  if (feat_list[feat].prerequisite_list == NULL && IS_EPIC_FEAT(feat) == FALSE)
+  if (is_expansion_epic(feat))
+  {
+    epic_browser_requirements(feat, buf2, sizeof(buf2));
+    web_info_field(ch, "Prerequisites", "", "%s", buf2);
+    strlcpy(buf, "\tcPrerequisites : \tn", sizeof(buf));
+    strlcat(buf, buf2, sizeof(buf));
+    strlcat(buf, "\r\n", sizeof(buf));
+  }
+  else if (feat_list[feat].prerequisite_list == NULL && IS_EPIC_FEAT(feat) == FALSE)
   {
     web_info_field(ch, "Prerequisites", "", "%s", "None");
     snprintf(buf, sizeof(buf), "\tCPrerequisites : \tnnone\r\n");
@@ -10420,83 +10686,190 @@ bool valid_item_feat(int featnum)
   return false;
 }
 
+/* Browse the registered catalogue even before the character reaches epic level.
+ * Expansion requirements live in their Study descriptions rather than the
+ * legacy linked prerequisite list. Never label those entries as unrestricted. */
+static bool epic_browser_matches(const char *name, const char *query)
+{
+  size_t length = strlen(query);
+  for (; *name; name++)
+    if (!strn_cmp(name, query, length)) return TRUE;
+  return FALSE;
+}
+
+static void epic_browser_requirements(int feat, char *out, size_t size)
+{
+  const char *text = feat_list[feat].description;
+  const char *start = text ? strstr(text, "Prerequisites:") : NULL;
+  const char *end;
+  struct feat_prerequisite *prereq;
+  strlcpy(out, "Level 21+", size);
+  if (start)
+  {
+    start += strlen("Prerequisites:");
+    while (*start == ' ') start++;
+    end = strpbrk(start, "\r\n");
+    strlcat(out, "; ", size);
+    strncat(out, start, MIN(end ? end - start : strlen(start), size - strlen(out) - 1));
+  }
+  else if (is_expansion_epic(feat))
+  {
+    /* Some descriptions incorporate requirements in prose (e.g. P02). */
+    strlcat(out, "; ", size);
+    strlcat(out, text ? text : "See full feat details.", size);
+  }
+  else
+    for (prereq = feat_list[feat].prerequisite_list; prereq; prereq = prereq->next)
+    {
+      strlcat(out, "; ", size);
+      strlcat(out, prereq->description, size);
+    }
+}
+
+/* Zero means there is no single global rank cap (including choices by school,
+ * weapon or skill). A missing prerequisite must never be mistaken for a cap. */
+static int epic_browser_rank_cap(int feat)
+{
+  if (feat == FEAT_EPIC_POWER_KNOWLEDGE) return 3;
+  if (feat == FEAT_EPIC_DISCIPLINE_FOCUS || feat == FEAT_EPIC_EVOLUTION_RESERVE ||
+      feat == FEAT_IMPROVED_SPELL_CAPACITY || feat == FEAT_EPIC_INSPIRATION) return 2;
+  if (is_expansion_epic(feat) || !feat_list[feat].can_stack) return 1;
+  switch (feat)
+  {
+  case FEAT_EPIC_SHIELD_USER: return 2;
+  case FEAT_EPIC_PROWESS:
+  case FEAT_LEADERSHIP:
+  case FEAT_EPIC_WILDSHAPE: return 5;
+  case FEAT_EMPOWERED_MAGIC:
+  case FEAT_EMPOWERED_PSIONICS:
+  case FEAT_ENHANCED_SPELL_DAMAGE: return 3;
+  case FEAT_ENHANCED_POWER_DAMAGE: return 4;
+  default: return 0;
+  }
+}
+
+static bool epic_browser_class_feat(struct char_data *ch, int feat)
+{
+  int class;
+  for (class = 0; class < NUM_CLASSES; class++)
+    if (CLASS_LEVEL(ch, class) > 0 && is_class_feat(feat, class, ch)) return TRUE;
+  return FALSE;
+}
+
 ACMD(do_epicfeats)
 {
-  int sortpos, i, w_type;
-  struct feat_prerequisite *prereq;
-  bool first = false;
-  struct obj_data *weap;
-  int line_length = MAX(80, GET_SCREEN_WIDTH(ch));
-  char buf[MAX_STRING_LENGTH] = {'\0'}, buf2[MAX_STRING_LENGTH] = {'\0'};
+  char mode[MAX_INPUT_LENGTH], query[MAX_INPUT_LENGTH], row[MAX_STRING_LENGTH];
+  char requirements[MAX_STRING_LENGTH];
+  const char *rest;
+  char *output;
+  size_t capacity = 2048;
+  int sortpos, feat, count = 0, class = -1, i;
+  int columns, cell_width, name_width, ranks, cap;
+  bool class_feat, eligible, maxed;
+  char name[MAX_INPUT_LENGTH];
+  bool known = FALSE, available = FALSE;
 
-  sprintf(buf + strlen(buf), "\tC%s\tn",
-          text_line_string("\tYEpic Feats\tC", line_length, '-', '-'));
-  strlcpy(buf2, buf, sizeof(buf2));
-
-  snprintf(buf, sizeof(buf), "%s",
-           text_line_string("All Epic Feats Requires Character Level 21+", line_length, '-', '-'));
-  strlcat(buf2, buf, sizeof(buf2));
-  snprintf(buf, sizeof(buf), "%s", text_line_string("-", line_length, '-', '-'));
-  strlcat(buf2, buf, sizeof(buf2));
-
-  for (sortpos = 1; sortpos < NUM_FEATS; sortpos++)
+  if (IS_NPC(ch) || !ch->desc) return;
+  rest = one_argument(argument, mode, sizeof(mode));
+  skip_spaces_c(&rest);
+  strlcpy(query, rest, sizeof(query));
+  if (!str_cmp(mode, "help"))
   {
-    i = feat_sort_info[sortpos];
-    /*  Print the feat, depending on the type of list. */
-    if (feat_list[i].in_game && feat_list[i].epic == TRUE &&
-        feat_list[i].feat_type != FEAT_TYPE_CLASS_ABILITY)
+    send_to_char(ch, "Epic feat planner (available at any level):\r\n"
+      "  epicfeats [all]             Browse a compact, color-coded epic feat list.\r\n"
+      "  epicfeats class <class>     Filter by eligible class epic feat pool.\r\n"
+      "  epicfeats search <text>     Search feat names.\r\n"
+      "  epicfeats known             Show your learned epic feats.\r\n"
+      "  epicfeats available         Show feats you currently qualify to select.\r\n"
+      "  epicfeats info <name or ID> Full mechanics, rank limits and prerequisites.\r\n"
+      "  epicfeats <name or ID>      Same as info.\r\n"
+      "Eligibility does not check unspent feat points; purchase through Study.\r\n");
+    return;
+  }
+  if (!str_cmp(mode, "class"))
+  {
+    for (i = 0; i < NUM_CLASSES; i++)
+      if (*query && !str_cmp(query, CLSLIST_NAME(i))) { class = i; break; }
+    if (class < 0)
     {
-      if (strlen(buf2) > MAX_STRING_LENGTH - 180)
-        break;
-
-      snprintf(buf, sizeof(buf), "\tc%-30s : \tn", feat_list[i].name);
-      strlcat(buf2, buf, sizeof(buf2));
-      if (feat_list[i].prerequisite_list == NULL)
-      {
-        snprintf(buf, sizeof(buf), "None\r\n");
-        strlcat(buf2, buf, sizeof(buf2));
-      }
-      else
-      {
-        weap = GET_EQ(ch, WEAR_WIELD_1);
-        if (GET_EQ(ch, WEAR_WIELD_2H))
-          weap = GET_EQ(ch, WEAR_WIELD_2H);
-        w_type = (weap == NULL) ? WEAPON_TYPE_UNARMED : GET_WEAPON_TYPE(weap);
-        first = true;
-        for (prereq = feat_list[i].prerequisite_list; prereq != NULL; prereq = prereq->next)
-        {
-          if (first)
-          {
-            first = false;
-            snprintf(buf, sizeof(buf), "%s%s%s",
-                     (meets_prerequisite(ch, prereq, w_type) ? "\tn" : "\tr"), prereq->description,
-                     "\tn");
-            strlcat(buf2, buf, sizeof(buf2));
-          }
-          else
-          {
-            snprintf(buf, sizeof(buf), ", %s%s%s",
-                     (meets_prerequisite(ch, prereq, w_type) ? "\tn" : "\tr"), prereq->description,
-                     "\tn");
-            strlcat(buf2, buf, sizeof(buf2));
-          }
-        }
-        snprintf(buf, sizeof(buf), "\tn\r\n");
-        strlcat(buf2, buf, sizeof(buf2));
-      }
+      send_to_char(ch, "Use epicfeats class <full class name>. Class names:\r\n");
+      for (i = 0; i < NUM_CLASSES; i++)
+        send_to_char(ch, "  %s\r\n", CLSLIST_NAME(i));
+      return;
     }
   }
+  else if (!str_cmp(mode, "known")) known = TRUE;
+  else if (!str_cmp(mode, "available")) available = TRUE;
+  else if (!str_cmp(mode, "search"))
+  {
+    if (!*query) { send_to_char(ch, "Use epicfeats search <name text>.\r\n"); return; }
+  }
+  else if (*mode && str_cmp(mode, "all"))
+  {
+    const char *name = !str_cmp(mode, "info") ? query : argument;
+    skip_spaces_c(&name);
+    feat = -1;
+    if (*name && strspn(name, "0123456789") == strlen(name)) feat = atoi(name);
+    else if (*name) feat = find_feat_num(name);
+    if (feat <= 0 || feat >= FEAT_LAST_FEAT || !feat_list[feat].in_game ||
+        !feat_list[feat].epic || !feat_list[feat].can_learn)
+    { send_to_char(ch, "No learnable epic feat found. Use epicfeats search <text> or epicfeats help.\r\n"); return; }
+    epic_browser_requirements(feat, requirements, sizeof(requirements));
+    send_to_char(ch, "\r\n%s [ID %d, learned ranks %d]\r\nRequirements: %s\r\n"
+      "Selection: %s (unspent points are checked in Study).\r\n",
+      feat_list[feat].name, feat, HAS_REAL_FEAT(ch, feat), requirements,
+      feat_is_available(ch, feat, 0, NULL) ? "currently eligible" : "not currently eligible");
+    display_feat_info(ch, feat_list[feat].name);
+    return;
+  }
 
-  snprintf(buf, sizeof(buf), "%s", text_line_string("\tn-", line_length, '-', '-'));
-  strlcat(buf2, buf, sizeof(buf2));
-  snprintf(buf, sizeof(buf), "%s",
-           text_line_string("Use 'feat info (featname)' for more information on a certain feat",
-                            line_length, '-', '-'));
-  strlcat(buf2, buf, sizeof(buf2));
-  snprintf(buf, sizeof(buf), "%s", text_line_string("-", line_length, '-', '-'));
-  strlcat(buf2, buf, sizeof(buf2));
-
-  page_string(ch->desc, buf2, 1);
+  /* Each fixed-width cell includes ID, four independent status markers and
+   * a name. Keep at least two columns at the normal 80-character width. */
+  columns = MAX(1, MIN(4, MAX(40, GET_SCREEN_WIDTH(ch)) / 40));
+  cell_width = MIN(200, MAX(40, GET_SCREEN_WIDTH(ch))) / columns;
+  name_width = cell_width - 14;
+  capacity += NUM_FEATS * (cell_width + 80);
+  CREATE(output, char, capacity);
+  strlcpy(output, "Epic feats (level 21+) -- epicfeats info <name or ID> for details.\r\n"
+    "Legend: [\tCC\tn] class feat for one of your classes; [\tYK\tn] known;\r\n"
+    "        [\tMM\tn] maximum ranks learned; [\tG+\tn] eligible for next rank.\r\n"
+    "A dash means that status does not apply. Eligibility excludes unspent points.\r\n"
+    "Names ending in ~ are shortened; use the ID to view full details.\r\n\r\n", capacity);
+  for (sortpos = 1; sortpos < NUM_FEATS; sortpos++)
+  {
+    feat = feat_sort_info[sortpos];
+    if (feat <= 0 || feat >= FEAT_LAST_FEAT || !feat_list[feat].in_game ||
+        !feat_list[feat].epic || !feat_list[feat].can_learn) continue;
+    if (known && !HAS_REAL_FEAT(ch, feat)) continue;
+    if (available && !feat_is_available(ch, feat, 0, NULL)) continue;
+    if (class >= 0 && !is_class_feat(feat, class, ch)) continue;
+    if (!str_cmp(mode, "search") && !epic_browser_matches(feat_list[feat].name, query)) continue;
+    ranks = HAS_REAL_FEAT(ch, feat);
+    cap = epic_browser_rank_cap(feat);
+    maxed = cap > 0 && ranks >= cap;
+    eligible = !maxed && feat_is_available(ch, feat, 0, NULL);
+    class_feat = epic_browser_class_feat(ch, feat);
+    strlcpy(name, feat_list[feat].name, sizeof(name));
+    if (strlen(name) > name_width)
+    {
+      name[name_width - 1] = '~';
+      name[name_width] = '\0';
+    }
+    snprintf(row, sizeof(row), "[%4d] [%s%s\tn%s%s\tn%s%s\tn%s%s\tn] %-*s",
+      feat, class_feat ? "\tC" : "", class_feat ? "C" : "-",
+      ranks ? "\tY" : "", ranks ? "K" : "-",
+      maxed ? "\tM" : "", maxed ? "M" : "-",
+      eligible ? "\tG" : "", eligible ? "+" : "-", name_width, name);
+    strlcat(output, row, capacity);
+    count++;
+    if (!(count % columns)) strlcat(output, "\r\n", capacity);
+  }
+  if (count % columns) strlcat(output, "\r\n", capacity);
+  snprintf(row, sizeof(row), "%d matching feats. Use epicfeats info <name or ID> for full mechanics\r\n"
+    "and later-rank requirements; epicfeats help lists filters.\r\n", count);
+  strlcat(output, row, capacity);
+  page_string(ch->desc, output, TRUE);
+  free(output);
 }
 
 /* EOF */

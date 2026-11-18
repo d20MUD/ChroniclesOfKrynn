@@ -39,6 +39,7 @@ int legendary_budget_available(struct char_data *,int kind); /* Read-only PC quo
 int legendary_budget_debit(struct char_data *, int kind, int requested);
 int legendary_heal(struct char_data *source, struct char_data *target, int amount);
 int legendary_temporary_hp(const struct legendary_activation *,int amount,int duration);
+void legendary_temporary_clear(struct char_data *ch);
 int legendary_temporary_absorb(struct char_data *,int damage);
 int legendary_temporary_remaining(struct char_data *);
 int legendary_resource_restore(struct char_data *, int amount);

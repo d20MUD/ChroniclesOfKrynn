@@ -30,6 +30,9 @@ struct refine_recipe_data refining_recipes[NUM_REFINING_RECIPES];
 
 void craft_recipe(int rec, int obj_type, int obj_subtype, const char *name, int practical)
 {
+  crafting_recipes[rec].epic_creation_category =
+      (obj_type == ITEM_WEAPON || obj_type == ITEM_ARMOR) ? 2 :
+      (obj_type == ITEM_WORN || obj_type == ITEM_TREASURE) ? 1 : 0;
   crafting_recipes[rec].name = name;
   crafting_recipes[rec].object_type = obj_type;
   crafting_recipes[rec].object_subtype = obj_subtype;
@@ -93,6 +96,7 @@ void initialize_crafting_recipes(void)
   /* initialize the list of encounters */
   for (i = 0; i < NUM_CRAFTING_RECIPES; i++)
   {
+    crafting_recipes[i].epic_creation_category = 0;
     crafting_recipes[i].name = "unused";
     crafting_recipes[i].object_type = 0;
     crafting_recipes[i].object_subtype = 0;

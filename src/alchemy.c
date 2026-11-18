@@ -5,6 +5,8 @@
 #include "sysdep.h"
 #include "structs.h"
 #include "utils.h"
+#include "epic_feats2.h"
+#include "legendary_effects.h"
 #include "comm.h"
 #include "spells.h"
 #include "handler.h"
@@ -507,6 +509,9 @@ void list_bomb_types_known(struct char_data *ch)
   return;
 }
 
+static void perform_bomb_effect_epic(struct char_data *,struct char_data *,int,int);
+static void perform_bomb_direct_damage_epic(struct char_data *,struct char_data *,int,int);
+
 ACMD(do_bombs)
 {
   /* dummy check */
@@ -684,6 +689,9 @@ ACMD(do_bombs)
     if (!target)
       target = FIGHTING(ch);
 
+    int epic_bonus = epic_bomb_consume(ch,bSlot);
+    GET_BOMB(ch,bSlot)=BOMB_NONE;
+    save_char(ch,0);
     int bomb_hit_result =
         bomb_is_friendly(type) ? 1 : bomb_attack_roll(ch, target);
 
@@ -691,7 +699,7 @@ ACMD(do_bombs)
     {
       // we hit!
 
-      perform_bomb_effect(ch, target, type);
+      perform_bomb_effect_epic(ch, target, type, type==BOMB_NORMAL ? epic_bonus : 0);
     }
     else
     {
@@ -765,6 +773,7 @@ ACMD(do_bombs)
             ch, KNOWS_DISCOVERY(ch, ALC_DISC_FAST_BOMBS) ? ACTION_MOVE : ACTION_STANDARD, TRUE))
       return;
 
+    epic_bomb_changed(ch,bSlot);
     ch->player_specials->saved.bombs[bSlot] = type;
 
     send_to_char(ch, "You've successfully created a %s bomb. Bombs prepared: %d/%d.\r\n",
@@ -844,6 +853,7 @@ ACMD(do_bombs)
     }
 
     send_to_char(ch, "You have discarded a %s bomb.\r\n", bomb_types[GET_BOMB(ch, bSlot)]);
+    epic_bomb_changed(ch,bSlot);
     GET_BOMB(ch, bSlot) = 0;
     save_char(ch, 0);
     return;
@@ -856,6 +866,8 @@ ACMD(do_bombs)
 }
 
 void perform_bomb_effect(struct char_data *ch, struct char_data *victim, int bomb_type)
+{ perform_bomb_effect_epic(ch,victim,bomb_type,0); }
+static void perform_bomb_effect_epic(struct char_data *ch, struct char_data *victim, int bomb_type, int epic_bonus)
 {
   /* dummy check */
   if (!ch || !victim)
@@ -888,7 +900,7 @@ void perform_bomb_effect(struct char_data *ch, struct char_data *victim, int bom
       send_bomb_direct_message(ch, victim, bomb_type);
       if (PRF_FLAGGED(ch, PRF_AOE_BOMBS))
         send_bomb_splash_message(ch, victim, bomb_type);
-      perform_bomb_direct_damage(ch, victim, bomb_type); // fire damage
+      perform_bomb_direct_damage_epic(ch, victim, bomb_type, cluster_iter==0 ? epic_bonus : 0); // fire damage
       if (PRF_FLAGGED(ch, PRF_AOE_BOMBS))
         perform_bomb_splash_damage(ch, victim, bomb_type); // fire damage
       break;
@@ -1076,6 +1088,7 @@ void perform_bomb_effect(struct char_data *ch, struct char_data *victim, int bom
             "\tCYour volatile catalyst ignites, triggering an automatic chain bomb throw!\tn\r\n");
 
         /* Remove the bomb before throwing (prevents infinite loops) */
+        epic_bomb_changed(ch,random_slot);
         GET_BOMB(ch, random_slot) = BOMB_NONE;
 
         /* Throw the chain bomb without normal prerequisites or action requirements */
@@ -1145,6 +1158,8 @@ void send_bomb_splash_message(struct char_data *ch, struct char_data *victim, in
 }
 
 void perform_bomb_direct_damage(struct char_data *ch, struct char_data *victim, int bomb_type)
+{ perform_bomb_direct_damage_epic(ch,victim,bomb_type,0); }
+static void perform_bomb_direct_damage_epic(struct char_data *ch, struct char_data *victim, int bomb_type, int epic_bonus)
 {
   /* dummy check */
   if (!ch || !victim)
@@ -1276,16 +1291,18 @@ void perform_bomb_direct_damage(struct char_data *ch, struct char_data *victim, 
   {
     if ((!IS_NPC(victim)) && saveType == SAVING_REFL && // evasion
         (HAS_FEAT(victim, FEAT_EVASION) || (HAS_FEAT(victim, FEAT_IMPROVED_EVASION))))
-      dam /= 2;
-    dam /= 2;
+      {dam /= 2; epic_bonus /= 2;}
+    {dam /= 2; epic_bonus /= 2;}
   }
   else if ((!IS_NPC(victim)) && saveType == SAVING_REFL && // evasion
            (HAS_FEAT(victim, FEAT_IMPROVED_EVASION)))
   {
-    dam /= 2;
+    {dam /= 2; epic_bonus /= 2;}
   }
 
   dam = damage(ch, victim, dam, SKILL_BOMB_TOSS, damType, SKILL_BOMB_TOSS);
+  if(dam>=0 && epic_bonus>0 && GET_POS(victim)!=POS_DEAD)
+    if (damage_with_origin(ch,victim,epic_bonus,SKILL_BOMB_TOSS,DAM_FIRE,SKILL_BOMB_TOSS,LEG_ORIGIN_BONUS|LEG_ORIGIN_NO_TRIGGER)<0) return;
 
   /* Concussive Bomb perk: 10% chance to knock prone on hit */
   if (dam > 0 && has_alchemist_concussive_bomb(ch) && rand_number(1, 100) <= 10)

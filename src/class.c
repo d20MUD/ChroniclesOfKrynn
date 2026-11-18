@@ -15,6 +15,9 @@
 #include "sysdep.h"
 #include "structs.h"
 #include "utils.h"
+#include "epic_feats3.h"
+#include "epic_feats.h"
+#include "epic_feats2.h"
 #include "db.h"
 #include "spells.h"
 #include "interpreter.h"
@@ -3346,6 +3349,17 @@ void init_start_char(struct char_data *ch)
     SET_ABILITY(ch, i, 0);
   for (i = 1; i < NUM_FEATS; i++)
     SET_FEAT(ch, i, 0);
+  epic_third_respec(ch);
+  memset(&EPIC_CHOICES(ch), 0, sizeof(EPIC_CHOICES(ch)));
+  memset(EPIC_TIMERS(ch).armed, 0, sizeof(EPIC_TIMERS(ch).armed));
+  EPIC_TIMERS(ch).ward_expiry = 0; /* Cooldowns survive respec. */
+  {
+    time_t ready[14], infusion_proc=EPIC_SECOND(ch).infusion_proc;
+    memcpy(ready,EPIC_SECOND(ch).ready,sizeof(ready));
+    memset(&EPIC_SECOND(ch),0,sizeof(EPIC_SECOND(ch)));
+    memcpy(EPIC_SECOND(ch).ready,ready,sizeof(ready));
+    EPIC_SECOND(ch).infusion_proc=infusion_proc;
+  }
   memset(ch->char_specials.saved.practiced_spellcaster_classes, 0,
          sizeof(ch->char_specials.saved.practiced_spellcaster_classes));
   for (i = 0; i < NUM_CFEATS; i++)
@@ -5913,6 +5927,7 @@ void load_class_list(void)
   feat_assignment(CLASS_BERSERKER, FEAT_GREAT_STRENGTH, Y, NOASSIGN_FEAT, N);
   feat_assignment(CLASS_BERSERKER, FEAT_GREAT_CONSTITUTION, Y, NOASSIGN_FEAT, N);
   feat_assignment(CLASS_BERSERKER, FEAT_CHAOTIC_RAGE, Y, NOASSIGN_FEAT, N);
+  feat_assignment(CLASS_BERSERKER, FEAT_RUINOUS_RAGE, Y, NOASSIGN_FEAT, N);
   feat_assignment(CLASS_BERSERKER, FEAT_OVERWHELMING_CRITICAL, Y, NOASSIGN_FEAT, N);
   feat_assignment(CLASS_BERSERKER, FEAT_DEVASTATING_CRITICAL, Y, NOASSIGN_FEAT, N);
   /* class prerequisites */
@@ -7242,6 +7257,11 @@ void load_class_list(void)
 
   // epic class feats
   feat_assignment(CLASS_PSIONICIST, FEAT_GREAT_INTELLIGENCE, Y, NOASSIGN_FEAT, N);
+  feat_assignment(CLASS_PSIONICIST, FEAT_EPIC_POWER_KNOWLEDGE, Y, NOASSIGN_FEAT, N);
+  feat_assignment(CLASS_PSIONICIST, FEAT_EPIC_AUGMENTATION_EFFICIENCY, Y, NOASSIGN_FEAT, N);
+  feat_assignment(CLASS_PSIONICIST, FEAT_EPIC_FOCUS_CONTINUITY, Y, NOASSIGN_FEAT, N);
+  feat_assignment(CLASS_PSIONICIST, FEAT_EPIC_MENTAL_BASTION, Y, NOASSIGN_FEAT, N);
+  feat_assignment(CLASS_PSIONICIST, FEAT_EPIC_MANIFESTING_POISE, Y, NOASSIGN_FEAT, N);
 
   // spell_assignment(CLASS_PSIONICIST, PSIONIC_TIMELESS_BODY, 17);
   /**** end psi power assignment *****/
@@ -9561,6 +9581,9 @@ void load_class_list(void)
   /* epic class */
   feat_assignment(CLASS_SUMMONER, FEAT_GREAT_CHARISMA, Y, NOASSIGN_FEAT, Y);
   feat_assignment(CLASS_SUMMONER, FEAT_EPIC_AUGMENT_SUMMONING, Y, NOASSIGN_FEAT, N);
+  feat_assignment(CLASS_SUMMONER, FEAT_EPIC_EVOLUTION_RESERVE, Y, NOASSIGN_FEAT, N);
+  feat_assignment(CLASS_SUMMONER, FEAT_EPIC_ADAPTIVE_EIDOLON_WARD, Y, NOASSIGN_FEAT, N);
+  feat_assignment(CLASS_SUMMONER, FEAT_EPIC_PLANAR_ANCHORAGE, Y, NOASSIGN_FEAT, N);
   feat_assignment(CLASS_SUMMONER, FEAT_EPIC_SPELL_FOCUS, Y, NOASSIGN_FEAT, N);
   feat_assignment(CLASS_SUMMONER, FEAT_AUTOMATIC_QUICKEN_SPELL, Y, NOASSIGN_FEAT, N);
   feat_assignment(CLASS_SUMMONER, FEAT_AUTOMATIC_STILL_SPELL, Y, NOASSIGN_FEAT, N);
@@ -9958,6 +9981,11 @@ void load_class_list(void)
   feat_assignment(CLASS_ARTIFICER, FEAT_STILL_SPELL, Y, NOASSIGN_FEAT, N);
   /* epic class feats */
   feat_assignment(CLASS_ARTIFICER, FEAT_GREAT_INTELLIGENCE, Y, NOASSIGN_FEAT, N);
+  feat_assignment(CLASS_ARTIFICER, FEAT_EPIC_ARTISANS_INSIGHT, Y, NOASSIGN_FEAT, N);
+  feat_assignment(CLASS_ARTIFICER, FEAT_EPIC_EFFICIENT_ITEM_CREATION, Y, NOASSIGN_FEAT, N);
+  feat_assignment(CLASS_ARTIFICER, FEAT_EPIC_METAMAGIC_SCIENCE, Y, NOASSIGN_FEAT, N);
+  feat_assignment(CLASS_ARTIFICER, FEAT_EPIC_DEVICE_PENETRATION, Y, NOASSIGN_FEAT, N);
+  feat_assignment(CLASS_ARTIFICER, FEAT_EPIC_ANCHORED_CHASSIS, Y, NOASSIGN_FEAT, N);
   feat_assignment(CLASS_ARTIFICER, FEAT_GREAT_DEXTERITY, Y, NOASSIGN_FEAT, N);
   feat_assignment(CLASS_ARTIFICER, FEAT_GREAT_CONSTITUTION, Y, NOASSIGN_FEAT, N);
 
@@ -10069,6 +10097,35 @@ void load_class_list(void)
   feat_assignment(CLASS_LOREMASTER, FEAT_TRUE_LORE, Y, 10, N);
   /* class prerequisites */
   class_prereq_loremaster(CLASS_LOREMASTER);
+  /* Epic catalogue, third release. */
+  feat_assignment(CLASS_PSIONICIST,FEAT_EPIC_PSIONIC_CONTINGENCY,Y,NOASSIGN_FEAT,N);
+  feat_assignment(CLASS_PSIONICIST,FEAT_EPIC_SENTINEL_MIND,Y,NOASSIGN_FEAT,N);
+  feat_assignment(CLASS_SUMMONER,FEAT_EPIC_EIDOLON_INTERCESSION,Y,NOASSIGN_FEAT,N);
+  feat_assignment(CLASS_SUMMONER,FEAT_EPIC_ADAPTIVE_ASPECT,Y,NOASSIGN_FEAT,N);
+  feat_assignment(CLASS_BARD,FEAT_LASTING_INSPIRATION,Y,NOASSIGN_FEAT,N);
+  feat_assignment(CLASS_PSIONICIST,FEAT_EPIC_DISCIPLINE_FOCUS,Y,NOASSIGN_FEAT,N);
+  feat_assignment(CLASS_ROGUE,FEAT_EPIC_ANATOMICAL_SAVANT,Y,NOASSIGN_FEAT,N);
+  feat_assignment(CLASS_ASSASSIN,FEAT_EPIC_ANATOMICAL_SAVANT,Y,NOASSIGN_FEAT,N);
+  /* Epic catalogue, second release. */
+  feat_assignment(CLASS_PSIONICIST, FEAT_EPIC_RESISTANCE_REBUTTAL, Y, NOASSIGN_FEAT, N);
+  feat_assignment(CLASS_PSIONICIST, FEAT_SHARED_PSIONIC_MANTLE, Y, NOASSIGN_FEAT, N);
+  feat_assignment(CLASS_ARTIFICER, FEAT_EPIC_CHARGE_FED_REPAIR, Y, NOASSIGN_FEAT, N);
+  feat_assignment(CLASS_ARTIFICER, FEAT_EPIC_GOLEM_AEGIS, Y, NOASSIGN_FEAT, N);
+  feat_assignment(CLASS_ARTIFICER, FEAT_EPIC_CONSTRUCTBANE_INFUSION, Y, NOASSIGN_FEAT, N);
+  feat_assignment(CLASS_SUMMONER, FEAT_EPIC_RESILIENT_BOND, Y, NOASSIGN_FEAT, N);
+  feat_assignment(CLASS_SUMMONER, FEAT_EPIC_SPELL_SHARING, Y, NOASSIGN_FEAT, N);
+  feat_assignment(CLASS_SUMMONER, FEAT_EPIC_CONJURATION_COMMAND, Y, NOASSIGN_FEAT, N);
+  feat_assignment(CLASS_SUMMONER, FEAT_EPIC_PLANAR_TRIAGE, Y, NOASSIGN_FEAT, N);
+  feat_assignment(CLASS_SUMMONER, FEAT_EPIC_EVOLVED_SUMMONS, Y, NOASSIGN_FEAT, N);
+  feat_assignment(CLASS_BARD, FEAT_EPIC_INSPIRATION, Y, NOASSIGN_FEAT, N);
+  feat_assignment(CLASS_ALCHEMIST, FEAT_EPIC_AUGMENTED_ALCHEMY, Y, NOASSIGN_FEAT, N);
+  feat_assignment(CLASS_CLERIC, FEAT_POSITIVE_ENERGY_BULWARK, Y, NOASSIGN_FEAT, N);
+  feat_assignment(CLASS_PALADIN, FEAT_POSITIVE_ENERGY_BULWARK, Y, NOASSIGN_FEAT, N);
+  feat_assignment(CLASS_PALADIN, FEAT_GREAT_SMITING, Y, NOASSIGN_FEAT, N);
+  feat_assignment(CLASS_BLACKGUARD, FEAT_GREAT_SMITING, Y, NOASSIGN_FEAT, N);
+  feat_assignment(CLASS_DRUID, FEAT_LEGENDARY_COMPANION_ELEMENTAL_BOND, Y, NOASSIGN_FEAT, N);
+  feat_assignment(CLASS_RANGER, FEAT_LEGENDARY_COMPANION_ELEMENTAL_BOND, Y, NOASSIGN_FEAT, N);
+
 }
 
 /* This will check a character to see if the object reference has any anti-class

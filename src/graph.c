@@ -12,6 +12,8 @@
 #include "sysdep.h"
 #include "structs.h"
 #include "utils.h"
+#include "epic_feats2.h"
+#include "epic_feats.h"
 #include "comm.h"
 #include "interpreter.h"
 #include "handler.h"
@@ -178,7 +180,7 @@ ACMD(do_track)
 
   /* The character must have the track skill. */
   if (!HAS_FEAT(ch, FEAT_NATURAL_TRACKER) && !HAS_FEAT(ch, FEAT_TRACK) &&
-      !HAS_EVOLUTION(ch, EVOLUTION_SCENT))
+      !HAS_EVOLUTION(ch, EVOLUTION_SCENT) && !epic_summon_doctrine(ch,2))
   {
     send_to_char(ch, "You have no idea how.\r\n");
     return;
@@ -262,6 +264,8 @@ ACMD(do_track)
     track_dc -= 5;
 
   int track_roll = skill_roll(ch, ABILITY_SURVIVAL);
+  if (epic_feat_rank(ch, FEAT_EPIC_TRAILMASTER))
+    track_roll += epic_typed_increment(ch, APPLY_SKILL, ABILITY_SURVIVAL, BONUS_TYPE_COMPETENCE, 6);
   if (!IS_NPC(ch) && has_inquisitor_track_and_hunt(ch))
   {
     track_roll += compute_ability(ch, ABILITY_SURVIVAL);

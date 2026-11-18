@@ -175,6 +175,7 @@
 struct craft_recipe_data
 {
   const char *name;
+  int epic_creation_category; /* 0 unclassified, 1 wondrous, 2 arms/armor */
   int object_type;
   int object_subtype;
   int variant_skill

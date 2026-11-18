@@ -14,6 +14,7 @@
 #include "structs.h"
 #include "clan_access.h"
 #include "utils.h"
+#include "epic_feats.h"
 #include "comm.h"
 #include "interpreter.h"
 #include "handler.h"
@@ -250,6 +251,7 @@ int do_simple_move(struct char_data *ch, int dir, int need_specials_check)
   /* How many movement points are required to travel from was_in to going_to.
    * We redefine this later when we need it. */
   int need_movement = 0;
+  bool epic_athletics_move = FALSE;
   /* NOTE: tch, next_tch, and buf2 were used in old message code - now handled in movement_messages.c */
   // for mount code
   int same_room = 0, riding = 0, ridden_by = 0;
@@ -546,6 +548,7 @@ int do_simple_move(struct char_data *ch, int dir, int need_specials_check)
     }
   }
 
+  ch->epic_swim_checked = FALSE;
   if (SECT(was_in) == SECT_WATER_SWIM || SECT(was_in) == SECT_UD_WATER ||
       SECT(was_in) == SECT_UNDERWATER || SECT(going_to) == SECT_WATER_SWIM ||
       SECT(going_to) == SECT_UD_WATER || SECT(going_to) == SECT_UNDERWATER)
@@ -563,6 +566,7 @@ int do_simple_move(struct char_data *ch, int dir, int need_specials_check)
     }
   }
 
+  epic_athletics_move = ch->epic_swim_checked;
   /* Flying Required: Does lack of flying prevent movement? */
   if ((SECT(was_in) == SECT_FLYING) || (SECT(going_to) == SECT_FLYING) ||
       (SECT(was_in) == SECT_UD_NOGROUND) || (SECT(going_to) == SECT_UD_NOGROUND))
@@ -708,6 +712,7 @@ int do_simple_move(struct char_data *ch, int dir, int need_specials_check)
     }
     else
     { /*success!*/
+      epic_athletics_move = TRUE;
       send_to_char(ch, "You successfully climb!: ");
     }
   }
@@ -920,7 +925,14 @@ int do_simple_move(struct char_data *ch, int dir, int need_specials_check)
   else
     need_movement = MAX(5, need_movement);
 
-  need_movement = legendary_foundation_walk(ch, need_movement, riding || RIDDEN_BY(ch));
+  {
+    int original_cost = need_movement;
+    need_movement = legendary_foundation_walk(ch, need_movement, riding || RIDDEN_BY(ch));
+    if (epic_athletics_move && !riding && !RIDDEN_BY(ch) && !AFF_FLAGGED(ch, AFF_FLYING) &&
+        epic_feat_rank(ch, FEAT_LEGENDARY_ATHLETE))
+      need_movement = MIN(need_movement, MAX(affected_by_spell(ch, SPELL_SHADOW_WALK) ? 1 : 5,
+                                          original_cost - 10));
+  }
 
   /* Move Point Requirement Check */
   if (riding)

@@ -16,6 +16,8 @@
 #include "legendary_transaction.h"
 #include "structs.h"
 #include "utils.h"
+#include "epic_feats.h"
+#include "epic_feats2.h"
 #include "comm.h"
 #include "interpreter.h"
 #include "handler.h"
@@ -1368,6 +1370,8 @@ int compute_ability_full(struct char_data *ch, int abilityNum, bool recursive)
     }
   }
 
+  if (abilityNum == ABILITY_ATHLETICS && epic_feat_rank(ch, FEAT_LEGENDARY_ATHLETE))
+    competence = MAX(competence, 6);
   value += high_eq + competence;
 
   /* Check for crafting tool bonuses */
@@ -1489,6 +1493,7 @@ int compute_ability_full(struct char_data *ch, int abilityNum, bool recursive)
     return value;
 
   case ABILITY_PERCEPTION:
+    if (epic_summon_doctrine(ch,2)) value += epic_typed_increment(ch,APPLY_SKILL,ABILITY_PERCEPTION,BONUS_TYPE_COMPETENCE,4);
     value += GET_WIS_BONUS(ch);
     if (HAS_FEAT(ch, FEAT_KENDER_SKILL_MOD))
       value += 2;

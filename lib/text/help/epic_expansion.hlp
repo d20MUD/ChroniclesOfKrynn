@@ -1,0 +1,813 @@
+EPIC-EXPANSION EPIC-FIRST-BATCH
+
+Forty-eight epic feats for level 21+. Each costs one general or eligible class
+epic feat point. Use STUDY to select suboptions and review full mechanics.
+Use FEATS INFO <name> or HELP <name> for individual descriptions.
+
+Active commands: epic artisan-insight, epic efficient-trigger,
+epic pierce-device, epic eidolon-ward <acid|cold|electricity|fire|sonic>.
+Timers use real seconds and continue offline. No cancellation refunds.
+#0
+
+EPIC POWER KNOWLEDGE
+
+Character level 21+. Cost: one general or eligible class epic feat point.
+
+Prerequisites: Psionicist 20, INT 21, trained Spellcraft 20, ninth-circle
+psionic access.
+
+Exact effect: Learn two additional ordinary powers from the native
+psionicist catalogue at circles you can manifest. Normal discipline/list
+restrictions apply. These selections do not consume normal known-power
+choices and grant no PSP or epic-power unlocks.
+
+Ranks/actions: Up to three ranks, with additional total-level gates 24 and
+27. Passive. Select two different powers per rank in Study; no duplicate or
+already-known choices. On respec, remove only these tagged grants; if a
+power later becomes known normally it remains known.
+
+See also: EPIC-EXPANSION, STUDY, EPICFEATS
+#0
+
+EPIC AUGMENTATION EFFICIENCY
+
+Character level 21+. Cost: one general or eligible class epic feat point.
+
+Prerequisites: Psionicist 20, INT 21, Expert Augmenting.
+
+Exact effect: Reduce the PSP paid for an ordinary power's augmentation by 2,
+never its base PSP cost. The selected augmentation must first fit both the
+native manifester allowance and that power's maximum/step size. Example:
+base cost 7 plus 6 legal augmentation costs 11 instead of 13, with exactly
+the original +6 augmentation effect.
+
+Limits/actions: Passive. Across this feat and any existing perk/item
+discount applying to augmentation, use the largest augmentation discount,
+not their sum. This feat's maximum discount is 2. No PSP refunds or bonus
+augmentation points.
+
+See also: EPIC-EXPANSION, STUDY, EPICFEATS
+#0
+
+EPIC FOCUS CONTINUITY
+
+Character level 21+. Cost: one general or eligible class epic feat point.
+
+Prerequisites: Psionicist 20, Psionic Focus, trained Concentration 20.
+
+Exact effect: A normal successful activation of your existing psionic focus
+lasts 18 rounds instead of 12. It retains all native conditions and
+suppression rules.
+
+Limits/actions: Passive upgrade to that activation. Does not refresh an
+already active focus, reduce its cooldown, restore a use, stack duration
+from multiple activations or alter perks that consume the focus affect.
+
+See also: EPIC-EXPANSION, STUDY, EPICFEATS
+#0
+
+EPIC MENTAL BASTION
+
+Character level 21+. Cost: one general or eligible class epic feat point.
+
+Prerequisites: Psionicist 20, WIS 19, trained Concentration 20.
+
+Exact effect: Gain a +4 insight bonus on native saves against charm,
+domination, confusion and fear. A failed or absent save is never converted
+into immunity. Does not help against unrelated death effects, energy damage
+or generic Will saves.
+
+Limits/actions: Passive. Highest applicable insight save bonus wins,
+including Touch of Destiny. Stacks with Epic Will's separate feat bonus when
+a Will save is actually made.
+
+See also: EPIC-EXPANSION, STUDY, EPICFEATS
+#0
+
+EPIC MANIFESTING POISE
+
+Character level 21+. Cost: one general or eligible class epic feat point.
+
+Prerequisites: Psionicist 20, Combat Manifestation, trained Concentration
+20.
+
+Exact effect: Gain +4 circumstance to Concentration checks caused by taking
+damage while manifesting an ordinary power. If one hit causes multiple typed
+damage packets, this bonus is applied to the native check, not repeatedly
+per packet.
+
+Limits/actions: Passive. No change to manifestation duration, actions,
+interruption DC or damage. Does not help checks for spells, item activations
+or other classes. Combines with Combat Manifestation; does not stack another
+circumstance bonus on that same check.
+
+See also: EPIC-EXPANSION, STUDY, EPICFEATS
+#0
+
+EPIC ARTISAN'S INSIGHT
+
+Character level 21+. Cost: one general or eligible class epic feat point.
+
+Prerequisites: Artificer 20, INT 23, Craft Wondrous Item, trained Arcana 20.
+
+Activation: epic artisan-insight; swift, 1/300s, out of combat. Arm for ten
+rounds.
+
+Exact effect: The next failed d20 check for a normal recipe craft or native
+golem construction/repair rolls a second d20 with the same modifiers and DC,
+keeping the second result. Consume the arm on that failure. Resolve the
+recipe's success/failure material consumption exactly once after the reroll.
+
+Limits: No reroll of random item quality, salvage yield, gathering, device
+instability, or prerequisite validation. Does not waive recipes, skill
+minimums, materials or item caps. The player must start the check while the
+arm is active. Commit-time state prevents disconnect/retry rerolls.
+
+See also: EPIC-EXPANSION, STUDY, EPICFEATS
+#0
+
+EPIC EFFICIENT ITEM CREATION
+
+Character level 21+. Cost: one general or eligible class epic feat point.
+
+Prerequisites: Artificer 23, Craft Wondrous Item or Craft Magical Arms and
+Armor, trained Arcana 23.
+
+Exact effect: Choose one of those owned item-creation categories at Study.
+Reduce eligible normal recipe completion time by 20 percentage points of the
+unmodified recipe time. Add this to other time reductions, but cap their
+combined reduction at 50%; final duration is rounded up to whole seconds,
+minimum one second.
+
+Ranks/actions: One rank, passive. Applies only to newly started crafts whose
+recipe explicitly records the chosen category. Unclassified recipes receive
+no reduction until categorized.
+
+Limits/overlap: Efficient Crafter's existing 10% reduction participates in
+the same cap. No material/gold discount, instant completion, recharge
+benefit, golem construction speed bonus or change to invention/matrix
+rebuilding. Cancelling retains normal penalties.
+
+See also: EPIC-EXPANSION, STUDY, EPICFEATS
+#0
+
+EPIC METAMAGIC SCIENCE
+
+Character level 21+. Cost: one general or eligible class epic feat point.
+
+Prerequisites: Artificer 23, Metamagic Science, trained Use Magic Device 23;
+three metamagic feats.
+
+Activation: epic efficient-trigger; swift, 1/60s, arm for three rounds.
+
+Exact effect: The next legal manually activated wand/staff spell with a
+positive Metamagic Science charge surcharge pays one fewer surcharge charge.
+Base activation charges are unchanged; total charge payment cannot fall
+below that base. Consume on activation commitment, even if resisted or
+interrupted.
+
+Limits: No reduction in item-use DC, final spell circle, action cost or
+target restrictions. Other charge discounts and this feat use the single
+largest discount, not their sum. No potions, scrolls, Weird Science devices
+or free activation when base charges are unavailable.
+
+See also: EPIC-EXPANSION, STUDY, EPICFEATS
+#0
+
+EPIC DEVICE PENETRATION
+
+Character level 21+. Cost: one general or eligible class epic feat point.
+
+Prerequisites: Artificer 20, Weird Science, Spell Penetration, Greater Spell
+Penetration, trained Use Magic Device 20.
+
+Activation: epic pierce-device; swift, 1/60s, arm for three rounds.
+
+Exact effect: The next manual Weird Science device activation gains +4
+circumstance on its first spell-resistance check. Consume the arm when the
+activation commits, even if no resistance check occurs. A multi-spell device
+receives the bonus on only the first check in native spell-list/target
+order.
+
+Limits/overlap: Existing Combat Calibration applies normally subject to
+bonus typing; no save DC, caster level, immunity bypass or overcharge
+reliability bonus. No cascade, proc, echo or automatically triggered
+activation benefits.
+
+See also: EPIC-EXPANSION, STUDY, EPICFEATS
+#0
+
+EPIC ANCHORED CHASSIS
+
+Character level 21+. Cost: one general or eligible class epic feat point.
+
+Prerequisites: Artificer 20, Construct Stone Golem, INT 21.
+
+Exact effect: Your active crafted golem gains +4 circumstance to defensive
+checks or saves specifically against trip, knockdown, bull rush or forced
+directional movement. If an effect has no defensive roll, this feat grants
+no new roll or immunity.
+
+Ranks/actions: One rank, passive. Apply once through the defensive contest,
+not both a skill check and a subsequent save for the same attempt. Highest
+circumstance bonus applies.
+
+Limits/overlap: No ordinary AC, damage reduction, grappling escape, teleport
+protection or player-owner bonus. Complements existing chassis HP/AC perks
+without copying them. Ownership changes remove it.
+
+See also: EPIC-EXPANSION, STUDY, EPICFEATS
+#0
+
+EPIC EVOLUTION RESERVE
+
+Character level 21+. Cost: one general or eligible class epic feat point.
+
+Prerequisites: Summoner 20, CHA 21, Eidolon class feature.
+
+Exact effect: Gain 2 permanent evolution points per rank for the primary
+eidolon's normal Study evolution budget. All native costs, rank gates, form
+prerequisites and incompatibilities still apply.
+
+Ranks/actions: Two ranks, second at total level 27. Passive; maximum +4
+points. This budget explicitly adds to existing evolution-pool perks; it
+does not grant another Aspect selection or another eidolon. Twin creation
+uses its normal mirroring rules, not a separate editable +4 pool.
+
+Persistence: Removing the feat requires a valid evolution respec before
+finalization; do not leave an overspent creature. Recalculation grants no
+current HP or resource refill.
+
+See also: EPIC-EXPANSION, STUDY, EPICFEATS
+#0
+
+EPIC ADAPTIVE EIDOLON WARD
+
+Character level 21+. Cost: one general or eligible class epic feat point.
+
+Prerequisites: Summoner 20, CHA 21, trained Spellcraft 20.
+
+Activation: epic eidolon-ward <acid|cold|electricity|fire|sonic>; swift,
+1/120s. Primary eidolon must be in your room.
+
+Exact effect: The primary gains 20 flat resistance to the selected energy
+for ten rounds. Selecting another energy cannot preserve the previous ward.
+
+Stacking/counters: Use the highest applicable flat resistance against that
+energy, not +20 on top of native/perk resistance. No immunity, additional
+HP, natural armor or mind-affecting protection. Thus it does not reproduce
+Planar Unity. Dispelling or suppression works normally;
+dismissing/resummoning does not restore its spent use or duration.
+
+See also: EPIC-EXPANSION, STUDY, EPICFEATS
+#0
+
+EPIC PLANAR ANCHORAGE
+
+Character level 21+. Cost: one general or eligible class epic feat point.
+
+Prerequisites: Summoner 20, CHA 21, trained Spellcraft 20.
+
+Exact effect: Your primary eidolon and normal conjured creatures gain +4
+circumstance on saves specifically against hostile banishment, dismissal and
+effects that sever your control. If such an effect instead uses an opposed
+caster-level check, add +4 to the defender's check or DC, not both.
+
+Limits/actions: Passive; applies while the creature remains yours. No
+protection against its ordinary duration expiring, your dismissal,
+death/extraction or an effect that grants no save/check. No general spell
+resistance, mind-affecting immunity or follower-limit exemption. Highest
+circumstance bonus applies.
+
+See also: EPIC-EXPANSION, STUDY, EPICFEATS
+#0
+
+EPIC FORTITUDE
+
+Character level 21+. Cost: one general or eligible class epic feat point.
+
+Prerequisites: CON 21, Great Fortitude.
+
+Exact effect: Passive +4 feat bonus to Fortitude saves. This adds to Great
+Fortitude but not another copy of Epic Fortitude. Does not increase the
+game's separately typed Poison or Death saves unless the actual incoming
+check uses Fortitude. No action, resource, duration or repeat ranks.
+
+See also: EPIC-EXPANSION, STUDY, EPICFEATS
+#0
+
+EPIC REFLEXES
+
+Character level 21+. Cost: one general or eligible class epic feat point.
+
+Prerequisites: DEX 21, Lightning Reflexes.
+
+Exact effect: Passive +4 feat bonus to Reflex saves, adding to Lightning
+Reflexes. No automatic success, evasion, damage reduction or saving throw
+against an effect that normally has none. Once selectable; no
+action/resource/duration.
+
+See also: EPIC-EXPANSION, STUDY, EPICFEATS
+#0
+
+EPIC WILL
+
+Character level 21+. Cost: one general or eligible class epic feat point.
+
+Prerequisites: WIS 21, Iron Will.
+
+Exact effect: Passive +4 feat bonus to Will saves, adding to Iron Will. No
+mind-affecting immunity and no bonus to separately typed Death saves unless
+they actually resolve as Will. Once selectable; no action/resource/duration.
+
+Overlap: P07 can combine only for its narrow categories because its bonus is
+insight, not another feat copy.
+
+See also: EPIC-EXPANSION, STUDY, EPICFEATS
+#0
+
+SUPERIOR INITIATIVE
+
+Character level 21+. Cost: one general or eligible class epic feat point.
+
+Prerequisites: DEX 21, Improved Initiative.
+
+Exact effect: Increase Improved Initiative's contribution by +4, for +8
+total from that feat chain. Other independently legal initiative modifiers
+retain their native stacking.
+
+Limits/actions: Passive. Does not reset existing combat timers, grant a free
+opening attack, clear surprise/flat-footed state or bypass action cooldowns.
+One rank.
+
+See also: EPIC-EXPANSION, STUDY, EPICFEATS
+#0
+
+LEGENDARY ATHLETE
+
+Character level 21+. Cost: one general or eligible class epic feat point.
+
+Prerequisites: STR 19, CON 19, trained Athletics 20, Endurance.
+
+Exact effect: Gain +6 competence on native climbing and ordinary swimming
+skill checks. For normal successful movement involving a required climb/swim
+check, reduce final movement-point cost by 10, retaining the normal cost
+floor.
+
+Limits: Passive. No automatic success, new exit, wall climbing, water
+breathing, flight or passage through boat-only sectors. No discount if
+mounted, flying over the obstacle, teleported, or already receiving a lower
+final cost from a non-stacking movement discount; apply the strongest flat
+movement discount.
+
+See also: EPIC-EXPANSION, STUDY, EPICFEATS
+#0
+
+IMPROVED SPELL CAPACITY
+
+Character level 21+. Cost: one general or eligible class epic feat point.
+
+Prerequisites: Trained Spellcraft 20; maximum normal spell circle already
+unlocked in the chosen casting class. For Summoner this is circle six, not
+nine.
+
+Exact effect: Choose one casting class at purchase. Gain one additional
+maximum slot at that class's highest normal circle. Learn/prepare spells
+through existing rules; this feat grants no spell knowledge, immediate
+charged slot or circle above the class's normal maximum.
+
+Ranks/actions: Two ranks, second at total level 27; both must choose the
+same class. Passive. Never adds a tenth circle, grants an epic spell, or
+increases PSP. Normal replenishment fills the extra capacity.
+
+Overlap: Existing New Arcana and slot bonuses remain separate and capped by
+their own rules.
+
+See also: EPIC-EXPANSION, STUDY, EPICFEATS
+#0
+
+RUINOUS RAGE
+
+Character level 21+. Cost: one general or eligible class epic feat point.
+
+Prerequisites: Berserker 20, STR 23, Greater Rage, Power Attack.
+
+Exact effect: While native rage is active, your own manual melee weapon
+attacks ignore up to five points of the target's applicable physical damage
+reduction. Effective DR cannot become negative. If several DR layers could
+apply, use the native selected layer; do not subtract five from every layer.
+
+Ranks/actions: One rank, passive. Multiple flat DR-penetration features use
+the largest applicable value, not their sum.
+
+Limits: No AC reduction, energy resistance penetration, spell or companion
+benefit, immunity bypass, extra attack, or permission to destroy protected
+scenery/doors. Does not change rage cost, exhaustion, duration or legality.
+
+See also: EPIC-EXPANSION, STUDY, EPICFEATS
+#0
+
+EPIC-SECOND-BATCH
+
+Sixteen further epic feats: Resistance Rebuttal, Shared Psionic Mantle; Charge-Fed
+Repair, Golem Aegis, Constructbane Infusion; Resilient Bond, Spell Sharing,
+Conjuration Command, Planar Triage, Evolved Summons; Trailmaster, Inspiration,
+Positive Energy Bulwark, Great Smiting, Elemental Bond and Augmented Alchemy.
+Use EPIC for commands and STUDY or FEATS INFO for full costs and mechanics.
+Study chooses the summon doctrine and companion element before confirmation.
+Cooldowns continue offline and survive respec. Great Smiting permits one rank.
+#0
+
+EPIC RESISTANCE REBUTTAL
+
+Character level 21+. Cost: one general or eligible class epic feat point.
+
+Prerequisites: Psionicist 20, Greater Power Penetration, trained Spellcraft
+20.
+
+Activation: epic psi-rebuttal; swift, 5 PSP, 1/60s; armed for three rounds.
+
+Exact effect: The next ordinary power encountering positive power resistance
+rolls its penetration d20 twice and keeps the better result. Apply the native
+fixed penetration modifiers once. The arm is consumed at that resistance
+check, including failure; it is not consumed by a power that encounters no
+resistance.
+
+Stacking: If an existing ability already gives advantage on the same check, do
+not roll a third die. Does not bypass resistance automatically or change save
+DC. Scope is the next target's check, not every target in an AoE.
+
+See also: EPIC-EXPANSION, EPIC-SECOND-BATCH, STUDY
+#0
+
+SHARED PSIONIC MANTLE
+
+Character level 21+. Cost: one general or eligible class epic feat point.
+
+Prerequisites: Psionicist 23, INT 23; know inertial armor, biofeedback or
+vigor.
+
+Activation: epic psi-mantle <ally> <power>; standard, 1/60s; pay the power's
+unaugmented base PSP cost plus 8 PSP.
+
+Exact effect: Manifest one of those three named powers on one visible grouped
+ally in your room, including an owned grouped companion. This is an explicit
+exception to those powers' self-only targeting. Use your current ML, no
+augmentation/metamagic, duration at most ten rounds.
+
+Limits: Does not also affect you; no copying an existing buff, spell
+reflection or refund. All native stacking, dispel, suppression and temporary-
+HP rules apply. It cannot duplicate a summon, heal, offensive power or epic
+ward.
+
+Shared Vigor supplies 5 finite temporary HP for at most 60 seconds, without
+increasing maximum HP or healing. True temporary HP pools use the strongest
+pool, never add together.
+
+See also: EPIC-EXPANSION, EPIC-SECOND-BATCH, STUDY
+#0
+
+EPIC CHARGE-FED REPAIR
+
+Character level 21+. Cost: one general or eligible class epic feat point.
+
+Prerequisites: Artificer 20, Construct Stone Golem, trained Use Magic Device
+20.
+
+Activation: epic charge-repair <golem> <wand>; standard, 1/300s; consumes
+three charges from a carried ordinary charged wand with a native spell of
+circle 1–3. All three must be available.
+
+Exact effect: Repair your active crafted golem for min(60, 10 + 2 × Artificer
+level) HP, capped at its missing HP. May be used in combat. It is a construct
+repair, with native healing suppression checks; the wand's spell is not cast.
+
+Limits: No destroyed golem recovery, charges from devices/staves/infinite-use
+items, discount from A03, spell procs, or charge refunds on overhealing.
+Reject a full-HP golem before commitment. Native out-of-combat material
+repairs remain available and unchanged.
+
+Construct repair bypasses the golem penalty for healing spells and Empowered
+Healing; native Blackmantle and feeding adjustments still apply.
+
+See also: EPIC-EXPANSION, EPIC-SECOND-BATCH, STUDY
+#0
+
+EPIC GOLEM AEGIS
+
+Character level 21+. Cost: one general or eligible class epic feat point.
+
+Prerequisites: Artificer 23, Construct Stone Golem, INT 23.
+
+Activation: epic golem-aegis; standard, 1/120s. Your same-room active crafted
+golem must have at least 31 HP.
+
+Exact effect: Deduct 30 HP directly from the golem and give yourself 30
+temporary HP for three rounds. The golem payment cannot kill it and bypasses
+damage redirection, mitigation and damage-triggered effects. The shield
+follows shared temporary-HP rules.
+
+Limits/overlap: No payment from shields, no repair to owner/golem and no
+Fortress Engine transfer or Soulbound Infusion trigger from the payment.
+Reject an already active Aegis shield before spending. Leaving the golem's
+room or losing ownership removes the remaining shield.
+
+See also: EPIC-EXPANSION, EPIC-SECOND-BATCH, STUDY
+#0
+
+EPIC CONSTRUCTBANE INFUSION
+
+Character level 21+. Cost: one general or eligible class epic feat point.
+
+Prerequisites: Artificer 25, Craft Magical Arms and Armor, trained Arcana 23.
+
+Activation: epic constructbane <wielded weapon>; standard, 1/60s. Duration
+three rounds; only one weapon per owner may carry this feat.
+
+Exact effect: Your first successful manual weapon hit each six-second interval
+against a native construct deals an additional 2d6 untyped physical damage.
+The packet undergoes ordinary physical DR; this is not precision damage and
+does not require a critical-vulnerable target.
+
+Limits: Weapon must remain wielded by you. Transfer, disarm, unwield or expiry
+ends the effect. No follower attacks, spell attacks, retaliation, extra item
+bonus slots, salvage-value change or permanent enchantment. The six-second
+proc timer belongs to the owner and cannot be reset by changing weapons.
+
+See also: EPIC-EXPANSION, EPIC-SECOND-BATCH, STUDY
+#0
+
+EPIC RESILIENT BOND
+
+Character level 21+. Cost: one general or eligible class epic feat point.
+
+Prerequisites: Summoner 23, CHA 23, Life Link class feature.
+
+Exact effect: If a damage packet would kill the primary eidolon after its
+normal Life Link survival attempt has failed, allow it one DC 20 Will save. On
+success reduce only that packet enough to leave it at 1 HP; on failure resolve
+death normally. Consume the owner's 1/300s use before the save, either way.
+
+Limits/actions: Passive. No protection against extraction, scripted death,
+dismissal, starvation or voluntary sacrifice. No second Life Link retry,
+healing, invulnerability duration or companion resurrection. Does not trigger
+for the Twin Eidolon mirror.
+
+See also: EPIC-EXPANSION, EPIC-SECOND-BATCH, STUDY
+#0
+
+EPIC SPELL SHARING
+
+Character level 21+. Cost: one general or eligible class epic feat point.
+
+Prerequisites: Summoner 20, trained Spellcraft 20; know one qualifying spell.
+
+Activation: epic shared-cast <spell> [normal spell option]; normal
+spellcasting action, 1/60s. Cast using a Summoner slot one circle higher than
+normal; final slot must be circle six or lower.
+
+Exact effect: Cast barkskin, blur, resist energy or stoneskin on both yourself
+and the same-room primary eidolon from that one slot. Resolve each target's
+stacking/immunity separately. Preserve the selected resist-energy type; use
+your normal CL and ordinary spell duration. Pay all native material/resource
+costs once.
+
+Limits: Both targets must be valid before commitment. No healing, temporary-HP
+grant, offensive spell, summon, epic spell, Twin mirror or third target. Does
+not duplicate cast-trigger procs or restore missing HP. If interrupted,
+neither buff is applied.
+
+Native Resist Energy currently protects against all energy types and has no
+selectable energy argument. Sharing retains that native behavior.
+
+See also: EPIC-EXPANSION, EPIC-SECOND-BATCH, STUDY
+#0
+
+EPIC CONJURATION COMMAND
+
+Character level 21+. Cost: one general or eligible class epic feat point.
+
+Prerequisites: Summoner 20, CHA 21, Augment Summoning.
+
+Activation: epic conjuration-command <own summon>; swift, 1/30s. One normal
+conjured creature in your room; no eidolon or mirror.
+
+Exact effect: Its next ordinary weapon/natural attack roll within two rounds
+gains +4 morale to hit. If that attack hits, the primary physical damage
+packet gains +8 flat damage, not multiplied on a critical. Miss or hit
+consumes the order.
+
+Limits: Grants neither an immediate attack nor an action reset. Does not
+affect spell attacks, each claw separately, AoE, extra damage packets or
+subsequent attacks. Highest morale attack bonus applies. Existing Beast
+Commander and stat bonuses retain their own rules; this is a short, one-attack
+command.
+
+See also: EPIC-EXPANSION, EPIC-SECOND-BATCH, STUDY
+#0
+
+EPIC PLANAR TRIAGE
+
+Character level 21+. Cost: one general or eligible class epic feat point.
+
+Prerequisites: Summoner 20, sixth-circle Summoner access, CHA 21.
+
+Activation: epic planar-triage; standard, expend one available sixth-circle
+Summoner slot, 1/300s. Primary eidolon must be alive, injured and in your
+room.
+
+Exact effect: Heal the primary for min(100, floor(0.20 × its max HP)), minimum
+1 before the normal healing pipeline. It receives no stat change or temporary
+HP. Native healing penalties may reduce the result.
+
+Limits: No use on a mirror, purchased pet, other player's eidolon or
+dismissed/dead creature. No resurrection, lost-slot refund, cooldown reset or
+extra heal from Life Bond. If native healing suppression rejects all healing
+before commitment, reject the command without spending a slot.
+
+See also: EPIC-EXPANSION, EPIC-SECOND-BATCH, STUDY
+#0
+
+EPIC EVOLVED SUMMONS
+
+Character level 21+. Cost: one general or eligible class epic feat point.
+
+Prerequisites: Summoner 23, Improved Augment Summoning, trained Spellcraft 23.
+
+Exact effect: Choose one doctrine at Study: Aquatic or Watchful. Newly created
+normal conjured creatures receive that doctrine for their original remaining
+summon lifetime. Aquatic grants native natural-swimmer status and underwater
+breathing; Watchful grants +4 competence Perception and native scent
+detection.
+
+Limits/actions: Passive. No extra attacks, spellcasting, bonus follower slot,
+additional summon, increased duration or swimming through boat-only exits. Do
+not grant a second copy of an ability already possessed. Existing stronger
+competence Perception wins. Choose once, changed only through a normal feat
+respec.
+
+Persistence: Store provenance and original summon expiry, so pet restore can
+reapply the doctrine without creating fresh lifetime or benefits for purchased
+pets. This uses a restricted doctrine rather than an unrestricted evolution
+editor on every summoned mob.
+
+See also: EPIC-EXPANSION, EPIC-SECOND-BATCH, STUDY
+#0
+
+EPIC TRAILMASTER
+
+Character level 21+. Cost: one general or eligible class epic feat point.
+
+Prerequisites: WIS 21, Track, trained Nature 23, trained Perception 20.
+
+Exact effect: Gain +6 competence to the native tracking check. While following
+an already recorded trail through a water or flying sector, ignore up to 10
+points of its terrain-related tracking penalty. Do not remove age, concealment
+or magical anti-tracking penalties.
+
+Limits: Passive. Does not fabricate a trail, reveal a hidden room/exit, report
+a remote player's live location or track through teleportation. Where the
+engine records no trail at all, it provides only the skill bonus. Existing
+trail visibility, age limits and builder restrictions remain.
+
+Native tracking currently has no recorded room trails or separate terrain
+penalty. Only the +6 competence tracking bonus applies; range and existing
+target lookup are unchanged.
+
+See also: EPIC-EXPANSION, EPIC-SECOND-BATCH, STUDY
+#0
+
+EPIC INSPIRATION
+
+Character level 21+. Cost: one general or eligible class epic feat point.
+
+Prerequisites: Bard 20, CHA 23, Bardic Music; trained Perform 20.
+
+Exact effect: Increase Dance of Protection’s AC and Will-save contributions
+and Song of Heroism’s attack-roll and damage-roll contributions by +1 per
+rank. Modify each original contribution, retaining its native inherent type,
+targeting and duration. These four numeric components are the complete
+whitelist.
+
+Ranks/actions: Two ranks, second requires total level 27 and Bard 23. Passive;
+at most +2 to an eligible contribution. Duplicate singers still use normal
+highest-bonus rules.
+
+MUD boundary: The tabletop morale/competence/dodge wording is replaced
+deliberately because these native songs use inherent bonuses. No extra hit
+dice, ability scores, DR, haste, healing, spell damage, duration, skill
+success chance or hostile-song DC. Song of Heroism’s existing haste bit is
+unchanged.
+
+See also: EPIC-EXPANSION, EPIC-SECOND-BATCH, STUDY
+#0
+
+POSITIVE ENERGY BULWARK
+
+Character level 21+. Cost: one general or eligible class epic feat point.
+
+Prerequisites: Cleric 20 or Paladin 20, CHA 21, Channel Energy, native
+permission to channel positive energy.
+
+Activation: epic positive-bulwark; standard, 1/300s, plus one available native
+Channel Energy use. Three-round duration.
+
+Exact effect: At commitment and six and twelve seconds later, deal 2d6
+positive-energy damage to each legal hostile undead in your room, using the
+native channel-undead damage path. Each pulse allows Will half, DC 10 +
+floor(qualifying class level / 2) + CHAmod. Snapshot the qualifying class and
+modifier at activation; if both classes qualify choose the higher class level,
+not their sum.
+
+Limits: No living targets, healing pulses, automatic turning/destruction,
+negative levels or channel-use refunds. Recheck PvP, room and target legality
+each pulse. Aura ends on death, unconsciousness or extraction, cannot overlap
+itself, and generates no secondary channel procs. Do not inherit damage
+increases from unrelated active Channel Energy uses.
+
+See also: EPIC-EXPANSION, EPIC-SECOND-BATCH, STUDY
+#0
+
+GREAT SMITING
+
+Character level 21+. Cost: one general or eligible class epic feat point.
+
+Prerequisites: Paladin 20 or Blackguard 20, CHA 23, the corresponding Smite
+Evil/Smite Good feature.
+
+Activation: epic great-smite; swift, 1/300s, arm for three rounds. The next
+native manual smite attack consumes its ordinary smite use and normal action
+as well as this already committed arm.
+
+Exact effect: If that attack hits a target eligible for the chosen native
+smite, deal +L physical damage, where L is the class level supplying that
+smite. Apply as a separate packet subject to normal physical defenses, never
+critical multiplication.
+
+Ranks/limits: One rank. Miss, expiry, wrong-alignment target after commitment
+or loss of the smite arm gives no refund. No extra smite use, immunity bypass,
+alignment conversion or bonus on every later attack against a marked target.
+Audit existing callers of this ID before enabling it so its old per-rank
+damage cannot also apply.
+
+See also: EPIC-EXPANSION, EPIC-SECOND-BATCH, STUDY
+#0
+
+LEGENDARY COMPANION: ELEMENTAL BOND
+
+Character level 21+. Cost: one general or eligible class epic feat point.
+
+Prerequisites: Druid 20 or Ranger 20, Animal Companion, WIS 21, trained
+Nature/Survival 20.
+
+Exact effect: Permanently choose acid, cold, electricity or fire at Study.
+Your single active native animal companion's first successful normal melee
+attack each six-second interval deals an additional 1d6 of that energy.
+Snapshot the type from the owner's feat, not a rerolled summon template.
+
+Ranks/actions: One rank, passive. Owner-level six-second timer persists across
+pet dismissal, replacement and restoration. No extra attack, follower slot,
+new companion type or rider on spell/proc/retaliation attacks.
+
+See also: EPIC-EXPANSION, EPIC-SECOND-BATCH, STUDY
+#0
+
+EPIC AUGMENTED ALCHEMY
+
+Character level 21+. Cost: one general or eligible class epic feat point.
+
+Prerequisites: Alchemist 20, INT 23, native bomb feature; trained Craft
+(Alchemy) 20.
+
+Activation: epic augment-bomb <prepared bomb slot> <sacrificial bomb slot>;
+swift, 1/60s. Both slots must contain prepared normal fire bombs and be
+distinct. Consume the sacrificial bomb immediately and bind the other slot for
+three rounds.
+
+Exact effect: Your next manual throw of the bound bomb uses its normal action,
+attack and consumption rules. On a successful direct hit, add 4d6 fire damage
+to the primary target only. Use the bomb's normal direct-hit save outcome, if
+any, for the extra packet. A miss still consumes the bomb and feat use.
+
+Limits/overlap: Splash, sticky ticks, chain reactions and secondary targets
+gain nothing. Expiry discards the bonus, not the bound bomb; the sacrificed
+bomb is never restored. Discarding/changing the bound slot cancels the arm.
+Existing bomb perks apply to the original attack, not a second proc chain. No
+bonus to healing/control bombs, extra prepared slots or exception to native
+bomb-making recovery. Slot identity and prepaid sacrifice require atomic saved
+state.
+
+See also: EPIC-EXPANSION, EPIC-SECOND-BATCH, STUDY
+#0
+
+EPIC-THIRD-BATCH EPIC-COMPLETION
+
+All 48 catalogue feats are implemented. Use FEATS INFO <name> for the full
+Study description. New active commands: epic psi-contingency, sentinel-mind,
+eidolon-intercession, adaptive-aspect, spell-opportunity, spell-stowaway, recover.
+These subcommands follow the word EPIC. Timers use real seconds offline.
+Opportunity reservations expire on reconnect without refund. Older conditions
+without saved original DC metadata cannot be selected for Epic Heroic Recovery.
+Native Resist Energy protects against all native energy types.
+#0
+$

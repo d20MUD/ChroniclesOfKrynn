@@ -8,6 +8,7 @@
 #include "sysdep.h"
 #include "structs.h"
 #include "utils.h"
+#include "epic_feats.h"
 #include "interpreter.h"
 #include "spells.h"
 #include "handler.h"
@@ -595,7 +596,7 @@ ACMD(do_psionic_focus)
 
   af.spell = PSIONIC_ABILITY_PSIONIC_FOCUS;
   af.location = APPLY_SPECIAL;
-  af.duration = 12;
+  af.duration = epic_feat_rank(ch, FEAT_EPIC_FOCUS_CONTINUITY) ? 18 : 12;
 
   affect_to_char(ch, &af);
 

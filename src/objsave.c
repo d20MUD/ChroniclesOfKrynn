@@ -82,7 +82,8 @@ obj_save_data *objsave_parse_objects_db_sheath(char *name, long int sheath_idnum
 static int restore_persistent_object(struct obj_data *obj, const char *tag, const char *value)
 {
   int index, a, b, c, d, e;
-  if (!strcmp(tag, "LgId")) legendary_identity_restore(obj, value);
+  if (!strcmp(tag,"EpID")) { if(legendary_uuid_valid(value)) strlcpy(obj->epic_binding_id,value,33); }
+  else if (!strcmp(tag, "LgId")) legendary_identity_restore(obj, value);
   else if (!strcmp(tag, "LgQn")) {
     obj->legendary_quarantined = true;
     if (!obj->legendary_uuid[0]) {
@@ -235,6 +236,13 @@ int objsave_save_obj_record_db(struct obj_data *obj, struct char_data *ch, room_
   strlcat(ins_buf, line_buf, sizeof(ins_buf));
 #endif
 
+  if (*obj->epic_binding_id) {
+    fprintf(fp,"EpID: %s\n",obj->epic_binding_id);
+#ifdef OBJSAVE_DB
+    snprintf(line_buf,sizeof(line_buf),"EpID: %s\n",obj->epic_binding_id);
+    strlcat(ins_buf,line_buf,sizeof(ins_buf));
+#endif
+  }
   if (obj->legendary_uuid[0]) {
     char identity_line[64];
     if (!legendary_identity_line(obj, identity_line, sizeof(identity_line))) {

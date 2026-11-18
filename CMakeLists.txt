@@ -612,6 +612,9 @@ set(SRC_C_FILES
     src/epic_magic.c
     src/mail.c
     src/medit.c
+    src/epic_feats.c
+  src/epic_feats2.c
+  src/epic_feats3.c
     src/metamagic_science.c
     src/missions.c
     src/mob_act.c

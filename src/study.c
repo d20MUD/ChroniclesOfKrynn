@@ -9,6 +9,8 @@
 #include "sysdep.h"
 #include "structs.h"
 #include "utils.h"
+#include "epic_feats.h"
+#include "epic_feats3.h"
 #include "comm.h"
 #include "db.h"
 #include "oasis.h"
@@ -233,6 +235,7 @@ void init_study(struct descriptor_data *d, int class)
   LEVELUP(ch)->level = CLASS_LEVEL(ch, class);
   LEVELUP(ch)->feat_points = MAX(0, GET_FEAT_POINTS(ch));
   LEVELUP(ch)->class_feat_points = MAX(0, GET_CLASS_FEATS(ch, class));
+  LEVELUP(ch)->epic_choices = EPIC_CHOICES(ch);
   LEVELUP(ch)->epic_feat_points = MAX(0, GET_EPIC_FEAT_POINTS(ch));
   LEVELUP(ch)->epic_class_feat_points = MAX(0, GET_EPIC_CLASS_FEATS(ch, class));
   LEVELUP(ch)->teamwork_feat_points = MAX(0, GET_TEAMWORK_FEAT_POINTS(ch));
@@ -310,6 +313,7 @@ void finalize_study(struct descriptor_data *d)
    * the character structure. */
   GET_FEAT_POINTS(ch) = LEVELUP(ch)->feat_points;
   GET_CLASS_FEATS(ch, LEVELUP(ch)->class) = LEVELUP(ch)->class_feat_points;
+  EPIC_CHOICES(ch) = LEVELUP(ch)->epic_choices;
   GET_EPIC_FEAT_POINTS(ch) = LEVELUP(ch)->epic_feat_points;
   GET_EPIC_CLASS_FEATS(ch, LEVELUP(ch)->class) = LEVELUP(ch)->epic_class_feat_points;
   GET_PRACTICES(ch) = LEVELUP(ch)->practices;
@@ -671,6 +675,12 @@ bool add_levelup_feat(struct descriptor_data *d, int feat)
   if (feat <= FEAT_UNDEFINED || feat >= NUM_FEATS)
   {
     write_to_output(d, "Invalid feat.\r\n");
+    return FALSE;
+  }
+
+  if (is_expansion_epic(feat) && !epic_feat_available(ch, feat))
+  {
+    write_to_output(d, "You no longer meet that epic feat's prerequisites or rank limit.\r\n");
     return FALSE;
   }
 
@@ -2968,6 +2978,101 @@ static void main_skills_disp_menu(struct descriptor_data *d)
   OLC_MODE(d) = STUDY_MAIN_SKILLS_MENU;
 }
 
+static void gen_feat_disp_menu(struct descriptor_data *d);
+
+static bool epic_needs_choice(struct char_data *ch, int feat)
+{
+  return feat == FEAT_EPIC_DISCIPLINE_FOCUS || feat == FEAT_EPIC_ANATOMICAL_SAVANT || feat == FEAT_EPIC_EVOLVED_SUMMONS || feat == FEAT_LEGENDARY_COMPANION_ELEMENTAL_BOND || feat == FEAT_EPIC_POWER_KNOWLEDGE || feat == FEAT_EPIC_EFFICIENT_ITEM_CREATION ||
+         (feat == FEAT_IMPROVED_SPELL_CAPACITY && !LEVELUP(ch)->epic_choices.capacity_class);
+}
+
+static void epic_confirm_menu(struct descriptor_data *d)
+{
+  struct char_data *ch=d->character;
+  int feat=LEVELUP(ch)->tempFeat;
+  write_to_output(d,"\r\n%s: %s\r\n",feat_list[feat].name,feat_list[feat].description);
+  if (feat==FEAT_EPIC_DISCIPLINE_FOCUS)
+    write_to_output(d,"Selected discipline: %s (same discipline for both ranks).\r\n",(const char *[]) {"none","Clairsentience","Metacreativity","Psychokinesis","Psychometabolism","Psychoportation","Telepathy"}[LEVELUP(ch)->epic_pending[0]]);
+  else if (feat==FEAT_EPIC_POWER_KNOWLEDGE)
+    write_to_output(d,"Selected powers: %s and %s.\r\n",
+                    spell_info[LEVELUP(ch)->epic_pending[0]].name,
+                    spell_info[LEVELUP(ch)->epic_pending[1]].name);
+  else if (feat==FEAT_EPIC_EFFICIENT_ITEM_CREATION)
+    write_to_output(d,"Selected category: %s.\r\n",LEVELUP(ch)->epic_pending[0]==1?"wondrous items":"magical arms and armor");
+  else if (feat==FEAT_EPIC_ANATOMICAL_SAVANT)
+    write_to_output(d,"Selected Weapon Focus type: %s.\r\n",weapon_list[LEVELUP(ch)->epic_pending[0]-1].name);
+  else if (feat==FEAT_EPIC_EVOLVED_SUMMONS)
+    write_to_output(d,"Doctrine: %s.\r\n",LEVELUP(ch)->epic_pending[0]==1 ? "Aquatic: natural swimming and underwater breathing" : "Watchful: +4 competence Perception and scent");
+  else if (feat==FEAT_LEGENDARY_COMPANION_ELEMENTAL_BOND)
+    write_to_output(d,"Element: %s.\r\n",(const char *[]) {"none","acid","cold","electricity","fire"}[LEVELUP(ch)->epic_pending[0]]);
+  else if (feat==FEAT_IMPROVED_SPELL_CAPACITY)
+    write_to_output(d,"Selected class: %s (circle %d).\r\n",
+      CLSLIST_NAME(LEVELUP(ch)->epic_pending[0]-1),epic_capacity_circle(LEVELUP(ch)->epic_pending[0]-1));
+  write_to_output(d,"Cost: one %s epic feat point. Choose this feat? (y/n): ",
+    is_class_feat(feat,LEVELUP(ch)->class,ch) && LEVELUP(ch)->epic_class_feat_points>0?"class":"general");
+  OLC_MODE(d)=STUDY_CONFIRM_ADD_FEAT;
+}
+
+static void epic_choice_menu(struct descriptor_data *d)
+{
+  struct char_data *ch=d->character;
+  int i,feat=LEVELUP(ch)->tempFeat;
+  write_to_output(d,"\r\n%s: %s\r\n",feat_list[feat].name,feat_list[feat].description);
+  if (feat==FEAT_EPIC_DISCIPLINE_FOCUS)
+    write_to_output(d,"1) Clairsentience\r\n2) Metacreativity\r\n3) Psychokinesis\r\n4) Psychometabolism\r\n5) Psychoportation\r\n6) Telepathy\r\nChoose discipline (same for both ranks; or Q): ");
+  else if (feat==FEAT_EPIC_POWER_KNOWLEDGE)
+  {
+    for (i=PSIONIC_POWER_START;i<=PSIONIC_POWER_END;i++)
+      if (epic_power_choice(ch,i) && i!=LEVELUP(ch)->epic_pending[0])
+        write_to_output(d,"%4d) %s (circle %d)\r\n",i,spell_info[i].name,
+                        compute_powers_circle(CLASS_PSIONICIST,i,METAMAGIC_NONE));
+    write_to_output(d,"Choose bonus power %d of 2 (ID or Q): ",LEVELUP(ch)->epic_choice_step+1);
+  }
+  else if (feat==FEAT_EPIC_EFFICIENT_ITEM_CREATION)
+  {
+    if (has_feat_requirement_check(ch,FEAT_CRAFT_WONDEROUS_ITEM)) write_to_output(d,"1) Wondrous items\r\n");
+    if (has_feat_requirement_check(ch,FEAT_CRAFT_MAGICAL_ARMS_AND_ARMOR)) write_to_output(d,"2) Magical arms and armor\r\n");
+    write_to_output(d,"Choose category (or Q): ");
+  }
+  else if (feat==FEAT_EPIC_ANATOMICAL_SAVANT)
+  {
+    for(i=0;i<NUM_WEAPON_TYPES;i++) if(epic_third_weapon_choice(ch,i,TRUE)) write_to_output(d,"%d) %s\r\n",i+1,weapon_list[i].name);
+    write_to_output(d,"Choose Weapon Focus type (or Q): ");
+  }
+  else if (feat==FEAT_EPIC_EVOLVED_SUMMONS)
+    write_to_output(d,"1) Aquatic: native swimming and underwater breathing.\r\n2) Watchful: +4 competence Perception and native scent.\r\nChoose doctrine (or Q): ");
+  else if (feat==FEAT_LEGENDARY_COMPANION_ELEMENTAL_BOND)
+    write_to_output(d,"1) Acid\r\n2) Cold\r\n3) Electricity\r\n4) Fire\r\nChoose companion's 1d6 energy (or Q): ");
+  else
+  {
+    for (i=0;i<NUM_CLASSES;i++) if (epic_capacity_choice(ch,i))
+      write_to_output(d,"%d) %s (circle %d)\r\n",i+1,CLSLIST_NAME(i),epic_capacity_circle(i));
+    write_to_output(d,"Choose casting class (or Q): ");
+  }
+  OLC_MODE(d)=STUDY_EPIC_CHOICE;
+}
+
+static bool epic_choices_valid(struct char_data *ch, int feat)
+{
+  if(feat==FEAT_EPIC_DISCIPLINE_FOCUS) return LEVELUP(ch)->epic_pending[0]>=1 && LEVELUP(ch)->epic_pending[0]<=6 && (!LEVELUP(ch)->epic_choices.discipline || LEVELUP(ch)->epic_choices.discipline==LEVELUP(ch)->epic_pending[0]);
+  if(feat==FEAT_EPIC_ANATOMICAL_SAVANT) return epic_third_weapon_choice(ch,LEVELUP(ch)->epic_pending[0]-1,TRUE);
+  if (feat==FEAT_EPIC_EVOLVED_SUMMONS || feat==FEAT_LEGENDARY_COMPANION_ELEMENTAL_BOND)
+    return LEVELUP(ch)->epic_pending[0]>=1 && LEVELUP(ch)->epic_pending[0]<=(feat==FEAT_EPIC_EVOLVED_SUMMONS?2:4);
+  if (feat==FEAT_EPIC_POWER_KNOWLEDGE)
+    return LEVELUP(ch)->epic_pending[0]!=LEVELUP(ch)->epic_pending[1] &&
+           epic_power_choice(ch,LEVELUP(ch)->epic_pending[0]) &&
+           epic_power_choice(ch,LEVELUP(ch)->epic_pending[1]);
+  if (feat==FEAT_EPIC_EFFICIENT_ITEM_CREATION)
+    return (LEVELUP(ch)->epic_pending[0]==1 && has_feat_requirement_check(ch,FEAT_CRAFT_WONDEROUS_ITEM)) ||
+           (LEVELUP(ch)->epic_pending[0]==2 && has_feat_requirement_check(ch,FEAT_CRAFT_MAGICAL_ARMS_AND_ARMOR));
+  if (feat==FEAT_IMPROVED_SPELL_CAPACITY)
+    return LEVELUP(ch)->epic_pending[0]>0 && LEVELUP(ch)->epic_pending[0]<=NUM_CLASSES &&
+           epic_capacity_choice(ch,LEVELUP(ch)->epic_pending[0]-1) &&
+           (!LEVELUP(ch)->epic_choices.capacity_class ||
+            LEVELUP(ch)->epic_pending[0]==LEVELUP(ch)->epic_choices.capacity_class);
+  return TRUE;
+}
+
 static void display_study_feats(struct descriptor_data *d)
 {
   struct char_data *ch = d->character;
@@ -3359,6 +3464,12 @@ void study_parse(struct descriptor_data *d, char *arg)
       }
       /* Save the temporary values in LEVELUP(d->character) to the
        * character, print a message, free the structures and exit. */
+      if (study_num_free_evolution_points(ch) < 0)
+      {
+        write_to_output(d, "Your eidolon exceeds its evolution budget; adjust its evolutions before saving.\r\n");
+        OLC_MODE(d) = STUDY_GEN_MAIN_MENU;
+        return;
+      }
       write_to_output(d, "Your choices have been finalized!\r\n\r\n");
       // if (GET_LEVEL(ch) == 1) /* in case they modify their intelligence */
       //   reset_training_points(ch);
@@ -4101,6 +4212,17 @@ void study_parse(struct descriptor_data *d, char *arg)
     /* Store the feat number in the work area in the data structure. */
     LEVELUP(d->character)->tempDiscovery = number;
 
+    if (is_expansion_epic(number))
+    {
+      LEVELUP(ch)->epic_pending[0]=LEVELUP(ch)->epic_pending[1]=0;
+      LEVELUP(ch)->epic_choice_step=0;
+      if (number==FEAT_IMPROVED_SPELL_CAPACITY)
+        LEVELUP(ch)->epic_pending[0]=LEVELUP(ch)->epic_choices.capacity_class;
+      if (epic_needs_choice(ch,number)) epic_choice_menu(d);
+      else epic_confirm_menu(d);
+      break;
+    }
+
     /* Display the description of the feat, and give the player an option. */
     write_to_output(d,
                     "%s%s%s: %s\r\n\r\n"
@@ -4138,6 +4260,17 @@ void study_parse(struct descriptor_data *d, char *arg)
 
     /* Store the mercy choice in the work area in the data structure. */
     LEVELUP(d->character)->tempMercy = number;
+
+    if (is_expansion_epic(number))
+    {
+      LEVELUP(ch)->epic_pending[0]=LEVELUP(ch)->epic_pending[1]=0;
+      LEVELUP(ch)->epic_choice_step=0;
+      if (number==FEAT_IMPROVED_SPELL_CAPACITY)
+        LEVELUP(ch)->epic_pending[0]=LEVELUP(ch)->epic_choices.capacity_class;
+      if (epic_needs_choice(ch,number)) epic_choice_menu(d);
+      else epic_confirm_menu(d);
+      break;
+    }
 
     /* Display the description of the feat, and give the player an option. */
     write_to_output(d,
@@ -4245,6 +4378,17 @@ void study_parse(struct descriptor_data *d, char *arg)
     /* Store the mercy choice in the work area in the data structure. */
     LEVELUP(d->character)->tempCruelty = number;
 
+    if (is_expansion_epic(number))
+    {
+      LEVELUP(ch)->epic_pending[0]=LEVELUP(ch)->epic_pending[1]=0;
+      LEVELUP(ch)->epic_choice_step=0;
+      if (number==FEAT_IMPROVED_SPELL_CAPACITY)
+        LEVELUP(ch)->epic_pending[0]=LEVELUP(ch)->epic_choices.capacity_class;
+      if (epic_needs_choice(ch,number)) epic_choice_menu(d);
+      else epic_confirm_menu(d);
+      break;
+    }
+
     /* Display the description of the feat, and give the player an option. */
     write_to_output(d,
                     "%s%s%s: %s\r\n\r\n"
@@ -4330,6 +4474,17 @@ void study_parse(struct descriptor_data *d, char *arg)
     /* Store the feat number in the work area in the data structure. */
     LEVELUP(d->character)->tempFeat = number;
 
+    if (is_expansion_epic(number))
+    {
+      LEVELUP(ch)->epic_pending[0]=LEVELUP(ch)->epic_pending[1]=0;
+      LEVELUP(ch)->epic_choice_step=0;
+      if (number==FEAT_IMPROVED_SPELL_CAPACITY)
+        LEVELUP(ch)->epic_pending[0]=LEVELUP(ch)->epic_choices.capacity_class;
+      if (epic_needs_choice(ch,number)) epic_choice_menu(d);
+      else epic_confirm_menu(d);
+      break;
+    }
+
     /* Display the description of the feat, and give the player an option. */
     write_to_output(d,
                     "%s%s%s: %s\r\n\r\n"
@@ -4338,6 +4493,22 @@ void study_parse(struct descriptor_data *d, char *arg)
                     feat_list[LEVELUP(ch)->tempFeat].description);
 
     OLC_MODE(d) = STUDY_CONFIRM_ADD_FEAT;
+    break;
+
+  case STUDY_EPIC_CHOICE:
+    if (*arg=='q' || *arg=='Q') { gen_feat_disp_menu(d);break; }
+    if (!isdigit((unsigned char)*arg)) { epic_choice_menu(d);break; }
+    number=atoi(arg);
+    if (LEVELUP(ch)->tempFeat==FEAT_EPIC_POWER_KNOWLEDGE)
+    {
+      if (!epic_power_choice(ch,number) || number==LEVELUP(ch)->epic_pending[0])
+      { epic_choice_menu(d);break; }
+      LEVELUP(ch)->epic_pending[LEVELUP(ch)->epic_choice_step++]=number;
+      if (LEVELUP(ch)->epic_choice_step<2) { epic_choice_menu(d);break; }
+    }
+    else LEVELUP(ch)->epic_pending[0]=number;
+    if (!epic_choices_valid(ch,LEVELUP(ch)->tempFeat)) { epic_choice_menu(d);break; }
+    epic_confirm_menu(d);
     break;
 
   case STUDY_CONFIRM_ADD_FEAT:
@@ -4349,6 +4520,35 @@ void study_parse(struct descriptor_data *d, char *arg)
       break;
     case 'y':
     case 'Y':
+      if (is_expansion_epic(LEVELUP(ch)->tempFeat))
+      {
+        int feat=LEVELUP(ch)->tempFeat,rank;
+        if (!epic_choices_valid(ch,feat))
+        { write_to_output(d,"Your subchoices are no longer available.\r\n");gen_feat_disp_menu(d);break; }
+        if (add_levelup_feat(d,feat))
+        {
+          rank=has_feat_requirement_check(ch,feat);
+          if (feat==FEAT_EPIC_DISCIPLINE_FOCUS)
+            LEVELUP(ch)->epic_choices.discipline=LEVELUP(ch)->epic_pending[0];
+          else if (feat==FEAT_EPIC_POWER_KNOWLEDGE)
+          {
+            LEVELUP(ch)->epic_choices.powers[2*(rank-1)]=LEVELUP(ch)->epic_pending[0];
+            LEVELUP(ch)->epic_choices.powers[2*(rank-1)+1]=LEVELUP(ch)->epic_pending[1];
+          }
+          else if (feat==FEAT_EPIC_EFFICIENT_ITEM_CREATION)
+            LEVELUP(ch)->epic_choices.craft_category=LEVELUP(ch)->epic_pending[0];
+          else if (feat==FEAT_EPIC_ANATOMICAL_SAVANT)
+            LEVELUP(ch)->epic_choices.anatomy_weapon=LEVELUP(ch)->epic_pending[0];
+          else if (feat==FEAT_EPIC_EVOLVED_SUMMONS)
+            LEVELUP(ch)->epic_choices.summon_doctrine=LEVELUP(ch)->epic_pending[0];
+          else if (feat==FEAT_LEGENDARY_COMPANION_ELEMENTAL_BOND)
+            LEVELUP(ch)->epic_choices.companion_element=LEVELUP(ch)->epic_pending[0];
+          else if (feat==FEAT_IMPROVED_SPELL_CAPACITY)
+            LEVELUP(ch)->epic_choices.capacity_class=LEVELUP(ch)->epic_pending[0];
+          write_to_output(d,"Feat %s chosen!\r\n",feat_list[feat].name);
+        }
+        gen_feat_disp_menu(d);break;
+      }
       /* Check to see if this feat has a subfeat - If so, then display the
        * approptiate menus. */
       if (LEVELUP(ch)->tempFeat == FEAT_PRACTICED_SPELLCASTER)
@@ -6689,6 +6889,7 @@ int study_num_free_evolution_points(struct char_data *ch)
   }
 
   num_points += get_summoner_evolution_pool_bonus(ch);
+  num_points += 2 * MIN(2, epic_study_rank(ch, FEAT_EPIC_EVOLUTION_RESERVE));
 
   return (num_points - num_spent);
 }

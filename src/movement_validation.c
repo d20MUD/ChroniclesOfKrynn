@@ -12,6 +12,9 @@
 #include "sysdep.h"
 #include "structs.h"
 #include "utils.h"
+#include "epic_feats3.h"
+#include "evolutions.h"
+#include "epic_feats2.h"
 #include "comm.h"
 #include "interpreter.h"
 #include "handler.h"
@@ -40,6 +43,8 @@ bool is_natural_swimmer(struct char_data *ch)
 
   if (!ch)
     return FALSE;
+
+  if (epic_summon_doctrine(ch,1)) return TRUE;
 
   if (IS_NPC(ch))
     for (i = 0; i < 3; i++)
@@ -111,6 +116,7 @@ int has_boat(struct char_data *ch, room_rnum going_to)
   if (is_natural_swimmer(ch))
     return 1;
 
+  ch->epic_swim_checked = FALSE;
   /* we should do a swim check now */
   int swim_dc = 13 + ZONE_MINLVL(GET_ROOM_ZONE(going_to));
   skill_roll = d20(ch);
@@ -125,6 +131,7 @@ int has_boat(struct char_data *ch, room_rnum going_to)
   }
   else
   { /*success!*/
+    ch->epic_swim_checked = TRUE;
     send_to_char(ch, "You successfully swim!: ");
     return 1;
   }
@@ -166,6 +173,7 @@ int has_scuba(struct char_data *ch, room_rnum destination)
   if (GET_LEVEL(ch) >= LVL_IMMORT)
     return (1);
 
+  if (epic_summon_doctrine(ch,1) || HAS_EVOLUTION(ch,EVOLUTION_GILLS)) return TRUE;
   if (AFF_FLAGGED(ch, AFF_SCUBA))
     return (1);
 

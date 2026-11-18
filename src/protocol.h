@@ -210,11 +210,9 @@ typedef struct descriptor_data descriptor_t;
  * Defines the download URL and version for the LuminariMUD GUI package.
  * Format: "version\ndownload_url"
  *
- * @note Only defined for default LuminariMUD campaign
- * @note Dragonlance and Forgotten Realms campaigns use different/no GUIs
  */
 #define MUDLET_PACKAGE                                                                             \
-  "{\"version\":4,\"url\":\"https://luminarimud.com/download/LuminariGUI-v2.0.4.015.mpackage\"}"
+  "{\"version\":\"0.8.10-chatfix1\",\"url\":\"https://raw.githubusercontent.com/legimia/mudlet-ui/main/KrynnNativeUI.mpackage\"}"
 
 /******************************************************************************
  *                           PROTOCOL CONSTANTS
@@ -236,9 +234,9 @@ typedef struct descriptor_data descriptor_t;
  * while allowing for complex protocol data exchange.
  */
 #define MAX_PROTOCOL_BUFFER (12 * 1024) /**< Main protocol buffer (matches MAX_RAW_INPUT_LENGTH) */
-#define MAX_VARIABLE_LENGTH (1024 * 1024)       /**< Maximum length for MSDP variable values */
-#define MAX_OUTPUT_BUFFER LARGE_BUFSIZE /**< Output buffer for processed protocol data */
-#define MAX_MSSP_BUFFER 4096            /**< Buffer for MSSP server status data */
+#define MAX_VARIABLE_LENGTH (1024 * 1024) /**< Maximum length for MSDP variable values */
+#define MAX_OUTPUT_BUFFER LARGE_BUFSIZE   /**< Output buffer for processed protocol data */
+#define MAX_MSSP_BUFFER 4096              /**< Buffer for MSSP server status data */
 
 /**
  * Telnet negotiation states
@@ -471,60 +469,60 @@ typedef enum
   eMSDP_SNIPPET_VERSION, /**< Protocol snippet version (8) */
 
   /* Character statistics and progression */
-  eMSDP_AFFECTS,         /**< Active spell effects and conditions (array) */
-  eMSDP_INVENTORY,       /**< Character inventory items (array) */
-  eMSDP_ALIGNMENT,       /**< Character alignment text (Lawful Good, Neutral Evil, etc.) */
-  eMSDP_EXPERIENCE,      /**< Current experience points */
-  eMSDP_EXPERIENCE_MAX,  /**< Experience points at current level */
-  eMSDP_EXPERIENCE_TNL,  /**< Experience points to next level */
-  eMSDP_HEALTH,          /**< Current hit points */
-  eMSDP_HEALTH_MAX,      /**< Maximum hit points */
-  eMSDP_LEVEL,           /**< Character level */
-  eMSDP_RACE,            /**< Character race name */
-  eMSDP_CLASS,           /**< Character class name */
-  eMSDP_PSP,             /**< Current psionic spell points */
-  eMSDP_PSP_MAX,         /**< Maximum psionic spell points */
-  eMSDP_WIMPY,           /**< Wimpy flee threshold */
-  eMSDP_PRACTICE,        /**< Practice sessions available */
-  eMSDP_MONEY,           /**< Character wealth in gold */
-  eMSDP_MOVEMENT,        /**< Current movement points */
-  eMSDP_MOVEMENT_MAX,    /**< Maximum movement points */
-  eMSDP_ATTACK_BONUS,    /**< Attack bonus modifier */
-  eMSDP_DAMAGE_BONUS,    /**< Damage bonus modifier */
-  eMSDP_AC,              /**< Armor class */
-  eMSDP_STR,             /**< Current strength score */
-  eMSDP_INT,             /**< Current intelligence score */
-  eMSDP_WIS,             /**< Current wisdom score */
-  eMSDP_DEX,             /**< Current dexterity score */
-  eMSDP_CON,             /**< Current constitution score */
-  eMSDP_CHA,             /**< Current charisma score */
-  eMSDP_STR_PERM,        /**< Permanent strength score */
-  eMSDP_INT_PERM,        /**< Permanent intelligence score */
-  eMSDP_WIS_PERM,        /**< Permanent wisdom score */
-  eMSDP_DEX_PERM,        /**< Permanent dexterity score */
-  eMSDP_CON_PERM,        /**< Permanent constitution score */
-  eMSDP_CHA_PERM,        /**< Permanent charisma score */
-  eMSDP_ACTIONS,         /**< Available actions data (table) */
-  eMSDP_STANDARD_ACTION, /**< Standard action available (boolean) */
-  eMSDP_MOVE_ACTION,     /**< Move action available (boolean) */
-  eMSDP_SWIFT_ACTION,    /**< Swift action available (boolean) */
-  eMSDP_GROUP,           /**< Group members data (array) */
-  eMSDP_POSITION,        /**< Current position (standing/sitting/etc) */
-  eMSDP_TITLE,           /**< Character title */
-  eMSDP_HELP_INFO,       /**< On-demand web help response as JSON */
-  eMSDP_SCORE_INFO, /**< On-demand structured score */
-  eMSDP_WHO_INFO, /**< On-demand visible player list */
-  eMSDP_LOOT_INFO, /**< Kill rewards and corpse loot notifications */
-  eMSDP_LORE_INFO,      /**< On-demand lore results as JSON */
+  eMSDP_AFFECTS,            /**< Active spell effects and conditions (array) */
+  eMSDP_INVENTORY,          /**< Character inventory items (array) */
+  eMSDP_ALIGNMENT,          /**< Character alignment text (Lawful Good, Neutral Evil, etc.) */
+  eMSDP_EXPERIENCE,         /**< Current experience points */
+  eMSDP_EXPERIENCE_MAX,     /**< Experience points at current level */
+  eMSDP_EXPERIENCE_TNL,     /**< Experience points to next level */
+  eMSDP_HEALTH,             /**< Current hit points */
+  eMSDP_HEALTH_MAX,         /**< Maximum hit points */
+  eMSDP_LEVEL,              /**< Character level */
+  eMSDP_RACE,               /**< Character race name */
+  eMSDP_CLASS,              /**< Character class name */
+  eMSDP_PSP,                /**< Current psionic spell points */
+  eMSDP_PSP_MAX,            /**< Maximum psionic spell points */
+  eMSDP_WIMPY,              /**< Wimpy flee threshold */
+  eMSDP_PRACTICE,           /**< Practice sessions available */
+  eMSDP_MONEY,              /**< Character wealth in gold */
+  eMSDP_MOVEMENT,           /**< Current movement points */
+  eMSDP_MOVEMENT_MAX,       /**< Maximum movement points */
+  eMSDP_ATTACK_BONUS,       /**< Attack bonus modifier */
+  eMSDP_DAMAGE_BONUS,       /**< Damage bonus modifier */
+  eMSDP_AC,                 /**< Armor class */
+  eMSDP_STR,                /**< Current strength score */
+  eMSDP_INT,                /**< Current intelligence score */
+  eMSDP_WIS,                /**< Current wisdom score */
+  eMSDP_DEX,                /**< Current dexterity score */
+  eMSDP_CON,                /**< Current constitution score */
+  eMSDP_CHA,                /**< Current charisma score */
+  eMSDP_STR_PERM,           /**< Permanent strength score */
+  eMSDP_INT_PERM,           /**< Permanent intelligence score */
+  eMSDP_WIS_PERM,           /**< Permanent wisdom score */
+  eMSDP_DEX_PERM,           /**< Permanent dexterity score */
+  eMSDP_CON_PERM,           /**< Permanent constitution score */
+  eMSDP_CHA_PERM,           /**< Permanent charisma score */
+  eMSDP_ACTIONS,            /**< Available actions data (table) */
+  eMSDP_STANDARD_ACTION,    /**< Standard action available (boolean) */
+  eMSDP_MOVE_ACTION,        /**< Move action available (boolean) */
+  eMSDP_SWIFT_ACTION,       /**< Swift action available (boolean) */
+  eMSDP_GROUP,              /**< Group members data (array) */
+  eMSDP_POSITION,           /**< Current position (standing/sitting/etc) */
+  eMSDP_TITLE,              /**< Character title */
+  eMSDP_HELP_INFO,          /**< On-demand web help response as JSON */
+  eMSDP_SCORE_INFO,         /**< On-demand structured score */
+  eMSDP_WHO_INFO,           /**< On-demand visible player list */
+  eMSDP_LOOT_INFO,          /**< Kill rewards and corpse loot notifications */
+  eMSDP_LORE_INFO,          /**< On-demand lore results as JSON */
   eMSDP_CHARACTER_CREATION, /**< Server-authoritative character creation step */
-  eMSDP_ROOM_CONTENTS, /**< Visible people and objects in the current room */
-  eMSDP_CLAN_PROGRESS, /**< Private clan progression and authorized buff choices as JSON. */
-  eMSDP_AMMO_STATUS,    /**< Equipped ranged weapon ammunition summary as JSON */
-  eMSDP_ROOM_QUESTS,    /**< Eligible quests offered in the current room */
-  eMSDP_QUEST_ACCEPTED,  /**< Quest acceptance event as JSON string */
-  eMSDP_QUEST_COMPLETE,  /**< Quest completion event as JSON string */
-  eMSDP_QUEST_HISTORY,   /**< Requested completed quest list/details as JSON */
-  eMSDP_QUEST_INFO,      /**< Active quest info as JSON string */
+  eMSDP_ROOM_CONTENTS,      /**< Visible people and objects in the current room */
+  eMSDP_CLAN_PROGRESS,      /**< Private clan progression and authorized buff choices as JSON. */
+  eMSDP_AMMO_STATUS,        /**< Equipped ranged weapon ammunition summary as JSON */
+  eMSDP_ROOM_QUESTS,        /**< Eligible quests offered in the current room */
+  eMSDP_QUEST_ACCEPTED,     /**< Quest acceptance event as JSON string */
+  eMSDP_QUEST_COMPLETE,     /**< Quest completion event as JSON string */
+  eMSDP_QUEST_HISTORY,      /**< Requested completed quest list/details as JSON */
+  eMSDP_QUEST_INFO,         /**< Active quest info as JSON string */
 
   /* Real-time combat information */
   eMSDP_OPPONENT_HEALTH,     /**< Current opponent's hit points */
@@ -536,15 +534,15 @@ typedef enum
   eMSDP_TANK_HEALTH_MAX,     /**< Group tank's maximum hit points */
 
   /* World and environment information */
-  eMSDP_ROOM,       /**< Complete room information (table) */
-  eMSDP_AREA_NAME,  /**< Current area/zone name */
-  eMSDP_ROOM_EXITS, /**< Available exits from current room (array) */
-  eMSDP_ROOM_NAME,  /**< Current room name */
-  eMSDP_ROOM_VNUM,  /**< Current room virtual number */
-  eMSDP_WORLD_TIME, /**< Game world time */
-  eMSDP_SECTORS,    /**< Room sector/terrain information */
-  eMSDP_MINIMAP,    /**< ASCII minimap representation */
-  eMSDP_AUTOMAP,    /**< ASCII automap data for the current room */
+  eMSDP_ROOM,        /**< Complete room information (table) */
+  eMSDP_AREA_NAME,   /**< Current area/zone name */
+  eMSDP_ROOM_EXITS,  /**< Available exits from current room (array) */
+  eMSDP_ROOM_NAME,   /**< Current room name */
+  eMSDP_ROOM_VNUM,   /**< Current room virtual number */
+  eMSDP_WORLD_TIME,  /**< Game world time */
+  eMSDP_SECTORS,     /**< Room sector/terrain information */
+  eMSDP_MINIMAP,     /**< ASCII minimap representation */
+  eMSDP_AUTOMAP,     /**< ASCII automap data for the current room */
   eMSDP_GRAPHIC_MAP, /**< Structured room map data for graphical clients */
 
   /* Client configuration and capabilities */

@@ -8,6 +8,7 @@
 #include "sysdep.h"
 #include "structs.h"
 #include "utils.h"
+#include "epic_feats3.h"
 #include "comm.h"
 #include "spells.h"
 #include "handler.h"
@@ -1640,12 +1641,12 @@ int get_shield_ally_bonus(struct char_data *ch)
 int char_has_evolution(struct char_data *ch, int evo)
 {
   if (HAS_REAL_EVOLUTION(ch, evo))
-    return HAS_REAL_EVOLUTION(ch, evo);
+    return epic_third_evolution(ch,evo,HAS_REAL_EVOLUTION(ch, evo));
 
   if (HAS_TEMP_EVOLUTION(ch, evo))
-    return HAS_TEMP_EVOLUTION(ch, evo);
+    return epic_third_evolution(ch,evo,HAS_TEMP_EVOLUTION(ch, evo));
 
-  return 0;
+  return epic_third_evolution(ch,evo,0);
 }
 
 void display_evolution_requirements(struct char_data *ch, int evo)

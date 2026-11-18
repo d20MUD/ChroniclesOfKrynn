@@ -19,6 +19,7 @@
 #include "structs.h"
 #include "mob_utils.h"
 #include "utils.h"
+#include "epic_feats.h"
 #include "comm.h"
 #include "interpreter.h"
 #include "handler.h"
@@ -2108,6 +2109,7 @@ void perform_call(struct char_data *ch, int call_type, int level)
   if (!GROUP(mob) && GROUP(ch) && GROUP_LEADER(GROUP(ch)) == ch)
     join_group(mob, GROUP(ch));
 
+  if (call_type == MOB_EIDOLON) EPIC_TIMERS(ch).ward_expiry = 0;
   if (call_type == MOB_EIDOLON && summon_twin)
   {
     twin = read_mobile(mob_num, VIRTUAL);
@@ -2957,6 +2959,7 @@ ACMD(do_golemrepair)
   dc = get_golem_repair_dc(golem_type, golem_size);
   roll = d20(ch);
   skill = compute_ability(ch, ABILITY_ARCANA);
+  roll = epic_artisan_roll(ch, roll, skill, dc, FALSE);
 
   send_to_char(ch,
                "You begin carefully repairing %s. You rolled %d + %d Arcana = %d vs. DC %d.\r\n",
@@ -13482,6 +13485,10 @@ ACMDU(do_device)
       }
       /* For non-violent spells, any target (including self) is okay */
     }
+    bool epic_penetration_ready;
+    epic_device_begin(ch);
+    epic_penetration_ready = ch->epic_device_check;
+    epic_device_end(ch);
     int device_spell_count = inv->num_spells;
     int max_uses = 1 + (artificer_level / 2);
     max_uses += get_artificer_device_efficiency_bonus(ch);
@@ -13716,7 +13723,10 @@ ACMDU(do_device)
       int spell_num = inv->spell_effects[i];
       if (spell_num > 0 && spell_num < NUM_SPELLS)
       {
+        ch->epic_device_check = epic_penetration_ready;
         call_magic(ch, target, obj_target, spell_num, 0, effective_artificer_level, CAST_DEVICE);
+        epic_penetration_ready = ch->epic_device_check;
+        epic_device_end(ch);
 
         if (resonant_imbuement_rank > 0 && !device_is_violent && target && !obj_target &&
             IN_ROOM(target) == IN_ROOM(ch) && IS_SET(spell_info[spell_num].routines, MAG_AFFECTS) &&

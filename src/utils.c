@@ -16,6 +16,8 @@
 #include "legendary_techniques.h"
 #include "structs.h"
 #include "utils.h"
+#include "epic_feats3.h"
+#include "epic_feats2.h"
 #include "epic_magic.h"
 #include "db.h"
 #include "comm.h"
@@ -5692,6 +5694,7 @@ void new_affect(struct affected_type *af)
   af->location = APPLY_NONE;
   af->bonus_type = BONUS_TYPE_ENHANCEMENT;
   af->specific = 0;
+  af->epic_source=0;af->epic_cl=af->epic_ward=af->epic_save_dc=af->epic_save_type=af->epic_flags=0;af->epic_baseline=0;af->epic_cast_serial=0;
   af->legendary_flags = 0;
   af->legendary_expiry = 0;
   af->next = NULL; /* CRITICAL: Must initialize next pointer to prevent heap corruption */
@@ -6952,7 +6955,7 @@ sbyte is_immune_mind_affecting(struct char_data *ch, struct char_data *victim, s
   {
     int resist = get_char_affect_modifier(victim, PSIONIC_THOUGHT_SHIELD, APPLY_SPECIAL) +
                  get_power_resist_mod(victim);
-    int penetrate = d20(ch) + GET_PSIONIC_LEVEL(ch) + get_power_penetrate_mod(ch);
+    int penetrate = epic_rebuttal_roll(ch, resist, d20(ch)) + GET_PSIONIC_LEVEL(ch) + get_power_penetrate_mod(ch);
     if (resist > penetrate)
     {
       if (display)
@@ -7825,6 +7828,7 @@ bool is_flying(struct char_data *ch)
 {
   if (!ch)
     return FALSE;
+  if (HAS_EVOLUTION(ch,EVOLUTION_FLIGHT)) return TRUE;
   if (bloodline_elemental_movement(ch, BLOODLINE_ELEMENT_AIR))
     return TRUE;
 
@@ -8449,7 +8453,7 @@ int get_power_resist_mod(struct char_data *ch)
 bool power_resistance(struct char_data *ch, struct char_data *victim, int modifier)
 {
   int resist = get_power_resist_mod(victim);
-  int penetrate = d20(ch) + GET_PSIONIC_LEVEL(ch) + get_power_penetrate_mod(ch) + modifier;
+  int penetrate = epic_rebuttal_roll(ch, resist, d20(ch)) + GET_PSIONIC_LEVEL(ch) + get_power_penetrate_mod(ch) + modifier;
 
   return (penetrate < resist);
 }

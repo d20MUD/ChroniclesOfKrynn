@@ -12,6 +12,9 @@
 #include "legendary_techniques.h"
 #include "structs.h"
 #include "utils.h"
+#include "epic_feats3.h"
+#include "epic_feats2.h"
+#include "epic_feats.h"
 #include "epic_magic.h"
 #include "interpreter.h"
 #include "spells.h"
@@ -198,6 +201,16 @@ bool concentration_check(struct char_data *ch, int spellnum)
     else if (GRAPPLE_TARGET(ch))
       concentration_dc += compute_cmb(GRAPPLE_TARGET(ch), COMBAT_MANEUVER_TYPE_GRAPPLE);
   }
+
+  if (ch->epic_manifest_damaged && CASTING_CLASS(ch) == CLASS_PSIONICIST &&
+      spellnum >= PSIONIC_POWER_START && spellnum < PSIONIC_IMPALE_MIND &&
+      epic_feat_rank(ch, FEAT_EPIC_MANIFESTING_POISE))
+    concentration_dc -= epic_typed_increment(ch, APPLY_SKILL, ABILITY_CONCENTRATION,
+                                             BONUS_TYPE_CIRCUMSTANCE, 4);
+  ch->epic_cast_dispatched=FALSE;
+  ch->epic_shared_spell = 0;
+  ch->epic_shared_pet = 0;
+  ch->epic_manifest_damaged = FALSE;
 
   /* Inquisitor Swift Spellcaster perk: +2 to concentration checks */
   if (has_inquisitor_swift_spellcaster(ch))
@@ -757,9 +770,20 @@ int call_magic(struct char_data *caster, struct char_data *cvict, struct obj_dat
 {
   bool previous;
   long caster_id;
-  int result, previous_metamagic;
+  int result, previous_metamagic, previous_epic_spell, previous_epic_type;
   if (!caster)
     return 0;
+  if(caster->epic_spell_depth==0 && casttype==CAST_SPELL)
+  {
+    caster->epic_cast_dispatched=FALSE;
+    static unsigned int epic_sequence=0;
+    caster->epic_cast_serial=(int64_t)time(NULL)*1000000+(++epic_sequence%1000000);
+  }
+  previous_epic_spell = caster->epic_spell_context;
+  previous_epic_type = caster->epic_cast_context;
+  caster->epic_spell_context = spellnum;
+  caster->epic_cast_context = casttype;
+  caster->epic_spell_depth++;
   previous_metamagic = CASTING_METAMAGIC(caster);
   if (spellnum == SPELL_ALTER_SELF)
     CASTING_METAMAGIC(caster) = metamagic;
@@ -768,12 +792,18 @@ int call_magic(struct char_data *caster, struct char_data *cvict, struct obj_dat
   caster->practiced_spellcaster_suppressed =
       previous || (casttype != CAST_SPELL && casttype != CAST_INNATE);
   result = resolve_call_magic(caster, cvict, ovict, spellnum, metamagic, level, casttype);
+
   if (find_char(caster_id) == caster)
   {
+    caster->epic_spell_context = previous_epic_spell;
+    caster->epic_cast_context = previous_epic_type;
+    caster->epic_spell_depth--;
     caster->practiced_spellcaster_suppressed = previous;
     if (spellnum == SPELL_ALTER_SELF)
       CASTING_METAMAGIC(caster) = previous_metamagic;
   }
+  if(find_char(caster_id)==caster && IS_NPC(caster) && caster->epic_spell_depth==0)
+    epic_third_cast_done(caster,cvict,spellnum,level,casttype,caster->epic_cast_dispatched);
   return result;
 }
 
@@ -1164,6 +1194,8 @@ SAVING_WILL here...  */
     spend_epic_spell_casts(caster, spellnum, metamagic);
   }
 
+  if(casttype==CAST_SPELL && caster->epic_spell_depth==1) caster->epic_cast_dispatched=TRUE;
+
   /* spell turning */
   if (cvict && casttype != CAST_DEVICE)
   {
@@ -1185,7 +1217,7 @@ SAVING_WILL here...  */
     consume_spell_slot(caster, spellnum);
   }
 
-  if (casttype == CAST_SPELL && GET_CASTING_CLASS(caster) == CLASS_SORCERER)
+  if (!caster->epic_reaction_depth && casttype == CAST_SPELL && GET_CASTING_CLASS(caster) == CLASS_SORCERER)
     bloodline_cast_arcana(caster, spellnum, cvict);
 
   /* now we actually process the spell based on the appropate routine */
@@ -1609,7 +1641,7 @@ void mag_objectmagic(struct char_data *ch, struct obj_data *obj, char *argument)
 {
   char arg[MAX_INPUT_LENGTH] = {'\0'};
   char metamagic_desc[MAX_INPUT_LENGTH] = {'\0'};
-  int i, k, metamagic = 0;
+  int i, k, metamagic = 0, item_charges = 1;
   struct char_data *tch = NULL, *next_tch;
   struct obj_data *tobj = NULL;
   int potion_level = GET_OBJ_VAL(obj, 0);
@@ -1667,6 +1699,8 @@ void mag_objectmagic(struct char_data *ch, struct obj_data *obj, char *argument)
     }
   }
 
+  if (GET_OBJ_TYPE(obj) == ITEM_WAND || GET_OBJ_TYPE(obj) == ITEM_STAFF)
+    item_charges = epic_trigger_cost(ch, 1 + calculate_metamagic_charge_cost(metamagic, GET_OBJ_VAL(obj, 0)), FALSE);
   one_argument(temp_argument, arg, sizeof(arg));
 
   k = generic_find(arg, FIND_CHAR_ROOM | FIND_OBJ_INV | FIND_OBJ_ROOM | FIND_OBJ_EQUIP, ch, &tch,
@@ -1681,7 +1715,7 @@ void mag_objectmagic(struct char_data *ch, struct obj_data *obj, char *argument)
     else
       act("$n taps $p three times on the ground.", FALSE, ch, obj, 0, TO_ROOM);
 
-    if (GET_OBJ_VAL(obj, 2) <= 0 && APOTHEOSIS_SLOTS(ch) < 3)
+    if (GET_OBJ_VAL(obj, 2) < item_charges && APOTHEOSIS_SLOTS(ch) < 3)
     {
       send_to_char(ch, "It seems powerless.\r\n");
       act("Nothing seems to happen.", FALSE, ch, obj, 0, TO_ROOM);
@@ -1695,7 +1729,8 @@ void mag_objectmagic(struct char_data *ch, struct obj_data *obj, char *argument)
       }
       else
       {
-        GET_OBJ_VAL(obj, 2)--;
+        (void)epic_trigger_cost(ch, 1 + calculate_metamagic_charge_cost(metamagic, GET_OBJ_VAL(obj, 0)), TRUE);
+        GET_OBJ_VAL(obj, 2) -= item_charges;
       }
       USE_STANDARD_ACTION(ch);
 
@@ -1767,7 +1802,7 @@ void mag_objectmagic(struct char_data *ch, struct obj_data *obj, char *argument)
       return;
     }
 
-    if (GET_OBJ_VAL(obj, 2) <= 0 && APOTHEOSIS_SLOTS(ch) < 3)
+    if (GET_OBJ_VAL(obj, 2) < item_charges && APOTHEOSIS_SLOTS(ch) < 3)
     {
       send_to_char(ch, "It seems powerless.\r\n");
       act("Nothing seems to happen.", FALSE, ch, obj, 0, TO_ROOM);
@@ -1780,8 +1815,8 @@ void mag_objectmagic(struct char_data *ch, struct obj_data *obj, char *argument)
     }
     else
     {
-      GET_OBJ_VAL(obj, 2)
-      --;
+      (void)epic_trigger_cost(ch, 1 + calculate_metamagic_charge_cost(metamagic, GET_OBJ_VAL(obj, 0)), TRUE);
+      GET_OBJ_VAL(obj, 2) -= item_charges;
     }
     USE_STANDARD_ACTION(ch);
 
@@ -1860,6 +1895,7 @@ void mag_objectmagic(struct char_data *ch, struct obj_data *obj, char *argument)
 
 void resetCastingData(struct char_data *ch)
 {
+  ch->epic_manifest_damaged = FALSE;
   legendary_cast_clear(ch);
   IS_CASTING(ch) = FALSE;
   if (!IS_NPC(ch))
@@ -1967,6 +2003,11 @@ int castingCheckOk(struct char_data *ch)
 /* moment of completion of spell casting */
 void finishCasting(struct char_data *ch)
 {
+  if(!epic_shared_valid(ch))
+  {
+    send_to_char(ch,"Your primary eidolon is no longer available; the shared spell dissipates.\r\n");
+    resetCastingData(ch);return;
+  }
   if (CASTING_SPELLNUM(ch) > 0 && CASTING_SPELLNUM(ch) < NUM_SPELLS)
   {
     if (!IS_NPC(ch) && HAS_FEAT(ch, FEAT_EMPOWERED_MAGIC))
@@ -2239,6 +2280,8 @@ void finishCasting(struct char_data *ch)
     if (call_magic(ch, CASTING_TCH(ch), CASTING_TOBJ(ch), spellnum, final_metamagic, cast_level,
                    final_casttype) > 0)
       consume_free_metamagic_perks(ch, CASTING_FREE_METAMAGIC(ch));
+
+    epic_shared_complete(ch, spellnum, cast_level, final_metamagic);
 
     /* Set cosmic awareness cooldown after successful manifestation */
     if (!IS_NPC(ch) && spellnum == PSIONIC_COSMIC_AWARENESS)
@@ -2535,6 +2578,7 @@ void finishCasting(struct char_data *ch)
   if (can_mastermind_power(ch, CASTING_SPELLNUM(ch)))
     affect_from_char(ch, PSIONIC_ABILITY_MASTERMIND);
 
+  epic_third_cast_done(ch,CASTING_TCH(ch),CASTING_SPELLNUM(ch),CASTER_LEVEL(ch),final_casttype,ch->epic_cast_dispatched);
   resetCastingData(ch);
 }
 
@@ -2768,7 +2812,7 @@ static int cast_spell_with_type_and_slot(struct char_data *ch, struct char_data 
     return 0;
   }
 
-  treat_as_at_will = canCastAtWill(ch, spellnum);
+  treat_as_at_will = !ch->epic_shared_spell && canCastAtWill(ch, spellnum);
   if (treat_as_at_will && (isAurakMagic(ch, spellnum) || isShifterMagic(ch, spellnum)) &&
       casttype == CAST_SPELL)
     casttype = CAST_INNATE; /* Preserve racial/class ability source through delayed casting. */
@@ -3345,7 +3389,7 @@ will be using for casting this spell */
         clevel = GET_LEVEL(ch);
         CASTING_CLASS(ch) = CLASS_SHIFTER;
       }
-      else if (isWarlockMagic(ch, spellnum))
+      else if (!ch->epic_shared_spell && isWarlockMagic(ch, spellnum))
       {
         clevel = GET_WARLOCK_LEVEL(ch);
         CASTING_CLASS(ch) = CLASS_WARLOCK;
@@ -3471,6 +3515,8 @@ will be using for casting this spell */
     {
       legendary_cast_effect(ch,spellnum,casttype);
       int result = call_magic(ch, tch, tobj, spellnum, metamagic, clevel, casttype);
+      if (result) epic_shared_complete(ch,spellnum,clevel,metamagic);
+      ch->epic_shared_spell=0;ch->epic_shared_pet=0;
 
       /* Inquisitor Righteous Strike: Set flag when inquisitor spell is cast */
       if (result && !IS_NPC(ch) && has_inquisitor_righteous_strike(ch) &&
@@ -3497,6 +3543,7 @@ will be using for casting this spell */
         consume_free_metamagic_perks(ch, CASTING_FREE_METAMAGIC(ch));
       CASTING_FREE_METAMAGIC(ch) = 0;
 
+      epic_third_cast_done(ch,tch,spellnum,clevel,casttype,ch->epic_cast_dispatched);
       return result;
     }
   }
@@ -4285,9 +4332,14 @@ return;
       if (psionic_powers[spellnum].augment_amount > 1)
         GET_AUGMENT_PSP(ch) -= GET_AUGMENT_PSP(ch) % psionic_powers[spellnum].augment_amount;
       legendary_psp_cost=effective_psp_cost+GET_AUGMENT_PSP(ch);
-      if(!legendary_technique_affordable(ch,legendary_psp_cost)) {
-        send_to_char(ch,"You don't have enough PSP to manifest that power.\r\n");return;
+      if (!legendary_technique_affordable(ch,legendary_psp_cost) &&
+          GET_PSP(ch) < MAX(0,legendary_psp_cost - epic_augmentation_discount(ch,spellnum,GET_AUGMENT_PSP(ch))))
+      {
+        send_to_char(ch,"You don't have enough PSP to manifest that power.\r\n");
+        return;
       }
+
+
 
       /* Mark Perfect Fabricator as used (daily) */
       if (perfect_fabricator_active)
@@ -6665,6 +6717,8 @@ void mag_assign_spells(void)
          "Your celestial conviction effect fades.", 1, 1, NOSCHOOL, FALSE);
   spello(AFFECT_BLOODLINE_SUMMON_WARD, "bloodline summon ward", 0, 0, 0, POS_FIGHTING, TAR_IGNORE, FALSE, 0,
          "Your bloodline summon ward effect fades.", 1, 1, NOSCHOOL, FALSE);
+  spello(AFFECT_EPIC_EIDOLON_WARD, "epic eidolon ward", 0, 0, 0, POS_FIGHTING, TAR_IGNORE, FALSE, 0,
+         "Your epic eidolon ward fades.", 1, 1, ABJURATION, FALSE);
   spello(AFFECT_ABYSSAL_SUMMON_BOOST, "abyssal summon boost", 0, 0, 0, POS_FIGHTING, TAR_IGNORE, FALSE, 0,
          "Your demonic summoning enhancement fades.", 1, 1, NOSCHOOL, FALSE);
 
@@ -8327,3 +8381,10 @@ bool npc_can_cast(struct char_data *ch, int spellnum)
 /* must be at end of file */
 #undef SINFO
 /**************************/
+
+/* Use the complete native casting path, including actions, materials and interruption. */
+int cast_epic_shared_spell(struct char_data *ch, int spell)
+{
+  GET_CASTING_CLASS(ch)=CLASS_SUMMONER;
+  return cast_spell_with_type_and_slot(ch,ch,NULL,spell,0,CAST_SPELL,CLASS_SUMMONER,spell,0);
+}

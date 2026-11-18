@@ -22,6 +22,9 @@
 #include "clan_enchant.h"
 #include "clan_sources.h"
 #include "utils.h"
+#include "epic_feats3.h"
+#include "epic_feats2.h"
+#include "epic_feats.h"
 #include "mob_utils.h"
 #include "epic_magic.h"
 #include "comm.h"
@@ -579,6 +582,8 @@ static bool has_feral_combat_training_for_attack(struct char_data *ch, int attac
   return FALSE;
 }
 
+static bool epic_natural_avoidance(struct char_data *,struct char_data *,int,int,int);
+
 int perform_natural_attack(struct char_data *ch, int mode, int phase, int attack_type,
                            int total_natural_attacks, bool secondary)
 {
@@ -614,8 +619,10 @@ int perform_natural_attack(struct char_data *ch, int mode, int phase, int attack
         elemental_dam = add_draconic_claws_elemental_damage(ch, vict);
         dam += elemental_dam;
       }
-      if (damage(ch, vict, dam, w_type, dam_type, attack_type) < 0)
-        return -1;
+      if(epic_natural_avoidance(ch,vict,w_type,dam_type,attack_type)) return 0;
+      int damage_result=damage(ch, vict, dam, w_type, dam_type, attack_type);
+      ch->epic_prechecked_victim=0;
+      if(damage_result<0) return -1;
       damage_shield_check(ch, vict, attack_type, TRUE, dam_type);
       return dam;
     }
@@ -692,8 +699,10 @@ static int perform_feral_mutagen_attack(struct char_data *ch, int mode, int phas
     {
       dam = feral_mutagen_damage_roll(ch, attack_type);
       dam += natural_attack_strength_bonus(ch, total_natural_attacks, FALSE);
-      if (damage(ch, vict, dam, w_type, dam_type, attack_type) < 0)
-        return -1;
+      if(epic_natural_avoidance(ch,vict,w_type,dam_type,attack_type)) return 0;
+      int damage_result=damage(ch, vict, dam, w_type, dam_type, attack_type);
+      ch->epic_prechecked_victim=0;
+      if(damage_result<0) return -1;
       damage_shield_check(ch, vict, attack_type, TRUE, dam_type);
       return dam;
     }
@@ -1244,6 +1253,7 @@ int get_initiative_modifier(struct char_data *ch)
   int initiative = 0;
 
   initiative += GET_DEX_BONUS(ch) + 4 * HAS_FEAT(ch, FEAT_IMPROVED_INITIATIVE);
+  if (epic_feat_rank(ch, FEAT_SUPERIOR_INITIATIVE)) initiative += 4;
   initiative += 2 * HAS_FEAT(ch, FEAT_IMPROVED_REACTION);
   initiative += GET_WIS_BONUS(ch) * HAS_FEAT(ch, FEAT_CUNNING_INITIATIVE);
   initiative += GET_INITIATIVE_MOD(ch);
@@ -2239,6 +2249,8 @@ void update_pos_dam(struct char_data *victim)
       act("$n's life link with $s master let's $m push through.", FALSE, victim, 0, 0, TO_NOTVICT);
       GET_HIT(victim) = 1;
     }
+    else if (GET_HIT(victim)<=0 && epic_resilient_bond(victim))
+      GET_HIT(victim)=1;
     else
     {
       change_position(victim, POS_DEAD);
@@ -4552,6 +4564,7 @@ int compute_energy_absorb(struct char_data *ch, int dam_type)
   }
 
   dam_reduction += bloodline_energy_resistance(ch, dam_type);
+  dam_reduction = MAX(dam_reduction, epic_eidolon_resistance(ch, dam_type));
   return (MIN(MAX_ENERGY_ABSORB, dam_reduction));
 }
 
@@ -5845,31 +5858,19 @@ bool ok_damage_handling(int attacktype)
    -1 means we're gonna go ahead and exit damage()
    anything that goes through here will affect ALL damage, whether
    skill or spell, etc */
-int damage_handling(struct char_data *ch, struct char_data *victim, int dam, int attacktype,
-                    int dam_type, int attack_type)
+/* Native hit avoidance, shared by the ordinary damage path and the once-per-attack
+ * Epic Dodge interception. No HP, DR, shields or on-hit effects are resolved here. */
+static int native_weapon_avoidance(struct char_data *ch,struct char_data *victim,int attacktype,int dam_type,int attack_type)
 {
-  bool is_spell = FALSE;
-  struct obj_data *weapon = NULL;
-  weapon = is_using_ranged_weapon(ch, true);
-  int damage_reduction = 0, dr_reduction = 0;
-  float damtype_reduction = 0;
-
-  /* lets figure out if this attacktype is magical or not */
-  if (is_spell_or_spell_like(attacktype))
-    is_spell = TRUE;
-
-  /* checking for actual damage, acceptable attacktypes and other dummy checks */
-  if (dam > 0 && ok_damage_handling(attacktype) && victim != ch)
-  {
-    if (dam_type == DAM_POISON && !can_poison(victim))
-      return 0;
-
+  bool is_spell=is_spell_or_spell_like(attacktype);
+  struct obj_data *weapon=is_using_ranged_weapon(ch,TRUE);
+  int dam=1;
     if (!is_spell && AFF_FLAGGED(ch, AFF_BLINKING) && rand_number(1, 100) <= 20)
     {
       act("$n blinks out just as $e strikes, missing $N!", FALSE, ch, NULL, victim, TO_NOTVICT);
       act("You blink out just as you strike, missing $N!", FALSE, ch, NULL, victim, TO_CHAR);
       act("$n blinks out just as $e strikes, missing you!", FALSE, ch, NULL, victim, TO_VICT);
-      return 0;
+      return -1;
     }
 
     /* handle concealment */
@@ -5886,7 +5887,7 @@ int damage_handling(struct char_data *ch, struct char_data *victim, int dam, int
     {
       send_combat_roll_info(victim, "\tW<conceal:%d>\tn", concealment);
       send_combat_roll_info(ch, "\tR<oconceal:%d>\tn", concealment);
-      return 0;
+      return -1;
     }
 
     /* trelux racial dodge */
@@ -6024,8 +6025,52 @@ int damage_handling(struct char_data *ch, struct char_data *victim, int dam, int
       }
     }
 
+  return 0;
+}
+
+static bool epic_natural_avoidance(struct char_data *ch,struct char_data *vict,int wtype,int damtype,int attacktype)
+{
+  bool dodge;
+  if(ch->epic_attack_depth || !epic_feat_rank(vict,FEAT_EPIC_DODGE)) return FALSE;
+  if(native_weapon_avoidance(ch,vict,wtype,damtype,attacktype)<0) return TRUE;
+  ch->epic_attack_depth=1;ch->epic_attack_critical=FALSE;
+  dodge=epic_third_dodge(ch,vict,wtype,damtype);
+  ch->epic_attack_depth=0;ch->epic_attack_dodged=FALSE;
+  if(!dodge) ch->epic_prechecked_victim=GET_ID(vict);
+  return dodge;
+}
+
+static int damage_handling_epic(struct char_data *ch, struct char_data *victim, int dam,
+                                int attacktype, int dam_type, int attack_type, int epic_credit, unsigned int origin);
+int damage_handling(struct char_data *ch, struct char_data *victim, int dam, int attacktype,
+                    int dam_type, int attack_type)
+{
+  return damage_handling_epic(ch, victim, dam, attacktype, dam_type, attack_type, -1, LEG_ORIGIN_NORMAL);
+}
+static int damage_handling_epic(struct char_data *ch, struct char_data *victim, int dam,
+                                int attacktype, int dam_type, int attack_type, int epic_credit, unsigned int origin)
+{
+  bool is_spell = FALSE;
+  struct obj_data *weapon = NULL;
+  weapon = is_using_ranged_weapon(ch, true);
+  int damage_reduction = 0, dr_reduction = 0;
+  float damtype_reduction = 0;
+
+  /* lets figure out if this attacktype is magical or not */
+  if (is_spell_or_spell_like(attacktype))
+    is_spell = TRUE;
+
+  /* checking for actual damage, acceptable attacktypes and other dummy checks */
+  if (dam > 0 && ok_damage_handling(attacktype) && victim != ch)
+  {
+    if (dam_type == DAM_POISON && !can_poison(victim))
+      return 0;
+
+    if (!origin && !(ch->epic_attack_depth<=1 && ch->epic_prechecked_victim==GET_ID(victim)) &&
+        native_weapon_avoidance(ch,victim,attacktype,dam_type,attack_type)<0) return -1;
+
     // we'll apply the cedit configuration for altered spell damage
-    if (is_spell && !IS_NPC(ch) && GET_CASTING_CLASS(ch) != CLASS_UNDEFINED)
+    if (!origin && is_spell && !IS_NPC(ch) && GET_CASTING_CLASS(ch) != CLASS_UNDEFINED)
     {
       switch (GET_CASTING_CLASS(ch))
       {
@@ -6054,12 +6099,12 @@ int damage_handling(struct char_data *ch, struct char_data *victim, int dam, int
       GET_CASTING_CLASS(ch) = CLASS_UNDEFINED;
     }
 
-    else if (is_spell && IS_NPC(ch))
+    else if (!origin && is_spell && IS_NPC(ch))
     {
       dam *= 0.75;
     }
 
-    else if (!is_spell && victim &&
+    else if (!origin && !is_spell && victim &&
              ((IS_EVIL(victim) &&
                group_member_affected_by_spell(ch, SPELL_LITANY_OF_RIGHTEOUSNESS) &&
                has_aura_of_good(ch)) ||
@@ -6089,7 +6134,7 @@ int damage_handling(struct char_data *ch, struct char_data *victim, int dam, int
     if (can_dam_be_resisted(dam_type))
     {
       /* energy absorption system */
-      absorb_energy_conversion(victim, dam_type, dam);
+      if (!origin) absorb_energy_conversion(victim, dam_type, dam);
       damage_reduction = compute_energy_absorb(victim, dam_type);
       dam -= compute_energy_absorb(victim, dam_type);
     }
@@ -6301,6 +6346,8 @@ int damage_handling(struct char_data *ch, struct char_data *victim, int dam, int
         dr_reduction += ignored_dr;
       }
 
+      if (!is_spell && epic_credit >= 0)
+        dr_reduction = MAX(dr_reduction, MAX(0, epic_rage_penetration(ch, attack_type) - epic_credit));
       damage_reduction -= dr_reduction;
 
       damage_reduction = MAX(0, damage_reduction);
@@ -6708,22 +6755,25 @@ int legendary_combat_packet(struct char_data *ch, struct char_data *victim, int 
   dam += legendary_bonus;
   if (!origin)
     legendary_record_action(ch, victim, LEG_ACTION_DAMAGE, NULL, MIN(dam, MAX(0, GET_HIT(victim))));
-  dam = legendary_temporary_absorb(victim, dam);
+  if (epic_temporary_remaining(victim)>legendary_temporary_remaining(victim))
+    dam=epic_temporary_absorb(victim,dam);
+  else
+    dam = legendary_temporary_absorb(victim, dam);
   if (extra)
     *extra = legendary_bonus;
   return dam;
 }
 
 static int resolve_damage(struct char_data *, struct char_data *, int, int, int, int, unsigned int,
-                          struct legendary_attack *);
+                          struct legendary_attack *, int);
 int damage_with_origin(struct char_data *ch, struct char_data *victim, int dam, int w_type,
                        int dam_type, int offhand, unsigned int origin)
 {
-  return resolve_damage(ch, victim, dam, w_type, dam_type, offhand, origin, NULL);
+  return resolve_damage(ch, victim, dam, w_type, dam_type, offhand, origin, NULL, -1);
 }
 static int resolve_damage(struct char_data *ch, struct char_data *victim, int dam, int w_type,
                           int dam_type, int offhand, unsigned int origin,
-                          struct legendary_attack *technique)
+                          struct legendary_attack *technique, int epic_credit)
 {
   char buf[MAX_INPUT_LENGTH] = {'\0'};
   char buf1[MAX_INPUT_LENGTH] = {'\0'};
@@ -6928,12 +6978,12 @@ static int resolve_damage(struct char_data *ch, struct char_data *victim, int da
 
   /* modify damage: concealment, trelux leap, mirror image, energey absorb
        damage-type reduction, old-skool damage reduction, inertial barrier */
-  dam = damage_handling(ch, victim, dam, w_type, dam_type, offhand); // modify damage
+  dam = damage_handling_epic(ch, victim, dam, w_type, dam_type, offhand, epic_credit, origin); // modify damage
   if (dam == -1) // make sure message handling has been done!
     return 0;
 
   /* last word!  gonna die to this blow, SMACK the fool hard! */
-  if (!IS_NPC(victim) && ((GET_HIT(victim) - dam) <= 0) && HAS_FEAT(victim, FEAT_LAST_WORD) &&
+  if (!origin && !IS_NPC(victim) && ((GET_HIT(victim) - dam) <= 0) && HAS_FEAT(victim, FEAT_LAST_WORD) &&
       affected_by_spell(victim, SKILL_DEFENSIVE_STANCE) &&
       !char_has_mud_event(victim, eLAST_WORD) && ch != victim)
   {
@@ -7156,7 +7206,9 @@ static int resolve_damage(struct char_data *ch, struct char_data *victim, int da
   }
 #endif
   dam = bloodline_modify_damage(victim, dam, w_type, dam_type);
+  dam = epic_third_intercept(ch,victim,dam,origin);
   clan_source_damage(ch, victim, dam, !origin);
+  if (dam > 0 && IS_CASTING(victim)) victim->epic_manifest_damaged = TRUE;
   GET_HIT(victim) -= dam;
   if (!origin && ch && IS_EPIC_SPELL(w_type))
   {
@@ -7488,10 +7540,13 @@ static int resolve_damage(struct char_data *ch, struct char_data *victim, int da
     }
   }
 
+  victim->epic_lethal_packet = dam > 0 && ch && ch != victim;
   if (!dam)
     update_pos(victim);
   else
     update_pos_dam(victim);
+  victim->epic_lethal_packet = FALSE;
+  epic_third_after_damage(ch,victim,dam,origin);
 
   if (dam)
   { // display damage done
@@ -7697,7 +7752,7 @@ static int resolve_damage(struct char_data *ch, struct char_data *victim, int da
     }
 
     /* Warlock Dark One's Blessing I/II: Gain temporary HP when reducing enemy to 0 HP */
-    if (ch && !IS_NPC(ch) && CLASS_LEVEL(ch, CLASS_WARLOCK) > 0 && victim && !IS_NPC(victim))
+    if (!origin && ch && !IS_NPC(ch) && CLASS_LEVEL(ch, CLASS_WARLOCK) > 0 && victim && !IS_NPC(victim))
     {
       int blessing_rank_1 = get_warlock_dark_ones_blessing_1_bonus(ch);
       int blessing_rank_2 = get_warlock_dark_ones_blessing_2_bonus(ch);
@@ -10981,8 +11036,17 @@ bool weapon_bypasses_dr(struct obj_data *weapon, struct damage_reduction_type *d
   wielded -> which weapon is producing this damage
   dam -> how much damage is coming in
   return value for non display is the modified damage reduction */
+static int apply_damage_reduction_epic(struct char_data *ch, struct char_data *victim,
+                                      struct obj_data *wielded, int dam, bool display,
+                                      int attack_type, int *epic_credit);
 int apply_damage_reduction(struct char_data *ch, struct char_data *victim, struct obj_data *wielded,
                            int dam, bool display, int attack_type)
+{
+  return apply_damage_reduction_epic(ch, victim, wielded, dam, display, attack_type, NULL);
+}
+static int apply_damage_reduction_epic(struct char_data *ch, struct char_data *victim,
+                                      struct obj_data *wielded, int dam, bool display,
+                                      int attack_type, int *epic_credit)
 {
   struct damage_reduction_type *dr = NULL, *cur = NULL;
   int reduction = 0;
@@ -11007,6 +11071,7 @@ int apply_damage_reduction(struct char_data *ch, struct char_data *victim, struc
   else
   {
     int effective_dr = dr->amount;
+    int previous_dr = effective_dr;
     if (affected_by_spell(victim, AFFECT_EPIC_RUIN))
       effective_dr = MAX(0, effective_dr - 10);
 
@@ -11040,6 +11105,13 @@ int apply_damage_reduction(struct char_data *ch, struct char_data *victim, struc
                      effective_dr);
     }
 
+    {
+      int bypass = epic_credit && wielded ? epic_rage_penetration(ch, attack_type) : 0;
+      int existing = previous_dr - effective_dr;
+      int extra = MAX(0, bypass - existing);
+      if (epic_credit) *epic_credit = MIN(5, existing + MIN(extra, effective_dr));
+      effective_dr = MAX(0, effective_dr - extra);
+    }
     reduction = MIN(effective_dr, dam);
   }
 
@@ -13094,6 +13166,7 @@ int combat_maneuver_check(struct char_data *ch, struct char_data *vict, int comb
 
   /* CMD = 10 + Base attack bonus + Strength modifier + Dexterity modifier + special size modifier + miscellaneous modifiers */
   cm_defense = compute_cmd(vict, combat_maneuver_type);
+  cm_defense += epic_chassis_bonus(vict, combat_maneuver_type);
   cm_bonus += legendary_technique_maneuver(ch, combat_maneuver_type, false);
   cm_defense += legendary_technique_maneuver(vict, combat_maneuver_type, true);
   if (HAS_FEAT(vict, FEAT_WEAPON_MASTERY_2) &&
@@ -13814,7 +13887,7 @@ void handle_missed_attack(struct char_data *ch, struct char_data *victim, int ty
 }
 
 /* is ch sneak attacking victim? */
-int can_sneak_attack(struct char_data *ch, struct char_data *victim)
+static int can_sneak_attack_anatomy(struct char_data *ch,struct char_data *victim,bool bypass)
 {
   /* we will check for disqualifiers first */
 
@@ -13826,7 +13899,7 @@ int can_sneak_attack(struct char_data *ch, struct char_data *victim)
   if (!HAS_FEAT(ch, FEAT_SNEAK_ATTACK) && get_monk_deadly_precision_dice(ch) <= 0)
     return FALSE;
 
-  if (HAS_REAL_FEAT(victim, FEAT_ESSENCE_OF_UNDEATH))
+  if (!bypass && HAS_REAL_FEAT(victim, FEAT_ESSENCE_OF_UNDEATH))
     return FALSE;
 
   if (HAS_SUBRACE(victim, SUBRACE_SWARM))
@@ -13863,6 +13936,9 @@ int can_sneak_attack(struct char_data *ch, struct char_data *victim)
   /* not vulnerable to sneak attack! */
   return FALSE;
 }
+
+int can_sneak_attack(struct char_data *ch,struct char_data *victim)
+{ return can_sneak_attack_anatomy(ch,victim,FALSE); }
 
 /* Data structure for Fist of Unbroken Air callback */
 struct fist_air_data
@@ -13953,8 +14029,10 @@ static bool resolve_manyshot_arrow(struct char_data *ch, struct char_data *victi
 int handle_successful_attack(struct char_data *ch, struct char_data *victim,
                              struct obj_data *wielded, int dam, int w_type, int type, int diceroll,
                              int is_critical, int attack_type, int dam_type,
-                             struct obj_data *missile, struct legendary_attack *technique)
+                             struct obj_data *missile, struct legendary_attack *technique, struct epic_second_attack *epic_attack)
 {
+  ch->epic_attack_critical=is_critical;
+  ch->epic_attack_dodged=FALSE;
   int ammo_damage_type = missile && GET_OBJ_TYPE(missile) == ITEM_MISSILE
                              ? GET_OBJ_VAL(missile, AMMO_VAL_DAMAGE_TYPE)
                              : 0;
@@ -14636,8 +14714,11 @@ int handle_successful_attack(struct char_data *ch, struct char_data *victim,
     }
   }
 
+  bool anatomy_bypass=HAS_REAL_FEAT(victim,FEAT_ESSENCE_OF_UNDEATH) &&
+    can_sneak_attack_anatomy(ch,victim,TRUE) && epic_third_anatomy(ch,victim,wielded);
   /* impromptu sneak attack */
-  if (attack_type == ATTACK_TYPE_PRIMARY_SNEAK || attack_type == ATTACK_TYPE_OFFHAND_SNEAK)
+  if ((attack_type == ATTACK_TYPE_PRIMARY_SNEAK || attack_type == ATTACK_TYPE_OFFHAND_SNEAK) &&
+      (!HAS_REAL_FEAT(victim,FEAT_ESSENCE_OF_UNDEATH) || anatomy_bypass))
   {
     /* Display why we are sneak attacking */
     send_combat_roll_info(ch, "\tW[IMPROMPTU]\tn");
@@ -14659,8 +14740,9 @@ int handle_successful_attack(struct char_data *ch, struct char_data *victim,
     /* Calculate regular sneak attack damage. */
   }
 
-  else if (can_sneak_attack(ch, victim) || (type == TYPE_ATTACK_OF_OPPORTUNITY && !IS_NPC(ch) &&
-                                            has_perk(ch, PERK_ROGUE_OPPORTUNIST_2)))
+  else if ((!HAS_REAL_FEAT(victim,FEAT_ESSENCE_OF_UNDEATH) || anatomy_bypass) &&
+           (anatomy_bypass || can_sneak_attack(ch, victim) || (type == TYPE_ATTACK_OF_OPPORTUNITY && !IS_NPC(ch) &&
+                                            has_perk(ch, PERK_ROGUE_OPPORTUNIST_2))))
   {
     /* Check for Perfect Kill before calculating sneak attack damage */
     if (!IS_NPC(ch) && can_use_perfect_kill(ch) && can_sneak_attack(ch, victim))
@@ -15045,6 +15127,8 @@ int handle_successful_attack(struct char_data *ch, struct char_data *victim,
   if ((dam = handle_warding(ch, victim, dam)) == -1)
     return (HIT_MISS);
 
+  int epic_rage_credit = wielded ? 0 : -1;
+  if (epic_attack) dam += epic_attack->command_damage;
   /* Apply Damage Reduction - void strike ignores DR */
   if (void_strike_bonus == 0)
   {
@@ -15060,7 +15144,9 @@ int handle_successful_attack(struct char_data *ch, struct char_data *victim,
       }
     }
 
-    if ((dam = apply_damage_reduction(ch, victim, wielded, dam - dr_bypass, FALSE, attack_type)) ==
+    if (dr_bypass >= 5) epic_rage_credit = -1;
+    if ((dam = apply_damage_reduction_epic(ch, victim, wielded, dam - dr_bypass, FALSE, attack_type,
+                                           epic_rage_credit >= 0 ? &epic_rage_credit : NULL)) ==
         -1)
       return (HIT_MISS); /* This should be changed to something more reasonable */
 
@@ -15089,7 +15175,7 @@ int handle_successful_attack(struct char_data *ch, struct char_data *victim,
     /* More SKILL_ garbage - This needs a better mechanic.  */
   case SKILL_BACKSTAB:
     dam += 4; /* base backstab bonus to damage */
-    if (damage(ch, victim, (dam * backstab_mult(ch)), SKILL_BACKSTAB, dam_type, attack_type) < 0)
+    if (resolve_damage(ch, victim, (dam * backstab_mult(ch)), SKILL_BACKSTAB, dam_type, attack_type, LEG_ORIGIN_NORMAL, NULL, epic_rage_credit) < 0)
       victim_is_dead = TRUE;
 
     break;
@@ -15114,8 +15200,16 @@ int handle_successful_attack(struct char_data *ch, struct char_data *victim,
 
       /* So do damage! (We aren't trelux, so do it normally) */
       if (resolve_damage(ch, victim, dam, w_type, dam_type, attack_type, LEG_ORIGIN_NORMAL,
-                         technique) < 0)
+                         technique, epic_rage_credit) < 0)
         victim_is_dead = TRUE;
+      if(ch->epic_attack_dodged) return HIT_MISS;
+
+      if (!victim_is_dead && !DEAD(ch) && type==TYPE_UNDEFINED && ch->epic_attack_depth==1)
+      {
+        long epic_victim_id=GET_ID(victim);
+        epic_second_attack_hit(ch,victim,wielded,attack_type,epic_attack);
+        if(find_char(epic_victim_id)!=victim || GET_POS(victim)==POS_DEAD) victim_is_dead=TRUE;
+      }
 
       if (!victim_is_dead && !DEAD(ch) && dam > 0 && wielded &&
           attack_type != ATTACK_TYPE_RANGED && affected_by_spell(ch, AFFECT_THUNDERSTAFF))
@@ -15677,7 +15771,9 @@ int hit(struct char_data *ch, struct char_data *victim, int type, int dam_type, 
                      manyshot_ready(ch, get_wielded(ch, ATTACK_TYPE_RANGED));
   ch->char_specials.manyshot_pending = FALSE;
   current_shot = &context;
+  ch->epic_attack_depth++;
   result = resolve_weapon_hit(ch, victim, type, dam_type, penalty, attack_type);
+  ch->epic_attack_depth--;
   finish_thrown_weapon(&context);
   /* All fired projectiles are spent, including misses, deflections and Manyshot.
    * Unlimited/Returning preserve the supply, not a collectible shot object. */
@@ -15702,6 +15798,7 @@ static int resolve_weapon_hit(struct char_data *ch, struct char_data *victim, in
 
   bool is_critical = FALSE;
   struct legendary_attack technique = {0};
+  struct epic_second_attack epic_attack = {0};
 
   char buf[DAM_MES_LENGTH] = {'\0'}; /* Damage message buffers. */
   char buf1[DAM_MES_LENGTH] = {'\0'};
@@ -16045,6 +16142,8 @@ static int resolve_weapon_hit(struct char_data *ch, struct char_data *victim, in
     break;
   }
 
+  calc_bab += epic_second_attack_begin(ch, type, attack_type, &epic_attack);
+
   /* Dark Revelation: +2 to hit against lored target */
   if (!IS_NPC(ch) && IS_NPC(victim) && ch->char_specials.dark_revelation_mob_rnum != NOBODY &&
       ch->char_specials.dark_revelation_mob_rnum == GET_MOB_RNUM(victim) &&
@@ -16310,9 +16409,23 @@ static int resolve_weapon_hit(struct char_data *ch, struct char_data *victim, in
   }
   else
   {
+    /* Resolve existing avoidance first, then Epic Dodge, before any on-hit work. */
+    ch->epic_attack_critical=is_critical;
+    ch->epic_attack_dodged=FALSE;
+    if (ch->epic_attack_depth==1 && type==TYPE_UNDEFINED && attack_type!=ATTACK_TYPE_PSIONICS &&
+        attack_type!=ATTACK_TYPE_ELDRITCH_BLAST &&
+        (epic_feat_rank(victim,FEAT_EPIC_DODGE) || epic_feat_rank(ch,FEAT_EPIC_ANATOMICAL_SAVANT)))
+    {
+      if(native_weapon_avoidance(ch,victim,w_type,dam_type,attack_type)<0) return HIT_MISS;
+      ch->epic_prechecked_victim=GET_ID(victim);
+      if(epic_third_dodge(ch,victim,w_type,dam_type)) {ch->epic_prechecked_victim=0;ch->epic_attack_dodged=FALSE;return HIT_MISS;}
+    }
     /* OK, attack should be a success at this stage */
     dam = handle_successful_attack(ch, victim, wielded, dam, w_type, type, diceroll, is_critical,
-                                   attack_type, dam_type, missile, &technique);
+                                   attack_type, dam_type, missile, &technique, &epic_attack);
+    ch->epic_prechecked_victim=0;
+    if(ch->epic_attack_dodged) {ch->epic_attack_dodged=FALSE;return HIT_MISS;}
+
   }
 
   if (is_critical)

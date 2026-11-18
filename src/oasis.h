@@ -790,6 +790,7 @@ i added this trying to debug issues with qedit-copy -zusuk
 #define STUDY_MORE_NEWFOUND_CLASS 83
 #define STUDY_APPLICABLE_KNOWLEDGE_FEAT 84
 #define STUDY_PRACTICED_CLASS 85
+#define STUDY_EPIC_CHOICE 87
 #define STUDY_SET_ELEMENTAL_BLOODLINE 86
 
 

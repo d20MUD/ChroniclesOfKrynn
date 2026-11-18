@@ -20,6 +20,7 @@
 #include "mob_utils.h"
 #include "housing.h"
 #include "utils.h"
+#include "epic_feats2.h"
 #include "comm.h"
 #include "db.h"
 #include "handler.h"
@@ -1609,6 +1610,8 @@ void char_from_room(struct char_data *ch)
     exit(1);
   }
 
+  epic_second_departure(ch);
+
   if (IN_ROOM(ch) == NOWHERE)
   {
     log("SYSERR: NOWHERE in %s, char_from_room, shutting game down!", __FILE__);
@@ -2373,6 +2376,7 @@ struct obj_data *unequip_char(struct char_data *ch, int pos)
   else
     log("SYSERR: IN_ROOM(ch) = NOWHERE when unequipping char %s.", GET_NAME(ch));
 
+  epic_infusion_unwield(ch, obj);
   GET_EQ(ch, pos) = NULL;
 
   for (j = 0; j < MAX_OBJ_AFFECT; j++)

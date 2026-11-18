@@ -336,6 +336,7 @@ lib/text/help/*
 !lib/text/help/introductions_disguises.hlp
 !lib/text/help/stats.hlp
 !lib/text/help/epicspells.hlp
+!lib/text/help/epic_expansion.hlp
 !lib/text/help/practiced_spellcaster.hlp
 !lib/text/help/stalls.hlp
 !lib/text/help/infuse.hlp

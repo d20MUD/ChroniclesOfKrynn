@@ -197,9 +197,9 @@ void init_core_player_tables(void)
   {
     const char *columns[] = {"purchased_pet", "pet_experience", "pet_hitroll", "pet_damroll",
                              "pet_damnodice", "pet_damsizedice", "pet_dead",
-                             "pet_kind", "pet_training_rank", "pet_training_exp", "pet_skill_health", "pet_skill_attack", "pet_skill_damage", "pet_skill_armor", "pet_skill_saves", "pet_save_fort", "pet_save_reflex", "pet_save_will", "pet_save_poison", "pet_save_death", "pet_gold"};
+                             "pet_kind", "pet_training_rank", "pet_training_exp", "pet_skill_health", "pet_skill_attack", "pet_skill_damage", "pet_skill_armor", "pet_skill_saves", "pet_save_fort", "pet_save_reflex", "pet_save_will", "pet_save_poison", "pet_save_death", "pet_gold", "epic_doctrine", "epic_expiry", "epic_identity"};
     int i;
-    for (i = 0; i < 21; i++)
+    for (i = 0; i < 24; i++)
     {
       char query[256];
       MYSQL_RES *result;
@@ -216,7 +216,7 @@ void init_core_player_tables(void)
       {
         mysql_free_result(result);
         snprintf(query, sizeof(query), "ALTER TABLE pet_data ADD COLUMN %s %s", columns[i],
-                 i >= 15 && i < 20 ? "INT DEFAULT NULL" : "INT NOT NULL DEFAULT 0");
+                 i == 23 ? "VARCHAR(32) NOT NULL DEFAULT ''" : (i == 22 ? "BIGINT NOT NULL DEFAULT 0" : (i >= 15 && i < 20 ? "INT DEFAULT NULL" : "INT NOT NULL DEFAULT 0")));
         if (mysql_query_safe(conn, query))
         {
           log("SYSERR: Failed to add pet progression column: %s", mysql_error(conn));

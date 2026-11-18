@@ -18,6 +18,9 @@
 #include "housing.h"
 #include "talents.h"
 #include "utils.h"
+#include "epic_feats.h"
+#include "epic_feats2.h"
+#include "epic_feats3.h"
 #include "mob_utils.h"
 #include "estate.h"
 #include "mudlim.h"
@@ -449,6 +452,10 @@ int load_char(const char *name, struct char_data *ch)
     }
     for (i = 0; i < NUM_FEATS; i++)
       SET_FEAT(ch, i, 0);
+    memset(&EPIC_CHOICES(ch), 0, sizeof(EPIC_CHOICES(ch)));
+    memset(&EPIC_TIMERS(ch), 0, sizeof(EPIC_TIMERS(ch)));
+    memset(&EPIC_SECOND(ch), 0, sizeof(EPIC_SECOND(ch)));
+    memset(&EPIC_THIRD(ch),0,sizeof(EPIC_THIRD(ch)));
     memset(ch->char_specials.saved.practiced_spellcaster_classes, 0,
            sizeof(ch->char_specials.saved.practiced_spellcaster_classes));
     for (i = 0; i < (END_GENERAL_ABILITIES + 1); i++)
@@ -1264,6 +1271,57 @@ int load_char(const char *name, struct char_data *ch)
         break;
 
       case 'E':
+        if(!strcmp(tag,"E3Cd") || !strcmp(tag,"E3St"))
+        {
+          int index;long long value;
+          if(sscanf(line,"%d %lld",&index,&value)==2 && index>=0)
+          {
+            if(!strcmp(tag,"E3Cd") && index<11) EPIC_THIRD(ch).ready[index]=MAX(0,value);
+            if(!strcmp(tag,"E3St") && index<20) EPIC_THIRD(ch).value[index]=(index==E3_OP_END ? 0 : value);
+          }
+          break;
+        }
+        if (!strcmp(tag, "E2Cd"))
+        { int index; long long ready; if(sscanf(line,"%d %lld",&index,&ready)==2 && index>=0 && index<14) EPIC_SECOND(ch).ready[index]=MAX(0,ready); break; }
+        if (!strcmp(tag, "E2St"))
+        {
+          long long v[10]={0}; int hp=0,slot=0,dc=0,pulses=0,cl=0;
+          if(sscanf(line,"%lld %lld %lld %lld %lld %lld %lld %lld %lld %d %d %d %d %d",&v[0],&v[1],&v[2],&v[3],&v[4],&v[5],&v[6],&v[7],&v[8],&hp,&slot,&dc,&pulses,&cl)==14)
+          {
+            struct epic_second_state *e=&EPIC_SECOND(ch);
+            e->rebuttal=v[0];e->aegis_expiry=v[1];e->infusion_expiry=v[2];e->infusion_proc=v[3];e->command_expiry=v[4];e->smite_expiry=v[5];e->bomb_expiry=v[6];e->bulwark_next=v[7];e->bulwark_end=v[8];
+            e->aegis_hp=LIMIT(hp,0,30);e->bomb_slot=LIMIT(slot,0,MAX_BOMBS_ALLOWED);e->bulwark_dc=dc;e->bulwark_pulses=LIMIT(pulses,0,2);e->smite_class=cl;
+          }
+          break;
+        }
+        if (!strcmp(tag,"E2Wp")) { if(legendary_uuid_valid(line)) strlcpy(EPIC_SECOND(ch).weapon_id,line,33); break; }
+        if (!strcmp(tag,"E2Gm")) { if(legendary_uuid_valid(line)) strlcpy(EPIC_SECOND(ch).golem_uuid,line,33); break; }
+        if (!strcmp(tag,"E2Cm")) { if(legendary_uuid_valid(line)) strlcpy(EPIC_SECOND(ch).command_uuid,line,33); break; }
+        if (!strcmp(tag, "EpCh"))
+        {
+          struct epic_feat_choices *e = &EPIC_CHOICES(ch);
+          sscanf(line, "%d %d %d %d %d %d %d %d %d %d %d %d", &e->craft_category, &e->capacity_class,
+                 &e->powers[0], &e->powers[1], &e->powers[2], &e->powers[3], &e->powers[4], &e->powers[5], &e->summon_doctrine, &e->companion_element, &e->anatomy_weapon, &e->discipline);
+          if(e->discipline<0 || e->discipline>6)e->discipline=0;
+          if(e->anatomy_weapon<0 || e->anatomy_weapon>NUM_WEAPON_TYPES)e->anatomy_weapon=0;
+          if(e->summon_doctrine<0 || e->summon_doctrine>2) e->summon_doctrine=0;
+          if(e->companion_element<0 || e->companion_element>4) e->companion_element=0;
+          if (e->craft_category < 0 || e->craft_category > 2) e->craft_category=0;
+          if (e->capacity_class < 0 || e->capacity_class > NUM_CLASSES) e->capacity_class=0;
+          for (i=0;i<6;i++)
+            if (e->powers[i]<PSIONIC_POWER_START || e->powers[i]>=PSIONIC_IMPALE_MIND) e->powers[i]=0;
+          break;
+        }
+        if (!strcmp(tag, "EpTm"))
+        {
+          long v[9] = {0};
+          sscanf(line, "%ld %ld %ld %ld %ld %ld %ld %ld %ld", &v[0], &v[1], &v[2], &v[3],
+                 &v[4], &v[5], &v[6], &v[7], &v[8]);
+          for (i=0;i<4;i++) EPIC_TIMERS(ch).ready[i]=MAX(0,v[i]);
+          for (i=0;i<3;i++) EPIC_TIMERS(ch).armed[i]=MAX(0,v[i+4]);
+          EPIC_TIMERS(ch).ward_expiry=MAX(0,v[7]); EPIC_TIMERS(ch).ward_type=v[8];
+          break;
+        }
         if (!strcmp(tag, "ECrd")) { ch->player_specials->estate_credit_receipt = strtoull(line, NULL, 10); break; }
         if (!strcmp(tag, "EDbt")) { ch->player_specials->estate_debit_receipt = strtoull(line, NULL, 10); break; }
         if (!strcmp(tag, "Exp "))
@@ -3702,6 +3760,28 @@ bool save_char_checked(struct char_data *ch, int mode)
   }
   BUFFER_WRITE("-1 -1 -1\n");
 
+  epic_snapshot_ward(ch);
+  BUFFER_WRITE("EpCh: %d %d %d %d %d %d %d %d %d %d %d %d\n", EPIC_CHOICES(ch).craft_category,
+               EPIC_CHOICES(ch).capacity_class, EPIC_CHOICES(ch).powers[0], EPIC_CHOICES(ch).powers[1],
+               EPIC_CHOICES(ch).powers[2], EPIC_CHOICES(ch).powers[3], EPIC_CHOICES(ch).powers[4], EPIC_CHOICES(ch).powers[5], EPIC_CHOICES(ch).summon_doctrine, EPIC_CHOICES(ch).companion_element, EPIC_CHOICES(ch).anatomy_weapon, EPIC_CHOICES(ch).discipline);
+  BUFFER_WRITE("EpTm: %ld %ld %ld %ld %ld %ld %ld %ld %d\n", (long)EPIC_TIMERS(ch).ready[0],
+               (long)EPIC_TIMERS(ch).ready[1], (long)EPIC_TIMERS(ch).ready[2], (long)EPIC_TIMERS(ch).ready[3],
+               (long)EPIC_TIMERS(ch).armed[0], (long)EPIC_TIMERS(ch).armed[1], (long)EPIC_TIMERS(ch).armed[2],
+               (long)EPIC_TIMERS(ch).ward_expiry, EPIC_TIMERS(ch).ward_type);
+
+  for(i=0;i<14;i++) BUFFER_WRITE("E2Cd: %d %lld\n",i,(long long)EPIC_SECOND(ch).ready[i]);
+  {
+    struct epic_second_state *e=&EPIC_SECOND(ch);
+    BUFFER_WRITE("E2St: %lld %lld %lld %lld %lld %lld %lld %lld %lld %d %d %d %d %d\n",
+      (long long)e->rebuttal,(long long)e->aegis_expiry,(long long)e->infusion_expiry,(long long)e->infusion_proc,(long long)e->command_expiry,(long long)e->smite_expiry,(long long)e->bomb_expiry,(long long)e->bulwark_next,(long long)e->bulwark_end,e->aegis_hp,e->bomb_slot,e->bulwark_dc,e->bulwark_pulses,e->smite_class);
+    if(*e->weapon_id) BUFFER_WRITE("E2Wp: %s\n",e->weapon_id);
+    if(*e->golem_uuid) BUFFER_WRITE("E2Gm: %s\n",e->golem_uuid);
+    if(*e->command_uuid) BUFFER_WRITE("E2Cm: %s\n",e->command_uuid);
+  }
+
+  for(i=0;i<11;i++) BUFFER_WRITE("E3Cd: %d %lld\n",i,(long long)EPIC_THIRD(ch).ready[i]);
+  for(i=0;i<20;i++) BUFFER_WRITE("E3St: %d %lld\n",i,EPIC_THIRD(ch).value[i]);
+
   /* Save feats */
   BUFFER_WRITE("Feat:\n");
   for (i = 1; i < NUM_FEATS; i++)
@@ -4333,11 +4413,11 @@ bool save_char_checked(struct char_data *ch, int mode)
     {
       aff = &tmp_aff[i];
       if (aff->spell)
-        BUFFER_WRITE("%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %lld\n", aff->spell, aff->duration,
+        BUFFER_WRITE("%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %lld %ld %d %d %d %d %d %lld %lld\n", aff->spell, aff->duration,
                      aff->modifier, aff->location, aff->bitvector[0], aff->bitvector[1],
                      aff->bitvector[2], aff->bitvector[3], aff->bonus_type, aff->specific,
                      aff->bitvector2[0], aff->bitvector2[1], aff->bitvector2[2],
-                     aff->bitvector2[3],aff->legendary_flags,(long long)aff->legendary_expiry);
+                     aff->bitvector2[3],aff->legendary_flags,(long long)aff->legendary_expiry,aff->epic_source,aff->epic_cl,aff->epic_ward,aff->epic_save_dc,aff->epic_save_type,aff->epic_flags,(long long)aff->epic_baseline,(long long)aff->epic_cast_serial);
     }
     BUFFER_WRITE("0 0 0 0 0 0 0 0 0 0 0 0 0 0\n");
   }
@@ -4876,16 +4956,17 @@ static void load_affects(FILE *fl, struct char_data *ch)
       n_vars, num10, num11, num12, num13, num14, num15;
   char line[MAX_INPUT_LENGTH + 1];
   struct affected_type af;
-  long long legendary_expiry=0;
+  long long legendary_expiry=0,epic_baseline=0,epic_serial=0;
+  long epic_source=0;int epic_cl=0,epic_ward=0,epic_dc=0,epic_type=0,epic_flags=0;
 
   i = 0;
   do
   {
-    new_affect(&af);legendary_expiry=0;
+    new_affect(&af);legendary_expiry=epic_baseline=epic_serial=0;epic_source=0;epic_cl=epic_ward=epic_dc=epic_type=epic_flags=0;
     if(!get_line(fl, line))break;
     n_vars =
-        sscanf(line, "%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %lld", &num, &num2, &num3, &num4,
-               &num5, &num6, &num7, &num8, &num9, &num10, &num11, &num12, &num13, &num14, &num15,&legendary_expiry);
+        sscanf(line, "%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %lld %ld %d %d %d %d %d %lld %lld", &num, &num2, &num3, &num4,
+               &num5, &num6, &num7, &num8, &num9, &num10, &num11, &num12, &num13, &num14, &num15,&legendary_expiry,&epic_source,&epic_cl,&epic_ward,&epic_dc,&epic_type,&epic_flags,&epic_baseline,&epic_serial);
     if (num > 0)
     {
       af.spell = num;
@@ -4907,6 +4988,11 @@ static void load_affects(FILE *fl, struct char_data *ch)
       }
       if(n_vars>=15)af.legendary_flags=num15;
       if(n_vars>=16&&legendary_expiry>0)af.legendary_expiry=legendary_expiry;
+      if(n_vars>=24) af.epic_cast_serial=epic_serial;
+      if(n_vars>=23) {
+        af.epic_source=MAX(0,epic_source);af.epic_cl=MAX(0,epic_cl);af.epic_ward=epic_ward==4?4:0;
+        af.epic_save_dc=MAX(0,epic_dc);af.epic_save_type=epic_type;af.epic_flags=epic_flags;af.epic_baseline=epic_baseline;
+      }
       if (n_vars == 10)
       { /* Version with bonus type! */
         af.bitvector[0] = num5;
@@ -6148,11 +6234,11 @@ static bool persist_char_pets_returning(struct char_data *ch, struct char_data *
       continue;
     snprintf(query2, sizeof(query2),
              "INSERT INTO pet_data (pet_data_id, owner_name, pet_name, pet_sdesc, pet_ldesc, "
-             "pet_ddesc, vnum, level, hp, max_hp, str, con, dex, ac, wis, cha, purge_mob_timer, purchased_pet, pet_experience, pet_hitroll, pet_damroll, pet_damnodice, pet_damsizedice, intel, pet_dead, pet_kind, pet_training_rank, pet_training_exp, pet_skill_health, pet_skill_attack, pet_skill_damage, pet_skill_armor, pet_skill_saves, pet_save_fort, pet_save_reflex, pet_save_will, pet_save_poison, pet_save_death, pet_gold) VALUES(NULL,");
+             "pet_ddesc, vnum, level, hp, max_hp, str, con, dex, ac, wis, cha, purge_mob_timer, purchased_pet, pet_experience, pet_hitroll, pet_damroll, pet_damnodice, pet_damsizedice, intel, pet_dead, pet_kind, pet_training_rank, pet_training_exp, pet_skill_health, pet_skill_attack, pet_skill_damage, pet_skill_armor, pet_skill_saves, pet_save_fort, pet_save_reflex, pet_save_will, pet_save_poison, pet_save_death, pet_gold, epic_doctrine, epic_expiry, epic_identity) VALUES(NULL,");
 
     end2 = stpcpy(query2,
                   "INSERT INTO pet_data (pet_data_id, owner_name, pet_name, pet_sdesc, pet_ldesc, "
-                  "pet_ddesc, vnum, level, hp, max_hp, str, con, dex, ac, wis, cha, purge_mob_timer, purchased_pet, pet_experience, pet_hitroll, pet_damroll, pet_damnodice, pet_damsizedice, intel, pet_dead, pet_kind, pet_training_rank, pet_training_exp, pet_skill_health, pet_skill_attack, pet_skill_damage, pet_skill_armor, pet_skill_saves, pet_save_fort, pet_save_reflex, pet_save_will, pet_save_poison, pet_save_death, pet_gold) VALUES(NULL,");
+                  "pet_ddesc, vnum, level, hp, max_hp, str, con, dex, ac, wis, cha, purge_mob_timer, purchased_pet, pet_experience, pet_hitroll, pet_damroll, pet_damnodice, pet_damsizedice, intel, pet_dead, pet_kind, pet_training_rank, pet_training_exp, pet_skill_health, pet_skill_attack, pet_skill_damage, pet_skill_armor, pet_skill_saves, pet_save_fort, pet_save_reflex, pet_save_will, pet_save_poison, pet_save_death, pet_gold, epic_doctrine, epic_expiry, epic_identity) VALUES(NULL,");
     *end2++ = '\'';
     end2 += mysql_real_escape_string(conn, end2, GET_NAME(ch), strlen(GET_NAME(ch)));
     *end2++ = '\'';
@@ -6222,7 +6308,7 @@ static bool persist_char_pets_returning(struct char_data *ch, struct char_data *
         purge_timer = 0;  /* Ensure non-negative */
     }
 
-    snprintf(query3, sizeof(query3), "'%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%ld','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d')",
+    snprintf(query3, sizeof(query3), "'%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%ld','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%lld','%s')",
              GET_MOB_VNUM(tch), GET_LEVEL(tch), GET_HIT(tch), GET_REAL_MAX_HIT(tch),
              GET_REAL_STR(tch), GET_REAL_CON(tch), GET_REAL_DEX(tch), GET_REAL_AC(tch),
              GET_REAL_WIS(tch), GET_REAL_CHA(tch), purge_timer,
@@ -6236,7 +6322,7 @@ static bool persist_char_pets_returning(struct char_data *ch, struct char_data *
              tch->mob_specials.pet_training_skills[2], tch->mob_specials.pet_training_skills[3],
              tch->mob_specials.pet_training_skills[4],
              GET_REAL_SAVE(tch, SAVING_FORT), GET_REAL_SAVE(tch, SAVING_REFL),
-             GET_REAL_SAVE(tch, SAVING_WILL), GET_REAL_SAVE(tch, SAVING_POISON), GET_REAL_SAVE(tch, SAVING_DEATH), MAX(0, GET_GOLD(tch)));
+             GET_REAL_SAVE(tch, SAVING_WILL), GET_REAL_SAVE(tch, SAVING_POISON), GET_REAL_SAVE(tch, SAVING_DEATH), MAX(0, GET_GOLD(tch)), tch->epic_summon_doctrine, (long long)tch->epic_summon_expiry, legendary_uuid_valid(tch->epic_pet_uuid)?tch->epic_pet_uuid:"");
     snprintf(finalQuery, sizeof(finalQuery), "%s%s", query2, query3);
     if (mysql_query(conn, finalQuery))
     {
@@ -6362,7 +6448,7 @@ static struct char_data *load_char_pets_filtered(struct char_data *ch, int reviv
   }
   snprintf(query, sizeof(query),
            "SELECT vnum, level, hp, max_hp, str, con, dex, ac, intel, wis, cha, pet_name, "
-           "pet_sdesc, pet_ldesc, pet_ddesc, pet_data_id, COALESCE(purge_mob_timer, 0), purchased_pet, pet_experience, pet_hitroll, pet_damroll, pet_damnodice, pet_damsizedice, pet_kind, pet_training_rank, pet_training_exp, pet_skill_health, pet_skill_attack, pet_skill_damage, pet_skill_armor, pet_skill_saves, pet_save_fort, pet_save_reflex, pet_save_will, pet_save_poison, pet_save_death, pet_gold FROM pet_data WHERE owner_name='%s' AND pet_dead=%d",
+           "pet_sdesc, pet_ldesc, pet_ddesc, pet_data_id, COALESCE(purge_mob_timer, 0), purchased_pet, pet_experience, pet_hitroll, pet_damroll, pet_damnodice, pet_damsizedice, pet_kind, pet_training_rank, pet_training_exp, pet_skill_health, pet_skill_attack, pet_skill_damage, pet_skill_armor, pet_skill_saves, pet_save_fort, pet_save_reflex, pet_save_will, pet_save_poison, pet_save_death, pet_gold, epic_doctrine, epic_expiry, epic_identity FROM pet_data WHERE owner_name='%s' AND pet_dead=%d",
            escaped_name, revive_id > 0 ? 1 : 0);
   if (revive_id > 0)
     snprintf(query + strlen(query), sizeof(query) - strlen(query),
@@ -6445,6 +6531,9 @@ static struct char_data *load_char_pets_filtered(struct char_data *ch, int reviv
     mob->mob_specials.pet_experience = MAX(0, atoi(row[18]));
     GET_GOLD(mob) = LIMIT(atoi(row[36]), 0, MAX_GOLD);
     restore_companion_kind(mob, atoi(row[23]));
+    mob->epic_summon_doctrine=LIMIT(atoi(row[37]),0,2);
+    mob->epic_summon_expiry=atoll(row[38]);
+    if(legendary_uuid_valid(row[39])) strlcpy(mob->epic_pet_uuid,row[39],33);
     mob->mob_specials.pet_training_rank = LIMIT(atoi(row[24]), 0, PET_TRAINING_RANK_CAP);
     mob->mob_specials.pet_training_experience = MAX(0, atoi(row[25]));
     {
@@ -6502,6 +6591,8 @@ static struct char_data *load_char_pets_filtered(struct char_data *ch, int reviv
     
     /* Restore ePURGEMOB event if timer was saved */
     long purge_timer = atol(row[16]);
+    if(mob->epic_summon_expiry>0)
+      purge_timer=MAX(1,MIN(purge_timer,(mob->epic_summon_expiry-time(NULL))*PASSES_PER_SEC));
     if (purge_timer > 0)
     {
       attach_mud_event(new_mud_event(ePURGEMOB, mob, NULL), purge_timer);
@@ -6555,6 +6646,7 @@ static struct char_data *load_char_pets_filtered(struct char_data *ch, int reviv
     if (revive_id <= 0)
       load_mtrigger(mob);
     add_follower(mob, ch);
+    if (revive_id <= 0) epic_restore_ward(ch, mob);
     if (ch->player_specials->saved.eidolon_training_saved)
       restore_eidolon_training(ch, mob);
     else

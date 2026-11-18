@@ -25,6 +25,7 @@
 #include "auction_house.h"
 #include "player_shop.h"
 #include "utils.h"
+#include "epic_feats.h"
 #include "comm.h"
 #include "protocol.h"
 #include <json-c/json.h>
@@ -1786,6 +1787,7 @@ cpp_extern const struct command_info cmd_info[] = {
      NULL},
     {"enlarge", "enlarge", POS_FIGHTING, do_enlarge, 1, 0, FALSE, ACTION_MOVE, {0, 0}, NULL},
     {"entertain", "entertain", POS_STANDING, do_entertain, 0, 0, FALSE, ACTION_NONE, {0, 0}, NULL},
+    {"epic", "epic", POS_FIGHTING, do_epic, 0, 0, TRUE, ACTION_NONE, {0, 0}, NULL},
     {"epicfeats", "epicfeats", POS_SLEEPING, do_epicfeats, 0, 0, TRUE, ACTION_NONE, {0, 0}, NULL},
     {"equipment", "eq", POS_SLEEPING, do_equipment, 0, 0, TRUE, ACTION_NONE, {0, 0}, NULL},
     {"eqstats", "eqst", POS_SLEEPING, do_not_here, 0, 0, TRUE, ACTION_NONE, {0, 0}, NULL},

@@ -73,6 +73,8 @@
 #include "clan_sources.h"
 #include "mob_utils.h"
 #include "utils.h"
+#include "epic_feats3.h"
+#include "epic_feats2.h"
 #include "comm.h"
 #include "interpreter.h"
 #include "handler.h"
@@ -1413,6 +1415,8 @@ void heartbeat(int heart_pulse)
   legendary_affect_schedule(PULSE_VIOLENCE-heart_pulse%PULSE_VIOLENCE);
 
   if (!(heart_pulse % PASSES_PER_SEC)) {
+    epic_second_update();
+    epic_third_update();
     struct char_data *legendary_ch,*legendary_next;
     for(legendary_ch=character_list;legendary_ch;legendary_ch=legendary_next){
       legendary_next=legendary_ch->next;legendary_condition_expire(legendary_ch);

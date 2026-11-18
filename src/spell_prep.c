@@ -53,6 +53,7 @@
 #include "sysdep.h"
 #include "structs.h"
 #include "utils.h"
+#include "epic_feats.h"
 #include "interpreter.h"
 #include "db.h"
 #include "comm.h"
@@ -1960,6 +1961,15 @@ bool is_spell_in_collection(struct char_data *ch, int class, int spellnum, int m
  */
 bool is_a_known_spell(struct char_data *ch, int class, int spellnum)
 {
+  if (!IS_NPC(ch) && class == CLASS_PSIONICIST)
+  {
+    int i, rank = epic_feat_rank(ch, FEAT_EPIC_POWER_KNOWLEDGE);
+    for (i=0; i<2*rank; i++)
+      if (spellnum > 0 && EPIC_CHOICES(ch).powers[i] == spellnum) return TRUE;
+    if (ch->desc && LEVELUP(ch))
+      for (i=0;i<6;i++)
+        if (LEVELUP(ch)->epic_choices.powers[i] == spellnum && spellnum > 0) return TRUE;
+  }
   /*DEBUG*/ /*
   if (GET_LEVEL(ch) >= LVL_IMMORT) {
     if (class == CLASS_SORCERER || class == CLASS_BARD) {
@@ -2526,6 +2536,7 @@ int compute_spells_circle(struct char_data *ch, int char_class, int spellnum, in
     /* Inquisitors are 3/4 divine spontaneous casters */
     min_level = MIN_SPELL_LVL(spellnum, char_class, domain);
     spell_circle = level_to_circle_conversion(min_level, 1);
+
     if (spell_circle <= 3)
     {
       metamagic_mod =
@@ -2536,6 +2547,7 @@ int compute_spells_circle(struct char_data *ch, int char_class, int spellnum, in
     /* Summoners are 3/4 spontaneous casters specializing in summon spells */
     min_level = MIN_SPELL_LVL(spellnum, char_class, domain);
     spell_circle = level_to_circle_conversion(min_level, 1);
+    if (ch->epic_shared_spell == spellnum && char_class == CLASS_SUMMONER) metamagic_mod++;
     if (spell_circle <= 3)
     {
       metamagic_mod =
@@ -3190,6 +3202,9 @@ int compute_slots_by_circle(struct char_data *ch, int class, int circle)
     break;
   }
 
+  if (!IS_NPC(ch) && EPIC_CHOICES(ch).capacity_class == class + 1 &&
+      circle == epic_capacity_circle(class) && epic_capacity_choice(ch, class))
+    spell_slots += epic_feat_rank(ch, FEAT_IMPROVED_SPELL_CAPACITY);
   spell_slots += get_bonus_spells_by_circle_and_class(ch, class, circle);
   if (!IS_NPC(ch) && circle == 1 && class == GET_LOREMASTER_NEWFOUND_CLASS(ch) &&
       (HAS_FEAT(ch, FEAT_LOREMASTER_NEWFOUND_ARCANA) ||
@@ -3397,6 +3412,16 @@ int spell_prep_gen_extract_by_class(struct char_data *ch, int ch_class, int spel
 
   if (!ch || ch_class < 0 || ch_class >= NUM_CLASSES)
     return CLASS_UNDEFINED;
+
+  if (ch_class==CLASS_SUMMONER && ch->epic_shared_spell==spellnum)
+  {
+    circle=compute_spells_circle(ch,ch_class,spellnum,0,0);
+    if(circle>6 || !is_a_known_spell(ch,ch_class,spellnum) ||
+       compute_slots_by_circle(ch,ch_class,circle)-count_total_slots(ch,ch_class,circle)<=0)
+      return CLASS_UNDEFINED;
+    innate_magic_add(ch,ch_class,circle,0,compute_spells_prep_time(ch,ch_class,circle,0),0);
+    return ch_class;
+  }
 
   if (CLASS_LEVEL(ch, ch_class) > 0)
   {

@@ -3200,9 +3200,59 @@ enum zone_terrain_type {
 #define FEAT_WINGS_OF_HEAVEN 1323
 #define FEAT_CELESTIAL_CONVICTION 1324
 #define FEAT_CELESTIAL_ASCENSION 1325
-#define FEAT_LAST_FEAT 1326
+/* 1326 was the old sentinel; never reuse persisted feat identifiers. */
+#define FEAT_EPIC_POWER_KNOWLEDGE 1327
+#define FEAT_EPIC_AUGMENTATION_EFFICIENCY 1328
+#define FEAT_EPIC_FOCUS_CONTINUITY 1329
+#define FEAT_EPIC_MENTAL_BASTION 1330
+#define FEAT_EPIC_MANIFESTING_POISE 1331
+#define FEAT_EPIC_ARTISANS_INSIGHT 1332
+#define FEAT_EPIC_EFFICIENT_ITEM_CREATION 1333
+#define FEAT_EPIC_METAMAGIC_SCIENCE 1334
+#define FEAT_EPIC_DEVICE_PENETRATION 1335
+#define FEAT_EPIC_ANCHORED_CHASSIS 1336
+#define FEAT_EPIC_EVOLUTION_RESERVE 1337
+#define FEAT_EPIC_ADAPTIVE_EIDOLON_WARD 1338
+#define FEAT_EPIC_PLANAR_ANCHORAGE 1339
+#define FEAT_EPIC_FORTITUDE 1340
+#define FEAT_EPIC_REFLEXES 1341
+#define FEAT_EPIC_WILL 1342
+#define FEAT_SUPERIOR_INITIATIVE 1343
+#define FEAT_LEGENDARY_ATHLETE 1344
+#define FEAT_IMPROVED_SPELL_CAPACITY 1345
+#define FEAT_RUINOUS_RAGE 1346
+/* 1347 was the previous persisted sentinel. */
+#define FEAT_EPIC_RESISTANCE_REBUTTAL 1348
+#define FEAT_SHARED_PSIONIC_MANTLE 1349
+#define FEAT_EPIC_CHARGE_FED_REPAIR 1350
+#define FEAT_EPIC_GOLEM_AEGIS 1351
+#define FEAT_EPIC_CONSTRUCTBANE_INFUSION 1352
+#define FEAT_EPIC_RESILIENT_BOND 1353
+#define FEAT_EPIC_SPELL_SHARING 1354
+#define FEAT_EPIC_CONJURATION_COMMAND 1355
+#define FEAT_EPIC_PLANAR_TRIAGE 1356
+#define FEAT_EPIC_EVOLVED_SUMMONS 1357
+#define FEAT_EPIC_TRAILMASTER 1358
+#define FEAT_EPIC_INSPIRATION 1359
+#define FEAT_POSITIVE_ENERGY_BULWARK 1360
+#define FEAT_LEGENDARY_COMPANION_ELEMENTAL_BOND 1361
+#define FEAT_EPIC_AUGMENTED_ALCHEMY 1362
+/* 1363 was a persisted sentinel. */
+#define FEAT_EPIC_PSIONIC_CONTINGENCY 1364
+#define FEAT_EPIC_SENTINEL_MIND 1365
+#define FEAT_EPIC_EIDOLON_INTERCESSION 1366
+#define FEAT_EPIC_ADAPTIVE_ASPECT 1367
+#define FEAT_EPIC_SPELL_OPPORTUNITY 1368
+#define FEAT_EPIC_SPELL_STOWAWAY 1369
+#define FEAT_TENACIOUS_WARDS 1370
+#define FEAT_EPIC_HEROIC_RECOVERY 1371
+#define FEAT_LASTING_INSPIRATION 1372
+#define FEAT_EPIC_ANATOMICAL_SAVANT 1373
+/* 1374 was a persisted sentinel. */
+#define FEAT_EPIC_DISCIPLINE_FOCUS 1375
+#define FEAT_LAST_FEAT 1376
 /** FEAT_LAST_FEAT + 1 ***/
-#define NUM_FEATS 1327
+#define NUM_FEATS 1377
 /** absolute cap **/
 #define MAX_FEATS 1500
 /*****/
@@ -6488,6 +6538,7 @@ struct obj_data
   char clan_delivery_uid[33];
   int clan_delivery_amount; /* Reserved finite shots, persisted with object. */
   unsigned long long estate_delivery_id;
+  char epic_binding_id[33]; /* Ordinary item identity, independent of legendary registry. */
   char legendary_uuid[33]; /* Optional persistent instance identity, never a prototype ID. */
   bool legendary_quarantined;
   struct legendary_item_record *legendary_record; /* Owned runtime cache; not serialized. */
@@ -6825,6 +6876,40 @@ struct char_point_data
 
 /** char_special_data_saved: specials which both a PC and an NPC have in
  * common, but which must be saved to the players file for PC's. */
+/* Stable, explicit ASCII-save fields for the first epic expansion. */
+struct epic_feat_choices
+{
+  int powers[6];
+  int craft_category; /* 1 wondrous, 2 arms/armor */
+  int capacity_class; /* class + 1; zero means unchosen */
+  int summon_doctrine; /* 1 aquatic, 2 watchful */
+  int anatomy_weapon; /* weapon type + 1 */
+  int discipline; /* native discipline 1..6 */
+  int companion_element; /* 1 acid, 2 cold, 3 electricity, 4 fire */
+};
+struct epic_feat_timers
+{
+  time_t ready[4]; /* artisan insight, efficient trigger, device penetration, eidolon ward */
+  time_t ward_expiry;
+  int ward_type;
+  time_t armed[3];
+};
+
+/* Batch-two cooldowns remain absolute across logout and respec. */
+struct epic_second_state
+{
+  time_t ready[14];
+  time_t rebuttal, aegis_expiry, infusion_expiry, infusion_proc;
+  time_t command_expiry, smite_expiry, bomb_expiry;
+  time_t bulwark_next, bulwark_end;
+  int aegis_hp, bomb_slot, bulwark_dc, bulwark_pulses, smite_class;
+  char weapon_id[33], golem_uuid[33], command_uuid[33];
+};
+struct epic_third_state
+{
+  time_t ready[11];
+  long long value[20]; /* Explicit tagged ASCII fields; indexes in epic_feats3.h. */
+};
 struct char_special_data_saved
 {
   int alignment;                  /**< -1000 (evil) to 1000 (good) range. */
@@ -6852,6 +6937,7 @@ struct char_special_data_saved
   int combat_feats[NUM_CFEATS][FT_ARRAY_MAX]; /* One bitvector array per CFEAT_ type  */
   int school_feats[NUM_SFEATS];               /* One bitvector array per CFEAT_ type  */
   bool practiced_spellcaster_classes[NUM_CLASSES];
+  struct epic_feat_choices epic_choices;
   int hp_regen;
   int mv_regen;
   int psp_regen;
@@ -7576,6 +7662,9 @@ struct player_special_data_saved
   byte score_section_order[8]; /**< Custom section ordering for score display */
 
   /* Device destruction tracking to prevent abuse */
+  struct epic_feat_timers epic_timers;
+  struct epic_second_state epic_second;
+  struct epic_third_state epic_third;
   time_t last_device_destruction;  /**< Timestamp of last device destruction */
   int devices_destroyed_today;     /**< Number of devices destroyed in past 24 hours */
   time_t device_creation_cooldown; /**< Timestamp until when device creation is blocked */
@@ -7894,6 +7983,10 @@ struct affected_type
 
   struct affected_type *next; /**< The next affect in the list of affects. */
   sh_int specific;
+  long epic_source; /* Persistent player identity; zero means unknown/NPC. */
+  int epic_cl, epic_ward, epic_save_dc, epic_save_type, epic_flags;
+  int64_t epic_cast_serial;
+  int64_t epic_baseline; /* Original performance expiry, never extended on refresh. */
   int legendary_flags; /* Scripted/boss-locked condition provenance. */
   int64_t legendary_expiry; /* Optional absolute expiry after Resolve. */
 };
@@ -7957,6 +8050,9 @@ struct damage_reduction_type
 
 struct level_data
 {
+  struct epic_feat_choices epic_choices;
+  int epic_pending[2];
+  int epic_choice_step;
   int level;
   int class;
   int feats[NUM_FEATS];
@@ -8169,6 +8265,21 @@ struct char_data
   struct player_special_data *player_specials; /**< PC specials		  */
   struct mob_special_data mob_specials;        /**< NPC specials		  */
 
+  int epic_spell_context, epic_cast_context, epic_spell_depth, epic_device_depth;
+  bool epic_device_check; /* One resistance check in a committed manual device activation. */
+  bool epic_swim_checked; /* Set only after a successful native swimming skill check. */
+  int epic_attack_depth;
+  int64_t epic_cast_serial;
+  int epic_reaction_depth, epic_last_save_spell, epic_last_save_dc, epic_last_save_type;
+  bool epic_save_retry, epic_attack_critical, epic_attack_dodged, epic_cast_dispatched;
+  long epic_last_save_source, epic_prechecked_victim;
+  int epic_shared_spell; /* Pending native cast; cleared by resetCastingData. */
+  long epic_shared_pet;
+  bool epic_lethal_packet; /* Scoped to damage update_pos, never sacrifice/extraction. */
+  char epic_pet_uuid[33];
+  int epic_summon_doctrine;
+  time_t epic_summon_expiry;
+  bool epic_manifest_damaged; /* Damage since the last manifestation concentration check. */
   struct affected_type *affected;        /**< affected by what spells    */
   struct obj_data *equipment[NUM_WEARS]; /**< Equipment array            */
 
