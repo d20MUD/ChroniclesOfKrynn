@@ -1705,6 +1705,8 @@ void reconcile_alter_self(struct char_data *ch);
   CHECK_PLAYER_SPECIAL((ch), ((ch)->player_specials->saved.preferred_arcane))
 #define GET_PREFERRED_DIVINE(ch)                                                                   \
   CHECK_PLAYER_SPECIAL((ch), ((ch)->player_specials->saved.preferred_divine))
+#define GET_PREFERRED_MARTIAL(ch) \
+  CHECK_PLAYER_SPECIAL((ch), ((ch)->player_specials->saved.preferred_martial))
 #define BONUS_CASTER_LEVEL(ch, class) (compute_bonus_caster_level(ch, class))
 
 // Eldritch knight spell critical ability

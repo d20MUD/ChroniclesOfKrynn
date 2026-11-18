@@ -7395,6 +7395,7 @@ struct player_special_data_saved
   /* preferred caster classs, used for prestige classes such as arcane archer */
   byte preferred_arcane;
   byte preferred_divine;
+  sbyte preferred_martial; /* CLASS_UNDEFINED until explicitly selected */
 
   int wimp_level;                        /**< Below this # of hit points, flee! */
   byte freeze_level;                     /**< Level of god who froze char, if any */

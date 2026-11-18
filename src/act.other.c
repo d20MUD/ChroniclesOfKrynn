@@ -3478,6 +3478,8 @@ ACMDU(do_gain)
       return;
     }
 
+    if (!perk_preferences_ready(ch, class, TRUE)) return;
+
     if (class < 0 || class >= NUM_CLASSES ||
         !class_is_available(ch, class, MODE_CLASSLIST_NORMAL, NULL))
     {

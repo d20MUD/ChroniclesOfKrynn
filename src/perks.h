@@ -17,6 +17,11 @@ extern const char *perk_category_names[];
 void init_perks(void);
 int count_defined_perks(void);
 int class_to_perk_class(int class_type, int which_perk);
+enum preferred_class_kind { PREFERRED_ARCANE = 1, PREFERRED_DIVINE, PREFERRED_MARTIAL };
+bool valid_preferred_class(int kind, int class_id);
+void auto_select_preferred_classes(struct char_data *ch);
+bool perk_preferences_ready(struct char_data *ch, int class_id, bool notify);
+void get_award_perk_classes(struct char_data *ch, int class_id, int *first, int *second);
 
 /* Perk definition functions */
 void define_fighter_perks(void);

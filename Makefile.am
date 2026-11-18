@@ -497,3 +497,7 @@ scrub: clean
 EXTRA_DIST += src/epic_feats.h src/epic_feats2.h src/epic_feats3.h unittests/test_epic_feats.c unittests/test_epic_feats.sh \
 	docs/EPIC_FEAT_FIRST_BATCH.md docs/EPIC_FEAT_SECOND_BATCH.md docs/EPIC_FEAT_THIRD_BATCH.md lib/text/help/epic_expansion.hlp \
 	lib/text/help/epicfeats.hlp sql/20261118_epicfeats_help.sql
+
+EXTRA_DIST += unittests/test_preferred_perks.c unittests/test_preferred_perks.sh \
+	docs/PREFERRED_CLASS_PERKS.md lib/text/help/preferred_classes.hlp \
+	sql/20261118_preferred_classes_help.sql

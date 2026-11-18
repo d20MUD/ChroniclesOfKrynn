@@ -1533,6 +1533,7 @@ int gain_exp_regardless(struct char_data *ch, int gain, bool is_ress)
     {
       while (GET_LEVEL(ch) < LVL_IMPL && GET_EXP(ch) >= level_exp(ch, GET_LEVEL(ch) + 1))
       {
+        if (!perk_preferences_ready(ch, GET_CLASS(ch), TRUE)) break;
         GET_LEVEL(ch) += 1;
         if (CLASS_LEVEL(ch, GET_CLASS(ch)) < (LVL_STAFF - 1))
           CLASS_LEVEL(ch, GET_CLASS(ch))

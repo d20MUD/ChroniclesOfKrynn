@@ -2094,6 +2094,16 @@ static void set_preferred_divine(struct descriptor_data *d)
   write_to_output(d, "\r\n%sEnter your preferred divine class : ", nrm);
 }
 
+static void set_preferred_martial(struct descriptor_data *d)
+{
+  int class;
+  clear_screen(d);
+  for (class = 0; class < NUM_CLASSES; class++)
+    if (valid_preferred_class(PREFERRED_MARTIAL, class))
+      write_to_output(d, "%d) %s\r\n", class, CLSLIST_NAME(class));
+  write_to_output(d, "\r\nEnter your preferred martial class: ");
+}
+
 static void set_bloodline_draconic(struct descriptor_data *d)
 {
   get_char_colors(d->character);
@@ -2177,38 +2187,25 @@ static void display_new_arcana_menu(struct descriptor_data *d)
   OLC_MODE(d) = SET_NEW_ARCANA;
 }
 
+static const char *preferred_class_name(int kind, int class_id)
+{
+  return valid_preferred_class(kind, class_id) ? CLSLIST_NAME(class_id) : "Not set";
+}
+
 static void set_preferred_caster(struct descriptor_data *d)
 {
-  /* dummy checks :( */
-  if (!d)
-    return;
-  if (!d->character)
-    return;
-  if (GET_PREFERRED_ARCANE(d->character) >= NUM_CLASSES ||
-      GET_PREFERRED_ARCANE(d->character) <= CLASS_UNDEFINED)
-  {
-    GET_PREFERRED_ARCANE(d->character) = CLASS_WIZARD;
-    write_to_output(
-        d, "There was an error, reset to wizard and exiting for you to try again!\r\n\r\n");
-    return;
-  }
-  if (GET_PREFERRED_DIVINE(d->character) >= NUM_CLASSES ||
-      GET_PREFERRED_DIVINE(d->character) <= CLASS_UNDEFINED)
-  {
-    GET_PREFERRED_DIVINE(d->character) = CLASS_CLERIC;
-    write_to_output(
-        d, "There was an error, reset to cleric and exiting for you to try again!\r\n\r\n");
-    return;
-  }
+  if (!d || !d->character) return;
+  auto_select_preferred_classes(d->character);
 
   get_char_colors(d->character);
   clear_screen(d);
 
   write_to_output(d,
-                  "\r\n-- %sSet Preferred Caster Class (for Prestige Classes)%s\r\n"
+                  "\r\n-- %sSet Preferred Classes (for Prestige Classes)%s\r\n"
                   "\r\n"
                   "%s 0%s) Arcane:      %s%s\r\n"
                   "%s 1%s) Divine:      %s%s\r\n"
+                  "%s 2%s) Martial:     %s%s\r\n"
                   "\r\n"
                   "%s Q%s) Quit\r\n"
                   "\r\n"
@@ -2216,8 +2213,10 @@ static void set_preferred_caster(struct descriptor_data *d)
 
                   mgn, nrm,
                   /* empty line */
-                  grn, nrm, CLSLIST_NAME(GET_PREFERRED_ARCANE(d->character)), nrm, grn, nrm,
-                  CLSLIST_NAME(GET_PREFERRED_DIVINE(d->character)), nrm,
+                  grn, nrm, preferred_class_name(PREFERRED_ARCANE, GET_PREFERRED_ARCANE(d->character)), nrm,
+                  grn, nrm,
+                  preferred_class_name(PREFERRED_DIVINE, GET_PREFERRED_DIVINE(d->character)), nrm,
+                  grn, nrm, preferred_class_name(PREFERRED_MARTIAL, GET_PREFERRED_MARTIAL(d->character)), nrm,
                   /* empty line */
                   grn, nrm
                   /* empty line */
@@ -3219,7 +3218,7 @@ static void generic_main_disp_menu(struct descriptor_data *d)
       "%s 7%s) Ranger Favored Enemy%s\r\n"
       "%s 8%s) Cleric Domain Selection%s\r\n"
       "%s 9%s) Wizard School Selection%s\r\n"
-      "%s A%s) Preferred Caster Classes (Prestige)%s\r\n"
+      "%s A%s) Preferred Classes (Prestige)%s\r\n"
       "%s B%s) Sorcerer Bloodline Selection%s\r\n"
       "%s C%s) Alchemist Discoveries Selection%s\r\n"
       "%s D%s) Paladin Mercies%s\r\n"
@@ -5724,8 +5723,7 @@ void study_parse(struct descriptor_data *d, char *arg)
     /***/
   case SET_PREFERRED_ARCANE:
     number = atoi(arg);
-    if (number != CLASS_WIZARD && number != CLASS_SORCERER && number != CLASS_SUMMONER &&
-        number != CLASS_BARD)
+    if (!isdigit((unsigned char)*arg) || !valid_preferred_class(PREFERRED_ARCANE, number))
     {
       write_to_output(d, "Invalid value!  Try again.\r\n");
       OLC_MODE(d) = SET_PREFERRED_ARCANE;
@@ -5739,7 +5737,7 @@ void study_parse(struct descriptor_data *d, char *arg)
     break;
   case SET_PREFERRED_DIVINE:
     number = atoi(arg);
-    if (number != CLASS_DRUID && number != CLASS_INQUISITOR && number != CLASS_CLERIC)
+    if (!isdigit((unsigned char)*arg) || !valid_preferred_class(PREFERRED_DIVINE, number))
     {
       write_to_output(d, "Invalid value!  Try again.\r\n");
       OLC_MODE(d) = SET_PREFERRED_DIVINE;
@@ -5749,6 +5747,19 @@ void study_parse(struct descriptor_data *d, char *arg)
     GET_PREFERRED_DIVINE(ch) = number;
     write_to_output(d, "Choice selected.\r\n");
     OLC_MODE(d) = STUDY_SET_P_CASTER;
+    set_preferred_caster(d);
+    break;
+
+  case SET_PREFERRED_MARTIAL:
+    number = atoi(arg);
+    if (!isdigit((unsigned char)*arg) || !valid_preferred_class(PREFERRED_MARTIAL, number))
+    {
+      write_to_output(d, "Invalid value! Try again.\r\n");
+      set_preferred_martial(d);
+      return;
+    }
+    GET_PREFERRED_MARTIAL(ch) = number;
+    write_to_output(d, "Choice selected.\r\n");
     set_preferred_caster(d);
     break;
 
@@ -5770,6 +5781,10 @@ void study_parse(struct descriptor_data *d, char *arg)
       case 1:
         set_preferred_divine(d);
         OLC_MODE(d) = SET_PREFERRED_DIVINE;
+        return;
+      case 2:
+        set_preferred_martial(d);
+        OLC_MODE(d) = SET_PREFERRED_MARTIAL;
         return;
       default:
         break;

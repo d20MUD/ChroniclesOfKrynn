@@ -46,7 +46,7 @@ static void define_wizard_controller_perks(void);
 static void define_sorcerer_controller_perks(void);
 static void define_sorcerer_versatile_caster_perks(void);
 static void define_wizard_versatile_caster_perks(void);
-static void get_award_perk_classes(struct char_data *ch, int award_class, int *perk_class_1,
+static void get_base_award_perk_classes(struct char_data *ch, int award_class, int *perk_class_1,
                                    int *perk_class_2);
 void define_artificer_perks(void);
 
@@ -474,12 +474,17 @@ static bool character_can_use_perk_class(struct char_data *ch, int class_id)
   if (class_id < 0 || class_id >= NUM_CLASSES)
     return FALSE;
 
-  if (class_id == CLASS_SORCERER)
-    return (CLASS_LEVEL(ch, CLASS_SORCERER) > 0);
 
   perk_class = normalize_perk_class_id(class_id);
   if (perk_class < 0 || perk_class >= NUM_CLASSES)
     return FALSE;
+
+  if (ch->player_specials->saved.perk_points[perk_class] > 0) return TRUE;
+  {
+    struct char_perk_data *perk;
+    for (perk = ch->player_specials->saved.perks; perk; perk = perk->next)
+      if (normalize_perk_class_id(perk->perk_class) == perk_class) return TRUE;
+  }
 
   for (i = 0; i < NUM_CLASSES; i++)
   {
@@ -510,8 +515,6 @@ static int find_perk_class_source_class(struct char_data *ch, int class_id)
   if (class_id < 0 || class_id >= NUM_CLASSES)
     return CLASS_UNDEFINED;
 
-  if (class_id == CLASS_SORCERER)
-    return CLASS_LEVEL(ch, CLASS_SORCERER) > 0 ? CLASS_SORCERER : CLASS_UNDEFINED;
 
   perk_class = normalize_perk_class_id(class_id);
   if (perk_class < 0 || perk_class >= NUM_CLASSES)
@@ -19532,7 +19535,7 @@ int calculate_stage_xp_needed(struct char_data *ch)
  * @param perk_class_1 Output - first perk class to receive a point (-1 if none)
  * @param perk_class_2 Output - second perk class to receive a point (-1 if none)
  */
-static void get_award_perk_classes(struct char_data *ch, int award_class, int *perk_class_1,
+static void get_base_award_perk_classes(struct char_data *ch, int award_class, int *perk_class_1,
                                    int *perk_class_2)
 {
   int i;
@@ -19612,6 +19615,104 @@ static void get_award_perk_classes(struct char_data *ch, int award_class, int *p
     *perk_class_2 = normalize_perk_class_id(second_class);
 }
 
+/* A distinct pair of perk assignments selects the matching preference for
+ * each category. Fixed rogue/psionic/etc. assignments have no preference. */
+bool valid_preferred_class(int kind, int class_id)
+{
+  switch (kind)
+  {
+  case PREFERRED_ARCANE:
+    return class_id == CLASS_WIZARD || class_id == CLASS_SORCERER ||
+           class_id == CLASS_BARD || class_id == CLASS_SUMMONER;
+  case PREFERRED_DIVINE:
+    return class_id == CLASS_CLERIC || class_id == CLASS_DRUID || class_id == CLASS_INQUISITOR;
+  case PREFERRED_MARTIAL:
+    return class_id == CLASS_WARRIOR || class_id == CLASS_BERSERKER ||
+           class_id == CLASS_PALADIN || class_id == CLASS_BLACKGUARD ||
+           class_id == CLASS_RANGER || class_id == CLASS_MONK;
+  }
+  return FALSE;
+}
+
+/* Fill only missing/invalid preferences; a player's explicit choice survives
+ * automatic defaults and later multiclassing. Count ranked base classes, not
+ * spellcasting progression or prestige-class perk mappings. */
+void auto_select_preferred_classes(struct char_data *ch)
+{
+  int kind, class, count, candidate, selected;
+  if (!ch || IS_NPC(ch) || !ch->player_specials) return;
+  for (kind = PREFERRED_ARCANE; kind <= PREFERRED_MARTIAL; kind++)
+  {
+    selected = kind == PREFERRED_ARCANE ? GET_PREFERRED_ARCANE(ch) :
+               kind == PREFERRED_DIVINE ? GET_PREFERRED_DIVINE(ch) : GET_PREFERRED_MARTIAL(ch);
+    if (valid_preferred_class(kind, selected)) continue;
+    candidate = CLASS_UNDEFINED;
+    count = 0;
+    for (class = 0; class < NUM_CLASSES; class++)
+      if (CLASS_LEVEL(ch, class) > 0 && valid_preferred_class(kind, class))
+      { candidate = class; count++; }
+    if (count != 1) continue;
+    if (kind == PREFERRED_ARCANE) GET_PREFERRED_ARCANE(ch) = candidate;
+    else if (kind == PREFERRED_DIVINE) GET_PREFERRED_DIVINE(ch) = candidate;
+    else GET_PREFERRED_MARTIAL(ch) = candidate;
+  }
+}
+
+static int perk_preference_kind(int class_id)
+{
+  int kind;
+  for (kind = PREFERRED_ARCANE; kind <= PREFERRED_MARTIAL; kind++)
+    if (valid_preferred_class(kind, class_id)) return kind;
+  return 0;
+}
+
+static int selected_perk_class(struct char_data *ch, int original)
+{
+  int kind = perk_preference_kind(original), selected;
+  if (!kind) return original;
+  selected = kind == PREFERRED_ARCANE ? GET_PREFERRED_ARCANE(ch) :
+             kind == PREFERRED_DIVINE ? GET_PREFERRED_DIVINE(ch) : GET_PREFERRED_MARTIAL(ch);
+  return valid_preferred_class(kind, selected) ? selected : CLASS_UNDEFINED;
+}
+
+bool perk_preferences_ready(struct char_data *ch, int class_id, bool notify)
+{
+  int first, second, kind, missing = 0;
+  if (!ch || IS_NPC(ch)) return TRUE;
+  if (class_id < 0 || class_id >= NUM_CLASSES) return FALSE;
+  auto_select_preferred_classes(ch);
+  get_base_award_perk_classes(ch, class_id, &first, &second);
+  if (first == second) return TRUE;
+  if (selected_perk_class(ch, first) == CLASS_UNDEFINED)
+    missing |= 1 << perk_preference_kind(first);
+  if (selected_perk_class(ch, second) == CLASS_UNDEFINED)
+    missing |= 1 << perk_preference_kind(second);
+  if (missing && notify)
+  {
+    send_to_char(ch, "Before advancing %s, set your required preferred classes in STUDY, option A:\r\n", CLSLIST_NAME(class_id));
+    for (kind = PREFERRED_ARCANE; kind <= PREFERRED_MARTIAL; kind++)
+      if (missing & (1 << kind))
+        send_to_char(ch, "  Preferred %s class is not set.\r\n",
+          kind == PREFERRED_ARCANE ? "arcane" : kind == PREFERRED_DIVINE ? "divine" : "martial");
+  }
+  return !missing;
+}
+
+void get_award_perk_classes(struct char_data *ch, int class_id, int *first, int *second)
+{
+  int a, b;
+  auto_select_preferred_classes(ch);
+  get_base_award_perk_classes(ch, class_id, &a, &b);
+  if (ch && !IS_NPC(ch) && a != b)
+  {
+    /* Resolve atomically: an unset preference must never lose half an award. */
+    if (!perk_preferences_ready(ch, class_id, FALSE)) a = b = CLASS_UNDEFINED;
+    else { a = selected_perk_class(ch, a); b = selected_perk_class(ch, b); }
+  }
+  if (first) *first = a;
+  if (second) *second = b;
+}
+
 /**
  * Check if character has enough XP to advance to the next stage.
  * Awards perk points for stages 1-3, and sets ready-to-level flag for stage 4.
@@ -19645,6 +19746,9 @@ bool check_stage_advancement(struct char_data *ch, int *perk_points_awarded)
   /* Initialize perk points awarded */
   if (perk_points_awarded)
     *perk_points_awarded = 0;
+
+  if (!perk_preferences_ready(ch, GET_CLASS(ch), FALSE)) return FALSE;
+  migrate_sorcerer_perks(ch);
 
   /* Get current stage info */
   current_stage = ch->player_specials->saved.stage_info.current_stage;
@@ -19814,7 +19918,7 @@ static void add_legacy_points_for_level_class(struct char_data *ch, int class_id
   if (class_id < 0 || class_id >= NUM_CLASSES)
     return;
 
-  get_award_perk_classes(ch, class_id, &perk_class_1, &perk_class_2);
+  get_base_award_perk_classes(ch, class_id, &perk_class_1, &perk_class_2);
 
   while (points >= 2)
   {
@@ -19931,6 +20035,7 @@ void award_stage_perk_points(struct char_data *ch, int class_id)
     return;
   }
 
+  if (!perk_preferences_ready(ch, class_id, TRUE)) return;
   migrate_sorcerer_perks(ch);
   get_award_perk_classes(ch, class_id, &perk_class_1, &perk_class_2);
   perk_class_1 = normalize_perk_class_id(perk_class_1);

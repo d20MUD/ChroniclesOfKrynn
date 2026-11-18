@@ -7159,6 +7159,12 @@ void init_char(struct char_data *ch)
   if (ch->player_specials == NULL)
     CREATE(ch->player_specials, struct player_special_data, 1);
 
+  /* Preferences must be chosen explicitly, never inherited from calloc's
+   * class-zero (Wizard) value on newly created characters. */
+  GET_PREFERRED_ARCANE(ch) = CLASS_UNDEFINED;
+  GET_PREFERRED_DIVINE(ch) = CLASS_UNDEFINED;
+  GET_PREFERRED_MARTIAL(ch) = CLASS_UNDEFINED;
+
   /* Initialize crafting data */
   GET_CRAFT(ch).craft_specialization[0] = -1;
   GET_CRAFT(ch).craft_specialization[1] = -1;

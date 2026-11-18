@@ -513,6 +513,7 @@ int load_char(const char *name, struct char_data *ch)
     GET_SPECIALTY_SCHOOL(ch) = PFDEF_SPECIALTY_SCHOOL;
     GET_PREFERRED_ARCANE(ch) = PFDEF_PREFERRED_ARCANE;
     GET_PREFERRED_DIVINE(ch) = PFDEF_PREFERRED_DIVINE;
+    GET_PREFERRED_MARTIAL(ch) = PFDEF_PREFERRED_MARTIAL;
     GET_1ST_RESTRICTED_SCHOOL(ch) = PFDEF_RESTRICTED_SCHOOL_1;
     GET_2ND_RESTRICTED_SCHOOL(ch) = PFDEF_RESTRICTED_SCHOOL_2;
     GET_1ST_DOMAIN(ch) = PFDEF_DOMAIN_1;
@@ -1685,6 +1686,12 @@ int load_char(const char *name, struct char_data *ch)
           load_spell_prep_queue(fl, ch);
         else if (!strcmp(tag, "PCAr"))
           GET_PREFERRED_ARCANE(ch) = atoi(line);
+        else if (!strcmp(tag, "PCMa"))
+        {
+          int selected = atoi(line);
+          GET_PREFERRED_MARTIAL(ch) = valid_preferred_class(PREFERRED_MARTIAL, selected)
+                                          ? selected : CLASS_UNDEFINED;
+        }
         else if (!strcmp(tag, "PCDi"))
           GET_PREFERRED_DIVINE(ch) = atoi(line);
         else if (!strcmp(tag, "PSP "))
@@ -2507,6 +2514,7 @@ int load_char(const char *name, struct char_data *ch)
   }
 
   fclose(fl);
+  auto_select_preferred_classes(ch);
   clan_persistence_reconcile_player(ch);
   return (id);
 }
@@ -2933,6 +2941,8 @@ bool save_char_checked(struct char_data *ch, int mode)
 
   if (GET_PREFERRED_ARCANE(ch) != PFDEF_PREFERRED_ARCANE)
     BUFFER_WRITE("PCAr: %d\n", GET_PREFERRED_ARCANE(ch));
+  if (GET_PREFERRED_MARTIAL(ch) != PFDEF_PREFERRED_MARTIAL)
+    BUFFER_WRITE("PCMa: %d\n", GET_PREFERRED_MARTIAL(ch));
   if (GET_PREFERRED_DIVINE(ch) != PFDEF_PREFERRED_DIVINE)
     BUFFER_WRITE("PCDi: %d\n", GET_PREFERRED_DIVINE(ch));
 

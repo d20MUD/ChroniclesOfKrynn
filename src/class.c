@@ -1127,6 +1127,8 @@ bool class_is_available(struct char_data *ch, int classnum, int iarg, char *sarg
   if (classnum < 0 || classnum >= NUM_CLASSES)
     return FALSE;
 
+  if (!perk_preferences_ready(ch, classnum, FALSE)) return FALSE;
+
   /* is this class even in the game? */
   if (!CLSLIST_INGAME(classnum))
     return FALSE;
@@ -3940,6 +3942,8 @@ void advance_level(struct char_data *ch, int class)
   int add_hp = 0, at_armor = 100, add_psp = 0, add_move = 0, k, trains = 0;
   int feats = 0, class_feats = 0, epic_feats = 0, epic_class_feats = 0;
   int i = 0;
+
+  auto_select_preferred_classes(ch);
 
   /* Reset stage progression for new level (Stage-based XP tracking - Step 3) */
   if (!IS_NPC(ch))
