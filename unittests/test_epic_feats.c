@@ -425,7 +425,8 @@ static void third_batch(void)
   memset(&af,0,sizeof(af));af.spell=SKILL_DANCE_OF_PROTECTION;af.location=APPLY_AC_NEW;af.duration=12;af.modifier=4;
   epic_third_performance(&pc,&af,0);assert(af.epic_flags==E3_PERFORMANCE);affect_to_char(&pc,&af);
   world[0].people=&pc;IS_PERFORMING(test_pc)=TRUE;
-  epic_third_stop_music(&pc);a=pc.affected;assert((a->epic_flags&E3_TAIL) && a->legendary_expiry==a->epic_baseline+18);
+  epic_third_stop_song(&pc,SKILL_SONG_OF_HEROISM);assert(!(pc.affected->epic_flags&E3_TAIL));
+  epic_third_stop_song(&pc,SKILL_DANCE_OF_PROTECTION);a=pc.affected;assert((a->epic_flags&E3_TAIL) && a->legendary_expiry==a->epic_baseline+18);
   epic_third_stop_music(&pc);assert(a->legendary_expiry==a->epic_baseline+18);
   memset(&af,0,sizeof(af));af.spell=SKILL_DANCE_OF_PROTECTION;af.location=APPLY_DR;af.duration=12;
   epic_third_performance(&pc,&af,2);assert(!af.epic_flags);

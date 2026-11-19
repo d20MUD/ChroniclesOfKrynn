@@ -15,6 +15,7 @@
 #include "legendary_foundations.h"
 #include "legendary_techniques.h"
 #include "structs.h"
+#include "class_improvements.h"
 #include "utils.h"
 #include "epic_feats2.h"
 #include "epic_feats.h"
@@ -9082,6 +9083,7 @@ ACMD(do_reneweddefense)
   send_to_char(ch, "Your body glows \tRred\tn as your wounds heal...\r\n");
   act("$n's body glows \tRred\tn as some wounds heal!", FALSE, ch, 0, NULL, TO_NOTVICT);
   attach_mud_event(new_mud_event(eRENEWEDDEFENSE, ch, NULL), (2 * SECS_PER_MUD_DAY));
+  class_recovery_start(ch);
   GET_HIT(ch) +=
       MIN((GET_MAX_HIT(ch) - GET_HIT(ch)),
           (dice(CLASS_LEVEL(ch, CLASS_STALWART_DEFENDER) / 2 + 1, 8) + 10 + GET_CON_BONUS(ch)));
@@ -11533,6 +11535,8 @@ ACMD(do_guard)
   one_argument(argument, arg, sizeof(arg));
   if (!*arg)
   {
+    if (CLASS_LEVEL(ch, CLASS_STALWART_DEFENDER) > 0)
+      do_classfeatures(ch, "", cmd, subcmd);
     if (GUARDING(ch))
       act("You are guarding $N", FALSE, ch, 0, ch->char_specials.guarding, TO_CHAR);
     else
@@ -11540,12 +11544,24 @@ ACMD(do_guard)
     return;
   }
 
+  if (!str_cmp(arg, "stop"))
+  {
+    GUARDING(ch) = NULL;
+    CI_STATE(ch).intercept = FALSE;
+    send_to_char(ch, "You stop guarding.\r\n");
+    return;
+  }
   if (!(vict = get_char_room_vis(ch, arg, NULL)))
   {
     send_to_char(ch, "Whom do you want to guard?\r\n");
     return;
   }
 
+  if (vict == ch)
+  {
+    send_to_char(ch, "You cannot guard yourself.\r\n");
+    return;
+  }
   if (IS_NPC(vict) && !IS_PET(vict))
   {
     send_to_char(ch, "Not even funny..\r\n");

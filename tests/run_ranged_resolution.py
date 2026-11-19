@@ -22,6 +22,9 @@ code=r'''
 #include "utils.h"
 #include "spells.h"
 #include <assert.h>
+#define CI_STATE(ch) ((ch)->char_specials.class_improvements)
+#define class_reaction_allow_hit() true
+#define find_char(id) ch
 #define HIT_MISS 0
 #define MIN(a,b) ((a)<(b)?(a):(b))
 static struct obj_data *last_missile;

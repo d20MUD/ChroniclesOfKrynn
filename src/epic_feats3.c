@@ -399,7 +399,7 @@ void epic_third_performance(struct char_data *ch, struct affected_type *af, int 
   af->epic_flags = E3_PERFORMANCE;
   af->epic_baseline = time(NULL) + MAX(1, af->duration) * 6;
 }
-void epic_third_stop_music(struct char_data *ch)
+static void stop_music_matching(struct char_data *ch, int spell)
 {
   struct char_data *recipient;
   struct affected_type *af;
@@ -409,7 +409,8 @@ void epic_third_stop_music(struct char_data *ch)
   for (recipient = world[IN_ROOM(ch)].people; recipient; recipient = recipient->next_in_room)
     if (is_player_grouped(ch, recipient))
       for (af = recipient->affected; af; af = af->next)
-        if (af->epic_source == GET_IDNUM(ch) && (af->epic_flags & E3_PERFORMANCE) &&
+        if ((spell < 0 || af->spell == spell) && af->epic_source == GET_IDNUM(ch) &&
+            (af->epic_flags & E3_PERFORMANCE) &&
             !(af->epic_flags & E3_TAIL) && af->epic_baseline > time(NULL))
         {
           af->epic_flags |= E3_TAIL;
@@ -417,6 +418,15 @@ void epic_third_stop_music(struct char_data *ch)
           af->duration = MAX(1, (af->legendary_expiry - time(NULL) + 5) / 6);
         }
 }
+void epic_third_stop_music(struct char_data *ch)
+{
+  stop_music_matching(ch, -1);
+}
+void epic_third_stop_song(struct char_data *ch, int spell)
+{
+  stop_music_matching(ch, spell);
+}
+
 void epic_third_update(void)
 {
   struct char_data *ch, *source;

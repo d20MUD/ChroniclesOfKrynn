@@ -1,0 +1,16 @@
+RALLY RALLYING-VERSE
+
+RALLYING VERSE
+
+Usage: rally [groupmate]
+Requires: Bard 7 and an active, valid group performance.
+Cost: swift action. Cooldown: 30 seconds, shared across all targets.
+
+Give yourself (default) or a conscious same-room groupmate +2 morale to
+all saving throws for two combat intervals (12 seconds). At Bard 15,
+the bonus becomes +3. The recipient must be able to receive the song;
+deaf recipients cannot benefit. This does not remove conditions or give
+an extra saving throw. Stronger morale bonuses take precedence.
+
+Multiple verses use the strongest bonus and refresh duration; they do
+not add bonuses or durations together. See classfeatures for readiness.

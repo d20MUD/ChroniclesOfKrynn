@@ -21,6 +21,7 @@
 #include "legendary_earnings.h"
 #include "legendary_transaction.h"
 #include "structs.h"
+#include "class_improvements.h"
 #include "housing.h"
 #include "auction_house.h"
 #include "player_shop.h"
@@ -1264,6 +1265,7 @@ cpp_extern const struct command_info cmd_info[] = {
      NULL},
     {"copycat", "copycat", POS_FIGHTING, do_copycat, 1, 0, FALSE, ACTION_STANDARD, {6, 0}, NULL},
     {"classes", "classes", POS_DEAD, do_class, 0, 0, TRUE, ACTION_NONE, {0, 0}, NULL},
+    {"classfeatures", "classfeatures", POS_DEAD, do_classfeatures, 0, 0, TRUE, ACTION_NONE, {0, 0}, NULL},
 //{"charmiecombatroll", "charmiecombatroll", POS_DEAD, do_gen_tog, 0, SCMD_CHARMIE_COMBATROLL, TRUE, ACTION_NONE, {0, 0}, NULL},
 //{"combatroll", "combatroll", POS_DEAD, do_gen_tog, 0, SCMD_COMBATROLL, TRUE, ACTION_NONE, {0, 0}, NULL},
 #if defined(CAMPAIGN_FR) || defined(CAMPAIGN_DL)
@@ -2468,6 +2470,7 @@ cpp_extern const struct command_info cmd_info[] = {
     {"immtitle", "immtitle", POS_DEAD, do_immtitle, LVL_IMMORT, 0, TRUE, ACTION_NONE, {0, 0}, NULL},
     {"info", "info", POS_SLEEPING, do_gen_ps, 0, SCMD_INFO, TRUE, ACTION_NONE, {0, 0}, NULL},
     {"infuse", "infuse", POS_DEAD, do_infuse, 1, 0, FALSE, ACTION_NONE, {0, 0}, NULL},
+    {"intercept", "intercept", POS_FIGHTING, do_intercept, 1, 0, FALSE, ACTION_NONE, {0, 0}, NULL},
     {"invis", "invi", POS_DEAD, do_invis, LVL_IMMORT, 0, TRUE, ACTION_NONE, {0, 0}, NULL},
     {"invisduergar",
      "invisduergar",
@@ -3135,6 +3138,7 @@ cpp_extern const struct command_info cmd_info[] = {
     /* {"command", "sort_as", minimum_position, *command_pointer, minimum_level, subcmd, ignore_wait, actions_required, {action_cooldowns}, *command_check_pointer},*/
 
     {"open", "o", POS_SITTING, do_gen_door, 0, SCMD_OPEN, FALSE, ACTION_MOVE, {0, 6}, NULL},
+    {"opening", "opening", POS_FIGHTING, do_opening, 1, 0, FALSE, ACTION_NONE, {0, 0}, NULL},
     {"oconvert", "oconvert", POS_DEAD, do_oconvert, LVL_IMPL, 0, TRUE, ACTION_NONE, {0, 0}, NULL},
     {"order", "ord", POS_RECLINING, do_order, 1, 0, FALSE, ACTION_NONE, {0, 0}, NULL},
     {"offer", "off", POS_STANDING, do_not_here, 1, 0, FALSE, ACTION_NONE, {0, 0}, NULL},
@@ -3570,6 +3574,7 @@ cpp_extern const struct command_info cmd_info[] = {
      ACTION_NONE,
      {0, 0},
      NULL},
+    {"rally", "rally", POS_FIGHTING, do_rally, 1, 0, FALSE, ACTION_NONE, {0, 0}, NULL},
     {"rallyingcry",
      "rallyingcry",
      POS_FIGHTING,

@@ -6893,7 +6893,9 @@ void load_class_list(void)
          "or scoundrels, or even all of the above. For bards, every day brings its own "
          "opportunities, adventures, and challenges, and only by bucking the odds, knowing "
          "the most, and being the best might they claim the treasures of each.  "
-         "Bards get a bonus feat every 3 levels.");
+         "Bards get a bonus feat every 3 levels. Battle Rhythm improves weapon attacks "
+         "while performing at ranks 3/9/15; Rallying Verse unlocks at rank 7. "
+         "Use perform status, rally, and classfeatures for details.");
   /* class-number then saves: fortitude, reflex, will, poison, death */
   assign_class_saves(CLASS_BARD, B, G, G, B, B);
   assign_class_abils(CLASS_BARD, /* class number */
@@ -7863,7 +7865,10 @@ void load_class_list(void)
          "to relinquish it. This behavior is more than a tactical decision for stalwart "
          "defenders; it is an obsessive, stubborn expression of the need to be undefeated. "
          "When stalwart defenders set themselves in a defensive stance, they place their "
-         "whole effort into weathering whatever foe, conflict, or threat comes their way.");
+         "whole effort into weathering whatever foe, conflict, or threat comes their way. "
+         "Guarded Companion unlocks at rank 2, Measured Advance at 4, Intercepting "
+         "Guard at 6, and Shielded Recovery at 8. Use guard, advance, intercept, "
+         "and classfeatures for details.");
   /* class-number then saves:        fortitude, reflex, will, poison, death */
   assign_class_saves(CLASS_STALWART_DEFENDER, G, B, G, B, B);
   assign_class_abils(CLASS_STALWART_DEFENDER, /* class number */
@@ -8792,7 +8797,8 @@ void load_class_list(void)
          "across the battlefield, leaping and tumbling into the fray. They thrive in "
          "melee, where their skill with the blade allows them to make sudden attacks "
          "against clumsy foes and to cripple opponents with particularly well-placed "
-         "thrusts of the blade.");
+         "thrusts of the blade. Measured Parry unlocks at rank 5, Find the Seam at 6, "
+         "and Exploit the Opening at 8. Use opening and classfeatures for details.");
   /* class-number then saves:  fortitude, reflex, will, poison, death */
   assign_class_saves(CLASS_DUELIST, B, G, B, B, B);
   assign_class_abils(CLASS_DUELIST, /* class number */

@@ -187,7 +187,7 @@ circle_SOURCES = \
 	src/epic_magic.c \
 	src/mail.c \
 	src/medit.c \
-	src/epic_feats.c src/epic_feats2.c src/epic_feats3.c \
+	src/epic_feats.c src/epic_feats2.c src/epic_feats3.c src/class_improvements.c \
 	src/metamagic_science.c \
 	src/missions.c \
 	src/mob_act.c \
@@ -515,3 +515,8 @@ EXTRA_DIST += tests/run_nimble_escape.py docs/NIMBLE_ESCAPE.md
 EXTRA_DIST += tests/run_domain_spells.py docs/CLERIC_DOMAIN_SPELLS.md
 
 EXTRA_DIST += tests/run_domains_command.py
+
+EXTRA_DIST += src/class_improvements.h tests/run_class_improvements.py \
+	docs/UNDERUTILIZED_CLASS_IMPROVEMENTS.md docs/CLASS_IMPROVEMENTS_IMPLEMENTATION.md \
+	lib/text/help/classfeatures.hlp lib/text/help/rally.hlp lib/text/help/opening.hlp \
+	lib/text/help/intercept.hlp lib/text/help/perform.hlp sql/20261118_class_improvements_help.sql

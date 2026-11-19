@@ -615,6 +615,7 @@ set(SRC_C_FILES
     src/epic_feats.c
   src/epic_feats2.c
   src/epic_feats3.c
+  src/class_improvements.c
     src/metamagic_science.c
     src/missions.c
     src/mob_act.c

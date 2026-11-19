@@ -15,6 +15,7 @@
 #include "legendary_identity.h"
 #include "legendary_store.h"
 #include "structs.h"
+#include "class_improvements.h"
 #include "housing.h"
 #include "talents.h"
 #include "utils.h"
@@ -1018,6 +1019,13 @@ int load_char(const char *name, struct char_data *ch)
         break;
 
       case 'C':
+        if (!strcmp(tag, "CiCd"))
+        {
+          int index; long long value;
+          if (sscanf(line, "%d %lld", &index, &value) == 2 && index >= 0 && index < CI_COOLDOWNS)
+            CI_READY(ch, index) = value > 0 ? (time_t)value : 0;
+          break;
+        }
         if (!strcmp(tag, "CbFt"))
         {
           sscanf(line, "%d %s %s %s %s", &i, f1, f2, f3, f4);
@@ -3789,6 +3797,7 @@ bool save_char_checked(struct char_data *ch, int mode)
     if(*e->command_uuid) BUFFER_WRITE("E2Cm: %s\n",e->command_uuid);
   }
 
+  for(i=0;i<CI_COOLDOWNS;i++) BUFFER_WRITE("CiCd: %d %lld\n",i,(long long)CI_READY(ch,i));
   for(i=0;i<11;i++) BUFFER_WRITE("E3Cd: %d %lld\n",i,(long long)EPIC_THIRD(ch).ready[i]);
   for(i=0;i<20;i++) BUFFER_WRITE("E3St: %d %lld\n",i,EPIC_THIRD(ch).value[i]);
 

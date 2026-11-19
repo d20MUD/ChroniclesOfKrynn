@@ -1,0 +1,43 @@
+PERFORM PERFORMANCES BATTLE-RHYTHM REVEALING-REFRAIN
+
+BARDIC PERFORMANCE
+
+Usage: perform list
+       perform status
+       perform [1|2] <song>
+       perform stop
+
+Use perform list to see songs you know, and perform status to see active
+slots and requirements. Starting or switching costs a standard action,
+or a move action with Efficient Performance. Existing performance checks,
+instrument benefits, stuttering and effect durations still apply.
+Invalid names, unmet requirements and missing actions leave songs running.
+
+Master of Motifs allows two songs: an unnumbered song fills an empty
+second slot while a first song is running; otherwise it replaces slot 1.
+Use perform 1 <song> or perform 2 <song> to replace a specific slot.
+The same song cannot occupy both slots. Switching does not refresh
+Crescendo's used flag. Perform stop ends both songs. With no argument,
+perform retains its original stop-if-active / list-if-inactive behavior.
+
+Battle Rhythm: while actually performing a valid song, gain +1 competence
+to weapon attack and damage rolls at Bard 3, +2 at 9, and +3 at 15.
+Applies to melee, projectile and thrown weapons, not spell/song damage.
+Multiple songs do not multiply the benefit. Stronger competence bonuses
+replace it; lingering song effects alone do not qualify.
+
+Revealing Refrain: Song of Revelation at Bard 11+ also helps your group
+strike visible hostile creatures through concealment. On the first
+concealed weapon attack against an engaged enemy each combat interval,
+the strongest eligible same-room bard attempts to overcome spell
+resistance and the target makes a Will save:
+  DC = 10 + half Bard ranks (rounded down) + Charisma modifier.
+A failed save suppresses concealment miss chance for that bard's
+same-room group for one combat interval. One save per target per interval
+prevents repeated attempts by several bards. The song must remain active.
+This is divination, not a mind-affecting compulsion. It does not bypass
+blocked targeting, inability to see, cover or separate incorporeal defenses;
+blinking targets retain their ethereal avoidance. Existing revelation
+benefits remain. Deaf group members cannot benefit from this rider.
+
+See help rally and help classfeatures for other automatic class features.

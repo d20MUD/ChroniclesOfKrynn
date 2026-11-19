@@ -19,6 +19,7 @@
 #include "legendary_equipment.h"
 #include "legendary_earnings.h"
 #include "structs.h"
+#include "class_improvements.h"
 #include "clan_enchant.h"
 #include "clan_sources.h"
 #include "utils.h"
@@ -359,7 +360,8 @@ bool combat_attack_in_range(struct char_data *ch, struct char_data *victim, int 
 int advance_combat_distance(struct char_data *ch, struct char_data *victim, int desired)
 {
   struct combat_distance_data *entry;
-  int distance, speed;
+  int distance, speed, moved;
+  bool measured;
   if (!ch || !victim || !is_action_available(ch, atMOVE, FALSE) || GET_POS(ch) < POS_FIGHTING ||
       AFF_FLAGGED(ch, AFF_STUN) || AFF_FLAGGED(ch, AFF_DAZED) || AFF_FLAGGED(ch, AFF_PARALYZED) ||
       char_has_mud_event(ch, eSTUNNED) || AFF_FLAGGED(ch, AFF_GRAPPLED) ||
@@ -368,7 +370,12 @@ int advance_combat_distance(struct char_data *ch, struct char_data *victim, int 
   distance = combat_distance(ch, victim);
   if (distance < 0 || distance <= desired)
     return 0;
+  measured = affected_by_spell(ch, SKILL_DEFENSIVE_STANCE) != 0;
+  if (measured && (!class_feature_ready(ch) || CLASS_LEVEL(ch, CLASS_STALWART_DEFENDER) < 4 ||
+      (CLASS_LEVEL(ch, CLASS_STALWART_DEFENDER) < 9 && CI_READY(ch, CI_ADVANCE) > time(NULL)) || GET_MOVE(ch) <= 0))
+    return 0;
   speed = MAX(0, get_speed(ch, FALSE));
+  if (measured) speed = MIN(speed, MIN(10, GET_MOVE(ch)));
   if (!speed)
     return 0;
   start_combat_distance(ch, victim);
@@ -376,8 +383,15 @@ int advance_combat_distance(struct char_data *ch, struct char_data *victim, int 
   if (!entry)
     return 0;
   entry->distance = MAX(desired, distance - speed);
+  moved = distance - entry->distance;
+  if (measured)
+  {
+    GET_MOVE(ch) -= moved;
+    if (CLASS_LEVEL(ch, CLASS_STALWART_DEFENDER) < 9)
+      CI_READY(ch, CI_ADVANCE) = time(NULL) + 3 * CI_ROUND_SECONDS;
+  }
   USE_MOVE_ACTION(ch);
-  return distance - entry->distance;
+  return moved;
 }
 
 static void auto_advance_mob(struct char_data *ch, int phase)
@@ -1317,7 +1331,7 @@ int roll_initiative(struct char_data *ch)
  * by 'attacker' (protection from alignment (evil/good), has dexterity bonus,
  * favored enemy) */
 static int compute_armor_class_with_decoy(struct char_data *attacker, struct char_data *ch,
-                                          int is_touch, int mode, bool decoy)
+                                          int is_touch, int mode, bool decoy, bool weapon_attack)
 {
   /* hack to translate old D&D to 3.5 Edition
    * Modified 09/09/2014 : Ornir
@@ -2134,6 +2148,9 @@ static int compute_armor_class_with_decoy(struct char_data *attacker, struct cha
       (AFF_FLAGGED(ch, AFF_FLAT_FOOTED) || !AWAKE(ch) || (attacker && !CAN_SEE(ch, attacker))))
     bonuses[BONUS_TYPE_LUCK] = MAX(bonuses[BONUS_TYPE_LUCK], bloodline_fated_bonus(ch));
 
+  /* This context denotes a real physical weapon attack, not a ray or maneuver. */
+  if (weapon_attack) bonuses[BONUS_TYPE_CIRCUMSTANCE] += class_guard_ac(ch);
+
   /* Add up all the bonuses */
   if (is_touch)
   { /* don't include armor, natural armor, shield */
@@ -2199,7 +2216,7 @@ static int compute_armor_class_with_decoy(struct char_data *attacker, struct cha
 
 int compute_armor_class(struct char_data *attacker, struct char_data *ch, int is_touch, int mode)
 {
-  return compute_armor_class_with_decoy(attacker, ch, is_touch, mode, false);
+  return compute_armor_class_with_decoy(attacker, ch, is_touch, mode, false, false);
 }
 
 // the whole update_pos system probably needs to be rethought -zusuk
@@ -5901,6 +5918,8 @@ static int native_weapon_avoidance(struct char_data *ch,struct char_data *victim
 
     /* handle concealment */
     int concealment = ranged_concealment(ch, victim, attack_type);
+    if (!is_spell && attacktype >= TYPE_HIT && attacktype < TYPE_HIT + NUM_ATTACK_TYPES &&
+        concealment > 0 && class_revelation(ch, victim)) concealment = 0;
     /* seeking weapons (ranged weapons only) bypass concealment always */
     if (weapon && OBJ_FLAGGED(weapon, ITEM_SEEKING))
       concealment = 0;
@@ -7235,6 +7254,7 @@ static int resolve_damage(struct char_data *ch, struct char_data *victim, int da
   dam = epic_third_intercept(ch,victim,dam,origin);
   clan_source_damage(ch, victim, dam, !origin);
   if (dam > 0 && IS_CASTING(victim)) victim->epic_manifest_damaged = TRUE;
+  if (!original_self_damage) dam = class_recovery_absorb(victim, dam, w_type, offhand, origin);
   GET_HIT(victim) -= dam;
   if (!origin && ch && IS_EPIC_SPELL(w_type))
   {
@@ -7890,6 +7910,8 @@ int compute_damage_bonus(struct char_data *ch, struct char_data *vict, struct ob
 
   /* damroll (should be mostly just gear, spell affections) */
   dambonus += GET_DAMROLL(ch);
+  if (wielded && (GET_OBJ_TYPE(wielded) == ITEM_WEAPON || GET_OBJ_TYPE(wielded) == ITEM_FIREWEAPON))
+    dambonus += class_rhythm_bonus(ch, APPLY_DAMROLL);
 
   /* Blackguard's Reprisal: consume and apply next-attack damage bonus */
   if (!display_mode && !IS_NPC(ch) && affected_by_spell(ch, AFFECT_BLACKGUARD_REPRISAL))
@@ -9076,10 +9098,14 @@ int compute_damage_bonus(struct char_data *ch, struct char_data *vict, struct ob
       send_to_char(ch, "Precise Strike bonus: \tR%d\tn\r\n",
                    MAX(1, CLASS_LEVEL(ch, CLASS_DUELIST)));
   }
-  if (vict && !IS_IMMUNE_CRITS(ch, vict) && !IS_NPC(ch) && HAS_FEAT(ch, FEAT_PRECISE_STRIKE) &&
+  if (vict && !IS_NPC(ch) && HAS_FEAT(ch, FEAT_PRECISE_STRIKE) &&
       HAS_FREE_HAND(ch) && compute_gear_armor_type(ch) <= ARMOR_TYPE_LIGHT)
   {
-    dambonus += MAX(1, CLASS_LEVEL(ch, CLASS_DUELIST));
+    /* Share this immunity result with Find the Seam: fortification can be probabilistic. */
+    if (!IS_IMMUNE_CRITS(ch, vict))
+      dambonus += MAX(1, CLASS_LEVEL(ch, CLASS_DUELIST));
+    else if (!display_mode)
+      CI_STATE(ch).precision_blocked = TRUE;
   }
 
   if (HAS_FEAT(ch, FEAT_MASTER_OF_THE_MIND))
@@ -11857,6 +11883,8 @@ int compute_attack_bonus_full(struct char_data *ch,     /* Attacker */
    function of the game to date, it is still necessary
    10/14/2014 Zusuk */
   calc_bab += GET_HITROLL(ch);
+  if (wielded && (GET_OBJ_TYPE(wielded) == ITEM_WEAPON || GET_OBJ_TYPE(wielded) == ITEM_FIREWEAPON))
+    calc_bab += class_rhythm_bonus(ch, APPLY_HITROLL);
   if (display && GET_HITROLL(ch))
     send_to_char(ch, "%2d: %-50s\r\n", GET_HITROLL(ch), "Hitroll");
   /******/
@@ -12968,6 +12996,9 @@ int compute_attack_bonus_full(struct char_data *ch,     /* Attacker */
     if (display && range_penalty)
       send_to_char(ch, "%2d: %-50s\r\n", range_penalty, "Weapon range increments");
   }
+
+  if (attack_type == ATTACK_TYPE_PRIMARY)
+    calc_bab += class_opening_accuracy(ch, victim, bonuses[BONUS_TYPE_INSIGHT]);
 
   /* Add up all the bonuses */
   for (i = 0; i < NUM_BONUS_TYPES; i++)
@@ -15027,7 +15058,10 @@ int handle_successful_attack(struct char_data *ch, struct char_data *victim,
   }
 
   /* Calculate damage for this hit */
+  CI_STATE(ch).precision_blocked = FALSE;
   dam += compute_hit_damage(ch, victim, w_type, diceroll, 0, is_critical, attack_type, dam_type);
+  dam += class_seam_damage(ch, victim, attack_type);
+  dam += class_opening_damage(ch, victim);
   if (type == TYPE_ATTACK_OF_OPPORTUNITY && has_teamwork_feat(ch, FEAT_PAIRED_OPPORTUNISTS))
     dam += 2;
   dam += powerful_blow_bonus;     /* ornir is going to yell at me for this :p  -zusuk */
@@ -15785,6 +15819,8 @@ int hit(struct char_data *ch, struct char_data *victim, int type, int dam_type, 
 {
   struct ranged_shot_context context = {ch, NULL, FALSE, current_shot};
   int result;
+  long attacker_id;
+  if (!class_reaction_allow_hit()) return HIT_MISS;
   if (!ch || !victim || IN_ROOM(ch) == NOWHERE || IN_ROOM(ch) != IN_ROOM(victim))
     return HIT_MISS;
   if (attack_type == ATTACK_TYPE_RANGED && THROWING(ch))
@@ -15801,10 +15837,18 @@ int hit(struct char_data *ch, struct char_data *victim, int type, int dam_type, 
                      manyshot_ready(ch, get_wielded(ch, ATTACK_TYPE_RANGED));
   ch->char_specials.manyshot_pending = FALSE;
   current_shot = &context;
+  attacker_id = GET_ID(ch);
+  long saved_opening = CI_STATE(ch).opening_attack_target;
+  CI_STATE(ch).opening_attack_target = 0;
   ch->epic_attack_depth++;
   result = resolve_weapon_hit(ch, victim, type, dam_type, penalty, attack_type);
-  ch->epic_attack_depth--;
-  finish_thrown_weapon(&context);
+  if (find_char(attacker_id) == ch)
+  {
+    ch->epic_attack_depth--;
+    CI_STATE(ch).opening_attack_target = saved_opening;
+    ch->epic_prechecked_victim = 0;
+    finish_thrown_weapon(&context);
+  }
   /* All fired projectiles are spent, including misses, deflections and Manyshot.
    * Unlimited/Returning preserve the supply, not a collectible shot object. */
   release_ranged_shot(&context);
@@ -15841,7 +15885,8 @@ static int resolve_weapon_hit(struct char_data *ch, struct char_data *victim, in
   if (!ch || !victim || IN_ROOM(ch) == NOWHERE || IN_ROOM(ch) != IN_ROOM(victim))
     return (HIT_MISS); /* All attacks require a target in the same room. */
 
-  if ((AFF_FLAGGED(ch, AFF_STAGGERED) || !is_action_available(ch, atMOVE, FALSE)) &&
+  if (!class_reaction_active() &&
+      (AFF_FLAGGED(ch, AFF_STAGGERED) || !is_action_available(ch, atMOVE, FALSE)) &&
       GET_ATTACKS_THIS_ROUND(ch) >= 1)
     return (HIT_MISS);
 
@@ -15865,7 +15910,7 @@ static int resolve_weapon_hit(struct char_data *ch, struct char_data *victim, in
               The parameter 'penalty' allows an external procedure to call hit with a to hit modifier
               of some kind - This need not be a penalty, but can rather be a bonus (due to a charge or some
               other buff or situation.)  It is not hit()'s job to determine these bonuses.' */
-  if (pending_attacks(ch))
+  if (!class_reaction_active() && pending_attacks(ch))
   {
     /* Dequeue the pending attack action.*/
     struct attack_action_data *attack = dequeue_attack(GET_ATTACK_QUEUE(ch));
@@ -16131,12 +16176,19 @@ static int resolve_weapon_hit(struct char_data *ch, struct char_data *victim, in
 
   /* Get the important numbers : ch's Attack bonus and victim's AC
    * attack rolls: 1 = stumble, 20 = hit, also check for threat-range for criticals */
+  bool weapon_defense = wielded &&
+      (GET_OBJ_TYPE(wielded) == ITEM_WEAPON || GET_OBJ_TYPE(wielded) == ITEM_FIREWEAPON) &&
+      (type == TYPE_UNDEFINED || type == TYPE_ATTACK_OF_OPPORTUNITY || type == SKILL_BACKSTAB) &&
+      attack_type != ATTACK_TYPE_PSIONICS && attack_type != ATTACK_TYPE_ELDRITCH_BLAST;
   victim_ac = compute_armor_class_with_decoy(
       ch, victim, FALSE, MODE_ARMOR_CLASS_NORMAL,
       wielded &&
           (GET_OBJ_TYPE(wielded) == ITEM_WEAPON || GET_OBJ_TYPE(wielded) == ITEM_FIREWEAPON) &&
           (type == TYPE_UNDEFINED || type == TYPE_ATTACK_OF_OPPORTUNITY) &&
-          attack_type != ATTACK_TYPE_PSIONICS && attack_type != ATTACK_TYPE_ELDRITCH_BLAST);
+          attack_type != ATTACK_TYPE_PSIONICS && attack_type != ATTACK_TYPE_ELDRITCH_BLAST,
+      weapon_defense);
+
+  (void)class_opening_begin(ch, victim, type, attack_type);
 
   switch (attack_type)
   {
@@ -16173,6 +16225,7 @@ static int resolve_weapon_hit(struct char_data *ch, struct char_data *victim, in
   }
 
   calc_bab += epic_second_attack_begin(ch, type, attack_type, &epic_attack);
+
 
   /* Dark Revelation: +2 to hit against lored target */
   if (!IS_NPC(ch) && IS_NPC(victim) && ch->char_specials.dark_revelation_mob_rnum != NOBODY &&
@@ -16275,7 +16328,7 @@ static int resolve_weapon_hit(struct char_data *ch, struct char_data *victim, in
    * a number of totaldefense attempts equal to the attacks granted by your BAB. */
   int total_defense_DC = calc_bab + modified_diceroll;
   int total_defense_attempt = 0;
-  if (!IS_NPC(victim) && compute_ability(victim, ABILITY_TOTAL_DEFENSE) && TOTAL_DEFENSE(victim) &&
+  if (!class_reaction_active() && !IS_NPC(victim) && compute_ability(victim, ABILITY_TOTAL_DEFENSE) && TOTAL_DEFENSE(victim) &&
       AFF_FLAGGED(victim, AFF_TOTAL_DEFENSE) && !IS_CASTING(victim) &&
       GET_POS(victim) >= POS_SITTING && attack_type != ATTACK_TYPE_RANGED && !is_critical)
   {
@@ -16290,7 +16343,7 @@ static int resolve_weapon_hit(struct char_data *ch, struct char_data *victim, in
       send_to_char(victim, "You failed to \tcdefend\tn yourself from the attack from %s!  ",
                    PERS(ch, victim));
     }
-    else if ((total_defense_attempt + (2 * HAS_FEAT(ch, FEAT_RIPOSTE))) >= 10)
+    else if ((total_defense_attempt + (2 * HAS_FEAT(victim, FEAT_RIPOSTE))) >= 10)
     {
       /* We can riposte, as the 'skill check' was 10 or more higher than the DC. */
       send_to_char(victim, "You deftly \tcriposte the attack\tn from %s!\r\n", PERS(ch, victim));
@@ -16439,16 +16492,38 @@ static int resolve_weapon_hit(struct char_data *ch, struct char_data *victim, in
   }
   else
   {
-    /* Resolve existing avoidance first, then Epic Dodge, before any on-hit work. */
-    ch->epic_attack_critical=is_critical;
-    ch->epic_attack_dodged=FALSE;
-    if (ch->epic_attack_depth==1 && type==TYPE_UNDEFINED && attack_type!=ATTACK_TYPE_PSIONICS &&
-        attack_type!=ATTACK_TYPE_ELDRITCH_BLAST &&
-        (epic_feat_rank(victim,FEAT_EPIC_DODGE) || epic_feat_rank(ch,FEAT_EPIC_ANATOMICAL_SAVANT)))
+    /* Resolve the original target's avoidance before parry/interception. */
+    ch->epic_attack_critical = is_critical;
+    ch->epic_attack_dodged = FALSE;
+    if (ch->epic_attack_depth == 1 &&
+        attack_type != ATTACK_TYPE_PSIONICS && attack_type != ATTACK_TYPE_ELDRITCH_BLAST &&
+        (weapon_defense || (type == TYPE_UNDEFINED &&
+         (epic_feat_rank(victim, FEAT_EPIC_DODGE) || epic_feat_rank(ch, FEAT_EPIC_ANATOMICAL_SAVANT)))))
     {
-      if(native_weapon_avoidance(ch,victim,w_type,dam_type,attack_type)<0) return HIT_MISS;
-      ch->epic_prechecked_victim=GET_ID(victim);
-      if(epic_third_dodge(ch,victim,w_type,dam_type)) {ch->epic_prechecked_victim=0;ch->epic_attack_dodged=FALSE;return HIT_MISS;}
+      if (native_weapon_avoidance(ch, victim, w_type, dam_type, attack_type) < 0)
+        return HIT_MISS;
+      ch->epic_prechecked_victim = GET_ID(victim);
+      if (epic_third_dodge(ch, victim, w_type, dam_type))
+      {
+        ch->epic_prechecked_victim = 0;
+        ch->epic_attack_dodged = FALSE;
+        return HIT_MISS;
+      }
+      if (weapon_defense)
+      {
+        if (class_measured_parry(ch, victim, calc_bab + modified_diceroll, is_critical, attack_type))
+        {
+          /* A counterattack may extract either participant. */
+          return HIT_MISS;
+        }
+        struct char_data *guard = class_intercept(ch, victim);
+        if (guard != victim)
+        {
+          victim = guard;
+          if (is_critical && IS_IMMUNE_CRITS(ch, victim)) is_critical = FALSE;
+        }
+        ch->epic_prechecked_victim = GET_ID(victim);
+      }
     }
     /* OK, attack should be a success at this stage */
     dam = handle_successful_attack(ch, victim, wielded, dam, w_type, type, diceroll, is_critical,

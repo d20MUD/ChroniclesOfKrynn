@@ -22,7 +22,7 @@ assert turn.index('auto_advance_mob(ch, phase);') < turn.index('epic_summon_comb
 assert 'combat_distance(ch, FIGHTING(ch)) > 5' in turn
 assert 'combat_attack_in_range(ch, victim, attack_type, wielded)' in function(fight,'static int resolve_weapon_hit(struct char_data *ch, struct char_data *victim, int type,\n                              int dam_type, int penalty, int attack_type)\n{')
 assert 'do_combat_advance, 0, 0' in (root/'src/interpreter.c').read_text()
-headers='\n'.join('#include "'+h+'"' for h in ['conf.h','sysdep.h','structs.h','utils.h','spells.h','assign_wpn_armor.h','fight.h','interpreter.h','mud_event.h','actions.h'])
+headers='\n'.join('#include "'+h+'"' for h in ['conf.h','sysdep.h','structs.h','utils.h','spells.h','assign_wpn_armor.h','fight.h','interpreter.h','mud_event.h','actions.h','class_improvements.h'])
 code=headers+r'''
 #include <assert.h>
 #undef ACMD
@@ -37,7 +37,9 @@ code=headers+r'''
 #define USE_MOVE_ACTION(ch) (used_move++,move_ready=false)
 #define is_action_available(ch,action,show) move_ready
 #define ranged_weapon_melee_type(...) (empty_launcher ? WEAPON_TYPE_QUARTERSTAFF : 0)
-static bool empty_launcher;
+static bool empty_launcher, defensive_stance;
+#define affected_by_spell(ch,spell) defensive_stance
+#define class_feature_ready(ch) (!IS_NPC(ch))
 #define one_argument(text,buf,len) snprintf(buf,len,"%s",text)
 #define get_char_vis(...) selected
 static int used_move, staff_calls;
@@ -179,6 +181,18 @@ int main(void) {
   rooms[0].room_size=101;assert(!combat_attack_in_range(&pc,&mob,ATTACK_TYPE_RANGED,&bow));
   far_shot=false;rooms[0].room_size=51;
   assert(!combat_attack_in_range(&pc,&mob,ATTACK_TYPE_RANGED,&bow));
+  reset_pairs(); rooms[0].room_size=50;
+  defensive_stance=true;GET_MOVE(&pc)=30;
+  CLASS_LEVEL((&pc),CLASS_STALWART_DEFENDER)=3;
+  assert(!advance_combat_distance(&pc,&mob,5));
+  CLASS_LEVEL((&pc),CLASS_STALWART_DEFENDER)=4;
+  assert(advance_combat_distance(&pc,&mob,5)==10 && GET_MOVE(&pc)==20);
+  move_ready=true;assert(!advance_combat_distance(&pc,&mob,5));
+  CLASS_LEVEL((&pc),CLASS_STALWART_DEFENDER)=9;CI_READY((&pc),CI_ADVANCE)=0;
+  assert(advance_combat_distance(&pc,&mob,5)==10 && GET_MOVE(&pc)==10);
+  move_ready=true;assert(advance_combat_distance(&pc,&mob,5)==10 && GET_MOVE(&pc)==0);
+  move_ready=true;assert(!advance_combat_distance(&pc,&mob,5));
+  reset_pairs();
   puts("PASS: ranged/melee starts, symmetric multi-opponent distance, per-round mob/charmie movement, ranged mob flag, 5/10-foot reach, advance actions, immobilization, cleanup and staff authorization.");
 }
 '''

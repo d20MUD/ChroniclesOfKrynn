@@ -14,6 +14,7 @@
 #include "legendary_techniques.h"
 #include "legendary_earnings.h"
 #include "structs.h"
+#include "class_improvements.h"
 #include "clan_sources.h"
 #include "utils.h"
 #include "epic_feats3.h"
@@ -469,6 +470,7 @@ int compute_mag_saves(struct char_data *vict, int type, int modifier)
 
   saves += MAX(bloodline_fated_bonus(vict), bloodline_affect_bonus(vict, AFFECT_DESTINED_ARCANA));
   saves += bloodline_affect_bonus(vict, AFFECT_TOUCH_OF_DESTINY);
+  saves += class_rally_save(vict, type);
   return MIN(99, saves);
 }
 

@@ -68,6 +68,9 @@ ACMD_DECL(do_perform);
 /**/
 #define NUM_PERFORM_AOE 4
 
+extern int performance_info[MAX_PERFORMANCES][PERFORMANCE_INFO_FIELDS];
+int can_perform(struct char_data *ch, int performance_num, bool need_check, bool silent);
+
 /*********************************************************/
 #ifdef __cplusplus
 }

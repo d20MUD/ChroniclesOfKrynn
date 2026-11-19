@@ -1,0 +1,23 @@
+INTERCEPT INTERCEPTING-GUARD
+
+INTERCEPTING GUARD
+
+Usage: intercept
+Requires: Stalwart Defender 6. Toggles interception on/off.
+
+While in Defensive Stance and guarding a conscious same-room groupmate
+within melee reach, redirect one successful single-target weapon attack
+to yourself every three combat intervals (18 seconds).
+
+The ally's avoidance resolves first. Interception preserves the attack's
+critical result, subject to your own immunity, and uses your normal
+mitigation without a second attack roll or avoidance roll. It can kill you.
+It cannot redirect again or trigger a reactive attack chain.
+
+Spells, area attacks, maneuvers, damage over time and reflected damage
+cannot be intercepted. Existing guard/rescue checks still run normally;
+an attack already redirected away from the ally is not intercepted again
+for that ally. Multiple defenders never intercept the same attack twice.
+
+Use guard <groupmate> to choose the ally, guard or classfeatures to see
+status, guard stop to end guarding, and intercept to disable interception.

@@ -51,6 +51,7 @@ int epic_third_intercept(struct char_data *, struct char_data *, int, unsigned i
 void epic_third_cast_done(struct char_data *, struct char_data *, int, int, int, bool);
 void epic_third_performance(struct char_data *, struct affected_type *, int);
 void epic_third_stop_music(struct char_data *);
+void epic_third_stop_song(struct char_data *, int);
 int epic_third_evolution(struct char_data *, int, int);
 bool epic_third_dodge(struct char_data *, struct char_data *, int, int);
 enum epic_precision_immunity

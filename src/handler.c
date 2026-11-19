@@ -16,6 +16,7 @@
 #include "legendary_foundations.h"
 #include "legendary_equipment.h"
 #include "structs.h"
+#include "class_improvements.h"
 #include "clan_access.h"
 #include "mob_utils.h"
 #include "housing.h"
@@ -1618,6 +1619,7 @@ void char_from_room(struct char_data *ch)
     exit(1);
   }
 
+  class_features_depart(ch);
   clear_combat_distances(ch, TRUE);
   legendary_effects_depart(ch);
 

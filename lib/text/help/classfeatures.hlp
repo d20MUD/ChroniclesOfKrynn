@@ -1,0 +1,50 @@
+CLASSFEATURES CLASS-FEATURES CLASSFEATURE
+
+CLASSFEATURES
+
+Usage: classfeatures
+
+Shows current Bard, Duelist and Stalwart Defender feature readiness,
+gear requirements, guard eligibility, recovery and damage-buffer status.
+Features use actual ranks in the named class, not total level or your
+preferred perk classes. They are automatic; no perk purchase is required.
+
+Bard: Battle Rhythm at 3/9/15, Rallying Verse at 7, and an improved
+Song of Revelation at 11. See help perform and help rally.
+Duelist: Measured Parry at 5, Find the Seam at 6, and Opening at 8.
+Stalwart Defender: Guarded Companion at 2, Measured Advance at 4,
+Intercepting Guard at 6, and Shielded Recovery at 8.
+
+Measured Parry: once per combat interval, an otherwise successful,
+non-critical melee weapon hit can be parried. d20 + Duelist ranks +
+Dexterity modifier must exceed the incoming attack total; ties fail.
+Requires a melee weapon, a free off hand, light/no armor, no casting,
+and no total defense. A success grants one Riposte attack at -2 if you
+have Riposte. It cannot chain reactive attacks or use a queued ability.
+
+Find the Seam: against critical-immune targets, eligible dueling melee
+weapon hits add half Duelist ranks (maximum 5) ordinary weapon damage
+instead of Precise Strike. It does not restore critical or sneak attacks,
+and is not multiplied by a critical hit.
+
+Guarded Companion: while in stance, guarding a conscious groupmate
+within melee reach grants them +1 AC against weapon attacks at Defender 2,
++2 at 6, and +3 at 10. Use the best defender's bonus, never the sum.
+Use guard <groupmate>, guard for status, and guard stop to end guarding.
+
+Measured Advance: while in stance, advance closes up to 10 feet within
+the room, costing a move action and one movement point per foot moved.
+At Defender 4-8 it recovers every three combat intervals. At Defender 9
+there is no interval, but the action and movement costs still apply.
+Normal rooting and movement restrictions apply; exits retain the existing
+Mobile Defense rules. Advance toward an NPC you are fighting.
+
+Shielded Recovery: successful Renewed Defense at Defender 8 also grants
+2 points per Defender rank (maximum 20) of weapon damage absorption for
+three combat intervals. The buffer absorbs final damage after mitigation,
+and does not absorb spells, damage over time, reflected packets or costs.
+Renewed Defense keeps its existing recovery and use limits.
+
+One combat interval is the native six-second combat period. Short effects
+expire in real time, including outside combat. New personal cooldowns
+survive logout. Stance/guard/target switching does not reset cooldowns.

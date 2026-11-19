@@ -8,6 +8,7 @@
 #include "conf.h"
 #include "sysdep.h"
 #include "structs.h"
+#include "class_improvements.h"
 #include "utils.h"
 #include "epic_feats3.h"
 #include "epic_feats2.h"
@@ -141,6 +142,7 @@ bool is_valid_performance(int performance_num)
 {
   bool return_val = FALSE;
 
+  if (performance_num < 0 || performance_num >= MAX_PERFORMANCES) return FALSE;
   switch (performance_info[performance_num][PERFORMANCE_SKILLNUM])
   {
   case SKILL_SONG_OF_FOCUSED_MIND:
@@ -348,145 +350,108 @@ int can_perform(struct char_data *ch, int performance_num, bool need_check, bool
 /* primary command entry point for the bardic performance */
 ACMD(do_perform)
 {
-  int performance_num = -1;
-  int len = 0;
+  char mode[MAX_INPUT_LENGTH];
+  const char *song_name;
+  int song = -1, slot = -1, i, matches = 0, recipients = 0;
+  bool was_performing = IS_PERFORMING(ch);
+  struct char_data *ally;
 
-  if (!argument || (len = strlen(argument)) == 0)
+  skip_spaces_c(&argument);
+  song_name = one_argument(argument, mode, sizeof(mode));
+  skip_spaces_c(&song_name);
+  if (!str_cmp(mode, "list"))
   {
-#ifdef EVENT_RAN
-    if (char_has_mud_event(ch, eBARDIC_PERFORMANCE))
+    list_available_performances(ch);
+    return;
+  }
+  if (!str_cmp(mode, "status"))
+  {
+    send_to_char(ch, "Performance status:\r\n");
+    if (!IS_PERFORMING(ch)) send_to_char(ch, "  No active performances.\r\n");
+    for (i = 0; i < 2 && IS_PERFORMING(ch); i++)
     {
-      epic_third_stop_music(ch);
-      event_cancel_specific(ch, eBARDIC_PERFORMANCE);
-      act("You stopped your performance.", FALSE, ch, 0, 0, TO_CHAR);
-      act("$n stops performing.", TRUE, ch, 0, 0, TO_ROOM);
-      return;
+      int active = i ? GET_PERFORMANCE_VAR(ch, 2) : GET_PERFORMING(ch);
+      if (active < 0 || active >= MAX_PERFORMANCES) continue;
+      recipients = 0;
+      if (IN_ROOM(ch) != NOWHERE)
+        for (ally = world[IN_ROOM(ch)].people; ally; ally = ally->next_in_room)
+          if ((ally == ch || (GROUP(ch) && GROUP(ch) == GROUP(ally))) &&
+              GET_HIT(ally) > 0 && !AFF_FLAGGED(ally, AFF_DEAF) &&
+              performance_info[active][PERFORMANCE_AOE] == PERFORM_AOE_GROUP &&
+              can_perform(ch, active, FALSE, TRUE)) recipients++;
+      send_to_char(ch, "  Slot %d: %s (%s); %d eligible group listeners here.\r\n",
+          i + 1, skill_name(performance_info[active][PERFORMANCE_SKILLNUM]),
+          can_perform(ch, active, FALSE, TRUE) ? "valid" : "requirements unmet", recipients);
     }
-#else
+    send_to_char(ch, "Starting/switching costs a %s action. Songs use the normal performance engine;\r\n"
+                     "there is no separate fixed upkeep or duration pool.\r\n"
+                     "Use perform [1|2] <song>, perform list, or perform stop.\r\n",
+                     HAS_FEAT(ch, FEAT_EFFICIENT_PERFORMANCE) ? "move" : "standard");
+    return;
+  }
+  /* Preserve the original no-argument stop/list behavior. */
+  if (!*argument || !str_cmp(mode, "stop"))
+  {
     if (IS_PERFORMING(ch))
     {
       epic_third_stop_music(ch);
       IS_PERFORMING(ch) = FALSE;
-      act("You stopped your performance.", FALSE, ch, 0, 0, TO_CHAR);
-      act("$n stops performing.", TRUE, ch, 0, 0, TO_ROOM);
-      return;
-    }
-#endif
-    else
-    {
-      send_to_char(ch, "Play what performance?\r\n");
-      list_available_performances(ch);
-      return;
-    }
-  }
-
-#ifdef EVENT_RAN
-  if (char_has_mud_event(ch, eBARDIC_PERFORMANCE))
-  {
-    act("You stopped your current performance.", FALSE, ch, 0, 0, TO_CHAR);
-    act("$n stops performing...", TRUE, ch, 0, 0, TO_ROOM);
-    event_cancel_specific(ch, eBARDIC_PERFORMANCE);
-  }
-#else
-  if (IS_PERFORMING(ch))
-  {
-    /* Tier 3 Spellsinger: Master of Motifs - stop performances intelligently */
-    if (!IS_NPC(ch) && has_bard_master_of_motifs(ch) && GET_PERFORMANCE_VAR(ch, 2) >= 0)
-    {
-      /* They have 2 performances, stop both */
-      epic_third_stop_music(ch);
-      IS_PERFORMING(ch) = FALSE;
       GET_PERFORMING(ch) = -1;
       GET_PERFORMANCE_VAR(ch, 2) = -1;
-      act("You stop both of your performances.", FALSE, ch, 0, 0, TO_CHAR);
-      act("$n stops performing...", TRUE, ch, 0, 0, TO_ROOM);
+      send_to_char(ch, "You stop performing.\r\n");
+      act("$n stops performing.", TRUE, ch, NULL, NULL, TO_ROOM);
     }
-    else
-    {
-      /* Only 1 performance, stop it normally */
-      epic_third_stop_music(ch);
-      IS_PERFORMING(ch) = FALSE;
-      GET_PERFORMING(ch) = -1;
-      GET_PERFORMANCE_VAR(ch, 2) = -1;
-      act("You stop your current performance.", FALSE, ch, 0, 0, TO_CHAR);
-      act("$n stops performing...", TRUE, ch, 0, 0, TO_ROOM);
-    }
+    else list_available_performances(ch);
+    return;
   }
-#endif
-
-  skip_spaces_c(&argument);
-  len = strlen(argument);
-
-  for (performance_num = 0; performance_num < MAX_PERFORMANCES; performance_num++)
+  if (!str_cmp(mode, "1") || !str_cmp(mode, "2")) slot = atoi(mode) - 1;
+  else song_name = argument;
+  if (slot == 1 && (IS_NPC(ch) || !has_bard_master_of_motifs(ch)))
+  { send_to_char(ch, "A second performance requires Master of Motifs.\r\n"); return; }
+  if (slot == 1 && !was_performing)
+  { send_to_char(ch, "Start your first performance before filling slot 2.\r\n"); return; }
+  for (i = 0; i < MAX_PERFORMANCES; i++)
+    if (is_abbrev(song_name, skill_name(performance_info[i][PERFORMANCE_SKILLNUM])))
+    { song = i; matches++; }
+  if (matches != 1)
   {
-    if (!strncmp(argument, skill_name(performance_info[performance_num][PERFORMANCE_SKILLNUM]),
-                 len))
-    {
-      if (!HAS_FEAT(ch, performance_info[performance_num][PERFORMANCE_FEATNUM]))
-      {
-        send_to_char(ch, "But you do not know that performance!\r\n");
-        return;
-      }
-      else
-      {
-        /* check for disqualifiers */
-        if (!can_perform(ch, performance_num, TRUE, FALSE))
-        {
-          /* we DO check if they have a bardic_performanc event here represented by the first TRUE */
-          /* the messages were sent via the last FALSE in can_perform()! */
-          return;
-        }
-
-        /* SUCCESS! */
-        /* Tier 3 Spellsinger: Master of Motifs - handle dual performances */
-        if (!IS_NPC(ch) && has_bard_master_of_motifs(ch) && IS_PERFORMING(ch) &&
-            GET_PERFORMANCE_VAR(ch, 2) < 0)
-        {
-          /* Starting a second performance */
-          GET_PERFORMANCE_VAR(ch, 2) = performance_num;
-          act("You begin a second performance, maintaining both songs!", FALSE, ch, 0, 0, TO_CHAR);
-          act("$n begins performing a second song simultaneously!", TRUE, ch, 0, 0, TO_ROOM);
-        }
-        else
-        {
-          /* Starting first performance normally */
-          act("You start performing.", FALSE, ch, 0, 0, TO_CHAR);
-          act("$n starts performing.", TRUE, ch, 0, 0, TO_ROOM);
-        }
-
-#ifdef EVENT_RAN
-        char buf[128];
-        snprintf(buf, sizeof(buf), "%d", i); /* Build the effect string */
-
-        NEW_EVENT(eBARDIC_PERFORMANCE, ch, buf, 4 * PASSES_PER_SEC);
-#else
-        IS_PERFORMING(ch) = TRUE;
-        GET_PERFORMING(ch) = performance_num;
-
-        /* Tier 3 Spellsinger: Master of Motifs - initialize second performance slot */
-        if (!IS_NPC(ch) && GET_PERFORMANCE_VAR(ch, 2) != performance_num)
-        {
-          GET_PERFORMANCE_VAR(ch, 2) = -1; /* -1 means no second performance */
-        }
-
-        /* Bard Spellsinger: Reset Crescendo flags when starting a new performance */
-        ch->char_specials.performance_vars[3] = 0; /* Crescendo used flag */
-        ch->char_specials.performance_vars[4] = 0; /* Crescendo damage dice */
-#endif
-
-        if (HAS_FEAT(ch, FEAT_EFFICIENT_PERFORMANCE))
-          USE_MOVE_ACTION(ch);
-        else
-          USE_STANDARD_ACTION(ch);
-
-        return;
-      }
-    }
+    send_to_char(ch, "%s performance name. Use perform list.\r\n", matches ? "Ambiguous" : "Unknown");
+    return;
   }
-
-  send_to_char(ch, "But that is not a performance!\r\n");
-  list_available_performances(ch);
-  return;
+  if (!HAS_FEAT(ch, performance_info[song][PERFORMANCE_FEATNUM]))
+  { send_to_char(ch, "You do not know that performance.\r\n"); return; }
+  /* Validate before mutating either slot; need_check=FALSE permits replacements. */
+  if (!can_perform(ch, song, FALSE, FALSE)) return;
+  if (slot < 0)
+    slot = was_performing && !IS_NPC(ch) && has_bard_master_of_motifs(ch) &&
+        GET_PERFORMANCE_VAR(ch, 2) < 0 ? 1 : 0;
+  if (was_performing && (GET_PERFORMING(ch) == song || GET_PERFORMANCE_VAR(ch, 2) == song))
+  { send_to_char(ch, "You are already maintaining that performance.\r\n"); return; }
+  if (!is_action_available(ch, HAS_FEAT(ch, FEAT_EFFICIENT_PERFORMANCE) ? atMOVE : atSTANDARD, TRUE)) return;
+  if (was_performing)
+  {
+    int previous = slot ? GET_PERFORMANCE_VAR(ch, 2) : GET_PERFORMING(ch);
+    if (previous >= 0 && previous < MAX_PERFORMANCES && previous != song)
+      epic_third_stop_song(ch, performance_info[previous][PERFORMANCE_SKILLNUM]);
+  }
+  if (slot == 0)
+  {
+    GET_PERFORMING(ch) = song;
+    if (!was_performing) GET_PERFORMANCE_VAR(ch, 2) = -1;
+  }
+  else GET_PERFORMANCE_VAR(ch, 2) = song;
+  IS_PERFORMING(ch) = TRUE;
+  /* Do not refresh Crescendo when merely switching or adding a song. */
+  if (!was_performing)
+  {
+    ch->char_specials.performance_vars[3] = 0;
+    ch->char_specials.performance_vars[4] = 0;
+  }
+  send_to_char(ch, "You begin %s in performance slot %d.\r\n",
+      skill_name(performance_info[song][PERFORMANCE_SKILLNUM]), slot + 1);
+  act("$n begins a performance.", TRUE, ch, NULL, NULL, TO_ROOM);
+  if (HAS_FEAT(ch, FEAT_EFFICIENT_PERFORMANCE)) USE_MOVE_ACTION(ch);
+  else USE_STANDARD_ACTION(ch);
 }
 
 /* function for processing individual effects for the performance */

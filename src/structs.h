@@ -7001,9 +7001,20 @@ struct condensed_combat_data
 };
 
 /** Special playing constants shared by PCs and NPCs which aren't in pfile */
+/* Short-lived class effects use IDs rather than retained target pointers. */
+struct class_improvement_state
+{
+  time_t rally_until, opening_until, recovery_until;
+  time_t revelation_check, revealed_until;
+  long opening_target, opening_attack_target, revealing_group;
+  int rally_bonus, recovery_hp;
+  bool intercept, precision_blocked;
+};
+
 struct char_special_data
 {
   /* combat related */
+  struct class_improvement_state class_improvements;
   int initiative;             /* What is this char's initiative score? */
   struct char_data *fighting; /**< Target of fight; else NULL */
   struct char_data *hunting;  /**< Target of NPC hunt; else NULL */
@@ -7663,6 +7674,7 @@ struct player_special_data_saved
   byte score_section_order[8]; /**< Custom section ordering for score display */
 
   /* Device destruction tracking to prevent abuse */
+  time_t class_improvement_ready[5]; /* absolute cooldowns, persisted across logout */
   struct epic_feat_timers epic_timers;
   struct epic_second_state epic_second;
   struct epic_third_state epic_third;

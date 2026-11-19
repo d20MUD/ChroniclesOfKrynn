@@ -24380,10 +24380,12 @@ void display_perk_details(struct char_data *ch, struct perk_data *perk,
                      ability_names[perk->effect_modifier]);
       break;
     case PERK_EFFECT_WEAPON_DAMAGE:
-      send_to_char(ch, "\tG+%d\tn to melee weapon damage per rank\r\n", perk->effect_value);
+      send_to_char(ch, "\tG+%d\tn to %s weapon damage per rank\r\n", perk->effect_value,
+                   perk->associated_class == CLASS_WARRIOR ? "all" : "melee");
       break;
     case PERK_EFFECT_WEAPON_TOHIT:
-      send_to_char(ch, "\tG+%d\tn to melee weapon to-hit per rank\r\n", perk->effect_value);
+      send_to_char(ch, "\tG+%d\tn to %s weapon to-hit per rank\r\n", perk->effect_value,
+                   perk->associated_class == CLASS_WARRIOR ? "all" : "melee");
       break;
     case PERK_EFFECT_SPELL_DC:
       send_to_char(ch, "\tG+%d\tn to spell save DC per rank\r\n", perk->effect_value);

@@ -439,3 +439,10 @@ unittests/CuTest/vessel_stress_test
 
 # Authored directional blocker help
 !lib/text/help/block_stealth.hlp
+
+# Automatic class feature help
+!lib/text/help/classfeatures.hlp
+!lib/text/help/rally.hlp
+!lib/text/help/opening.hlp
+!lib/text/help/intercept.hlp
+!lib/text/help/perform.hlp

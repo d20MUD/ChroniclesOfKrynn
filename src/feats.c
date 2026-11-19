@@ -4569,7 +4569,10 @@ void assign_feats(void)
         "+Int modifier bonus on knowledge checks.", "+Int modifier bonus on knowledge checks.");
   feato(FEAT_BARDIC_MUSIC, "bardic music", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
         "Use Perform skill to create various magical effects.",
-        "Use Perform skill to create various magical effects.");
+        "Use Perform skill to create various magical effects. Use perform list, perform status, "
+        "perform [1|2] <song>, or perform stop. Battle Rhythm grants +1/+2/+3 competence "
+        "to weapon attacks and damage while performing at Bard ranks 3/9/15. "
+        "Rallying Verse unlocks at Bard 7; use rally <groupmate>.");
 
   /* unfinished */ feato(FEAT_COUNTERSONG, "countersong", TRUE, FALSE, FALSE,
                          FEAT_TYPE_CLASS_ABILITY,
@@ -5199,11 +5202,16 @@ void assign_feats(void)
               "Constitution modifier + 10. For every two levels the stalwart defender "
               "has attained above 2nd, this healing increases by 1d8.  This power "
               "can be used only once per day and only while in a defensive stance.  This feat also "
-              "gives a high regen rate while fighting during defensive stance.");
+              "gives a high regen rate while fighting during defensive stance. At Stalwart Defender 8, "
+              "a successful use also gives a 2-per-Defender-rank weapon damage buffer (maximum 20), "
+              "lasting three combat intervals. It absorbs final weapon damage only.");
   /*9*/ feato(FEAT_MOBILE_DEFENSE, "mobile defense", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
               "Allows one to move while in defensive stance",
               "A stalwart defender can adjust his position while maintaining a defensive "
-              "stance without losing the benefit of the stance.");
+              "stance without losing the benefit of the stance. Measured Advance first permits up to "
+              "10 feet of in-room advance every three combat intervals at Defender 4; at Defender 9 "
+              "the interval is removed. Each advance costs a move action and one movement point "
+              "per foot. Room-to-room travel retains the existing Mobile Defense rules.");
   /*10*/ /* AC bonus */ /* damage reduction 5 */
   /*10*/ feato(FEAT_SMASH_DEFENSE, "smash defense", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
                "free knockdown attack while in defensive stance",
@@ -5566,7 +5574,9 @@ void assign_feats(void)
       "shield. A duelist's precise strike only works against living creatures with "
       "discernible anatomies. Any creature that is immune to critical hits is also "
       "immune to a precise strike, and any item or ability that protects a creature "
-      "from critical hits also protects a creature from a precise strike.");
+      "from critical hits also protects a creature from a precise strike. At Duelist 6, "
+      "Find the Seam instead adds half Duelist level (maximum 5) ordinary, non-multiplied "
+      "melee weapon damage against critical-immune targets with eligible dueling gear.");
   /*2*/ feato(FEAT_IMPROVED_REACTION, "improved reaction", TRUE, FALSE, TRUE,
               FEAT_TYPE_CLASS_ABILITY, "+2 to initiative, stacks with improved initiative",
               "+2 to initiative, stacks with improved initiative");
@@ -5582,7 +5592,11 @@ void assign_feats(void)
               "gain a +2 bonus on Reflex saves");
   /*5*/ feato(FEAT_RIPOSTE, "riposte", TRUE, FALSE, FALSE, FEAT_TYPE_CLASS_ABILITY,
               "+2 bonus to riposte attempts (totaldefense)",
-              "+2 bonus to riposte attempts (totaldefense)");
+              "+2 bonus to riposte attempts (totaldefense). At Duelist 5, Measured Parry also attempts "
+              "to stop one non-critical melee weapon hit per combat interval during normal combat: "
+              "d20 + Duelist ranks + Dexterity modifier must exceed the incoming attack total. "
+              "A success grants one riposte at -2, with light/no armor, a melee weapon, free "
+              "off hand, and no casting. It cannot chain counterattacks.");
   /*6*/ feato(FEAT_ACROBATIC_CHARGE, "dexterous charge", TRUE, FALSE, FALSE,
               FEAT_TYPE_CLASS_ABILITY, "+4 damage when charging on foot",
               "+4 damage when charging on foot");

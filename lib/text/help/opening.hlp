@@ -1,0 +1,18 @@
+OPENING EXPLOIT-THE-OPENING
+
+EXPLOIT THE OPENING
+
+Usage: opening [current opponent]
+Requires: Duelist 8; light/no armor, a melee weapon and free off hand.
+Cost: swift action. Cooldown: 18 seconds.
+
+Designate your current enemy within melee reach. Your next ordinary
+primary-weapon attack against that target within two combat intervals
+(12 seconds) gains +2 insight to hit and +1d6 ordinary weapon damage.
+The attack roll consumes the benefit even on a miss. The damage is not
+precision damage and is not multiplied on a critical hit.
+
+Only one opening can be held. Leaving the room or losing the target
+ends it. Reactive attacks do not consume or benefit from Opening.
+Stronger insight attack bonuses take precedence. Use classfeatures
+for gear requirements and readiness.

@@ -9,6 +9,9 @@ def function(text,sig):
 headers='\n'.join('#include "'+h+'"' for h in ['conf.h','sysdep.h','structs.h','utils.h','spells.h','fight.h','assign_wpn_armor.h','spec_abilities.h','mud_event.h','actions.h','clan.h'])
 code=headers+r'''
 #include <assert.h>
+#define CI_STATE(ch) ((ch)->char_specials.class_improvements)
+#define class_reaction_allow_hit() true
+#define find_char(id) ch
 #undef CHECK_PLAYER_SPECIAL
 #define CHECK_PLAYER_SPECIAL(ch,var) (var)
 #undef GET_OBJ_VNUM
