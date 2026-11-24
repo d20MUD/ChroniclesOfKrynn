@@ -12,6 +12,7 @@
 #include "sysdep.h"
 #include "legendary_equipment.h"
 #include "structs.h"
+#include "religion.h"
 #include "utils.h"
 #include "epic_feats3.h"
 #include "epic_magic.h"
@@ -529,6 +530,7 @@ void perform_dispel(struct char_data *ch, struct char_data *vict, struct obj_dat
 
   if (vict == ch)
   {
+    religion_blessing_remove(ch);
     send_to_char(ch, "You dispel all your own magic!\r\n");
     act("$n dispels all $s magic!", FALSE, ch, 0, 0, TO_ROOM);
     while (ch->affected)
@@ -558,7 +560,9 @@ void perform_dispel(struct char_data *ch, struct char_data *vict, struct obj_dat
       {
         if (attempt >= challenge)
         { // successful
-          if (vict->affected)
+          if (religion_blessing_value(vict, CHURCH_SAVE))
+          { if (religion_blessing_remove(vict)) msg = TRUE; }
+          else if (vict->affected)
           {
             if (vict->affected[0].spell == WARLOCK_RETRIBUTIVE_INVISIBILITY)
             {
@@ -601,7 +605,9 @@ void perform_dispel(struct char_data *ch, struct char_data *vict, struct obj_dat
       { // successful
         send_to_char(ch, "You successfuly dispel some magic!\r\n");
         act("$n dispels some of $N's magic!", FALSE, ch, 0, vict, TO_ROOM);
-        if (vict->affected)
+        if (religion_blessing_value(vict, CHURCH_SAVE))
+          religion_blessing_remove(vict);
+        else if (vict->affected)
           affect_remove(vict, vict->affected);
       }
       else

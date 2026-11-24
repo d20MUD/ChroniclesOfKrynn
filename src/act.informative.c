@@ -2252,6 +2252,13 @@ static void look_at_target(struct char_data *ch, char *arg)
   bits = generic_find(arg, FIND_OBJ_INV | FIND_OBJ_ROOM | FIND_OBJ_EQUIP | FIND_CHAR_ROOM, ch,
                       &found_char, &found_obj);
 
+  if (found_obj && found_obj->restring_extras_cleared && *found_obj->restring_inspection) {
+    show_obj_info(found_obj, ch);
+    send_to_char(ch, "\r\n%s\r\n", found_obj->restring_inspection);
+    show_obj_modifiers(found_obj, ch);
+    return;
+  }
+
   /* Is the target a character? */
   if (found_char != NULL)
   {

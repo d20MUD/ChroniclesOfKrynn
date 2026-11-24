@@ -69,6 +69,7 @@
 #include "perfmon.h"
 #include "missions.h"
 #include "deities.h"
+#include "religion.h"
 #include "backgrounds.h"
 #include "terrain_bridge.h"
 #include "mob_spellslots.h" /* for show_mob_spell_slots */
@@ -1188,6 +1189,10 @@ static void do_stat_character(struct char_data *ch, struct char_data *k)
                k->coords[1], IS_NPC(k) ? NOWHERE : GET_LOADROOM(k));
   if (IS_MOB(k))
   {
+    send_to_char(ch, "Mob deity: %s (%d); temple rank: %s (%d)\r\n",
+                 k->mob_deity >= 0 && k->mob_deity < NUM_DEITIES ?
+                   deity_list[k->mob_deity].name : "Invalid",
+                 k->mob_deity, religion_rank_name(k->mob_temple_rank), k->mob_temple_rank);
     send_to_char(ch, "\tCKeyword:\tn %s\tC, VNum: [\tn%5d\tC], RNum: [\tn%5d\tC]\r\n",
                  k->player.name, GET_MOB_VNUM(k), GET_MOB_RNUM(k));
     send_to_char(ch, "\tCL-Des: \tn%s", k->player.long_descr ? k->player.long_descr : "<None>\r\n");
@@ -5349,21 +5354,33 @@ static int perform_set(struct char_data *ch, struct char_data *vict, int mode, c
     break;
 
   case 95:
-    for (i = 0; i < NUM_DEITIES; i++)
+    if (!strcasecmp(val_arg, "none")) i = DEITY_NONE;
+    else
     {
-      if (deity_list[i].pantheon != DEITY_PANTHEON_ALL)
-        continue;
-      if (is_abbrev(val_arg, deity_list[i].name))
+      for (i = 1; i < NUM_DEITIES; i++)
+        if (religion_deity_valid(i) && is_abbrev(val_arg, deity_list[i].name)) break;
+      if (i >= NUM_DEITIES)
       {
-        break;
+        send_to_char(ch, "There is no deity by that name.\r\n");
+        return (0);
       }
     }
-    if (i < 0 || i >= NUM_DEITIES)
+    if (IS_NPC(vict))
     {
-      send_to_char(ch, "There is no deity by that name.\r\n");
-      return (0);
+      if (!i && (MOB_FLAGGED(vict, MOB_BLOCK_RELIGION) || MOB_FLAGGED(vict, MOB_BLOCK_TEMPLE_RANK)))
+      {
+        send_to_char(ch, "Clear the mob's faith-blocking flags before its deity.\r\n");
+        return (0);
+      }
+      vict->mob_deity = i;
     }
-    GET_DEITY(vict) = i;
+    else
+    {
+      if (GET_DEITY(vict) != i && !religion_blessing_remove(vict))
+      { send_to_char(ch, "Unable to persist blessing removal; patron unchanged.\r\n"); return 0; }
+      GET_DEITY(vict) = i;
+      religion_clear_confirmation(vict);
+    }
     break;
 
   case 96: // eldritch knight

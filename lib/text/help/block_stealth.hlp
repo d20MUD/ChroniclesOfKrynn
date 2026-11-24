@@ -12,7 +12,7 @@ guard mob vnum. Retrying, changing direction, toggling stealth, or replacing
 the guard with another copy does not grant another roll. Normal logout does
 not reset the timer. A cached success still requires Sneak or Hide.
 
-No-Block-Bypass prevents stealth passage. Block-Clan access requirements
+No-Block-Bypass prevents stealth passage. Block-Clan, Block-Religion and Block-Temple-Rank access requirements
 remain mandatory. Other existing guard exemptions retain their behavior.
 Each blocking guard must allow passage; this flag does not bypass doors or
 other movement restrictions.

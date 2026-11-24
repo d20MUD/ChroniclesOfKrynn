@@ -419,9 +419,9 @@ void ensure_account_reward_bonus_columns(void)
     return;
   /* Upgrade existing accounts before any account is loaded. */
   {
-    const char *columns[] = {"exp_bonus_pct", "treasure_bonus_pct", "gold_bonus_pct", "qp_bonus_pct"};
+    const char *columns[] = {"exp_bonus_pct", "treasure_bonus_pct", "gold_bonus_pct", "qp_bonus_pct", "mudlet_no_ask"};
     int bonus;
-    for (bonus = 0; bonus < NUM_ACCOUNT_REWARD_BONUSES; bonus++)
+    for (bonus = 0; bonus < (int)(sizeof(columns) / sizeof(columns[0])); bonus++)
     {
       char query[256];
       MYSQL_RES *result;

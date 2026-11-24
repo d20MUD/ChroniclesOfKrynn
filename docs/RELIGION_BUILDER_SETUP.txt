@@ -1,0 +1,229 @@
+RELIGION: TEMPLE, PRIEST AND CHEST SETUP
+
+Use a builder character with editing permission for the zone.
+Replace DEITY_ID, ROOM_VNUM and PRIEST_VNUM with actual numeric values.
+Choose an unused temple ID; the examples below use 1.
+
+1. CONFIGURE THE PRIEST
+
+  medit PRIEST_VNUM
+
+At the main MEDIT menu:
+- Enter deity, then choose the faith's numeric ID from the displayed list.
+- Enter templerank, then choose a rank from 1 through 8.
+- Finish the other normal mob settings, then quit and save.
+
+Temple ranks:
+  1 Devotee
+  2 Faithful
+  3 Acolyte
+  4 Votary
+  5 Steward
+  6 Preceptor
+  7 Elder
+  8 Luminary
+
+Any nonzero priest rank can provide services. The priest's rank does not impose
+that rank requirement on visitors. Blocker flags are not required for services.
+
+2. REGISTER AND ENABLE THE TEMPLE
+
+  religionadmin create 1 DEITY_ID Temple Name
+  religionadmin set 1 entrance ROOM_VNUM
+  religionadmin set 1 priest PRIEST_VNUM
+  religionadmin set 1 hospitality 1
+  religionadmin set 1 enabled 1
+  religionadmin show 1
+
+The priest's deity must match the temple. Each priest prototype can belong to
+only one registered temple. Several temples may belong to the same deity.
+Use a public entrance that worshippers can reach.
+
+3. PLACE THE PRIEST
+
+  goto ROOM_VNUM
+  load mob PRIEST_VNUM 1
+
+Use ZEDIT to add a normal mobile reset in that room so the priest returns after
+reboots. Run saveall after saving your editor changes.
+
+Services require the priest to be awake, visible and outside combat at the
+registered entrance. Reload/reset existing priest instances after changing
+their prototype; editing a prototype does not update existing instances.
+
+4. ADD A TEMPLE CHEST
+
+Stand in the room where the chest should appear, then enter:
+
+  religionadmin chest DEITY_ID 1 50
+
+This creates or updates one chest requiring temple rank 1, with capacity for
+50 items. Change the final two numbers to choose a different minimum rank
+(1 through 8) and item limit (1 through 10000).
+
+Viewing, depositing and withdrawing require the same active religion and at
+least the configured rank. Staff have no faith bypass for chest access.
+Nested objects and sheathed weapons count toward capacity. Capacity cannot be
+reduced below the current number of stored items.
+
+Chest configuration saves immediately. The chest needs no OEDIT prototype or
+ZEDIT reset and returns automatically after reboot. Place it in a permanent
+public room outside player housing. It does not require a priest or a temple
+registry entry. Chest settings and contents persist in SQL.
+
+Existing persistent-storage exclusions apply: money, no-rent and no-drop items
+cannot be stored, including when nested. Legendary ownership checks still apply.
+
+5. TEST WITH AN ELIGIBLE PLAYER
+
+  religion info DEITY_NAME
+  religion hospitality
+  look in chest
+  examine chest
+  put ITEM chest
+  get ITEM chest
+
+Normal numbered and all selectors are supported, including:
+
+  get all chest
+
+Hospitality provides one random food and one random drink, each carrying an
+existing consumable buff. Effects apply when eaten or drunk. The shared
+24-hour character cooldown survives logout and changes of faith. Hunger and
+thirst are unchanged. Make room in inventory for both provisions first.
+
+Also test chest access with a different faith and with a rank below its minimum,
+and confirm stored contents remain available after a reboot.
+
+6. CHANGE AN EXISTING TEMPLE
+
+Disable the temple before changing its configuration:
+
+  religionadmin set 1 enabled 0
+
+Make the changes using the set commands above, then enable it again:
+
+  religionadmin set 1 enabled 1
+  religionadmin show 1
+
+Other management commands:
+
+  religionadmin list
+  religionadmin reload
+  religionadmin delete 1 confirm
+
+Temple registry edits save automatically to etc/religion.json. The reload command
+rereads that registry; it does not reset or respawn priest mobs.
+
+INSTALLATION NOTE
+
+SQL storage must be available for chests and hospitality rewards. Missing tables
+are created automatically when the game account has the necessary permissions.
+Otherwise, an administrator can preinstall:
+
+  sql/20261123_temple_chests.sql
+  sql/20261123_religion_hospitality.sql
+
+These features also use the existing estate storage and delivery tables.
+
+7. ADD PHASE 2 TASKS AND RANK NAMES
+
+Author suitable quests in QEDIT: repeatable, untimed, standalone, with positive
+objective quantity, the temple priest as questmaster and no economic rewards.
+Supported objectives: room/mob visit, kill, object find/return, room clear, dialogue.
+Use no previous/next quest or dialogue fallback; set gold, XP and quest points to
+zero and remove reward items, followers and race changes. Save the quests.
+
+Configure up to four distinct templates per faith BEFORE players open the board:
+
+  religionadmin task 1 1 QUEST_VNUM_A
+  religionadmin task 1 2 QUEST_VNUM_B
+  religionadmin task 1 3 QUEST_VNUM_C
+  religionadmin task 1 4 QUEST_VNUM_D
+  religionadmin task 1
+
+The final command lists configuration. Use quest vnum 0 to clear a slot.
+Existing weekly boards stay unchanged until Monday 00:00 UTC.
+
+Optionally author each deity's eight rank labels:
+
+  religionadmin rankname DEITY_ID 1 Rank Name
+
+Replace 1 with ranks 2 through 8 as needed. Labels never alter character titles.
+
+Player task commands:
+
+  religion task list
+  religion task accept 1
+  religion task confirm
+  religion task status
+  religion task turnin
+  religion task abandon
+
+Players complete native quest objectives and return to the assigned temple.
+They have one church task separate from the three ordinary quest slots.
+Rewards: 2 Standing per eligible task; at most 3 rewarded completions per week
+across all faiths, with no template rewarding twice in that completion week.
+Standing stops at 336. Tasks accepted as story-only never bank later rewards.
+
+Install sql/20261123_religion_phase2.sql if the game account cannot create missing
+tables. Full details: docs/RELIGION_PHASE2.md. An optional two-church Krynn pilot
+is under examples/religion_phase2; its README covers installation and playtesting.
+
+PHASE 3: APPEARANCES AND THE CHURCH BLESSING
+==========================================
+SQL migration: sql/20261123_religion_phase3.sql
+SQL help:      sql/20261123_religion_phase3_help.sql
+Optional Krynn wardrobe seed: examples/religion_phase3/wardrobes.sql
+Full guide: docs/RELIGION_PHASE3.md
+
+BUILD AN APPEARANCE
+  restringedit
+  1 = Clans (Favor ranks 1..5); 2 = Religion (temple ranks 1..8).
+  Select rank, then A to add, E <id> to edit, D <id> to delete.
+  F <organization-id> filters; N/V page; C <deity-id> checks 8x4x7 coverage.
+  Fields 1..8: organization, rank, position, matcher, keywords, short, room,
+  inspection. Inspection uses multiple lines ending in @; - clears it.
+  9 previews. S saves a draft; P publishes; B goes back; Q quits.
+  Saving a draft preserves the old published appearance. Missing published
+  content is hidden from players. Clan edits require clan edit authorization.
+
+MATCHERS
+  armor 0/1/2/3 = native clothing/light/medium/heavy
+  symbol 0..3 = four non-armor neck styles
+  shield <native-subtype-id>, weapon <native-family-id>, other <item-type-id>
+  The editor displays the native lists. Positions use equipment locations,
+  not wear-bit numbers. Both neck locations share the neck appearance group.
+
+PLAYER COMMANDS AT THE CORRECT PRIEST / CLAN QUARTERMASTER
+  restringapply robe religion 2
+  restringapply "blue robe" religion 2
+  restringapply 2.robe religion 2
+  restringapply sword clan 3
+  restringapply choose <id>     (when several positions/styles match)
+  restringapply confirm
+  restringapply cancel
+  Default fee: 100 x max(1,item level). Override the single shared rate in
+  etc/restring.json with {"gold_per_level":100}. Confirmations last two minutes.
+  Old keyword extra descriptions are erased. Applied appearances stamp the
+  related faith/temple rank or clan/Favor requirement and preserve other gates.
+  No Standing or Favor is spent. The existing craft-kit restring is unchanged.
+
+BLESSING AT AN ENABLED REGISTERED TEMPLE WITH ITS PRIEST PRESENT
+  religion blessing           (current/future package and cooldown status)
+  religion bless              (preview whole package)
+  religion bless confirm
+  religion bless cancel
+  religion bless remove       (whole package; cooldown retained)
+  No extra priest flag is needed. Each application lasts 86400 real seconds.
+  Cooldown is shared across temples/faiths. Death retains the original expiry;
+  rank-up applies on the next application. Faith change removes the blessing.
+  Neither HP nor movement is refilled by applying it.
+
+ADDITIONAL TEMPLE ROOMS/TASKS
+  examples/religion_phase3 contains a complete replacement zone 699 pilot with
+  rank-3 archives, rank-6 chambers, rank-8 sanctums and public service annexes.
+  Install it instead of the phase 2 example, check vnums, then follow setup.txt.
+  The additional task templates replace board slots in the next weekly snapshot;
+  there are still at most four offered choices per faith. Nothing here has been
+  installed into the live world indexes automatically.

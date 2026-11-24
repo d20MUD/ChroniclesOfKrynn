@@ -14,6 +14,8 @@
 #include "legendary_techniques.h"
 #include "legendary_earnings.h"
 #include "structs.h"
+#include "religion.h"
+#include <limits.h>
 #include "class_improvements.h"
 #include "clan_sources.h"
 #include "utils.h"
@@ -354,6 +356,7 @@ int mag_resistance(struct char_data *ch, struct char_data *vict, int modifier)
  */
 int compute_mag_saves(struct char_data *vict, int type, int modifier)
 {
+  religion_blessing_tick(vict);
   int saves = 0;
 
   legendary_foundations_refresh(vict);
@@ -1428,6 +1431,7 @@ void affect_update(void)
   for (i = character_list; i; i = next_char)
   {                      /* go through everything */
     next_char = i->next; /* Cache next pointer in case character is extracted */
+    religion_blessing_tick(i);
     char_count++;
     if (IS_NPC(i))
       npc_count++;
@@ -10776,7 +10780,14 @@ void mag_affects_full(int level, struct char_data *ch, struct char_data *victim,
     for (i = 0; i < MAX_SPELL_AFFECTS; i++)
     {
       if (af[i].duration > 0)
-        af[i].duration = af[i].duration * get_spell_duration_bonus(ch) / 100;
+      {
+        int percent = get_spell_duration_bonus(ch);
+        long long extended;
+        if (casttype != CAST_SPELL)
+          percent = MAX(100, percent - religion_blessing_value(ch, CHURCH_DURATION));
+        extended = (long long)af[i].duration * percent / 100;
+        af[i].duration = extended > INT_MAX ? INT_MAX : extended < 1 ? 1 : (int)extended;
+      }
       if (af[i].modifier > 0)
         af[i].modifier = af[i].modifier * get_spell_potency_bonus(ch) / 100;
     }

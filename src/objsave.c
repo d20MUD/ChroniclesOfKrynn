@@ -14,6 +14,7 @@
 #include "durable_file.h"
 #include "structs.h"
 #include "utils.h"
+#include "religion.h"
 #include "comm.h"
 #include "handler.h"
 #include "db.h"
@@ -101,6 +102,30 @@ static int restore_persistent_object(struct obj_data *obj, const char *tag, cons
       strlcpy(e->uid, uid, sizeof(e->uid)); strlcpy(e->receipt, !strcmp(receipt,"-") ? "" : receipt, sizeof(e->receipt));
       strlcpy(e->word, !strcmp(word,"-") ? "" : word, sizeof(e->word));
       e->effect = effect; e->active = active; e->bane_race = race; e->reroll_week = week;
+    }
+  }
+  else if (!strcmp(tag, "RReq")) {
+    if (!religion_parse_requirement(value, &obj->religion_requirement))
+      log("SYSERR: Invalid saved object religion requirement; purchases fail closed.");
+  }
+  else if (!strcmp(tag, "REmp")) {
+    if (atoi(value) == 1) {
+      free_ex_descriptions_shared(obj->ex_description, VALID_OBJ_RNUM(obj) ?
+          obj_proto[GET_OBJ_RNUM(obj)].ex_description : NULL);
+      obj->ex_description = NULL;
+      obj->restring_extras_cleared = true;
+      obj->restring_inspection[0] = '\0';
+    }
+  }
+  else if (!strcmp(tag, "RIns")) {
+    char encoded[401]; size_t offset, i, n; unsigned v;
+    if (sscanf(value,"%zu %400s",&offset,encoded)==2) {
+      n=strlen(encoded);
+      if (n%2==0 && offset==strlen(obj->restring_inspection) &&
+          offset+n/2<sizeof(obj->restring_inspection) && strspn(encoded,"0123456789abcdefABCDEF")==n) {
+        for(i=0;i<n/2;i++){sscanf(encoded+2*i,"%2x",&v);obj->restring_inspection[offset+i]=(char)v;}
+        obj->restring_inspection[offset+n/2]='\0';
+      }
     }
   }
   else if (!strcmp(tag, "CReq")) {
@@ -279,6 +304,32 @@ int objsave_save_obj_record_db(struct obj_data *obj, struct char_data *ch, room_
     strlcat(ins_buf, enchant_line, sizeof(ins_buf));
 #endif
   }
+  if (obj->restring_extras_cleared) {
+    size_t offset, ri, n = strlen(obj->restring_inspection);
+    fprintf(fp,"REmp: 1\n");
+#ifdef OBJSAVE_DB
+    strlcat(ins_buf,"REmp: 1\n",sizeof(ins_buf));
+#endif
+    /* All native readers use READ_SIZE lines. Chunk hexadecimal text so the
+     * explicit inspection override survives every file/SQL reader unchanged. */
+    for(offset=0;offset<n;offset+=200) {
+      char encoded[401];size_t chunk=MIN(200,n-offset);
+      for(ri=0;ri<chunk;ri++)sprintf(encoded+2*ri,"%02x",(unsigned char)obj->restring_inspection[offset+ri]);
+      encoded[2*chunk]='\0';
+      fprintf(fp,"RIns: %zu %s\n",offset,encoded);
+#ifdef OBJSAVE_DB
+      snprintf(line_buf,sizeof(line_buf),"RIns: %zu %s\n",offset,encoded);
+      strlcat(ins_buf,line_buf,sizeof(ins_buf));
+#endif
+    }
+  }
+  /* Always write zeros too, so instance settings override later prototype edits. */
+  fprintf(fp, "RReq: %d %d\n", obj->religion_requirement.deity, obj->religion_requirement.rank);
+#ifdef OBJSAVE_DB
+  snprintf(line_buf, sizeof(line_buf), "RReq: %d %d\n", obj->religion_requirement.deity,
+           obj->religion_requirement.rank);
+  strlcat(ins_buf, line_buf, sizeof(ins_buf));
+#endif
   fprintf(fp, "CReq: %d %d %d\n", obj->clan_requirement.clan,
           obj->clan_requirement.rank, obj->clan_requirement.favor);
 #ifdef OBJSAVE_DB
@@ -362,7 +413,7 @@ int objsave_save_obj_record_db(struct obj_data *obj, struct char_data *ch, room_
   ((!obj1->field || !obj2->field || strcmp(obj1->field, obj2->field)))
 #define TEST_OBJN(field) (obj->obj_flags.field != temp->obj_flags.field)
 
-  if (TEST_OBJS(obj, temp, name))
+  if (obj->restring_extras_cleared || TEST_OBJS(obj, temp, name))
   {
     fprintf(fp, "Name: %s\n", obj->name ? obj->name : "Undefined");
 #ifdef OBJSAVE_DB
@@ -386,7 +437,7 @@ int objsave_save_obj_record_db(struct obj_data *obj, struct char_data *ch, room_
     strlcat(ins_buf, line_buf, sizeof(ins_buf));
 #endif
   }
-  if (TEST_OBJS(obj, temp, short_description))
+  if (obj->restring_extras_cleared || TEST_OBJS(obj, temp, short_description))
   {
     fprintf(fp, "Shrt: %s\n", obj->short_description ? obj->short_description : "Undefined");
 #ifdef OBJSAVE_DB
@@ -397,7 +448,7 @@ int objsave_save_obj_record_db(struct obj_data *obj, struct char_data *ch, room_
   }
 
   /* These two could be a pain on the read... we'll see... */
-  if (TEST_OBJS(obj, temp, description))
+  if (obj->restring_extras_cleared || TEST_OBJS(obj, temp, description))
   {
     fprintf(fp, "Desc: %s\n", obj->description ? obj->description : "Undefined");
 #ifdef OBJSAVE_DB
@@ -3280,6 +3331,30 @@ bool pet_load_objs(struct char_data *ch, struct char_data *owner, long int pet_i
 }
 
 
+/* New schemas use id; older production tables use idnum. Keep insertion
+ * order in either schema, since nested inventory restoration depends on it. */
+static bool select_saved_pet_objects(const char *name, long int pet_idnum)
+{
+  char query[1024];
+  char *escaped = mysql_escape_string_alloc(conn, name);
+  int result;
+  if (!escaped)
+    return FALSE;
+  snprintf(query, sizeof(query),
+           "SELECT serialized_obj FROM pet_save_objs WHERE owner_name='%s' AND pet_idnum=%ld ORDER BY id ASC",
+           escaped, pet_idnum);
+  result = mysql_query(conn, query);
+  if (result && mysql_errno(conn) == 1054) /* ER_BAD_FIELD_ERROR: legacy idnum column */
+  {
+    snprintf(query, sizeof(query),
+             "SELECT serialized_obj FROM pet_save_objs WHERE owner_name='%s' AND pet_idnum=%ld ORDER BY idnum ASC",
+             escaped, pet_idnum);
+    result = mysql_query(conn, query);
+  }
+  free(escaped);
+  return result == 0;
+}
+
 obj_save_data *objsave_parse_objects_db_pet(char *name, long int pet_idnum)
 {
   obj_save_data *head, *current, *tempsave;
@@ -3289,7 +3364,6 @@ obj_save_data *objsave_parse_objects_db_pet(char *name, long int pet_idnum)
   /* MySql Data Structures */
   MYSQL_RES *result;
   MYSQL_ROW row;
-  char buf[1024];
   char *serialized_obj;
   int locate;
   int obj_db_idnum = 0;
@@ -3297,18 +3371,10 @@ obj_save_data *objsave_parse_objects_db_pet(char *name, long int pet_idnum)
   char **lines; /* Storage for tokenized serialization */
   char **line;  /* Token iterator */
 
-  snprintf(buf, sizeof(buf),
-           "SELECT   serialized_obj "
-           "FROM     pet_save_objs "
-           "WHERE    owner_name = '%s' "
-           "AND      pet_idnum = '%ld' "
-           "ORDER BY id ASC;",
-           name, pet_idnum);
-
-  if (mysql_query(conn, buf))
+  if (!select_saved_pet_objects(name, pet_idnum))
   {
     log("SYSERR: Unable to SELECT from pet_save_objs: %s", mysql_error(conn));
-    /* Table doesn't exist, so no pet objects to load */
+    /* Caller checks the expected count and retains the pet save on failure. */
     return NULL;
   }
 

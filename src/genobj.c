@@ -84,6 +84,22 @@ static int update_all_objects(struct obj_data *refobj)
     if (GET_OBJ_TYPE(&swap) != ITEM_WEAPON || !is_legacy_composite_bow(GET_OBJ_VAL(&swap, 0)))
       retire_new_composite_bow(obj);
 
+    /* Completed catalogue appearances are instance overrides. Prototype edits
+     * must not resurrect erased extras or replace the stamped membership. */
+    if (swap.restring_extras_cleared)
+    {
+      obj->restring_extras_cleared = true;
+      memcpy(obj->restring_inspection, swap.restring_inspection, sizeof(obj->restring_inspection));
+      obj->name = swap.name;
+      obj->short_description = swap.short_description;
+      obj->description = swap.description;
+      obj->ex_description = swap.ex_description;
+      obj->clan_requirement = swap.clan_requirement;
+      obj->religion_requirement = swap.religion_requirement;
+      obj->estate_delivery_id = swap.estate_delivery_id;
+      memcpy(obj->epic_binding_id, swap.epic_binding_id, sizeof(obj->epic_binding_id));
+    }
+
     /* Copy game-time dependent variables over. */
     obj->clan_enchantment = swap.clan_enchantment;
     memcpy(obj->legendary_uuid, swap.legendary_uuid, sizeof(obj->legendary_uuid));
@@ -325,6 +341,9 @@ int save_objects(zone_rnum zone_num)
       if (obj->clan_requirement.clan || obj->clan_requirement.rank || obj->clan_requirement.favor)
         fprintf(fp, "U\n%d %d %d\n", obj->clan_requirement.clan,
                 obj->clan_requirement.rank, obj->clan_requirement.favor);
+
+      if (obj->religion_requirement.deity || obj->religion_requirement.rank)
+        fprintf(fp, "F\n%d %d\n", obj->religion_requirement.deity, obj->religion_requirement.rank);
 
       /* B:  Do we have spells? */
       if (obj->sbinfo)

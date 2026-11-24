@@ -1,0 +1,141 @@
+#69900
+sister meriel temple priest keeper~
+Sister Meriel~
+Sister Meriel stands here, offering a quiet welcome.
+~
+A patient servant of the temple watches over this peaceful place.
+~
+10 0 0 0 0 0 0 0 0 E
+30 20 10 10d10+100 1d4+0
+0 0
+8 8 0
+MobDeity: 2
+TempleRank: 8
+E
+#69901
+archivist teren temple priest keeper~
+Archivist Teren~
+Archivist Teren stands here, offering a quiet welcome.
+~
+A patient servant of the temple watches over this peaceful place.
+~
+10 0 0 0 0 0 0 0 0 E
+30 20 10 10d10+100 1d4+0
+0 0
+8 8 0
+MobDeity: 8
+TempleRank: 8
+E
+#69902
+a keeper of mercy temple priest keeper~
+a keeper of mercy~
+a keeper of mercy stands here, offering a quiet welcome.
+~
+A patient servant of the temple watches over this peaceful place.
+~
+10 16384 0 65536 0 0 0 0 0 E
+30 20 10 10d10+100 1d4+0
+0 0
+8 8 0
+MobDeity: 2
+TempleRank: 2
+E
+#69903
+a keeper of the open book temple priest keeper~
+a keeper of the open book~
+a keeper of the open book stands here, offering a quiet welcome.
+~
+A patient servant of the temple watches over this peaceful place.
+~
+10 16384 0 65536 0 0 0 0 0 E
+30 20 10 10d10+100 1d4+0
+0 0
+8 8 0
+MobDeity: 8
+TempleRank: 2
+E
+#69904
+keeper records archive a keeper of vigil records~
+a keeper of vigil records~
+A keeper of vigil records waits beside the inward passage.
+~
+This temple keeper checks service standing before admitting visitors farther inward. The outward path remains clear.
+~
+10 8192 0 65536 0 0 0 0 0 E
+30 20 10 10d10+100 1d4+0
+0 0
+8 8 0
+MobDeity: 2
+TempleRank: 3
+E
+#69905
+keeper records archive a keeper of the healing hand~
+a keeper of the healing hand~
+A keeper of the healing hand waits beside the inward passage.
+~
+This temple keeper checks service standing before admitting visitors farther inward. The outward path remains clear.
+~
+10 16384 0 65536 0 0 0 0 0 E
+30 20 10 10d10+100 1d4+0
+0 0
+8 8 0
+MobDeity: 2
+TempleRank: 6
+E
+#69906
+keeper records archive a keeper of returning light~
+a keeper of returning light~
+A keeper of returning light waits beside the inward passage.
+~
+This temple keeper checks service standing before admitting visitors farther inward. The outward path remains clear.
+~
+10 16384 0 65536 0 0 0 0 0 E
+30 20 10 10d10+100 1d4+0
+0 0
+8 8 0
+MobDeity: 2
+TempleRank: 8
+E
+#69907
+keeper records archive a keeper of compared accounts~
+a keeper of compared accounts~
+A keeper of compared accounts waits beside the inward passage.
+~
+This temple keeper checks service standing before admitting visitors farther inward. The outward path remains clear.
+~
+10 8192 0 65536 0 0 0 0 0 E
+30 20 10 10d10+100 1d4+0
+0 0
+8 8 0
+MobDeity: 8
+TempleRank: 3
+E
+#69908
+keeper records archive a keeper of careful witness~
+a keeper of careful witness~
+A keeper of careful witness waits beside the inward passage.
+~
+This temple keeper checks service standing before admitting visitors farther inward. The outward path remains clear.
+~
+10 16384 0 65536 0 0 0 0 0 E
+30 20 10 10d10+100 1d4+0
+0 0
+8 8 0
+MobDeity: 8
+TempleRank: 6
+E
+#69909
+keeper records archive a keeper of unwritten pages~
+a keeper of unwritten pages~
+A keeper of unwritten pages waits beside the inward passage.
+~
+This temple keeper checks service standing before admitting visitors farther inward. The outward path remains clear.
+~
+10 16384 0 65536 0 0 0 0 0 E
+30 20 10 10d10+100 1d4+0
+0 0
+8 8 0
+MobDeity: 8
+TempleRank: 8
+E
+$

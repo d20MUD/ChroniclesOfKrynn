@@ -5755,11 +5755,30 @@ static void ammo_efficient_materials(struct char_data *ch, const struct ammo_cra
                           total, total == 1 ? "" : "s");
 }
 
+/* All attempts are reserved upfront. Refund only unattempted reservations. */
+static void refund_ammunition_attempts(struct char_data *ch, const struct ammo_craft_plan *plan,
+                                      int attempts)
+{
+  while (attempts-- > 0)
+    refund_ammunition_costs(ch, plan, 1);
+}
+
+static int ammunition_craft_duration(struct char_data *ch, const struct ammo_craft_plan *plan)
+{
+  int duration = MAX(1, CRAFT_AMMO_BASE_TIME - get_rapid_talent_bonus(ch, plan->recipe->skill));
+  if (artificer_efficient_crafter_applies(ch))
+    duration = MAX(1, duration * 90 / 100);
+  return duration;
+}
+
 static void craft_ammunition_complete(struct char_data *ch)
 {
   struct ammo_craft_plan plan;
   struct obj_data *obj;
   int old_type, natural_roll = 0;
+  int remaining = MAX(1, MIN(10, GET_CRAFT(ch).ammo_job_remaining));
+  int job[8], mote = GET_CRAFT(ch).ammo_job_enhancement_mote;
+  memcpy(job, GET_CRAFT(ch).ammo_job, sizeof(job));
   bool success, critical, making_kit = GET_CRAFT(ch).ammo_job[7] != 0;
   if (GET_CRAFT(ch).crafting_method != SCMD_NEWCRAFT_AMMO ||
       GET_CRAFT(ch).craft_duration > 0)
@@ -5769,6 +5788,7 @@ static void craft_ammunition_complete(struct char_data *ch)
   GET_CRAFT(ch).crafting_method = 0;
   memset(GET_CRAFT(ch).ammo_job, 0, sizeof(GET_CRAFT(ch).ammo_job));
   GET_CRAFT(ch).ammo_job_enhancement_mote = 0;
+  GET_CRAFT(ch).ammo_job_remaining = 0;
   if (!valid)
   {
     send_to_char(ch, "The ammunition project is invalid and has been cancelled.\r\n");
@@ -5778,7 +5798,7 @@ static void craft_ammunition_complete(struct char_data *ch)
   obj = making_kit ? read_object(FLETCHING_KIT_VNUM, VIRTUAL) : create_crafted_ammo(&plan);
   if (!obj)
   {
-    if (!making_kit) refund_ammunition_costs(ch, &plan, 1);
+    if (!making_kit) refund_ammunition_attempts(ch, &plan, remaining);
     send_to_char(ch, "The crafting template is unavailable; the batch could not be completed.\r\n");
     save_char(ch, 0);
     return;
@@ -5830,6 +5850,32 @@ static void craft_ammunition_complete(struct char_data *ch)
     else
       send_to_char(ch, "The batch failed; all materials and motes were returned.\r\n");
   }
+  if (remaining > 1)
+  {
+    /* A new session still needs a usable workplace and room for its result. */
+    if (ch->trade || FIGHTING(ch) || GET_POS(ch) < POS_RESTING ||
+        IS_CARRYING_N(ch) >= CAN_CARRY_N(ch) || IS_CARRYING_W(ch) + 1 > CAN_CARRY_W(ch) ||
+        (!has_portable_fletching_kit(ch) &&
+         (!is_wearing_tool_for_crafting_ability(ch, plan.recipe->skill) ||
+          !has_crafting_station_in_room(ch, plan.recipe->skill))))
+    {
+      refund_ammunition_attempts(ch, &plan, remaining - 1);
+      send_to_char(ch, "Bulk ammunition crafting stopped; unattempted materials and motes were returned.\r\n");
+    }
+    else
+    {
+      memcpy(GET_CRAFT(ch).ammo_job, job, sizeof(job));
+      GET_CRAFT(ch).ammo_job_enhancement_mote = mote;
+      GET_CRAFT(ch).ammo_job_remaining = remaining - 1;
+      GET_CRAFT(ch).craft_duration = ammunition_craft_duration(ch, &plan);
+      GET_CRAFT(ch).crafting_method = SCMD_NEWCRAFT_AMMO;
+      send_to_char(ch, "You begin the next ammunition attempt (%d remaining). This will take %d seconds. "
+                       "Use 'craft ammo cancel' to stop.\r\n",
+                   remaining - 1, GET_CRAFT(ch).craft_duration);
+    }
+  }
+  else if (GET_CRAFT(ch).ammo_job_remaining == 0)
+    send_to_char(ch, "Ammunition crafting complete.\r\n");
   save_char(ch, 0);
 }
 
@@ -5837,7 +5883,7 @@ static void craft_ammunition(struct char_data *ch, const char *argument)
 {
   struct ammo_craft_plan plan;
   struct obj_data *obj;
-  int i, skill_mod, index, value;
+  int i, skill_mod, index, value, attempts = 1;
   bool making_kit = FALSE;
   char command[MAX_INPUT_LENGTH], rest[MAX_INPUT_LENGTH], token[MAX_INPUT_LENGTH],
       tail[MAX_INPUT_LENGTH], *end;
@@ -5853,11 +5899,12 @@ static void craft_ammunition(struct char_data *ch, const char *argument)
         send_to_char(ch, "The reserved recipe could not be verified; nothing was changed.\r\n");
         return;
       }
-      refund_ammunition_costs(ch, &plan, 1);
+      refund_ammunition_attempts(ch, &plan, MAX(1, MIN(10, GET_CRAFT(ch).ammo_job_remaining)));
       GET_CRAFT(ch).craft_duration = 0;
       GET_CRAFT(ch).crafting_method = 0;
       memset(GET_CRAFT(ch).ammo_job, 0, sizeof(GET_CRAFT(ch).ammo_job));
       GET_CRAFT(ch).ammo_job_enhancement_mote = 0;
+      GET_CRAFT(ch).ammo_job_remaining = 0;
       send_to_char(ch, "You cancel the batch. All reserved materials and motes were returned.\r\n");
       save_char(ch, 0);
     }
@@ -5878,6 +5925,7 @@ static void craft_ammunition(struct char_data *ch, const char *argument)
         "  craft ammo mote <air|dark|earth|fire|ice|light|lightning|water>\r\n"
         "  craft ammo damage <none|fire|cold|acid|electricity|sonic> [4|6|8|10|12]\r\n"
         "  craft ammo show | cost | begin | reset | cancel\r\n"
+        "  craft ammo bulk <1-10>: consecutive attempts at current settings; cancel stops all.\r\n"
         "  craft ammo <type>: craft that type with saved settings; cost <type> previews it.\r\n"
         "  craft ammo kit: make a portable fletching kit (2 ash wood, 2 bronze, 2 hemp; DC 15).\r\n"
         "\r\n"
@@ -5980,7 +6028,19 @@ static void craft_ammunition(struct char_data *ch, const char *argument)
     show_ammo_plan(ch, &plan);
     return;
   }
-  if (!str_cmp(command, "begin") && !*rest)
+  if (!str_cmp(command, "bulk"))
+  {
+    long requested = strtol(rest, &end, 10);
+    if (!*rest || *end || requested < 1 || requested > 10)
+    {
+      send_to_char(ch, "Use 'craft ammo bulk <1-10>'.\r\n");
+      return;
+    }
+    attempts = (int)requested;
+    if (!saved_ammo_plan(ch, &plan))
+      goto invalid;
+  }
+  else if (!str_cmp(command, "begin") && !*rest)
   {
     if (!saved_ammo_plan(ch, &plan))
       goto invalid;
@@ -6034,23 +6094,23 @@ static void craft_ammunition(struct char_data *ch, const char *argument)
     send_to_char(ch, "You do not yet have enough crafting skill for that batch.\r\n");
     return;
   }
-  if (IS_CARRYING_N(ch) >= CAN_CARRY_N(ch) ||
-      IS_CARRYING_W(ch) + (making_kit ? 3 : 1) > CAN_CARRY_W(ch))
+  if (IS_CARRYING_N(ch) + attempts > CAN_CARRY_N(ch) ||
+      IS_CARRYING_W(ch) + (making_kit ? 3 : attempts) > CAN_CARRY_W(ch))
   {
     send_to_char(ch, "You cannot carry another ammunition bundle.\r\n");
     return;
   }
   for (i = 0; i < 3; i++)
-    if (plan.materials[i][1] && plan.materials[i][1] > GET_CRAFT_MAT(ch, plan.materials[i][0]))
+    if (plan.materials[i][1] && plan.materials[i][1] * attempts > GET_CRAFT_MAT(ch, plan.materials[i][0]))
     {
-      send_to_char(ch, "You need %d %s for that batch.\r\n", plan.materials[i][1],
+      send_to_char(ch, "You need %d %s for those attempts.\r\n", plan.materials[i][1] * attempts,
                    crafting_materials[plan.materials[i][0]]);
       return;
     }
   for (i = 1; i < NUM_CRAFT_MOTES; i++)
-    if (plan.motes[i] > GET_CRAFT_MOTES(ch, i))
+    if (plan.motes[i] * attempts > GET_CRAFT_MOTES(ch, i))
     {
-      send_to_char(ch, "You need %d %s motes for that batch.\r\n", plan.motes[i],
+      send_to_char(ch, "You need %d %s motes for those attempts.\r\n", plan.motes[i] * attempts,
                    crafting_motes[i]);
       return;
     }
@@ -6062,9 +6122,9 @@ static void craft_ammunition(struct char_data *ch, const char *argument)
   }
   for (i = 0; i < 3; i++)
     if (plan.materials[i][1])
-      GET_CRAFT_MAT(ch, plan.materials[i][0]) -= plan.materials[i][1];
+      GET_CRAFT_MAT(ch, plan.materials[i][0]) -= plan.materials[i][1] * attempts;
   for (i = 1; i < NUM_CRAFT_MOTES; i++)
-    GET_CRAFT_MOTES(ch, i) -= plan.motes[i];
+    GET_CRAFT_MOTES(ch, i) -= plan.motes[i] * attempts;
   /* Ingredients are committed now; deliver and roll only when the timer expires. */
   extract_obj(obj);
   GET_CRAFT(ch).ammo_job[0] = plan.recipe - ammo_craft_recipes;
@@ -6075,14 +6135,15 @@ static void craft_ammunition(struct char_data *ch, const char *argument)
   GET_CRAFT(ch).ammo_job[6] = plan.damage_die;
   GET_CRAFT(ch).ammo_job[7] = making_kit;
   GET_CRAFT(ch).ammo_job_enhancement_mote = plan.enhancement_mote;
-  GET_CRAFT(ch).craft_duration = MAX(1, CRAFT_AMMO_BASE_TIME -
-      get_rapid_talent_bonus(ch, plan.recipe->skill));
-  if (artificer_efficient_crafter_applies(ch))
-    GET_CRAFT(ch).craft_duration = MAX(1, GET_CRAFT(ch).craft_duration * 90 / 100);
+  GET_CRAFT(ch).ammo_job_remaining = attempts;
+  GET_CRAFT(ch).craft_duration = ammunition_craft_duration(ch, &plan);
   GET_CRAFT(ch).crafting_method = SCMD_NEWCRAFT_AMMO;
   send_to_char(ch, "You begin crafting %s. This will take %d seconds.\r\n",
                making_kit ? "a portable fletching kit" : plan.recipe->name,
                GET_CRAFT(ch).craft_duration);
+  if (attempts > 1)
+    send_to_char(ch, "Bulk crafting: %d attempts reserved. Failures count as attempts; "
+                     "use 'craft ammo cancel' to stop and refund unattempted work.\r\n", attempts);
   act("$n starts crafting.", FALSE, ch, 0, 0, TO_ROOM);
   save_char(ch, 0);
   return;
@@ -6621,7 +6682,7 @@ void show_craft_score(struct char_data *ch, const char *arg2)
     total = base_rank + modifier;
     send_to_char(ch, "%-25s %-10s %-4d %-4d %-5d %-6d %-6d\r\n", ability_names[abil], "Craft",
                  base_rank, modifier, total, GET_CRAFT_SKILL_EXP(ch, abil),
-                 craft_skill_level_exp(ch, base_rank + 1));
+                 MAX(0, craft_skill_level_exp(ch, base_rank + 1) - GET_CRAFT_SKILL_EXP(ch, abil)));
   }
 
   send_to_char(ch, "\tc");
@@ -6638,7 +6699,7 @@ void show_craft_score(struct char_data *ch, const char *arg2)
     total = base_rank + modifier;
     send_to_char(ch, "%-25s %-10s %-4d %-4d %-5d %-6d %-6d\r\n", ability_names[abil], "Harvest",
                  base_rank, modifier, total, GET_CRAFT_SKILL_EXP(ch, abil),
-                 craft_skill_level_exp(ch, base_rank + 1));
+                 MAX(0, craft_skill_level_exp(ch, base_rank + 1) - GET_CRAFT_SKILL_EXP(ch, abil)));
   }
   send_to_char(ch, "\tc");
   draw_line(ch, 90, '-', '-');
@@ -8061,22 +8122,23 @@ void gain_craft_exp(struct char_data *ch, int exp, int abil, bool verbose)
                    ability_names[abil]);
     }
   }
+  /* Progression uses learned ranks; effective skill bonuses only affect checks. */
   if (GET_CRAFT_SKILL_EXP(ch, abil) >=
-      craft_skill_level_exp(ch, get_craft_skill_value(ch, abil) + 1))
+      craft_skill_level_exp(ch, GET_ABILITY(ch, abil) + 1))
   {
     send_to_char(ch, "\tYYour skill in '%s' has increased from %d to %d!\r\n\tn",
-                 ability_names[abil], get_craft_skill_value(ch, abil),
-                 get_craft_skill_value(ch, abil) + 1);
-    SET_ABILITY(ch, abil, get_craft_skill_value(ch, abil) + 1);
+                 ability_names[abil], GET_ABILITY(ch, abil),
+                 GET_ABILITY(ch, abil) + 1);
+    SET_ABILITY(ch, abil, GET_ABILITY(ch, abil) + 1);
     /* Award 1 crafting talent point per crafting/harvesting skill level up */
     gain_talent_point(ch, 1);
   }
   send_to_char(ch, "%c%s: XP %d | TNL %d (next rank: %d).\r\n",
                toupper((unsigned char)ability_names[abil][0]), ability_names[abil] + 1,
                GET_CRAFT_SKILL_EXP(ch, abil),
-               MAX(0, craft_skill_level_exp(ch, get_craft_skill_value(ch, abil) + 1) -
+               MAX(0, craft_skill_level_exp(ch, GET_ABILITY(ch, abil) + 1) -
                           GET_CRAFT_SKILL_EXP(ch, abil)),
-               get_craft_skill_value(ch, abil) + 1);
+               GET_ABILITY(ch, abil) + 1);
 }
 
 #define MAX_REFINING_BATCHES 20

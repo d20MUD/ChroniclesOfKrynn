@@ -1,0 +1,161 @@
+#69900
+Courtyard of Mercy~
+This public courtyard welcomes visitors to the temple of Mishakal. A priest offers church service work here. An eastern passage leads to a members sanctuary.
+~
+0 0 0 0 0 0
+D0
+A clear passage leads onward.~
+~
+0 -1 69910
+D1
+A clear passage leads onward.~
+~
+0 -1 69909
+D2
+A clear passage leads onward.~
+~
+0 -1 69901
+S
+#69901
+Shrine of the Shelter~
+This modest shrine to Mishakal invites a pilgrim to pause and reflect on the shelter. A worn path leads back toward the public temple courtyard.
+~
+0 0 0 0 0 0
+D0
+A clear passage leads onward.~
+~
+0 -1 69900
+D2
+A clear passage leads onward.~
+~
+0 -1 69902
+S
+#69902
+Shrine of the Healers~
+This modest shrine to Mishakal invites a pilgrim to pause and reflect on the healers. A worn path leads back toward the public temple courtyard.
+~
+0 0 0 0 0 0
+D0
+A clear passage leads onward.~
+~
+0 -1 69901
+D2
+A clear passage leads onward.~
+~
+0 -1 69903
+S
+#69903
+Shrine of the Returning Light~
+This modest shrine to Mishakal invites a pilgrim to pause and reflect on the returning light. A worn path leads back toward the public temple courtyard.
+~
+0 0 0 0 0 0
+D0
+A clear passage leads onward.~
+~
+0 -1 69902
+D2
+A clear passage leads onward.~
+~
+0 -1 69904
+S
+#69904
+Shrine of the Quiet Vigil~
+This modest shrine to Mishakal invites a pilgrim to pause and reflect on the quiet vigil. A worn path leads back toward the public temple courtyard.
+~
+0 0 0 0 0 0
+D0
+A clear passage leads onward.~
+~
+0 -1 69903
+S
+#69909
+Inner Sanctuary of Mishakal~
+This quiet members sanctuary offers space for reflection in the service of Mishakal. The western passage is an unobstructed outward route to the public courtyard.
+~
+0 19398656 0 0 0 0
+D3
+A clear passage leads onward.~
+~
+0 -1 69900
+S
+#69910
+Courtyard of the Open Book~
+This public courtyard welcomes visitors to the temple of Gilean. A priest offers church service work here. An eastern passage leads to a members sanctuary.
+~
+0 0 0 0 0 0
+D0
+A clear passage leads onward.~
+~
+0 -1 69911
+D1
+A clear passage leads onward.~
+~
+0 -1 69919
+D2
+A clear passage leads onward.~
+~
+0 -1 69900
+S
+#69911
+Shrine of the First Word~
+This modest shrine to Gilean invites a pilgrim to pause and reflect on the first word. A worn path leads back toward the public temple courtyard.
+~
+0 0 0 0 0 0
+D0
+A clear passage leads onward.~
+~
+0 -1 69912
+D2
+A clear passage leads onward.~
+~
+0 -1 69910
+S
+#69912
+Shrine of the Careful Question~
+This modest shrine to Gilean invites a pilgrim to pause and reflect on the careful question. A worn path leads back toward the public temple courtyard.
+~
+0 0 0 0 0 0
+D0
+A clear passage leads onward.~
+~
+0 -1 69913
+D2
+A clear passage leads onward.~
+~
+0 -1 69911
+S
+#69913
+Shrine of the Remembered Name~
+This modest shrine to Gilean invites a pilgrim to pause and reflect on the remembered name. A worn path leads back toward the public temple courtyard.
+~
+0 0 0 0 0 0
+D0
+A clear passage leads onward.~
+~
+0 -1 69914
+D2
+A clear passage leads onward.~
+~
+0 -1 69912
+S
+#69914
+Shrine of the Unwritten Page~
+This modest shrine to Gilean invites a pilgrim to pause and reflect on the unwritten page. A worn path leads back toward the public temple courtyard.
+~
+0 0 0 0 0 0
+D2
+A clear passage leads onward.~
+~
+0 -1 69913
+S
+#69919
+Inner Sanctuary of Gilean~
+This quiet members sanctuary offers space for reflection in the service of Gilean. The western passage is an unobstructed outward route to the public courtyard.
+~
+0 19398656 0 0 0 0
+D3
+A clear passage leads onward.~
+~
+0 -1 69910
+S
+$

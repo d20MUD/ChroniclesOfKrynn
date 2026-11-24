@@ -1213,6 +1213,8 @@ const char *action_bits[] = {"<spec>", // 0
                              "Ranged-Attack",
                              "Block-Clan",
                              "Block-Stealth",
+                             "Block-Religion",
+                             "Block-Temple-Rank",
                              "\n"};
 CHECK_TABLE_SIZE(action_bits, NUM_MOB_FLAGS + 1);
 
@@ -1313,6 +1315,8 @@ const char *preference_bits[] = {"Brief",
                                  "Anonymous",
                                  "Auto-Harvest",
                                  "Disp-Ammo",
+                                 "Mudlet-No-Ask",
+                                 "Mudlet-Install",
                                  "\n"};
 CHECK_TABLE_SIZE(preference_bits, NUM_PRF_FLAGS + 1);
 
@@ -1688,6 +1692,7 @@ const char *connected_types[] = {
     "Board Post Abort",
     "Board Editor",
     "Quit Feedback Prompt",
+    "Mudlet Package Consent",
     "\n" /* make sure this matches NUM_CON_STATES */
 };
 CHECK_TABLE_SIZE(connected_types, NUM_CON_STATES + 1);

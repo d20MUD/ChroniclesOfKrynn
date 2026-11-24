@@ -8,6 +8,8 @@
 #include "conf.h"
 #include "sysdep.h"
 #include "structs.h"
+#include "deities.h"
+#include "religion.h"
 #include "utils.h"
 #include "interpreter.h"
 #include "comm.h"
@@ -821,9 +823,15 @@ static void medit_disp_menu(struct descriptor_data *d)
       specname ? specname : "None", grn, nrm, grn, nrm, grn, nrm);
   write_to_output(d, "\r\n\tCclan\tn) Clan number       : %d\r\n"
                      "\tCrank\tn) Minimum clan rank : %d (1 is highest)\r\n"
-                     "\tCfavor\tn) Minimum Favor rank: %d\r\nEnter choice : ",
+                     "\tCfavor\tn) Minimum Favor rank: %d\r\n"
+                     "\tCdeity\tn) Mob deity         : %s (%d)\r\n"
+                     "\tCtemplerank\tn) Temple rank : %s (%d, 1..8; 0 none)\r\nEnter choice : ",
                      OLC_MOB(d)->clan_requirement.clan, OLC_MOB(d)->clan_requirement.rank,
-                     OLC_MOB(d)->clan_requirement.favor);
+                     OLC_MOB(d)->clan_requirement.favor,
+                     OLC_MOB(d)->mob_deity == 0 ? "None" :
+                       religion_deity_valid(OLC_MOB(d)->mob_deity) ? deity_list[OLC_MOB(d)->mob_deity].name : "Invalid",
+                     OLC_MOB(d)->mob_deity, religion_rank_name(OLC_MOB(d)->mob_temple_rank),
+                     OLC_MOB(d)->mob_temple_rank);
   OLC_MODE(d) = MEDIT_MAIN_MENU;
 }
 
@@ -1040,6 +1048,12 @@ void medit_parse(struct descriptor_data *d, char *arg)
     {
     case 'y':
     case 'Y':
+      if (!religion_mob_valid(OLC_MOB(d)))
+      {
+        write_to_output(d, "Invalid religion settings. Faith blockers need a deity; rank blockers need rank 1..8.\r\n");
+        medit_disp_menu(d);
+        return;
+      }
       /* Save the mob in memory and to disk. */
       medit_save_internally(d);
       mudlog(CMP, MAX(LVL_BUILDER, GET_INVIS_LEV(d->character)), TRUE, "OLC: %s edits mob %d",
@@ -1068,6 +1082,31 @@ void medit_parse(struct descriptor_data *d, char *arg)
     }
     break;
 
+  case MEDIT_MOB_DEITY:
+  case MEDIT_TEMPLE_RANK:
+    if (!*arg || strspn(arg, "0123456789") != strlen(arg) || strlen(arg) > 3 ||
+        atoi(arg) > (OLC_MODE(d) == MEDIT_MOB_DEITY ? NUM_DEITIES - 1 : 8)) {
+      write_to_output(d, "Enter a valid number: ");
+      return;
+    }
+    if (OLC_MODE(d) == MEDIT_MOB_DEITY && atoi(arg) != 0 &&
+        deity_list[atoi(arg)].pantheon == DEITY_PANTHEON_NONE) {
+      write_to_output(d, "That deity ID is not available in this campaign. Enter another: ");
+      return;
+    }
+    if ((OLC_MODE(d) == MEDIT_MOB_DEITY && atoi(arg) == 0 &&
+         (MOB_FLAGGED(OLC_MOB(d), MOB_BLOCK_RELIGION) || MOB_FLAGGED(OLC_MOB(d), MOB_BLOCK_TEMPLE_RANK))) ||
+        (OLC_MODE(d) == MEDIT_TEMPLE_RANK && atoi(arg) == 0 && MOB_FLAGGED(OLC_MOB(d), MOB_BLOCK_TEMPLE_RANK)))
+    {
+      write_to_output(d, "Disable the faith blocker flag before clearing its required field: ");
+      return;
+    }
+    if (OLC_MODE(d) == MEDIT_MOB_DEITY) OLC_MOB(d)->mob_deity = atoi(arg);
+    else OLC_MOB(d)->mob_temple_rank = atoi(arg);
+    OLC_VAL(d) = 1;
+    medit_disp_menu(d);
+    return;
+
   case MEDIT_CLAN:
   case MEDIT_CLAN_RANK:
   case MEDIT_CLAN_FAVOR:
@@ -1082,6 +1121,25 @@ void medit_parse(struct descriptor_data *d, char *arg)
     medit_disp_menu(d); return;
 
   case MEDIT_MAIN_MENU:
+    if (!strcasecmp(arg, "deity") || !strcasecmp(arg, "templerank")) {
+      OLC_MODE(d) = !strcasecmp(arg, "deity") ? MEDIT_MOB_DEITY : MEDIT_TEMPLE_RANK;
+      if (OLC_MODE(d) == MEDIT_MOB_DEITY) {
+        int deity_id;
+        write_to_output(d, "  0) None\r\n");
+        for (deity_id = 1; deity_id < NUM_DEITIES; deity_id++)
+          if (deity_list[deity_id].pantheon != DEITY_PANTHEON_NONE)
+            write_to_output(d, "%3d) %s\r\n", deity_id, deity_list[deity_id].name);
+        write_to_output(d, "Enter deity ID (0 = none): ");
+      }
+      else
+      {
+        int rank;
+        for (rank = 0; rank <= 8; ++rank)
+          write_to_output(d, "%d) %s\r\n", rank, religion_rank_name(rank));
+        write_to_output(d, "Enter temple rank (0 = none, 1..8): ");
+      }
+      return;
+    }
     if (!strcasecmp(arg, "clan") || !strcasecmp(arg, "rank") || !strcasecmp(arg, "favor")) {
       OLC_MODE(d) = !strcasecmp(arg, "clan") ? MEDIT_CLAN :
                     !strcasecmp(arg, "rank") ? MEDIT_CLAN_RANK : MEDIT_CLAN_FAVOR;
@@ -1887,6 +1945,12 @@ void medit_parse(struct descriptor_data *d, char *arg)
     else if (j <= NUM_MOB_FLAGS)
     {
       TOGGLE_BIT_AR(MOB_FLAGS(OLC_MOB(d)), (j));
+      if ((j == MOB_BLOCK_RELIGION || j == MOB_BLOCK_TEMPLE_RANK) &&
+          MOB_FLAGGED(OLC_MOB(d), j) && !religion_mob_valid(OLC_MOB(d)))
+      {
+        TOGGLE_BIT_AR(MOB_FLAGS(OLC_MOB(d)), (j));
+        write_to_output(d, "Set a valid deity first; Block-Temple-Rank also needs rank 1..8.\r\n");
+      }
     }
     medit_disp_mob_flags(d);
     return;

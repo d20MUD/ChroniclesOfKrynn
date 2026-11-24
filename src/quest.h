@@ -166,6 +166,7 @@ int is_quest_target_obj(struct char_data *ch, struct obj_data *obj);
 qst_vnum find_quest_by_qmnum(struct char_data *ch, mob_rnum qm, int num);
 void add_completed_quest(struct char_data *ch, qst_vnum vnum);
 void remove_completed_quest(struct char_data *ch, qst_vnum vnum);
+bool quest_church_eligible(struct char_data *ch, qst_rnum rnum, char **reason);
 void quest_timeout(struct char_data *ch, int index);
 void check_timed_quests(void);
 void quest_walkto(struct char_data *ch, char argument[MAX_STRING_LENGTH]);

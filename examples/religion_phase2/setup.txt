@@ -1,0 +1,42 @@
+KRYNN PILOT: run after installing zone 699, saving and resetting its mobs.
+Deity IDs 2 and 8 are Mishakal and Gilean in the Dragonlance campaign.
+Temple IDs 69901 and 69902 must be unused.
+
+goto 69900
+religionadmin create 69901 2 Courtyard of Mercy
+religionadmin set 69901 entrance 69900
+religionadmin set 69901 priest 69900
+religionadmin set 69901 hospitality 1
+religionadmin task 69901 1 69900
+religionadmin task 69901 2 69901
+religionadmin task 69901 3 69902
+religionadmin task 69901 4 69903
+religionadmin set 69901 enabled 1
+religionadmin chest 2 1 50
+goto 69910
+religionadmin create 69902 8 Courtyard of the Open Book
+religionadmin set 69902 entrance 69910
+religionadmin set 69902 priest 69901
+religionadmin set 69902 hospitality 1
+religionadmin task 69902 1 69904
+religionadmin task 69902 2 69905
+religionadmin task 69902 3 69906
+religionadmin task 69902 4 69907
+religionadmin set 69902 enabled 1
+religionadmin chest 8 1 50
+religionadmin rankname 2 1 Bearer of Mercy
+religionadmin rankname 2 2 Tender of Wounds
+religionadmin rankname 2 3 Keeper of the Vigil
+religionadmin rankname 2 4 Servant of Renewal
+religionadmin rankname 2 5 Steward of Compassion
+religionadmin rankname 2 6 Voice of Mercy
+religionadmin rankname 2 7 Elder of Renewal
+religionadmin rankname 2 8 Luminary of Healing
+religionadmin rankname 8 1 Seeker of Words
+religionadmin rankname 8 2 Keeper of the Page
+religionadmin rankname 8 3 Reader of Names
+religionadmin rankname 8 4 Guardian of Records
+religionadmin rankname 8 5 Steward of Knowledge
+religionadmin rankname 8 6 Voice of the Archive
+religionadmin rankname 8 7 Elder of the Book
+religionadmin rankname 8 8 Luminary of Knowledge

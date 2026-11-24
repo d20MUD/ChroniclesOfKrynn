@@ -309,6 +309,10 @@ i added this trying to debug issues with qedit-copy -zusuk
 #define MEDIT_CLAN 8804
 #define MEDIT_CLAN_RANK 8805
 #define MEDIT_CLAN_FAVOR 8806
+#define MEDIT_MOB_DEITY 8807
+#define MEDIT_TEMPLE_RANK 8808
+#define OEDIT_DEITY 8809
+#define OEDIT_TEMPLE_RANK 8810
 
 /* Submodes of REDIT connectedness. */
 #define REDIT_MAIN_MENU 1

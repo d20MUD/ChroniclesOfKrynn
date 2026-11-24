@@ -17,6 +17,10 @@
 #include "legendary_commands.h"
 #include "legendary_equipment.h"
 #include "structs.h"
+#include "deities.h"
+#include "religion.h"
+#include "restring.h"
+#include "housing.h"
 #include "clan_sources.h"
 #include "clan_expeditions.h"
 #include "clan_expedition_enrollment.h"
@@ -1176,6 +1180,8 @@ void boot_db(void)
   init_obj_rnum_hash();
 
   boot_world();
+  religion_boot();
+  religion_tasks_boot();
   clan_expedition_boot_validate();
   clan_qm_boot_validate();
 
@@ -1379,6 +1385,7 @@ void boot_db(void)
     reset_zone(i);
   }
 
+  temple_chests_boot();
   reset_q.head = reset_q.tail = NULL;
 
   if (!boot_time)
@@ -2995,6 +3002,22 @@ static void interpret_espec(const char *keyword, const char *value, int i, int n
   if (value)
     num_arg = atoi(value);
 
+  CASE("MobDeity")
+  {
+    char *end;
+    long parsed;
+    errno = 0;
+    parsed = strtol(value, &end, 10);
+    mob_proto[i].mob_deity = !errno && *value && !*end && parsed >= 0 && parsed < NUM_DEITIES ? (int)parsed : -1;
+  }
+  CASE("TempleRank")
+  {
+    char *end;
+    long parsed;
+    errno = 0;
+    parsed = strtol(value, &end, 10);
+    mob_proto[i].mob_temple_rank = !errno && *value && !*end && parsed >= 0 && parsed <= 8 ? (int)parsed : -1;
+  }
   CASE("Clan") { RANGE(0, 65534); mob_proto[i].clan_requirement.clan = num_arg; }
   CASE("ClanRank") { RANGE(0, 15); mob_proto[i].clan_requirement.rank = num_arg; }
   CASE("ClanFavorRank") { RANGE(0, 5); mob_proto[i].clan_requirement.favor = num_arg; }
@@ -3988,6 +4011,15 @@ const char *parse_object(FILE *obj_f, int nr)
       obj_proto[i].sbinfo[j].spellname = t[0];
       obj_proto[i].sbinfo[j].pages = t[1];
       j++;
+      break;
+    case 'F': /* Religion purchase requirements. */
+      if (!get_line(obj_f, line))
+      {
+        log("SYSERR: Missing object religion requirements: %s", buf2);
+        exit(1);
+      }
+      if (!religion_parse_requirement(line, &obj_proto[i].religion_requirement))
+        log("SYSERR: Invalid object religion requirements: %s; purchases fail closed.", buf2);
       break;
     case 'U': /* Clan purchase/equipment requirements. */
       if (!get_line(obj_f, line) ||
@@ -6745,6 +6777,7 @@ void free_char(struct char_data *ch)
         next = check->next;
         free(check);
       }
+      restring_cleanup(ch);
       free(ch->player_specials);
     }
 

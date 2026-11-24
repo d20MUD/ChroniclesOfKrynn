@@ -433,6 +433,8 @@ int write_mobile_espec(mob_vnum mvnum, struct char_data *mob, FILE *fd)
     }
   }
 
+  if (mob->mob_deity) fprintf(fd, "MobDeity: %d\n", mob->mob_deity);
+  if (mob->mob_temple_rank) fprintf(fd, "TempleRank: %d\n", mob->mob_temple_rank);
   if (mob->clan_requirement.clan) fprintf(fd, "Clan: %d\n", mob->clan_requirement.clan);
   if (mob->clan_requirement.rank) fprintf(fd, "ClanRank: %d\n", mob->clan_requirement.rank);
   if (mob->clan_requirement.favor) fprintf(fd, "ClanFavorRank: %d\n", mob->clan_requirement.favor);

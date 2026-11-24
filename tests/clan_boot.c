@@ -9,6 +9,7 @@
 #include "clan_repository.h"
 #include "clan_persistence.h"
 #include <assert.h>
+#include <json-c/json.h>
 struct clan_data *clan_list;int num_of_clans;
 struct claim_data *claim_list;
 struct player_special_data dummy_mob;
@@ -35,7 +36,19 @@ int main(int argc,char **argv)
  else if(!strcmp(scenario,"shadow")){assert(clan_persistence_boot("shadow"));assert(legacy_calls==2&&!clan_persistence_sql_authority());}
  else if(!strcmp(scenario,"invalid")){assert(!clan_persistence_boot("MySQL"));assert(!legacy_calls);}
  else if(!strcmp(scenario,"unavailable")){mysql_available=false;assert(!clan_persistence_boot("mysql"));assert(clan_persistence_sql_authority()&&!clan_persistence_ready()&&!legacy_calls);assert(!clan_persistence_configure(CLAN_STORE_LEGACY));}
- else if(!strcmp(scenario,"missing-player")){rows[0].flags=PINDEX_DELETED;assert(!clan_persistence_boot("mysql"));assert(!clan_persistence_ready()&&!legacy_calls);}
+ else if(!strcmp(scenario,"missing-player") || !strcmp(scenario,"deleted-player")){
+  struct json_object *snapshot=NULL;
+  if(!strcmp(scenario,"deleted-player")) rows[0].flags=PINDEX_DELETED;
+  else rows[0].id=6000000000;
+  assert(clan_persistence_boot("mysql"));assert(clan_persistence_ready()&&!legacy_calls);
+  assert(rows[0].clan==0&&rows[1].clan==9);
+  ch.player_specials=&saved;GET_IDNUM(&ch)=5000000007;GET_PFILEPOS(&ch)=0;
+  GET_CLAN(&ch)=123;GET_CLANRANK(&ch)=3;
+  clan_persistence_reconcile_player(&ch);assert(GET_CLAN(&ch)==0&&GET_CLANRANK(&ch)==0);
+  assert(clan_repository_snapshot_read(pool.conn,&snapshot)==CLAN_REPO_OK);
+  assert(json_object_array_length(json_object_object_get(snapshot,"members"))==1);
+  json_object_put(snapshot);
+ }
  else if(!strcmp(scenario,"rejected")){assert(!clan_persistence_boot("mysql"));assert(clan_persistence_sql_authority()&&!clan_persistence_ready()&&!legacy_calls);assert(!clan_persistence_boot_buff(0,&b));}
  else {
   assert(!strcmp(scenario,"file-mysql")?clan_persistence_boot_environment():clan_persistence_boot("mysql"));assert(clan_persistence_sql_authority()&&clan_persistence_ready()&&!legacy_calls&&hash_rebuilds==1);
@@ -43,7 +56,7 @@ int main(int argc,char **argv)
   else {
    assert(num_of_clans==2&&clan_list[0].vnum==7&&clan_list[1].vnum==9);assert(clan_list[0].allies[1]&&clan_list[1].allies[0]);
    assert(clan_list[0].treasure==INT64_C(5000000000));assert(claim_list&&claim_list->clan==7&&claim_list->popularity[0]==17.25f);
-   assert(rows[0].clan==7&&rows[1].clan==9&&rows[2].clan==(int)NO_CLAN);
+   assert(rows[0].clan==7&&rows[1].clan==9&&rows[2].clan==0);
    ch.player_specials=&saved;GET_IDNUM(&ch)=rows[0].id;GET_PFILEPOS(&ch)=0;GET_CLAN(&ch)=123;GET_CLANRANK(&ch)=3;GET_CLANPOINTS(&ch)=99;
    clan_persistence_reconcile_player(&ch);assert(GET_CLAN(&ch)==7&&GET_CLANRANK(&ch)==1&&GET_CLANPOINTS(&ch)==99);
    assert(clan_persistence_boot_buff(0,&b));assert(b.expires_at==300&&b.next_available_at==500&&!clan_repository_buff_active(&b,400));

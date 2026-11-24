@@ -148,6 +148,9 @@ static variable_name_t VariableNameTable[eMSDP_MAX + 1] = {
     {eMSDP_ATTACK_BONUS, "ATTACK_BONUS", NUMBER_READ_ONLY},
     {eMSDP_DAMAGE_BONUS, "DAMAGE_BONUS", NUMBER_READ_ONLY},
     {eMSDP_AC, "AC", NUMBER_READ_ONLY},
+    {eMSDP_FORTITUDE, "FORTITUDE", NUMBER_READ_ONLY},
+    {eMSDP_REFLEX, "REFLEX", NUMBER_READ_ONLY},
+    {eMSDP_WILLPOWER, "WILLPOWER", NUMBER_READ_ONLY},
     {eMSDP_STR, "STR", NUMBER_READ_ONLY},
     {eMSDP_INT, "INT", NUMBER_READ_ONLY},
     {eMSDP_WIS, "WIS", NUMBER_READ_ONLY},
@@ -334,6 +337,8 @@ protocol_t *ProtocolCreate(void)
     return NULL;
   }
   pProtocol->WriteOOB = 0;
+  pProtocol->mudlet_offer_shown = false;
+  pProtocol->mudlet_stop_asking = false;
   for (i = eNEGOTIATED_TTYPE; i < eNEGOTIATED_MAX; ++i)
     pProtocol->Negotiated[i] = false;
   pProtocol->bIACMode = false;
@@ -2392,36 +2397,8 @@ static void PerformHandshake(descriptor_t *apDescriptor, char aCmd, char aProtoc
         log("DEBUG: NOT enabling GMCP - bMSDP=%d, bGMCP=%d", pProtocol->bMSDP, pProtocol->bGMCP);
       }
 
-      if (CONFIG_AUTO_DL_MUDLET_PACKAGE)
-      {
-        /* Always allow GMCP for Mudlet package delivery */
-        if (!pProtocol->bGMCP)
-        {
-          log("DEBUG: Force-enabling GMCP for Mudlet package delivery");
-          pProtocol->bGMCP = true;
-        }
-
-#ifdef MUDLET_PACKAGE
-        log("DEBUG: MUDLET_PACKAGE defined as: %s", MUDLET_PACKAGE);
-        /* Send the Mudlet GUI package to the user. */
-        if (MatchString("Mudlet", pProtocol->pVariables[eMSDP_CLIENT_ID]->pValueString))
-        {
-          log("DEBUG: Mudlet client detected! Sending package via GMCP");
-          SendGMCP(apDescriptor, "Client.GUI", MUDLET_PACKAGE);
-        }
-        else
-        {
-          log("DEBUG: Client '%s' is not Mudlet, not sending package",
-              pProtocol->pVariables[eMSDP_CLIENT_ID]->pValueString);
-        }
-#else
-        log("DEBUG: MUDLET_PACKAGE not defined!");
-#endif /* MUDLET_PACKAGE */
-      }
-      else
-      {
-        log("DEBUG: Auto-download Mudlet package disabled via config");
-      }
+      /* GMCP is available even when the client also supports MSDP. */
+      pProtocol->bGMCP = true;
     }
     else if (aCmd == (char)WONT)
     {
@@ -2679,14 +2656,6 @@ static void PerformSubnegotiation(descriptor_t *apDescriptor, char aCmd, char *a
 
         log("DEBUG: TTYPE identified client as '%s'", pClientName);
 
-#ifdef MUDLET_PACKAGE
-        /* Check if this is Mudlet and we have GMCP enabled but haven't sent the package yet */
-        if (MatchString("Mudlet", pClientName) && pProtocol->bGMCP)
-        {
-          log("DEBUG: Mudlet identified via TTYPE, sending package now via GMCP");
-          SendGMCP(apDescriptor, "Client.GUI", MUDLET_PACKAGE);
-        }
-#endif /* MUDLET_PACKAGE */
 
         /* This is a bit nasty, but using cyclic TTYPE on windows telnet
          * causes it to lock up.  None of the clients we need to cycle
@@ -3404,6 +3373,21 @@ static void ParseGMCP(descriptor_t *apDescriptor, const char *apData)
   char Variable[MSDP_VAL][MAX_MSDP_SIZE + 1] = {{'\0'}, {'\0'}};
   char *pPos = NULL, *pStart = NULL;
 
+  /* The helper reports profile-local consent; accept only exact messages. */
+  if (!strcmp(apData, "Krynn.Preference \"stop\"") ||
+      !strcmp(apData, "Krynn.Preference \"ask\""))
+  {
+    if (apDescriptor->pProtocol->mudlet_stop_asking)
+      MudletPackageRemember(apDescriptor);
+    else if (!strcmp(apData, "Krynn.Preference \"stop\"") &&
+             STATE(apDescriptor) == CON_MUDLET_PACKAGE)
+    {
+      write_to_output(apDescriptor, "\r\nMudlet GUI offer disabled for this profile.\r\n%s", GREETINGS);
+      STATE(apDescriptor) = CON_ACCOUNT_NAME;
+    }
+    return;
+  }
+
   while (*apData)
   {
     switch (*apData)
@@ -3430,6 +3414,44 @@ static void ParseGMCP(descriptor_t *apDescriptor, const char *apData)
     ExecuteMSDPPair(apDescriptor, Variable[MSDP_VAR - 1], Variable[MSDP_VAL - 1]);
     Variable[MSDP_VAL - 1][0] = '\0';
   }
+}
+
+void MudletPackageInstall(descriptor_t *d)
+{
+#ifdef MUDLET_PACKAGE
+  if (d && d->pProtocol && d->pProtocol->bGMCP)
+    SendGMCP(d, "Client.GUI", MUDLET_PACKAGE);
+#endif
+}
+
+void MudletPackageRemember(descriptor_t *d)
+{
+#ifdef MUDLET_PACKAGE
+  if (d && d->pProtocol && d->pProtocol->bGMCP)
+    SendGMCP(d, "Krynn.Preference", "{\"stop\":true}");
+#endif
+}
+
+bool_t MudletPackageOffer(descriptor_t *d)
+{
+  protocol_t *p;
+  if (!d || !(p = d->pProtocol) || !p->bGMCP || p->mudlet_offer_shown ||
+      !PrefixString("Mudlet", p->pVariables[eMSDP_CLIENT_ID]->pValueString))
+    return false;
+  p->mudlet_offer_shown = true;
+  STATE(d) = CON_MUDLET_PACKAGE;
+#ifdef MUDLET_PACKAGE
+  /* Mudlet installs this separate helper only when profile settings permit it.
+   * Until it responds, the normal text prompt remains usable. */
+  SendGMCP(d, "Client.GUI", "{\"version\":\"1\",\"url\":\"https://raw.githubusercontent.com/d20MUD/ChroniclesOfKrynn/master/mudlet/KrynnPreference.mpackage\"}");
+  SendGMCP(d, "Krynn.Preference", "{\"request\":true}");
+#endif
+  write_to_output(d, "\r\nDownload and install the Mudlet GUI package?\r\n"
+                     "  1) Yes\r\n"
+                     "  2) No\r\n"
+                     "  3) No, and stop asking\r\n"
+                     "Your choice: ");
+  return true;
 }
 
 #ifdef MUDLET_PACKAGE

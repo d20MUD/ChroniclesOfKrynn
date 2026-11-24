@@ -15,6 +15,7 @@
 #include "legendary_foundations.h"
 #include "legendary_techniques.h"
 #include "structs.h"
+#include "religion.h"
 #include "utils.h"
 #include "epic_feats3.h"
 #include "epic_feats2.h"
@@ -9376,6 +9377,8 @@ void calculate_max_hp(struct char_data *ch, bool display)
                    anthem_fortitude_hp_bonus_pct);
   }
 
+  max_hp += religion_blessing_value(ch, CHURCH_HP);
+
   // Clamp to minimum 1 HP
   if (max_hp < 1)
   {
@@ -12621,7 +12624,7 @@ int get_spell_potency_bonus(struct char_data *ch)
     potency_bonus += max_value[i];
   }
 
-  return potency_bonus;
+  return potency_bonus + religion_blessing_value(ch, CHURCH_POTENCY);
 }
 
 int get_spell_dc_bonus(struct char_data *ch)
@@ -12897,7 +12900,7 @@ int get_spell_duration_bonus(struct char_data *ch)
     duration_bonus += max_value[i];
   }
 
-  return MAX(100, duration_bonus);
+  return MAX(100, duration_bonus + religion_blessing_value(ch, CHURCH_DURATION));
 }
 
 int get_random_spellcaster_class(void)

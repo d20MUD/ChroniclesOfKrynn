@@ -19,6 +19,7 @@
 #include "legendary_equipment.h"
 #include "legendary_earnings.h"
 #include "structs.h"
+#include "religion.h"
 #include "class_improvements.h"
 #include "clan_enchant.h"
 #include "clan_sources.h"
@@ -309,6 +310,127 @@ int ranged_range_penalty(struct char_data *ch, struct char_data *victim, struct 
   if (increment <= 0)
     return 0;
   return -((distance - 1) / increment) * (HAS_FEAT(ch, FEAT_FAR_SHOT) ? 1 : 2);
+}
+
+/* Use the shot snapshot, rather than the pouch head: the last arrow in a
+ * stack has already been removed by the time its attack roll is displayed. */
+static void show_ranged_attack_details(struct char_data *ch, struct char_data *victim,
+                                      struct obj_data *weapon, bool combat_roll)
+{
+  struct obj_data *ammo = ranged_ammunition(ch);
+  char details[2048];
+  size_t used = 0;
+  int enhancement, arrow_bonus, pbs, aim, range_penalty;
+
+  if (!ammo)
+    return;
+  enhancement = MAX(GET_ENHANCEMENT_BONUS(ammo), weapon ? GET_ENHANCEMENT_BONUS(weapon) : 0);
+  if (affected_by_spell(ch, SPELL_GREATER_MAGIC_WEAPON))
+    enhancement = MAX(enhancement,
+                      get_char_affect_modifier(ch, SPELL_GREATER_MAGIC_WEAPON, APPLY_SPECIAL));
+  arrow_bonus = GET_OBJ_VAL(ammo, 0) == AMMO_TYPE_ARROW ? HAS_FEAT(ch, FEAT_ENHANCE_ARROW_MAGIC) : 0;
+  pbs = point_blank_shot_bonus(ch, victim);
+  aim = deadly_aim_step(ch);
+  range_penalty = ranged_range_penalty(ch, victim, weapon);
+
+  /* Combat gets only compact, shot-specific modifiers. The attacks command
+   * retains names, stacking rules and passive feat explanations below. */
+  if (combat_roll)
+  {
+    used += snprintf(details + used, sizeof(details) - used, " [Ammo:%+d", GET_ENHANCEMENT_BONUS(ammo));
+    if (arrow_bonus)
+      used += snprintf(details + used, sizeof(details) - used, " EA:%+d", arrow_bonus);
+    if (pbs)
+      used += snprintf(details + used, sizeof(details) - used, " PBS:+1");
+    if (aim)
+      used += snprintf(details + used, sizeof(details) - used, " DA:-%d/+%d", aim, aim * 2);
+    if (range_penalty)
+      used += snprintf(details + used, sizeof(details) - used, " Range:%+d", range_penalty);
+    if (GET_OBJ_VAL(ammo, AMMO_VAL_DAMAGE_TYPE) > 0 &&
+        GET_OBJ_VAL(ammo, AMMO_VAL_DAMAGE_TYPE) < NUM_DAM_TYPES &&
+        GET_OBJ_VAL(ammo, AMMO_VAL_DAMAGE_DIE) > 0)
+      used += snprintf(details + used, sizeof(details) - used, " +1d%d %s",
+                       MIN(100, GET_OBJ_VAL(ammo, AMMO_VAL_DAMAGE_DIE)),
+                       damtypes[GET_OBJ_VAL(ammo, AMMO_VAL_DAMAGE_TYPE)]);
+    if (current_shot && current_shot->attacker == ch && current_shot->extra_projectile)
+    {
+      struct obj_data *extra = current_shot->extra_projectile;
+      used += snprintf(details + used, sizeof(details) - used, " MS-ammo:%+d", GET_ENHANCEMENT_BONUS(extra));
+      if (GET_OBJ_VAL(extra, AMMO_VAL_DAMAGE_TYPE) > 0 &&
+          GET_OBJ_VAL(extra, AMMO_VAL_DAMAGE_TYPE) < NUM_DAM_TYPES &&
+          GET_OBJ_VAL(extra, AMMO_VAL_DAMAGE_DIE) > 0)
+        used += snprintf(details + used, sizeof(details) - used, " +1d%d %s",
+                         MIN(100, GET_OBJ_VAL(extra, AMMO_VAL_DAMAGE_DIE)),
+                         damtypes[GET_OBJ_VAL(extra, AMMO_VAL_DAMAGE_TYPE)]);
+    }
+    snprintf(details + used, sizeof(details) - used, "]");
+    send_combat_roll_info(ch, "%s", details);
+    return;
+  }
+
+  used += snprintf(details + used, sizeof(details) - used,
+                   " [Ammo: %.120s; ammo enhancement %+d; weapon/ammo enhancement %+d (highest equipment/spell only)",
+                   ammo->short_description ? ammo->short_description : "ammunition",
+                   GET_ENHANCEMENT_BONUS(ammo), enhancement);
+  if (arrow_bonus)
+    used += snprintf(details + used, sizeof(details) - used,
+                     "; Enhance Arrow %+d attack/damage (stacks with ammo)", arrow_bonus);
+  if (pbs)
+    used += snprintf(details + used, sizeof(details) - used,
+                     "; Point Blank Shot +1 attack/damage");
+  else if (HAS_FEAT(ch, FEAT_POINT_BLANK_SHOT) && !victim)
+    used += snprintf(details + used, sizeof(details) - used,
+                     "; Point Blank Shot +1 attack/damage within 30 ft (target required)");
+  if (HAS_FEAT(ch, FEAT_PRECISE_SHOT) || HAS_FEAT(ch, FEAT_IMPROVED_PRECISE_SHOT))
+    used += snprintf(details + used, sizeof(details) - used,
+                     "; Precise Shot: no -4 firing-into-melee penalty");
+  if (HAS_FEAT(ch, FEAT_IMPROVED_PRECISE_SHOT))
+    used += snprintf(details + used, sizeof(details) - used,
+                     "; Improved Precise Shot: ignores concealment below 50%%");
+  if (aim)
+    used += snprintf(details + used, sizeof(details) - used,
+                     "; Deadly Aim -%d attack/%+d damage", aim, aim * 2);
+  if (HAS_FEAT(ch, FEAT_RAPID_SHOT) && AFF_FLAGGED(ch, AFF_RAPID_SHOT))
+    used += snprintf(details + used, sizeof(details) - used,
+                     "; Rapid Shot mode: extra shot/-2 attack on eligible full attacks");
+  if (HAS_FEAT(ch, FEAT_FAR_SHOT) && ranged_weapon_increment(ch, weapon) > 0)
+    used += snprintf(details + used, sizeof(details) - used,
+                     "; Far Shot: %d ft increments, -1 per extra increment",
+                     ranged_weapon_increment(ch, weapon));
+  if (range_penalty)
+    used += snprintf(details + used, sizeof(details) - used,
+                     "; range %+d attack", range_penalty);
+  if (GET_OBJ_VAL(ammo, AMMO_VAL_DAMAGE_TYPE) > 0 &&
+      GET_OBJ_VAL(ammo, AMMO_VAL_DAMAGE_TYPE) < NUM_DAM_TYPES &&
+      GET_OBJ_VAL(ammo, AMMO_VAL_DAMAGE_DIE) > 0)
+    used += snprintf(details + used, sizeof(details) - used,
+                     "; ammo +1d%d %s damage", MIN(100, GET_OBJ_VAL(ammo, AMMO_VAL_DAMAGE_DIE)),
+                     damtypes[GET_OBJ_VAL(ammo, AMMO_VAL_DAMAGE_TYPE)]);
+  if (current_shot && current_shot->attacker == ch && current_shot->extra_projectile)
+  {
+    struct obj_data *extra = current_shot->extra_projectile;
+    int extra_enhancement = MAX(GET_ENHANCEMENT_BONUS(extra), weapon ? GET_ENHANCEMENT_BONUS(weapon) : 0);
+    if (affected_by_spell(ch, SPELL_GREATER_MAGIC_WEAPON))
+      extra_enhancement = MAX(extra_enhancement,
+                             get_char_affect_modifier(ch, SPELL_GREATER_MAGIC_WEAPON, APPLY_SPECIAL));
+    used += snprintf(details + used, sizeof(details) - used,
+                     "; Manyshot extra ammo: %.120s, enhancement %+d damage (highest only), "
+                     "Enhance Arrow %+d damage (stacks with ammo); shares first roll",
+                     extra->short_description ? extra->short_description : "ammunition",
+                     extra_enhancement,
+                     GET_OBJ_VAL(extra, 0) == AMMO_TYPE_ARROW ? HAS_FEAT(ch, FEAT_ENHANCE_ARROW_MAGIC) : 0);
+    if (GET_OBJ_VAL(extra, AMMO_VAL_DAMAGE_TYPE) > 0 &&
+        GET_OBJ_VAL(extra, AMMO_VAL_DAMAGE_TYPE) < NUM_DAM_TYPES &&
+        GET_OBJ_VAL(extra, AMMO_VAL_DAMAGE_DIE) > 0)
+      used += snprintf(details + used, sizeof(details) - used,
+                       ", +1d%d %s damage", MIN(100, GET_OBJ_VAL(extra, AMMO_VAL_DAMAGE_DIE)),
+                       damtypes[GET_OBJ_VAL(extra, AMMO_VAL_DAMAGE_TYPE)]);
+  }
+  snprintf(details + used, sizeof(details) - used, "]%s", combat_roll ? "" : "\r\n");
+  if (combat_roll)
+    send_combat_roll_info(ch, "%s", details);
+  else
+    send_to_char(ch, "%s", details);
 }
 
 int combat_melee_range(struct char_data *ch, struct obj_data *weapon)
@@ -1310,7 +1432,7 @@ int get_initiative_modifier(struct char_data *ch)
   if (!IS_NPC(ch) && has_inquisitor_master_tactician(ch))
     initiative += 2;
 
-  return initiative;
+  return initiative + religion_blessing_value(ch, CHURCH_INIT);
 }
 
 int roll_initiative(struct char_data *ch)
@@ -2141,6 +2263,7 @@ static int compute_armor_class_with_decoy(struct char_data *attacker, struct cha
   if (attacker && IS_UNDEAD(attacker) && affected_by_spell(ch, SPELL_VEIL_OF_POSITIVE_ENERGY))
     bonuses[BONUS_TYPE_SACRED] = MAX(bonuses[BONUS_TYPE_SACRED], 2);
 
+  bonuses[BONUS_TYPE_DEFLECTION] = MAX(bonuses[BONUS_TYPE_DEFLECTION], religion_blessing_value(ch, CHURCH_AC));
   bonuses[BONUS_TYPE_DEFLECTION] =
       legendary_foundation_deflection(ch, bonuses[BONUS_TYPE_DEFLECTION]);
 
@@ -8729,7 +8852,7 @@ int compute_damage_bonus(struct char_data *ch, struct char_data *vict, struct ob
 
     if (GET_OBJ_VAL(ammo, 0) == AMMO_TYPE_ARROW &&
         HAS_FEAT(ch, FEAT_ENHANCE_ARROW_MAGIC) && display_mode)
-      send_to_char(ch, "Enhance ammo magic bonus: \tR%d\tn\r\n",
+      send_to_char(ch, "Enhance Arrow bonus (stacks with ammo): \tR%d\tn\r\n",
                    HAS_FEAT(ch, FEAT_ENHANCE_ARROW_MAGIC));
     if (GET_OBJ_VAL(ammo, 0) == AMMO_TYPE_ARROW)
       dambonus += HAS_FEAT(ch, FEAT_ENHANCE_ARROW_MAGIC);
@@ -11102,20 +11225,23 @@ static int apply_damage_reduction_epic(struct char_data *ch, struct char_data *v
                                       struct obj_data *wielded, int dam, bool display,
                                       int attack_type, int *epic_credit)
 {
-  struct damage_reduction_type *dr = NULL, *cur = NULL;
-  int reduction = 0;
+  struct damage_reduction_type *dr = NULL, *cur = NULL, church = {0};
+  int reduction = 0, church_amount = religion_blessing_value(victim, CHURCH_DR);
 
-  /* No DR, just return dam.*/
-  if (GET_DR(victim) == NULL)
-    return dam;
-
-  dr = NULL;
-  for (cur = GET_DR(victim); cur != NULL; cur = cur->next)
-  {
-    if (dr == NULL ||
-        (dr->amount < cur->amount && (weapon_bypasses_dr(wielded, cur, ch, attack_type) == FALSE)))
-      dr = cur;
+  if (church_amount) {
+    int critical = HIT_BY_CRITICAL(victim), sneak = HIT_BY_SNEAK_ATTACK(victim);
+    /* The legacy flat DR is applied later by damage(). Only contribute the
+     * shortfall, then compete with native bypassable DR instead of adding it.
+     * Computing the legacy value must not consume the incoming-hit flags. */
+    church.amount = MAX(0, church_amount - compute_damage_reduction(victim, 0));
+    HIT_BY_CRITICAL(victim) = critical; HIT_BY_SNEAK_ATTACK(victim) = sneak;
+    church.max_damage = -1;
+    if (church.amount) dr = &church;
   }
+  for (cur = GET_DR(victim); cur; cur = cur->next)
+    if (!weapon_bypasses_dr(wielded, cur, ch, attack_type) && (!dr || dr->amount < cur->amount))
+      dr = cur;
+  if (!dr) return dam;
 
   /* Now dr is set to the 'best' DR for the incoming damage. */
   if (weapon_bypasses_dr(wielded, dr, ch, attack_type) == TRUE)
@@ -11707,6 +11833,8 @@ int compute_attack_bonus_full(struct char_data *ch,     /* Attacker */
     send_to_char(ch, "Attack Roll Breakdown\r\n");
     draw_line(ch, 80, '-', '-');
     send_to_char(ch, "\tn");
+    if (ammo)
+      show_ranged_attack_details(ch, victim, wielded, FALSE);
   }
 
   if (display)
@@ -12159,16 +12287,17 @@ int compute_attack_bonus_full(struct char_data *ch,     /* Attacker */
   /* ranged includes arrow, what a hack */ /* why is that a hack again? */
   if (ammo)
   {
+    int ammo_contribution = MAX(0, GET_ENHANCEMENT_BONUS(ammo) - bonuses[BONUS_TYPE_ENHANCEMENT]);
     bonuses[BONUS_TYPE_ENHANCEMENT] =
         MAX(bonuses[BONUS_TYPE_ENHANCEMENT], GET_ENHANCEMENT_BONUS(ammo));
     if (display && GET_ENHANCEMENT_BONUS(ammo) > 0)
-      send_to_char(ch, "%2d: %-50s\r\n", GET_ENHANCEMENT_BONUS(ammo), "Ammo Enhancement");
+      send_to_char(ch, "%2d: %-50s\r\n", ammo_contribution, "Ammo Enhancement (additional)");
     if (GET_OBJ_VAL(ammo, 0) == AMMO_TYPE_ARROW)
     {
       calc_bab += HAS_FEAT(ch, FEAT_ENHANCE_ARROW_MAGIC);
       if (display && HAS_FEAT(ch, FEAT_ENHANCE_ARROW_MAGIC))
         send_to_char(ch, "%2d: %-50s\r\n", HAS_FEAT(ch, FEAT_ENHANCE_ARROW_MAGIC),
-                     "Enhance Arrow");
+                     "Enhance Arrow (stacks with ammo)");
     }
   }
   if (IS_WILDSHAPED(ch) || IS_MORPHED(ch))
@@ -12999,6 +13128,10 @@ int compute_attack_bonus_full(struct char_data *ch,     /* Attacker */
 
   if (attack_type == ATTACK_TYPE_PRIMARY)
     calc_bab += class_opening_accuracy(ch, victim, bonuses[BONUS_TYPE_INSIGHT]);
+
+  if (!ch->char_specials.ranged_touch_roll && attack_type != ATTACK_TYPE_ELDRITCH_BLAST &&
+      attack_type != ATTACK_TYPE_PSIONICS)
+    bonuses[BONUS_TYPE_MORALE] = MAX(bonuses[BONUS_TYPE_MORALE], religion_blessing_value(ch, CHURCH_ATTACK));
 
   /* Add up all the bonuses */
   for (i = 0; i < NUM_BONUS_TYPES; i++)
@@ -16301,6 +16434,8 @@ static int resolve_weapon_hit(struct char_data *ch, struct char_data *victim, in
       snprintf(buf1, sizeof(buf1), "\tW[R:%2d]\tn", diceroll);
     snprintf(buf, sizeof(buf), "%7s", buf1);
     send_combat_roll_info(ch, "%s", buf);
+    if (attack_type == ATTACK_TYPE_RANGED && !ch->char_specials.ranged_touch_roll)
+      show_ranged_attack_details(ch, victim, wielded, TRUE);
   }
   if (show_combat_roll(victim))
   {
@@ -17666,6 +17801,7 @@ int perform_attacks(struct char_data *ch, int mode, int phase)
            !ranged_weapon_melee_type(ch, is_using_ranged_weapon(ch, TRUE)))
   {
     hand_crossbow_offhand_attacks(ch, mode, phase, penalty);
+    show_ranged_attack_details(ch, FIGHTING(ch), get_wielded(ch, ATTACK_TYPE_RANGED), FALSE);
     while (ranged_attacks > 0)
     {
       /* display hitroll bonus */

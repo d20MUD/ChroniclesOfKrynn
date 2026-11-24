@@ -16,8 +16,10 @@
 #include "legendary_foundations.h"
 #include "legendary_equipment.h"
 #include "structs.h"
+#include "religion.h"
 #include "class_improvements.h"
 #include "clan_access.h"
+#include "religion.h"
 #include "mob_utils.h"
 #include "housing.h"
 #include "utils.h"
@@ -426,6 +428,8 @@ int calculate_best_mod(struct char_data *ch, int location, int bonus_type, int e
 
   if (location == APPLY_STR && bonus_type == BONUS_TYPE_INHERENT)
     best = bloodline_strength_bonus(ch);
+
+  best = MAX(best, religion_blessing_typed(ch, location, bonus_type));
 
   /* Check affect structures */
   for (af = ch->affected; af; af = af->next)
@@ -1088,6 +1092,8 @@ void affect_total_plus(struct char_data *ch, int at_armor)
     if (berserker_sr > 0)
       GET_SPELL_RES(ch) += berserker_sr;
   }
+
+  GET_MAX_MOVE(ch) += religion_blessing_value(ch, CHURCH_MOVE);
 
   /* cap character */
   compute_char_cap(ch, 0);
@@ -2266,7 +2272,9 @@ void equip_char(struct char_data *ch, struct obj_data *obj, int pos)
     log("SYSERR: EQUIP: Obj is in_room when equip.");
     return;
   }
-  if (!ch->legendary_serializing && !clan_access_check(ch, &obj->clan_requirement, true)) { obj_to_char(obj, ch); return; }
+  if (!ch->legendary_serializing &&
+      (!clan_access_check(ch, &obj->clan_requirement, true) ||
+       !religion_object_wear_allows(ch, obj, true))) { obj_to_char(obj, ch); return; }
   if (!legendary_tree_check(ch, obj, LEG_ROUTE_OWNER)) { obj_to_char(obj, ch); return; }
   if (violates_only_equip_one(ch, obj))
   {

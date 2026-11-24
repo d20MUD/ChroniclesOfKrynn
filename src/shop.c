@@ -16,6 +16,7 @@
 #include "structs.h"
 #include "clan_access.h"
 #include "utils.h"
+#include "religion.h"
 #include "assign_wpn_armor.h"
 #include "comm.h"
 #include "handler.h"
@@ -370,7 +371,22 @@ static int same_obj(struct obj_data *obj1, struct obj_data *obj2)
 
   if (!obj1 || !obj2)
     return (obj1 == obj2);
+  /* Filled containers/sheaths are individual stock, never manufactured copies
+   * that could lose the contents' purchase requirements. */
+  if (obj1 != obj2 && (obj1->contains || obj2->contains || obj1->sheath_primary || obj2->sheath_primary ||
+                      obj1->sheath_secondary || obj2->sheath_secondary))
+    return FALSE;
   /*DEBUG: Ornir*/
+
+  if (obj1->clan_requirement.clan != obj2->clan_requirement.clan ||
+      obj1->clan_requirement.rank != obj2->clan_requirement.rank ||
+      obj1->clan_requirement.favor != obj2->clan_requirement.favor ||
+      obj1->religion_requirement.deity != obj2->religion_requirement.deity ||
+      obj1->religion_requirement.rank != obj2->religion_requirement.rank)
+    return FALSE;
+
+  if (obj1->restring_extras_cleared != obj2->restring_extras_cleared ||
+      strcmp(obj1->restring_inspection, obj2->restring_inspection)) return FALSE;
 
   if (GET_OBJ_RNUM(obj1) != GET_OBJ_RNUM(obj2))
     return (FALSE);
@@ -533,6 +549,7 @@ static struct obj_data *get_purchase_obj(struct char_data *ch, char *arg, struct
       return (NULL);
     }
     if (purchase && !clan_access_check(ch, &obj->clan_requirement, msg)) return NULL;
+    if (purchase && !religion_object_purchase_allows(ch, obj, msg)) return NULL;
     if (!legendary_tree_check(ch, obj, LEG_ROUTE_TRANSFER)) return NULL;
     if (GET_OBJ_COST(obj) <= 0)
     {

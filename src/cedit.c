@@ -1686,7 +1686,7 @@ static void cedit_disp_extra_game_play_options(struct descriptor_data *d)
                   "%sJ%s) Use Arcane Moon Phases         : %s%s\r\n"
                   "%sK%s) Spellcasting Time Mode         : %s%s\r\n"
                   "%sL%s) Vessel System                  : %s%s\r\n"
-                  "%sM%s) Auto-Download MUDlet Package?  : %s%s\r\n"
+                  "%sM%s) Legacy MUDlet Auto-Download   : %s%s\r\n"
                   "\r\n"
                   "%sQ%s) Exit To The Main Menu\r\n"
                   "Enter your choice : ",
@@ -2547,8 +2547,7 @@ void cedit_parse(struct descriptor_data *d, char *arg)
     case 'm':
     case 'M':
       write_to_output(d, "Auto-download MUDlet package?\r\n");
-      write_to_output(d, "When enabled, players connecting via MUDlet will automatically receive\r\n");
-      write_to_output(d, "the MUD's MUDlet package for download.\r\n");
+      write_to_output(d, "This legacy setting has no effect; Mudlet players are asked for consent.\r\n");
       for (i = 0; i < NUM_AUTO_DL_MUDLET_PACKAGE_OPTIONS; i++)
       {
         write_to_output(d, "%d) %s\n", i + 1, auto_dl_mudlet_package_options[i]);

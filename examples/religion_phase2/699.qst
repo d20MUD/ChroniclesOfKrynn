@@ -1,0 +1,129 @@
+#69900
+Pilgrimage: Shrine of the Shelter~
+Visit Shrine of the Shelter, then report to the temple priest.~
+Walk from the public courtyard of Mishakal to Shrine of the Shelter. Reflect on its lesson, then return to the priest and use religion task turnin.
+~
+You have completed the pilgrimage.
+~
+You leave this pilgrimage for another day.
+~
+~
+1 69900 1 69901 -1 -1 -1
+0 0 1 50 -1 -1 1
+0 0 -1 -1 -1 -1 -1
+D
+-1 -1 -1 -1
+S
+#69901
+Pilgrimage: Shrine of the Healers~
+Visit Shrine of the Healers, then report to the temple priest.~
+Walk from the public courtyard of Mishakal to Shrine of the Healers. Reflect on its lesson, then return to the priest and use religion task turnin.
+~
+You have completed the pilgrimage.
+~
+You leave this pilgrimage for another day.
+~
+~
+1 69900 1 69902 -1 -1 -1
+0 0 1 50 -1 -1 1
+0 0 -1 -1 -1 -1 -1
+D
+-1 -1 -1 -1
+S
+#69902
+Pilgrimage: Shrine of the Returning Light~
+Visit Shrine of the Returning Light, then report to the temple priest.~
+Walk from the public courtyard of Mishakal to Shrine of the Returning Light. Reflect on its lesson, then return to the priest and use religion task turnin.
+~
+You have completed the pilgrimage.
+~
+You leave this pilgrimage for another day.
+~
+~
+1 69900 1 69903 -1 -1 -1
+0 0 1 50 -1 -1 1
+0 0 -1 -1 -1 -1 -1
+D
+-1 -1 -1 -1
+S
+#69903
+Pilgrimage: Shrine of the Quiet Vigil~
+Visit Shrine of the Quiet Vigil, then report to the temple priest.~
+Walk from the public courtyard of Mishakal to Shrine of the Quiet Vigil. Reflect on its lesson, then return to the priest and use religion task turnin.
+~
+You have completed the pilgrimage.
+~
+You leave this pilgrimage for another day.
+~
+~
+1 69900 1 69904 -1 -1 -1
+0 0 1 50 -1 -1 1
+0 0 -1 -1 -1 -1 -1
+D
+-1 -1 -1 -1
+S
+#69904
+Pilgrimage: Shrine of the First Word~
+Visit Shrine of the First Word, then report to the temple priest.~
+Walk from the public courtyard of Gilean to Shrine of the First Word. Reflect on its lesson, then return to the priest and use religion task turnin.
+~
+You have completed the pilgrimage.
+~
+You leave this pilgrimage for another day.
+~
+~
+1 69901 1 69911 -1 -1 -1
+0 0 1 50 -1 -1 1
+0 0 -1 -1 -1 -1 -1
+D
+-1 -1 -1 -1
+S
+#69905
+Pilgrimage: Shrine of the Careful Question~
+Visit Shrine of the Careful Question, then report to the temple priest.~
+Walk from the public courtyard of Gilean to Shrine of the Careful Question. Reflect on its lesson, then return to the priest and use religion task turnin.
+~
+You have completed the pilgrimage.
+~
+You leave this pilgrimage for another day.
+~
+~
+1 69901 1 69912 -1 -1 -1
+0 0 1 50 -1 -1 1
+0 0 -1 -1 -1 -1 -1
+D
+-1 -1 -1 -1
+S
+#69906
+Pilgrimage: Shrine of the Remembered Name~
+Visit Shrine of the Remembered Name, then report to the temple priest.~
+Walk from the public courtyard of Gilean to Shrine of the Remembered Name. Reflect on its lesson, then return to the priest and use religion task turnin.
+~
+You have completed the pilgrimage.
+~
+You leave this pilgrimage for another day.
+~
+~
+1 69901 1 69913 -1 -1 -1
+0 0 1 50 -1 -1 1
+0 0 -1 -1 -1 -1 -1
+D
+-1 -1 -1 -1
+S
+#69907
+Pilgrimage: Shrine of the Unwritten Page~
+Visit Shrine of the Unwritten Page, then report to the temple priest.~
+Walk from the public courtyard of Gilean to Shrine of the Unwritten Page. Reflect on its lesson, then return to the priest and use religion task turnin.
+~
+You have completed the pilgrimage.
+~
+You leave this pilgrimage for another day.
+~
+~
+1 69901 1 69914 -1 -1 -1
+0 0 1 50 -1 -1 1
+0 0 -1 -1 -1 -1 -1
+D
+-1 -1 -1 -1
+S
+$~

@@ -14,6 +14,7 @@
 #include "structs.h"
 #include "clan_access.h"
 #include "utils.h"
+#include "religion.h"
 #include "epic_feats.h"
 #include "comm.h"
 #include "interpreter.h"
@@ -103,7 +104,8 @@ bool blocker_stealth_passes(struct char_data *ch, struct char_data *guard)
   time_t now = time(NULL);
   if (!ch || !guard || IS_NPC(ch) || !IS_NPC(guard) || !ch->player_specials ||
       !MOB_FLAGGED(guard, MOB_BLOCK_STEALTH) || MOB_FLAGGED(guard, MOB_NO_BLOCK_BYPASS) ||
-      MOB_FLAGGED(guard, MOB_BLOCK_CLAN) || PRF_FLAGGED(ch, PRF_NOHASSLE) ||
+      MOB_FLAGGED(guard, MOB_BLOCK_CLAN) || MOB_FLAGGED(guard, MOB_BLOCK_RELIGION) ||
+      MOB_FLAGGED(guard, MOB_BLOCK_TEMPLE_RANK) || PRF_FLAGGED(ch, PRF_NOHASSLE) ||
       (!AFF_FLAGGED(ch, AFF_SNEAK) && !AFF_FLAGGED(ch, AFF_HIDE)))
     return FALSE;
   guard_vnum = GET_MOB_VNUM(guard);
@@ -769,11 +771,17 @@ int do_simple_move(struct char_data *ch, int dir, int need_specials_check)
     else if (dir == DOWN && MOB_FLAGGED(mob, MOB_BLOCK_D))
       block = TRUE;
 
-    if (block && MOB_FLAGGED(mob, MOB_BLOCK_CLAN)) {
-      if (!mob->clan_requirement.clan || clan_access_check(ch, &mob->clan_requirement, false)) {
-        block = FALSE; continue;
+    if (block && (MOB_FLAGGED(mob, MOB_BLOCK_CLAN) || MOB_FLAGGED(mob, MOB_BLOCK_RELIGION) ||
+                  MOB_FLAGGED(mob, MOB_BLOCK_TEMPLE_RANK)))
+    {
+      bool clan_allowed = !MOB_FLAGGED(mob, MOB_BLOCK_CLAN) || !mob->clan_requirement.clan ||
+                          clan_access_check(ch, &mob->clan_requirement, false);
+      if (clan_allowed && religion_guard_allows(ch, mob))
+      {
+        block = FALSE;
+        continue;
       }
-      break; /* Other guard exemptions cannot bypass a clan requirement. */
+      break; /* Neither ordinary exemptions nor stealth can skip mandatory requirements. */
     }
 
     if (block && MOB_FLAGGED(mob, MOB_BLOCK_RACE) && GET_RACE(ch) == GET_RACE(mob))

@@ -3,6 +3,12 @@
 #include "sysdep.h"
 #include "structs.h"
 #include "utils.h"
+#include "deities.h"
+#include "religion.h"
+#include "restring.h"
+#include "assign_wpn_armor.h"
+#include "clan.h"
+#include "quest.h"
 #include "act.h"
 #include "auction_house.h"
 #include "comm.h"
@@ -14,6 +20,7 @@
 #include "housing.h"
 #include "interpreter.h"
 #include <assert.h>
+#include <json-c/json.h>
 #ifdef LEGENDARY_PERSISTENCE_TEST
 #include "legendary_identity.h"
 #endif
@@ -21,11 +28,31 @@
 struct index_data *obj_index;
 obj_rnum top_of_objt = -1;
 #endif
+struct aq_data *aquest_table;
+qst_rnum total_quests;
+qst_rnum real_quest(qst_vnum vnum) {
+  for(int i=0;i<total_quests;i++)if(QST_NUM(i)==vnum)return i;
+  return NOTHING;
+}
+void clear_quest(struct char_data *ch,int index) {
+  GET_QUEST(ch,index)=NOTHING;GET_QUEST_COUNTER(ch,index)=0;GET_QUEST_TIME(ch,index)=-1;
+}
+void set_quest(struct char_data *ch,qst_rnum r,int index) {
+  GET_QUEST(ch,index)=QST_NUM(r);GET_QUEST_COUNTER(ch,index)=QST_QUANTITY(r);GET_QUEST_TIME(ch,index)=QST_TIME(r);
+}
+bool quest_church_eligible(struct char_data *ch,qst_rnum r,char **reason) {
+  (void)reason;return GET_QUEST(ch,RELIGION_QUEST_SLOT)==NOTHING && GET_LEVEL(ch)>=QST_MINLEVEL(r) && GET_LEVEL(ch)<=QST_MAXLEVEL(r);
+}
 MYSQL *conn;
 bool mysql_available = TRUE;
 struct room_data *world;
 room_rnum top_of_world;
 struct player_special_data dummy_mob;
+struct deity_info deity_list[NUM_DEITIES];
+struct char_data *mob_proto;
+struct index_data *mob_index;
+mob_rnum top_of_mobt = -1;
+mob_rnum real_mobile(mob_vnum vnum) { return mob_proto && vnum>=5000 && vnum<=5001 ? vnum-5000 : NOBODY; }
 struct command_info *complete_cmd_info;
 const char *dirs[] = {"north",     "east",      "south",     "west",      "up", "down",
                       "northwest", "northeast", "southeast", "southwest", "\n"};
@@ -34,7 +61,21 @@ const char *wear_bits[NUM_ITEM_WEARS] = {
     [ITEM_WEAR_BODY] = "Body", [ITEM_WEAR_WIELD] = "Wield", [ITEM_WEAR_ON_BACK] = "On-Back"};
 size_t wear_bits_count = NUM_ITEM_WEARS;
 int rev_dir[] = {2, 3, 0, 1, 5, 4, 8, 9, 6, 7};
+static time_t church_clock;
+time_t religion_task_test_time(void) {return church_clock ? church_clock : time(NULL);}
+bool room_is_dark(room_rnum room) {(void)room;return false;}
+bool char_has_ultra(struct char_data *ch) {(void)ch;return false;}
+bool char_has_infra(struct char_data *ch) {(void)ch;return false;}
+bool is_outdoors(struct char_data *ch) {(void)ch;return false;}
+bool has_blindsight(struct char_data *ch) {(void)ch;return false;}
+bool has_true_sight(struct char_data *ch) {(void)ch;return false;}
+bool can_see_hidden(struct char_data *ch,struct char_data *vict) {(void)ch;(void)vict;return true;}
 static char output[32768];
+static int fail_church_saves;
+static int restring_clan_policy, restring_clan_favor=5;
+static bool restring_clan_member=true;
+static int temple_edit_allowed = TRUE;
+int can_edit_zone(struct char_data *ch, zone_rnum zone) {(void)ch;(void)zone;return temple_edit_allowed;}
 void basic_mud_log(const char *format, ...)
 {
   va_list ap;
@@ -103,6 +144,7 @@ void affect_total(struct char_data *ch)
 int compute_armor_class(struct char_data *a,struct char_data *ch,int touch,int mode)
 {(void)a;(void)touch;(void)mode;return 10+legendary_foundation_deflection(ch,0);}
 int MAX(int a, int b) { return a > b ? a : b; }
+int MIN(int a, int b) { return a < b ? a : b; }
 size_t strlcpy(char *dst, const char *src, size_t n)
 {
   size_t len = strlen(src);
@@ -129,6 +171,7 @@ void skip_spaces(char **s)
   while (**s && isspace((unsigned char)**s))
     (*s)++;
 }
+static bool preserve_argument_separator;
 const char *one_argument(const char *s, char *arg, size_t n)
 {
   size_t i = 0;
@@ -140,7 +183,9 @@ const char *one_argument(const char *s, char *arg, size_t n)
     s++;
   }
   arg[i] = 0;
-  skip_spaces_c(&s);
+  /* Exercise production separator behavior in the restring editor tests. */
+  if (!preserve_argument_separator)
+    skip_spaces_c(&s);
   return s;
 }
 int is_abbrev(const char *a, const char *b) { return *a && !strncasecmp(a, b, strlen(a)); }
@@ -350,6 +395,7 @@ int get_filename(char *out, size_t n, int mode, const char *name)
 bool save_char_checked(struct char_data *ch, int mode)
 {
   char path[128], data[256];
+  if (fail_church_saves) {--fail_church_saves;return false;}
   int len;
   (void)mode;
   get_filename(path, sizeof(path), PLR_FILE, GET_NAME(ch));
@@ -457,6 +503,7 @@ static void init_player(struct char_data *ch, const char *name, long id)
   GET_LEVEL(ch) = id == 4 ? LVL_GRSTAFF : 20;
   GET_GOLD(ch) = 500000;
   IN_ROOM(ch) = NOWHERE;
+  for(int i=0;i<MAX_CURRENT_QUESTS;i++)clear_quest(ch,i);
   ch->real_abils.dex = 18;
   ch->real_abils.str=ch->real_abils.con=ch->real_abils.intel=ch->real_abils.wis=ch->real_abils.cha=10;
   ch->aff_abils=ch->real_abils;
@@ -544,6 +591,9 @@ static void test_stalls(struct char_data *seller, struct char_data *buyer,
   player_shop_show_room(buyer);
   assert(strstr(output, "Smith's Emporium"));
   obj = item("stallblade");
+#ifdef ESTATE_REAL_CODEC
+  obj->religion_requirement=(struct religion_requirement){1,4};
+#endif
   obj->affected[0].location = APPLY_FEAT;
   obj->affected[0].modifier = FEAT_WEAPON_FOCUS;
   obj->affected[0].specific = 3;
@@ -584,6 +634,18 @@ static void test_stalls(struct char_data *seller, struct char_data *buyer,
   stall(buyer, "buy %ld", first);
   assert(IS_CARRYING_N(buyer) == items);
   GET_GOLD(buyer) = gold;
+#ifdef ESTATE_REAL_CODEC
+  GET_DEITY(buyer)=0;stall(buyer, "buy %ld", first);
+  assert(GET_GOLD(buyer)==gold && IS_CARRYING_N(buyer)==items);
+  GET_DEITY(buyer)=2;buyer->player_specials->saved.religion_standing[2]=336;
+  stall(buyer, "buy %ld", first);
+  assert(GET_GOLD(buyer)==gold && scalar("SELECT COUNT(*) FROM player_shop_sales")==0);
+  GET_DEITY(buyer)=1;buyer->player_specials->saved.religion_standing[1]=36;
+  stall(buyer, "buy %ld", first);
+  assert(GET_GOLD(buyer)==gold && IS_CARRYING_N(buyer)==items);
+  assert(scalar("SELECT COUNT(*) FROM player_shop_listings WHERE state='active'")==1);
+  buyer->player_specials->saved.religion_standing[1]=72;
+#endif
   IS_CARRYING_N(buyer) = 10000;
   stall(buyer, "buy %ld", first);
   assert(GET_GOLD(buyer) == gold);
@@ -726,11 +788,264 @@ static void test_stalls(struct char_data *seller, struct char_data *buyer,
   puts("PASS: player stalls: account limits, local purchases, typed gear, capacity, rent/grace, "
        "tenant isolation, recovery, proceeds, staff controls and idempotent money journal");
 }
+static void church_accept(struct char_data *ch,int slot)
+{
+  char text[80];
+  snprintf(text,sizeof(text),"accept %d",slot);religion_tasks_command(ch,text);
+  religion_tasks_command(ch,"confirm");
+}
+static void church_ready(struct char_data *ch)
+{
+  assert(GET_QUEST(ch,RELIGION_QUEST_SLOT)!=NOTHING);
+  GET_QUEST_COUNTER(ch,RELIGION_QUEST_SLOT)=0;
+  religion_task_objective_complete(ch);
+}
+static void test_church_tasks(struct char_data *ch,struct char_data *admin)
+{
+  FILE *registry=fopen("test-churches.json","w");
+  int i;
+  char text[80];
+  assert(registry);
+  fputs("{\"version\":1,\"temples\":[{\"id\":42,\"deity\":1,\"name\":\"East Church\",\"entrance\":2200,\"priest\":5000,\"enabled\":true,\"hospitality\":true},"
+        "{\"id\":43,\"deity\":2,\"name\":\"West Church\",\"entrance\":2200,\"priest\":5001,\"enabled\":true,\"hospitality\":true}]}",registry);
+  fclose(registry);
+  mob_proto=calloc(2,sizeof(*mob_proto));mob_index=calloc(2,sizeof(*mob_index));top_of_mobt=1;
+  for(i=0;i<2;i++) {
+    mob_index[i].vnum=5000+i;mob_proto[i].nr=i;
+    SET_BIT_AR(MOB_FLAGS(&mob_proto[i]),MOB_ISNPC);
+    mob_proto[i].mob_deity=i+1;mob_proto[i].mob_temple_rank=8;
+    mob_proto[i].player.short_descr=i ? "the western priest" : "the eastern priest";
+    GET_POS(&mob_proto[i])=POS_STANDING;char_to_room(&mob_proto[i],1);
+  }
+  assert(religion_load_temples("test-churches.json"));
+  aquest_table=calloc(8,sizeof(*aquest_table));total_quests=8;
+  for(i=0;i<8;i++) {
+    QST_NUM(i)=700+i;QST_TYPE(i)=AQ_ROOM_FIND;QST_MASTER(i)=i<4 ? 5000 : 5001;
+    QST_FLAGS(i)=AQ_REPEATABLE;QST_TARGET(i)=2200;
+    QST_PREV(i)=QST_NEXT(i)=QST_DIAGN(i)=QST_PREREQ(i)=NOTHING;
+    QST_OBJ(i)=NOTHING;QST_FOLLOWER(i)=NOBODY;QST_RACE(i)=RACE_UNDEFINED;
+    QST_TIME(i)=-1;QST_QUANTITY(i)=1;QST_MINLEVEL(i)=1;QST_MAXLEVEL(i)=50;
+    QST_NAME(i)="Church pilgrimage";QST_INFO(i)="Visit the shrine and return to this priest.";QST_DESC(i)="Visit the shrine.";
+    snprintf(text,sizeof(text),"%d %d",i%4+1,700+i);
+    religion_tasks_admin(admin,i<4 ? 42:43,i<4 ? 1:2,i<4 ? 5000:5001,text);
+  }
+  assert(scalar("SELECT COUNT(*) FROM religion_task_config")==8);
+  QST_GOLD(0)=100;religion_tasks_admin(admin,42,1,5000,"4 700");QST_GOLD(0)=0;
+  assert(scalar("SELECT quest_vnum FROM religion_task_config WHERE deity=1 AND slot=4")==703);
+  religion_tasks_admin(admin,42,1,5000,"2 700"); /* duplicate template rolls back slot replacement */
+  assert(scalar("SELECT quest_vnum FROM religion_task_config WHERE deity=1 AND slot=2")==701);
+
+  religion_rank_admin(admin,"1 2 Keeper of Mercy");
+  religion_tasks_boot();assert(!strcmp(religion_rank_title(1,2),"Keeper of Mercy"));
+  GET_DEITY(ch)=1;GET_POS(ch)=POS_STANDING;
+  ch->player_specials->saved.religion_standing[1]=ch->player_specials->saved.religion_standing[2]=0;
+  for(i=0;i<NORMAL_CURRENT_QUESTS;i++)GET_QUEST(ch,i)=9000+i;
+  church_clock=1700438399; /* Sunday 23:59:59 UTC; Monday boundary is next second. */
+  church_accept(ch,1);assert(GET_QUEST(ch,RELIGION_QUEST_SLOT)==700);
+  religion_tasks_command(ch,"accept 2");assert(scalar("SELECT COUNT(*) FROM religion_task_active")==1);
+  for(i=0;i<NORMAL_CURRENT_QUESTS;i++)assert(GET_QUEST(ch,i)==9000+i);
+  church_ready(ch);
+  assert(estate_query("CREATE TRIGGER test_church_completion BEFORE INSERT ON religion_task_completions FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='church completion test failure'"));
+  religion_tasks_command(ch,"turnin");assert(scalar("SELECT COUNT(*) FROM religion_task_completions")==0);
+  assert(ch->player_specials->saved.religion_standing[1]==0);
+  assert(estate_query("DROP TRIGGER test_church_completion"));
+  GET_DEITY(ch)=2;religion_tasks_command(ch,"turnin");assert(scalar("SELECT COUNT(*) FROM religion_task_completions")==0);
+  GET_DEITY(ch)=1;fail_church_saves=1;religion_tasks_command(ch,"turnin");assert(ch->player_specials->saved.religion_standing[1]==2);
+  religion_tasks_command(ch,"turnin");assert(scalar("SELECT COUNT(*) FROM religion_task_completions")==1);
+  ch->player_specials->saved.religion_standing[1]=0;religion_tasks_restore(ch);
+  assert(ch->player_specials->saved.religion_standing[1]==2);
+  church_accept(ch,1);assert(scalar("SELECT story_only FROM religion_task_active")==1);church_ready(ch);
+  ++church_clock;religion_tasks_command(ch,"turnin");assert(ch->player_specials->saved.religion_standing[1]==2);
+  for(i=2;i<=4;i++) {church_accept(ch,i);church_ready(ch);religion_tasks_command(ch,"turnin");}
+  assert(ch->player_specials->saved.religion_standing[1]==8);
+  assert(scalar("SELECT COUNT(*) FROM religion_task_completions WHERE award>0")==4);
+  GET_DEITY(ch)=2;church_accept(ch,1);
+  assert(scalar("SELECT story_only FROM religion_task_active")==1);church_ready(ch);
+  religion_tasks_command(ch,"turnin");assert(ch->player_specials->saved.religion_standing[2]==0);
+  GET_DEITY(ch)=1;church_clock+=604800-1;
+  religion_tasks_command(ch,"accept 1");++church_clock;religion_tasks_command(ch,"confirm");
+  assert(scalar("SELECT COUNT(*) FROM religion_task_active")==0); /* preview expired at reset */
+  church_accept(ch,2);church_clock+=604800;church_ready(ch);religion_tasks_command(ch,"turnin");
+  assert(ch->player_specials->saved.religion_standing[1]==10); /* active task crosses weeks */
+  church_accept(ch,1);church_ready(ch);religion_tasks_command(ch,"turnin");
+  assert(religion_rank(ch)==2 && !strcmp(religion_rank_title(1,2),"Keeper of Mercy"));
+  church_accept(ch,3);clear_quest(ch,RELIGION_QUEST_SLOT);religion_tasks_restore(ch);
+  assert(GET_QUEST(ch,RELIGION_QUEST_SLOT)==702); /* missing character save recovers enrollment */
+  QST_QUANTITY(2)=2;GET_QUEST_COUNTER(ch,RELIGION_QUEST_SLOT)=0;religion_task_objective_complete(ch);
+  assert(scalar("SELECT ready FROM religion_task_active")==0);
+  religion_tasks_command(ch,"abandon");QST_QUANTITY(2)=1;
+  assert(estate_query("UPDATE religion_standing SET standing=334 WHERE player_id=%ld AND deity=1",GET_IDNUM(ch)));
+  religion_tasks_restore(ch);church_accept(ch,4);church_ready(ch);religion_tasks_command(ch,"turnin");
+  assert(ch->player_specials->saved.religion_standing[1]==336 && religion_rank(ch)==8);
+  church_clock+=604800;
+  church_accept(ch,3);assert(scalar("SELECT story_only FROM religion_task_active")==1);
+  religion_tasks_command(ch,"abandon");
+  religion_tasks_command(ch,"accept 1");church_clock+=121;religion_tasks_command(ch,"confirm");
+  assert(scalar("SELECT COUNT(*) FROM religion_task_active")==0);
+  assert(scalar("SELECT COUNT(*) FROM (SELECT deity,week_id,COUNT(*) n FROM religion_task_offers GROUP BY deity,week_id HAVING n>4) counts")==0);
+  /* Config changes do not reroll the persisted week's offerings. */
+  religion_tasks_admin(admin,42,1,5000,"1 0");religion_tasks_command(ch,"list");
+  assert(scalar("SELECT COUNT(*) FROM religion_task_offers WHERE temple_id=42 AND quest_vnum=700 AND week_id=(SELECT MAX(week_id) FROM religion_task_weeks WHERE deity=1)")==1);
+  for(i=0;i<MAX_CURRENT_QUESTS;i++)clear_quest(ch,i);
+  GET_DEITY(ch)=0;church_clock=0;
+  char_from_room(&mob_proto[0]);char_from_room(&mob_proto[1]);
+  puts("PASS: church board confirmations, dedicated slot, atomic Standing, weekly caps across faiths, story-only rollover, template edits, reload and rank cap");
+}
+
+static void test_church_blessing(struct char_data *ch)
+{
+ static const int thresholds[]={0,0,12,36,72,120,180,252,336};
+ static const int expected[9][9]={{0},{1,0,0,0,0,0,0,0,0},{1,1,0,0,0,0,0,0,0},
+ {2,1,15,0,0,0,0,0,0},{2,2,20,5,5,0,0,0,0},{3,2,25,5,5,1,0,0,0},
+ {3,3,30,7,10,1,1,0,0},{4,3,35,7,10,2,2,50,0},{4,4,40,10,15,2,3,75,2}};
+ int rank,i;time_t expires;
+ char_to_room(&mob_proto[0],1);char_to_room(&mob_proto[1],1);
+ church_clock=1800000000;GET_DEITY(ch)=1;GET_POS(ch)=POS_STANDING;
+ assert(estate_query("DELETE FROM religion_blessings"));
+ for(rank=1;rank<=8;rank++) {
+  ch->player_specials->saved.religion_standing[1]=thresholds[rank];
+  assert(estate_query("REPLACE INTO religion_blessings VALUES(%ld,1,%d,%lld,%lld)",GET_IDNUM(ch),rank,(long long)church_clock+86400,(long long)church_clock+86400));
+  religion_blessing_restore(ch);
+  for(i=0;i<9;i++)assert(religion_blessing_value(ch,i)==expected[rank][i]);
+  ch->legendary_serializing=true;
+  for(i=0;i<9;i++)assert(!religion_blessing_value(ch,i));
+  religion_blessing_tick(ch); /* Serialization must not remove the durable package. */
+  ch->legendary_serializing=false;
+  assert(religion_blessing_value(ch,CHURCH_SAVE)==expected[rank][CHURCH_SAVE]);
+ }
+ expires=ch->player_specials->saved.church_expires;
+ ch->player_specials->saved.religion_standing[1]=0;religion_blessing_tick(ch);
+ assert(ch->player_specials->saved.church_rank==1 && ch->player_specials->saved.church_expires==expires);
+ ch->player_specials->saved.religion_standing[1]=336;religion_blessing_tick(ch);
+ assert(religion_blessing_value(ch,CHURCH_HP)==0); /* No automatic upgrade. */
+ religion_blessing_restore(ch);assert(ch->player_specials->saved.church_rank==1);
+ assert(religion_blessing_remove(ch));religion_blessing_restore(ch);
+ assert(!religion_blessing_value(ch,CHURCH_SAVE) && ch->player_specials->saved.church_available==expires);
+ religion_blessing_command(ch,"bless","");religion_blessing_command(ch,"bless","confirm");
+ assert(!religion_blessing_value(ch,CHURCH_SAVE)); /* Removal retains cooldown. */
+ church_clock=expires;religion_blessing_command(ch,"bless","");
+ assert(ch->player_specials->church_preview_until==church_clock+120);
+ religion_blessing_command(ch,"bless","confirm");assert(religion_blessing_value(ch,CHURCH_HP)==40);
+ expires=ch->player_specials->saved.church_expires;
+ religion_blessing_command(ch,"bless","confirm");assert(ch->player_specials->saved.church_expires==expires);
+ GET_DEITY(ch)=2;religion_blessing_tick(ch);GET_DEITY(ch)=1;religion_blessing_restore(ch);
+ assert(!religion_blessing_value(ch,CHURCH_SAVE));
+ assert(ch->player_specials->saved.church_available==expires);
+ church_clock=expires;religion_blessing_command(ch,"bless","");
+ assert(estate_query("CREATE TRIGGER reject_blessing BEFORE UPDATE ON religion_blessings FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='test blessing failure'"));
+ religion_blessing_command(ch,"bless","confirm");assert(!religion_blessing_value(ch,CHURCH_SAVE));
+ assert(ch->player_specials->saved.church_available==expires);
+ assert(estate_query("DROP TRIGGER reject_blessing"));
+ religion_blessing_command(ch,"bless","");religion_blessing_command(ch,"bless","confirm");
+ expires=ch->player_specials->saved.church_expires;
+ church_clock=expires+1;religion_blessing_restore(ch);assert(!religion_blessing_value(ch,CHURCH_SAVE));
+ puts("PASS: exact blessing rows, immutable expiry, correction trimming, no rank-up upgrade, shared cooldown, faith removal, relog expiry and failed application");
+}
+#ifdef ESTATE_REAL_CODEC
+static void edit_input(struct char_data *ch,const char *s){preserve_argument_separator=true;assert(restring_editor_input(ch,s));preserve_argument_separator=false;}
+static void edit_field(struct char_data *ch,int n,const char *s){char a[8];snprintf(a,sizeof(a),"%d",n);edit_input(ch,a);edit_input(ch,s);if(n==8)edit_input(ch,"@");}
+static void test_restrings(struct char_data *ch,struct char_data *admin)
+{
+ struct obj_data *obj,*loaded;char *packed;int before,initial_gold=GET_GOLD(ch);
+ extern int restring_test_stop_after_commit;
+ struct descriptor_data cd={0},ad={0};
+ ch->desc=&cd;admin->desc=&ad;cd.character=ch;ad.character=admin;
+ assert(estate_query("DELETE FROM restring_catalogue"));
+ GET_DEITY(ch)=1;GET_POS(ch)=POS_STANDING;ch->player_specials->saved.religion_standing[1]=0;
+ do_restringedit(admin,"",0,0);edit_input(admin,"2");edit_input(admin,"1");edit_input(admin,"a");
+ edit_field(admin,1,"1");edit_field(admin,3,"neck");edit_field(admin,4,"symbol   0  ");
+ {
+  struct json_object *entry=NULL,*value=NULL;
+  assert(json_object_object_get_ex(admin->player_specials->restring_editor,"entry",&entry));
+  assert(json_object_object_get_ex(entry,"value",&value)&&json_object_get_int(value)==0);
+  edit_input(admin,"4");edit_input(admin,"symbol garbage");
+  assert(json_object_object_get_ex(entry,"value",&value)&&json_object_get_int(value)==0);
+  edit_input(admin,"symbol 0");
+ }
+ edit_field(admin,3,"body");edit_field(admin,4,"armor 0");
+ edit_field(admin,5,"robe vestment");edit_field(admin,6,"a blue service robe");
+ edit_field(admin,7,"A blue service robe lies here.");edit_field(admin,8,"Fine blue stitching surrounds a plain emblem.");
+ edit_input(admin,"s");assert(scalar("SELECT COUNT(*) FROM restring_catalogue WHERE draft IS NOT NULL AND published IS NULL")==1);
+ edit_input(admin,"p");assert(scalar("SELECT COUNT(*) FROM restring_catalogue WHERE published IS NOT NULL AND draft IS NULL")==1);
+ /* A draft edit keeps the published revision and player text intact. */
+ edit_field(admin,6,"an unfinished draft robe");edit_input(admin,"s");
+ assert(scalar("SELECT COUNT(*) FROM restring_catalogue WHERE JSON_UNQUOTE(JSON_EXTRACT(published,'$.short'))='a blue service robe'")==1);
+ edit_input(admin,"b");edit_input(admin,"yes");edit_input(admin,"q");
+ obj=item("robe");obj->id=80001;GET_OBJ_TYPE(obj)=ITEM_WORN;GET_OBJ_LEVEL(obj)=5;
+ SET_BIT_AR(GET_OBJ_WEAR(obj),ITEM_WEAR_BODY);obj_to_char(obj,ch);GET_GOLD(ch)=5000;
+ obj->ex_description=calloc(1,sizeof(*obj->ex_description));obj->ex_description->keyword=strdup("secret");obj->ex_description->description=strdup("Old secret text.");
+ before=GET_GOLD(ch);do_restringapply(ch,"robe religion 2",0,0);assert(!ch->player_specials->restring_quote);
+ do_restringapply(ch,"robe religion 1",0,0);assert(ch->player_specials->restring_quote);
+ do_restringapply(ch,"confirm",0,0);assert(GET_GOLD(ch)==before-500);
+ assert(!strcmp(obj->short_description,"a blue service robe") && !obj->ex_description && obj->restring_extras_cleared);
+ assert(obj->religion_requirement.deity==1 && obj->religion_requirement.rank==1 && GET_OBJ_LEVEL(obj)==5 && obj->id==80001);
+ assert(!strcmp(obj->restring_inspection,"Fine blue stitching surrounds a plain emblem.\r\n"));
+ do_restringapply(ch,"confirm",0,0);assert(GET_GOLD(ch)==before-500);
+ packed=estate_pack(obj);assert(packed && strstr(packed,"REmp: 1") && strstr(packed,"RIns:"));loaded=estate_unpack(packed);free(packed);
+ assert(loaded && loaded->restring_extras_cleared && !loaded->ex_description && !strcmp(loaded->restring_inspection,obj->restring_inspection));extract_obj(loaded);
+ before=GET_GOLD(ch);do_restringapply(ch,"robe religion 1",0,0);do_restringapply(ch,"confirm",0,0);assert(GET_GOLD(ch)==before); /* No-op. */
+ /* An object edit invalidates a quote, as does a new published revision. */
+ do_restringapply(ch,"robe religion 1",0,0);GET_OBJ_LEVEL(obj)=6;do_restringapply(ch,"confirm",0,0);assert(GET_GOLD(ch)==before);GET_OBJ_LEVEL(obj)=5;
+ do_restringapply(ch,"robe religion 1",0,0);assert(estate_query("UPDATE restring_catalogue SET revision=revision+1"));do_restringapply(ch,"confirm",0,0);assert(GET_GOLD(ch)==before);
+ do_restringedit(admin,"",0,0);edit_input(admin,"2");edit_input(admin,"1");
+ {char line[64];snprintf(line,sizeof(line),"e %ld",scalar("SELECT id FROM restring_catalogue LIMIT 1"));edit_input(admin,line);}
+ edit_field(admin,6,"a newly embroidered robe");edit_input(admin,"p");edit_input(admin,"q");
+ do_restringapply(ch,"robe religion 1",0,0);
+ assert(estate_query("CREATE TRIGGER reject_restring BEFORE INSERT ON estate_deliveries FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='test appearance failure'"));
+ do_restringapply(ch,"confirm",0,0);assert(GET_GOLD(ch)==before && !strcmp(obj->short_description,"a blue service robe"));
+ assert(estate_query("DROP TRIGGER reject_restring"));estate_recover(ch);ch->player_specials->restring_pending=false;
+ do_restringapply(ch,"robe religion 1",0,0);do_restringapply(ch,"confirm",0,0);assert(GET_GOLD(ch)==before-500 && !strcmp(obj->short_description,"a newly embroidered robe"));
+ estate_recover(ch);assert(GET_GOLD(ch)==before-500);
+ /* A crash after COMMIT reloads the old escrow-tagged save, removes it,
+  * delivers the committed appearance and applies its fee exactly once. */
+ packed=estate_pack(obj);loaded=estate_unpack(packed);free(packed);assert(loaded);
+ before=GET_GOLD(ch);
+ assert(estate_query("UPDATE restring_catalogue SET revision=revision+1,published=JSON_SET(published,'$.short','a crash-recovered robe')"));
+ do_restringapply(ch,"robe religion 1",0,0);restring_test_stop_after_commit=1;
+ do_restringapply(ch,"confirm",0,0);restring_test_stop_after_commit=0;
+ assert(ch->player_specials->restring_pending && GET_GOLD(ch)==before);
+ loaded->estate_delivery_id=(unsigned long long)scalar("SELECT MAX(escrow_id) FROM estate_outgoing") | (1ULL<<63);
+ extract_obj(obj);obj_to_char(loaded,ch);estate_recover(ch);
+ obj=NULL;for(loaded=ch->carrying;loaded;loaded=loaded->next_content)if(!strcmp(loaded->short_description,"a crash-recovered robe"))obj=loaded;
+ assert(obj && GET_GOLD(ch)==before-500 && !obj->ex_description && obj->restring_extras_cleared);
+ estate_recover(ch);assert(GET_GOLD(ch)==before-500);ch->player_specials->restring_pending=false;
+ /* Long multiline inspection text uses bounded codec records. */
+ memset(obj->restring_inspection,'x',sizeof(obj->restring_inspection)-1);obj->restring_inspection[sizeof(obj->restring_inspection)-1]=0;
+ obj->restring_inspection[500]='\n';packed=estate_pack(obj);loaded=estate_unpack(packed);free(packed);
+ assert(loaded && !strcmp(loaded->restring_inspection,obj->restring_inspection));extract_obj(loaded);
+ /* Shared clan application uses personal Favor, preserving the existing
+  * officer gate and the previously stamped religion requirement. */
+ SET_BIT_AR(MOB_FLAGS(&mob_proto[0]),MOB_QUARTERMASTER);
+ clan_list=calloc(1,sizeof(*clan_list));num_of_clans=1;clan_list[0].vnum=1;clan_list[0].clan_name="Test Clan";
+ do_restringedit(admin,"",0,0);edit_input(admin,"1");edit_input(admin,"3");edit_input(admin,"a");
+ edit_field(admin,1,"1");edit_field(admin,3,"body");edit_field(admin,4,"armor 0");
+ edit_field(admin,5,"robe clan");edit_field(admin,6,"a clan service robe");edit_field(admin,7,"A clan service robe lies here.");edit_field(admin,8,"A woven clan emblem.");edit_input(admin,"p");edit_input(admin,"q");
+ obj->id=80001;obj->clan_requirement.rank=2;restring_clan_policy=1;restring_clan_favor=2;
+ before=GET_GOLD(ch);do_restringapply(ch,"robe clan 3",0,0);assert(!ch->player_specials->restring_quote);
+ restring_clan_favor=3;do_restringapply(ch,"robe clan 3",0,0);assert(ch->player_specials->restring_quote);
+ restring_clan_member=false;do_restringapply(ch,"confirm",0,0);assert(GET_GOLD(ch)==before);
+ restring_clan_member=true;do_restringapply(ch,"robe clan 3",0,0);do_restringapply(ch,"confirm",0,0);
+ assert(GET_GOLD(ch)==before-500 && obj->clan_requirement.clan==1 && obj->clan_requirement.favor==3 && obj->clan_requirement.rank==2);
+ assert(obj->religion_requirement.deity==1 && obj->religion_requirement.rank==1);
+ REMOVE_BIT_AR(MOB_FLAGS(&mob_proto[0]),MOB_QUARTERMASTER);
+ restring_clan_policy=0;free(clan_list);clan_list=NULL;num_of_clans=0;
+ /* Deletion is confirmed, audited and does not rewrite completed items. */
+ do_restringedit(admin,"",0,0);edit_input(admin,"2");edit_input(admin,"1");
+ {char line[64];snprintf(line,sizeof(line),"d %ld",scalar("SELECT id FROM restring_catalogue LIMIT 1"));edit_input(admin,line);}edit_input(admin,"yes");edit_input(admin,"q");
+ assert(scalar("SELECT COUNT(*) FROM restring_catalogue WHERE deleted=1")==1 && scalar("SELECT COUNT(*) FROM restring_audit WHERE action='delete'")==1);
+ assert(!strcmp(obj->short_description,"a clan service robe"));
+ restring_cleanup(ch);extract_obj(obj);GET_GOLD(ch)=initial_gold;GET_DEITY(ch)=0;estate_save_player(ch);ch->desc=admin->desc=NULL;
+ puts("PASS: shared appearance menus, draft isolation, publication, eligibility, exact ranks, fees, no-op, stale quotes, native codec, extra clearing, failure rollback, replay and deletion audit");
+}
+#endif
+
 int main(int argc, char **argv)
 {
   struct char_data seller, buyer, guest, admin;
   struct obj_data *obj, *chest, *restored;
   char *packed;
+  deity_list[1].pantheon=DEITY_PANTHEON_ALL;deity_list[1].name="Test Faith";
+  deity_list[2].pantheon=DEITY_PANTHEON_ALL;deity_list[2].name="Other Faith";
   assert(argc == 2);
   assert(setenv("STALL_TEST_SOCKET", argv[1], 1) == 0);
   conn = mysql_init(NULL);
@@ -747,6 +1062,107 @@ int main(int argc, char **argv)
   init_player(&buyer, "buyer", 2);
   init_player(&guest, "guest", 3);
   init_player(&admin, "admin", 4);
+  /* Temple chests use the production SQL escrow/delivery path and native codec. */
+  temple_edit_allowed = FALSE;
+  temple_chest_admin(&admin, "1 4 3");
+  assert(scalar("SELECT COUNT(*) FROM temple_chests") == 0);
+  temple_edit_allowed = TRUE;
+  temple_chest_admin(&admin, "999999999999999999999999 4 3");
+  assert(scalar("SELECT COUNT(*) FROM temple_chests") == 0);
+  temple_chest_admin(&admin, "1 0 3");
+  assert(scalar("SELECT COUNT(*) FROM temple_chests") == 0);
+  temple_chest_admin(&admin, "1 4 3");
+  assert(scalar("SELECT COUNT(*) FROM temple_chests") == 1);
+  chest = world[1].contents;
+  assert(chest && GET_OBJ_TYPE(chest) == ITEM_CONTAINER && !CAN_WEAR(chest, ITEM_WEAR_TAKE));
+  temple_chests_boot(); assert(world[1].contents == chest && !chest->next_content);
+  output[0]=0;assert(housing_contents(&admin,chest));assert(strstr(output,"Only members"));
+  assert(chest->religion_requirement.deity==1 && chest->religion_requirement.rank==4);
+  obj = item("templeblade");obj_to_char(obj, &seller);
+  GET_DEITY((&seller))=2;seller.player_specials->saved.religion_standing[2]=336;
+  output[0]=0;assert(housing_contents(&seller,chest));assert(strstr(output,"Only members"));
+  assert(housing_put(&seller,obj,chest));assert(obj->carried_by==&seller);
+  GET_DEITY((&seller))=1;seller.player_specials->saved.religion_standing[1]=36;
+  assert(housing_put(&seller,obj,chest));assert(obj->carried_by==&seller);
+  seller.player_specials->saved.religion_standing[1]=72;
+  assert(estate_query("CREATE TRIGGER test_temple_insert BEFORE INSERT ON temple_chest_items FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='test temple deposit failure'"));
+  assert(housing_put(&seller,obj,chest));assert(obj->carried_by==&seller);
+  assert(scalar("SELECT COUNT(*) FROM temple_chest_items")==0);
+  assert(estate_query("DROP TRIGGER test_temple_insert"));
+  assert(housing_put(&seller,obj,chest));
+  assert(scalar("SELECT COUNT(*) FROM temple_chest_items")==1);
+  obj=item("templebox");obj_to_obj(item("templegem"),obj);obj_to_char(obj,&seller);
+  assert(housing_put(&seller,obj,chest));
+  assert(scalar("SELECT SUM(item_units) FROM temple_chest_items")==3);
+  obj=item("excess");obj_to_char(obj,&seller);
+  assert(housing_put(&seller,obj,chest));assert(obj->carried_by==&seller);
+  assert(scalar("SELECT COUNT(*) FROM temple_chest_items")==2);
+  temple_chest_admin(&admin,"1 4 2");
+  assert(scalar("SELECT item_limit FROM temple_chests")==3);
+  extract_obj(chest);temple_chests_boot();chest=world[1].contents;
+  assert(chest && scalar("SELECT COUNT(*) FROM temple_chest_items")==2);
+  output[0]=0;assert(housing_contents(&seller,chest));assert(strstr(output,"templeblade"));
+  seller.player_specials->saved.religion_standing[1]=36;
+  assert(housing_get(&seller,chest,"all",1));
+  assert(scalar("SELECT COUNT(*) FROM temple_chest_items")==2);
+  GET_DEITY((&seller))=2;
+  assert(housing_get(&seller,chest,"all",1));
+  assert(scalar("SELECT COUNT(*) FROM temple_chest_items")==2);
+  GET_DEITY((&seller))=1;seller.player_specials->saved.religion_standing[1]=336;
+  assert(estate_query("CREATE TRIGGER test_temple_delete BEFORE DELETE ON temple_chest_items FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='test temple failure'"));
+  assert(housing_get(&seller,chest,"templeblade",1));
+  assert(scalar("SELECT COUNT(*) FROM temple_chest_items")==2);
+  assert(estate_query("DROP TRIGGER test_temple_delete"));
+  assert(housing_get(&seller,chest,"all",1));
+  assert(scalar("SELECT COUNT(*) FROM temple_chest_items")==0);
+  assert(scalar("SELECT COUNT(*) FROM estate_deliveries WHERE delivered=0")==0);
+  while(seller.carrying)extract_obj(seller.carrying);
+  estate_save_player(&seller);
+  assert(estate_query("DELETE FROM player_save_objs WHERE name='seller'"));
+  extract_obj(chest);
+  GET_DEITY((&seller))=0;
+  /* Both hospitality gifts and the cooldown commit together, including partial
+   * delivery failure, stale character files and idempotent delivery recovery. */
+  {
+    struct obj_data *meal=item("templemeal"), *drink=item("templedrink");
+    GET_OBJ_TYPE(meal)=ITEM_FOOD;GET_OBJ_TYPE(drink)=ITEM_DRINK;
+    GET_OBJ_VAL(meal,0)=GET_OBJ_VAL(drink,0)=100;
+    meal->affected[0].location=APPLY_STR;meal->affected[0].modifier=2;
+    meal->affected[0].bonus_type=BONUS_TYPE_FOOD;
+    drink->affected[0].location=APPLY_CHA;drink->affected[0].modifier=2;
+    drink->affected[0].bonus_type=BONUS_TYPE_DRINK;
+    assert(estate_query("CREATE TRIGGER test_hospitality_delivery BEFORE INSERT ON estate_deliveries "
+      "FOR EACH ROW BEGIN IF NEW.player_id=3 AND (SELECT COUNT(*) FROM estate_deliveries WHERE player_id=3)>0 "
+      "THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='test second hospitality gift failure'; END IF; END"));
+    assert(!estate_hospitality_claim(&guest,meal,drink,1700000000,86400));
+    assert(scalar("SELECT COUNT(*) FROM estate_deliveries WHERE player_id=3")==0);
+    assert(scalar("SELECT available_after FROM religion_hospitality WHERE player_id=3")==0);
+    assert(!guest.player_specials->saved.religion_hospitality_after);
+    assert(estate_query("DROP TRIGGER test_hospitality_delivery"));
+    assert(estate_hospitality_claim(&guest,meal,drink,1700000000,86400));
+    assert(scalar("SELECT COUNT(*) FROM estate_deliveries WHERE player_id=3")==2);
+    assert(guest.player_specials->saved.religion_hospitality_after==1700086400);
+    guest.player_specials->saved.religion_hospitality_after=0;
+    assert(!estate_hospitality_claim(&guest,meal,drink,1700000001,86400));
+    assert(guest.player_specials->saved.religion_hospitality_after==1700086400);
+    assert(scalar("SELECT COUNT(*) FROM estate_deliveries WHERE player_id=3")==2);
+    assert(IS_CARRYING_N(&guest)==2);estate_recover(&guest);assert(IS_CARRYING_N(&guest)==2);
+#ifdef ESTATE_REAL_CODEC
+    assert(guest.carrying->affected[0].bonus_type==BONUS_TYPE_DRINK);
+    assert(guest.carrying->next_content->affected[0].bonus_type==BONUS_TYPE_FOOD);
+    assert(GET_OBJ_VAL(guest.carrying,0)==100);
+#endif
+    assert(estate_hospitality_claim(&guest,meal,drink,1700086400,86400));
+    estate_recover(&guest);assert(IS_CARRYING_N(&guest)==4);
+    extract_obj(meal);extract_obj(drink);
+    while(guest.carrying)extract_obj(guest.carrying);
+    estate_save_player(&guest);
+  }
+  test_church_tasks(&seller,&admin);
+  test_church_blessing(&seller);
+#ifdef ESTATE_REAL_CODEC
+  test_restrings(&seller,&admin);
+#endif
   assert(housing_admin(&admin, "neighborhood add 2200 Test Neighborhood"));
   assert(scalar("SELECT COUNT(*) FROM housing_neighborhoods") == 1);
 #ifdef ESTATE_REAL_CODEC
@@ -764,6 +1180,7 @@ int main(int argc, char **argv)
   obj->clan_delivery_amount=25;
   strcpy(obj->clan_qm_uid,"cccccccccccccccccccccccccccccccc");
   obj->clan_requirement = (struct clan_requirement){7, 3, 4};
+  obj->religion_requirement = (struct religion_requirement){1, 4};
   strcpy(obj->clan_enchantment.uid,"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
   strcpy(obj->clan_enchantment.receipt,"ffffffffffffffffffffffffffffffff");
   strcpy(obj->clan_enchantment.word,"inferno");
@@ -805,6 +1222,7 @@ int main(int argc, char **argv)
     assert(strstr(restored->action_description, "A second line."));
     assert(!strcmp(restored->clan_delivery_uid,"dddddddddddddddddddddddddddddddd") && restored->clan_delivery_amount==25);
     assert(!strcmp(restored->clan_qm_uid,"cccccccccccccccccccccccccccccccc"));
+    assert(restored->religion_requirement.deity==1 && restored->religion_requirement.rank==4);
     assert(restored->clan_requirement.clan==7 && restored->clan_requirement.rank==3 && restored->clan_requirement.favor==4);
     assert(!strcmp(restored->clan_enchantment.uid,"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee") &&
            !strcmp(restored->clan_enchantment.receipt,"ffffffffffffffffffffffffffffffff") &&
@@ -819,6 +1237,7 @@ int main(int argc, char **argv)
     {
       obj_save_data *database = objsave_parse_objects_db("seller", NOWHERE);
       assert(database && !database->next);
+      assert(database->obj->religion_requirement.deity==1 && database->obj->religion_requirement.rank==4);
       assert(!strcmp(database->obj->clan_delivery_uid,"dddddddddddddddddddddddddddddddd") && database->obj->clan_delivery_amount==25);
       assert(!strcmp(database->obj->clan_qm_uid,"cccccccccccccccccccccccccccccccc"));
       assert(database->locate == 3 && database->db_idnum > 0 &&
@@ -1015,6 +1434,9 @@ int main(int argc, char **argv)
   assert(!strcmp(world[IN_ROOM(&seller)].name, "A Fine Hall"));
   assert(world[IN_ROOM(&seller)].ex_description);
   house(&seller, "leave");
+#ifdef ESTATE_REAL_CODEC
+  seller.carrying->contains->religion_requirement=(struct religion_requirement){1,4};
+#endif
   /* Native prototypes also use zero as an unassigned binding ID. */
   GET_OBJ_BOUND_ID(seller.carrying)=0;
   auction(&seller, "sell dagger 1234");
@@ -1028,6 +1450,15 @@ int main(int argc, char **argv)
   assert(strstr(output, "IDENTIFY"));
   auction(&seller, "buy 1");
   assert(!seller.carrying);
+#ifdef ESTATE_REAL_CODEC
+  auction(&buyer,"buy 1");assert(!buyer.carrying && GET_GOLD(&buyer)==500000);
+  GET_DEITY((&buyer))=2;buyer.player_specials->saved.religion_standing[2]=336;
+  auction(&buyer,"buy 1");assert(!buyer.carrying && GET_GOLD(&buyer)==500000);
+  GET_DEITY((&buyer))=1;buyer.player_specials->saved.religion_standing[1]=36;
+  auction(&buyer,"buy 1");assert(!buyer.carrying && GET_GOLD(&buyer)==500000);
+  assert(scalar("SELECT COUNT(*) FROM auction_listings WHERE listing_state='active'")==1);
+  buyer.player_specials->saved.religion_standing[1]=72;
+#endif
   auction(&buyer, "buy 1");
   assert(buyer.carrying && buyer.carrying->contains && buyer.carrying->sheath_primary);
   assert(GET_GOLD(&buyer) == 498766);
@@ -1104,7 +1535,7 @@ int main(int argc, char **argv)
     assert(GET_GOLD(&seller) == before);
   }
   assert(!estate_unpack("EOBJ1 999999999 1 0 0\n"));
-  puts("PASS: neighborhood purchase/build/guests/reload, chest nesting/sheaths, auction "
+  puts("PASS: hospitality atomic rewards/cooldown/recovery, temple chest access/capacity/reload/failure recovery, neighborhood purchase/build/guests/reload, chest nesting/sheaths, auction "
        "escrow/search/expiry/cancel/reprice, payouts and delivery recovery");
   test_stalls(&seller, &buyer, &guest, &admin);
   mysql_close(conn);
@@ -1113,4 +1544,25 @@ int main(int argc, char **argv)
 
 /* Clan access is exercised against real SQL by run_clan_qm_services.py. */
 bool clan_access_check(struct char_data *ch,const struct clan_requirement *r,bool explain)
-{ (void)ch;(void)explain;(void)r;return true; }
+{ (void)ch;(void)explain;return !restring_clan_policy || ((!r->clan || (restring_clan_member && r->clan==1)) && (!r->favor || r->favor<=restring_clan_favor)); }
+
+/* Native surrounding adapters for the shared appearance service. */
+void free_ex_descriptions(struct extra_descr_data *e)
+{ while(e){struct extra_descr_data *next=e->next;free(e->keyword);free(e->description);free(e);e=next;} }
+
+struct weapon_table weapon_list[NUM_WEAPON_TYPES];
+struct armor_table armor_list[NUM_SPEC_ARMOR_TYPES];
+const char *weapon_family[NUM_WEAPON_FAMILIES+1];
+const char *armor_type[NUM_SPEC_ARMOR_TYPES];
+struct clan_data *clan_list;
+int num_of_clans;
+clan_rnum real_clan(clan_vnum v) { return v==1?0:NO_CLAN; }
+bool can_edit_clan(struct char_data *ch,clan_vnum v) { (void)ch;return v==1; }
+bool has_quartermaster_in_room(struct char_data *ch) { (void)ch;return true; }
+struct obj_data *get_obj_in_equip_vis(struct char_data *ch,char *arg,int *number,struct obj_data *equipment[])
+{ int i;(void)number;for(i=0;i<NUM_WEARS;i++)if(equipment[i] && isname(arg,equipment[i]->name))return equipment[i];return NULL; }
+
+struct PERF_prof_sect;
+void PERF_prof_sect_init(struct PERF_prof_sect **p,const char *id){(void)p;(void)id;}
+void PERF_prof_sect_enter(struct PERF_prof_sect *p){(void)p;}
+void PERF_prof_sect_exit(struct PERF_prof_sect *p){(void)p;}

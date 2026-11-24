@@ -19,6 +19,7 @@ static void (*member_invalidation)(struct char_data *, const char *);
 void clan_persistence_set_member_invalidation(void (*callback)(struct char_data *,const char *))
 {member_invalidation=callback;}
 static struct json_object* committed;
+static bool write_snapshot(struct json_object* candidate);
 static struct json_object*
 get(struct json_object* o, const char* name)
 {
@@ -332,11 +333,46 @@ clan_persistence_configure(enum clan_store_mode requested)
   if (mode == CLAN_STORE_MYSQL)
   {
     struct char_data* ch;
+    struct json_object *repaired = copy(committed), *members;
+    size_t n = 0;
+    bool changed = false;
     int p;
+    if (!repaired) {
+      ready = false;
+      return false;
+    }
+    members = get(repaired, "members");
+    while (n < json_object_array_length(members)) {
+      struct json_object* m = json_object_array_get_idx(members, n);
+      int64_t id = json_object_get_int64(get(m, "player_id"));
+      bool found = false;
+      for (p = 0; p <= top_of_p_table; p++)
+        if (player_table[p].id == id && player_table[p].name &&
+            !IS_SET(player_table[p].flags, PINDEX_DELETED)) {
+          found = true;
+          break;
+        }
+      if (found) {
+        n++;
+        continue;
+      }
+      /* No membership row is the SQL representation of clan 0/rank 0.
+       * Persist the repair so a later reused/restored ID cannot inherit it. */
+      log("CLAN BOOT: player %lld missing or deleted; clearing clan and rank to 0",
+          (long long)id);
+      json_object_array_del_idx(members, n, 1);
+      changed = true;
+    }
+    if (changed) {
+      json_object_object_add(repaired, "written_at", json_object_new_int64(time(NULL)));
+      if (!write_snapshot(repaired))
+        return false;
+    } else
+      json_object_put(repaired);
     for (p = 0; p <= top_of_p_table; p++)
     {
       size_t n;
-      player_table[p].clan = NO_CLAN;
+      player_table[p].clan = 0;
       for (n = 0; n < json_object_array_length(get(committed, "members")); n++)
       {
         struct json_object* m = json_object_array_get_idx(get(committed, "members"), n);
@@ -539,7 +575,7 @@ clan_persistence_reconcile_player(struct char_data* ch)
 {
   struct json_object* m;
   size_t i;
-  int vnum = NO_CLAN, rank = 0;
+  int vnum = 0, rank = 0;
   if (mode != CLAN_STORE_MYSQL || !ch || IS_NPC(ch))
     return;
   m = ready ? member(committed, GET_IDNUM(ch)) : NULL;
@@ -650,7 +686,7 @@ bool clan_persistence_disband(int vnum)
   /* SQL is authoritative. Offline player files are reconciled on load; do not
    * make an SQL tombstone depend on writing every character file. */
   for (p = 0; p <= top_of_p_table; p++)
-    if (player_table[p].clan == vnum) player_table[p].clan = NO_CLAN;
+    if (player_table[p].clan == vnum) player_table[p].clan = 0;
   for (ch = character_list; ch; ch = ch->next) {
     if (!IS_NPC(ch) && GET_CLAN(ch) == (clan_vnum)vnum)
       send_to_char(ch, "Your clan has been disbanded. You are no longer a member.\r\n");

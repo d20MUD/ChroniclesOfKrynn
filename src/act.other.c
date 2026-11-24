@@ -63,6 +63,7 @@
 #include "staff_events.h"
 #include "account.h"
 #include "deities.h"
+#include "religion.h"
 #include "evolutions.h"
 #include "traps.h" /* For trap system functions */
 #include "constants.h"
@@ -10939,6 +10940,7 @@ ACMD(do_buff)
 
 ACMDU(do_devote)
 {
+  if (IS_NPC(ch)) return;
   char arg1[MEDIUM_STRING], arg2[MEDIUM_STRING], dname[SMALL_STRING];
 
   half_chop(argument, arg1, arg2);
@@ -11087,36 +11089,9 @@ ACMDU(do_devote)
   }
   else if (is_abbrev(arg1, "choose"))
   {
-    if (GET_DEITY(ch) != DEITY_NONE)
-    {
-      send_to_char(ch, "You have already chosen your deity.  If you wish to change your deity "
-                       "selection, please ask a staff member.\r\n");
-      return;
-    }
-    if (!*arg2)
-    {
-      send_to_char(ch, "Please specify the deity you want to worship.  Use 'devote list' to see "
-                       "the deity options.\r\n");
-      return;
-    }
-    for (i = 0; i < NUM_DEITIES; i++)
-    {
-      if (deity_list[i].pantheon == DEITY_PANTHEON_NONE)
-        continue;
-      if (is_abbrev(arg2, deity_list[i].name))
-      {
-        break;
-      }
-    }
-    if (i < 0 || i >= NUM_DEITIES)
-    {
-      send_to_char(ch, "There is no deity by that name.\r\n");
-      return;
-    }
-    GET_DEITY(ch) = i;
-    snprintf(dname, sizeof(dname), "%s", deity_list[i].name);
-    send_to_char(ch, "You are now a worshipper of %s!\r\n", CAP(dname));
-    save_char(ch, 0);
+    char request[MAX_INPUT_LENGTH];
+    snprintf(request, sizeof(request), "devote %s", arg2);
+    do_religion(ch, request, cmd, subcmd);
   }
 }
 

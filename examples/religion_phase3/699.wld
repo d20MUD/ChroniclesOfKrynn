@@ -1,0 +1,273 @@
+#69900
+Courtyard of Mercy~
+This public courtyard welcomes visitors to the temple of Mishakal. A priest offers church service work here. An eastern passage leads to a members sanctuary.
+~
+0 0 0 0 0 0
+D0
+A clear passage leads onward.~
+~
+0 -1 69910
+D1
+A clear passage leads onward.~
+~
+0 -1 69909
+D2
+A clear passage leads onward.~
+~
+0 -1 69901
+D3
+A covered walk leads to a public service annex.~
+~
+0 -1 69908
+S
+#69901
+Shrine of the Shelter~
+This modest shrine to Mishakal invites a pilgrim to pause and reflect on the shelter. A worn path leads back toward the public temple courtyard.
+~
+0 0 0 0 0 0
+D0
+A clear passage leads onward.~
+~
+0 -1 69900
+D2
+A clear passage leads onward.~
+~
+0 -1 69902
+S
+#69902
+Shrine of the Healers~
+This modest shrine to Mishakal invites a pilgrim to pause and reflect on the healers. A worn path leads back toward the public temple courtyard.
+~
+0 0 0 0 0 0
+D0
+A clear passage leads onward.~
+~
+0 -1 69901
+D2
+A clear passage leads onward.~
+~
+0 -1 69903
+S
+#69903
+Shrine of the Returning Light~
+This modest shrine to Mishakal invites a pilgrim to pause and reflect on the returning light. A worn path leads back toward the public temple courtyard.
+~
+0 0 0 0 0 0
+D0
+A clear passage leads onward.~
+~
+0 -1 69902
+D2
+A clear passage leads onward.~
+~
+0 -1 69904
+S
+#69904
+Shrine of the Quiet Vigil~
+This modest shrine to Mishakal invites a pilgrim to pause and reflect on the quiet vigil. A worn path leads back toward the public temple courtyard.
+~
+0 0 0 0 0 0
+D0
+A clear passage leads onward.~
+~
+0 -1 69903
+S
+#69909
+Inner Sanctuary of Mishakal~
+This quiet members sanctuary offers space for reflection in the service of Mishakal. The western passage is an unobstructed outward route to the public courtyard.
+~
+0 19398656 0 0 0 0
+D3
+A clear passage leads onward.~
+~
+0 -1 69900
+D0
+A quiet passage leads toward the temple archive.~
+~
+0 -1 69905
+S
+#69910
+Courtyard of the Open Book~
+This public courtyard welcomes visitors to the temple of Gilean. A priest offers church service work here. An eastern passage leads to a members sanctuary.
+~
+0 0 0 0 0 0
+D0
+A clear passage leads onward.~
+~
+0 -1 69911
+D1
+A clear passage leads onward.~
+~
+0 -1 69919
+D2
+A clear passage leads onward.~
+~
+0 -1 69900
+D3
+A covered walk leads to a public service annex.~
+~
+0 -1 69918
+S
+#69911
+Shrine of the First Word~
+This modest shrine to Gilean invites a pilgrim to pause and reflect on the first word. A worn path leads back toward the public temple courtyard.
+~
+0 0 0 0 0 0
+D0
+A clear passage leads onward.~
+~
+0 -1 69912
+D2
+A clear passage leads onward.~
+~
+0 -1 69910
+S
+#69912
+Shrine of the Careful Question~
+This modest shrine to Gilean invites a pilgrim to pause and reflect on the careful question. A worn path leads back toward the public temple courtyard.
+~
+0 0 0 0 0 0
+D0
+A clear passage leads onward.~
+~
+0 -1 69913
+D2
+A clear passage leads onward.~
+~
+0 -1 69911
+S
+#69913
+Shrine of the Remembered Name~
+This modest shrine to Gilean invites a pilgrim to pause and reflect on the remembered name. A worn path leads back toward the public temple courtyard.
+~
+0 0 0 0 0 0
+D0
+A clear passage leads onward.~
+~
+0 -1 69914
+D2
+A clear passage leads onward.~
+~
+0 -1 69912
+S
+#69914
+Shrine of the Unwritten Page~
+This modest shrine to Gilean invites a pilgrim to pause and reflect on the unwritten page. A worn path leads back toward the public temple courtyard.
+~
+0 0 0 0 0 0
+D2
+A clear passage leads onward.~
+~
+0 -1 69913
+S
+#69919
+Inner Sanctuary of Gilean~
+This quiet members sanctuary offers space for reflection in the service of Gilean. The western passage is an unobstructed outward route to the public courtyard.
+~
+0 19398656 0 0 0 0
+D3
+A clear passage leads onward.~
+~
+0 -1 69910
+D0
+A quiet passage leads toward the temple archive.~
+~
+0 -1 69915
+S
+#69908
+Mercy Service Annex~
+Clean folded linens and empty basins wait beside a record of completed visits. A painted infinity sign reminds volunteers to return borrowed tools.
+~
+0 0 0 0 0 0
+D1
+The passage is kept clear for travelers.~
+~
+0 -1 69900
+S
+#69918
+Hall of Public Copies~
+Copyists compare public notices beneath an open-book sign. A slate lists records still awaiting a careful second reading.
+~
+0 0 0 0 0 0
+D1
+The passage is kept clear for travelers.~
+~
+0 -1 69910
+S
+#69905
+Archive of Unfinished Vigils~
+Bound journals preserve the names of patients and the practical lessons of earlier vigils. Blue thread marks accounts still awaiting a return visit.
+~
+0 19398656 0 0 0 0
+D2
+The passage is kept clear for travelers.~
+~
+0 -1 69909
+D1
+The passage is kept clear for travelers.~
+~
+0 -1 69906
+S
+#69906
+Chamber of the Healing Hand~
+Interwoven hands are carved into the table where senior servants compare difficult accounts. An unlit lamp is kept for those still away on service.
+~
+0 19398656 0 0 0 0
+D3
+The passage is kept clear for travelers.~
+~
+0 -1 69905
+D1
+The passage is kept clear for travelers.~
+~
+0 -1 69907
+S
+#69907
+Sanctum of Returning Light~
+Daylight falls through a blue infinity window onto a circle of plain seats. Even the most intricate vestments find no throne here; a work ledger rests open at the center.
+~
+0 19398656 0 0 0 0
+D3
+The passage is kept clear for travelers.~
+~
+0 -1 69906
+S
+#69915
+Archive of Compared Accounts~
+Gray-bound volumes set disagreeing accounts side by side. Marginal notes preserve questions that later readers may still be able to answer.
+~
+0 19398656 0 0 0 0
+D2
+The passage is kept clear for travelers.~
+~
+0 -1 69919
+D1
+The passage is kept clear for travelers.~
+~
+0 -1 69916
+S
+#69916
+Chamber of the Careful Witness~
+A broad desk holds paired copies of testimony, their differences marked without erasure. Silver book clasps keep the papers arranged for the next reader.
+~
+0 19398656 0 0 0 0
+D3
+The passage is kept clear for travelers.~
+~
+0 -1 69915
+D1
+The passage is kept clear for travelers.~
+~
+0 -1 69917
+S
+#69917
+Sanctum of the Unwritten Page~
+An unmarked leaf lies within an open silver-bound book. The surrounding shelves leave space for records yet to be written; no seat is raised above the others.
+~
+0 19398656 0 0 0 0
+D3
+The passage is kept clear for travelers.~
+~
+0 -1 69916
+S
+$

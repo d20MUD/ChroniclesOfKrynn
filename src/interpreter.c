@@ -91,6 +91,9 @@
 #include "discord_bridge.h"
 #include "evolutions.h"
 #include "deities.h"
+#include "religion.h"
+#include "restring.h"
+#include "estate.h"
 #include "pubsub.h"
 #include "mudlim.h"
 #include "backgrounds.h"
@@ -3563,6 +3566,8 @@ cpp_extern const struct command_info cmd_info[] = {
     /* {"command", "sort_as", minimum_position, *command_pointer, minimum_level, subcmd, ignore_wait, actions_required, {action_cooldowns}, *command_check_pointer},*/
 
     {"rest", "re", POS_RECLINING, do_rest, 0, 0, FALSE, ACTION_NONE, {0, 0}, NULL},
+    {"religion", "religion", POS_DEAD, do_religion, 1, 0, TRUE, ACTION_NONE, {0, 0}, NULL},
+    {"religionadmin", "religionadmin", POS_DEAD, do_religionadmin, LVL_BUILDER, 0, TRUE, ACTION_NONE, {0, 0}, NULL},
     {"reply", "r", POS_SLEEPING, do_reply, 0, 0, TRUE, ACTION_NONE, {0, 0}, NULL},
     {"radiantaura",
      "radiantaura",
@@ -3799,6 +3804,8 @@ cpp_extern const struct command_info cmd_info[] = {
 #if defined(ALLOW_OBJECT_RETSRINGS_BY_PLAYERS)
     {"restring", "restring", POS_STANDING, do_not_here, 1, 0, FALSE, ACTION_NONE, {0, 0}, NULL},
 #endif
+    {"restringapply", "restringapply", POS_RESTING, do_restringapply, 1, 0, FALSE, ACTION_NONE, {0, 0}, NULL},
+    {"restringedit", "restringedit", POS_DEAD, do_restringedit, LVL_BUILDER, 0, TRUE, ACTION_NONE, {0, 0}, NULL},
     {"rage", "rage", POS_FIGHTING, do_rage, 1, 0, FALSE, ACTION_NONE, {0, 0}, can_rage},
     {"recklessabandon",
      "reckless",
@@ -5600,6 +5607,13 @@ void command_interpreter(struct char_data *ch, char *argument)
   char *line = NULL;
   char arg[MAX_INPUT_LENGTH] = {'\0'};
 
+  if (!IS_NPC(ch) && ch->player_specials && ch->player_specials->restring_pending) {
+    if (!estate_player_ready(ch)) return;
+    ch->player_specials->restring_pending=false;
+  }
+  if (restring_editor_input(ch, argument)) return;
+  religion_blessing_tick(ch);
+
   if (!IS_NPC(ch) && (ch->legendary_awards_pending || legendary_transaction_locked(ch)) &&
       !legendary_earnings_recover(ch))
     return;
@@ -6864,7 +6878,7 @@ int enter_player_game(struct descriptor_data *d)
 #elif defined(CAMPAIGN_DL)
   if (!race_list[GET_REAL_RACE(d->character)].is_pc)
     GET_REAL_RACE(d->character) = DL_RACE_HUMAN;
-  if (GET_DEITY(d->character) >= NUM_DEITIES)
+  if (GET_DEITY(d->character) < 0 || GET_DEITY(d->character) >= NUM_DEITIES)
     GET_DEITY(d->character) = 0;
 #endif
 
@@ -6953,8 +6967,11 @@ EVENTFUNC(get_protocols)
 
   write_to_output(d, buf, 0);
 
-  write_to_output(d, GREETINGS, 0);
-  STATE(d) = CON_ACCOUNT_NAME; // CON_GET_NAME;
+  if (!MudletPackageOffer(d))
+  {
+    write_to_output(d, GREETINGS, 0);
+    STATE(d) = CON_ACCOUNT_NAME; // CON_GET_NAME;
+  }
   return 0;
 }
 
@@ -7234,9 +7251,10 @@ void web_creation_finish(struct descriptor_data *d, struct output_capture *captu
         json_object_object_add(json_object_array_get_idx(choices,12),"blockedReason",
           json_object_new_string("You have already chosen a hometown. Contact a staff member if you need to change it."));
       creation_choice(choices,"d","Deity","");
-      if (d->character && GET_DEITY(d->character) > 0)
+      if (d->character && (GET_LEVEL(d->character) > 0 || GET_DEITY(d->character) > 0 ||
+                           d->character->player_specials->saved.religion_devote_after > 0))
         json_object_object_add(json_object_array_get_idx(choices,13),"blockedReason",
-          json_object_new_string("You have already chosen a deity. Contact a staff member if you need to change it."));
+          json_object_new_string("Use religion devote in-game, or ask staff about a supported patron change."));
       creation_choice(choices,"q","Done","");
       break;
     case CON_QREGION:
@@ -7332,7 +7350,7 @@ void web_creation_finish(struct descriptor_data *d, struct output_capture *captu
       break;
     case CON_CHARACTER_DEITY_CONFIRM:
     {
-      int deity = d->character ? GET_DEITY(d->character) : -1;
+      int deity = d->character ? d->character->player_specials->religion_pending_deity : -1;
       step = "confirm"; title = "Confirm your deity";
       if (deity >= 0 && deity < NUM_DEITIES && deity_list[deity].pantheon != DEITY_PANTHEON_NONE)
       {
@@ -7506,6 +7524,29 @@ void nanny(struct descriptor_data *d, char *arg)
   /* Not in OLC. */
   switch (STATE(d))
   {
+  case CON_MUDLET_PACKAGE:
+    if (!str_cmp(arg, "1") || !str_cmp(arg, "yes") || !str_cmp(arg, "y"))
+    {
+      MudletPackageInstall(d);
+      write_to_output(d, "Mudlet package installation requested.\r\n");
+    }
+    else if (!str_cmp(arg, "2") || !str_cmp(arg, "no") || !str_cmp(arg, "n"))
+      write_to_output(d, "Mudlet package installation declined.\r\n");
+    else if (!str_cmp(arg, "3"))
+    {
+      d->pProtocol->mudlet_stop_asking = true;
+      MudletPackageRemember(d);
+      write_to_output(d, "Mudlet package installation declined.\r\n");
+    }
+    else
+    {
+      write_to_output(d, "Please choose 1, 2, or 3: ");
+      return;
+    }
+    write_to_output(d, "%s", GREETINGS);
+    STATE(d) = CON_ACCOUNT_NAME;
+    return;
+
   case CON_GET_PROTOCOL:
     write_to_output(d, "Collecting Protocol Information... Please Wait.\r\n");
     return;
@@ -8134,6 +8175,11 @@ void nanny(struct descriptor_data *d, char *arg)
         d->account->bad_password_count = 0;
       }
 
+      if (d->pProtocol->mudlet_stop_asking && !d->account->mudlet_no_ask)
+      {
+        d->account->mudlet_no_ask = TRUE;
+        save_account(d->account);
+      }
       show_account_menu(d);
       STATE(d) = CON_ACCOUNT_MENU;
       break;
@@ -8213,6 +8259,8 @@ void nanny(struct descriptor_data *d, char *arg)
 
     if (STATE(d) == CON_CNFPASSWD)
     {
+      if (d->pProtocol->mudlet_stop_asking)
+        d->account->mudlet_no_ask = TRUE;
       save_account(d->account);
       show_account_menu(d);
       STATE(d) = CON_ACCOUNT_MENU;
@@ -9410,6 +9458,11 @@ void nanny(struct descriptor_data *d, char *arg)
       break;
     case 'D':
     case 'd':
+      if (GET_LEVEL(d->character) > 0)
+      {
+        send_to_char(d->character, "Use religion devote in-game to select a faith, or ask staff for a supported patron change.\r\n");
+        return;
+      }
       if (GET_DEITY(d->character))
       {
         send_to_char(d->character, "You have already selected a deity. Please contact a staff "

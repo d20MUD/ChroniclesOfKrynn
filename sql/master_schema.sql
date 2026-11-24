@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS account_data (
   treasure_bonus_pct TINYINT UNSIGNED NOT NULL DEFAULT 0,
   gold_bonus_pct TINYINT UNSIGNED NOT NULL DEFAULT 0,
   qp_bonus_pct TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  mudlet_no_ask TINYINT UNSIGNED NOT NULL DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   last_login TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   status ENUM('active', 'suspended', 'banned') DEFAULT 'active',
@@ -1372,4 +1373,86 @@ CREATE TABLE IF NOT EXISTS personal_hunt_progress (
   targets TEXT NOT NULL COMMENT '35 space-separated integers: five seven-field target slots',
   revision BIGINT UNSIGNED NOT NULL DEFAULT 1,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- Shared temple storage, using the existing estate escrow/delivery journal.
+CREATE TABLE IF NOT EXISTS temple_chests (
+  room_vnum INT PRIMARY KEY,
+  deity INT NOT NULL,
+  temple_rank INT NOT NULL,
+  item_limit INT NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS temple_chest_items (
+  item_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  chest_id INT NOT NULL,
+  item_name TEXT NOT NULL,
+  keywords TEXT NOT NULL,
+  serialized_obj LONGTEXT NOT NULL,
+  item_units INT NOT NULL DEFAULT 1,
+  KEY chest(chest_id),
+  FOREIGN KEY(chest_id) REFERENCES temple_chests(room_vnum)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Hospitality rewards and cooldown share the estate delivery transaction.
+CREATE TABLE IF NOT EXISTS religion_hospitality (
+  player_id BIGINT PRIMARY KEY,
+  available_after BIGINT NOT NULL DEFAULT 0
+) ENGINE=InnoDB;
+
+-- Religion phase 2: native quest boards and character-wide weekly rewards.
+CREATE TABLE IF NOT EXISTS religion_rank_names (
+ deity INT NOT NULL, rank_num INT NOT NULL, title VARCHAR(90) NOT NULL,
+ PRIMARY KEY(deity,rank_num)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS religion_task_config (
+ temple_id INT NOT NULL, slot INT NOT NULL, deity INT NOT NULL, quest_vnum INT NOT NULL,
+ PRIMARY KEY(deity,slot), UNIQUE KEY template(deity,quest_vnum), KEY temple(temple_id)
+) ENGINE=InnoDB;
+CREATE TABLE IF NOT EXISTS religion_task_weeks (
+ deity INT NOT NULL, week_id BIGINT NOT NULL, PRIMARY KEY(deity,week_id)
+) ENGINE=InnoDB;
+CREATE TABLE IF NOT EXISTS religion_task_offers (
+ temple_id INT NOT NULL, week_id BIGINT NOT NULL, slot INT NOT NULL, deity INT NOT NULL,
+ quest_vnum INT NOT NULL, PRIMARY KEY(deity,week_id,slot),
+ UNIQUE KEY template(deity,week_id,quest_vnum)
+) ENGINE=InnoDB;
+CREATE TABLE IF NOT EXISTS religion_standing (
+ player_id BIGINT NOT NULL, deity INT NOT NULL, standing INT NOT NULL DEFAULT 0,
+ PRIMARY KEY(player_id,deity)
+) ENGINE=InnoDB;
+CREATE TABLE IF NOT EXISTS religion_task_active (
+ player_id BIGINT PRIMARY KEY, enrollment BIGINT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE,
+ temple_id INT NOT NULL, deity INT NOT NULL, quest_vnum INT NOT NULL,
+ story_only TINYINT NOT NULL DEFAULT 0, ready TINYINT NOT NULL DEFAULT 0,
+ objective_hash BIGINT UNSIGNED NOT NULL
+) ENGINE=InnoDB;
+CREATE TABLE IF NOT EXISTS religion_task_completions (
+ enrollment BIGINT UNSIGNED PRIMARY KEY, player_id BIGINT NOT NULL, deity INT NOT NULL,
+ quest_vnum INT NOT NULL, week_id BIGINT NOT NULL, award INT NOT NULL,
+ KEY weekly(player_id,week_id), KEY template(player_id,week_id,quest_vnum)
+) ENGINE=InnoDB;
+
+-- Phase 3: one real-time church blessing and the shared appearance catalogue.
+CREATE TABLE IF NOT EXISTS religion_blessings (
+  player_id BIGINT PRIMARY KEY,
+  deity INT NOT NULL,
+  application_rank INT NOT NULL,
+  expires_at BIGINT NOT NULL,
+  available_after BIGINT NOT NULL
+) ENGINE=InnoDB;
+CREATE TABLE IF NOT EXISTS restring_catalogue (
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  revision INT NOT NULL DEFAULT 0,
+  draft MEDIUMTEXT NULL,
+  published MEDIUMTEXT NULL,
+  deleted TINYINT NOT NULL DEFAULT 0
+) ENGINE=InnoDB;
+CREATE TABLE IF NOT EXISTS restring_audit (
+  audit_id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  entry_id BIGINT UNSIGNED NOT NULL,
+  revision INT NOT NULL,
+  editor BIGINT NOT NULL,
+  action VARCHAR(16) NOT NULL,
+  record MEDIUMTEXT NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;

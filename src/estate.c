@@ -308,6 +308,25 @@ int estate_init(void)
       "AUTO_INCREMENT,player_id BIGINT NOT NULL,escrow_state ENUM('prepared','committed','saved') "
       "NOT NULL DEFAULT 'prepared',KEY pending(player_id,escrow_state)) ENGINE=InnoDB DEFAULT "
       "CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+      "CREATE TABLE IF NOT EXISTS temple_chests (room_vnum INT PRIMARY KEY, deity INT NOT NULL, "
+      "temple_rank INT NOT NULL, item_limit INT NOT NULL) ENGINE=InnoDB "
+      "DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+      "CREATE TABLE IF NOT EXISTS temple_chest_items (item_id BIGINT PRIMARY KEY AUTO_INCREMENT, "
+      "chest_id INT NOT NULL, item_name TEXT NOT NULL, keywords TEXT NOT NULL, "
+      "serialized_obj LONGTEXT NOT NULL, item_units INT NOT NULL DEFAULT 1, KEY chest(chest_id), FOREIGN KEY(chest_id) "
+      "REFERENCES temple_chests(room_vnum)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+      "CREATE TABLE IF NOT EXISTS religion_hospitality (player_id BIGINT PRIMARY KEY, "
+      "available_after BIGINT NOT NULL DEFAULT 0) ENGINE=InnoDB",
+      "CREATE TABLE IF NOT EXISTS religion_rank_names ( deity INT NOT NULL, rank_num INT NOT NULL, title VARCHAR(90) NOT NULL, PRIMARY KEY(deity,rank_num) ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+      "CREATE TABLE IF NOT EXISTS religion_task_config ( temple_id INT NOT NULL, slot INT NOT NULL, deity INT NOT NULL, quest_vnum INT NOT NULL, PRIMARY KEY(deity,slot), UNIQUE KEY template(deity,quest_vnum), KEY temple(temple_id) ) ENGINE=InnoDB",
+      "CREATE TABLE IF NOT EXISTS religion_task_weeks ( deity INT NOT NULL, week_id BIGINT NOT NULL, PRIMARY KEY(deity,week_id) ) ENGINE=InnoDB",
+      "CREATE TABLE IF NOT EXISTS religion_task_offers ( temple_id INT NOT NULL, week_id BIGINT NOT NULL, slot INT NOT NULL, deity INT NOT NULL, quest_vnum INT NOT NULL, PRIMARY KEY(deity,week_id,slot), UNIQUE KEY template(deity,week_id,quest_vnum) ) ENGINE=InnoDB",
+      "CREATE TABLE IF NOT EXISTS religion_standing ( player_id BIGINT NOT NULL, deity INT NOT NULL, standing INT NOT NULL DEFAULT 0, PRIMARY KEY(player_id,deity) ) ENGINE=InnoDB",
+      "CREATE TABLE IF NOT EXISTS religion_task_active ( player_id BIGINT PRIMARY KEY, enrollment BIGINT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE, temple_id INT NOT NULL, deity INT NOT NULL, quest_vnum INT NOT NULL, story_only TINYINT NOT NULL DEFAULT 0, ready TINYINT NOT NULL DEFAULT 0, objective_hash BIGINT UNSIGNED NOT NULL ) ENGINE=InnoDB",
+      "CREATE TABLE IF NOT EXISTS religion_task_completions ( enrollment BIGINT UNSIGNED PRIMARY KEY, player_id BIGINT NOT NULL, deity INT NOT NULL, quest_vnum INT NOT NULL, week_id BIGINT NOT NULL, award INT NOT NULL, KEY weekly(player_id,week_id), KEY template(player_id,week_id,quest_vnum) ) ENGINE=InnoDB",
+      "CREATE TABLE IF NOT EXISTS religion_blessings ( player_id BIGINT PRIMARY KEY, deity INT NOT NULL, application_rank INT NOT NULL, expires_at BIGINT NOT NULL, available_after BIGINT NOT NULL ) ENGINE=InnoDB",
+      "CREATE TABLE IF NOT EXISTS restring_catalogue ( id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT, revision INT NOT NULL DEFAULT 0, draft MEDIUMTEXT NULL, published MEDIUMTEXT NULL, deleted TINYINT NOT NULL DEFAULT 0 ) ENGINE=InnoDB",
+      "CREATE TABLE IF NOT EXISTS restring_audit ( audit_id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT, entry_id BIGINT UNSIGNED NOT NULL, revision INT NOT NULL, editor BIGINT NOT NULL, action VARCHAR(16) NOT NULL, record MEDIUMTEXT NOT NULL, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ) ENGINE=InnoDB",
       NULL};
   int i;
   if (ready)
@@ -332,6 +351,49 @@ int estate_init(void)
   }
   ready = TRUE;
   return TRUE;
+}
+
+/* Commit the account-independent character cooldown with both deliveries. The
+ * SQL deadline is authoritative even when the character-file save fails. */
+int estate_hospitality_claim(struct char_data *ch, struct obj_data *food,
+                            struct obj_data *drink, time_t now, int cooldown)
+{
+  MYSQL_RES *res;
+  MYSQL_ROW row;
+  time_t deadline;
+  if (IS_NPC(ch) || !food || !drink || cooldown <= 0 ||
+      !estate_init() || !estate_player_ready(ch) ||
+      !estate_query("INSERT IGNORE INTO religion_hospitality(player_id) VALUES(%ld)", GET_IDNUM(ch)) ||
+      !estate_query("START TRANSACTION")) goto unavailable;
+  res = estate_select("SELECT available_after FROM religion_hospitality WHERE player_id=%ld FOR UPDATE",
+                      GET_IDNUM(ch));
+  if (!res) goto rollback;
+  row = mysql_fetch_row(res);
+  if (!row) { mysql_free_result(res); goto rollback; }
+  deadline = (time_t)strtoll(row[0], NULL, 10);
+  mysql_free_result(res);
+  if (ch->player_specials->saved.religion_hospitality_after > deadline)
+    deadline = ch->player_specials->saved.religion_hospitality_after;
+  if (deadline > now) {
+    estate_query("ROLLBACK");
+    ch->player_specials->saved.religion_hospitality_after = deadline;
+    send_to_char(ch, "Hospitality is still on cooldown. Try again in %ld seconds.\r\n", (long)(deadline - now));
+    return FALSE;
+  }
+  deadline = now + cooldown;
+  if (!estate_query("UPDATE religion_hospitality SET available_after=%lld WHERE player_id=%ld",
+                    (long long)deadline, GET_IDNUM(ch)) ||
+      !estate_queue_delivery(ch, food, 0) || !estate_queue_delivery(ch, drink, 0) ||
+      !estate_query("COMMIT")) goto rollback;
+  ch->player_specials->saved.religion_hospitality_after = deadline;
+  if (!save_char_checked(ch, 0))
+    log("Hospitality: character %ld cooldown retained in SQL pending character save.", GET_IDNUM(ch));
+  return TRUE;
+rollback:
+  estate_query("ROLLBACK");
+unavailable:
+  send_to_char(ch, "Hospitality is unavailable right now. Please try again later; any pending provisions are saved.\r\n");
+  return FALSE;
 }
 
 /* Confirm the currency receipt in the saved character file before acknowledging SQL. */

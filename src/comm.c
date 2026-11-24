@@ -5223,6 +5223,9 @@ static void update_msdp_descriptor(struct descriptor_data *d, struct char_data *
   MSDPSetNumber(d, eMSDP_DEX, GET_DEX(ch));
   MSDPSetNumber(d, eMSDP_CON, GET_CON(ch));
   MSDPSetNumber(d, eMSDP_CHA, GET_CHA(ch));
+  MSDPSetNumber(d, eMSDP_FORTITUDE, compute_mag_saves(ch, SAVING_FORT, 0));
+  MSDPSetNumber(d, eMSDP_REFLEX, compute_mag_saves(ch, SAVING_REFL, 0));
+  MSDPSetNumber(d, eMSDP_WILLPOWER, compute_mag_saves(ch, SAVING_WILL, 0));
 
   snprintf(buf, sizeof(buf), "%s", position_types[GET_POS(ch)]);
   strip_colors(buf);
@@ -5682,6 +5685,9 @@ static void msdp_update(void)
       MSDPSetNumber(d, eMSDP_DEX, GET_DEX(ch));
       MSDPSetNumber(d, eMSDP_CON, GET_CON(ch));
       MSDPSetNumber(d, eMSDP_CHA, GET_CHA(ch));
+      MSDPSetNumber(d, eMSDP_FORTITUDE, compute_mag_saves(ch, SAVING_FORT, 0));
+      MSDPSetNumber(d, eMSDP_REFLEX, compute_mag_saves(ch, SAVING_REFL, 0));
+      MSDPSetNumber(d, eMSDP_WILLPOWER, compute_mag_saves(ch, SAVING_WILL, 0));
 
       snprintf(buf, sizeof(buf), "%s", position_types[GET_POS(ch)]);
       strip_colors(buf);
@@ -5836,6 +5842,7 @@ static void msdp_update(void)
         MSDPSetNumber(d, eMSDP_TANK_HEALTH_MAX, 0);
       }
 
+      update_msdp_room_quests(ch);
       MSDPUpdate(d);
     }
 

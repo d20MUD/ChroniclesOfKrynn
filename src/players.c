@@ -19,6 +19,7 @@
 #include "housing.h"
 #include "talents.h"
 #include "utils.h"
+#include "religion.h"
 #include "epic_feats.h"
 #include "epic_feats2.h"
 #include "epic_feats3.h"
@@ -424,12 +425,19 @@ int load_char(const char *name, struct char_data *ch)
     }
 
     /* Character initializations. Necessary to keep some things straight. */
+    religion_clear_confirmation(ch);
+    ch->player_specials->saved.religion_devote_after = 0;
+    ch->player_specials->saved.religion_hospitality_after = 0;
+    ch->player_specials->saved.religion_channel_off = false;
+    memset(ch->player_specials->saved.religion_standing, 0,
+           sizeof(ch->player_specials->saved.religion_standing));
     memset(ch->player_specials->clan_objective_pending,0,sizeof(ch->player_specials->clan_objective_pending));
     ch->affected = NULL;
     GET_PREFERRED_AMMO(ch) = 0;
     GET_HOOPAK_MODE(ch) = HOOPAK_MODE_HYBRID;
     ch->player_specials->saved.ammo_enhancement_mote = 0;
     GET_CRAFT(ch).ammo_job_enhancement_mote = 0;
+    GET_CRAFT(ch).ammo_job_remaining = 0;
     memset(ch->player_specials->saved.ammo_craft_settings, 0, sizeof(ch->player_specials->saved.ammo_craft_settings));
     for (i = 0; i < MAX_CLASSES; i++)
     {
@@ -823,6 +831,7 @@ int load_char(const char *name, struct char_data *ch)
       {
       case 'A':
         if (!strcmp(tag, "AmEM")) ch->player_specials->saved.ammo_enhancement_mote = atoi(line);
+        if (!strcmp(tag, "AmJn")) GET_CRAFT(ch).ammo_job_remaining = MAX(0, MIN(10, atoi(line)));
         if (!strcmp(tag, "AmJM")) GET_CRAFT(ch).ammo_job_enhancement_mote = atoi(line);
         if (!strcmp(tag, "AmJb"))
           sscanf(line, "%d %d %d %d %d %d %d %d",
@@ -2024,18 +2033,24 @@ int load_char(const char *name, struct char_data *ch)
           GET_QUEST(ch, 1) = atoi(line);
         else if (!strcmp(tag, "Qcu2"))
           GET_QUEST(ch, 2) = atoi(line);
+        else if (!strcmp(tag, "Qcu3"))
+          GET_QUEST(ch, RELIGION_QUEST_SLOT) = atoi(line);
         else if (!strcmp(tag, "Qcnt"))
           GET_QUEST_COUNTER(ch, 0) = atoi(line);
         else if (!strcmp(tag, "Qcn1"))
           GET_QUEST_COUNTER(ch, 1) = atoi(line);
         else if (!strcmp(tag, "Qcn2"))
           GET_QUEST_COUNTER(ch, 2) = atoi(line);
+        else if (!strcmp(tag, "Qcn3"))
+          GET_QUEST_COUNTER(ch, RELIGION_QUEST_SLOT) = atoi(line);
         else if (!strcmp(tag, "Qtim"))
           GET_QUEST_TIME(ch, 0) = atoi(line);
         else if (!strcmp(tag, "Qti1"))
           GET_QUEST_TIME(ch, 1) = atoi(line);
         else if (!strcmp(tag, "Qti2"))
           GET_QUEST_TIME(ch, 2) = atoi(line);
+        else if (!strcmp(tag, "Qti3"))
+          GET_QUEST_TIME(ch, RELIGION_QUEST_SLOT) = atoi(line);
         else if (!strcmp(tag, "Qest"))
           load_quests(fl, ch);
         else if (!strcmp(tag, "QSvy"))
@@ -2043,6 +2058,18 @@ int load_char(const char *name, struct char_data *ch)
         break;
 
       case 'R':
+        if (!strcmp(tag, "RsPn"))
+          ch->player_specials->restring_pending = atoi(line) != 0;
+        if (!strcmp(tag, "RlCd"))
+        {
+          if (!religion_load_player_cooldowns(ch, line))
+            log("SYSERR: Invalid religion cooldown record for %s.", name);
+        }
+        if (!strcmp(tag, "RlSt"))
+        {
+          if (!religion_load_player_standing(ch, line))
+            log("SYSERR: Invalid religion Standing record for %s.", name);
+        }
         if (!strcmp(tag, "Race"))
           GET_REAL_RACE(ch) = atoi(line);
         if (!strcmp(tag, "RacR"))
@@ -2524,6 +2551,8 @@ int load_char(const char *name, struct char_data *ch)
   fclose(fl);
   auto_select_preferred_classes(ch);
   clan_persistence_reconcile_player(ch);
+  religion_tasks_restore(ch);
+  religion_blessing_restore(ch);
   return (id);
 }
 
@@ -3123,6 +3152,15 @@ bool save_char_checked(struct char_data *ch, int mode)
   if (GET_WARLOCK_WITCH_CONCENTRATION_COOLDOWN(ch) != 0)
     BUFFER_WRITE("WwCd: %d\n", GET_WARLOCK_WITCH_CONCENTRATION_COOLDOWN(ch));
   BUFFER_WRITE("God : %d\n", GET_DEITY(ch));
+  BUFFER_WRITE("RsPn: %d\n", ch->player_specials->restring_pending ? 1 : 0);
+  BUFFER_WRITE("RlCd: %lld %lld %d\n",
+               (long long)ch->player_specials->saved.religion_devote_after,
+               (long long)ch->player_specials->saved.religion_hospitality_after,
+               ch->player_specials->saved.religion_channel_off ? 1 : 0);
+  for (i = 1; i < RELIGION_DEITY_CAPACITY; ++i)
+    if (ch->player_specials->saved.religion_standing[i] > 0 &&
+        ch->player_specials->saved.religion_standing[i] <= 336)
+      BUFFER_WRITE("RlSt: %d %d\n", i, ch->player_specials->saved.religion_standing[i]);
   if (GET_AUTOCQUEST_VNUM(ch) != PFDEF_AUTOCQUEST_VNUM)
     BUFFER_WRITE("Cvnm: %d\n", GET_AUTOCQUEST_VNUM(ch));
   if (GET_AUTOCQUEST_MAKENUM(ch) != PFDEF_AUTOCQUEST_MAKENUM)
@@ -3326,6 +3364,11 @@ bool save_char_checked(struct char_data *ch, int mode)
   if (GET_NSUPPLY_NUM_MADE(ch) != 0)
     BUFFER_WRITE("SpNM: %d\n", GET_NSUPPLY_NUM_MADE(ch));
 
+  if (GET_QUEST(ch, RELIGION_QUEST_SLOT) != PFDEF_CURRQUEST) {
+    BUFFER_WRITE("Qcu3: %d\n", GET_QUEST(ch, RELIGION_QUEST_SLOT));
+    BUFFER_WRITE("Qcn3: %d\n", GET_QUEST_COUNTER(ch, RELIGION_QUEST_SLOT));
+    BUFFER_WRITE("Qti3: %d\n", GET_QUEST_TIME(ch, RELIGION_QUEST_SLOT));
+  }
   if (GET_QUEST(ch, 0) != PFDEF_CURRQUEST)
     BUFFER_WRITE("Qcur: %d\n", GET_QUEST(ch, 0));
   if (GET_QUEST(ch, 1) != PFDEF_CURRQUEST)
@@ -3377,6 +3420,7 @@ bool save_char_checked(struct char_data *ch, int mode)
         ch->desc->pProtocol->pVariables[eMSDP_256_COLORS]->ValueInt;
     BUFFER_WRITE("UTF8: %d\n", ch->desc->pProtocol->pVariables[eMSDP_UTF_8]->ValueInt);
   }
+  BUFFER_WRITE("AmJn: %d\n", GET_CRAFT(ch).ammo_job_remaining);
   BUFFER_WRITE("AmPr: %d\n", GET_PREFERRED_AMMO(ch));
   BUFFER_WRITE("AmEM: %d\nAmJM: %d\n", ch->player_specials->saved.ammo_enhancement_mote,
                GET_CRAFT(ch).ammo_job_enhancement_mote);
@@ -4619,6 +4663,8 @@ restore_character:
   ch->legendary_serializing=false;
   legendary_loadout_invalidate(ch);
   (void)legendary_loadout_get(ch);
+  religion_blessing_tick(ch);
+  if (religion_blessing_value(ch, CHURCH_SAVE)) affect_total(ch);
   GET_HIT(ch)=MIN(legendary_saved_hp,GET_MAX_HIT(ch));
   GET_MOVE(ch)=MIN(legendary_saved_move,GET_MAX_MOVE(ch));
   GET_PSP(ch)=MIN(legendary_saved_psp,GET_MAX_PSP(ch));
@@ -6164,7 +6210,7 @@ bool valid_pet_name(char *name)
 
 static bool persist_char_pets_returning(struct char_data *ch, struct char_data *returning)
 {
-  if (!ch || IS_NPC(ch))
+  if (!ch || IS_NPC(ch) || ch->player_specials->pet_restore_failed)
     return FALSE;
 
   struct follow_type *f = NULL;
@@ -6445,9 +6491,14 @@ static struct char_data *load_char_pets_filtered(struct char_data *ch, int reviv
   char desc4[MAX_STRING_LENGTH] = {'\0'};
   long int pet_idnum = 0;
   struct char_data *mob = NULL, *revived = NULL;
+  bool restore_failed = FALSE;
 
   if (!ch)
     return NULL;
+
+  /* Never let a later autosave replace records for pets that failed to load. */
+  if (revive_id <= 0)
+    ch->player_specials->pet_restore_failed = TRUE;
 
   if (IN_ROOM(ch) == NOWHERE)
     return NULL;
@@ -6489,7 +6540,10 @@ static struct char_data *load_char_pets_filtered(struct char_data *ch, int reviv
   {
     mob = read_mobile(atoi(row[0]), VIRTUAL);
     if (!mob)
+    {
+      restore_failed = TRUE;
       continue;
+    }
     if (revive_id > 0)
     {
       /* Claim this exact fallen record once; ordinary login never loads fallen pets. */
@@ -6652,6 +6706,7 @@ static struct char_data *load_char_pets_filtered(struct char_data *ch, int reviv
       GET_HIT(mob) = GET_MAX_HIT(mob);
     if (!pet_load_objs(mob, ch, pet_idnum))
     {
+      restore_failed = TRUE;
       if (revive_id > 0)
       {
         snprintf(query, sizeof(query), "UPDATE pet_data SET pet_dead=1 WHERE pet_data_id=%d", revive_id);
@@ -6677,6 +6732,8 @@ static struct char_data *load_char_pets_filtered(struct char_data *ch, int reviv
   }
 
   mysql_free_result(result);
+  if (revive_id <= 0)
+    ch->player_specials->pet_restore_failed = restore_failed;
   return revived;
 }
 

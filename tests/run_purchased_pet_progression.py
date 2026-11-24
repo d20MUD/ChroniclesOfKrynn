@@ -2,6 +2,7 @@
 """Exercise purchased pet XP and actual pet saves against disposable MariaDB."""
 from pathlib import Path
 import os
+import json
 import shlex
 import subprocess
 import tempfile
@@ -19,7 +20,9 @@ schema = (root/'src/db_init.c').read_text()
 start = schema.index('  /* pet_data - Saved companion information */')
 end = schema.index('  /* player_data - Core player character information */', start)
 code = 'static void upgrade_pet_schema(void) {\n' + schema[start:end] + '\n}\n'
-code += 'static void explicit_pet_upgrade(void) { sql(' + '"-- Explicit upgrade for existing pet tables. Required by companion save/load,\\n-- bought-pet progression, fallen pets and training. Existing rows are preserved.\\nALTER TABLE pet_data\\n ADD COLUMN IF NOT EXISTS purchased_pet INT NOT NULL DEFAULT 0,\\n ADD COLUMN IF NOT EXISTS pet_experience INT NOT NULL DEFAULT 0,\\n ADD COLUMN IF NOT EXISTS pet_hitroll INT NOT NULL DEFAULT 0,\\n ADD COLUMN IF NOT EXISTS pet_damroll INT NOT NULL DEFAULT 0,\\n ADD COLUMN IF NOT EXISTS pet_damnodice INT NOT NULL DEFAULT 0,\\n ADD COLUMN IF NOT EXISTS pet_damsizedice INT NOT NULL DEFAULT 0,\\n ADD COLUMN IF NOT EXISTS pet_dead INT NOT NULL DEFAULT 0,\\n ADD COLUMN IF NOT EXISTS pet_kind INT NOT NULL DEFAULT 0,\\n ADD COLUMN IF NOT EXISTS pet_training_rank INT NOT NULL DEFAULT 0,\\n ADD COLUMN IF NOT EXISTS pet_training_exp INT NOT NULL DEFAULT 0,\\n ADD COLUMN IF NOT EXISTS pet_skill_health INT NOT NULL DEFAULT 0,\\n ADD COLUMN IF NOT EXISTS pet_skill_attack INT NOT NULL DEFAULT 0,\\n ADD COLUMN IF NOT EXISTS pet_skill_damage INT NOT NULL DEFAULT 0,\\n ADD COLUMN IF NOT EXISTS pet_skill_armor INT NOT NULL DEFAULT 0,\\n ADD COLUMN IF NOT EXISTS pet_skill_saves INT NOT NULL DEFAULT 0,\\n ADD COLUMN IF NOT EXISTS pet_save_fort INT DEFAULT NULL,\\n ADD COLUMN IF NOT EXISTS pet_save_reflex INT DEFAULT NULL,\\n ADD COLUMN IF NOT EXISTS pet_save_will INT DEFAULT NULL,\\n ADD COLUMN IF NOT EXISTS pet_save_poison INT DEFAULT NULL,\\n ADD COLUMN IF NOT EXISTS pet_save_death INT DEFAULT NULL,\\n ADD COLUMN IF NOT EXISTS pet_gold INT NOT NULL DEFAULT 0;\\n"' + '); }\n'
+code += 'static void explicit_pet_upgrade(void) { sql(' + json.dumps((root/'sql/20261027_pet_persistence.sql').read_text()) + '); }\n'
+code += 'static void epic_pet_upgrade(void) { sql(' + json.dumps((root/'sql/20261119_pet_epic_persistence.sql').read_text()) + '); }\n'
+
 code += function(players, 'static bool persist_char_pets_returning(struct char_data *ch, struct char_data *returning)')
 code += function(players, 'static bool persist_char_pets(struct char_data *ch)')
 code += function(players, 'bool return_eidolon_gear(struct char_data *pet)')
@@ -48,6 +51,7 @@ for signature in [
     code += function(mobile, signature)
 objects = (root/'src/objsave.c').read_text()
 gear_code = '#define MAX_BAG_ROWS 64\n#define LOC_INVENTORY 0\n'
+pet_query_code = function(objects, 'static bool select_saved_pet_objects(const char *name, long int pet_idnum)')
 gear_code += function(objects, 'static int Crash_save_pet(struct obj_data *obj, struct char_data *ch, struct char_data *owner,\n                          long int pet_idnum, int location)')
 gear_code += function(objects, 'bool pet_save_objs(struct char_data *ch, struct char_data *owner, long int pet_idnum)').replace('bool pet_save_objs(', 'static bool production_pet_save_objs(', 1)
 gear_code += function(objects, 'static int handle_obj(struct obj_data *temp, struct char_data *ch, int locate,\n                      struct obj_data **cont_row)')
@@ -57,6 +61,10 @@ end = players.index('  if (ch->player_specials->saved.aurak_magic_refresh)', sta
 code += '\nstatic void save_eidolon_training_record(struct char_data *ch) {\n#define BUFFER_WRITE(...) snprintf(messages, sizeof(messages), __VA_ARGS__)\n' + players[start:end] + '\n#undef BUFFER_WRITE\n}\n'
 stubs_extra = r"""
 static int deny_return, defer_return;
+bool legendary_uuid_valid(const char *uuid) { return uuid && strlen(uuid)==32 && strspn(uuid,"0123456789abcdef")==32; }
+void epic_restore_ward(struct char_data *owner,struct char_data *pet) {}
+void bloodline_summon_benefits(struct char_data *owner,struct char_data *pet,int spell) {}
+bool clan_delivery_recover(struct char_data *owner) { return true; }
 int estate_init(void) { return 1; }
 int estate_queue_delivery(struct char_data *owner,struct obj_data *obj,long debit) {
   char q[256];
@@ -84,10 +92,12 @@ void estate_recover(struct char_data *owner) {
 """
 headers = '\n'.join('#include "'+h+'"' for h in
     ['conf.h','sysdep.h','structs.h','utils.h','db.h','comm.h','mysql.h','spells.h',
-     'handler.h','mudlim.h','oasis.h','mud_event.h','dg_event.h','evolutions.h','crafting_new.h','mob_utils.h'])
+     'legendary_identity.h','epic_feats.h','bloodlines.h','clan_delivery_runtime.h','handler.h','mudlim.h','oasis.h','mud_event.h','dg_event.h','evolutions.h','crafting_new.h','mob_utils.h'])
 stubs = r'''
 #include <assert.h>
 #include <limits.h>
+struct sivak_form *active_sivak_form(struct char_data *ch) { return NULL; }
+int char_has_evolution(struct char_data *ch,int evolution) { return 0; }
 MYSQL *conn;
 bool mysql_available = TRUE;
 struct room_data *world;
@@ -98,6 +108,7 @@ mob_rnum top_of_mobt;
 struct config_data config_info;
 struct char_data loaded;
 static int save_objects, loaded_objects, saved_players, deny_follower, deny_mobile, fail_gear, inventory_saves;
+static bool select_saved_pet_objects(const char *name, long int pet_idnum);
 static struct char_data *temporary_pet;
 static struct mud_event_data temporary_event;
 static char messages[32768];
@@ -208,10 +219,10 @@ int objsave_save_obj_record_db_pet(struct obj_data *obj,struct char_data *pet,st
   return !mysql_query(conn,query);
 }
 obj_save_data *objsave_parse_objects_db_pet(char *name,long id) {
-  char query[256]; obj_save_data *head=NULL,**tail=&head;
+  obj_save_data *head=NULL,**tail=&head;
   if (fail_gear) return NULL;
-  snprintf(query,sizeof(query),"SELECT serialized_obj FROM pet_save_objs WHERE pet_idnum=%ld ORDER BY row_id",id);
-  sql(query); MYSQL_RES *r=mysql_store_result(conn); MYSQL_ROW row;
+  assert(select_saved_pet_objects(name,id));
+  MYSQL_RES *r=mysql_store_result(conn); MYSQL_ROW row;
   while ((row=mysql_fetch_row(r))) {
     int locate,type,weight,value; assert(sscanf(row[0],"%d %d %d %d",&locate,&type,&weight,&value)==4);
     obj_save_data *item=calloc(1,sizeof(*item)); item->obj=calloc(1,sizeof(*item->obj)); item->locate=locate;
@@ -235,9 +246,18 @@ int main(int argc,char **argv) {
       "pet_name VARCHAR(50), pet_sdesc VARCHAR(255), pet_ldesc TEXT, pet_ddesc TEXT, "
       "vnum INT, level INT, hp INT, max_hp INT, str INT, con INT, dex INT, ac INT, "
       "intel INT DEFAULT 0, wis INT, cha INT, purge_mob_timer INT DEFAULT 0)");
-  sql("CREATE TABLE pet_save_objs (row_id INT AUTO_INCREMENT PRIMARY KEY, owner_name VARCHAR(50), pet_idnum INT, serialized_obj TEXT)");
+  sql(getenv("PET_TEST_MODERN_SCHEMA")
+      ? "CREATE TABLE pet_save_objs (id INT AUTO_INCREMENT PRIMARY KEY, owner_name VARCHAR(50), pet_idnum INT, serialized_obj TEXT)"
+      : "CREATE TABLE pet_save_objs (idnum INT AUTO_INCREMENT PRIMARY KEY, owner_name VARCHAR(50), pet_idnum INT, serialized_obj TEXT)");
   sql("INSERT INTO pet_data(owner_name) VALUES('old')");
   explicit_pet_upgrade(); explicit_pet_upgrade();
+  /* Reproduce an existing installation whose earlier pet upgrade predates epics. */
+  sql("ALTER TABLE pet_data DROP COLUMN epic_doctrine, DROP COLUMN epic_expiry, DROP COLUMN epic_identity");
+  epic_pet_upgrade(); epic_pet_upgrade();
+  sql("SELECT epic_doctrine,epic_expiry,epic_identity FROM pet_data WHERE owner_name='old'");
+  MYSQL_RES *epic_result=mysql_store_result(conn); MYSQL_ROW epic_row=mysql_fetch_row(epic_result);
+  assert(epic_row && atoi(epic_row[0])==0 && atoll(epic_row[1])==0 && !*epic_row[2]);
+  mysql_free_result(epic_result);
   upgrade_pet_schema(); upgrade_pet_schema();
   sql("SELECT purchased_pet,pet_experience FROM pet_data WHERE owner_name='old'");
   MYSQL_RES *result=mysql_store_result(conn); MYSQL_ROW row=mysql_fetch_row(result);
@@ -292,7 +312,13 @@ int main(int argc,char **argv) {
   /* Saves keep base attack values, rather than persisting temporary buffs. */
   GET_HITROLL(&pet)=100; GET_DAMROLL(&pet)=100;
   follower.next=NULL; save_char_pets(&owner); assert(save_objects>0);
-  owner.followers=NULL; load_char_pets(&owner);
+  owner.followers=NULL; deny_mobile=1; load_char_pets(&owner); deny_mobile=0;
+  assert(owner.player_specials->pet_restore_failed && !owner.followers);
+  assert(!save_char_pets_checked(&owner));
+  sql("SELECT COUNT(*) FROM pet_data WHERE owner_name='Trainer' AND pet_dead=0");
+  result=mysql_store_result(conn); row=mysql_fetch_row(result); assert(atoi(row[0])==1); mysql_free_result(result);
+  load_char_pets(&owner);
+  assert(!owner.player_specials->pet_restore_failed);
   assert(owner.followers && owner.followers->follower==&loaded);
   assert(loaded.mob_specials.purchased_pet && loaded.mob_specials.pet_experience==1000);
   assert(GET_LEVEL(&loaded)==4 && GET_HIT(&loaded)==20 && GET_REAL_MAX_HIT(&loaded)==80);
@@ -514,7 +540,7 @@ assert 'while (ch->carrying)' in death[:archived]
 
 with tempfile.TemporaryDirectory(prefix='pet-progression-') as tmp:
     temp=Path(tmp); data=temp/'data'; data.mkdir(); socket=temp/'mysql.sock'; log=temp/'mysql.log'
-    path=temp/'check.c'; path.write_text(headers+stubs+gear_code+stubs_extra+r"""
+    path=temp/'check.c'; path.write_text(headers+stubs+pet_query_code+gear_code+stubs_extra+r"""
 bool pet_save_objs(struct char_data *pet,struct char_data *owner,long id) {
   save_objects++; return production_pet_save_objs(pet,owner,id);
 }
@@ -541,8 +567,13 @@ bool pet_load_objs(struct char_data *pet,struct char_data *owner,long id) {
             if server.poll() is not None: raise RuntimeError(log.read_text())
             time.sleep(.1)
         else: raise RuntimeError('Temporary MariaDB did not become ready')
-        subprocess.run([*client,'-e','CREATE DATABASE pet_progression_test'],check=True)
-        subprocess.run([str(binary),str(socket)],check=True)
+        for modern in (False, True):
+            subprocess.run([*client,'-e','DROP DATABASE IF EXISTS pet_progression_test; CREATE DATABASE pet_progression_test'],check=True)
+            env = dict(os.environ)
+            env.pop('PET_TEST_MODERN_SCHEMA', None)
+            if modern:
+                env['PET_TEST_MODERN_SCHEMA'] = '1'
+            subprocess.run([str(binary),str(socket)],check=True,env=env)
     finally:
         server.terminate(); server.wait(timeout=15)
 print('Persistent pets: combat XP, levels/caps, no healing, abuse exclusions, migration, real database save/load, fallen archives, paid revival, failure refunds, equipped/nested gear, safe discard, and companion training passed.')

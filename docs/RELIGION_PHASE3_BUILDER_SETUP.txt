@@ -1,0 +1,105 @@
+RELIGION PHASE 3 - BUILDER AND DATABASE SETUP
+===========================================
+
+Assumes religion phases 1 and 2 are already installed.
+
+DATABASE IMPORTS FOR AN EXISTING DATABASE
+---------------------------------------
+Run from /home/krynn/code, replacing DB_USER and DB_NAME with your settings.
+The -p option prompts for the password.
+
+1. Import the phase 3 schema:
+   mariadb -u DB_USER -p DB_NAME < sql/20261123_religion_phase3.sql
+
+   Creates religion_blessings, restring_catalogue and restring_audit.
+   This is the phase 3 schema migration to use on an existing database.
+
+2. Import the phase 3 SQL help:
+   mariadb -u DB_USER -p DB_NAME < sql/20261123_religion_phase3_help.sql
+
+   Updates RELIGION help and adds RESTRINGAPPLY / RESTRINGEDIT help and keywords.
+   Use this when your installation loads help from SQL.
+
+3. Optional: import the complete authored Krynn wardrobe collection:
+   mariadb -u DB_USER -p DB_NAME < examples/religion_phase3/wardrobes.sql
+
+   Import after step 1. This supplies 4,704 published appearances across 21
+   deities, eight ranks, four styles and seven positions. It is Krynn-only.
+   Without this seed, builders can create their own entries in restringedit;
+   missing entries remain unavailable to players.
+
+All three imports can be reapplied. The wardrobe seed uses INSERT IGNORE and
+preserves existing catalogue rows at its stable IDs.
+
+sql/master_schema.sql was also updated with the three new tables. It is the
+full installation schema, not an additional phase 3 upgrade import. For an
+existing database, use step 1 instead of reimporting master_schema.sql.
+No phase 1 or phase 2 migrations need to be reimported for this upgrade if
+those phases are already installed.
+
+WORLD CONTENT IS SEPARATE FROM SQL
+---------------------------------
+The wardrobe SQL does not install rooms, mobs, quests, or registered temples.
+The optional examples/religion_phase3/699.wld, 699.mob, 699.qst and 699.zon
+replace the phase 2 pilot files; do not install both copies. Check vnum
+availability, install into the matching world directories/indexes using your
+normal builder deployment process, then follow examples/religion_phase3/setup.txt.
+These examples have not been added to the live world automatically.
+
+PHASE 3: APPEARANCES AND THE CHURCH BLESSING
+==========================================
+SQL migration: sql/20261123_religion_phase3.sql
+SQL help:      sql/20261123_religion_phase3_help.sql
+Optional Krynn wardrobe seed: examples/religion_phase3/wardrobes.sql
+Full guide: docs/RELIGION_PHASE3.md
+
+BUILD AN APPEARANCE
+  restringedit
+  1 = Clans (Favor ranks 1..5); 2 = Religion (temple ranks 1..8).
+  Select rank, then A to add, E <id> to edit, D <id> to delete.
+  F <organization-id> filters; N/V page; C <deity-id> checks 8x4x7 coverage.
+  Fields 1..8: organization, rank, position, matcher, keywords, short, room,
+  inspection. Inspection uses multiple lines ending in @; - clears it.
+  9 previews. S saves a draft; P publishes; B goes back; Q quits.
+  Saving a draft preserves the old published appearance. Missing published
+  content is hidden from players. Clan edits require clan edit authorization.
+
+MATCHERS
+  armor 0/1/2/3 = native clothing/light/medium/heavy
+  symbol 0..3 = four non-armor neck styles
+  shield <native-subtype-id>, weapon <native-family-id>, other <item-type-id>
+  The editor displays the native lists. Positions use equipment locations,
+  not wear-bit numbers. Both neck locations share the neck appearance group.
+
+PLAYER COMMANDS AT THE CORRECT PRIEST / CLAN QUARTERMASTER
+  restringapply robe religion 2
+  restringapply "blue robe" religion 2
+  restringapply 2.robe religion 2
+  restringapply sword clan 3
+  restringapply choose <id>     (when several positions/styles match)
+  restringapply confirm
+  restringapply cancel
+  Default fee: 100 x max(1,item level). Override the single shared rate in
+  etc/restring.json with {"gold_per_level":100}. Confirmations last two minutes.
+  Old keyword extra descriptions are erased. Applied appearances stamp the
+  related faith/temple rank or clan/Favor requirement and preserve other gates.
+  No Standing or Favor is spent. The existing craft-kit restring is unchanged.
+
+BLESSING AT AN ENABLED REGISTERED TEMPLE WITH ITS PRIEST PRESENT
+  religion blessing           (current/future package and cooldown status)
+  religion bless              (preview whole package)
+  religion bless confirm
+  religion bless cancel
+  religion bless remove       (whole package; cooldown retained)
+  No extra priest flag is needed. Each application lasts 86400 real seconds.
+  Cooldown is shared across temples/faiths. Death retains the original expiry;
+  rank-up applies on the next application. Faith change removes the blessing.
+  Neither HP nor movement is refilled by applying it.
+
+ADDITIONAL TEMPLE ROOMS/TASKS
+  examples/religion_phase3 contains a complete replacement zone 699 pilot with
+  rank-3 archives, rank-6 chambers, rank-8 sanctums and public service annexes.
+  Install it instead of the phase 2 example, check vnums, then follow setup.txt.
+  The additional task templates replace board slots in the next weekly snapshot;
+  there are still at most four offered choices per faith. Nothing here has been
+  installed into the live world indexes automatically.

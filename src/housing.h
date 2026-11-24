@@ -1,5 +1,7 @@
 #ifndef KRYNN_HOUSING_H
 #define KRYNN_HOUSING_H
+void temple_chests_boot(void);
+void temple_chest_admin(struct char_data *ch, const char *argument);
 int housing_command(struct char_data *ch, const char *argument);
 int housing_admin(struct char_data *ch, const char *argument);
 int housing_is_room(room_vnum vnum);

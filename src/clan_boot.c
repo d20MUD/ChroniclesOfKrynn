@@ -134,25 +134,7 @@ clan_persistence_boot(const char* selection)
   n = json_object_array_length(clans);
   if (n > MAX_CLANS)
     goto failed;
-  /* SQL memberships must reference surviving stable player identities. Stale
-   * clan numbers in the index are mirrors and are reconciled on attachment. */
-  {
-    struct json_object* members = field(root, "members");
-    for (i = 0; i < json_object_array_length(members); i++) {
-      int p;
-      bool found = false;
-      int64_t id = json_object_get_int64(
-        field(json_object_array_get_idx(members, i), "player_id"));
-      for (p = 0; p <= top_of_p_table; p++)
-        if (player_table[p].id == id && player_table[p].name &&
-            !IS_SET(player_table[p].flags, PINDEX_DELETED)) {
-          found = true;
-          break;
-        }
-      if (!found)
-        goto failed;
-    }
-  }
+  /* Membership identity drift is repaired during persistence attachment. */
   loaded = calloc(n ? n : 1, sizeof(*loaded));
   if (!loaded)
     goto failed;

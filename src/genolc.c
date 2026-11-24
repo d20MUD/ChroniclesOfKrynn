@@ -173,6 +173,28 @@ void copy_ex_descriptions(struct extra_descr_data **to, struct extra_descr_data 
   }
 }
 
+/* An instance may share list nodes or strings with its prototype. Releasing
+ * an override must never free any of those prototype-owned allocations. */
+void free_ex_descriptions_shared(struct extra_descr_data *head, const struct extra_descr_data *prototype)
+{
+  struct extra_descr_data *node, *next;
+  const struct extra_descr_data *p;
+  for (node=head;node;node=next)
+  {
+    bool own_node=true, own_keyword=true, own_description=true;
+    next=node->next;
+    for(p=prototype;p;p=p->next)
+    {
+      if(node==p)own_node=false;
+      if(node->keyword==p->keyword)own_keyword=false;
+      if(node->description==p->description)own_description=false;
+    }
+    if(own_keyword)free(node->keyword);
+    if(own_description)free(node->description);
+    if(own_node)free(node);
+  }
+}
+
 void free_ex_descriptions(struct extra_descr_data *head)
 {
   struct extra_descr_data *thised, *next_one;

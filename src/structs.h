@@ -1315,7 +1315,9 @@ enum zone_terrain_type {
 #define MOB_RANGED_ATTACK 108 /**< May attack beyond 5 feet while still auto advancing. */
 #define MOB_BLOCK_CLAN 109 /* Direction guards use builder clan requirements. */
 #define MOB_BLOCK_STEALTH 110 /**< Allows hidden/sneaking PCs to contest directional blocking. */
-#define NUM_MOB_FLAGS 111
+#define MOB_BLOCK_RELIGION 111 /* Require the guard's faith on guarded directions. */
+#define MOB_BLOCK_TEMPLE_RANK 112 /* Require that faith and at least the guard's rank. */
+#define NUM_MOB_FLAGS 113
 /**********************/
 /**********************/
 
@@ -1527,7 +1529,10 @@ enum zone_terrain_type {
 
 #define PRF_DISPAMMO 93          /**< Ammo/thrown count in the MUD prompt */
 
-#define NUM_PRF_FLAGS 94
+#define PRF_MUDLET_NO_ASK 94 /**< Remember the Mudlet package decision */
+#define PRF_MUDLET_INSTALL 95 /**< Remembered decision permits package installation */
+
+#define NUM_PRF_FLAGS 96
 
 /* Score Color Theme constants */
 #define SCORE_THEME_ENHANCED 0     /**< Enhanced theme with rich colors */
@@ -1854,8 +1859,9 @@ enum zone_terrain_type {
 #define CON_BOARD_POST_ABORT 84 /**< Board post aborted */
 #define CON_BEDIT 85            /**< OLC mode - board editor */
 #define CON_QUIT_REASON 86      /**< Quit feedback prompt */
+#define CON_MUDLET_PACKAGE 87   /**< Await Mudlet package consent */
 
-#define NUM_CON_STATES 87
+#define NUM_CON_STATES 88
 
 /* Character equipment positions: used as index for char_data.equipment[] */
 /* NOTE: Don't confuse these constants with the ITEM_ bitvectors
@@ -6425,6 +6431,7 @@ struct crafting_data_info
   int dc;
   int craft_duration;
   int ammo_job_enhancement_mote; // frozen independently of elemental damage
+  int ammo_job_remaining; // reserved attempts, including the active attempt (max 10)
   int ammo_job[8]; // immutable recipe settings [0..6], portable kit flag [7]
   int obj_level;
   int level_adjust;
@@ -6522,6 +6529,7 @@ struct trap_data
 };
 
 struct clan_requirement { int clan, rank, favor; };
+struct religion_requirement { int deity, rank; };
 struct clan_weapon_enchantment {
   char uid[33], receipt[33], word[24];
   int effect, active, bane_race;
@@ -6533,6 +6541,9 @@ struct clan_weapon_enchantment {
 struct obj_data
 {
   struct clan_requirement clan_requirement;
+  bool restring_extras_cleared;
+  char restring_inspection[2048]; /* Independent of keyword extra descriptions. */
+  struct religion_requirement religion_requirement; /* Purchase and wear eligibility; both nonzero enables. */
   struct clan_weapon_enchantment clan_enchantment;
   char clan_qm_uid[33]; /* Durable quartermaster delivery identity. */
   char clan_delivery_uid[33];
@@ -7352,6 +7363,8 @@ struct disguise_observation
   struct disguise_observation *next;
 };
 
+#define RELIGION_DEITY_CAPACITY 120 /* Stable deity ID slots, including inactive campaigns. */
+
 struct player_special_data_saved
 {
   int preferred_ammo; /* Preferred ammunition prototype vnum + 1; 0 = automatic. */
@@ -7430,7 +7443,9 @@ struct player_special_data_saved
   char clan_application_name[61];
 
 /* autoquest */
-#define MAX_CURRENT_QUESTS 3
+#define NORMAL_CURRENT_QUESTS 3
+#define RELIGION_QUEST_SLOT NORMAL_CURRENT_QUESTS
+#define MAX_CURRENT_QUESTS (NORMAL_CURRENT_QUESTS + 1)
   int questpoints;                       // quest points earned
   qst_vnum *completed_quests;            /**< Quests completed              */
   int num_completed_quests;              /**< Number completed              */
@@ -7539,6 +7554,11 @@ struct player_special_data_saved
   int active_fiendish_boons;                          // active fiendish boons by blackguard
   int channel_energy_type;            // neutral clerics must decide either positive or negative
   int deity;                          // what deity does the person follow?
+  int religion_standing[RELIGION_DEITY_CAPACITY];
+  time_t religion_devote_after, religion_hospitality_after;
+  bool religion_channel_off;
+  int church_deity, church_rank;
+  time_t church_expires, church_available;
   int languages_known[NUM_LANGUAGES]; // languages known by the character
   int speaking;                       // language currently being spoken, defaults to common
   int region;                         // the region in which a human hails from.  Used for languages
@@ -7807,6 +7827,18 @@ struct blocker_stealth_check
 
 struct player_special_data
 {
+  int religion_pending_action, religion_pending_deity, religion_pending_source, religion_pending_temple;
+  unsigned long religion_pending_revision;
+  int religion_task_preview[6]; /* temple, slot, quest, deity, week, story-only */
+  unsigned long long religion_task_preview_hash;
+  time_t religion_task_preview_until;
+  time_t church_preview_until;
+  int church_preview_deity, church_preview_rank, church_preview_temple;
+  int church_runtime_rank;
+  struct json_object *restring_editor, *restring_quote;
+  bool restring_pending;
+  time_t religion_pending_until; /* Session-only preview; never persisted. */
+  bool pet_restore_failed; /* Protect saved companions after an incomplete login restore. */
   struct blocker_stealth_check *blocker_stealth_checks;
   char appearance_cast_args[MAX_INPUT_LENGTH]; /* Per-caster choices survive delayed casting. */
   long housing_house_id, housing_room_id;
@@ -8239,6 +8271,7 @@ struct dialogue_quest_check
 struct char_data
 {
   struct clan_requirement clan_requirement; /* Builder-authored NPC guard requirements. */
+  int mob_deity, mob_temple_rank; /* Builder-assigned NPC faith; 0 means none. */
   /* Clan buff cache: checked runtime state only, never serialized as base HP. */
   int clan_vitality_percent, clan_vitality_applied, clan_buff_vnum;
   int clan_artisan_bonus;
@@ -8920,6 +8953,7 @@ struct account_data
   int races[MAX_UNLOCKED_RACES];
   char *email;
   bool quit_survey_completed;
+  bool mudlet_no_ask;
   //        int surveys[4];
   //        struct obj_data *item_bank;
   //        int item_bank_size;

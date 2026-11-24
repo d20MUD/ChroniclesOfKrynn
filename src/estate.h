@@ -2,6 +2,7 @@
 #define KRYNN_ESTATE_H
 #include "mysql.h"
 int estate_init(void);
+int estate_hospitality_claim(struct char_data *, struct obj_data *, struct obj_data *, time_t, int);
 int estate_player_ready(struct char_data *);
 unsigned long long estate_prepare_escrow(struct char_data *, struct obj_data *);
 int estate_commit_escrow(unsigned long long);

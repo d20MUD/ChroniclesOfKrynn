@@ -5,6 +5,9 @@
 #include "structs.h"
 #include "utils.h"
 #include "housing.h"
+#include "religion.h"
+#include "deities.h"
+#include "oasis.h"
 #include "act.h"
 #include "comm.h"
 #include "constants.h"
@@ -23,6 +26,7 @@ struct home_room
 struct home_chest
 {
   long id, house, room;
+  int temple, deity, rank, limit;
   struct obj_data *obj;
   struct home_chest *next;
 };
@@ -379,7 +383,7 @@ static void create_chest(MYSQL_ROW row)
   if (!r)
     return;
   for (c = home_chests; c; c = c->next)
-    if (c->id == atol(row[0]))
+    if (!c->temple && c->id == atol(row[0]))
       break;
   if (c && c->obj)
     return;
@@ -494,8 +498,104 @@ room_rnum housing_login_room(struct char_data *ch)
   r = persistent_room(ch->player_specials->housing_room_id);
   return r && r->house == id ? real_room(r->vnum) : entry;
 }
+/* Temple chests share the durable inventory/escrow path, not house ownership. */
+void temple_chests_boot(void)
+{
+  MYSQL_RES *res;
+  MYSQL_ROW row;
+  struct home_chest *c;
+  struct obj_data *obj;
+  room_rnum room;
+  if (!estate_init()) { log("TEMPLE CHESTS: SQL storage unavailable."); return; }
+  res = estate_select("SELECT room_vnum,deity,temple_rank,item_limit FROM temple_chests");
+  if (!res) return;
+  while ((row = mysql_fetch_row(res)))
+  {
+    if ((room = real_room(atoi(row[0]))) == NOWHERE) continue;
+    for (c = home_chests; c; c = c->next)
+      if (c->temple && c->id == atol(row[0])) break;
+    if (!c) { CREATE(c, struct home_chest, 1); c->next = home_chests; home_chests = c; }
+    c->temple = TRUE; c->id = atol(row[0]);
+    c->deity = atoi(row[1]); c->rank = atoi(row[2]); c->limit = atoi(row[3]);
+    if (c->obj) {
+      c->obj->religion_requirement = (struct religion_requirement){c->deity, c->rank};
+      continue;
+    }
+    obj = create_obj();
+    obj->item_number = NOTHING;
+    obj->name = strdup("temple chest");
+    obj->short_description = strdup("a temple chest");
+    obj->description = strdup("A sturdy temple chest stands here.");
+    GET_OBJ_TYPE(obj) = ITEM_CONTAINER;
+    GET_OBJ_VAL(obj, 0) = INT_MAX;
+    GET_OBJ_BOUND_ID(obj) = NOBODY;
+    GET_OBJ_WEIGHT(obj) = 1000;
+    SET_BIT_AR(GET_OBJ_EXTRA(obj), ITEM_NORENT);
+    obj->religion_requirement = (struct religion_requirement){c->deity, c->rank};
+    c->obj = obj;
+    obj_to_room(obj, room);
+  }
+  mysql_free_result(res);
+}
+
+void temple_chest_admin(struct char_data *ch, const char *argument)
+{
+  int deity, rank, limit, used = 0;
+  char values[3][MAX_INPUT_LENGTH];
+  const char *rest = argument;
+  int i;
+  MYSQL_RES *res;
+  MYSQL_ROW row;
+  room_vnum room;
+  if (IS_NPC(ch) || GET_LEVEL(ch) < LVL_BUILDER || IN_ROOM(ch) == NOWHERE) return;
+  if (housing_is_room(GET_ROOM_VNUM(IN_ROOM(ch))) || ROOM_FLAGGED(IN_ROOM(ch), ROOM_HOUSE)) {
+    send_to_char(ch, "Place temple chests in permanent public rooms, outside player houses.\r\n"); return;
+  }
+  if (!can_edit_zone(ch, world[IN_ROOM(ch)].zone)) {
+    send_to_char(ch, "You cannot edit this zone.\r\n"); return;
+  }
+  for (i = 0; i < 3; ++i) rest = one_argument(rest, values[i], sizeof(values[i]));
+  skip_spaces_c(&rest);
+  for (i = 0; i < 3; ++i)
+    if (!*values[i] || strlen(values[i]) > 5 || strspn(values[i], "0123456789") != strlen(values[i])) break;
+  deity = i == 3 ? atoi(values[0]) : 0;
+  rank = i == 3 ? atoi(values[1]) : 0;
+  limit = i == 3 ? atoi(values[2]) : 0;
+  if (i != 3 || *rest || !religion_deity_valid(deity) || rank < 1 || rank > 8 || limit < 1 || limit > 10000) {
+    send_to_char(ch, "Usage: religionadmin chest <deity-id> <temple-rank 1..8> <item-limit 1..10000>\r\n");
+    return;
+  }
+  room = GET_ROOM_VNUM(IN_ROOM(ch));
+  if (!estate_init()) { send_to_char(ch, "Storage is unavailable.\r\n"); return; }
+  res = estate_select("SELECT COALESCE(SUM(item_units),0) FROM temple_chest_items WHERE chest_id=%d", room);
+  if (!res) { send_to_char(ch, "Storage is unavailable.\r\n"); return; }
+  row = mysql_fetch_row(res); if (row) used = atoi(row[0]);
+  mysql_free_result(res);
+  if (limit < used) { send_to_char(ch, "The chest already holds %d items.\r\n", used); return; }
+  if (!estate_query("INSERT INTO temple_chests(room_vnum,deity,temple_rank,item_limit) VALUES(%d,%d,%d,%d) "
+                    "ON DUPLICATE KEY UPDATE deity=VALUES(deity),temple_rank=VALUES(temple_rank),item_limit=VALUES(item_limit)",
+                    room, deity, rank, limit)) {
+    send_to_char(ch, "Unable to save the chest.\r\n"); return;
+  }
+  temple_chests_boot();
+  send_to_char(ch, "Temple chest saved in room %d: deity %d, minimum temple rank %d, capacity %d items.\r\n",
+               room, deity, rank, limit);
+}
+
 static int storage_permission(struct char_data *ch, struct home_chest *c)
 {
+  if (c && c->temple) {
+    if (IS_NPC(ch) || IN_ROOM(ch) != real_room(c->id) || IN_ROOM(c->obj) != IN_ROOM(ch) ||
+        !religion_deity_valid(c->deity) || c->rank < 1 || c->rank > 8 || c->limit < 1 ||
+        GET_DEITY(ch) != c->deity || religion_rank(ch) < c->rank) {
+      send_to_char(ch, "Only members of this chest's faith with sufficient temple rank may use it.\r\n");
+      return FALSE;
+    }
+    if (!estate_init() || !estate_player_ready(ch)) {
+      send_to_char(ch, "Storage is unavailable; try again later.\r\n"); return FALSE;
+    }
+    return TRUE;
+  }
   if (!c || !owns(ch, c->house) || IN_ROOM(ch) != IN_ROOM(c->obj))
   {
     send_to_char(ch, "Only the house owner can use chest storage, while in its room.\r\n");
@@ -518,17 +618,47 @@ static int storable(struct obj_data *obj)
     return FALSE;
   return TRUE;
 }
+/* Count nested objects and sheathed weapons as slots too. Bound traversal before
+ * invoking recursive serialization so corrupt/cyclic trees cannot exhaust it. */
+static int temple_item_units(struct obj_data *obj, int depth, int *budget)
+{
+  struct obj_data *child;
+  int total = 1, n;
+  if (!obj || depth > 64 || --*budget < 0) return 0;
+  for (child = obj->contains; child; child = child->next_content) {
+    n = temple_item_units(child, depth + 1, budget);
+    if (!n) return 0;
+    total += n;
+  }
+  if (obj->sheath_primary) {
+    n = temple_item_units(obj->sheath_primary, depth + 1, budget);
+    if (!n) return 0;
+    total += n;
+  }
+  if (obj->sheath_secondary) {
+    n = temple_item_units(obj->sheath_secondary, depth + 1, budget);
+    if (!n) return 0;
+    total += n;
+  }
+  return total;
+}
+
 int housing_put(struct char_data *ch, struct obj_data *obj, struct obj_data *container)
 {
   struct home_chest *c = chest_record(container);
   char *packed, *q, *name, *keywords;
+  char unit_text[32];
   int ok;
   unsigned long long escrow;
+  MYSQL_RES *capacity;
+  MYSQL_ROW count;
+  int room_available = TRUE, units = 1, budget = 10000;
   if (!c)
     return FALSE;
   if (!storage_permission(ch, c))
     return TRUE;
-  if (obj->carried_by != ch || !storable(obj))
+  if (c->temple) units = temple_item_units(obj, 0, &budget);
+  if (!units || obj->carried_by != ch || !storable(obj))
   {
     send_to_char(ch, "That item cannot be stored.\r\n");
     return TRUE;
@@ -550,10 +680,31 @@ int housing_put(struct char_data *ch, struct obj_data *obj, struct obj_data *con
   name = estate_quote(obj->short_description);
   keywords = estate_quote(obj->name);
   free(packed);
-  ok = q && name && keywords && estate_query("START TRANSACTION") &&
-       estate_query("INSERT INTO housing_chest_items(chest_id,item_name,keywords,serialized_obj) "
-                    "VALUES(%ld,'%s','%s','%s')",
-                    c->id, name, keywords, q) &&
+  if (c->temple) {
+    room_available = FALSE;
+    if (estate_query("START TRANSACTION")) {
+      capacity = estate_select("SELECT item_limit FROM temple_chests WHERE room_vnum=%ld FOR UPDATE", c->id);
+      if (capacity) {
+        count = mysql_fetch_row(capacity);
+        if (count) c->limit = atoi(count[0]);
+        mysql_free_result(capacity);
+        capacity = estate_select("SELECT COALESCE(SUM(item_units),0) FROM temple_chest_items "
+                                 "WHERE chest_id=%ld", c->id);
+        if (capacity) {
+          count = mysql_fetch_row(capacity);
+          room_available = count && atoi(count[0]) + units <= c->limit;
+          mysql_free_result(capacity);
+        }
+      }
+    }
+  }
+  snprintf(unit_text, sizeof(unit_text), ",%d", units);
+  ok = q && name && keywords && room_available && (c->temple || estate_query("START TRANSACTION")) &&
+       estate_query("INSERT INTO %s(chest_id,item_name,keywords,serialized_obj%s) "
+                    "VALUES(%ld,'%s','%s','%s'%s)",
+                    c->temple ? "temple_chest_items" : "housing_chest_items",
+                    c->temple ? ",item_units" : "", c->id, name, keywords, q,
+                    c->temple ? unit_text : "") &&
        estate_commit_escrow(escrow) && estate_query("COMMIT");
   if (!ok)
     estate_query("ROLLBACK");
@@ -568,7 +719,7 @@ int housing_put(struct char_data *ch, struct obj_data *obj, struct obj_data *con
     estate_recover(ch);
   }
   else
-    send_to_char(ch, "Storage failed; you still have your item.\r\n");
+    send_to_char(ch, room_available ? "Storage failed; you still have your item.\r\n" : "The chest is full or unavailable; you still have your item.\r\n");
   return TRUE;
 }
 int housing_contents(struct char_data *ch, struct obj_data *container)
@@ -582,13 +733,16 @@ int housing_contents(struct char_data *ch, struct obj_data *container)
   if (!storage_permission(ch, c))
     return TRUE;
   res = estate_select(
-      "SELECT item_id,item_name FROM housing_chest_items WHERE chest_id=%ld ORDER BY item_id",
-      c->id);
+      "SELECT item_id,item_name FROM %s WHERE chest_id=%ld ORDER BY item_id",
+      c->temple ? "temple_chest_items" : "housing_chest_items", c->id);
   if (!res)
   {
     send_to_char(ch, "Storage is unavailable.\r\n");
     return TRUE;
   }
+  if (c->temple)
+    send_to_char(ch, "Faith: %s. Minimum temple rank: %s. Capacity: %d items (including nested contents).\r\n",
+                 deity_list[c->deity].name, religion_rank_name(c->rank), c->limit);
   send_to_char(ch, "%s contains:\r\n", object_short_description(container));
   while ((row = mysql_fetch_row(res)))
   {
@@ -621,9 +775,9 @@ int housing_get(struct char_data *ch, struct obj_data *container, const char *ar
     number = 1;
   if (mode != FIND_INDIV && amount == 1)
     amount = INT_MAX;
-  res = estate_select("SELECT item_id,keywords,serialized_obj FROM housing_chest_items WHERE "
+  res = estate_select("SELECT item_id,keywords,serialized_obj FROM %s WHERE "
                       "chest_id=%ld ORDER BY item_id",
-                      c->id);
+                      c->temple ? "temple_chest_items" : "housing_chest_items", c->id);
   if (!res)
   {
     send_to_char(ch, "Storage is unavailable.\r\n");
@@ -653,8 +807,8 @@ int housing_get(struct char_data *ch, struct obj_data *container, const char *ar
       extract_obj(obj);
       break;
     }
-    if (!estate_query("DELETE FROM housing_chest_items WHERE item_id=%s AND chest_id=%ld", row[0],
-                      c->id) ||
+    if (!estate_query("DELETE FROM %s WHERE item_id=%s AND chest_id=%ld",
+                      c->temple ? "temple_chest_items" : "housing_chest_items", row[0], c->id) ||
         mysql_affected_rows(conn) != 1 || !estate_queue_delivery(ch, obj, 0) ||
         !estate_query("COMMIT"))
     {
@@ -681,7 +835,7 @@ static struct home_chest *find_chest(struct char_data *ch, long id)
 {
   struct home_chest *c;
   for (c = home_chests; c; c = c->next)
-    if (c->obj && c->id == id && IN_ROOM(c->obj) == IN_ROOM(ch))
+    if (!c->temple && c->obj && c->id == id && IN_ROOM(c->obj) == IN_ROOM(ch))
       return c;
   return NULL;
 }

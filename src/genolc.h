@@ -26,6 +26,7 @@ char *str_udup(const char *);
 char *str_udupnl(const char *);
 void copy_ex_descriptions(struct extra_descr_data **to, struct extra_descr_data *from);
 void free_ex_descriptions(struct extra_descr_data *head);
+void free_ex_descriptions_shared(struct extra_descr_data *head, const struct extra_descr_data *prototype);
 int sprintascii(char *out, bitvector_t bits);
 ACMD_DECL(do_export_zone);
 ACMD_DECL(do_show_save_list);

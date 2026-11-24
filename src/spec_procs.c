@@ -16,6 +16,7 @@
 #include "legendary_transaction.h"
 #include "structs.h"
 #include "utils.h"
+#include "religion.h"
 #include "epic_feats.h"
 #include "epic_feats2.h"
 #include "comm.h"
@@ -6434,6 +6435,8 @@ SPECIAL(pet_shops)
       send_to_char(ch, "There is no such pet!\r\n");
       return (TRUE);
     }
+    if (!religion_pet_purchase_allows(ch, pet, true))
+      return TRUE;
     if (GET_GOLD(ch) < PET_PRICE(pet))
     {
       send_to_char(ch, "You don't have enough gold!\r\n");

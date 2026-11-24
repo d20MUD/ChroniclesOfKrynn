@@ -47,17 +47,26 @@ with database(migrations) as (tmp,socket,sql,client):
  # Expiry/cancellation keeps family rows and cooldowns; no recomputation at boot.
  for family,canceled in [(1,0),(2,1)]:
   sql(f"INSERT INTO clan_buff_families VALUES('{B}',{family},'{str(family)*32}',1,{family},1,200,300,500,800,{canceled})")
- run('migrated');run('migrated');run('missing-player')
+ run('migrated');run('migrated')
  (tmp/'.env').write_text('CLAN_STORE_MODE=mysql\n');run('file-mysql');run('env-legacy');(tmp/'.env').unlink()
  assert sql('SELECT next_available_at FROM clan_buff_families ORDER BY family_id')=='500\n500'
  sql(f"UPDATE clan_buff_families SET rules_version=2 WHERE clan_uid='{B}' AND family_id=1")
  run('rejected');sql('UPDATE clan_buff_families SET rules_version=1')
  sql('UPDATE clan_buff_families SET canceled=0,slot_id=1 WHERE family_id=2');run('rejected')
  sql('UPDATE clan_buff_families SET canceled=1,slot_id=2 WHERE family_id=2')
+ # Missing/deleted player identities are repaired durably instead of aborting.
+ for scenario in ('missing-player','deleted-player'):
+  run(scenario)
+  repaired=bridge('read');assert len(repaired['members'])==1
+  run(scenario) # Already repaired boots are idempotent.
+  assert bridge('read')==repaired
+  restored=copy.deepcopy(repaired);restored['members']=copy.deepcopy(after['members']);restored['written_at']=int(time.time())
+  bridge('save',dict(snapshot=restored,expected_revision=repaired['store_revision']))
+ after=bridge('read')
  # Post-cutover write cannot be rolled back by reimporting a stale snapshot.
  changed=copy.deepcopy(after);changed['written_at']=2200000001;changed['clans'][0]['core']['treasury_gold']=5000000123;changed['clans'][0]['core']['updated_at']=2200000001
- bridge('save',dict(snapshot=changed,expected_revision=2));committed=bridge('read')
- bridge('import',dict(snapshot=initial,expected_revision=3,manifest=manifest()),'invalid');assert bridge('read')==committed
+ bridge('save',dict(snapshot=changed,expected_revision=after['store_revision']));committed=bridge('read')
+ bridge('import',dict(snapshot=initial,expected_revision=committed['store_revision'],manifest=manifest()),'invalid');assert bridge('read')==committed
  sql(f"INSERT INTO clan_personal_favor VALUES(5000000010,'{B}',777,0,101)")
  # Rehearse SQL-only recovery into a different private database from a full dump.
  dump=subprocess.check_output(['mariadb-dump','--no-defaults','--socket='+str(socket),'--user=root','--single-transaction','--triggers','clan_test'])

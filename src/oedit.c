@@ -9,6 +9,8 @@
 #include "sysdep.h"
 #include "structs.h"
 #include "utils.h"
+#include "religion.h"
+#include "deities.h"
 #include "comm.h"
 #include "interpreter.h"
 #include "spells.h"
@@ -2151,9 +2153,16 @@ static void oedit_disp_menu(struct descriptor_data *d)
                   buf5);
   write_to_output(d, "\r\n\tCclan\tn) Clan number       : %d\r\n"
                      "\tCrank\tn) Minimum clan rank : %d (1 is highest)\r\n"
-                     "\tCfavor\tn) Minimum Favor rank: %d\r\nEnter choice : ",
+                     "\tCfavor\tn) Minimum Favor rank: %d\r\n"
+                     "\tCdeity\tn) Purchase deity    : %s (%d)\r\n"
+                     "\tCtemplerank\tn) Minimum temple rank: %s (%d)\r\nEnter choice : ",
                      OLC_OBJ(d)->clan_requirement.clan, OLC_OBJ(d)->clan_requirement.rank,
-                     OLC_OBJ(d)->clan_requirement.favor);
+                     OLC_OBJ(d)->clan_requirement.favor,
+                     OLC_OBJ(d)->religion_requirement.deity == 0 ? "None" :
+                       religion_deity_valid(OLC_OBJ(d)->religion_requirement.deity) ?
+                       deity_list[OLC_OBJ(d)->religion_requirement.deity].name : "Unavailable",
+                     OLC_OBJ(d)->religion_requirement.deity,
+                     religion_rank_name(OLC_OBJ(d)->religion_requirement.rank), OLC_OBJ(d)->religion_requirement.rank);
   OLC_MODE(d) = OEDIT_MAIN_MENU;
 }
 
@@ -2206,6 +2215,14 @@ void oedit_parse(struct descriptor_data *d, char *arg)
     {
     case 'y':
     case 'Y':
+      if ((OLC_OBJ(d)->religion_requirement.deity != 0 &&
+           !religion_deity_valid(OLC_OBJ(d)->religion_requirement.deity)) ||
+          OLC_OBJ(d)->religion_requirement.rank < 0 || OLC_OBJ(d)->religion_requirement.rank > 8)
+      {
+        write_to_output(d, "Set valid religion purchase requirements or clear them with zero.\r\n");
+        oedit_disp_menu(d);
+        return;
+      }
       oedit_save_internally(d);
       mudlog(CMP, MAX(LVL_BUILDER, GET_INVIS_LEV(d->character)), TRUE, "OLC: %s edits obj %d",
              GET_NAME(d->character), OLC_NUM(d));
@@ -2235,6 +2252,21 @@ void oedit_parse(struct descriptor_data *d, char *arg)
       return;
     }
 
+  case OEDIT_DEITY:
+  case OEDIT_TEMPLE_RANK:
+    if (!*arg || strlen(arg) > 3 || strspn(arg, "0123456789") != strlen(arg) ||
+        atoi(arg) > (OLC_MODE(d) == OEDIT_DEITY ? NUM_DEITIES - 1 : 8) ||
+        (OLC_MODE(d) == OEDIT_DEITY && atoi(arg) != 0 && !religion_deity_valid(atoi(arg))))
+    {
+      write_to_output(d, "Enter a valid value (0 clears this requirement): ");
+      return;
+    }
+    if (OLC_MODE(d) == OEDIT_DEITY) OLC_OBJ(d)->religion_requirement.deity = atoi(arg);
+    else OLC_OBJ(d)->religion_requirement.rank = atoi(arg);
+    OLC_VAL(d) = 1;
+    oedit_disp_menu(d);
+    return;
+
   case OEDIT_CLAN:
   case OEDIT_CLAN_RANK:
   case OEDIT_CLAN_FAVOR:
@@ -2249,6 +2281,20 @@ void oedit_parse(struct descriptor_data *d, char *arg)
     oedit_disp_menu(d); return;
 
   case OEDIT_MAIN_MENU:
+    if (!strcasecmp(arg, "deity") || !strcasecmp(arg, "templerank"))
+    {
+      OLC_MODE(d) = !strcasecmp(arg, "deity") ? OEDIT_DEITY : OEDIT_TEMPLE_RANK;
+      if (OLC_MODE(d) == OEDIT_DEITY)
+      {
+        write_to_output(d, "0) None\r\n");
+        for (i = 1; i < NUM_DEITIES; ++i)
+          if (religion_deity_valid(i)) write_to_output(d, "%d) %s\r\n", i, deity_list[i].name);
+      }
+      else
+        for (i = 0; i <= 8; ++i) write_to_output(d, "%d) %s\r\n", i, religion_rank_name(i));
+      write_to_output(d, "Enter value (both deity and rank must be set to restrict purchases): ");
+      return;
+    }
     if (!strcasecmp(arg, "clan") || !strcasecmp(arg, "rank") || !strcasecmp(arg, "favor")) {
       OLC_MODE(d) = !strcasecmp(arg, "clan") ? OEDIT_CLAN :
                     !strcasecmp(arg, "rank") ? OEDIT_CLAN_RANK : OEDIT_CLAN_FAVOR;

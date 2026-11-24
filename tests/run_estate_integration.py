@@ -15,7 +15,7 @@ if os.environ.get('LEGENDARY_COMMANDS_TEST') == '1':
 
 root = Path(__file__).resolve().parents[1]
 resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
-extra_flags = shlex.split(os.environ.get('ESTATE_TEST_CFLAGS', ''))
+extra_flags = shlex.split(os.environ.get('ESTATE_TEST_CFLAGS', '')) + ['-DRELIGION_TASK_TEST']
 with tempfile.TemporaryDirectory(prefix='krynn-estate-test-') as directory:
     temp = Path(directory)
     data = temp / 'data'
@@ -27,8 +27,8 @@ with tempfile.TemporaryDirectory(prefix='krynn-estate-test-') as directory:
     subprocess.run([os.environ.get('CC', 'cc'), *extra_flags, '-std=gnu99', '-Wall', '-Wextra',
                     '-Wno-unused-parameter', '-ffunction-sections', '-fdata-sections',
                     '-I'+str(root/'src'), str(root/'tests/estate_integration.c'),
-                    *[str(root/'src'/name) for name in ['estate.c', 'housing.c', 'auction_house.c', 'player_shop.c', 'durable_file.c', 'legendary_transaction.c', 'legendary_store.c', 'legendary.c', 'legendary_equipment.c', 'legendary_foundations.c', 'legendary_effects.c', 'legendary_techniques.c', 'legendary_identity.c']],
-                    '-Wl,--gc-sections', *flags, '-lcrypto', '-o', str(executable)], check=True)
+                    *[str(root/'src'/name) for name in ['religion.c','religion_tasks.c','religion_blessing.c','restring.c','estate.c', 'housing.c', 'auction_house.c', 'player_shop.c', 'durable_file.c', 'legendary_transaction.c', 'legendary_store.c', 'legendary.c', 'legendary_equipment.c', 'legendary_foundations.c', 'legendary_effects.c', 'legendary_techniques.c', 'legendary_identity.c']],
+                    '-Wl,--gc-sections', *flags, '-lcrypto', '-ljson-c', '-o', str(executable)], check=True)
     # Extract the production functions verbatim, avoiding unrelated rental code dependencies.
     source = (root/'src/objsave.c').read_text()
     masked = re.sub(r"""/\*.*?\*/|//[^\n]*|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'""",
@@ -60,11 +60,12 @@ with tempfile.TemporaryDirectory(prefix='krynn-estate-test-') as directory:
     subprocess.run([str(room_executable)], check=True)
     codec = temp/'real-codec.c'
     codec.write_text('\n'.join(['#include "conf.h"', '#include "sysdep.h"', '#include "structs.h"',
-                               '#include "utils.h"', '#include "db.h"', '#include "handler.h"', '#include "legendary_identity.h"',
+                               '#include "utils.h"', '#include "religion.h"', '#include "db.h"', '#include "handler.h"', '#include "legendary_identity.h"',
                                '#include "genolc.h"', '#include "spells.h"', '#include "act.h"', '#include "mysql.h"', '#define OBJSAVE_DB 1',
                                'static int estate_file_only;', 'int estate_write_record(struct obj_data *, FILE *);',
                                'int objsave_save_obj_record_db_sheath(struct obj_data *, struct char_data *, long, int);',
                                function('int objsave_save_obj_record_db(struct obj_data *obj'),
+                               function('void free_ex_descriptions_shared(', (root/'src/genolc.c').read_text()),
                                function('static int restore_persistent_object('),
                                function('obj_save_data *objsave_parse_objects(FILE *fl)'),
                                function('obj_save_data *objsave_parse_objects_db(char *name'),
@@ -74,8 +75,8 @@ with tempfile.TemporaryDirectory(prefix='krynn-estate-test-') as directory:
                     '-Wno-unused-parameter', '-ffunction-sections', '-fdata-sections', '-DESTATE_REAL_CODEC',
                     '-I'+str(root/'src'), str(root/'tests/estate_integration.c'),
                     str(root/'tests/estate_real_codec_adapter.c'), str(codec),
-                    *[str(root/'src'/name) for name in ['estate.c', 'housing.c', 'auction_house.c', 'player_shop.c', 'durable_file.c', 'legendary_transaction.c', 'legendary_store.c', 'legendary.c', 'legendary_equipment.c', 'legendary_foundations.c', 'legendary_effects.c', 'legendary_techniques.c', 'legendary_identity.c']],
-                    '-Wl,--gc-sections', *flags, '-lcrypto', '-o', str(real_executable)], check=True)
+                    *[str(root/'src'/name) for name in ['religion.c','religion_tasks.c','religion_blessing.c','restring.c','estate.c', 'housing.c', 'auction_house.c', 'player_shop.c', 'durable_file.c', 'legendary_transaction.c', 'legendary_store.c', 'legendary.c', 'legendary_equipment.c', 'legendary_foundations.c', 'legendary_effects.c', 'legendary_techniques.c', 'legendary_identity.c']],
+                    '-Wl,--gc-sections', *flags, '-lcrypto', '-ljson-c', '-o', str(real_executable)], check=True)
     legendary_executable = None
     if os.environ.get('LEGENDARY_PERSISTENCE_TEST') == '1':
         legendary_codec = temp/'legendary-codec.c'
@@ -109,9 +110,9 @@ with tempfile.TemporaryDirectory(prefix='krynn-estate-test-') as directory:
                         '-DESTATE_REAL_CODEC', '-DLEGENDARY_PERSISTENCE_TEST', '-I'+str(root/'src'),
                         str(root/'tests/legendary_persistence.c'), str(root/'tests/estate_real_codec_adapter.c'),
                         str(legendary_codec), *[str(root/'src'/name) for name in
-                        ['estate.c','housing.c','auction_house.c','player_shop.c','legendary.c', 'legendary_equipment.c', 'legendary_foundations.c', 'legendary_effects.c', 'legendary_techniques.c',
+                        ['religion.c','religion_tasks.c','religion_blessing.c','restring.c','estate.c','housing.c','auction_house.c','player_shop.c','legendary.c', 'legendary_equipment.c', 'legendary_foundations.c', 'legendary_effects.c', 'legendary_techniques.c',
                          'legendary_store.c','legendary_identity.c','legendary_transaction.c','durable_file.c']],
-                        '-Wl,--gc-sections', *flags, '-lcrypto', '-o', str(legendary_executable)], check=True)
+                        '-Wl,--gc-sections', *flags, '-lcrypto', '-ljson-c', '-o', str(legendary_executable)], check=True)
     transaction_executable = None
     if os.environ.get('LEGENDARY_TRANSACTION_TEST') == '1' or os.environ.get('LEGENDARY_COMMANDS_TEST') == '1':
         transaction_executable = temp/'legendary-transaction-test'
@@ -133,9 +134,9 @@ with tempfile.TemporaryDirectory(prefix='krynn-estate-test-') as directory:
                         '-I'+str(root/'src'), str(root/'tests/legendary_transactions.c'),
                         str(root/'tests/estate_real_codec_adapter.c'), str(transaction_codec),
                         *[str(root/'src'/name) for name in
-                        ['estate.c','housing.c','auction_house.c','player_shop.c','legendary.c', 'legendary_equipment.c', 'legendary_foundations.c', 'legendary_effects.c', 'legendary_techniques.c',
+                        ['religion.c','religion_tasks.c','religion_blessing.c','restring.c','estate.c','housing.c','auction_house.c','player_shop.c','legendary.c', 'legendary_equipment.c', 'legendary_foundations.c', 'legendary_effects.c', 'legendary_techniques.c',
                          'legendary_store.c','legendary_identity.c','legendary_transaction.c','durable_file.c']],
-                        '-Wl,--gc-sections', *flags, '-lcrypto', '-o', str(transaction_executable)], check=True)
+                        '-Wl,--gc-sections', *flags, '-lcrypto', '-ljson-c', '-o', str(transaction_executable)], check=True)
     earnings_executable = None
     if os.environ.get('LEGENDARY_EARNINGS_TEST') == '1':
         earnings_executable = temp/'legendary-earnings-test'
@@ -155,9 +156,9 @@ with tempfile.TemporaryDirectory(prefix='krynn-estate-test-') as directory:
                         '-DLEGENDARY_EARNINGS_TEST', '-I'+str(root/'src'), str(root/'tests/legendary_earnings.c'), str(xp_codec),
                         str(root/'tests/estate_real_codec_adapter.c'), str(transaction_codec),
                         *[str(root/'src'/name) for name in
-                        ['estate.c','housing.c','auction_house.c','player_shop.c','legendary.c', 'legendary_equipment.c', 'legendary_foundations.c', 'legendary_effects.c', 'legendary_techniques.c',
+                        ['religion.c','religion_tasks.c','religion_blessing.c','restring.c','estate.c','housing.c','auction_house.c','player_shop.c','legendary.c', 'legendary_equipment.c', 'legendary_foundations.c', 'legendary_effects.c', 'legendary_techniques.c',
                          'legendary_store.c','legendary_identity.c','legendary_transaction.c','durable_file.c','legendary_earnings.c']],
-                        '-Wl,--gc-sections', *flags, '-lcrypto', '-o', str(earnings_executable)], check=True)
+                        '-Wl,--gc-sections', *flags, '-lcrypto', '-ljson-c', '-o', str(earnings_executable)], check=True)
     commands_executable = None
     if os.environ.get('LEGENDARY_COMMANDS_TEST') == '1':
         commands_executable = temp/'legendary-commands-test'
@@ -250,10 +251,10 @@ with tempfile.TemporaryDirectory(prefix='krynn-estate-test-') as directory:
                         *equipment_flags, '-I'+str(root/'src'), str(root/'tests/legendary_commands.c'), *equipment_sources,
                         str(root/'tests/estate_real_codec_adapter.c'), str(transaction_codec),
                         *[str(root/'src'/name) for name in
-                        ['estate.c','housing.c','auction_house.c','player_shop.c','legendary.c', 'legendary_equipment.c', 'legendary_foundations.c', 'legendary_effects.c', 'legendary_techniques.c',
+                        ['religion.c','religion_tasks.c','religion_blessing.c','restring.c','estate.c','housing.c','auction_house.c','player_shop.c','legendary.c', 'legendary_equipment.c', 'legendary_foundations.c', 'legendary_effects.c', 'legendary_techniques.c',
                          'legendary_store.c','legendary_identity.c','legendary_transaction.c','durable_file.c',
                          'legendary_earnings.c','legendary_commands.c']],
-                        '-Wl,--gc-sections', *flags, '-lcrypto', '-o', str(commands_executable)], check=True)
+                        '-Wl,--gc-sections', *flags, '-lcrypto', '-ljson-c', '-o', str(commands_executable)], check=True)
     subprocess.run(['mariadb-install-db', '--no-defaults', '--datadir='+str(data),
                     '--auth-root-authentication-method=normal', '--skip-test-db'],
                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
@@ -278,6 +279,20 @@ with tempfile.TemporaryDirectory(prefix='krynn-estate-test-') as directory:
         subprocess.run([*client, '-e', 'DROP DATABASE estate_test; CREATE DATABASE estate_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci'], check=True)
         print('Testing the production object record codec:', flush=True)
         subprocess.run([str(real_executable), str(socket)], cwd=temp, check=True)
+        # Validate deployment SQL and deterministic seed replay on this disposable DB.
+        migration = (root/'sql/20261123_religion_phase3.sql').read_text()
+        seed = (root/'examples/religion_phase3/wardrobes.sql').read_text()
+        for _ in range(2):
+            subprocess.run([*client, 'estate_test'], input=migration+seed, text=True, check=True)
+        counts = subprocess.check_output([*client, '-N', 'estate_test', '-e',
+            "SELECT COUNT(*),COUNT(DISTINCT JSON_EXTRACT(published,'$.org')),SUM(JSON_VALID(published)) FROM restring_catalogue WHERE id BETWEEN 300000 AND 329999"], text=True).strip()
+        assert counts == '4704\t21\t4704', counts
+        schema = (root/'sql/master_schema.sql').read_text()
+        help_schema = '\n'.join(re.search(r'CREATE TABLE IF NOT EXISTS '+table+r'\s*\(.*?;', schema, re.S).group() for table in ('help_entries','help_keywords'))
+        help_sql = (root/'sql/20261123_religion_phase3_help.sql').read_text()
+        for _ in range(2):
+            subprocess.run([*client, 'estate_test'], input=help_schema+help_sql, text=True, check=True)
+        print('PASS: phase 3 migration, 4704 wardrobe seed rows and SQL help are valid and replayable', flush=True)
         if legendary_executable:
             subprocess.run([*client, '-e', 'DROP DATABASE estate_test; CREATE DATABASE estate_test'], check=True)
             migration = (root/'sql/20261023_legendary_objects.sql').read_text() + (root/'sql/20261024_legendary_transactions.sql').read_text() + (root/'sql/20261024_legendary_earnings.sql').read_text() + (root/'sql/20261024_legendary_smiths.sql').read_text() + (root/'sql/20261024_legendary_effects.sql').read_text() + (root/'sql/20261025_legendary_item_passives.sql').read_text() + (root/'sql/20261025_legendary_release_controls.sql').read_text() + (root/'sql/20261026_legendary_mob_bosses.sql').read_text() + (root/'sql/20261026_legendary_smith_specproc.sql').read_text() + (root/'sql/20261026_legendary_daily_limits.sql').read_text()

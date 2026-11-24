@@ -38,6 +38,15 @@
 /* External functions */
 bool can_hear_sneaking(struct char_data *observer, struct char_data *sneaker);
 
+/* act() does not apply hide_invisible to TO_VICT messages. Movement uses
+ * per-observer sneak checks, so explicitly enforce visibility before sending. */
+static void visible_movement_message(const char *message, struct char_data *actor,
+                                     struct char_data *observer)
+{
+  if (CAN_SEE(observer, actor))
+    act(message, TRUE, actor, 0, observer, TO_VICT);
+}
+
 /**
  * Display leave messages when a character exits a room
  * Handles various scenarios: walking, sneaking, mounted, etc.
@@ -76,13 +85,13 @@ void display_leave_messages(struct char_data *ch, int dir, int riding, int ridde
           {
             /* message: mount not sneaking, rider is sneaking */
             snprintf(buf2, sizeof(buf2), "$n leaves %s.", dirs[dir]);
-            act(buf2, TRUE, RIDING(ch), 0, tch, TO_VICT);
+            visible_movement_message(buf2, RIDING(ch), tch);
           }
           else
           {
             /* rider detected ! */
             snprintf(buf2, sizeof(buf2), "$n rides %s %s.", PERS(RIDING(ch), tch), dirs[dir]);
-            act(buf2, TRUE, ch, 0, tch, TO_VICT);
+            visible_movement_message(buf2, ch, tch);
           }
         }
 
@@ -112,7 +121,7 @@ void display_leave_messages(struct char_data *ch, int dir, int riding, int ridde
           {
             /* mount detected! */
             snprintf(buf2, sizeof(buf2), "$n rides %s %s.", PERS(RIDING(ch), tch), dirs[dir]);
-            act(buf2, TRUE, ch, 0, tch, TO_VICT);
+            visible_movement_message(buf2, ch, tch);
           } /* if we pass this check, the rider/mount are both sneaking */
         }
       } /* ch is still trying to sneak (mount too) */
@@ -137,13 +146,13 @@ void display_leave_messages(struct char_data *ch, int dir, int riding, int ridde
             /* mount failed, player succeeded */
             /* message: mount not sneaking, rider is sneaking */
             snprintf(buf2, sizeof(buf2), "$n leaves %s.", dirs[dir]);
-            act(buf2, TRUE, RIDING(ch), 0, tch, TO_VICT);
+            visible_movement_message(buf2, RIDING(ch), tch);
           }
           else
           {
             /* mount failed, player failed */
             snprintf(buf2, sizeof(buf2), "$n rides %s %s.", PERS(RIDING(ch), tch), dirs[dir]);
-            act(buf2, TRUE, ch, 0, tch, TO_VICT);
+            visible_movement_message(buf2, ch, tch);
           }
         }
       }
@@ -177,13 +186,13 @@ void display_leave_messages(struct char_data *ch, int dir, int riding, int ridde
           {
             /* message: mount not sneaking, rider is sneaking */
             snprintf(buf2, sizeof(buf2), "$n leaves %s.", dirs[dir]);
-            act(buf2, TRUE, ch, 0, tch, TO_VICT);
+            visible_movement_message(buf2, ch, tch);
           }
           else
           {
             /* rider detected ! */
             snprintf(buf2, sizeof(buf2), "$n rides %s %s.", PERS(ch, tch), dirs[dir]);
-            act(buf2, TRUE, RIDDEN_BY(ch), 0, tch, TO_VICT);
+            visible_movement_message(buf2, RIDDEN_BY(ch), tch);
           }
         }
 
@@ -219,14 +228,14 @@ void display_leave_messages(struct char_data *ch, int dir, int riding, int ridde
             /* mount failed, rider succeeded */
             /* message: mount not sneaking, rider is sneaking */
             snprintf(buf2, sizeof(buf2), "$n leaves %s.", dirs[dir]);
-            act(buf2, TRUE, RIDDEN_BY(ch), 0, tch, TO_VICT);
+            visible_movement_message(buf2, RIDDEN_BY(ch), tch);
           }
           else
           {
             /* mount failed, rider failed */
             /* 3.23.18 Ornir Bugfix. */
             snprintf(buf2, sizeof(buf2), "$n rides %s %s.", PERS(ch, tch), dirs[dir]);
-            act(buf2, TRUE, RIDDEN_BY(ch), 0, tch, TO_VICT);
+            visible_movement_message(buf2, RIDDEN_BY(ch), tch);
           }
         }
 
@@ -248,7 +257,7 @@ void display_leave_messages(struct char_data *ch, int dir, int riding, int ridde
           {
             /* mount detected! */
             snprintf(buf2, sizeof(buf2), "$n rides %s %s.", PERS(ch, tch), dirs[dir]);
-            act(buf2, TRUE, ch, 0, tch, TO_VICT);
+            visible_movement_message(buf2, ch, tch);
           } /* if we pass this check, the rider/mount are both sneaking */
         }
       }
@@ -279,12 +288,12 @@ void display_leave_messages(struct char_data *ch, int dir, int riding, int ridde
         {
           /* if they have a walk-out message, display that instead */
           snprintf(buf2, sizeof(buf2), "%s %s.", ch->player.walkout, dirs[dir]);
-          act(buf2, TRUE, ch, 0, tch, TO_VICT);
+          visible_movement_message(buf2, ch, tch);
         }
         else
         {
           snprintf(buf2, sizeof(buf2), "$n leaves %s.", dirs[dir]);
-          act(buf2, TRUE, ch, 0, tch, TO_VICT);
+          visible_movement_message(buf2, ch, tch);
         }
       } /* if we pass this check, we are sneaking */
     }
@@ -354,7 +363,7 @@ void display_enter_messages(struct char_data *ch, int dir, int riding, int ridde
                     : dir == DOWN ? "above"
                                   : dirs[rev_dir[dir]]));
         }
-        act(buf2, TRUE, ch, 0, tch, TO_VICT);
+        visible_movement_message(buf2, ch, tch);
       }
     }
   }
@@ -382,7 +391,7 @@ void display_enter_messages(struct char_data *ch, int dir, int riding, int ridde
                  (dir == UP     ? "below"
                   : dir == DOWN ? "above"
                                 : dirs[rev_dir[dir]]));
-        act(buf2, TRUE, RIDING(ch), 0, tch, TO_VICT);
+        visible_movement_message(buf2, RIDING(ch), tch);
       }
       else
       {
@@ -393,7 +402,7 @@ void display_enter_messages(struct char_data *ch, int dir, int riding, int ridde
                   : dir == DOWN ? "above"
                                 : dirs[rev_dir[dir]]),
                  PERS(RIDING(ch), tch));
-        act(buf2, TRUE, ch, 0, tch, TO_VICT);
+        visible_movement_message(buf2, ch, tch);
       }
     }
   }
@@ -421,7 +430,7 @@ void display_enter_messages(struct char_data *ch, int dir, int riding, int ridde
                  (dir == UP     ? "below"
                   : dir == DOWN ? "above"
                                 : dirs[rev_dir[dir]]));
-        act(buf2, TRUE, ch, 0, tch, TO_VICT);
+        visible_movement_message(buf2, ch, tch);
       }
       else
       {
@@ -432,7 +441,7 @@ void display_enter_messages(struct char_data *ch, int dir, int riding, int ridde
                   : dir == DOWN ? "above"
                                 : dirs[rev_dir[dir]]),
                  PERS(RIDDEN_BY(ch), tch));
-        act(buf2, TRUE, RIDDEN_BY(ch), 0, tch, TO_VICT);
+        visible_movement_message(buf2, RIDDEN_BY(ch), tch);
       }
     }
   }

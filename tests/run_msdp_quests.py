@@ -23,7 +23,7 @@ code = r'''
 #define log(...) ((void)0)
 #undef CREATE
 #define CREATE(p,t,n) do { (p)=calloc((n),sizeof(t)); assert(p); } while(0)
-static int slots[3], counters[3], times[3];
+static int slots[MAX_CURRENT_QUESTS], counters[MAX_CURRENT_QUESTS], times[MAX_CURRENT_QUESTS];
 #undef GET_QUEST
 #undef GET_QUEST_COUNTER
 #undef GET_QUEST_TIME
@@ -32,7 +32,7 @@ static int slots[3], counters[3], times[3];
 #define GET_QUEST_COUNTER(ch,i) counters[i]
 #define GET_QUEST_TIME(ch,i) times[i]
 #define GET_NAME(ch) "Test Archer"
-struct aq_data quests[3];
+struct aq_data quests[MAX_CURRENT_QUESTS];
 struct aq_data *aquest_table = quests;
 struct room_data rooms[1], *world = rooms;
 struct obj_data objects[1], *obj_proto = objects;
@@ -41,7 +41,7 @@ const char *quest_types[NUM_AQ_TYPES+1];
 static char *reported;
 static struct txt_block *bufpool;
 static int buf_largecount;
-qst_rnum real_quest(qst_vnum v) { return v >= 0 && v < 3 ? v : NOTHING; }
+qst_rnum real_quest(qst_vnum v) { return v >= 0 && v < MAX_CURRENT_QUESTS ? v : NOTHING; }
 obj_rnum real_object(obj_vnum v) { return v == 1 ? 0 : NOTHING; }
 room_rnum real_room(room_vnum v) { return v == 1 ? 0 : NOWHERE; }
 mob_rnum real_mobile(mob_vnum v) { return v == 1 ? 0 : NOBODY; }
@@ -68,7 +68,7 @@ int main(void) {
   struct descriptor_data d={0}; struct char_data ch={0};
   char *long_text=malloc(49152); memset(long_text,'x',49151);long_text[49151]=0;
   const char *prefix="\"\\\n\t<script>caf\303\251";memcpy(long_text,prefix,strlen(prefix));
-  for(int i=0;i<3;i++) {
+  for(int i=0;i<MAX_CURRENT_QUESTS;i++) {
     slots[i]=i;counters[i]=3;times[i]=7;
     quests[i].vnum=i;quests[i].name="A \"quest\"";quests[i].desc=long_text;
     quests[i].info=long_text;quests[i].type=AQ_DIALOGUE;quests[i].target=1;
@@ -78,7 +78,7 @@ int main(void) {
   update_msdp_quest_info(&d,&ch);
   assert(strlen(reported)>16384 && strlen(reported)<MAX_VARIABLE_LENGTH);
   struct json_object *decoded=json_tokener_parse(reported);assert(decoded);
-  assert(json_object_array_length(decoded)==3);
+  assert(json_object_array_length(decoded)==MAX_CURRENT_QUESTS);
   struct json_object *q=json_object_array_get_idx(decoded,2);
   assert(!strcmp(json_object_get_string(field(q,"info")),long_text));
   assert(json_object_get_int(field(field(q,"progress"),"completed"))==2);
@@ -95,7 +95,7 @@ int main(void) {
   char *too_large=malloc(LARGE_BUFSIZE+1);memset(too_large,'z',LARGE_BUFSIZE);too_large[LARGE_BUFSIZE]=0;
   assert(!write_protocol_packet(&d,too_large));assert(d.bufptr==before && d.bufspace==left);
   // Removing all active quests clears the client rather than retaining old data.
-  for(int i=0;i<3;i++)slots[i]=NOTHING;
+  for(int i=0;i<MAX_CURRENT_QUESTS;i++)slots[i]=NOTHING;
   update_msdp_quest_info(&d,&ch);assert(!strcmp(reported,"[]"));
   protocol_t protocol={0}; MSDP_t values[eMSDP_MAX]={0}; MSDP_t *pointers[eMSDP_MAX];
   for(int i=0;i<eMSDP_MAX;i++)pointers[i]=&values[i];

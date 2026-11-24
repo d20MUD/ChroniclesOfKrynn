@@ -789,7 +789,7 @@ int load_account(char *name, struct account_data *account)
   /* Case-insensitive match on the escaped account name */
   snprintf(buf, sizeof(buf),
            "SELECT id, name, password, experience, email, quit_survey_completed, "
-           "exp_bonus_pct, treasure_bonus_pct, gold_bonus_pct, qp_bonus_pct "
+           "exp_bonus_pct, treasure_bonus_pct, gold_bonus_pct, qp_bonus_pct, mudlet_no_ask "
            "from account_data where lower(name) = lower('%s')",
            escaped_name);
 
@@ -825,6 +825,7 @@ int load_account(char *name, struct account_data *account)
                                                   row[6 + bonus] ? atoi(row[6 + bonus]) : 0));
   }
 
+  account->mudlet_no_ask = row[10] ? atoi(row[10]) != 0 : false;
   mysql_free_result(result);
   load_account_characters(account);
   load_account_unlocks(account);
@@ -1148,8 +1149,8 @@ void save_account(struct account_data *account)
 
   snprintf(buf, sizeof(buf),
            "INSERT into account_data (id, name, password, experience, email, quit_survey_completed, "
-           "exp_bonus_pct, treasure_bonus_pct, gold_bonus_pct, qp_bonus_pct) "
-           "values (%d, '%s', '%s', %d, %s%s%s, %d, %d, %d, %d, %d)"
+           "exp_bonus_pct, treasure_bonus_pct, gold_bonus_pct, qp_bonus_pct, mudlet_no_ask) "
+           "values (%d, '%s', '%s', %d, %s%s%s, %d, %d, %d, %d, %d, %d)"
            " on duplicate key update password = VALUES(password), "
            "                         experience = VALUES(experience), "
            "                         email = VALUES(email), "
@@ -1157,12 +1158,13 @@ void save_account(struct account_data *account)
            "                         exp_bonus_pct = VALUES(exp_bonus_pct), "
            "                         treasure_bonus_pct = VALUES(treasure_bonus_pct), "
            "                         gold_bonus_pct = VALUES(gold_bonus_pct), "
-           "                         qp_bonus_pct = VALUES(qp_bonus_pct);",
+           "                         qp_bonus_pct = VALUES(qp_bonus_pct), "
+           "                         mudlet_no_ask = VALUES(mudlet_no_ask);",
            account->id, account->name, account->password, account->experience,
            (account->email ? "'" : ""), (account->email ? account->email : "NULL"),
            (account->email ? "'" : ""), account->quit_survey_completed ? 1 : 0,
            account->reward_bonus_pct[0], account->reward_bonus_pct[1],
-           account->reward_bonus_pct[2], account->reward_bonus_pct[3]);
+           account->reward_bonus_pct[2], account->reward_bonus_pct[3], account->mudlet_no_ask ? 1 : 0);
 
   if (mysql_query(conn, buf))
   {
@@ -1243,6 +1245,7 @@ void save_account(struct account_data *account)
         /* Reload unlock arrays from DB to keep them in sync */
         load_account_unlocks(j->account);
         j->account->experience = account->experience;
+        j->account->mudlet_no_ask = account->mudlet_no_ask;
         memcpy(j->account->reward_bonus_pct, account->reward_bonus_pct,
                sizeof(account->reward_bonus_pct));
       }

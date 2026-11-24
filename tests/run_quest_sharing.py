@@ -36,6 +36,8 @@ code = r'''
 #define AQ_DIALOGUE 24
 #define MAX_INPUT_LENGTH 512
 #define MAX_STRING_LENGTH 49152
+#define NORMAL_CURRENT_QUESTS 3
+#define RELIGION_QUEST_SLOT 3
 #define MAX_CURRENT_QUESTS 4
 #define NUM_WEARS 2
 #define LVL_IMMORT 50
@@ -145,7 +147,7 @@ b = quest.index('/*-------------------------------------------------------------
 code += quest[a:b]
 code += "\nstatic void quest_web_history(struct char_data *ch,const char *argument,bool details) {}\n"
 for signature in [
-    'void set_quest(', 'static bool quest_join_eligible(', 'void send_quest_acceptance(', 'static void quest_begin(',
+    'void set_quest(', 'static void quest_eligibility_message(', 'static bool quest_join_eligible(', 'void send_quest_acceptance(', 'static void quest_begin(',
     'void quest_join(', 'static bool room_quest_eligible(', 'static struct char_data *room_quest_giver(',
     'void update_msdp_room_quests(', 'static void quest_web_join(', 'static void quest_share_clear(', 'static bool quest_share_party(',
     'static bool quest_share_active(', 'static void quest_share_offer(',
@@ -249,7 +251,13 @@ int main(void) {
   setup(); aquest_table[0].flags=AQ_NO_SHARE;
   { char join_arg[MAX_INPUT_LENGTH]="1"; quest_join(&recipient,&other,join_arg); }
   assert(recipient.quests[0]==100 && saves==1); /* flag only prevents sharing */
-  setup(); recipient.level=LVL_IMMORT; assert(quest_join_eligible(&recipient,0,&slot,true));
+  setup(); recipient.level=LVL_IMMORT; assert(quest_join_eligible(&recipient,0,&slot,true,NULL,false));
+  /* Church quests have their own reserved slot even with three ordinary quests. */
+  setup(); for(int i=0;i<NORMAL_CURRENT_QUESTS;i++)recipient.quests[i]=101;
+  assert(!quest_join_eligible(&recipient,0,&slot,false,NULL,false));
+  assert(quest_join_eligible(&recipient,0,&slot,false,NULL,true) && slot==RELIGION_QUEST_SLOT);
+  recipient.quests[RELIGION_QUEST_SLOT]=102;
+  assert(!quest_join_eligible(&recipient,0,&slot,false,NULL,true));
   /* Room discovery includes blocked unfinished quests without terminal spam. */
   setup();
   struct variable roomvar={.bReport=true}; struct variable acceptedvar={0}; struct variable *vars[]={&roomvar,&acceptedvar};
@@ -269,6 +277,26 @@ int main(void) {
   assert(json_object_object_get_ex(entry,"eligible",&eligible) && !json_object_get_boolean(eligible));
   assert(json_object_object_get_ex(entry,"unavailableReason",&reason) && strstr(json_object_get_string(reason),"not high enough level"));
   json_object_put(payload);
+  /* Completing a prerequisite while staying in the room changes the MSDP result. */
+  recipient.level=10; aquest_table[2].prev_quest=101;
+  update_msdp_room_quests(&recipient);
+  payload=json_tokener_parse(room_payload); json_object_object_get_ex(payload,"quests",&list);
+  entry=json_object_array_get_idx(list,2);
+  assert(json_object_object_get_ex(entry,"eligible",&eligible) && !json_object_get_boolean(eligible));
+  json_object_put(payload);
+  recipient.completed[1]=true; update_msdp_room_quests(&recipient);
+  payload=json_tokener_parse(room_payload); json_object_object_get_ex(payload,"quests",&list);
+  entry=json_object_array_get_idx(list,1);
+  assert(json_object_object_get_ex(entry,"id",&roomfield) && json_object_get_int(roomfield)==102);
+  assert(json_object_object_get_ex(entry,"eligible",&eligible) && json_object_get_boolean(eligible));
+  assert(!*output); json_object_put(payload);
+  recipient.completed[1]=false; aquest_table[2].prev_quest=NOTHING;
+  /* Web eligibility uses the same staff override as ordinary joining. */
+  recipient.level=LVL_IMMORT; update_msdp_room_quests(&recipient);
+  payload=json_tokener_parse(room_payload); json_object_object_get_ex(payload,"quests",&list);
+  entry=json_object_array_get_idx(list,0);
+  assert(json_object_object_get_ex(entry,"eligible",&eligible) && json_object_get_boolean(eligible));
+  assert(!*output); json_object_put(payload); recipient.level=1;
   recipient.completed[0]=true;update_msdp_room_quests(&recipient);
   payload=json_tokener_parse(room_payload);json_object_object_get_ex(payload,"quests",&list);assert(json_object_array_length(list)==3);json_object_put(payload);
   recipient.completed[0]=false;recipient.quests[0]=100;recipient.level=10;update_msdp_room_quests(&recipient);

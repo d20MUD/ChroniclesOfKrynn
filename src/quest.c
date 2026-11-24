@@ -23,6 +23,7 @@
 #include "comm.h"
 #include "screen.h"
 #include "quest.h"
+#include "religion.h"
 #include "constants.h"
 #include "spells.h"
 #include "act.h" /* for do_tell */
@@ -744,6 +745,11 @@ void complete_quest(struct char_data *ch, int index)
     return;
   }
 
+  if (index == RELIGION_QUEST_SLOT) {
+    religion_task_objective_complete(ch);
+    return;
+  }
+
   /* does this race reward convert you into another race?  we have some important requirements! */
   if (QST_RACE(rnum) < NUM_EXTENDED_RACES && QST_RACE(rnum) > RACE_UNDEFINED)
   {
@@ -966,6 +972,7 @@ void complete_quest(struct char_data *ch, int index)
  * will call: void complete_quest() above */
 void generic_complete_quest(struct char_data *ch, int index)
 {
+  if (index == RELIGION_QUEST_SLOT && GET_QUEST_COUNTER(ch, index) <= 0) return;
   if (has_duplicate_quest(ch))
     remove_duplicate_quests(ch);
 
@@ -986,6 +993,11 @@ void generic_complete_quest(struct char_data *ch, int index)
   }
   else if (GET_QUEST(ch, index) != NOTHING)
   {
+    if (index == RELIGION_QUEST_SLOT) {
+      religion_task_objective_complete(ch);
+      save_char_checked(ch, 0); /* Preserve zero-counter evidence if SQL is unavailable. */
+      return;
+    }
     struct mud_event_data *pMudEvent = NULL;
     char buf[128] = {'\0'};
     qst_vnum event_quest_num = NOTHING;
@@ -1385,10 +1397,25 @@ void quest_hist(struct char_data *ch, char argument[MAX_STRING_LENGTH])
   }
 }
 
+/* A caller requesting a reason receives structured eligibility data without
+ * emitting game output. Interactive join/share calls pass NULL instead. */
+static void quest_eligibility_message(struct char_data *ch, char **reason, const char *format, ...)
+{
+  char message[MAX_STRING_LENGTH];
+  va_list args;
+  va_start(args, format);
+  vsnprintf(message, sizeof(message), format, args);
+  va_end(args);
+  if (reason)
+    *reason = strdup(message);
+  else
+    send_to_char(ch, "%s", message);
+}
+
 /* Joining and sharing must enforce the same quest requirements. Shared offers
  * never use the normal immortal overrides. No state changes occur here. */
 static bool quest_join_eligible(struct char_data *ch, qst_rnum rnum, int *slot,
-                                bool allow_staff_override)
+                                bool allow_staff_override, char **reason, bool church)
 {
   qst_vnum vnum = QST_NUM(rnum);
   obj_rnum objrnum = NOTHING;
@@ -1399,12 +1426,13 @@ static bool quest_join_eligible(struct char_data *ch, qst_rnum rnum, int *slot,
 
   if (IS_NPC(ch) || QST_TYPE(rnum) < 0 || QST_TYPE(rnum) >= NUM_AQ_TYPES)
   {
-    send_to_char(ch, "That quest is not available.\r\n");
+    quest_eligibility_message(ch, reason, "That quest is not available.\r\n");
     return FALSE;
   }
 
   /* got a spare slot to join a quest? */
-  for (index = 0; index < MAX_CURRENT_QUESTS; index++)
+  for (index = church ? RELIGION_QUEST_SLOT : 0;
+       index < (church ? MAX_CURRENT_QUESTS : NORMAL_CURRENT_QUESTS); index++)
   {
     if (GET_QUEST(ch, index) == NOTHING)
     {
@@ -1417,7 +1445,7 @@ static bool quest_join_eligible(struct char_data *ch, qst_rnum rnum, int *slot,
   {
     snprintf(buf, sizeof(buf), "\r\n%s, but you don't have any spare slots to join a quest!\r\n",
              GET_NAME(ch));
-    send_to_char(ch, "%s", buf);
+    quest_eligibility_message(ch, reason, "%s", buf);
     return FALSE;
   }
 
@@ -1429,7 +1457,7 @@ static bool quest_join_eligible(struct char_data *ch, qst_rnum rnum, int *slot,
   if (found)
   {
     snprintf(buf, sizeof(buf), "\r\n%s, you already have accepted that quest!\r\n", GET_NAME(ch));
-    send_to_char(ch, "%s", buf);
+    quest_eligibility_message(ch, reason, "%s", buf);
     return FALSE;
   }
 
@@ -1439,23 +1467,23 @@ static bool quest_join_eligible(struct char_data *ch, qst_rnum rnum, int *slot,
   {
     snprintf(buf, sizeof(buf), "\r\n%s, you are not high enough level for that quest!\r\n",
              GET_NAME(ch));
-    send_to_char(ch, "%s", buf);
+    quest_eligibility_message(ch, reason, "%s", buf);
     return FALSE;
   }
-  else if (staff_override)
+  else if (staff_override && !reason)
   {
-    send_to_char(ch, "\tRNOTE: you are over-riding Min-Level\tn\r\n");
+    quest_eligibility_message(ch, reason, "\tRNOTE: you are over-riding Min-Level\tn\r\n");
   }
 
   if ((GET_LEVEL(ch) > QST_MAXLEVEL(rnum)) && !staff_override)
   {
     snprintf(buf, sizeof(buf), "\r\n%s, you are too experienced for that quest!\r\n", GET_NAME(ch));
-    send_to_char(ch, "%s", buf);
+    quest_eligibility_message(ch, reason, "%s", buf);
     return FALSE;
   }
-  else if (staff_override)
+  else if (staff_override && !reason)
   {
-    send_to_char(ch, "\tRNOTE: you are over-riding Max-Level\tn\r\n");
+    quest_eligibility_message(ch, reason, "\tRNOTE: you are over-riding Max-Level\tn\r\n");
   }
 
   /* repeatable quests are handled here */
@@ -1463,12 +1491,12 @@ static bool quest_join_eligible(struct char_data *ch, qst_rnum rnum, int *slot,
       !staff_override)
   {
     snprintf(buf, sizeof(buf), "\r\n%s, you have already completed that quest!\r\n", GET_NAME(ch));
-    send_to_char(ch, "%s", buf);
+    quest_eligibility_message(ch, reason, "%s", buf);
     return FALSE;
   }
-  else if (staff_override)
+  else if (staff_override && !reason)
   {
-    send_to_char(ch, "\tRNOTE: you are over-riding 'quest completed'\tn\r\n");
+    quest_eligibility_message(ch, reason, "\tRNOTE: you are over-riding 'quest completed'\tn\r\n");
   }
 
   /* requires previous quest completed (quest chain) */
@@ -1476,7 +1504,7 @@ static bool quest_join_eligible(struct char_data *ch, qst_rnum rnum, int *slot,
   {
     snprintf(buf, sizeof(buf), "\r\n%s, that quest is not available to you yet! (quest chain)\r\n",
              GET_NAME(ch));
-    send_to_char(ch, "%s", buf);
+    quest_eligibility_message(ch, reason, "%s", buf);
     return FALSE;
   }
 
@@ -1489,9 +1517,9 @@ static bool quest_join_eligible(struct char_data *ch, qst_rnum rnum, int *slot,
     {
       qst_rnum d_rnum = get_dialogue_alternative_quest_rnum(QST_PREV(rnum));
       if (d_rnum != NOTHING)
-        send_to_char(ch, "You must complete %s in order to take this quest.\r\n", QST_NAME(d_rnum));
+        quest_eligibility_message(ch, reason, "You must complete %s in order to take this quest.\r\n", QST_NAME(d_rnum));
       else
-        send_to_char(ch,
+        quest_eligibility_message(ch, reason,
                      "Error getting dialogue alternative quest rnum. Please report to staff.\r\n");
       return FALSE;
     }
@@ -1511,7 +1539,7 @@ static bool quest_join_eligible(struct char_data *ch, qst_rnum rnum, int *slot,
       // Only block if there IS an alternative quest and it's NOT complete
       if (alt_quest != NOTHING && alt_quest > 0 && !is_complete(ch, alt_quest))
       {
-        send_to_char(ch, "The previous quest was a dialogue quest which failed. You will need to "
+        quest_eligibility_message(ch, reason, "The previous quest was a dialogue quest which failed. You will need to "
                          "complete its alternative quest in order to take this quest.\r\n");
         return FALSE;
       }
@@ -1540,13 +1568,19 @@ static bool quest_join_eligible(struct char_data *ch, qst_rnum rnum, int *slot,
     {
       snprintf(buf, sizeof(buf), "\r\n%s, you need to have %s first!\r\n", GET_NAME(ch),
                obj_proto[real_object(QST_PREREQ(rnum))].short_description);
-      send_to_char(ch, "%s", buf);
+      quest_eligibility_message(ch, reason, "%s", buf);
       return FALSE;
     }
   }
 
   *slot = index;
   return TRUE;
+}
+
+bool quest_church_eligible(struct char_data *ch, qst_rnum rnum, char **reason)
+{
+  int slot;
+  return quest_join_eligible(ch, rnum, &slot, false, reason, true);
 }
 
 static void quest_begin(struct char_data *ch, qst_rnum rnum, int index)
@@ -1610,24 +1644,16 @@ void quest_join(struct char_data *ch, struct char_data *qm, char argument[MAX_IN
     send_to_char(ch, "I don't know of such a quest!\r\n");
     return;
   }
-  if (quest_join_eligible(ch, rnum, &slot, TRUE))
+  if (quest_join_eligible(ch, rnum, &slot, TRUE, NULL, false))
     quest_begin(ch, rnum, slot);
 }
 
-/* Query normal join requirements without terminal output. The caller owns
- * the captured explanation so blocked quests can explain their requirements. */
+/* Query normal join requirements directly for the MSDP report. */
 static bool room_quest_eligible(struct char_data *ch, qst_rnum rnum, char **reason)
 {
-  struct output_capture capture = {0};
-  bool eligible;
   int slot;
   *reason = NULL;
-  if (!ch->desc || ch->desc->output_capture) return FALSE;
-  ch->desc->output_capture = &capture;
-  eligible = quest_join_eligible(ch, rnum, &slot, FALSE);
-  ch->desc->output_capture = NULL;
-  *reason = capture.text;
-  return eligible;
+  return quest_join_eligible(ch, rnum, &slot, TRUE, reason, false);
 }
 
 static struct char_data *room_quest_giver(struct char_data *ch, qst_rnum rnum)
@@ -1699,7 +1725,7 @@ static void quest_web_join(struct char_data *ch, const char *argument)
       room != GET_ROOM_VNUM(IN_ROOM(ch)) || (rnum = real_quest(vnum)) == NOTHING ||
       !room_quest_giver(ch, rnum))
     send_to_char(ch, "That quest is no longer offered here.\r\n");
-  else if (quest_join_eligible(ch, rnum, &slot, FALSE))
+  else if (quest_join_eligible(ch, rnum, &slot, TRUE, NULL, false))
     quest_begin(ch, rnum, slot);
   update_msdp_room_quests(ch);
   if (ch->desc && ch->desc->pProtocol &&
@@ -1757,6 +1783,10 @@ void quest_quit(struct char_data *ch, char argument[MAX_STRING_LENGTH])
     return;
   }
 
+  if (index == RELIGION_QUEST_SLOT) {
+    religion_tasks_command(ch, "abandon"); return;
+  }
+
   if (GET_QUEST(ch, index) == NOTHING)
   {
     send_to_char(ch, "But you currently aren't on a quest in that index!\r\n");
@@ -1801,7 +1831,9 @@ void quest_progress(struct char_data *ch, char argument[MAX_STRING_LENGTH])
       if ((rnum = real_quest(GET_QUEST(ch, index))) == NOTHING)
       {
         clear_quest(ch, index); /* safety clearing */
-        send_to_char(ch, " (Index: %d) This quest slot is available.\r\n", index);
+        send_to_char(ch, index == RELIGION_QUEST_SLOT ?
+                     " (Index: %d) Reserved for religion task.\r\n" :
+                     " (Index: %d) This quest slot is available.\r\n", index);
       }
       else
         send_to_char(ch, "(Index: %d) - %s [vnum %d]\r\n", index, QST_NAME(rnum), QST_NUM(rnum));
@@ -2025,7 +2057,7 @@ void quest_assign(struct char_data *ch, char argument[MAX_STRING_LENGTH])
     send_to_char(ch, "That character already completed that quest.\r\n");
 
   /* got a spare slot to join a quest? */
-  for (index = 0; index < MAX_CURRENT_QUESTS; index++)
+  for (index = 0; index < NORMAL_CURRENT_QUESTS; index++)
   {
     if (GET_QUEST(victim, index) == NOTHING)
     {
@@ -2872,7 +2904,7 @@ static void quest_share_offer(struct char_data *ch, const char *argument)
     return;
   }
   quest_share_clear(recipient);
-  if (!quest_join_eligible(recipient, rnum, &slot, FALSE))
+  if (!quest_join_eligible(recipient, rnum, &slot, FALSE, NULL, false))
   {
     send_to_char(ch, "That player does not qualify to accept this quest.\r\n");
     return;
@@ -2928,7 +2960,7 @@ static void quest_share_respond(struct char_data *ch, bool accept)
     send_to_char(ch, "That quest is no longer available to share.\r\n");
     return;
   }
-  if (!quest_join_eligible(ch, rnum, &slot, FALSE))
+  if (!quest_join_eligible(ch, rnum, &slot, TRUE, NULL, false))
     return;
 
   send_to_char(ch, "You accept the shared quest '%s'.\r\n", QST_NAME(rnum));

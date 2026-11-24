@@ -108,6 +108,10 @@ circle_SOURCES = \
 	src/db_startup_init.c \
 	src/db_admin_commands.c \
 	src/deities.c \
+	src/religion.c \
+	src/religion_tasks.c \
+	src/religion_blessing.c \
+	src/restring.c \
 	src/desc_engine.c \
 	src/dg_comm.c \
 	src/discord_bridge.c \
@@ -520,3 +524,23 @@ EXTRA_DIST += src/class_improvements.h tests/run_class_improvements.py \
 	docs/UNDERUTILIZED_CLASS_IMPROVEMENTS.md docs/CLASS_IMPROVEMENTS_IMPLEMENTATION.md \
 	lib/text/help/classfeatures.hlp lib/text/help/rally.hlp lib/text/help/opening.hlp \
 	lib/text/help/intercept.hlp lib/text/help/perform.hlp sql/20261118_class_improvements_help.sql
+
+EXTRA_DIST += sql/20261119_pet_epic_persistence.sql docs/PET_SCHEMA_REPAIR.md
+
+EXTRA_DIST += tests/run_ranged_bonus_display.py
+
+EXTRA_DIST += tests/run_craft_rank_progression.py
+
+EXTRA_DIST += sql/20261119_bulk_ammo_help.sql
+
+EXTRA_DIST += tests/run_movement_visibility.py
+
+EXTRA_DIST += src/religion.h lib/text/help/religion.hlp lib/text/help/religionadmin.hlp \
+	docs/RELIGION_PHASE1.md tests/run_religion.py sql/20261123_religion_help.sql \
+	sql/20261123_temple_chests.sql sql/20261123_religion_hospitality.sql
+
+EXTRA_DIST += sql/20261123_religion_phase2.sql docs/RELIGION_PHASE2.md
+EXTRA_DIST += tests/run_religion_pilot.py docs/RELIGION_BUILDER_SETUP.txt \
+	examples/religion_phase2/README.txt examples/religion_phase2/setup.txt \
+	examples/religion_phase2/699.wld examples/religion_phase2/699.mob \
+	examples/religion_phase2/699.qst examples/religion_phase2/699.zon

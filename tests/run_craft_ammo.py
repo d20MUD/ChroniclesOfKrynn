@@ -7,13 +7,17 @@ s = (root/'src/crafting_new.c').read_text()
 def function(signature):
     start=s.index(signature+'\n{')
     return s[start:s.index('\n}',start)+2]
-headers='\n'.join('#include "'+h+'"' for h in ['conf.h','sysdep.h','structs.h','utils.h','comm.h','db.h','constants.h','crafting_new.h','assign_wpn_armor.h','spells.h','interpreter.h','vnums.h','talents.h','spec_abilities.h'])
+headers='\n'.join('#include "'+h+'"' for h in ['conf.h','sysdep.h','structs.h','utils.h','comm.h','db.h','constants.h','crafting_new.h','assign_wpn_armor.h','spells.h','interpreter.h','vnums.h','talents.h','spec_abilities.h','crafting_recipes.h','epic_feats.h'])
 defines='\n'.join(re.findall(r'^#define CRAFT_MOTES_REQ_.*$',s,re.M))+'\n#define CREATE_BASE_DC 10\n#define CREATE_BASE_EXP 50\n#define CREATE_BASE_TIME 60\n'
 players=(root/'src/players.c').read_text();a=players.index('static void load_ammo_craft_settings(struct char_data *ch, const char *line)\n{');loader=players[a:players.index('\n}',a)+2]
+bulk_writer = next(line.strip() for line in players.splitlines() if 'BUFFER_WRITE("AmJn:' in line)
+bulk_reader = next(line.strip() for line in players.splitlines() if 'if (!strcmp(tag, "AmJn"))' in line)
+bulk_default = next(line.strip() for line in players.splitlines() if 'GET_CRAFT(ch).ammo_job_remaining = 0;' in line)
 code=s[s.index('#define CRAFT_AMMO_BATCH_SIZE'):s.index('static bool obj_has_catalyst_target(',s.index('#define CRAFT_AMMO_BATCH_SIZE'))]
 stubs=r'''
 #include <assert.h>
 struct player_special_data dummy_mob;
+int epic_artisan_roll(struct char_data *ch,int roll,int modifier,int dc,bool criticals) {return roll;}
 bool obj_has_special_ability(struct obj_data *obj,int ability) {return false;}
 void basic_mud_log(const char *f,...) {assert(0);}
 char *CAP(char *s) {if(*s) *s=toupper((unsigned char)*s);return s;}
@@ -63,6 +67,7 @@ void save_char(struct char_data*c,int r) {saves++;}
 void Crash_crashsave(struct char_data*c) {crashes++;}
 void extract_obj(struct obj_data*o) {removed++;free(o->special_abilities);free(o->name);free(o->short_description);free(o->description);free(o);}
 int MAX(int a,int b) {return a>b?a:b;}
+int MIN(int a,int b) {return a<b?a:b;}
 int is_abbrev(const char*a,const char*b) {return *a && !strncasecmp(a,b,strlen(a));}
 int get_level_adjustment_by_apply_and_modifier(int a,int b,int c) {return 0;}
 void free_obj_special_abilities(struct obj_special_ability*p) {free(p);}
@@ -72,6 +77,17 @@ struct obj_data *read_object(obj_vnum n,int t) {
  memset(o->affected,255,sizeof(o->affected));
  memset(&o->weapon_poison,255,sizeof(o->weapon_poison));
  o->special_abilities=calloc(1,sizeof(*o->special_abilities)); if(n==FLETCHING_KIT_VNUM) {memset(&o->obj_flags,0,sizeof(o->obj_flags)); GET_OBJ_TYPE(o)=ITEM_OTHER; o->item_number=n; o->short_description=strdup("a portable fletching kit");} return o;
+}
+'''
+bulk_persistence = r'''
+static void roundtrip_bulk_counter(struct char_data *ch) {
+  char saved[64], tag[5], line[32];
+  int expected = GET_CRAFT(ch).ammo_job_remaining;
+  #define BUFFER_WRITE(...) snprintf(saved, sizeof(saved), __VA_ARGS__)
+''' + bulk_writer + '\n' + bulk_default + r'''
+  assert(sscanf(saved, "%4[^:]: %31s", tag, line) == 2);
+''' + bulk_reader + r'''
+  assert(GET_CRAFT(ch).ammo_job_remaining == expected);
 }
 '''
 checks=r'''
@@ -394,6 +410,73 @@ int main(void) {
    }
  }
  proficient=0;check_skill=100;
+ // Bulk uses saved settings, reserves total costs, and never retries failures.
+ craft_ammunition(&ch,"reset");craft_ammunition(&ch,"enhancement 2");
+ craft_ammunition(&ch,"mote fire");craft_ammunition(&ch,"damage cold 6");
+ assert(saved_ammo_plan(&ch,&p));
+ for(int m=0;m<NUM_CRAFT_MATS;m++)GET_CRAFT_MAT((&ch),m)=100000;
+ for(int m=0;m<NUM_CRAFT_MOTES;m++)GET_CRAFT_MOTES((&ch),m)=100000;
+ const char *invalid_bulk[]={"bulk 0","bulk -1","bulk 11","bulk 999999999999999999999","bulk abc","bulk 2 extra","bulk"};
+ for(unsigned i=0;i<sizeof(invalid_bulk)/sizeof(invalid_bulk[0]);i++) {
+   craft_ammunition(&ch,invalid_bulk[i]);assert(!GET_CRAFT((&ch)).crafting_method);
+ }
+ int required=p.materials[0][1]*10;
+ GET_CRAFT_MAT((&ch),p.materials[0][0])=required-1;
+ int rolls_before=rolls;
+ craft_ammunition(&ch,"bulk 10");assert(!GET_CRAFT((&ch)).crafting_method && rolls==rolls_before);
+ assert(GET_CRAFT_MAT((&ch),p.materials[0][0])==required-1);
+ for(int m=0;m<NUM_CRAFT_MATS;m++)GET_CRAFT_MAT((&ch),m)=100000;
+ int mote=0;for(int m=1;m<NUM_CRAFT_MOTES;m++)if(p.motes[m]){mote=m;break;}
+ assert(mote);GET_CRAFT_MOTES((&ch),mote)=p.motes[mote]*10-1;
+ craft_ammunition(&ch,"bulk 10");assert(!GET_CRAFT((&ch)).crafting_method);
+ for(int m=0;m<NUM_CRAFT_MATS;m++)assert(GET_CRAFT_MAT((&ch),m)==100000);
+ for(int m=0;m<NUM_CRAFT_MOTES;m++)GET_CRAFT_MOTES((&ch),m)=100000;
+ craft_ammunition(&ch,"bulk 10");
+ assert(GET_CRAFT((&ch)).ammo_job_remaining==10 && rolls==rolls_before);
+ for(int i=0;i<3;i++)if(p.materials[i][1])
+   assert(GET_CRAFT_MAT((&ch),p.materials[i][0])==100000-p.materials[i][1]*10);
+ for(int m=1;m<NUM_CRAFT_MOTES;m++)assert(GET_CRAFT_MOTES((&ch),m)==100000-p.motes[m]*10);
+ // Changes to menu settings cannot alter later attempts in the active queue.
+ craft_ammunition(&ch,"reset");
+ int successes=0;
+ for(int i=0;i<10;i++) {
+   bool failure=i==1||i==4||i==7;
+   natural_roll=i==1?1:failure?2:10;check_skill=failure?p.dc-3:100;
+   assert(GET_CRAFT((&ch)).ammo_job_remaining==10-i);
+   roundtrip_bulk_counter(&ch);
+   GET_CRAFT((&ch)).craft_duration=0;
+   craft_ammunition_complete(&ch);
+   if(delivered) {
+     successes++;assert(GET_OBJ_VAL(delivered,4)==p.enhancement);
+     assert(GET_OBJ_VAL(delivered,AMMO_VAL_DAMAGE_DIE)==p.damage_die);
+     extract_obj(delivered);delivered=NULL;
+   }
+   if(i<9) assert(GET_CRAFT((&ch)).crafting_method==SCMD_NEWCRAFT_AMMO && GET_CRAFT((&ch)).craft_duration==30);
+ }
+ assert(successes==7 && rolls==rolls_before+10);
+ assert(!GET_CRAFT((&ch)).crafting_method && !GET_CRAFT((&ch)).ammo_job_remaining);
+ // Seven successes plus one critical failure consume eight attempts' costs.
+ for(int i=0;i<3;i++)if(p.materials[i][1])
+   assert(GET_CRAFT_MAT((&ch),p.materials[i][0])==100000-p.materials[i][1]*8);
+ for(int m=1;m<NUM_CRAFT_MOTES;m++)assert(GET_CRAFT_MOTES((&ch),m)==100000-p.motes[m]*8);
+ // Cancel after one completion: refund all five outstanding reservations once.
+ craft_ammunition(&ch,"reset");assert(saved_ammo_plan(&ch,&p));
+ for(int m=0;m<NUM_CRAFT_MATS;m++)GET_CRAFT_MAT((&ch),m)=100000;
+ check_skill=100;natural_roll=10;craft_ammunition(&ch,"bulk 6");
+ GET_CRAFT((&ch)).craft_duration=0;craft_ammunition_complete(&ch);
+ assert(delivered && GET_CRAFT((&ch)).ammo_job_remaining==5);extract_obj(delivered);delivered=NULL;
+ craft_ammunition(&ch,"cancel");craft_ammunition(&ch,"cancel");
+ assert(!GET_CRAFT((&ch)).ammo_job_remaining && !GET_CRAFT((&ch)).crafting_method);
+ for(int i=0;i<3;i++)if(p.materials[i][1])
+   assert(GET_CRAFT_MAT((&ch),p.materials[i][0])==100000-p.materials[i][1]);
+ rolls_before=rolls;craft_ammunition_complete(&ch);assert(rolls==rolls_before);
+ // Losing the workplace stops the rest and refunds unattempted work.
+ craft_ammunition(&ch,"bulk 3");station=false;
+ GET_CRAFT((&ch)).craft_duration=0;craft_ammunition_complete(&ch);station=true;
+ assert(delivered);extract_obj(delivered);delivered=NULL;
+ assert(!GET_CRAFT((&ch)).crafting_method && !GET_CRAFT((&ch)).ammo_job_remaining);
+ for(int i=0;i<3;i++)if(p.materials[i][1])
+   assert(GET_CRAFT_MAT((&ch),p.materials[i][0])==100000-p.materials[i][1]*2);
  return 0;
 }
 '''
@@ -407,7 +490,7 @@ with tempfile.TemporaryDirectory(prefix='craft-ammo-') as tmp:
     throwing=(root/'src/assign_wpn_armor.c').read_text(); thrown_functions=''
     for sig in ['int thrown_weapon_type(struct obj_data *obj)', 'struct obj_data *make_thrown_weapon_profile(struct obj_data *source, struct obj_data *profile)']:
         a=throwing.index(sig+'\n{');thrown_functions+=throwing[a:throwing.index('\n}',a)+2]+'\n'
-    p.write_text(headers+'\n'+defines+stubs+names+chop+native+thrown_functions+function('int get_level_adjustment_by_enhancement_bonus(int bonus_amt)')+function('int craft_motes_required(int location, int modifier, int bonus_type, int enhancement)')+'\n'+function('static bool create_craft_skill_check_with_roll(struct char_data *ch, struct obj_data *obj, int skill, char *method,\n                              int exp, int dc, int *natural_roll)')+'\n'+code+loader+checks)
+    p.write_text(headers+'\n'+defines+stubs+names+chop+native+thrown_functions+function('int get_level_adjustment_by_enhancement_bonus(int bonus_amt)')+function('int craft_motes_required(int location, int modifier, int bonus_type, int enhancement)')+'\n'+function('static bool create_craft_skill_check_with_roll(struct char_data *ch, struct obj_data *obj, int skill, char *method,\n                              int exp, int dc, int *natural_roll)')+'\n'+code+loader+bulk_persistence+checks)
     subprocess.run([os.environ.get('CC','cc'),'-fsanitize=address','-g','-std=gnu99','-I'+str(root/'src'),str(p),'-o',str(binary)],check=True)
     subprocess.run([str(binary)],check=True)
 print('Ammo crafting: recipes, bounds, elemental costs, enhancement, and material quality and finite template sanitization, guards, and success/failure resource consumption passed.')

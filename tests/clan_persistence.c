@@ -58,6 +58,7 @@ int main(int argc,char **argv)
 {
  struct json_object *root=NULL;struct char_data player={0};struct player_special_data saved={0};FILE *f;char before[20000],after[20000];size_t n;int i,j;
  assert(argc==2);clan_list=calloc(2,sizeof(*clan_list));pool.conn=mysql_init(NULL);assert(mysql_real_connect(pool.conn,NULL,"root","","clan_test",0,argv[1],0));assert(!mysql_query(pool.conn,"SET SESSION sql_mode='STRICT_ALL_TABLES,NO_ENGINE_SUBSTITUTION'"));
+ index_rows[0].id=5000000007;index_rows[0].name="first";index_rows[1].id=5000000009;index_rows[1].name="second";
  assert(clan_repository_snapshot_read(pool.conn,&root)==CLAN_REPO_OK);hydrate_fixture(root);json_object_put(root);
  assert(clan_persistence_ready()&&!clan_persistence_sql_authority());assert(save_clans()&&save_claims());
  f=fopen(CLAN_FILE,"r");assert(f);n=fread(before,1,sizeof(before),f);fclose(f);
@@ -123,8 +124,8 @@ int main(int argc,char **argv)
   assert(num_of_clans==1&&clan_list[0].vnum==9);
   assert(!clan_list[0].allies[0]&&!clan_list[0].at_war[0]);
   assert(claim.clan==NO_CLAN&&claim.claimant==0&&claim.popularity[0]==82.75f);
-  assert(GET_CLAN(&member)==NO_CLAN&&GET_CLANRANK(&member)==0&&GET_CLANPOINTS(&member)==123);
-  assert(index_rows[0].clan==NO_CLAN);
+  assert(GET_CLAN(&member)==0&&GET_CLANRANK(&member)==0&&GET_CLANPOINTS(&member)==123);
+  assert(index_rows[0].clan==0);
   assert(!clan_persistence_progression_access(&member,"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"));
   assert(clan_repository_snapshot_read(pool.conn,&root)==CLAN_REPO_OK);
   assert(json_object_array_length(get(root,"clans"))==1);json_object_put(root);
@@ -159,7 +160,7 @@ int main(int argc,char **argv)
   character_list=member.next;
  }
  mysql_available=false;clan_list[0].modified=true;assert(!save_single_clan(0));assert(clan_list[0].modified&&!clan_persistence_ready());assert(!clan_persistence_configure(CLAN_STORE_LEGACY));
- GET_CLANRANK(&player)=2;assert(!clan_persistence_before_player_save(&player));assert(GET_CLAN(&player)==NO_CLAN&&GET_CLANRANK(&player)==0);assert(clan_persistence_before_player_save(&player));
+ GET_CLANRANK(&player)=2;assert(!clan_persistence_before_player_save(&player));assert(GET_CLAN(&player)==0&&GET_CLANRANK(&player)==0);assert(clan_persistence_before_player_save(&player));
  f=fopen(CLAN_FILE,"r");assert(f);assert(fread(after,1,sizeof(after),f)==n&&!memcmp(before,after,n));fclose(f);
  /* Progression refresh cannot silently merge an unrelated remote clan edit. */
  mysql_available=true;

@@ -14,6 +14,7 @@ CRAFT AMMO
   craft ammo show
   craft ammo cost
   craft ammo begin
+  craft ammo bulk <1-10>
   craft ammo reset
   craft ammo cancel
   craft ammo kit
@@ -31,6 +32,22 @@ active recipe and remaining time are saved between logins.
 Use craft ammo cancel (or craft throwing cancel) to stop the job and return
 all reserved materials and motes. Fletching-kit cancellation also refunds
 its reserved materials.
+
+BULK AMMO CRAFTING
+Use craft ammo bulk <1-10> to attempt that many batches using your current
+ammo settings. Materials and motes for ALL attempts must be available and
+are reserved upfront. You also need room to carry the resulting stacks.
+Each attempt runs its normal timer, then the next starts automatically.
+A failed attempt counts and is never retried: ten attempts with three
+failures produce seven stacks. Normal success, failure, critical and talent
+rules still apply separately to every attempt.
+Use craft ammo cancel at any time to stop the entire queue. The active
+unfinished attempt and all unattempted reservations are refunded; finished
+attempts keep their normal costs. Changing ammo settings during a queue
+does not change its recipe. The remaining queue is saved between logins.
+Bulk crafting applies to ammunition and throwing bundles, not fletching kits.
+If your workplace becomes unavailable or you cannot carry the next stack,
+the queue stops and unattempted reservations are returned.
 
 A bare craft ammo <type> (arrows, bolts, bullets or a throwing type) starts crafting
 with your saved material, enhancement and damage settings. The ammo type

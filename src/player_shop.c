@@ -6,6 +6,7 @@
 #include "structs.h"
 #include "clan_access.h"
 #include "utils.h"
+#include "religion.h"
 #include "comm.h"
 #include "db.h"
 #include "estate.h"
@@ -527,6 +528,7 @@ static void listing_action(struct char_data *ch, const char *verb, long id, cons
     return;
   }
   if (buying && !clan_access_check(ch, &obj->clan_requirement, true)) goto fail;
+  if (buying && !religion_object_purchase_allows(ch, obj, true)) goto fail;
   if (!CAN_CARRY_OBJ(ch, obj))
   {
     send_to_char(ch, "You cannot carry that item.\r\n");

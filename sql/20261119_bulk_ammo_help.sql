@@ -1,0 +1,251 @@
+-- Bulk ammo crafting help; safe to reapply.
+START TRANSACTION;
+INSERT INTO help_entries(tag,category,entry,min_level,max_level,auto_generated)
+VALUES ('CRAFTAMMO','general',REPLACE('CRAFT AMMO
+
+  craft ammo type <type>
+  Types: arrows, bolts, bullets, knives, axes, hammers, javelins, darts,
+         shuriken.
+  craft ammo material 1 <material name>
+  craft ammo material 2 <material name>
+  craft ammo material 3 <material name>
+  craft ammo enhancement <0-8>
+  craft ammo mote <air|dark|earth|fire|ice|light|lightning|water>
+  craft ammo damage <none|fire|cold|acid|electricity|sonic> [die]
+  craft ammo show
+  craft ammo cost
+  craft ammo begin
+  craft ammo bulk <1-10>
+  craft ammo reset
+  craft ammo cancel
+  craft ammo kit
+
+Configure your recipe, review it with show or cost, then begin crafting.
+Selections are saved between logins. Selecting a type restores its default
+materials but keeps your enhancement and damage selections. Reset restores
+ordinary arrows and all default settings. Configuration and previews cost
+nothing; begin starts a timed job using your saved recipe.
+
+Ammo, throwing bundles and fletching kits take 30 seconds to craft before
+rapid-crafting talent reductions. Progress messages show time remaining.
+The skill roll and finished item arrive only when the timer ends. Your
+active recipe and remaining time are saved between logins.
+Use craft ammo cancel (or craft throwing cancel) to stop the job and return
+all reserved materials and motes. Fletching-kit cancellation also refunds
+its reserved materials.
+
+BULK AMMO CRAFTING
+Use craft ammo bulk <1-10> to attempt that many batches using your current
+ammo settings. Materials and motes for ALL attempts must be available and
+are reserved upfront. You also need room to carry the resulting stacks.
+Each attempt runs its normal timer, then the next starts automatically.
+A failed attempt counts and is never retried: ten attempts with three
+failures produce seven stacks. Normal success, failure, critical and talent
+rules still apply separately to every attempt.
+Use craft ammo cancel at any time to stop the entire queue. The active
+unfinished attempt and all unattempted reservations are refunded; finished
+attempts keep their normal costs. Changing ammo settings during a queue
+does not change its recipe. The remaining queue is saved between logins.
+Bulk crafting applies to ammunition and throwing bundles, not fletching kits.
+If your workplace becomes unavailable or you cannot carry the next stack,
+the queue stops and unattempted reservations are returned.
+
+A bare craft ammo <type> (arrows, bolts, bullets or a throwing type) starts crafting
+with your saved material, enhancement and damage settings. The ammo type
+is a one-time override; your saved recipe is unchanged. If switching between
+wooden shafts, bullet bodies or shuriken blanks, an incompatible material
+uses the new type default instead. Use craft ammo cost <type> to preview
+any type with your saved settings, without spending materials.
+Choose any graded wood for shafts, any graded hard metal for heads, and any
+graded cloth for binding. Explicit choices require that exact material; the
+command never silently spends a different grade when your choice runs out.
+
+A normal success produces ONE ammunition item with 50 uses, whether
+arrows, bolts, bullets or throwing weapons. Unlimited and returning ammo
+cannot be crafted. Throwing bundles fit an ammo pouch and work with throw.
+
+AMMO CRAFTING ROLLS
+  Normal success: 50 uses, full material and mote costs.
+  Ordinary failure: no ammo; all reserved materials and motes are returned.
+  Natural 1: critical failure; materials and motes are lost.
+  Natural 20: critical success; 75 uses, half material and mote costs.
+Half costs round UP to whole units, after combining slots using the same
+material. For example, a cost of 3 becomes 2; a cost of 1 remains 1.
+These rules include throwing bundles; fletching kits keep their normal rolls.
+
+CRAFTING TALENTS
+Ammo uses its recipe''s skill: woodworking for arrows, bolts, javelins, darts
+and fletching kits; weaponsmithing for bullets and other throwing bundles.
+The matching skill talents apply:
+  Proficient: adds its skill-check bonus.
+  Rapid: reduces the crafting timer (minimum one second).
+  Insightful: increases crafting experience through the normal XP rules.
+  Expertise: each rank gives a 1% chance to upgrade a successful craft to
+             a critical success. Natural 1 failures cannot be upgraded.
+  Efficient: each rank gives a 3% chance per material type to save half
+             its cost on success, rounded down. Motes are not discounted.
+
+Expertise critical ammo has 75 uses and half material/mote costs, just like
+a natural 20. Efficient savings apply to materials still paid AFTER that
+critical discount, so the same units cannot be refunded twice. At least
+one unit of each required material remains consumed. Cancellation and
+ordinary ammo failures return the original reservation without extra savings.
+Kits receive skill/time/XP and Efficient benefits; Expertise can make them
+masterwork but does not change their quantity or give the ammo critical discount.
+
+THREE MATERIAL SLOTS
+  Slot 1: shafts/handles (wood), bullet bodies (stone/metal),
+          or shuriken blanks (hard metal).
+  Slot 2: heads or cores (metal; throwing weapons require hard metal).
+  Slot 3: binding (cloth).
+
+Use crafting material names, including multiword names such as maple wood
+and cold iron. Only materials with a crafting grade are accepted.
+Default amounts, with your selected material substituted for each slot:
+  Arrows:  2 ash wood, 1 iron, 1 hemp.
+  Bolts:   1 ash wood, 2 iron, 1 hemp.
+  Bullets: 3 stone, 1 iron, 1 hemp.
+If two slots use the same material, their quantities are added together.
+For example, iron bullet bodies and iron cores require four iron in total.
+
+THROWING WEAPONS
+Use craft ammo or its craft throwing alias with these types:
+  knives, axes, hammers, javelins, darts, shuriken
+Both command prefixes share the same saved recipe and material/magic settings.
+For example:
+  craft throwing type knives
+  craft throwing material 1 maple wood
+  craft throwing material 2 steel
+  craft throwing material 3 wool
+  craft throwing show
+  craft throwing begin
+Or craft throwing knives starts a timed knife batch with your saved settings.
+
+Default costs per bundle of 50 uses:
+  Knives:   1 ash wood, 3 iron, 1 hemp.
+  Axes:     2 ash wood, 4 iron, 1 hemp.
+  Hammers:  2 ash wood, 4 iron, 1 hemp.
+  Javelins: 4 ash wood, 2 iron, 1 hemp.
+  Darts:    1 ash wood, 1 iron, 1 hemp.
+  Shuriken: 2 iron blanks, 2 iron edges, 1 hemp (4 iron total).
+Substitute your selected materials in each slot. Javelins and darts use
+woodworking; knives, axes, hammers and shuriken use weaponsmithing. Carrying
+the portable kit permits these recipes away from the matching workshop.
+The usual skill checks, material/mote costs, enhancement and elemental damage
+rules apply. Throwing bundles use native weapon damage/proficiency rules,
+consume finite uses and do not receive unlimited or returning properties.
+
+MATERIAL QUALITY AND DIFFICULTY
+Each material contributes its grade, regardless of the quantity consumed.
+The material enhancement bonus is the average of the three grades, rounded
+down, minus one. The final enhancement is the greater of that bonus and
+your requested enhancement; the two bonuses do not stack.
+
+Each grade above 1 in each slot reduces the base crafting DC by 1. The base
+DC starts at 11 and cannot drop below 5. Magical upgrades are added AFTER
+this floor: enhancement above the material bonus adds its normal crafting
+level adjustment (3.75 per point, rounded down); bonus damage adds its die
+size. Better materials lower DC; magical upgrades make the batch harder.
+
+Examples of grades:
+  Wood: ash 1, maple 2, mahogany 3, valenwood 4, ironwood 5.
+  Metal: tin/copper 1, bronze 2, iron 3, steel 4, mithril 5,
+         adamantine 5, dragonmetal 6.
+  Binding: hemp 1, linen/flax 2, wool 3, silk 4, satin 5.
+
+ENHANCEMENT AND BONUS DAMAGE
+Enhancement above material quality costs your selected mote type, discounted by the
+material''s enhancement tier, with at least one mote for an upgrade.
+Bonus damage adds +1d4, +1d6, +1d8, +1d10, or +1d12. Omitting the die uses
+6. Choose none to remove bonus damage. Damage consumes matching motes:
+fire, ice for cold, water for acid, lightning for electricity, air for sonic.
+Use craft ammo mote <type> to choose the enhancement currency independently
+of bonus damage. The default is fire. This selection is saved between logins
+and applies to one-line recipes and throwing bundles too. Changing damage
+type never changes your enhancement mote selection. Extra damage always
+requires its matching mote type; you cannot substitute another type for it.
+If both upgrades use the same mote type, their costs are added together.
+Show and cost list the selected enhancement mote and total costs per type.
+Timed jobs keep the mote selection they started with, including refunds.
+
+The item level is the normal enhancement level adjustment plus the damage
+die size, with a minimum of 1 and maximum of 30. Show displays the resulting
+bonus, damage, DC, material quantities, and mote costs before you spend.
+
+PORTABLE FLETCHING KIT
+Use craft ammo kit to make a reusable portable fletching kit. This requires
+2 ash wood, 2 bronze, and 2 hemp; DC 15 woodworking; an equipped woodworking
+tool and a carpentry table. Materials are consumed even if the roll fails.
+
+Carry the finished kit directly in your inventory (take it out of any bag),
+or equip it. It replaces both the tool and station requirements for all
+ammo and throwing recipes listed here, so you can craft while travelling.
+It does not replace the workshop needed to make another kit, nor grant
+portable crafting for other items. The kit is reusable; materials and motes
+follow the ammo roll rules above. Without a kit, equip the correct tool
+and use a matching station:
+  Woodworking: arrows, bolts, javelins and darts.
+  Weaponsmithing: bullets, knives, axes, hammers and shuriken.
+
+EXAMPLE
+  craft ammo type arrows
+  craft ammo material 1 maple wood
+  craft ammo material 2 steel
+  craft ammo material 3 wool
+  craft ammo enhancement 3
+  craft ammo mote earth
+  craft ammo damage fire 6
+  craft ammo show
+  craft ammo begin
+
+This recipe has material bonus +2 and crafts +3 arrows with +1d6 fire
+damage, at DC 14 and item level 17. Show lists the exact material and mote
+costs before you attempt it.
+
+The earlier one-line syntax still works and starts a timed job:
+  craft ammo arrows 2 fire 6
+  craft ammo cost arrows 2 fire 6
+  craft ammo arrows material ironwood
+These one-line recipes use their own defaults; they do not alter your saved
+settings. Use numbered material commands to customize all three slots.
+
+RESTRICTIONS
+Finish current crafting projects, supply orders, trades, and combat first.
+You need enough skill to possibly succeed and space to carry the result.
+Missing resources or equipment prevent an attempt without spending. Costs
+are reserved when work starts; ordinary ammo failures return the reservation.
+Every attempt requires the crafting timer to finish. Success awards crafting
+experience. Cancelling returns all reserved materials and motes.
+
+AMMO POUCHES AND USE
+Put finished ammunition into your equipped ammo pouch/quiver before firing
+or throwing.
+Pouch capacity counts STACK OBJECTS, not weight or remaining shots. A full
+50-use bundle occupies one slot; a partially used bundle still occupies one
+slot. Removing a bundle frees its slot. Only ammunition can be put inside.
+Actual carried weight still counts toward your character''s encumbrance.
+Use ammopref to select preferred ammunition from your equipped pouch.
+
+RANDOM AMMO DROPS
+Random treasure also awards one finite 50-use stack. Its enhancement follows
+the treasure source level, rather than your character''s level:
+  Level  1-5:  +1 enhancement; elemental bonus, if rolled, +1d4.
+  Level  6-10: +2 enhancement; elemental bonus, if rolled, +1d6.
+  Level 11-15: +3 enhancement; elemental bonus, if rolled, +1d8.
+  Level 16-20: +4 enhancement; elemental bonus, if rolled, +1d10.
+  Level 21-25: +5 enhancement; elemental bonus, if rolled, +1d12.
+  Level 26+:   +6 enhancement; elemental bonus, if rolled, +1d12.
+
+Common drops have enhancement only. Rare, Legendary, and Mythical drops
+have a 50%, 75%, and 100% chance of bonus damage, respectively. The damage
+type is randomly fire, cold, acid, electricity, or sonic. Drop descriptions
+show the enhancement and any elemental bonus. When no source level is
+provided, the treasure grade determines its level tier instead.
+
+These random-drop rules do not change crafting costs, DCs, or recipes.
+Crafted ammo uses your chosen materials, enhancement, damage type and die.
+
+See also: CRAFTING, RANGED, AMMUNITION, AMMOPREF
+#0',CHAR(10),CONCAT(CHAR(13),CHAR(10))),0,1000,FALSE)
+ON DUPLICATE KEY UPDATE category=VALUES(category),entry=VALUES(entry),min_level=VALUES(min_level),max_level=VALUES(max_level),auto_generated=FALSE;
+COMMIT;

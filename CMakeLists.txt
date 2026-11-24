@@ -546,6 +546,10 @@ set(SRC_C_FILES
     src/db_startup_init.c
     src/db_admin_commands.c
     src/deities.c
+    src/religion.c
+    src/religion_tasks.c
+    src/religion_blessing.c
+    src/restring.c
     src/desc_engine.c
     src/dg_comm.c
     src/discord_bridge.c

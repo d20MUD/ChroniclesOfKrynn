@@ -6,6 +6,7 @@
 #include "structs.h"
 #include "clan_access.h"
 #include "utils.h"
+#include "religion.h"
 #include "auction_house.h"
 #include "comm.h"
 #include "constants.h"
@@ -383,6 +384,7 @@ void auction_house_command(struct char_data *ch, const char *argument)
       goto fail;
     }
     if (buying && !clan_access_check(ch, &obj->clan_requirement, true)) { extract_obj(obj); goto fail; }
+    if (buying && !religion_object_purchase_allows(ch, obj, true)) { extract_obj(obj); goto fail; }
     if (!CAN_CARRY_OBJ(ch, obj))
     {
       extract_obj(obj);

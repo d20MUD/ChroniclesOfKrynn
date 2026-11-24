@@ -25,6 +25,7 @@
 #include "improved-edit.h"
 #include "roleplay.h"
 #include "deities.h"
+#include "religion.h"
 #include "char_descs.h"
 #include "modify.h"
 
@@ -1314,19 +1315,22 @@ void display_deity_info(struct descriptor_data *d)
 {
   struct char_data *ch = d->character;
   char dname[50];
+  int deity;
 
   if (!ch)
     return;
 
-  snprintf(dname, sizeof(dname), "%s", deity_list[GET_DEITY(ch)].name);
+  deity = ch->player_specials->religion_pending_deity;
+  if (!religion_deity_valid(deity)) return;
+  snprintf(dname, sizeof(dname), "%s", deity_list[deity].name);
   send_to_char(ch, "\tA%s\r\n\tn", CAP(dname));
   send_to_char(ch, "\r\n");
-  send_to_char(ch, "\tAPantheon:\tn %s\r\n", pantheons[deity_list[GET_DEITY(ch)].pantheon]);
+  send_to_char(ch, "\tAPantheon:\tn %s\r\n", pantheons[deity_list[deity].pantheon]);
   send_to_char(
       ch, "\tAAlignment:\tn %s\r\n",
-      GET_ALIGN_STRING(deity_list[GET_DEITY(ch)].ethos, deity_list[GET_DEITY(ch)].alignment));
-  send_to_char(ch, "\tAPortfolio:\tn %s\r\n", deity_list[GET_DEITY(ch)].portfolio);
-  send_to_char(ch, "\tADescription:\tn\r\n%s\r\n", deity_list[GET_DEITY(ch)].description);
+      GET_ALIGN_STRING(deity_list[deity].ethos, deity_list[deity].alignment));
+  send_to_char(ch, "\tAPortfolio:\tn %s\r\n", deity_list[deity].portfolio);
+  send_to_char(ch, "\tADescription:\tn\r\n%s\r\n", deity_list[deity].description);
 
   send_to_char(ch, "\r\n");
   send_to_char(ch, "Do you wish to select this deity? (Y|N) ");
@@ -1336,12 +1340,22 @@ void HandleStateCharacterDeityParseMenuChoice(struct descriptor_data *d, char *a
 {
   int changeStateTo = STATE(d);
   struct char_data *ch = d->character;
-  int deity = atoi(arg);
+  char *end;
+  long selected = strtol(arg, &end, 10);
+  int deity = selected >= 0 && selected < NUM_DEITIES && end != arg && !*end ? (int)selected : -1;
 
+
+  if (GET_LEVEL(ch) > 0 || ch->player_specials->saved.religion_devote_after > 0 || GET_DEITY(ch))
+  {
+    send_to_char(ch, "Use religion devote in-game to change your faith.\r\n");
+    STATE(d) = CON_CHAR_RP_MENU;
+    show_character_rp_menu(d);
+    return;
+  }
 
   if (deity >= 0 && deity < NUM_DEITIES && deity_list[deity].pantheon != DEITY_PANTHEON_NONE)
   {
-    GET_DEITY(ch) = deity;
+    ch->player_specials->religion_pending_deity = deity;
     display_deity_info(d);
     changeStateTo = CON_CHARACTER_DEITY_CONFIRM;
   }
@@ -1357,10 +1371,22 @@ void HandleStateCharacterDeityConfirmParseMenuChoice(struct descriptor_data *d, 
   int changeStateTo = STATE(d);
   struct char_data *ch = d->character;
 
+  if (GET_LEVEL(ch) > 0 || GET_DEITY(ch) != 0 ||
+      ch->player_specials->saved.religion_devote_after > 0 ||
+      !religion_deity_valid(ch->player_specials->religion_pending_deity))
+  {
+    send_to_char(ch, "Preview your deity selection again, or use religion devote in-game.\r\n");
+    STATE(d) = CON_CHAR_RP_MENU;
+    show_character_rp_menu(d);
+    return;
+  }
+
   switch (*arg)
   {
   case 'Y':
   case 'y':
+    GET_DEITY(ch) = ch->player_specials->religion_pending_deity;
+    religion_clear_confirmation(ch);
     send_to_char(ch, "You've decided your character's deity will be: %s.\r\n",
                  deity_list[GET_DEITY(ch)].name);
     changeStateTo = CON_CHAR_RP_MENU;
@@ -1368,7 +1394,7 @@ void HandleStateCharacterDeityConfirmParseMenuChoice(struct descriptor_data *d, 
     break;
   case 'N':
   case 'n':
-    GET_DEITY(ch) = 0;
+    ch->player_specials->religion_pending_deity = 0;
     display_deity_menu(d);
     changeStateTo = CON_CHARACTER_DEITY_SELECT;
     break;

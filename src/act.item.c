@@ -14,6 +14,7 @@
 #include "legendary_transaction.h"
 #include "structs.h"
 #include "clan_access.h"
+#include "religion.h"
 #include "clan_enchant.h"
 #include "housing.h"
 #include "utils.h"
@@ -5708,7 +5709,8 @@ void perform_wear(struct char_data *ch, struct obj_data *obj, int where)
       "You already have something equipped on your back.\r\n"};
 
   /* we are looking for some quick exits */
-  if (!clan_access_check(ch, &obj->clan_requirement, true)) return;
+  if (!clan_access_check(ch, &obj->clan_requirement, true) ||
+      !religion_object_wear_allows(ch, obj, true)) return;
 
   if (IS_ANIMAL(ch))
   {

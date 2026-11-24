@@ -490,6 +490,9 @@ typedef enum
   eMSDP_ATTACK_BONUS,       /**< Attack bonus modifier */
   eMSDP_DAMAGE_BONUS,       /**< Damage bonus modifier */
   eMSDP_AC,                 /**< Armor class */
+  eMSDP_FORTITUDE,          /**< Fortitude saving throw */
+  eMSDP_REFLEX,             /**< Reflex saving throw */
+  eMSDP_WILLPOWER,          /**< Will saving throw */
   eMSDP_STR,                /**< Current strength score */
   eMSDP_INT,                /**< Current intelligence score */
   eMSDP_WIS,                /**< Current wisdom score */
@@ -705,6 +708,8 @@ typedef struct
   bool_t bMSDP;    /**< MSDP protocol support */
   bool_t bMSSP;    /**< MSSP protocol support */
   bool_t bGMCP;    /**< GMCP protocol support */
+  bool_t mudlet_offer_shown; /**< Offer handled on this connection */
+  bool_t mudlet_stop_asking; /**< Choice awaiting account authentication */
   bool_t bMSP;     /**< Sound protocol support */
   bool_t bMXP;     /**< Markup protocol support */
   bool_t bMCCP;    /**< Compression protocol support */
@@ -787,6 +792,9 @@ typedef struct
  * @see ProtocolDestroy(), ProtocolNegotiate()
  */
 protocol_t *ProtocolCreate(void);
+bool_t MudletPackageOffer(descriptor_t *d);
+void MudletPackageInstall(descriptor_t *d);
+void MudletPackageRemember(descriptor_t *d);
 
 /**
  * Clean up and free a protocol structure

@@ -1268,6 +1268,8 @@ ACMD_DECL(do_gloryscall);
 
 // deities.c
 ACMD_DECL(do_devote);
+ACMD_DECL(do_religion);
+ACMD_DECL(do_religionadmin);
 
 ACMD_DECL(do_temote);
 
