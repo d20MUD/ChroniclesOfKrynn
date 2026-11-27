@@ -554,11 +554,8 @@ ACMD(do_reboot)
       send_to_char(ch, "Cannot read handbook\r\n");
     if (file_to_string_alloc(BACKGROUND_FILE, &background) < 0)
       send_to_char(ch, "Cannot read background\r\n");
-    if (help_table)
-    {
-      free_help_table();
-      index_boot(DB_BOOT_HLP);
-    }
+    free_help_table();
+    index_boot(DB_BOOT_HLP);
   }
   else if (!str_cmp(arg, "wizlist"))
   {
@@ -629,11 +626,8 @@ ACMD(do_reboot)
   }
   else if (!str_cmp(arg, "xhelp"))
   {
-    if (help_table)
-    {
-      free_help_table();
-      index_boot(DB_BOOT_HLP);
-    }
+    free_help_table();
+    index_boot(DB_BOOT_HLP);
   }
   else if (!str_cmp(arg, "regions"))
   {
@@ -1766,6 +1760,7 @@ void index_boot(int mode)
       {
         log("No help.hlp file found - using database-only help system.");
       }
+      fclose(db_index);
       return;
     }
     log("SYSERR: boot error - 0 records counted in %s/%s.", prefix, index_filename);
@@ -1828,6 +1823,13 @@ void index_boot(int mode)
     snprintf(buf2, sizeof(buf2), "%s%s", prefix, buf1);
     if (!(db_file = fopen(buf2, "r")))
     {
+      if (mode == DB_BOOT_HLP)
+      {
+        log("Help file '%s' not found - skipping", buf2);
+        if (fscanf(db_index, "%s\n", buf1) != 1)
+          break;
+        continue;
+      }
       log("SYSERR: %s: %s", buf2, strerror(errno));
       exit(1);
     }
@@ -4585,14 +4587,20 @@ static void get_one_line(FILE *fl, char *buf)
   buf[strlen(buf) - 1] = '\0'; /* take off the trailing \n */
 }
 
-/* Legacy file-based help system removed - all help is now managed via MySQL database.
- * The help_entries and help_keywords tables provide all help functionality.
- * Help entries are managed through the hedit OLC command.
- * This change improves security, performance, and maintainability. */
-
 void free_help_table(void)
 {
-  /* Legacy function retained for compatibility - no longer needed as help is database-driven */
+  int i;
+
+  for (i = 0; i < top_of_helpt; i++)
+  {
+    free(help_table[i].keywords);
+    /* Aliases share the same entry; only the first owns it. */
+    if (!help_table[i].duplicate)
+      free(help_table[i].entry);
+  }
+  free(help_table);
+  help_table = NULL;
+  top_of_helpt = 0;
 }
 
 void load_help(FILE *fl, char *name)

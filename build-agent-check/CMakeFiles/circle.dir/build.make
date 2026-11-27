@@ -492,10 +492,472 @@ CMakeFiles/circle.dir/src/clan_economy.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/clan_economy.c.s"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/clan_economy.c -o CMakeFiles/circle.dir/src/clan_economy.c.s
 
+CMakeFiles/circle.dir/src/clan_buff_queries.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/clan_buff_queries.c.o: /home/krynn/code/src/clan_buff_queries.c
+CMakeFiles/circle.dir/src/clan_buff_queries.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_31) "Building C object CMakeFiles/circle.dir/src/clan_buff_queries.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/clan_buff_queries.c.o -MF CMakeFiles/circle.dir/src/clan_buff_queries.c.o.d -o CMakeFiles/circle.dir/src/clan_buff_queries.c.o -c /home/krynn/code/src/clan_buff_queries.c
+
+CMakeFiles/circle.dir/src/clan_buff_queries.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/clan_buff_queries.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/clan_buff_queries.c > CMakeFiles/circle.dir/src/clan_buff_queries.c.i
+
+CMakeFiles/circle.dir/src/clan_buff_queries.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/clan_buff_queries.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/clan_buff_queries.c -o CMakeFiles/circle.dir/src/clan_buff_queries.c.s
+
+CMakeFiles/circle.dir/src/clan_buff_activation.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/clan_buff_activation.c.o: /home/krynn/code/src/clan_buff_activation.c
+CMakeFiles/circle.dir/src/clan_buff_activation.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_32) "Building C object CMakeFiles/circle.dir/src/clan_buff_activation.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/clan_buff_activation.c.o -MF CMakeFiles/circle.dir/src/clan_buff_activation.c.o.d -o CMakeFiles/circle.dir/src/clan_buff_activation.c.o -c /home/krynn/code/src/clan_buff_activation.c
+
+CMakeFiles/circle.dir/src/clan_buff_activation.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/clan_buff_activation.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/clan_buff_activation.c > CMakeFiles/circle.dir/src/clan_buff_activation.c.i
+
+CMakeFiles/circle.dir/src/clan_buff_activation.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/clan_buff_activation.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/clan_buff_activation.c -o CMakeFiles/circle.dir/src/clan_buff_activation.c.s
+
+CMakeFiles/circle.dir/src/clan_buff_commit.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/clan_buff_commit.c.o: /home/krynn/code/src/clan_buff_commit.c
+CMakeFiles/circle.dir/src/clan_buff_commit.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_33) "Building C object CMakeFiles/circle.dir/src/clan_buff_commit.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/clan_buff_commit.c.o -MF CMakeFiles/circle.dir/src/clan_buff_commit.c.o.d -o CMakeFiles/circle.dir/src/clan_buff_commit.c.o -c /home/krynn/code/src/clan_buff_commit.c
+
+CMakeFiles/circle.dir/src/clan_buff_commit.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/clan_buff_commit.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/clan_buff_commit.c > CMakeFiles/circle.dir/src/clan_buff_commit.c.i
+
+CMakeFiles/circle.dir/src/clan_buff_commit.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/clan_buff_commit.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/clan_buff_commit.c -o CMakeFiles/circle.dir/src/clan_buff_commit.c.s
+
+CMakeFiles/circle.dir/src/clan_buff_lifecycle.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/clan_buff_lifecycle.c.o: /home/krynn/code/src/clan_buff_lifecycle.c
+CMakeFiles/circle.dir/src/clan_buff_lifecycle.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_34) "Building C object CMakeFiles/circle.dir/src/clan_buff_lifecycle.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/clan_buff_lifecycle.c.o -MF CMakeFiles/circle.dir/src/clan_buff_lifecycle.c.o.d -o CMakeFiles/circle.dir/src/clan_buff_lifecycle.c.o -c /home/krynn/code/src/clan_buff_lifecycle.c
+
+CMakeFiles/circle.dir/src/clan_buff_lifecycle.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/clan_buff_lifecycle.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/clan_buff_lifecycle.c > CMakeFiles/circle.dir/src/clan_buff_lifecycle.c.i
+
+CMakeFiles/circle.dir/src/clan_buff_lifecycle.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/clan_buff_lifecycle.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/clan_buff_lifecycle.c -o CMakeFiles/circle.dir/src/clan_buff_lifecycle.c.s
+
+CMakeFiles/circle.dir/src/clan_buff_runtime.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/clan_buff_runtime.c.o: /home/krynn/code/src/clan_buff_runtime.c
+CMakeFiles/circle.dir/src/clan_buff_runtime.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_35) "Building C object CMakeFiles/circle.dir/src/clan_buff_runtime.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/clan_buff_runtime.c.o -MF CMakeFiles/circle.dir/src/clan_buff_runtime.c.o.d -o CMakeFiles/circle.dir/src/clan_buff_runtime.c.o -c /home/krynn/code/src/clan_buff_runtime.c
+
+CMakeFiles/circle.dir/src/clan_buff_runtime.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/clan_buff_runtime.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/clan_buff_runtime.c > CMakeFiles/circle.dir/src/clan_buff_runtime.c.i
+
+CMakeFiles/circle.dir/src/clan_buff_runtime.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/clan_buff_runtime.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/clan_buff_runtime.c -o CMakeFiles/circle.dir/src/clan_buff_runtime.c.s
+
+CMakeFiles/circle.dir/src/clan_buff_commands.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/clan_buff_commands.c.o: /home/krynn/code/src/clan_buff_commands.c
+CMakeFiles/circle.dir/src/clan_buff_commands.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_36) "Building C object CMakeFiles/circle.dir/src/clan_buff_commands.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/clan_buff_commands.c.o -MF CMakeFiles/circle.dir/src/clan_buff_commands.c.o.d -o CMakeFiles/circle.dir/src/clan_buff_commands.c.o -c /home/krynn/code/src/clan_buff_commands.c
+
+CMakeFiles/circle.dir/src/clan_buff_commands.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/clan_buff_commands.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/clan_buff_commands.c > CMakeFiles/circle.dir/src/clan_buff_commands.c.i
+
+CMakeFiles/circle.dir/src/clan_buff_commands.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/clan_buff_commands.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/clan_buff_commands.c -o CMakeFiles/circle.dir/src/clan_buff_commands.c.s
+
+CMakeFiles/circle.dir/src/clan_combat.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/clan_combat.c.o: /home/krynn/code/src/clan_combat.c
+CMakeFiles/circle.dir/src/clan_combat.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_37) "Building C object CMakeFiles/circle.dir/src/clan_combat.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/clan_combat.c.o -MF CMakeFiles/circle.dir/src/clan_combat.c.o.d -o CMakeFiles/circle.dir/src/clan_combat.c.o -c /home/krynn/code/src/clan_combat.c
+
+CMakeFiles/circle.dir/src/clan_combat.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/clan_combat.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/clan_combat.c > CMakeFiles/circle.dir/src/clan_combat.c.i
+
+CMakeFiles/circle.dir/src/clan_combat.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/clan_combat.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/clan_combat.c -o CMakeFiles/circle.dir/src/clan_combat.c.s
+
+CMakeFiles/circle.dir/src/clan_web_content.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/clan_web_content.c.o: /home/krynn/code/src/clan_web_content.c
+CMakeFiles/circle.dir/src/clan_web_content.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_38) "Building C object CMakeFiles/circle.dir/src/clan_web_content.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/clan_web_content.c.o -MF CMakeFiles/circle.dir/src/clan_web_content.c.o.d -o CMakeFiles/circle.dir/src/clan_web_content.c.o -c /home/krynn/code/src/clan_web_content.c
+
+CMakeFiles/circle.dir/src/clan_web_content.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/clan_web_content.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/clan_web_content.c > CMakeFiles/circle.dir/src/clan_web_content.c.i
+
+CMakeFiles/circle.dir/src/clan_web_content.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/clan_web_content.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/clan_web_content.c -o CMakeFiles/circle.dir/src/clan_web_content.c.s
+
+CMakeFiles/circle.dir/src/clan_web_content_runtime.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/clan_web_content_runtime.c.o: /home/krynn/code/src/clan_web_content_runtime.c
+CMakeFiles/circle.dir/src/clan_web_content_runtime.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_39) "Building C object CMakeFiles/circle.dir/src/clan_web_content_runtime.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/clan_web_content_runtime.c.o -MF CMakeFiles/circle.dir/src/clan_web_content_runtime.c.o.d -o CMakeFiles/circle.dir/src/clan_web_content_runtime.c.o -c /home/krynn/code/src/clan_web_content_runtime.c
+
+CMakeFiles/circle.dir/src/clan_web_content_runtime.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/clan_web_content_runtime.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/clan_web_content_runtime.c > CMakeFiles/circle.dir/src/clan_web_content_runtime.c.i
+
+CMakeFiles/circle.dir/src/clan_web_content_runtime.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/clan_web_content_runtime.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/clan_web_content_runtime.c -o CMakeFiles/circle.dir/src/clan_web_content_runtime.c.s
+
+CMakeFiles/circle.dir/src/clan_web.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/clan_web.c.o: /home/krynn/code/src/clan_web.c
+CMakeFiles/circle.dir/src/clan_web.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_40) "Building C object CMakeFiles/circle.dir/src/clan_web.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/clan_web.c.o -MF CMakeFiles/circle.dir/src/clan_web.c.o.d -o CMakeFiles/circle.dir/src/clan_web.c.o -c /home/krynn/code/src/clan_web.c
+
+CMakeFiles/circle.dir/src/clan_web.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/clan_web.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/clan_web.c > CMakeFiles/circle.dir/src/clan_web.c.i
+
+CMakeFiles/circle.dir/src/clan_web.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/clan_web.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/clan_web.c -o CMakeFiles/circle.dir/src/clan_web.c.s
+
+CMakeFiles/circle.dir/src/clan_web_runtime.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/clan_web_runtime.c.o: /home/krynn/code/src/clan_web_runtime.c
+CMakeFiles/circle.dir/src/clan_web_runtime.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_41) "Building C object CMakeFiles/circle.dir/src/clan_web_runtime.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/clan_web_runtime.c.o -MF CMakeFiles/circle.dir/src/clan_web_runtime.c.o.d -o CMakeFiles/circle.dir/src/clan_web_runtime.c.o -c /home/krynn/code/src/clan_web_runtime.c
+
+CMakeFiles/circle.dir/src/clan_web_runtime.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/clan_web_runtime.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/clan_web_runtime.c > CMakeFiles/circle.dir/src/clan_web_runtime.c.i
+
+CMakeFiles/circle.dir/src/clan_web_runtime.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/clan_web_runtime.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/clan_web_runtime.c -o CMakeFiles/circle.dir/src/clan_web_runtime.c.s
+
+CMakeFiles/circle.dir/src/clan_quartermaster.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/clan_quartermaster.c.o: /home/krynn/code/src/clan_quartermaster.c
+CMakeFiles/circle.dir/src/clan_quartermaster.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_42) "Building C object CMakeFiles/circle.dir/src/clan_quartermaster.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/clan_quartermaster.c.o -MF CMakeFiles/circle.dir/src/clan_quartermaster.c.o.d -o CMakeFiles/circle.dir/src/clan_quartermaster.c.o -c /home/krynn/code/src/clan_quartermaster.c
+
+CMakeFiles/circle.dir/src/clan_quartermaster.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/clan_quartermaster.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/clan_quartermaster.c > CMakeFiles/circle.dir/src/clan_quartermaster.c.i
+
+CMakeFiles/circle.dir/src/clan_quartermaster.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/clan_quartermaster.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/clan_quartermaster.c -o CMakeFiles/circle.dir/src/clan_quartermaster.c.s
+
+CMakeFiles/circle.dir/src/clan_quartermaster_runtime.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/clan_quartermaster_runtime.c.o: /home/krynn/code/src/clan_quartermaster_runtime.c
+CMakeFiles/circle.dir/src/clan_quartermaster_runtime.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_43) "Building C object CMakeFiles/circle.dir/src/clan_quartermaster_runtime.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/clan_quartermaster_runtime.c.o -MF CMakeFiles/circle.dir/src/clan_quartermaster_runtime.c.o.d -o CMakeFiles/circle.dir/src/clan_quartermaster_runtime.c.o -c /home/krynn/code/src/clan_quartermaster_runtime.c
+
+CMakeFiles/circle.dir/src/clan_quartermaster_runtime.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/clan_quartermaster_runtime.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/clan_quartermaster_runtime.c > CMakeFiles/circle.dir/src/clan_quartermaster_runtime.c.i
+
+CMakeFiles/circle.dir/src/clan_quartermaster_runtime.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/clan_quartermaster_runtime.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/clan_quartermaster_runtime.c -o CMakeFiles/circle.dir/src/clan_quartermaster_runtime.c.s
+
+CMakeFiles/circle.dir/src/clan_delivery.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/clan_delivery.c.o: /home/krynn/code/src/clan_delivery.c
+CMakeFiles/circle.dir/src/clan_delivery.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_44) "Building C object CMakeFiles/circle.dir/src/clan_delivery.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/clan_delivery.c.o -MF CMakeFiles/circle.dir/src/clan_delivery.c.o.d -o CMakeFiles/circle.dir/src/clan_delivery.c.o -c /home/krynn/code/src/clan_delivery.c
+
+CMakeFiles/circle.dir/src/clan_delivery.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/clan_delivery.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/clan_delivery.c > CMakeFiles/circle.dir/src/clan_delivery.c.i
+
+CMakeFiles/circle.dir/src/clan_delivery.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/clan_delivery.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/clan_delivery.c -o CMakeFiles/circle.dir/src/clan_delivery.c.s
+
+CMakeFiles/circle.dir/src/clan_delivery_runtime.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/clan_delivery_runtime.c.o: /home/krynn/code/src/clan_delivery_runtime.c
+CMakeFiles/circle.dir/src/clan_delivery_runtime.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_45) "Building C object CMakeFiles/circle.dir/src/clan_delivery_runtime.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/clan_delivery_runtime.c.o -MF CMakeFiles/circle.dir/src/clan_delivery_runtime.c.o.d -o CMakeFiles/circle.dir/src/clan_delivery_runtime.c.o -c /home/krynn/code/src/clan_delivery_runtime.c
+
+CMakeFiles/circle.dir/src/clan_delivery_runtime.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/clan_delivery_runtime.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/clan_delivery_runtime.c > CMakeFiles/circle.dir/src/clan_delivery_runtime.c.i
+
+CMakeFiles/circle.dir/src/clan_delivery_runtime.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/clan_delivery_runtime.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/clan_delivery_runtime.c -o CMakeFiles/circle.dir/src/clan_delivery_runtime.c.s
+
+CMakeFiles/circle.dir/src/clan_expedition_enrollment.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/clan_expedition_enrollment.c.o: /home/krynn/code/src/clan_expedition_enrollment.c
+CMakeFiles/circle.dir/src/clan_expedition_enrollment.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_46) "Building C object CMakeFiles/circle.dir/src/clan_expedition_enrollment.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/clan_expedition_enrollment.c.o -MF CMakeFiles/circle.dir/src/clan_expedition_enrollment.c.o.d -o CMakeFiles/circle.dir/src/clan_expedition_enrollment.c.o -c /home/krynn/code/src/clan_expedition_enrollment.c
+
+CMakeFiles/circle.dir/src/clan_expedition_enrollment.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/clan_expedition_enrollment.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/clan_expedition_enrollment.c > CMakeFiles/circle.dir/src/clan_expedition_enrollment.c.i
+
+CMakeFiles/circle.dir/src/clan_expedition_enrollment.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/clan_expedition_enrollment.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/clan_expedition_enrollment.c -o CMakeFiles/circle.dir/src/clan_expedition_enrollment.c.s
+
+CMakeFiles/circle.dir/src/clan_expedition_runtime.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/clan_expedition_runtime.c.o: /home/krynn/code/src/clan_expedition_runtime.c
+CMakeFiles/circle.dir/src/clan_expedition_runtime.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_47) "Building C object CMakeFiles/circle.dir/src/clan_expedition_runtime.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/clan_expedition_runtime.c.o -MF CMakeFiles/circle.dir/src/clan_expedition_runtime.c.o.d -o CMakeFiles/circle.dir/src/clan_expedition_runtime.c.o -c /home/krynn/code/src/clan_expedition_runtime.c
+
+CMakeFiles/circle.dir/src/clan_expedition_runtime.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/clan_expedition_runtime.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/clan_expedition_runtime.c > CMakeFiles/circle.dir/src/clan_expedition_runtime.c.i
+
+CMakeFiles/circle.dir/src/clan_expedition_runtime.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/clan_expedition_runtime.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/clan_expedition_runtime.c -o CMakeFiles/circle.dir/src/clan_expedition_runtime.c.s
+
+CMakeFiles/circle.dir/src/clan_expeditions.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/clan_expeditions.c.o: /home/krynn/code/src/clan_expeditions.c
+CMakeFiles/circle.dir/src/clan_expeditions.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_48) "Building C object CMakeFiles/circle.dir/src/clan_expeditions.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/clan_expeditions.c.o -MF CMakeFiles/circle.dir/src/clan_expeditions.c.o.d -o CMakeFiles/circle.dir/src/clan_expeditions.c.o -c /home/krynn/code/src/clan_expeditions.c
+
+CMakeFiles/circle.dir/src/clan_expeditions.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/clan_expeditions.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/clan_expeditions.c > CMakeFiles/circle.dir/src/clan_expeditions.c.i
+
+CMakeFiles/circle.dir/src/clan_expeditions.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/clan_expeditions.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/clan_expeditions.c -o CMakeFiles/circle.dir/src/clan_expeditions.c.s
+
+CMakeFiles/circle.dir/src/clan_expedition_world.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/clan_expedition_world.c.o: /home/krynn/code/src/clan_expedition_world.c
+CMakeFiles/circle.dir/src/clan_expedition_world.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_49) "Building C object CMakeFiles/circle.dir/src/clan_expedition_world.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/clan_expedition_world.c.o -MF CMakeFiles/circle.dir/src/clan_expedition_world.c.o.d -o CMakeFiles/circle.dir/src/clan_expedition_world.c.o -c /home/krynn/code/src/clan_expedition_world.c
+
+CMakeFiles/circle.dir/src/clan_expedition_world.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/clan_expedition_world.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/clan_expedition_world.c > CMakeFiles/circle.dir/src/clan_expedition_world.c.i
+
+CMakeFiles/circle.dir/src/clan_expedition_world.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/clan_expedition_world.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/clan_expedition_world.c -o CMakeFiles/circle.dir/src/clan_expedition_world.c.s
+
+CMakeFiles/circle.dir/src/clan_objectives.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/clan_objectives.c.o: /home/krynn/code/src/clan_objectives.c
+CMakeFiles/circle.dir/src/clan_objectives.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_50) "Building C object CMakeFiles/circle.dir/src/clan_objectives.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/clan_objectives.c.o -MF CMakeFiles/circle.dir/src/clan_objectives.c.o.d -o CMakeFiles/circle.dir/src/clan_objectives.c.o -c /home/krynn/code/src/clan_objectives.c
+
+CMakeFiles/circle.dir/src/clan_objectives.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/clan_objectives.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/clan_objectives.c > CMakeFiles/circle.dir/src/clan_objectives.c.i
+
+CMakeFiles/circle.dir/src/clan_objectives.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/clan_objectives.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/clan_objectives.c -o CMakeFiles/circle.dir/src/clan_objectives.c.s
+
+CMakeFiles/circle.dir/src/clan_objective_runtime.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/clan_objective_runtime.c.o: /home/krynn/code/src/clan_objective_runtime.c
+CMakeFiles/circle.dir/src/clan_objective_runtime.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_51) "Building C object CMakeFiles/circle.dir/src/clan_objective_runtime.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/clan_objective_runtime.c.o -MF CMakeFiles/circle.dir/src/clan_objective_runtime.c.o.d -o CMakeFiles/circle.dir/src/clan_objective_runtime.c.o -c /home/krynn/code/src/clan_objective_runtime.c
+
+CMakeFiles/circle.dir/src/clan_objective_runtime.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/clan_objective_runtime.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/clan_objective_runtime.c > CMakeFiles/circle.dir/src/clan_objective_runtime.c.i
+
+CMakeFiles/circle.dir/src/clan_objective_runtime.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/clan_objective_runtime.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/clan_objective_runtime.c -o CMakeFiles/circle.dir/src/clan_objective_runtime.c.s
+
+CMakeFiles/circle.dir/src/clan_sources.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/clan_sources.c.o: /home/krynn/code/src/clan_sources.c
+CMakeFiles/circle.dir/src/clan_sources.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_52) "Building C object CMakeFiles/circle.dir/src/clan_sources.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/clan_sources.c.o -MF CMakeFiles/circle.dir/src/clan_sources.c.o.d -o CMakeFiles/circle.dir/src/clan_sources.c.o -c /home/krynn/code/src/clan_sources.c
+
+CMakeFiles/circle.dir/src/clan_sources.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/clan_sources.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/clan_sources.c > CMakeFiles/circle.dir/src/clan_sources.c.i
+
+CMakeFiles/circle.dir/src/clan_sources.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/clan_sources.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/clan_sources.c -o CMakeFiles/circle.dir/src/clan_sources.c.s
+
+CMakeFiles/circle.dir/src/clan_qm_services.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/clan_qm_services.c.o: /home/krynn/code/src/clan_qm_services.c
+CMakeFiles/circle.dir/src/clan_qm_services.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_53) "Building C object CMakeFiles/circle.dir/src/clan_qm_services.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/clan_qm_services.c.o -MF CMakeFiles/circle.dir/src/clan_qm_services.c.o.d -o CMakeFiles/circle.dir/src/clan_qm_services.c.o -c /home/krynn/code/src/clan_qm_services.c
+
+CMakeFiles/circle.dir/src/clan_qm_services.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/clan_qm_services.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/clan_qm_services.c > CMakeFiles/circle.dir/src/clan_qm_services.c.i
+
+CMakeFiles/circle.dir/src/clan_qm_services.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/clan_qm_services.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/clan_qm_services.c -o CMakeFiles/circle.dir/src/clan_qm_services.c.s
+
+CMakeFiles/circle.dir/src/clan_enchant.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/clan_enchant.c.o: /home/krynn/code/src/clan_enchant.c
+CMakeFiles/circle.dir/src/clan_enchant.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_54) "Building C object CMakeFiles/circle.dir/src/clan_enchant.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/clan_enchant.c.o -MF CMakeFiles/circle.dir/src/clan_enchant.c.o.d -o CMakeFiles/circle.dir/src/clan_enchant.c.o -c /home/krynn/code/src/clan_enchant.c
+
+CMakeFiles/circle.dir/src/clan_enchant.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/clan_enchant.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/clan_enchant.c > CMakeFiles/circle.dir/src/clan_enchant.c.i
+
+CMakeFiles/circle.dir/src/clan_enchant.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/clan_enchant.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/clan_enchant.c -o CMakeFiles/circle.dir/src/clan_enchant.c.s
+
+CMakeFiles/circle.dir/src/clan_access.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/clan_access.c.o: /home/krynn/code/src/clan_access.c
+CMakeFiles/circle.dir/src/clan_access.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_55) "Building C object CMakeFiles/circle.dir/src/clan_access.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/clan_access.c.o -MF CMakeFiles/circle.dir/src/clan_access.c.o.d -o CMakeFiles/circle.dir/src/clan_access.c.o -c /home/krynn/code/src/clan_access.c
+
+CMakeFiles/circle.dir/src/clan_access.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/clan_access.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/clan_access.c > CMakeFiles/circle.dir/src/clan_access.c.i
+
+CMakeFiles/circle.dir/src/clan_access.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/clan_access.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/clan_access.c -o CMakeFiles/circle.dir/src/clan_access.c.s
+
+CMakeFiles/circle.dir/src/clan_status.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/clan_status.c.o: /home/krynn/code/src/clan_status.c
+CMakeFiles/circle.dir/src/clan_status.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_56) "Building C object CMakeFiles/circle.dir/src/clan_status.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/clan_status.c.o -MF CMakeFiles/circle.dir/src/clan_status.c.o.d -o CMakeFiles/circle.dir/src/clan_status.c.o -c /home/krynn/code/src/clan_status.c
+
+CMakeFiles/circle.dir/src/clan_status.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/clan_status.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/clan_status.c > CMakeFiles/circle.dir/src/clan_status.c.i
+
+CMakeFiles/circle.dir/src/clan_status.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/clan_status.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/clan_status.c -o CMakeFiles/circle.dir/src/clan_status.c.s
+
+CMakeFiles/circle.dir/src/clan_commands.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/clan_commands.c.o: /home/krynn/code/src/clan_commands.c
+CMakeFiles/circle.dir/src/clan_commands.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_57) "Building C object CMakeFiles/circle.dir/src/clan_commands.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/clan_commands.c.o -MF CMakeFiles/circle.dir/src/clan_commands.c.o.d -o CMakeFiles/circle.dir/src/clan_commands.c.o -c /home/krynn/code/src/clan_commands.c
+
+CMakeFiles/circle.dir/src/clan_commands.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/clan_commands.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/clan_commands.c > CMakeFiles/circle.dir/src/clan_commands.c.i
+
+CMakeFiles/circle.dir/src/clan_commands.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/clan_commands.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/clan_commands.c -o CMakeFiles/circle.dir/src/clan_commands.c.s
+
+CMakeFiles/circle.dir/src/clan_awards.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/clan_awards.c.o: /home/krynn/code/src/clan_awards.c
+CMakeFiles/circle.dir/src/clan_awards.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_58) "Building C object CMakeFiles/circle.dir/src/clan_awards.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/clan_awards.c.o -MF CMakeFiles/circle.dir/src/clan_awards.c.o.d -o CMakeFiles/circle.dir/src/clan_awards.c.o -c /home/krynn/code/src/clan_awards.c
+
+CMakeFiles/circle.dir/src/clan_awards.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/clan_awards.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/clan_awards.c > CMakeFiles/circle.dir/src/clan_awards.c.i
+
+CMakeFiles/circle.dir/src/clan_awards.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/clan_awards.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/clan_awards.c -o CMakeFiles/circle.dir/src/clan_awards.c.s
+
+CMakeFiles/circle.dir/src/clan_policy.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/clan_policy.c.o: /home/krynn/code/src/clan_policy.c
+CMakeFiles/circle.dir/src/clan_policy.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_59) "Building C object CMakeFiles/circle.dir/src/clan_policy.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/clan_policy.c.o -MF CMakeFiles/circle.dir/src/clan_policy.c.o.d -o CMakeFiles/circle.dir/src/clan_policy.c.o -c /home/krynn/code/src/clan_policy.c
+
+CMakeFiles/circle.dir/src/clan_policy.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/clan_policy.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/clan_policy.c > CMakeFiles/circle.dir/src/clan_policy.c.i
+
+CMakeFiles/circle.dir/src/clan_policy.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/clan_policy.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/clan_policy.c -o CMakeFiles/circle.dir/src/clan_policy.c.s
+
+CMakeFiles/circle.dir/src/clan_progression.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/clan_progression.c.o: /home/krynn/code/src/clan_progression.c
+CMakeFiles/circle.dir/src/clan_progression.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_60) "Building C object CMakeFiles/circle.dir/src/clan_progression.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/clan_progression.c.o -MF CMakeFiles/circle.dir/src/clan_progression.c.o.d -o CMakeFiles/circle.dir/src/clan_progression.c.o -c /home/krynn/code/src/clan_progression.c
+
+CMakeFiles/circle.dir/src/clan_progression.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/clan_progression.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/clan_progression.c > CMakeFiles/circle.dir/src/clan_progression.c.i
+
+CMakeFiles/circle.dir/src/clan_progression.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/clan_progression.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/clan_progression.c -o CMakeFiles/circle.dir/src/clan_progression.c.s
+
+CMakeFiles/circle.dir/src/clan_repository.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/clan_repository.c.o: /home/krynn/code/src/clan_repository.c
+CMakeFiles/circle.dir/src/clan_repository.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_61) "Building C object CMakeFiles/circle.dir/src/clan_repository.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/clan_repository.c.o -MF CMakeFiles/circle.dir/src/clan_repository.c.o.d -o CMakeFiles/circle.dir/src/clan_repository.c.o -c /home/krynn/code/src/clan_repository.c
+
+CMakeFiles/circle.dir/src/clan_repository.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/clan_repository.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/clan_repository.c > CMakeFiles/circle.dir/src/clan_repository.c.i
+
+CMakeFiles/circle.dir/src/clan_repository.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/clan_repository.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/clan_repository.c -o CMakeFiles/circle.dir/src/clan_repository.c.s
+
+CMakeFiles/circle.dir/src/clan_boot.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/clan_boot.c.o: /home/krynn/code/src/clan_boot.c
+CMakeFiles/circle.dir/src/clan_boot.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_62) "Building C object CMakeFiles/circle.dir/src/clan_boot.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/clan_boot.c.o -MF CMakeFiles/circle.dir/src/clan_boot.c.o.d -o CMakeFiles/circle.dir/src/clan_boot.c.o -c /home/krynn/code/src/clan_boot.c
+
+CMakeFiles/circle.dir/src/clan_boot.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/clan_boot.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/clan_boot.c > CMakeFiles/circle.dir/src/clan_boot.c.i
+
+CMakeFiles/circle.dir/src/clan_boot.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/clan_boot.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/clan_boot.c -o CMakeFiles/circle.dir/src/clan_boot.c.s
+
+CMakeFiles/circle.dir/src/clan_persistence.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/clan_persistence.c.o: /home/krynn/code/src/clan_persistence.c
+CMakeFiles/circle.dir/src/clan_persistence.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_63) "Building C object CMakeFiles/circle.dir/src/clan_persistence.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/clan_persistence.c.o -MF CMakeFiles/circle.dir/src/clan_persistence.c.o.d -o CMakeFiles/circle.dir/src/clan_persistence.c.o -c /home/krynn/code/src/clan_persistence.c
+
+CMakeFiles/circle.dir/src/clan_persistence.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/clan_persistence.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/clan_persistence.c > CMakeFiles/circle.dir/src/clan_persistence.c.i
+
+CMakeFiles/circle.dir/src/clan_persistence.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/clan_persistence.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/clan_persistence.c -o CMakeFiles/circle.dir/src/clan_persistence.c.s
+
 CMakeFiles/circle.dir/src/clan_edit.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/clan_edit.c.o: /home/krynn/code/src/clan_edit.c
 CMakeFiles/circle.dir/src/clan_edit.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_31) "Building C object CMakeFiles/circle.dir/src/clan_edit.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_64) "Building C object CMakeFiles/circle.dir/src/clan_edit.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/clan_edit.c.o -MF CMakeFiles/circle.dir/src/clan_edit.c.o.d -o CMakeFiles/circle.dir/src/clan_edit.c.o -c /home/krynn/code/src/clan_edit.c
 
 CMakeFiles/circle.dir/src/clan_edit.c.i: cmake_force
@@ -509,7 +971,7 @@ CMakeFiles/circle.dir/src/clan_edit.c.s: cmake_force
 CMakeFiles/circle.dir/src/clan_transactions.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/clan_transactions.c.o: /home/krynn/code/src/clan_transactions.c
 CMakeFiles/circle.dir/src/clan_transactions.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_32) "Building C object CMakeFiles/circle.dir/src/clan_transactions.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_65) "Building C object CMakeFiles/circle.dir/src/clan_transactions.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/clan_transactions.c.o -MF CMakeFiles/circle.dir/src/clan_transactions.c.o.d -o CMakeFiles/circle.dir/src/clan_transactions.c.o -c /home/krynn/code/src/clan_transactions.c
 
 CMakeFiles/circle.dir/src/clan_transactions.c.i: cmake_force
@@ -523,7 +985,7 @@ CMakeFiles/circle.dir/src/clan_transactions.c.s: cmake_force
 CMakeFiles/circle.dir/src/class.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/class.c.o: /home/krynn/code/src/class.c
 CMakeFiles/circle.dir/src/class.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_33) "Building C object CMakeFiles/circle.dir/src/class.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_66) "Building C object CMakeFiles/circle.dir/src/class.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/class.c.o -MF CMakeFiles/circle.dir/src/class.c.o.d -o CMakeFiles/circle.dir/src/class.c.o -c /home/krynn/code/src/class.c
 
 CMakeFiles/circle.dir/src/class.c.i: cmake_force
@@ -537,7 +999,7 @@ CMakeFiles/circle.dir/src/class.c.s: cmake_force
 CMakeFiles/circle.dir/src/combat_modes.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/combat_modes.c.o: /home/krynn/code/src/combat_modes.c
 CMakeFiles/circle.dir/src/combat_modes.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_34) "Building C object CMakeFiles/circle.dir/src/combat_modes.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_67) "Building C object CMakeFiles/circle.dir/src/combat_modes.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/combat_modes.c.o -MF CMakeFiles/circle.dir/src/combat_modes.c.o.d -o CMakeFiles/circle.dir/src/combat_modes.c.o -c /home/krynn/code/src/combat_modes.c
 
 CMakeFiles/circle.dir/src/combat_modes.c.i: cmake_force
@@ -551,7 +1013,7 @@ CMakeFiles/circle.dir/src/combat_modes.c.s: cmake_force
 CMakeFiles/circle.dir/src/comm.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/comm.c.o: /home/krynn/code/src/comm.c
 CMakeFiles/circle.dir/src/comm.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_35) "Building C object CMakeFiles/circle.dir/src/comm.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_68) "Building C object CMakeFiles/circle.dir/src/comm.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/comm.c.o -MF CMakeFiles/circle.dir/src/comm.c.o.d -o CMakeFiles/circle.dir/src/comm.c.o -c /home/krynn/code/src/comm.c
 
 CMakeFiles/circle.dir/src/comm.c.i: cmake_force
@@ -565,7 +1027,7 @@ CMakeFiles/circle.dir/src/comm.c.s: cmake_force
 CMakeFiles/circle.dir/src/config.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/config.c.o: /home/krynn/code/src/config.c
 CMakeFiles/circle.dir/src/config.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_36) "Building C object CMakeFiles/circle.dir/src/config.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_69) "Building C object CMakeFiles/circle.dir/src/config.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/config.c.o -MF CMakeFiles/circle.dir/src/config.c.o.d -o CMakeFiles/circle.dir/src/config.c.o -c /home/krynn/code/src/config.c
 
 CMakeFiles/circle.dir/src/config.c.i: cmake_force
@@ -579,7 +1041,7 @@ CMakeFiles/circle.dir/src/config.c.s: cmake_force
 CMakeFiles/circle.dir/src/constants.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/constants.c.o: /home/krynn/code/src/constants.c
 CMakeFiles/circle.dir/src/constants.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_37) "Building C object CMakeFiles/circle.dir/src/constants.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_70) "Building C object CMakeFiles/circle.dir/src/constants.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/constants.c.o -MF CMakeFiles/circle.dir/src/constants.c.o.d -o CMakeFiles/circle.dir/src/constants.c.o -c /home/krynn/code/src/constants.c
 
 CMakeFiles/circle.dir/src/constants.c.i: cmake_force
@@ -593,7 +1055,7 @@ CMakeFiles/circle.dir/src/constants.c.s: cmake_force
 CMakeFiles/circle.dir/src/copyover_diagnostic.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/copyover_diagnostic.c.o: /home/krynn/code/src/copyover_diagnostic.c
 CMakeFiles/circle.dir/src/copyover_diagnostic.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_38) "Building C object CMakeFiles/circle.dir/src/copyover_diagnostic.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_71) "Building C object CMakeFiles/circle.dir/src/copyover_diagnostic.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/copyover_diagnostic.c.o -MF CMakeFiles/circle.dir/src/copyover_diagnostic.c.o.d -o CMakeFiles/circle.dir/src/copyover_diagnostic.c.o -c /home/krynn/code/src/copyover_diagnostic.c
 
 CMakeFiles/circle.dir/src/copyover_diagnostic.c.i: cmake_force
@@ -607,7 +1069,7 @@ CMakeFiles/circle.dir/src/copyover_diagnostic.c.s: cmake_force
 CMakeFiles/circle.dir/src/craft.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/craft.c.o: /home/krynn/code/src/craft.c
 CMakeFiles/circle.dir/src/craft.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_39) "Building C object CMakeFiles/circle.dir/src/craft.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_72) "Building C object CMakeFiles/circle.dir/src/craft.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/craft.c.o -MF CMakeFiles/circle.dir/src/craft.c.o.d -o CMakeFiles/circle.dir/src/craft.c.o -c /home/krynn/code/src/craft.c
 
 CMakeFiles/circle.dir/src/craft.c.i: cmake_force
@@ -621,7 +1083,7 @@ CMakeFiles/circle.dir/src/craft.c.s: cmake_force
 CMakeFiles/circle.dir/src/crafting_new.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/crafting_new.c.o: /home/krynn/code/src/crafting_new.c
 CMakeFiles/circle.dir/src/crafting_new.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_40) "Building C object CMakeFiles/circle.dir/src/crafting_new.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_73) "Building C object CMakeFiles/circle.dir/src/crafting_new.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/crafting_new.c.o -MF CMakeFiles/circle.dir/src/crafting_new.c.o.d -o CMakeFiles/circle.dir/src/crafting_new.c.o -c /home/krynn/code/src/crafting_new.c
 
 CMakeFiles/circle.dir/src/crafting_new.c.i: cmake_force
@@ -635,7 +1097,7 @@ CMakeFiles/circle.dir/src/crafting_new.c.s: cmake_force
 CMakeFiles/circle.dir/src/crafting_recipes.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/crafting_recipes.c.o: /home/krynn/code/src/crafting_recipes.c
 CMakeFiles/circle.dir/src/crafting_recipes.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_41) "Building C object CMakeFiles/circle.dir/src/crafting_recipes.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_74) "Building C object CMakeFiles/circle.dir/src/crafting_recipes.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/crafting_recipes.c.o -MF CMakeFiles/circle.dir/src/crafting_recipes.c.o.d -o CMakeFiles/circle.dir/src/crafting_recipes.c.o -c /home/krynn/code/src/crafting_recipes.c
 
 CMakeFiles/circle.dir/src/crafting_recipes.c.i: cmake_force
@@ -649,7 +1111,7 @@ CMakeFiles/circle.dir/src/crafting_recipes.c.s: cmake_force
 CMakeFiles/circle.dir/src/crafts.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/crafts.c.o: /home/krynn/code/src/crafts.c
 CMakeFiles/circle.dir/src/crafts.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_42) "Building C object CMakeFiles/circle.dir/src/crafts.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_75) "Building C object CMakeFiles/circle.dir/src/crafts.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/crafts.c.o -MF CMakeFiles/circle.dir/src/crafts.c.o.d -o CMakeFiles/circle.dir/src/crafts.c.o -c /home/krynn/code/src/crafts.c
 
 CMakeFiles/circle.dir/src/crafts.c.i: cmake_force
@@ -663,7 +1125,7 @@ CMakeFiles/circle.dir/src/crafts.c.s: cmake_force
 CMakeFiles/circle.dir/src/db.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/db.c.o: /home/krynn/code/src/db.c
 CMakeFiles/circle.dir/src/db.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_43) "Building C object CMakeFiles/circle.dir/src/db.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_76) "Building C object CMakeFiles/circle.dir/src/db.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/db.c.o -MF CMakeFiles/circle.dir/src/db.c.o.d -o CMakeFiles/circle.dir/src/db.c.o -c /home/krynn/code/src/db.c
 
 CMakeFiles/circle.dir/src/db.c.i: cmake_force
@@ -677,7 +1139,7 @@ CMakeFiles/circle.dir/src/db.c.s: cmake_force
 CMakeFiles/circle.dir/src/db_init.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/db_init.c.o: /home/krynn/code/src/db_init.c
 CMakeFiles/circle.dir/src/db_init.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_44) "Building C object CMakeFiles/circle.dir/src/db_init.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_77) "Building C object CMakeFiles/circle.dir/src/db_init.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/db_init.c.o -MF CMakeFiles/circle.dir/src/db_init.c.o.d -o CMakeFiles/circle.dir/src/db_init.c.o -c /home/krynn/code/src/db_init.c
 
 CMakeFiles/circle.dir/src/db_init.c.i: cmake_force
@@ -691,7 +1153,7 @@ CMakeFiles/circle.dir/src/db_init.c.s: cmake_force
 CMakeFiles/circle.dir/src/db_init_data.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/db_init_data.c.o: /home/krynn/code/src/db_init_data.c
 CMakeFiles/circle.dir/src/db_init_data.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_45) "Building C object CMakeFiles/circle.dir/src/db_init_data.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_78) "Building C object CMakeFiles/circle.dir/src/db_init_data.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/db_init_data.c.o -MF CMakeFiles/circle.dir/src/db_init_data.c.o.d -o CMakeFiles/circle.dir/src/db_init_data.c.o -c /home/krynn/code/src/db_init_data.c
 
 CMakeFiles/circle.dir/src/db_init_data.c.i: cmake_force
@@ -705,7 +1167,7 @@ CMakeFiles/circle.dir/src/db_init_data.c.s: cmake_force
 CMakeFiles/circle.dir/src/db_startup_init.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/db_startup_init.c.o: /home/krynn/code/src/db_startup_init.c
 CMakeFiles/circle.dir/src/db_startup_init.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_46) "Building C object CMakeFiles/circle.dir/src/db_startup_init.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_79) "Building C object CMakeFiles/circle.dir/src/db_startup_init.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/db_startup_init.c.o -MF CMakeFiles/circle.dir/src/db_startup_init.c.o.d -o CMakeFiles/circle.dir/src/db_startup_init.c.o -c /home/krynn/code/src/db_startup_init.c
 
 CMakeFiles/circle.dir/src/db_startup_init.c.i: cmake_force
@@ -719,7 +1181,7 @@ CMakeFiles/circle.dir/src/db_startup_init.c.s: cmake_force
 CMakeFiles/circle.dir/src/db_admin_commands.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/db_admin_commands.c.o: /home/krynn/code/src/db_admin_commands.c
 CMakeFiles/circle.dir/src/db_admin_commands.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_47) "Building C object CMakeFiles/circle.dir/src/db_admin_commands.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_80) "Building C object CMakeFiles/circle.dir/src/db_admin_commands.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/db_admin_commands.c.o -MF CMakeFiles/circle.dir/src/db_admin_commands.c.o.d -o CMakeFiles/circle.dir/src/db_admin_commands.c.o -c /home/krynn/code/src/db_admin_commands.c
 
 CMakeFiles/circle.dir/src/db_admin_commands.c.i: cmake_force
@@ -733,7 +1195,7 @@ CMakeFiles/circle.dir/src/db_admin_commands.c.s: cmake_force
 CMakeFiles/circle.dir/src/deities.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/deities.c.o: /home/krynn/code/src/deities.c
 CMakeFiles/circle.dir/src/deities.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_48) "Building C object CMakeFiles/circle.dir/src/deities.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_81) "Building C object CMakeFiles/circle.dir/src/deities.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/deities.c.o -MF CMakeFiles/circle.dir/src/deities.c.o.d -o CMakeFiles/circle.dir/src/deities.c.o -c /home/krynn/code/src/deities.c
 
 CMakeFiles/circle.dir/src/deities.c.i: cmake_force
@@ -744,10 +1206,66 @@ CMakeFiles/circle.dir/src/deities.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/deities.c.s"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/deities.c -o CMakeFiles/circle.dir/src/deities.c.s
 
+CMakeFiles/circle.dir/src/religion.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/religion.c.o: /home/krynn/code/src/religion.c
+CMakeFiles/circle.dir/src/religion.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_82) "Building C object CMakeFiles/circle.dir/src/religion.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/religion.c.o -MF CMakeFiles/circle.dir/src/religion.c.o.d -o CMakeFiles/circle.dir/src/religion.c.o -c /home/krynn/code/src/religion.c
+
+CMakeFiles/circle.dir/src/religion.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/religion.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/religion.c > CMakeFiles/circle.dir/src/religion.c.i
+
+CMakeFiles/circle.dir/src/religion.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/religion.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/religion.c -o CMakeFiles/circle.dir/src/religion.c.s
+
+CMakeFiles/circle.dir/src/religion_tasks.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/religion_tasks.c.o: /home/krynn/code/src/religion_tasks.c
+CMakeFiles/circle.dir/src/religion_tasks.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_83) "Building C object CMakeFiles/circle.dir/src/religion_tasks.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/religion_tasks.c.o -MF CMakeFiles/circle.dir/src/religion_tasks.c.o.d -o CMakeFiles/circle.dir/src/religion_tasks.c.o -c /home/krynn/code/src/religion_tasks.c
+
+CMakeFiles/circle.dir/src/religion_tasks.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/religion_tasks.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/religion_tasks.c > CMakeFiles/circle.dir/src/religion_tasks.c.i
+
+CMakeFiles/circle.dir/src/religion_tasks.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/religion_tasks.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/religion_tasks.c -o CMakeFiles/circle.dir/src/religion_tasks.c.s
+
+CMakeFiles/circle.dir/src/religion_blessing.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/religion_blessing.c.o: /home/krynn/code/src/religion_blessing.c
+CMakeFiles/circle.dir/src/religion_blessing.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_84) "Building C object CMakeFiles/circle.dir/src/religion_blessing.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/religion_blessing.c.o -MF CMakeFiles/circle.dir/src/religion_blessing.c.o.d -o CMakeFiles/circle.dir/src/religion_blessing.c.o -c /home/krynn/code/src/religion_blessing.c
+
+CMakeFiles/circle.dir/src/religion_blessing.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/religion_blessing.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/religion_blessing.c > CMakeFiles/circle.dir/src/religion_blessing.c.i
+
+CMakeFiles/circle.dir/src/religion_blessing.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/religion_blessing.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/religion_blessing.c -o CMakeFiles/circle.dir/src/religion_blessing.c.s
+
+CMakeFiles/circle.dir/src/restring.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/restring.c.o: /home/krynn/code/src/restring.c
+CMakeFiles/circle.dir/src/restring.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_85) "Building C object CMakeFiles/circle.dir/src/restring.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/restring.c.o -MF CMakeFiles/circle.dir/src/restring.c.o.d -o CMakeFiles/circle.dir/src/restring.c.o -c /home/krynn/code/src/restring.c
+
+CMakeFiles/circle.dir/src/restring.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/restring.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/restring.c > CMakeFiles/circle.dir/src/restring.c.i
+
+CMakeFiles/circle.dir/src/restring.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/restring.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/restring.c -o CMakeFiles/circle.dir/src/restring.c.s
+
 CMakeFiles/circle.dir/src/desc_engine.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/desc_engine.c.o: /home/krynn/code/src/desc_engine.c
 CMakeFiles/circle.dir/src/desc_engine.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_49) "Building C object CMakeFiles/circle.dir/src/desc_engine.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_86) "Building C object CMakeFiles/circle.dir/src/desc_engine.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/desc_engine.c.o -MF CMakeFiles/circle.dir/src/desc_engine.c.o.d -o CMakeFiles/circle.dir/src/desc_engine.c.o -c /home/krynn/code/src/desc_engine.c
 
 CMakeFiles/circle.dir/src/desc_engine.c.i: cmake_force
@@ -761,7 +1279,7 @@ CMakeFiles/circle.dir/src/desc_engine.c.s: cmake_force
 CMakeFiles/circle.dir/src/dg_comm.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/dg_comm.c.o: /home/krynn/code/src/dg_comm.c
 CMakeFiles/circle.dir/src/dg_comm.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_50) "Building C object CMakeFiles/circle.dir/src/dg_comm.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_87) "Building C object CMakeFiles/circle.dir/src/dg_comm.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/dg_comm.c.o -MF CMakeFiles/circle.dir/src/dg_comm.c.o.d -o CMakeFiles/circle.dir/src/dg_comm.c.o -c /home/krynn/code/src/dg_comm.c
 
 CMakeFiles/circle.dir/src/dg_comm.c.i: cmake_force
@@ -775,7 +1293,7 @@ CMakeFiles/circle.dir/src/dg_comm.c.s: cmake_force
 CMakeFiles/circle.dir/src/discord_bridge.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/discord_bridge.c.o: /home/krynn/code/src/discord_bridge.c
 CMakeFiles/circle.dir/src/discord_bridge.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_51) "Building C object CMakeFiles/circle.dir/src/discord_bridge.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_88) "Building C object CMakeFiles/circle.dir/src/discord_bridge.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/discord_bridge.c.o -MF CMakeFiles/circle.dir/src/discord_bridge.c.o.d -o CMakeFiles/circle.dir/src/discord_bridge.c.o -c /home/krynn/code/src/discord_bridge.c
 
 CMakeFiles/circle.dir/src/discord_bridge.c.i: cmake_force
@@ -789,7 +1307,7 @@ CMakeFiles/circle.dir/src/discord_bridge.c.s: cmake_force
 CMakeFiles/circle.dir/src/dg_db_scripts.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/dg_db_scripts.c.o: /home/krynn/code/src/dg_db_scripts.c
 CMakeFiles/circle.dir/src/dg_db_scripts.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_52) "Building C object CMakeFiles/circle.dir/src/dg_db_scripts.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_89) "Building C object CMakeFiles/circle.dir/src/dg_db_scripts.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/dg_db_scripts.c.o -MF CMakeFiles/circle.dir/src/dg_db_scripts.c.o.d -o CMakeFiles/circle.dir/src/dg_db_scripts.c.o -c /home/krynn/code/src/dg_db_scripts.c
 
 CMakeFiles/circle.dir/src/dg_db_scripts.c.i: cmake_force
@@ -803,7 +1321,7 @@ CMakeFiles/circle.dir/src/dg_db_scripts.c.s: cmake_force
 CMakeFiles/circle.dir/src/dg_event.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/dg_event.c.o: /home/krynn/code/src/dg_event.c
 CMakeFiles/circle.dir/src/dg_event.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_53) "Building C object CMakeFiles/circle.dir/src/dg_event.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_90) "Building C object CMakeFiles/circle.dir/src/dg_event.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/dg_event.c.o -MF CMakeFiles/circle.dir/src/dg_event.c.o.d -o CMakeFiles/circle.dir/src/dg_event.c.o -c /home/krynn/code/src/dg_event.c
 
 CMakeFiles/circle.dir/src/dg_event.c.i: cmake_force
@@ -817,7 +1335,7 @@ CMakeFiles/circle.dir/src/dg_event.c.s: cmake_force
 CMakeFiles/circle.dir/src/dg_handler.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/dg_handler.c.o: /home/krynn/code/src/dg_handler.c
 CMakeFiles/circle.dir/src/dg_handler.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_54) "Building C object CMakeFiles/circle.dir/src/dg_handler.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_91) "Building C object CMakeFiles/circle.dir/src/dg_handler.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/dg_handler.c.o -MF CMakeFiles/circle.dir/src/dg_handler.c.o.d -o CMakeFiles/circle.dir/src/dg_handler.c.o -c /home/krynn/code/src/dg_handler.c
 
 CMakeFiles/circle.dir/src/dg_handler.c.i: cmake_force
@@ -831,7 +1349,7 @@ CMakeFiles/circle.dir/src/dg_handler.c.s: cmake_force
 CMakeFiles/circle.dir/src/dg_misc.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/dg_misc.c.o: /home/krynn/code/src/dg_misc.c
 CMakeFiles/circle.dir/src/dg_misc.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_55) "Building C object CMakeFiles/circle.dir/src/dg_misc.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_92) "Building C object CMakeFiles/circle.dir/src/dg_misc.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/dg_misc.c.o -MF CMakeFiles/circle.dir/src/dg_misc.c.o.d -o CMakeFiles/circle.dir/src/dg_misc.c.o -c /home/krynn/code/src/dg_misc.c
 
 CMakeFiles/circle.dir/src/dg_misc.c.i: cmake_force
@@ -845,7 +1363,7 @@ CMakeFiles/circle.dir/src/dg_misc.c.s: cmake_force
 CMakeFiles/circle.dir/src/dg_mobcmd.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/dg_mobcmd.c.o: /home/krynn/code/src/dg_mobcmd.c
 CMakeFiles/circle.dir/src/dg_mobcmd.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_56) "Building C object CMakeFiles/circle.dir/src/dg_mobcmd.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_93) "Building C object CMakeFiles/circle.dir/src/dg_mobcmd.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/dg_mobcmd.c.o -MF CMakeFiles/circle.dir/src/dg_mobcmd.c.o.d -o CMakeFiles/circle.dir/src/dg_mobcmd.c.o -c /home/krynn/code/src/dg_mobcmd.c
 
 CMakeFiles/circle.dir/src/dg_mobcmd.c.i: cmake_force
@@ -859,7 +1377,7 @@ CMakeFiles/circle.dir/src/dg_mobcmd.c.s: cmake_force
 CMakeFiles/circle.dir/src/dg_objcmd.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/dg_objcmd.c.o: /home/krynn/code/src/dg_objcmd.c
 CMakeFiles/circle.dir/src/dg_objcmd.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_57) "Building C object CMakeFiles/circle.dir/src/dg_objcmd.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_94) "Building C object CMakeFiles/circle.dir/src/dg_objcmd.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/dg_objcmd.c.o -MF CMakeFiles/circle.dir/src/dg_objcmd.c.o.d -o CMakeFiles/circle.dir/src/dg_objcmd.c.o -c /home/krynn/code/src/dg_objcmd.c
 
 CMakeFiles/circle.dir/src/dg_objcmd.c.i: cmake_force
@@ -873,7 +1391,7 @@ CMakeFiles/circle.dir/src/dg_objcmd.c.s: cmake_force
 CMakeFiles/circle.dir/src/dg_olc.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/dg_olc.c.o: /home/krynn/code/src/dg_olc.c
 CMakeFiles/circle.dir/src/dg_olc.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_58) "Building C object CMakeFiles/circle.dir/src/dg_olc.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_95) "Building C object CMakeFiles/circle.dir/src/dg_olc.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/dg_olc.c.o -MF CMakeFiles/circle.dir/src/dg_olc.c.o.d -o CMakeFiles/circle.dir/src/dg_olc.c.o -c /home/krynn/code/src/dg_olc.c
 
 CMakeFiles/circle.dir/src/dg_olc.c.i: cmake_force
@@ -887,7 +1405,7 @@ CMakeFiles/circle.dir/src/dg_olc.c.s: cmake_force
 CMakeFiles/circle.dir/src/dg_scripts.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/dg_scripts.c.o: /home/krynn/code/src/dg_scripts.c
 CMakeFiles/circle.dir/src/dg_scripts.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_59) "Building C object CMakeFiles/circle.dir/src/dg_scripts.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_96) "Building C object CMakeFiles/circle.dir/src/dg_scripts.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/dg_scripts.c.o -MF CMakeFiles/circle.dir/src/dg_scripts.c.o.d -o CMakeFiles/circle.dir/src/dg_scripts.c.o -c /home/krynn/code/src/dg_scripts.c
 
 CMakeFiles/circle.dir/src/dg_scripts.c.i: cmake_force
@@ -901,7 +1419,7 @@ CMakeFiles/circle.dir/src/dg_scripts.c.s: cmake_force
 CMakeFiles/circle.dir/src/dg_triggers.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/dg_triggers.c.o: /home/krynn/code/src/dg_triggers.c
 CMakeFiles/circle.dir/src/dg_triggers.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_60) "Building C object CMakeFiles/circle.dir/src/dg_triggers.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_97) "Building C object CMakeFiles/circle.dir/src/dg_triggers.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/dg_triggers.c.o -MF CMakeFiles/circle.dir/src/dg_triggers.c.o.d -o CMakeFiles/circle.dir/src/dg_triggers.c.o -c /home/krynn/code/src/dg_triggers.c
 
 CMakeFiles/circle.dir/src/dg_triggers.c.i: cmake_force
@@ -915,7 +1433,7 @@ CMakeFiles/circle.dir/src/dg_triggers.c.s: cmake_force
 CMakeFiles/circle.dir/src/dg_variables.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/dg_variables.c.o: /home/krynn/code/src/dg_variables.c
 CMakeFiles/circle.dir/src/dg_variables.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_61) "Building C object CMakeFiles/circle.dir/src/dg_variables.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_98) "Building C object CMakeFiles/circle.dir/src/dg_variables.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/dg_variables.c.o -MF CMakeFiles/circle.dir/src/dg_variables.c.o.d -o CMakeFiles/circle.dir/src/dg_variables.c.o -c /home/krynn/code/src/dg_variables.c
 
 CMakeFiles/circle.dir/src/dg_variables.c.i: cmake_force
@@ -929,7 +1447,7 @@ CMakeFiles/circle.dir/src/dg_variables.c.s: cmake_force
 CMakeFiles/circle.dir/src/dg_wldcmd.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/dg_wldcmd.c.o: /home/krynn/code/src/dg_wldcmd.c
 CMakeFiles/circle.dir/src/dg_wldcmd.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_62) "Building C object CMakeFiles/circle.dir/src/dg_wldcmd.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_99) "Building C object CMakeFiles/circle.dir/src/dg_wldcmd.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/dg_wldcmd.c.o -MF CMakeFiles/circle.dir/src/dg_wldcmd.c.o.d -o CMakeFiles/circle.dir/src/dg_wldcmd.c.o -c /home/krynn/code/src/dg_wldcmd.c
 
 CMakeFiles/circle.dir/src/dg_wldcmd.c.i: cmake_force
@@ -943,7 +1461,7 @@ CMakeFiles/circle.dir/src/dg_wldcmd.c.s: cmake_force
 CMakeFiles/circle.dir/src/domain_powers.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/domain_powers.c.o: /home/krynn/code/src/domain_powers.c
 CMakeFiles/circle.dir/src/domain_powers.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_63) "Building C object CMakeFiles/circle.dir/src/domain_powers.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_100) "Building C object CMakeFiles/circle.dir/src/domain_powers.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/domain_powers.c.o -MF CMakeFiles/circle.dir/src/domain_powers.c.o.d -o CMakeFiles/circle.dir/src/domain_powers.c.o -c /home/krynn/code/src/domain_powers.c
 
 CMakeFiles/circle.dir/src/domain_powers.c.i: cmake_force
@@ -957,7 +1475,7 @@ CMakeFiles/circle.dir/src/domain_powers.c.s: cmake_force
 CMakeFiles/circle.dir/src/domains_schools.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/domains_schools.c.o: /home/krynn/code/src/domains_schools.c
 CMakeFiles/circle.dir/src/domains_schools.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_64) "Building C object CMakeFiles/circle.dir/src/domains_schools.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_101) "Building C object CMakeFiles/circle.dir/src/domains_schools.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/domains_schools.c.o -MF CMakeFiles/circle.dir/src/domains_schools.c.o.d -o CMakeFiles/circle.dir/src/domains_schools.c.o -c /home/krynn/code/src/domains_schools.c
 
 CMakeFiles/circle.dir/src/domains_schools.c.i: cmake_force
@@ -971,7 +1489,7 @@ CMakeFiles/circle.dir/src/domains_schools.c.s: cmake_force
 CMakeFiles/circle.dir/src/dotenv.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/dotenv.c.o: /home/krynn/code/src/dotenv.c
 CMakeFiles/circle.dir/src/dotenv.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_65) "Building C object CMakeFiles/circle.dir/src/dotenv.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_102) "Building C object CMakeFiles/circle.dir/src/dotenv.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/dotenv.c.o -MF CMakeFiles/circle.dir/src/dotenv.c.o.d -o CMakeFiles/circle.dir/src/dotenv.c.o -c /home/krynn/code/src/dotenv.c
 
 CMakeFiles/circle.dir/src/dotenv.c.i: cmake_force
@@ -985,7 +1503,7 @@ CMakeFiles/circle.dir/src/dotenv.c.s: cmake_force
 CMakeFiles/circle.dir/src/encounters.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/encounters.c.o: /home/krynn/code/src/encounters.c
 CMakeFiles/circle.dir/src/encounters.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_66) "Building C object CMakeFiles/circle.dir/src/encounters.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_103) "Building C object CMakeFiles/circle.dir/src/encounters.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/encounters.c.o -MF CMakeFiles/circle.dir/src/encounters.c.o.d -o CMakeFiles/circle.dir/src/encounters.c.o -c /home/krynn/code/src/encounters.c
 
 CMakeFiles/circle.dir/src/encounters.c.i: cmake_force
@@ -999,7 +1517,7 @@ CMakeFiles/circle.dir/src/encounters.c.s: cmake_force
 CMakeFiles/circle.dir/src/evolutions.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/evolutions.c.o: /home/krynn/code/src/evolutions.c
 CMakeFiles/circle.dir/src/evolutions.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_67) "Building C object CMakeFiles/circle.dir/src/evolutions.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_104) "Building C object CMakeFiles/circle.dir/src/evolutions.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/evolutions.c.o -MF CMakeFiles/circle.dir/src/evolutions.c.o.d -o CMakeFiles/circle.dir/src/evolutions.c.o -c /home/krynn/code/src/evolutions.c
 
 CMakeFiles/circle.dir/src/evolutions.c.i: cmake_force
@@ -1013,7 +1531,7 @@ CMakeFiles/circle.dir/src/evolutions.c.s: cmake_force
 CMakeFiles/circle.dir/src/feats.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/feats.c.o: /home/krynn/code/src/feats.c
 CMakeFiles/circle.dir/src/feats.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_68) "Building C object CMakeFiles/circle.dir/src/feats.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_105) "Building C object CMakeFiles/circle.dir/src/feats.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/feats.c.o -MF CMakeFiles/circle.dir/src/feats.c.o.d -o CMakeFiles/circle.dir/src/feats.c.o -c /home/krynn/code/src/feats.c
 
 CMakeFiles/circle.dir/src/feats.c.i: cmake_force
@@ -1027,7 +1545,7 @@ CMakeFiles/circle.dir/src/feats.c.s: cmake_force
 CMakeFiles/circle.dir/src/fight.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/fight.c.o: /home/krynn/code/src/fight.c
 CMakeFiles/circle.dir/src/fight.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_69) "Building C object CMakeFiles/circle.dir/src/fight.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_106) "Building C object CMakeFiles/circle.dir/src/fight.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/fight.c.o -MF CMakeFiles/circle.dir/src/fight.c.o.d -o CMakeFiles/circle.dir/src/fight.c.o -c /home/krynn/code/src/fight.c
 
 CMakeFiles/circle.dir/src/fight.c.i: cmake_force
@@ -1041,7 +1559,7 @@ CMakeFiles/circle.dir/src/fight.c.s: cmake_force
 CMakeFiles/circle.dir/src/gain.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/gain.c.o: /home/krynn/code/src/gain.c
 CMakeFiles/circle.dir/src/gain.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_70) "Building C object CMakeFiles/circle.dir/src/gain.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_107) "Building C object CMakeFiles/circle.dir/src/gain.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/gain.c.o -MF CMakeFiles/circle.dir/src/gain.c.o.d -o CMakeFiles/circle.dir/src/gain.c.o -c /home/krynn/code/src/gain.c
 
 CMakeFiles/circle.dir/src/gain.c.i: cmake_force
@@ -1055,7 +1573,7 @@ CMakeFiles/circle.dir/src/gain.c.s: cmake_force
 CMakeFiles/circle.dir/src/genmob.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/genmob.c.o: /home/krynn/code/src/genmob.c
 CMakeFiles/circle.dir/src/genmob.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_71) "Building C object CMakeFiles/circle.dir/src/genmob.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_108) "Building C object CMakeFiles/circle.dir/src/genmob.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/genmob.c.o -MF CMakeFiles/circle.dir/src/genmob.c.o.d -o CMakeFiles/circle.dir/src/genmob.c.o -c /home/krynn/code/src/genmob.c
 
 CMakeFiles/circle.dir/src/genmob.c.i: cmake_force
@@ -1069,7 +1587,7 @@ CMakeFiles/circle.dir/src/genmob.c.s: cmake_force
 CMakeFiles/circle.dir/src/genobj.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/genobj.c.o: /home/krynn/code/src/genobj.c
 CMakeFiles/circle.dir/src/genobj.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_72) "Building C object CMakeFiles/circle.dir/src/genobj.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_109) "Building C object CMakeFiles/circle.dir/src/genobj.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/genobj.c.o -MF CMakeFiles/circle.dir/src/genobj.c.o.d -o CMakeFiles/circle.dir/src/genobj.c.o -c /home/krynn/code/src/genobj.c
 
 CMakeFiles/circle.dir/src/genobj.c.i: cmake_force
@@ -1083,7 +1601,7 @@ CMakeFiles/circle.dir/src/genobj.c.s: cmake_force
 CMakeFiles/circle.dir/src/genolc.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/genolc.c.o: /home/krynn/code/src/genolc.c
 CMakeFiles/circle.dir/src/genolc.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_73) "Building C object CMakeFiles/circle.dir/src/genolc.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_110) "Building C object CMakeFiles/circle.dir/src/genolc.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/genolc.c.o -MF CMakeFiles/circle.dir/src/genolc.c.o.d -o CMakeFiles/circle.dir/src/genolc.c.o -c /home/krynn/code/src/genolc.c
 
 CMakeFiles/circle.dir/src/genolc.c.i: cmake_force
@@ -1097,7 +1615,7 @@ CMakeFiles/circle.dir/src/genolc.c.s: cmake_force
 CMakeFiles/circle.dir/src/genqst.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/genqst.c.o: /home/krynn/code/src/genqst.c
 CMakeFiles/circle.dir/src/genqst.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_74) "Building C object CMakeFiles/circle.dir/src/genqst.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_111) "Building C object CMakeFiles/circle.dir/src/genqst.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/genqst.c.o -MF CMakeFiles/circle.dir/src/genqst.c.o.d -o CMakeFiles/circle.dir/src/genqst.c.o -c /home/krynn/code/src/genqst.c
 
 CMakeFiles/circle.dir/src/genqst.c.i: cmake_force
@@ -1111,7 +1629,7 @@ CMakeFiles/circle.dir/src/genqst.c.s: cmake_force
 CMakeFiles/circle.dir/src/genshp.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/genshp.c.o: /home/krynn/code/src/genshp.c
 CMakeFiles/circle.dir/src/genshp.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_75) "Building C object CMakeFiles/circle.dir/src/genshp.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_112) "Building C object CMakeFiles/circle.dir/src/genshp.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/genshp.c.o -MF CMakeFiles/circle.dir/src/genshp.c.o.d -o CMakeFiles/circle.dir/src/genshp.c.o -c /home/krynn/code/src/genshp.c
 
 CMakeFiles/circle.dir/src/genshp.c.i: cmake_force
@@ -1125,7 +1643,7 @@ CMakeFiles/circle.dir/src/genshp.c.s: cmake_force
 CMakeFiles/circle.dir/src/genwld.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/genwld.c.o: /home/krynn/code/src/genwld.c
 CMakeFiles/circle.dir/src/genwld.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_76) "Building C object CMakeFiles/circle.dir/src/genwld.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_113) "Building C object CMakeFiles/circle.dir/src/genwld.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/genwld.c.o -MF CMakeFiles/circle.dir/src/genwld.c.o.d -o CMakeFiles/circle.dir/src/genwld.c.o -c /home/krynn/code/src/genwld.c
 
 CMakeFiles/circle.dir/src/genwld.c.i: cmake_force
@@ -1139,7 +1657,7 @@ CMakeFiles/circle.dir/src/genwld.c.s: cmake_force
 CMakeFiles/circle.dir/src/genzon.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/genzon.c.o: /home/krynn/code/src/genzon.c
 CMakeFiles/circle.dir/src/genzon.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_77) "Building C object CMakeFiles/circle.dir/src/genzon.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_114) "Building C object CMakeFiles/circle.dir/src/genzon.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/genzon.c.o -MF CMakeFiles/circle.dir/src/genzon.c.o.d -o CMakeFiles/circle.dir/src/genzon.c.o -c /home/krynn/code/src/genzon.c
 
 CMakeFiles/circle.dir/src/genzon.c.i: cmake_force
@@ -1153,7 +1671,7 @@ CMakeFiles/circle.dir/src/genzon.c.s: cmake_force
 CMakeFiles/circle.dir/src/graph.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/graph.c.o: /home/krynn/code/src/graph.c
 CMakeFiles/circle.dir/src/graph.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_78) "Building C object CMakeFiles/circle.dir/src/graph.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_115) "Building C object CMakeFiles/circle.dir/src/graph.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/graph.c.o -MF CMakeFiles/circle.dir/src/graph.c.o.d -o CMakeFiles/circle.dir/src/graph.c.o -c /home/krynn/code/src/graph.c
 
 CMakeFiles/circle.dir/src/graph.c.i: cmake_force
@@ -1167,7 +1685,7 @@ CMakeFiles/circle.dir/src/graph.c.s: cmake_force
 CMakeFiles/circle.dir/src/grapple.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/grapple.c.o: /home/krynn/code/src/grapple.c
 CMakeFiles/circle.dir/src/grapple.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_79) "Building C object CMakeFiles/circle.dir/src/grapple.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_116) "Building C object CMakeFiles/circle.dir/src/grapple.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/grapple.c.o -MF CMakeFiles/circle.dir/src/grapple.c.o.d -o CMakeFiles/circle.dir/src/grapple.c.o -c /home/krynn/code/src/grapple.c
 
 CMakeFiles/circle.dir/src/grapple.c.i: cmake_force
@@ -1181,7 +1699,7 @@ CMakeFiles/circle.dir/src/grapple.c.s: cmake_force
 CMakeFiles/circle.dir/src/handler.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/handler.c.o: /home/krynn/code/src/handler.c
 CMakeFiles/circle.dir/src/handler.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_80) "Building C object CMakeFiles/circle.dir/src/handler.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_117) "Building C object CMakeFiles/circle.dir/src/handler.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/handler.c.o -MF CMakeFiles/circle.dir/src/handler.c.o.d -o CMakeFiles/circle.dir/src/handler.c.o -c /home/krynn/code/src/handler.c
 
 CMakeFiles/circle.dir/src/handler.c.i: cmake_force
@@ -1195,7 +1713,7 @@ CMakeFiles/circle.dir/src/handler.c.s: cmake_force
 CMakeFiles/circle.dir/src/hedit.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/hedit.c.o: /home/krynn/code/src/hedit.c
 CMakeFiles/circle.dir/src/hedit.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_81) "Building C object CMakeFiles/circle.dir/src/hedit.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_118) "Building C object CMakeFiles/circle.dir/src/hedit.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/hedit.c.o -MF CMakeFiles/circle.dir/src/hedit.c.o.d -o CMakeFiles/circle.dir/src/hedit.c.o -c /home/krynn/code/src/hedit.c
 
 CMakeFiles/circle.dir/src/hedit.c.i: cmake_force
@@ -1209,7 +1727,7 @@ CMakeFiles/circle.dir/src/hedit.c.s: cmake_force
 CMakeFiles/circle.dir/src/help.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/help.c.o: /home/krynn/code/src/help.c
 CMakeFiles/circle.dir/src/help.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_82) "Building C object CMakeFiles/circle.dir/src/help.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_119) "Building C object CMakeFiles/circle.dir/src/help.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/help.c.o -MF CMakeFiles/circle.dir/src/help.c.o.d -o CMakeFiles/circle.dir/src/help.c.o -c /home/krynn/code/src/help.c
 
 CMakeFiles/circle.dir/src/help.c.i: cmake_force
@@ -1223,7 +1741,7 @@ CMakeFiles/circle.dir/src/help.c.s: cmake_force
 CMakeFiles/circle.dir/src/helpers.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/helpers.c.o: /home/krynn/code/src/helpers.c
 CMakeFiles/circle.dir/src/helpers.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_83) "Building C object CMakeFiles/circle.dir/src/helpers.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_120) "Building C object CMakeFiles/circle.dir/src/helpers.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/helpers.c.o -MF CMakeFiles/circle.dir/src/helpers.c.o.d -o CMakeFiles/circle.dir/src/helpers.c.o -c /home/krynn/code/src/helpers.c
 
 CMakeFiles/circle.dir/src/helpers.c.i: cmake_force
@@ -1237,7 +1755,7 @@ CMakeFiles/circle.dir/src/helpers.c.s: cmake_force
 CMakeFiles/circle.dir/src/hlqedit.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/hlqedit.c.o: /home/krynn/code/src/hlqedit.c
 CMakeFiles/circle.dir/src/hlqedit.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_84) "Building C object CMakeFiles/circle.dir/src/hlqedit.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_121) "Building C object CMakeFiles/circle.dir/src/hlqedit.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/hlqedit.c.o -MF CMakeFiles/circle.dir/src/hlqedit.c.o.d -o CMakeFiles/circle.dir/src/hlqedit.c.o -c /home/krynn/code/src/hlqedit.c
 
 CMakeFiles/circle.dir/src/hlqedit.c.i: cmake_force
@@ -1251,7 +1769,7 @@ CMakeFiles/circle.dir/src/hlqedit.c.s: cmake_force
 CMakeFiles/circle.dir/src/hlquest.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/hlquest.c.o: /home/krynn/code/src/hlquest.c
 CMakeFiles/circle.dir/src/hlquest.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_85) "Building C object CMakeFiles/circle.dir/src/hlquest.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_122) "Building C object CMakeFiles/circle.dir/src/hlquest.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/hlquest.c.o -MF CMakeFiles/circle.dir/src/hlquest.c.o.d -o CMakeFiles/circle.dir/src/hlquest.c.o -c /home/krynn/code/src/hlquest.c
 
 CMakeFiles/circle.dir/src/hlquest.c.i: cmake_force
@@ -1265,7 +1783,7 @@ CMakeFiles/circle.dir/src/hlquest.c.s: cmake_force
 CMakeFiles/circle.dir/src/house.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/house.c.o: /home/krynn/code/src/house.c
 CMakeFiles/circle.dir/src/house.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_86) "Building C object CMakeFiles/circle.dir/src/house.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_123) "Building C object CMakeFiles/circle.dir/src/house.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/house.c.o -MF CMakeFiles/circle.dir/src/house.c.o.d -o CMakeFiles/circle.dir/src/house.c.o -c /home/krynn/code/src/house.c
 
 CMakeFiles/circle.dir/src/house.c.i: cmake_force
@@ -1279,7 +1797,7 @@ CMakeFiles/circle.dir/src/house.c.s: cmake_force
 CMakeFiles/circle.dir/src/housing.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/housing.c.o: /home/krynn/code/src/housing.c
 CMakeFiles/circle.dir/src/housing.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_87) "Building C object CMakeFiles/circle.dir/src/housing.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_124) "Building C object CMakeFiles/circle.dir/src/housing.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/housing.c.o -MF CMakeFiles/circle.dir/src/housing.c.o.d -o CMakeFiles/circle.dir/src/housing.c.o -c /home/krynn/code/src/housing.c
 
 CMakeFiles/circle.dir/src/housing.c.i: cmake_force
@@ -1293,7 +1811,7 @@ CMakeFiles/circle.dir/src/housing.c.s: cmake_force
 CMakeFiles/circle.dir/src/estate.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/estate.c.o: /home/krynn/code/src/estate.c
 CMakeFiles/circle.dir/src/estate.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_88) "Building C object CMakeFiles/circle.dir/src/estate.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_125) "Building C object CMakeFiles/circle.dir/src/estate.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/estate.c.o -MF CMakeFiles/circle.dir/src/estate.c.o.d -o CMakeFiles/circle.dir/src/estate.c.o -c /home/krynn/code/src/estate.c
 
 CMakeFiles/circle.dir/src/estate.c.i: cmake_force
@@ -1307,7 +1825,7 @@ CMakeFiles/circle.dir/src/estate.c.s: cmake_force
 CMakeFiles/circle.dir/src/legendary.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/legendary.c.o: /home/krynn/code/src/legendary.c
 CMakeFiles/circle.dir/src/legendary.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_89) "Building C object CMakeFiles/circle.dir/src/legendary.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_126) "Building C object CMakeFiles/circle.dir/src/legendary.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/legendary.c.o -MF CMakeFiles/circle.dir/src/legendary.c.o.d -o CMakeFiles/circle.dir/src/legendary.c.o -c /home/krynn/code/src/legendary.c
 
 CMakeFiles/circle.dir/src/legendary.c.i: cmake_force
@@ -1321,7 +1839,7 @@ CMakeFiles/circle.dir/src/legendary.c.s: cmake_force
 CMakeFiles/circle.dir/src/legendary_equipment.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/legendary_equipment.c.o: /home/krynn/code/src/legendary_equipment.c
 CMakeFiles/circle.dir/src/legendary_equipment.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_90) "Building C object CMakeFiles/circle.dir/src/legendary_equipment.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_127) "Building C object CMakeFiles/circle.dir/src/legendary_equipment.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/legendary_equipment.c.o -MF CMakeFiles/circle.dir/src/legendary_equipment.c.o.d -o CMakeFiles/circle.dir/src/legendary_equipment.c.o -c /home/krynn/code/src/legendary_equipment.c
 
 CMakeFiles/circle.dir/src/legendary_equipment.c.i: cmake_force
@@ -1335,7 +1853,7 @@ CMakeFiles/circle.dir/src/legendary_equipment.c.s: cmake_force
 CMakeFiles/circle.dir/src/legendary_techniques.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/legendary_techniques.c.o: /home/krynn/code/src/legendary_techniques.c
 CMakeFiles/circle.dir/src/legendary_techniques.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_91) "Building C object CMakeFiles/circle.dir/src/legendary_techniques.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_128) "Building C object CMakeFiles/circle.dir/src/legendary_techniques.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/legendary_techniques.c.o -MF CMakeFiles/circle.dir/src/legendary_techniques.c.o.d -o CMakeFiles/circle.dir/src/legendary_techniques.c.o -c /home/krynn/code/src/legendary_techniques.c
 
 CMakeFiles/circle.dir/src/legendary_techniques.c.i: cmake_force
@@ -1349,7 +1867,7 @@ CMakeFiles/circle.dir/src/legendary_techniques.c.s: cmake_force
 CMakeFiles/circle.dir/src/legendary_effects.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/legendary_effects.c.o: /home/krynn/code/src/legendary_effects.c
 CMakeFiles/circle.dir/src/legendary_effects.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_92) "Building C object CMakeFiles/circle.dir/src/legendary_effects.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_129) "Building C object CMakeFiles/circle.dir/src/legendary_effects.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/legendary_effects.c.o -MF CMakeFiles/circle.dir/src/legendary_effects.c.o.d -o CMakeFiles/circle.dir/src/legendary_effects.c.o -c /home/krynn/code/src/legendary_effects.c
 
 CMakeFiles/circle.dir/src/legendary_effects.c.i: cmake_force
@@ -1363,7 +1881,7 @@ CMakeFiles/circle.dir/src/legendary_effects.c.s: cmake_force
 CMakeFiles/circle.dir/src/legendary_foundations.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/legendary_foundations.c.o: /home/krynn/code/src/legendary_foundations.c
 CMakeFiles/circle.dir/src/legendary_foundations.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_93) "Building C object CMakeFiles/circle.dir/src/legendary_foundations.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_130) "Building C object CMakeFiles/circle.dir/src/legendary_foundations.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/legendary_foundations.c.o -MF CMakeFiles/circle.dir/src/legendary_foundations.c.o.d -o CMakeFiles/circle.dir/src/legendary_foundations.c.o -c /home/krynn/code/src/legendary_foundations.c
 
 CMakeFiles/circle.dir/src/legendary_foundations.c.i: cmake_force
@@ -1377,7 +1895,7 @@ CMakeFiles/circle.dir/src/legendary_foundations.c.s: cmake_force
 CMakeFiles/circle.dir/src/legendary_commands.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/legendary_commands.c.o: /home/krynn/code/src/legendary_commands.c
 CMakeFiles/circle.dir/src/legendary_commands.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_94) "Building C object CMakeFiles/circle.dir/src/legendary_commands.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_131) "Building C object CMakeFiles/circle.dir/src/legendary_commands.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/legendary_commands.c.o -MF CMakeFiles/circle.dir/src/legendary_commands.c.o.d -o CMakeFiles/circle.dir/src/legendary_commands.c.o -c /home/krynn/code/src/legendary_commands.c
 
 CMakeFiles/circle.dir/src/legendary_commands.c.i: cmake_force
@@ -1391,7 +1909,7 @@ CMakeFiles/circle.dir/src/legendary_commands.c.s: cmake_force
 CMakeFiles/circle.dir/src/legendary_earnings.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/legendary_earnings.c.o: /home/krynn/code/src/legendary_earnings.c
 CMakeFiles/circle.dir/src/legendary_earnings.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_95) "Building C object CMakeFiles/circle.dir/src/legendary_earnings.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_132) "Building C object CMakeFiles/circle.dir/src/legendary_earnings.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/legendary_earnings.c.o -MF CMakeFiles/circle.dir/src/legendary_earnings.c.o.d -o CMakeFiles/circle.dir/src/legendary_earnings.c.o -c /home/krynn/code/src/legendary_earnings.c
 
 CMakeFiles/circle.dir/src/legendary_earnings.c.i: cmake_force
@@ -1405,7 +1923,7 @@ CMakeFiles/circle.dir/src/legendary_earnings.c.s: cmake_force
 CMakeFiles/circle.dir/src/legendary_transaction.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/legendary_transaction.c.o: /home/krynn/code/src/legendary_transaction.c
 CMakeFiles/circle.dir/src/legendary_transaction.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_96) "Building C object CMakeFiles/circle.dir/src/legendary_transaction.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_133) "Building C object CMakeFiles/circle.dir/src/legendary_transaction.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/legendary_transaction.c.o -MF CMakeFiles/circle.dir/src/legendary_transaction.c.o.d -o CMakeFiles/circle.dir/src/legendary_transaction.c.o -c /home/krynn/code/src/legendary_transaction.c
 
 CMakeFiles/circle.dir/src/legendary_transaction.c.i: cmake_force
@@ -1419,7 +1937,7 @@ CMakeFiles/circle.dir/src/legendary_transaction.c.s: cmake_force
 CMakeFiles/circle.dir/src/durable_file.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/durable_file.c.o: /home/krynn/code/src/durable_file.c
 CMakeFiles/circle.dir/src/durable_file.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_97) "Building C object CMakeFiles/circle.dir/src/durable_file.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_134) "Building C object CMakeFiles/circle.dir/src/durable_file.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/durable_file.c.o -MF CMakeFiles/circle.dir/src/durable_file.c.o.d -o CMakeFiles/circle.dir/src/durable_file.c.o -c /home/krynn/code/src/durable_file.c
 
 CMakeFiles/circle.dir/src/durable_file.c.i: cmake_force
@@ -1433,7 +1951,7 @@ CMakeFiles/circle.dir/src/durable_file.c.s: cmake_force
 CMakeFiles/circle.dir/src/legendary_store.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/legendary_store.c.o: /home/krynn/code/src/legendary_store.c
 CMakeFiles/circle.dir/src/legendary_store.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_98) "Building C object CMakeFiles/circle.dir/src/legendary_store.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_135) "Building C object CMakeFiles/circle.dir/src/legendary_store.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/legendary_store.c.o -MF CMakeFiles/circle.dir/src/legendary_store.c.o.d -o CMakeFiles/circle.dir/src/legendary_store.c.o -c /home/krynn/code/src/legendary_store.c
 
 CMakeFiles/circle.dir/src/legendary_store.c.i: cmake_force
@@ -1447,7 +1965,7 @@ CMakeFiles/circle.dir/src/legendary_store.c.s: cmake_force
 CMakeFiles/circle.dir/src/legendary_identity.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/legendary_identity.c.o: /home/krynn/code/src/legendary_identity.c
 CMakeFiles/circle.dir/src/legendary_identity.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_99) "Building C object CMakeFiles/circle.dir/src/legendary_identity.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_136) "Building C object CMakeFiles/circle.dir/src/legendary_identity.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/legendary_identity.c.o -MF CMakeFiles/circle.dir/src/legendary_identity.c.o.d -o CMakeFiles/circle.dir/src/legendary_identity.c.o -c /home/krynn/code/src/legendary_identity.c
 
 CMakeFiles/circle.dir/src/legendary_identity.c.i: cmake_force
@@ -1461,7 +1979,7 @@ CMakeFiles/circle.dir/src/legendary_identity.c.s: cmake_force
 CMakeFiles/circle.dir/src/auction_house.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/auction_house.c.o: /home/krynn/code/src/auction_house.c
 CMakeFiles/circle.dir/src/auction_house.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_100) "Building C object CMakeFiles/circle.dir/src/auction_house.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_137) "Building C object CMakeFiles/circle.dir/src/auction_house.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/auction_house.c.o -MF CMakeFiles/circle.dir/src/auction_house.c.o.d -o CMakeFiles/circle.dir/src/auction_house.c.o -c /home/krynn/code/src/auction_house.c
 
 CMakeFiles/circle.dir/src/auction_house.c.i: cmake_force
@@ -1475,7 +1993,7 @@ CMakeFiles/circle.dir/src/auction_house.c.s: cmake_force
 CMakeFiles/circle.dir/src/player_shop.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/player_shop.c.o: /home/krynn/code/src/player_shop.c
 CMakeFiles/circle.dir/src/player_shop.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_101) "Building C object CMakeFiles/circle.dir/src/player_shop.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_138) "Building C object CMakeFiles/circle.dir/src/player_shop.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/player_shop.c.o -MF CMakeFiles/circle.dir/src/player_shop.c.o.d -o CMakeFiles/circle.dir/src/player_shop.c.o -c /home/krynn/code/src/player_shop.c
 
 CMakeFiles/circle.dir/src/player_shop.c.i: cmake_force
@@ -1489,7 +2007,7 @@ CMakeFiles/circle.dir/src/player_shop.c.s: cmake_force
 CMakeFiles/circle.dir/src/hsedit.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/hsedit.c.o: /home/krynn/code/src/hsedit.c
 CMakeFiles/circle.dir/src/hsedit.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_102) "Building C object CMakeFiles/circle.dir/src/hsedit.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_139) "Building C object CMakeFiles/circle.dir/src/hsedit.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/hsedit.c.o -MF CMakeFiles/circle.dir/src/hsedit.c.o.d -o CMakeFiles/circle.dir/src/hsedit.c.o -c /home/krynn/code/src/hsedit.c
 
 CMakeFiles/circle.dir/src/hsedit.c.i: cmake_force
@@ -1503,7 +2021,7 @@ CMakeFiles/circle.dir/src/hsedit.c.s: cmake_force
 CMakeFiles/circle.dir/src/hunts.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/hunts.c.o: /home/krynn/code/src/hunts.c
 CMakeFiles/circle.dir/src/hunts.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_103) "Building C object CMakeFiles/circle.dir/src/hunts.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_140) "Building C object CMakeFiles/circle.dir/src/hunts.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/hunts.c.o -MF CMakeFiles/circle.dir/src/hunts.c.o.d -o CMakeFiles/circle.dir/src/hunts.c.o -c /home/krynn/code/src/hunts.c
 
 CMakeFiles/circle.dir/src/hunts.c.i: cmake_force
@@ -1517,7 +2035,7 @@ CMakeFiles/circle.dir/src/hunts.c.s: cmake_force
 CMakeFiles/circle.dir/src/ibt.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/ibt.c.o: /home/krynn/code/src/ibt.c
 CMakeFiles/circle.dir/src/ibt.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_104) "Building C object CMakeFiles/circle.dir/src/ibt.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_141) "Building C object CMakeFiles/circle.dir/src/ibt.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/ibt.c.o -MF CMakeFiles/circle.dir/src/ibt.c.o.d -o CMakeFiles/circle.dir/src/ibt.c.o -c /home/krynn/code/src/ibt.c
 
 CMakeFiles/circle.dir/src/ibt.c.i: cmake_force
@@ -1531,7 +2049,7 @@ CMakeFiles/circle.dir/src/ibt.c.s: cmake_force
 CMakeFiles/circle.dir/src/improved-edit.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/improved-edit.c.o: /home/krynn/code/src/improved-edit.c
 CMakeFiles/circle.dir/src/improved-edit.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_105) "Building C object CMakeFiles/circle.dir/src/improved-edit.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_142) "Building C object CMakeFiles/circle.dir/src/improved-edit.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/improved-edit.c.o -MF CMakeFiles/circle.dir/src/improved-edit.c.o.d -o CMakeFiles/circle.dir/src/improved-edit.c.o -c /home/krynn/code/src/improved-edit.c
 
 CMakeFiles/circle.dir/src/improved-edit.c.i: cmake_force
@@ -1545,7 +2063,7 @@ CMakeFiles/circle.dir/src/improved-edit.c.s: cmake_force
 CMakeFiles/circle.dir/src/interpreter.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/interpreter.c.o: /home/krynn/code/src/interpreter.c
 CMakeFiles/circle.dir/src/interpreter.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_106) "Building C object CMakeFiles/circle.dir/src/interpreter.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_143) "Building C object CMakeFiles/circle.dir/src/interpreter.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/interpreter.c.o -MF CMakeFiles/circle.dir/src/interpreter.c.o.d -o CMakeFiles/circle.dir/src/interpreter.c.o -c /home/krynn/code/src/interpreter.c
 
 CMakeFiles/circle.dir/src/interpreter.c.i: cmake_force
@@ -1559,7 +2077,7 @@ CMakeFiles/circle.dir/src/interpreter.c.s: cmake_force
 CMakeFiles/circle.dir/src/introduce.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/introduce.c.o: /home/krynn/code/src/introduce.c
 CMakeFiles/circle.dir/src/introduce.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_107) "Building C object CMakeFiles/circle.dir/src/introduce.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_144) "Building C object CMakeFiles/circle.dir/src/introduce.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/introduce.c.o -MF CMakeFiles/circle.dir/src/introduce.c.o.d -o CMakeFiles/circle.dir/src/introduce.c.o -c /home/krynn/code/src/introduce.c
 
 CMakeFiles/circle.dir/src/introduce.c.i: cmake_force
@@ -1573,7 +2091,7 @@ CMakeFiles/circle.dir/src/introduce.c.s: cmake_force
 CMakeFiles/circle.dir/src/kdtree.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/kdtree.c.o: /home/krynn/code/src/kdtree.c
 CMakeFiles/circle.dir/src/kdtree.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_108) "Building C object CMakeFiles/circle.dir/src/kdtree.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_145) "Building C object CMakeFiles/circle.dir/src/kdtree.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/kdtree.c.o -MF CMakeFiles/circle.dir/src/kdtree.c.o.d -o CMakeFiles/circle.dir/src/kdtree.c.o -c /home/krynn/code/src/kdtree.c
 
 CMakeFiles/circle.dir/src/kdtree.c.i: cmake_force
@@ -1587,7 +2105,7 @@ CMakeFiles/circle.dir/src/kdtree.c.s: cmake_force
 CMakeFiles/circle.dir/src/limits.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/limits.c.o: /home/krynn/code/src/limits.c
 CMakeFiles/circle.dir/src/limits.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_109) "Building C object CMakeFiles/circle.dir/src/limits.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_146) "Building C object CMakeFiles/circle.dir/src/limits.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/limits.c.o -MF CMakeFiles/circle.dir/src/limits.c.o.d -o CMakeFiles/circle.dir/src/limits.c.o -c /home/krynn/code/src/limits.c
 
 CMakeFiles/circle.dir/src/limits.c.i: cmake_force
@@ -1601,7 +2119,7 @@ CMakeFiles/circle.dir/src/limits.c.s: cmake_force
 CMakeFiles/circle.dir/src/lists.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/lists.c.o: /home/krynn/code/src/lists.c
 CMakeFiles/circle.dir/src/lists.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_110) "Building C object CMakeFiles/circle.dir/src/lists.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_147) "Building C object CMakeFiles/circle.dir/src/lists.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/lists.c.o -MF CMakeFiles/circle.dir/src/lists.c.o.d -o CMakeFiles/circle.dir/src/lists.c.o -c /home/krynn/code/src/lists.c
 
 CMakeFiles/circle.dir/src/lists.c.i: cmake_force
@@ -1615,7 +2133,7 @@ CMakeFiles/circle.dir/src/lists.c.s: cmake_force
 CMakeFiles/circle.dir/src/magic.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/magic.c.o: /home/krynn/code/src/magic.c
 CMakeFiles/circle.dir/src/magic.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_111) "Building C object CMakeFiles/circle.dir/src/magic.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_148) "Building C object CMakeFiles/circle.dir/src/magic.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/magic.c.o -MF CMakeFiles/circle.dir/src/magic.c.o.d -o CMakeFiles/circle.dir/src/magic.c.o -c /home/krynn/code/src/magic.c
 
 CMakeFiles/circle.dir/src/magic.c.i: cmake_force
@@ -1626,10 +2144,24 @@ CMakeFiles/circle.dir/src/magic.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/magic.c.s"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/magic.c -o CMakeFiles/circle.dir/src/magic.c.s
 
+CMakeFiles/circle.dir/src/spell_batch_final.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/spell_batch_final.c.o: /home/krynn/code/src/spell_batch_final.c
+CMakeFiles/circle.dir/src/spell_batch_final.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_149) "Building C object CMakeFiles/circle.dir/src/spell_batch_final.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/spell_batch_final.c.o -MF CMakeFiles/circle.dir/src/spell_batch_final.c.o.d -o CMakeFiles/circle.dir/src/spell_batch_final.c.o -c /home/krynn/code/src/spell_batch_final.c
+
+CMakeFiles/circle.dir/src/spell_batch_final.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/spell_batch_final.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/spell_batch_final.c > CMakeFiles/circle.dir/src/spell_batch_final.c.i
+
+CMakeFiles/circle.dir/src/spell_batch_final.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/spell_batch_final.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/spell_batch_final.c -o CMakeFiles/circle.dir/src/spell_batch_final.c.s
+
 CMakeFiles/circle.dir/src/epic_magic.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/epic_magic.c.o: /home/krynn/code/src/epic_magic.c
 CMakeFiles/circle.dir/src/epic_magic.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_112) "Building C object CMakeFiles/circle.dir/src/epic_magic.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_150) "Building C object CMakeFiles/circle.dir/src/epic_magic.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/epic_magic.c.o -MF CMakeFiles/circle.dir/src/epic_magic.c.o.d -o CMakeFiles/circle.dir/src/epic_magic.c.o -c /home/krynn/code/src/epic_magic.c
 
 CMakeFiles/circle.dir/src/epic_magic.c.i: cmake_force
@@ -1643,7 +2175,7 @@ CMakeFiles/circle.dir/src/epic_magic.c.s: cmake_force
 CMakeFiles/circle.dir/src/mail.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/mail.c.o: /home/krynn/code/src/mail.c
 CMakeFiles/circle.dir/src/mail.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_113) "Building C object CMakeFiles/circle.dir/src/mail.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_151) "Building C object CMakeFiles/circle.dir/src/mail.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/mail.c.o -MF CMakeFiles/circle.dir/src/mail.c.o.d -o CMakeFiles/circle.dir/src/mail.c.o -c /home/krynn/code/src/mail.c
 
 CMakeFiles/circle.dir/src/mail.c.i: cmake_force
@@ -1657,7 +2189,7 @@ CMakeFiles/circle.dir/src/mail.c.s: cmake_force
 CMakeFiles/circle.dir/src/medit.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/medit.c.o: /home/krynn/code/src/medit.c
 CMakeFiles/circle.dir/src/medit.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_114) "Building C object CMakeFiles/circle.dir/src/medit.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_152) "Building C object CMakeFiles/circle.dir/src/medit.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/medit.c.o -MF CMakeFiles/circle.dir/src/medit.c.o.d -o CMakeFiles/circle.dir/src/medit.c.o -c /home/krynn/code/src/medit.c
 
 CMakeFiles/circle.dir/src/medit.c.i: cmake_force
@@ -1668,10 +2200,66 @@ CMakeFiles/circle.dir/src/medit.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/medit.c.s"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/medit.c -o CMakeFiles/circle.dir/src/medit.c.s
 
+CMakeFiles/circle.dir/src/epic_feats.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/epic_feats.c.o: /home/krynn/code/src/epic_feats.c
+CMakeFiles/circle.dir/src/epic_feats.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_153) "Building C object CMakeFiles/circle.dir/src/epic_feats.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/epic_feats.c.o -MF CMakeFiles/circle.dir/src/epic_feats.c.o.d -o CMakeFiles/circle.dir/src/epic_feats.c.o -c /home/krynn/code/src/epic_feats.c
+
+CMakeFiles/circle.dir/src/epic_feats.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/epic_feats.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/epic_feats.c > CMakeFiles/circle.dir/src/epic_feats.c.i
+
+CMakeFiles/circle.dir/src/epic_feats.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/epic_feats.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/epic_feats.c -o CMakeFiles/circle.dir/src/epic_feats.c.s
+
+CMakeFiles/circle.dir/src/epic_feats2.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/epic_feats2.c.o: /home/krynn/code/src/epic_feats2.c
+CMakeFiles/circle.dir/src/epic_feats2.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_154) "Building C object CMakeFiles/circle.dir/src/epic_feats2.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/epic_feats2.c.o -MF CMakeFiles/circle.dir/src/epic_feats2.c.o.d -o CMakeFiles/circle.dir/src/epic_feats2.c.o -c /home/krynn/code/src/epic_feats2.c
+
+CMakeFiles/circle.dir/src/epic_feats2.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/epic_feats2.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/epic_feats2.c > CMakeFiles/circle.dir/src/epic_feats2.c.i
+
+CMakeFiles/circle.dir/src/epic_feats2.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/epic_feats2.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/epic_feats2.c -o CMakeFiles/circle.dir/src/epic_feats2.c.s
+
+CMakeFiles/circle.dir/src/epic_feats3.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/epic_feats3.c.o: /home/krynn/code/src/epic_feats3.c
+CMakeFiles/circle.dir/src/epic_feats3.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_155) "Building C object CMakeFiles/circle.dir/src/epic_feats3.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/epic_feats3.c.o -MF CMakeFiles/circle.dir/src/epic_feats3.c.o.d -o CMakeFiles/circle.dir/src/epic_feats3.c.o -c /home/krynn/code/src/epic_feats3.c
+
+CMakeFiles/circle.dir/src/epic_feats3.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/epic_feats3.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/epic_feats3.c > CMakeFiles/circle.dir/src/epic_feats3.c.i
+
+CMakeFiles/circle.dir/src/epic_feats3.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/epic_feats3.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/epic_feats3.c -o CMakeFiles/circle.dir/src/epic_feats3.c.s
+
+CMakeFiles/circle.dir/src/class_improvements.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/class_improvements.c.o: /home/krynn/code/src/class_improvements.c
+CMakeFiles/circle.dir/src/class_improvements.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_156) "Building C object CMakeFiles/circle.dir/src/class_improvements.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/class_improvements.c.o -MF CMakeFiles/circle.dir/src/class_improvements.c.o.d -o CMakeFiles/circle.dir/src/class_improvements.c.o -c /home/krynn/code/src/class_improvements.c
+
+CMakeFiles/circle.dir/src/class_improvements.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/class_improvements.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/class_improvements.c > CMakeFiles/circle.dir/src/class_improvements.c.i
+
+CMakeFiles/circle.dir/src/class_improvements.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/class_improvements.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/class_improvements.c -o CMakeFiles/circle.dir/src/class_improvements.c.s
+
 CMakeFiles/circle.dir/src/metamagic_science.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/metamagic_science.c.o: /home/krynn/code/src/metamagic_science.c
 CMakeFiles/circle.dir/src/metamagic_science.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_115) "Building C object CMakeFiles/circle.dir/src/metamagic_science.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_157) "Building C object CMakeFiles/circle.dir/src/metamagic_science.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/metamagic_science.c.o -MF CMakeFiles/circle.dir/src/metamagic_science.c.o.d -o CMakeFiles/circle.dir/src/metamagic_science.c.o -c /home/krynn/code/src/metamagic_science.c
 
 CMakeFiles/circle.dir/src/metamagic_science.c.i: cmake_force
@@ -1685,7 +2273,7 @@ CMakeFiles/circle.dir/src/metamagic_science.c.s: cmake_force
 CMakeFiles/circle.dir/src/missions.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/missions.c.o: /home/krynn/code/src/missions.c
 CMakeFiles/circle.dir/src/missions.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_116) "Building C object CMakeFiles/circle.dir/src/missions.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_158) "Building C object CMakeFiles/circle.dir/src/missions.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/missions.c.o -MF CMakeFiles/circle.dir/src/missions.c.o.d -o CMakeFiles/circle.dir/src/missions.c.o -c /home/krynn/code/src/missions.c
 
 CMakeFiles/circle.dir/src/missions.c.i: cmake_force
@@ -1699,7 +2287,7 @@ CMakeFiles/circle.dir/src/missions.c.s: cmake_force
 CMakeFiles/circle.dir/src/mob_act.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/mob_act.c.o: /home/krynn/code/src/mob_act.c
 CMakeFiles/circle.dir/src/mob_act.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_117) "Building C object CMakeFiles/circle.dir/src/mob_act.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_159) "Building C object CMakeFiles/circle.dir/src/mob_act.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/mob_act.c.o -MF CMakeFiles/circle.dir/src/mob_act.c.o.d -o CMakeFiles/circle.dir/src/mob_act.c.o -c /home/krynn/code/src/mob_act.c
 
 CMakeFiles/circle.dir/src/mob_act.c.i: cmake_force
@@ -1713,7 +2301,7 @@ CMakeFiles/circle.dir/src/mob_act.c.s: cmake_force
 CMakeFiles/circle.dir/src/mob_memory.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/mob_memory.c.o: /home/krynn/code/src/mob_memory.c
 CMakeFiles/circle.dir/src/mob_memory.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_118) "Building C object CMakeFiles/circle.dir/src/mob_memory.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_160) "Building C object CMakeFiles/circle.dir/src/mob_memory.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/mob_memory.c.o -MF CMakeFiles/circle.dir/src/mob_memory.c.o.d -o CMakeFiles/circle.dir/src/mob_memory.c.o -c /home/krynn/code/src/mob_memory.c
 
 CMakeFiles/circle.dir/src/mob_memory.c.i: cmake_force
@@ -1727,7 +2315,7 @@ CMakeFiles/circle.dir/src/mob_memory.c.s: cmake_force
 CMakeFiles/circle.dir/src/mob_utils.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/mob_utils.c.o: /home/krynn/code/src/mob_utils.c
 CMakeFiles/circle.dir/src/mob_utils.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_119) "Building C object CMakeFiles/circle.dir/src/mob_utils.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_161) "Building C object CMakeFiles/circle.dir/src/mob_utils.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/mob_utils.c.o -MF CMakeFiles/circle.dir/src/mob_utils.c.o.d -o CMakeFiles/circle.dir/src/mob_utils.c.o -c /home/krynn/code/src/mob_utils.c
 
 CMakeFiles/circle.dir/src/mob_utils.c.i: cmake_force
@@ -1741,7 +2329,7 @@ CMakeFiles/circle.dir/src/mob_utils.c.s: cmake_force
 CMakeFiles/circle.dir/src/mob_race.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/mob_race.c.o: /home/krynn/code/src/mob_race.c
 CMakeFiles/circle.dir/src/mob_race.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_120) "Building C object CMakeFiles/circle.dir/src/mob_race.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_162) "Building C object CMakeFiles/circle.dir/src/mob_race.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/mob_race.c.o -MF CMakeFiles/circle.dir/src/mob_race.c.o.d -o CMakeFiles/circle.dir/src/mob_race.c.o -c /home/krynn/code/src/mob_race.c
 
 CMakeFiles/circle.dir/src/mob_race.c.i: cmake_force
@@ -1755,7 +2343,7 @@ CMakeFiles/circle.dir/src/mob_race.c.s: cmake_force
 CMakeFiles/circle.dir/src/mob_psionic.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/mob_psionic.c.o: /home/krynn/code/src/mob_psionic.c
 CMakeFiles/circle.dir/src/mob_psionic.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_121) "Building C object CMakeFiles/circle.dir/src/mob_psionic.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_163) "Building C object CMakeFiles/circle.dir/src/mob_psionic.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/mob_psionic.c.o -MF CMakeFiles/circle.dir/src/mob_psionic.c.o.d -o CMakeFiles/circle.dir/src/mob_psionic.c.o -c /home/krynn/code/src/mob_psionic.c
 
 CMakeFiles/circle.dir/src/mob_psionic.c.i: cmake_force
@@ -1769,7 +2357,7 @@ CMakeFiles/circle.dir/src/mob_psionic.c.s: cmake_force
 CMakeFiles/circle.dir/src/mob_class.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/mob_class.c.o: /home/krynn/code/src/mob_class.c
 CMakeFiles/circle.dir/src/mob_class.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_122) "Building C object CMakeFiles/circle.dir/src/mob_class.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_164) "Building C object CMakeFiles/circle.dir/src/mob_class.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/mob_class.c.o -MF CMakeFiles/circle.dir/src/mob_class.c.o.d -o CMakeFiles/circle.dir/src/mob_class.c.o -c /home/krynn/code/src/mob_class.c
 
 CMakeFiles/circle.dir/src/mob_class.c.i: cmake_force
@@ -1783,7 +2371,7 @@ CMakeFiles/circle.dir/src/mob_class.c.s: cmake_force
 CMakeFiles/circle.dir/src/mob_known_spells.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/mob_known_spells.c.o: /home/krynn/code/src/mob_known_spells.c
 CMakeFiles/circle.dir/src/mob_known_spells.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_123) "Building C object CMakeFiles/circle.dir/src/mob_known_spells.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_165) "Building C object CMakeFiles/circle.dir/src/mob_known_spells.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/mob_known_spells.c.o -MF CMakeFiles/circle.dir/src/mob_known_spells.c.o.d -o CMakeFiles/circle.dir/src/mob_known_spells.c.o -c /home/krynn/code/src/mob_known_spells.c
 
 CMakeFiles/circle.dir/src/mob_known_spells.c.i: cmake_force
@@ -1797,7 +2385,7 @@ CMakeFiles/circle.dir/src/mob_known_spells.c.s: cmake_force
 CMakeFiles/circle.dir/src/mob_spells.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/mob_spells.c.o: /home/krynn/code/src/mob_spells.c
 CMakeFiles/circle.dir/src/mob_spells.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_124) "Building C object CMakeFiles/circle.dir/src/mob_spells.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_166) "Building C object CMakeFiles/circle.dir/src/mob_spells.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/mob_spells.c.o -MF CMakeFiles/circle.dir/src/mob_spells.c.o.d -o CMakeFiles/circle.dir/src/mob_spells.c.o -c /home/krynn/code/src/mob_spells.c
 
 CMakeFiles/circle.dir/src/mob_spells.c.i: cmake_force
@@ -1811,7 +2399,7 @@ CMakeFiles/circle.dir/src/mob_spells.c.s: cmake_force
 CMakeFiles/circle.dir/src/mob_spellslots.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/mob_spellslots.c.o: /home/krynn/code/src/mob_spellslots.c
 CMakeFiles/circle.dir/src/mob_spellslots.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_125) "Building C object CMakeFiles/circle.dir/src/mob_spellslots.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_167) "Building C object CMakeFiles/circle.dir/src/mob_spellslots.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/mob_spellslots.c.o -MF CMakeFiles/circle.dir/src/mob_spellslots.c.o.d -o CMakeFiles/circle.dir/src/mob_spellslots.c.o -c /home/krynn/code/src/mob_spellslots.c
 
 CMakeFiles/circle.dir/src/mob_spellslots.c.i: cmake_force
@@ -1825,7 +2413,7 @@ CMakeFiles/circle.dir/src/mob_spellslots.c.s: cmake_force
 CMakeFiles/circle.dir/src/modify.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/modify.c.o: /home/krynn/code/src/modify.c
 CMakeFiles/circle.dir/src/modify.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_126) "Building C object CMakeFiles/circle.dir/src/modify.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_168) "Building C object CMakeFiles/circle.dir/src/modify.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/modify.c.o -MF CMakeFiles/circle.dir/src/modify.c.o.d -o CMakeFiles/circle.dir/src/modify.c.o -c /home/krynn/code/src/modify.c
 
 CMakeFiles/circle.dir/src/modify.c.i: cmake_force
@@ -1839,7 +2427,7 @@ CMakeFiles/circle.dir/src/modify.c.s: cmake_force
 CMakeFiles/circle.dir/src/moon_bonus_spells.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/moon_bonus_spells.c.o: /home/krynn/code/src/moon_bonus_spells.c
 CMakeFiles/circle.dir/src/moon_bonus_spells.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_127) "Building C object CMakeFiles/circle.dir/src/moon_bonus_spells.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_169) "Building C object CMakeFiles/circle.dir/src/moon_bonus_spells.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/moon_bonus_spells.c.o -MF CMakeFiles/circle.dir/src/moon_bonus_spells.c.o.d -o CMakeFiles/circle.dir/src/moon_bonus_spells.c.o -c /home/krynn/code/src/moon_bonus_spells.c
 
 CMakeFiles/circle.dir/src/moon_bonus_spells.c.i: cmake_force
@@ -1853,7 +2441,7 @@ CMakeFiles/circle.dir/src/moon_bonus_spells.c.s: cmake_force
 CMakeFiles/circle.dir/src/msgedit.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/msgedit.c.o: /home/krynn/code/src/msgedit.c
 CMakeFiles/circle.dir/src/msgedit.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_128) "Building C object CMakeFiles/circle.dir/src/msgedit.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_170) "Building C object CMakeFiles/circle.dir/src/msgedit.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/msgedit.c.o -MF CMakeFiles/circle.dir/src/msgedit.c.o.d -o CMakeFiles/circle.dir/src/msgedit.c.o -c /home/krynn/code/src/msgedit.c
 
 CMakeFiles/circle.dir/src/msgedit.c.i: cmake_force
@@ -1867,7 +2455,7 @@ CMakeFiles/circle.dir/src/msgedit.c.s: cmake_force
 CMakeFiles/circle.dir/src/mud_event.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/mud_event.c.o: /home/krynn/code/src/mud_event.c
 CMakeFiles/circle.dir/src/mud_event.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_129) "Building C object CMakeFiles/circle.dir/src/mud_event.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_171) "Building C object CMakeFiles/circle.dir/src/mud_event.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/mud_event.c.o -MF CMakeFiles/circle.dir/src/mud_event.c.o.d -o CMakeFiles/circle.dir/src/mud_event.c.o -c /home/krynn/code/src/mud_event.c
 
 CMakeFiles/circle.dir/src/mud_event.c.i: cmake_force
@@ -1881,7 +2469,7 @@ CMakeFiles/circle.dir/src/mud_event.c.s: cmake_force
 CMakeFiles/circle.dir/src/mud_event_list.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/mud_event_list.c.o: /home/krynn/code/src/mud_event_list.c
 CMakeFiles/circle.dir/src/mud_event_list.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_130) "Building C object CMakeFiles/circle.dir/src/mud_event_list.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_172) "Building C object CMakeFiles/circle.dir/src/mud_event_list.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/mud_event_list.c.o -MF CMakeFiles/circle.dir/src/mud_event_list.c.o.d -o CMakeFiles/circle.dir/src/mud_event_list.c.o -c /home/krynn/code/src/mud_event_list.c
 
 CMakeFiles/circle.dir/src/mud_event_list.c.i: cmake_force
@@ -1895,7 +2483,7 @@ CMakeFiles/circle.dir/src/mud_event_list.c.s: cmake_force
 CMakeFiles/circle.dir/src/mysql.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/mysql.c.o: /home/krynn/code/src/mysql.c
 CMakeFiles/circle.dir/src/mysql.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_131) "Building C object CMakeFiles/circle.dir/src/mysql.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_173) "Building C object CMakeFiles/circle.dir/src/mysql.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/mysql.c.o -MF CMakeFiles/circle.dir/src/mysql.c.o.d -o CMakeFiles/circle.dir/src/mysql.c.o -c /home/krynn/code/src/mysql.c
 
 CMakeFiles/circle.dir/src/mysql.c.i: cmake_force
@@ -1909,7 +2497,7 @@ CMakeFiles/circle.dir/src/mysql.c.s: cmake_force
 CMakeFiles/circle.dir/src/mysql_boards.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/mysql_boards.c.o: /home/krynn/code/src/mysql_boards.c
 CMakeFiles/circle.dir/src/mysql_boards.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_132) "Building C object CMakeFiles/circle.dir/src/mysql_boards.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_174) "Building C object CMakeFiles/circle.dir/src/mysql_boards.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/mysql_boards.c.o -MF CMakeFiles/circle.dir/src/mysql_boards.c.o.d -o CMakeFiles/circle.dir/src/mysql_boards.c.o -c /home/krynn/code/src/mysql_boards.c
 
 CMakeFiles/circle.dir/src/mysql_boards.c.i: cmake_force
@@ -1923,7 +2511,7 @@ CMakeFiles/circle.dir/src/mysql_boards.c.s: cmake_force
 CMakeFiles/circle.dir/src/new_mail.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/new_mail.c.o: /home/krynn/code/src/new_mail.c
 CMakeFiles/circle.dir/src/new_mail.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_133) "Building C object CMakeFiles/circle.dir/src/new_mail.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_175) "Building C object CMakeFiles/circle.dir/src/new_mail.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/new_mail.c.o -MF CMakeFiles/circle.dir/src/new_mail.c.o.d -o CMakeFiles/circle.dir/src/new_mail.c.o -c /home/krynn/code/src/new_mail.c
 
 CMakeFiles/circle.dir/src/new_mail.c.i: cmake_force
@@ -1937,7 +2525,7 @@ CMakeFiles/circle.dir/src/new_mail.c.s: cmake_force
 CMakeFiles/circle.dir/src/oasis.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/oasis.c.o: /home/krynn/code/src/oasis.c
 CMakeFiles/circle.dir/src/oasis.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_134) "Building C object CMakeFiles/circle.dir/src/oasis.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_176) "Building C object CMakeFiles/circle.dir/src/oasis.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/oasis.c.o -MF CMakeFiles/circle.dir/src/oasis.c.o.d -o CMakeFiles/circle.dir/src/oasis.c.o -c /home/krynn/code/src/oasis.c
 
 CMakeFiles/circle.dir/src/oasis.c.i: cmake_force
@@ -1951,7 +2539,7 @@ CMakeFiles/circle.dir/src/oasis.c.s: cmake_force
 CMakeFiles/circle.dir/src/oasis_copy.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/oasis_copy.c.o: /home/krynn/code/src/oasis_copy.c
 CMakeFiles/circle.dir/src/oasis_copy.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_135) "Building C object CMakeFiles/circle.dir/src/oasis_copy.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_177) "Building C object CMakeFiles/circle.dir/src/oasis_copy.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/oasis_copy.c.o -MF CMakeFiles/circle.dir/src/oasis_copy.c.o.d -o CMakeFiles/circle.dir/src/oasis_copy.c.o -c /home/krynn/code/src/oasis_copy.c
 
 CMakeFiles/circle.dir/src/oasis_copy.c.i: cmake_force
@@ -1965,7 +2553,7 @@ CMakeFiles/circle.dir/src/oasis_copy.c.s: cmake_force
 CMakeFiles/circle.dir/src/oasis_delete.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/oasis_delete.c.o: /home/krynn/code/src/oasis_delete.c
 CMakeFiles/circle.dir/src/oasis_delete.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_136) "Building C object CMakeFiles/circle.dir/src/oasis_delete.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_178) "Building C object CMakeFiles/circle.dir/src/oasis_delete.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/oasis_delete.c.o -MF CMakeFiles/circle.dir/src/oasis_delete.c.o.d -o CMakeFiles/circle.dir/src/oasis_delete.c.o -c /home/krynn/code/src/oasis_delete.c
 
 CMakeFiles/circle.dir/src/oasis_delete.c.i: cmake_force
@@ -1979,7 +2567,7 @@ CMakeFiles/circle.dir/src/oasis_delete.c.s: cmake_force
 CMakeFiles/circle.dir/src/oasis_list.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/oasis_list.c.o: /home/krynn/code/src/oasis_list.c
 CMakeFiles/circle.dir/src/oasis_list.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_137) "Building C object CMakeFiles/circle.dir/src/oasis_list.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_179) "Building C object CMakeFiles/circle.dir/src/oasis_list.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/oasis_list.c.o -MF CMakeFiles/circle.dir/src/oasis_list.c.o.d -o CMakeFiles/circle.dir/src/oasis_list.c.o -c /home/krynn/code/src/oasis_list.c
 
 CMakeFiles/circle.dir/src/oasis_list.c.i: cmake_force
@@ -1993,7 +2581,7 @@ CMakeFiles/circle.dir/src/oasis_list.c.s: cmake_force
 CMakeFiles/circle.dir/src/objsave.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/objsave.c.o: /home/krynn/code/src/objsave.c
 CMakeFiles/circle.dir/src/objsave.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_138) "Building C object CMakeFiles/circle.dir/src/objsave.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_180) "Building C object CMakeFiles/circle.dir/src/objsave.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/objsave.c.o -MF CMakeFiles/circle.dir/src/objsave.c.o.d -o CMakeFiles/circle.dir/src/objsave.c.o -c /home/krynn/code/src/objsave.c
 
 CMakeFiles/circle.dir/src/objsave.c.i: cmake_force
@@ -2007,7 +2595,7 @@ CMakeFiles/circle.dir/src/objsave.c.s: cmake_force
 CMakeFiles/circle.dir/src/oedit.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/oedit.c.o: /home/krynn/code/src/oedit.c
 CMakeFiles/circle.dir/src/oedit.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_139) "Building C object CMakeFiles/circle.dir/src/oedit.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_181) "Building C object CMakeFiles/circle.dir/src/oedit.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/oedit.c.o -MF CMakeFiles/circle.dir/src/oedit.c.o.d -o CMakeFiles/circle.dir/src/oedit.c.o -c /home/krynn/code/src/oedit.c
 
 CMakeFiles/circle.dir/src/oedit.c.i: cmake_force
@@ -2021,7 +2609,7 @@ CMakeFiles/circle.dir/src/oedit.c.s: cmake_force
 CMakeFiles/circle.dir/src/perfmon.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/perfmon.c.o: /home/krynn/code/src/perfmon.c
 CMakeFiles/circle.dir/src/perfmon.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_140) "Building C object CMakeFiles/circle.dir/src/perfmon.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_182) "Building C object CMakeFiles/circle.dir/src/perfmon.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/perfmon.c.o -MF CMakeFiles/circle.dir/src/perfmon.c.o.d -o CMakeFiles/circle.dir/src/perfmon.c.o -c /home/krynn/code/src/perfmon.c
 
 CMakeFiles/circle.dir/src/perfmon.c.i: cmake_force
@@ -2035,7 +2623,7 @@ CMakeFiles/circle.dir/src/perfmon.c.s: cmake_force
 CMakeFiles/circle.dir/src/perks.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/perks.c.o: /home/krynn/code/src/perks.c
 CMakeFiles/circle.dir/src/perks.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_141) "Building C object CMakeFiles/circle.dir/src/perks.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_183) "Building C object CMakeFiles/circle.dir/src/perks.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/perks.c.o -MF CMakeFiles/circle.dir/src/perks.c.o.d -o CMakeFiles/circle.dir/src/perks.c.o -c /home/krynn/code/src/perks.c
 
 CMakeFiles/circle.dir/src/perks.c.i: cmake_force
@@ -2049,7 +2637,7 @@ CMakeFiles/circle.dir/src/perks.c.s: cmake_force
 CMakeFiles/circle.dir/src/perlin.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/perlin.c.o: /home/krynn/code/src/perlin.c
 CMakeFiles/circle.dir/src/perlin.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_142) "Building C object CMakeFiles/circle.dir/src/perlin.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_184) "Building C object CMakeFiles/circle.dir/src/perlin.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/perlin.c.o -MF CMakeFiles/circle.dir/src/perlin.c.o.d -o CMakeFiles/circle.dir/src/perlin.c.o -c /home/krynn/code/src/perlin.c
 
 CMakeFiles/circle.dir/src/perlin.c.i: cmake_force
@@ -2063,7 +2651,7 @@ CMakeFiles/circle.dir/src/perlin.c.s: cmake_force
 CMakeFiles/circle.dir/src/players.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/players.c.o: /home/krynn/code/src/players.c
 CMakeFiles/circle.dir/src/players.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_143) "Building C object CMakeFiles/circle.dir/src/players.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_185) "Building C object CMakeFiles/circle.dir/src/players.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/players.c.o -MF CMakeFiles/circle.dir/src/players.c.o.d -o CMakeFiles/circle.dir/src/players.c.o -c /home/krynn/code/src/players.c
 
 CMakeFiles/circle.dir/src/players.c.i: cmake_force
@@ -2077,7 +2665,7 @@ CMakeFiles/circle.dir/src/players.c.s: cmake_force
 CMakeFiles/circle.dir/src/prefedit.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/prefedit.c.o: /home/krynn/code/src/prefedit.c
 CMakeFiles/circle.dir/src/prefedit.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_144) "Building C object CMakeFiles/circle.dir/src/prefedit.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_186) "Building C object CMakeFiles/circle.dir/src/prefedit.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/prefedit.c.o -MF CMakeFiles/circle.dir/src/prefedit.c.o.d -o CMakeFiles/circle.dir/src/prefedit.c.o -c /home/krynn/code/src/prefedit.c
 
 CMakeFiles/circle.dir/src/prefedit.c.i: cmake_force
@@ -2091,7 +2679,7 @@ CMakeFiles/circle.dir/src/prefedit.c.s: cmake_force
 CMakeFiles/circle.dir/src/premadebuilds.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/premadebuilds.c.o: /home/krynn/code/src/premadebuilds.c
 CMakeFiles/circle.dir/src/premadebuilds.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_145) "Building C object CMakeFiles/circle.dir/src/premadebuilds.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_187) "Building C object CMakeFiles/circle.dir/src/premadebuilds.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/premadebuilds.c.o -MF CMakeFiles/circle.dir/src/premadebuilds.c.o.d -o CMakeFiles/circle.dir/src/premadebuilds.c.o -c /home/krynn/code/src/premadebuilds.c
 
 CMakeFiles/circle.dir/src/premadebuilds.c.i: cmake_force
@@ -2105,7 +2693,7 @@ CMakeFiles/circle.dir/src/premadebuilds.c.s: cmake_force
 CMakeFiles/circle.dir/src/protocol.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/protocol.c.o: /home/krynn/code/src/protocol.c
 CMakeFiles/circle.dir/src/protocol.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_146) "Building C object CMakeFiles/circle.dir/src/protocol.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_188) "Building C object CMakeFiles/circle.dir/src/protocol.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/protocol.c.o -MF CMakeFiles/circle.dir/src/protocol.c.o.d -o CMakeFiles/circle.dir/src/protocol.c.o -c /home/krynn/code/src/protocol.c
 
 CMakeFiles/circle.dir/src/protocol.c.i: cmake_force
@@ -2119,7 +2707,7 @@ CMakeFiles/circle.dir/src/protocol.c.s: cmake_force
 CMakeFiles/circle.dir/src/psionics.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/psionics.c.o: /home/krynn/code/src/psionics.c
 CMakeFiles/circle.dir/src/psionics.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_147) "Building C object CMakeFiles/circle.dir/src/psionics.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_189) "Building C object CMakeFiles/circle.dir/src/psionics.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/psionics.c.o -MF CMakeFiles/circle.dir/src/psionics.c.o.d -o CMakeFiles/circle.dir/src/psionics.c.o -c /home/krynn/code/src/psionics.c
 
 CMakeFiles/circle.dir/src/psionics.c.i: cmake_force
@@ -2133,7 +2721,7 @@ CMakeFiles/circle.dir/src/psionics.c.s: cmake_force
 CMakeFiles/circle.dir/src/pubsub.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/pubsub.c.o: /home/krynn/code/src/pubsub.c
 CMakeFiles/circle.dir/src/pubsub.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_148) "Building C object CMakeFiles/circle.dir/src/pubsub.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_190) "Building C object CMakeFiles/circle.dir/src/pubsub.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/pubsub.c.o -MF CMakeFiles/circle.dir/src/pubsub.c.o.d -o CMakeFiles/circle.dir/src/pubsub.c.o -c /home/krynn/code/src/pubsub.c
 
 CMakeFiles/circle.dir/src/pubsub.c.i: cmake_force
@@ -2147,7 +2735,7 @@ CMakeFiles/circle.dir/src/pubsub.c.s: cmake_force
 CMakeFiles/circle.dir/src/qedit.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/qedit.c.o: /home/krynn/code/src/qedit.c
 CMakeFiles/circle.dir/src/qedit.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_149) "Building C object CMakeFiles/circle.dir/src/qedit.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_191) "Building C object CMakeFiles/circle.dir/src/qedit.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/qedit.c.o -MF CMakeFiles/circle.dir/src/qedit.c.o.d -o CMakeFiles/circle.dir/src/qedit.c.o -c /home/krynn/code/src/qedit.c
 
 CMakeFiles/circle.dir/src/qedit.c.i: cmake_force
@@ -2161,7 +2749,7 @@ CMakeFiles/circle.dir/src/qedit.c.s: cmake_force
 CMakeFiles/circle.dir/src/quest.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/quest.c.o: /home/krynn/code/src/quest.c
 CMakeFiles/circle.dir/src/quest.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_150) "Building C object CMakeFiles/circle.dir/src/quest.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_192) "Building C object CMakeFiles/circle.dir/src/quest.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/quest.c.o -MF CMakeFiles/circle.dir/src/quest.c.o.d -o CMakeFiles/circle.dir/src/quest.c.o -c /home/krynn/code/src/quest.c
 
 CMakeFiles/circle.dir/src/quest.c.i: cmake_force
@@ -2175,7 +2763,7 @@ CMakeFiles/circle.dir/src/quest.c.s: cmake_force
 CMakeFiles/circle.dir/src/race.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/race.c.o: /home/krynn/code/src/race.c
 CMakeFiles/circle.dir/src/race.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_151) "Building C object CMakeFiles/circle.dir/src/race.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_193) "Building C object CMakeFiles/circle.dir/src/race.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/race.c.o -MF CMakeFiles/circle.dir/src/race.c.o.d -o CMakeFiles/circle.dir/src/race.c.o -c /home/krynn/code/src/race.c
 
 CMakeFiles/circle.dir/src/race.c.i: cmake_force
@@ -2189,7 +2777,7 @@ CMakeFiles/circle.dir/src/race.c.s: cmake_force
 CMakeFiles/circle.dir/src/random.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/random.c.o: /home/krynn/code/src/random.c
 CMakeFiles/circle.dir/src/random.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_152) "Building C object CMakeFiles/circle.dir/src/random.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_194) "Building C object CMakeFiles/circle.dir/src/random.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/random.c.o -MF CMakeFiles/circle.dir/src/random.c.o.d -o CMakeFiles/circle.dir/src/random.c.o -c /home/krynn/code/src/random.c
 
 CMakeFiles/circle.dir/src/random.c.i: cmake_force
@@ -2203,7 +2791,7 @@ CMakeFiles/circle.dir/src/random.c.s: cmake_force
 CMakeFiles/circle.dir/src/random_names.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/random_names.c.o: /home/krynn/code/src/random_names.c
 CMakeFiles/circle.dir/src/random_names.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_153) "Building C object CMakeFiles/circle.dir/src/random_names.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_195) "Building C object CMakeFiles/circle.dir/src/random_names.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/random_names.c.o -MF CMakeFiles/circle.dir/src/random_names.c.o.d -o CMakeFiles/circle.dir/src/random_names.c.o -c /home/krynn/code/src/random_names.c
 
 CMakeFiles/circle.dir/src/random_names.c.i: cmake_force
@@ -2217,7 +2805,7 @@ CMakeFiles/circle.dir/src/random_names.c.s: cmake_force
 CMakeFiles/circle.dir/src/rank.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/rank.c.o: /home/krynn/code/src/rank.c
 CMakeFiles/circle.dir/src/rank.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_154) "Building C object CMakeFiles/circle.dir/src/rank.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_196) "Building C object CMakeFiles/circle.dir/src/rank.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/rank.c.o -MF CMakeFiles/circle.dir/src/rank.c.o.d -o CMakeFiles/circle.dir/src/rank.c.o -c /home/krynn/code/src/rank.c
 
 CMakeFiles/circle.dir/src/rank.c.i: cmake_force
@@ -2231,7 +2819,7 @@ CMakeFiles/circle.dir/src/rank.c.s: cmake_force
 CMakeFiles/circle.dir/src/redit.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/redit.c.o: /home/krynn/code/src/redit.c
 CMakeFiles/circle.dir/src/redit.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_155) "Building C object CMakeFiles/circle.dir/src/redit.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_197) "Building C object CMakeFiles/circle.dir/src/redit.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/redit.c.o -MF CMakeFiles/circle.dir/src/redit.c.o.d -o CMakeFiles/circle.dir/src/redit.c.o -c /home/krynn/code/src/redit.c
 
 CMakeFiles/circle.dir/src/redit.c.i: cmake_force
@@ -2245,7 +2833,7 @@ CMakeFiles/circle.dir/src/redit.c.s: cmake_force
 CMakeFiles/circle.dir/src/resource_system.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/resource_system.c.o: /home/krynn/code/src/resource_system.c
 CMakeFiles/circle.dir/src/resource_system.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_156) "Building C object CMakeFiles/circle.dir/src/resource_system.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_198) "Building C object CMakeFiles/circle.dir/src/resource_system.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/resource_system.c.o -MF CMakeFiles/circle.dir/src/resource_system.c.o.d -o CMakeFiles/circle.dir/src/resource_system.c.o -c /home/krynn/code/src/resource_system.c
 
 CMakeFiles/circle.dir/src/resource_system.c.i: cmake_force
@@ -2259,7 +2847,7 @@ CMakeFiles/circle.dir/src/resource_system.c.s: cmake_force
 CMakeFiles/circle.dir/src/resource_depletion.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/resource_depletion.c.o: /home/krynn/code/src/resource_depletion.c
 CMakeFiles/circle.dir/src/resource_depletion.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_157) "Building C object CMakeFiles/circle.dir/src/resource_depletion.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_199) "Building C object CMakeFiles/circle.dir/src/resource_depletion.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/resource_depletion.c.o -MF CMakeFiles/circle.dir/src/resource_depletion.c.o.d -o CMakeFiles/circle.dir/src/resource_depletion.c.o -c /home/krynn/code/src/resource_depletion.c
 
 CMakeFiles/circle.dir/src/resource_depletion.c.i: cmake_force
@@ -2273,7 +2861,7 @@ CMakeFiles/circle.dir/src/resource_depletion.c.s: cmake_force
 CMakeFiles/circle.dir/src/resource_descriptions.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/resource_descriptions.c.o: /home/krynn/code/src/resource_descriptions.c
 CMakeFiles/circle.dir/src/resource_descriptions.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_158) "Building C object CMakeFiles/circle.dir/src/resource_descriptions.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_200) "Building C object CMakeFiles/circle.dir/src/resource_descriptions.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/resource_descriptions.c.o -MF CMakeFiles/circle.dir/src/resource_descriptions.c.o.d -o CMakeFiles/circle.dir/src/resource_descriptions.c.o -c /home/krynn/code/src/resource_descriptions.c
 
 CMakeFiles/circle.dir/src/resource_descriptions.c.i: cmake_force
@@ -2287,7 +2875,7 @@ CMakeFiles/circle.dir/src/resource_descriptions.c.s: cmake_force
 CMakeFiles/circle.dir/src/resource_regeneration.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/resource_regeneration.c.o: /home/krynn/code/src/resource_regeneration.c
 CMakeFiles/circle.dir/src/resource_regeneration.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_159) "Building C object CMakeFiles/circle.dir/src/resource_regeneration.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_201) "Building C object CMakeFiles/circle.dir/src/resource_regeneration.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/resource_regeneration.c.o -MF CMakeFiles/circle.dir/src/resource_regeneration.c.o.d -o CMakeFiles/circle.dir/src/resource_regeneration.c.o -c /home/krynn/code/src/resource_regeneration.c
 
 CMakeFiles/circle.dir/src/resource_regeneration.c.i: cmake_force
@@ -2301,7 +2889,7 @@ CMakeFiles/circle.dir/src/resource_regeneration.c.s: cmake_force
 CMakeFiles/circle.dir/src/roleplay.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/roleplay.c.o: /home/krynn/code/src/roleplay.c
 CMakeFiles/circle.dir/src/roleplay.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_160) "Building C object CMakeFiles/circle.dir/src/roleplay.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_202) "Building C object CMakeFiles/circle.dir/src/roleplay.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/roleplay.c.o -MF CMakeFiles/circle.dir/src/roleplay.c.o.d -o CMakeFiles/circle.dir/src/roleplay.c.o -c /home/krynn/code/src/roleplay.c
 
 CMakeFiles/circle.dir/src/roleplay.c.i: cmake_force
@@ -2315,7 +2903,7 @@ CMakeFiles/circle.dir/src/roleplay.c.s: cmake_force
 CMakeFiles/circle.dir/src/routing.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/routing.c.o: /home/krynn/code/src/routing.c
 CMakeFiles/circle.dir/src/routing.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_161) "Building C object CMakeFiles/circle.dir/src/routing.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_203) "Building C object CMakeFiles/circle.dir/src/routing.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/routing.c.o -MF CMakeFiles/circle.dir/src/routing.c.o.d -o CMakeFiles/circle.dir/src/routing.c.o -c /home/krynn/code/src/routing.c
 
 CMakeFiles/circle.dir/src/routing.c.i: cmake_force
@@ -2329,7 +2917,7 @@ CMakeFiles/circle.dir/src/routing.c.s: cmake_force
 CMakeFiles/circle.dir/src/sedit.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/sedit.c.o: /home/krynn/code/src/sedit.c
 CMakeFiles/circle.dir/src/sedit.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_162) "Building C object CMakeFiles/circle.dir/src/sedit.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_204) "Building C object CMakeFiles/circle.dir/src/sedit.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/sedit.c.o -MF CMakeFiles/circle.dir/src/sedit.c.o.d -o CMakeFiles/circle.dir/src/sedit.c.o -c /home/krynn/code/src/sedit.c
 
 CMakeFiles/circle.dir/src/sedit.c.i: cmake_force
@@ -2343,7 +2931,7 @@ CMakeFiles/circle.dir/src/sedit.c.s: cmake_force
 CMakeFiles/circle.dir/src/shop.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/shop.c.o: /home/krynn/code/src/shop.c
 CMakeFiles/circle.dir/src/shop.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_163) "Building C object CMakeFiles/circle.dir/src/shop.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_205) "Building C object CMakeFiles/circle.dir/src/shop.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/shop.c.o -MF CMakeFiles/circle.dir/src/shop.c.o.d -o CMakeFiles/circle.dir/src/shop.c.o -c /home/krynn/code/src/shop.c
 
 CMakeFiles/circle.dir/src/shop.c.i: cmake_force
@@ -2357,7 +2945,7 @@ CMakeFiles/circle.dir/src/shop.c.s: cmake_force
 CMakeFiles/circle.dir/src/spec_abilities.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/spec_abilities.c.o: /home/krynn/code/src/spec_abilities.c
 CMakeFiles/circle.dir/src/spec_abilities.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_164) "Building C object CMakeFiles/circle.dir/src/spec_abilities.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_206) "Building C object CMakeFiles/circle.dir/src/spec_abilities.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/spec_abilities.c.o -MF CMakeFiles/circle.dir/src/spec_abilities.c.o.d -o CMakeFiles/circle.dir/src/spec_abilities.c.o -c /home/krynn/code/src/spec_abilities.c
 
 CMakeFiles/circle.dir/src/spec_abilities.c.i: cmake_force
@@ -2371,7 +2959,7 @@ CMakeFiles/circle.dir/src/spec_abilities.c.s: cmake_force
 CMakeFiles/circle.dir/src/spec_assign.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/spec_assign.c.o: /home/krynn/code/src/spec_assign.c
 CMakeFiles/circle.dir/src/spec_assign.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_165) "Building C object CMakeFiles/circle.dir/src/spec_assign.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_207) "Building C object CMakeFiles/circle.dir/src/spec_assign.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/spec_assign.c.o -MF CMakeFiles/circle.dir/src/spec_assign.c.o.d -o CMakeFiles/circle.dir/src/spec_assign.c.o -c /home/krynn/code/src/spec_assign.c
 
 CMakeFiles/circle.dir/src/spec_assign.c.i: cmake_force
@@ -2385,7 +2973,7 @@ CMakeFiles/circle.dir/src/spec_assign.c.s: cmake_force
 CMakeFiles/circle.dir/src/spec_procs.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/spec_procs.c.o: /home/krynn/code/src/spec_procs.c
 CMakeFiles/circle.dir/src/spec_procs.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_166) "Building C object CMakeFiles/circle.dir/src/spec_procs.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_208) "Building C object CMakeFiles/circle.dir/src/spec_procs.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/spec_procs.c.o -MF CMakeFiles/circle.dir/src/spec_procs.c.o.d -o CMakeFiles/circle.dir/src/spec_procs.c.o -c /home/krynn/code/src/spec_procs.c
 
 CMakeFiles/circle.dir/src/spec_procs.c.i: cmake_force
@@ -2399,7 +2987,7 @@ CMakeFiles/circle.dir/src/spec_procs.c.s: cmake_force
 CMakeFiles/circle.dir/src/specs.artifacts.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/specs.artifacts.c.o: /home/krynn/code/src/specs.artifacts.c
 CMakeFiles/circle.dir/src/specs.artifacts.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_167) "Building C object CMakeFiles/circle.dir/src/specs.artifacts.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_209) "Building C object CMakeFiles/circle.dir/src/specs.artifacts.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/specs.artifacts.c.o -MF CMakeFiles/circle.dir/src/specs.artifacts.c.o.d -o CMakeFiles/circle.dir/src/specs.artifacts.c.o -c /home/krynn/code/src/specs.artifacts.c
 
 CMakeFiles/circle.dir/src/specs.artifacts.c.i: cmake_force
@@ -2413,7 +3001,7 @@ CMakeFiles/circle.dir/src/specs.artifacts.c.s: cmake_force
 CMakeFiles/circle.dir/src/casting_visuals.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/casting_visuals.c.o: /home/krynn/code/src/casting_visuals.c
 CMakeFiles/circle.dir/src/casting_visuals.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_168) "Building C object CMakeFiles/circle.dir/src/casting_visuals.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_210) "Building C object CMakeFiles/circle.dir/src/casting_visuals.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/casting_visuals.c.o -MF CMakeFiles/circle.dir/src/casting_visuals.c.o.d -o CMakeFiles/circle.dir/src/casting_visuals.c.o -c /home/krynn/code/src/casting_visuals.c
 
 CMakeFiles/circle.dir/src/casting_visuals.c.i: cmake_force
@@ -2424,10 +3012,24 @@ CMakeFiles/circle.dir/src/casting_visuals.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/casting_visuals.c.s"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/casting_visuals.c -o CMakeFiles/circle.dir/src/casting_visuals.c.s
 
+CMakeFiles/circle.dir/src/spellhelp.c.o: CMakeFiles/circle.dir/flags.make
+CMakeFiles/circle.dir/src/spellhelp.c.o: /home/krynn/code/src/spellhelp.c
+CMakeFiles/circle.dir/src/spellhelp.c.o: CMakeFiles/circle.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_211) "Building C object CMakeFiles/circle.dir/src/spellhelp.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/spellhelp.c.o -MF CMakeFiles/circle.dir/src/spellhelp.c.o.d -o CMakeFiles/circle.dir/src/spellhelp.c.o -c /home/krynn/code/src/spellhelp.c
+
+CMakeFiles/circle.dir/src/spellhelp.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/circle.dir/src/spellhelp.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/krynn/code/src/spellhelp.c > CMakeFiles/circle.dir/src/spellhelp.c.i
+
+CMakeFiles/circle.dir/src/spellhelp.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/circle.dir/src/spellhelp.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/krynn/code/src/spellhelp.c -o CMakeFiles/circle.dir/src/spellhelp.c.s
+
 CMakeFiles/circle.dir/src/spell_parser.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/spell_parser.c.o: /home/krynn/code/src/spell_parser.c
 CMakeFiles/circle.dir/src/spell_parser.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_169) "Building C object CMakeFiles/circle.dir/src/spell_parser.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_212) "Building C object CMakeFiles/circle.dir/src/spell_parser.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/spell_parser.c.o -MF CMakeFiles/circle.dir/src/spell_parser.c.o.d -o CMakeFiles/circle.dir/src/spell_parser.c.o -c /home/krynn/code/src/spell_parser.c
 
 CMakeFiles/circle.dir/src/spell_parser.c.i: cmake_force
@@ -2441,7 +3043,7 @@ CMakeFiles/circle.dir/src/spell_parser.c.s: cmake_force
 CMakeFiles/circle.dir/src/spell_prep.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/spell_prep.c.o: /home/krynn/code/src/spell_prep.c
 CMakeFiles/circle.dir/src/spell_prep.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_170) "Building C object CMakeFiles/circle.dir/src/spell_prep.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_213) "Building C object CMakeFiles/circle.dir/src/spell_prep.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/spell_prep.c.o -MF CMakeFiles/circle.dir/src/spell_prep.c.o.d -o CMakeFiles/circle.dir/src/spell_prep.c.o -c /home/krynn/code/src/spell_prep.c
 
 CMakeFiles/circle.dir/src/spell_prep.c.i: cmake_force
@@ -2455,7 +3057,7 @@ CMakeFiles/circle.dir/src/spell_prep.c.s: cmake_force
 CMakeFiles/circle.dir/src/spellbook_scroll.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/spellbook_scroll.c.o: /home/krynn/code/src/spellbook_scroll.c
 CMakeFiles/circle.dir/src/spellbook_scroll.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_171) "Building C object CMakeFiles/circle.dir/src/spellbook_scroll.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_214) "Building C object CMakeFiles/circle.dir/src/spellbook_scroll.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/spellbook_scroll.c.o -MF CMakeFiles/circle.dir/src/spellbook_scroll.c.o.d -o CMakeFiles/circle.dir/src/spellbook_scroll.c.o -c /home/krynn/code/src/spellbook_scroll.c
 
 CMakeFiles/circle.dir/src/spellbook_scroll.c.i: cmake_force
@@ -2469,7 +3071,7 @@ CMakeFiles/circle.dir/src/spellbook_scroll.c.s: cmake_force
 CMakeFiles/circle.dir/src/spells.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/spells.c.o: /home/krynn/code/src/spells.c
 CMakeFiles/circle.dir/src/spells.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_172) "Building C object CMakeFiles/circle.dir/src/spells.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_215) "Building C object CMakeFiles/circle.dir/src/spells.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/spells.c.o -MF CMakeFiles/circle.dir/src/spells.c.o.d -o CMakeFiles/circle.dir/src/spells.c.o -c /home/krynn/code/src/spells.c
 
 CMakeFiles/circle.dir/src/spells.c.i: cmake_force
@@ -2483,7 +3085,7 @@ CMakeFiles/circle.dir/src/spells.c.s: cmake_force
 CMakeFiles/circle.dir/src/staff_events.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/staff_events.c.o: /home/krynn/code/src/staff_events.c
 CMakeFiles/circle.dir/src/staff_events.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_173) "Building C object CMakeFiles/circle.dir/src/staff_events.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_216) "Building C object CMakeFiles/circle.dir/src/staff_events.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/staff_events.c.o -MF CMakeFiles/circle.dir/src/staff_events.c.o.d -o CMakeFiles/circle.dir/src/staff_events.c.o -c /home/krynn/code/src/staff_events.c
 
 CMakeFiles/circle.dir/src/staff_events.c.i: cmake_force
@@ -2497,7 +3099,7 @@ CMakeFiles/circle.dir/src/staff_events.c.s: cmake_force
 CMakeFiles/circle.dir/src/study.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/study.c.o: /home/krynn/code/src/study.c
 CMakeFiles/circle.dir/src/study.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_174) "Building C object CMakeFiles/circle.dir/src/study.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_217) "Building C object CMakeFiles/circle.dir/src/study.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/study.c.o -MF CMakeFiles/circle.dir/src/study.c.o.d -o CMakeFiles/circle.dir/src/study.c.o -c /home/krynn/code/src/study.c
 
 CMakeFiles/circle.dir/src/study.c.i: cmake_force
@@ -2511,7 +3113,7 @@ CMakeFiles/circle.dir/src/study.c.s: cmake_force
 CMakeFiles/circle.dir/src/talents.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/talents.c.o: /home/krynn/code/src/talents.c
 CMakeFiles/circle.dir/src/talents.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_175) "Building C object CMakeFiles/circle.dir/src/talents.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_218) "Building C object CMakeFiles/circle.dir/src/talents.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/talents.c.o -MF CMakeFiles/circle.dir/src/talents.c.o.d -o CMakeFiles/circle.dir/src/talents.c.o -c /home/krynn/code/src/talents.c
 
 CMakeFiles/circle.dir/src/talents.c.i: cmake_force
@@ -2525,7 +3127,7 @@ CMakeFiles/circle.dir/src/talents.c.s: cmake_force
 CMakeFiles/circle.dir/src/tedit.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/tedit.c.o: /home/krynn/code/src/tedit.c
 CMakeFiles/circle.dir/src/tedit.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_176) "Building C object CMakeFiles/circle.dir/src/tedit.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_219) "Building C object CMakeFiles/circle.dir/src/tedit.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/tedit.c.o -MF CMakeFiles/circle.dir/src/tedit.c.o.d -o CMakeFiles/circle.dir/src/tedit.c.o -c /home/krynn/code/src/tedit.c
 
 CMakeFiles/circle.dir/src/tedit.c.i: cmake_force
@@ -2539,7 +3141,7 @@ CMakeFiles/circle.dir/src/tedit.c.s: cmake_force
 CMakeFiles/circle.dir/src/templates.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/templates.c.o: /home/krynn/code/src/templates.c
 CMakeFiles/circle.dir/src/templates.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_177) "Building C object CMakeFiles/circle.dir/src/templates.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_220) "Building C object CMakeFiles/circle.dir/src/templates.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/templates.c.o -MF CMakeFiles/circle.dir/src/templates.c.o.d -o CMakeFiles/circle.dir/src/templates.c.o -c /home/krynn/code/src/templates.c
 
 CMakeFiles/circle.dir/src/templates.c.i: cmake_force
@@ -2553,7 +3155,7 @@ CMakeFiles/circle.dir/src/templates.c.s: cmake_force
 CMakeFiles/circle.dir/src/trade.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/trade.c.o: /home/krynn/code/src/trade.c
 CMakeFiles/circle.dir/src/trade.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_178) "Building C object CMakeFiles/circle.dir/src/trade.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_221) "Building C object CMakeFiles/circle.dir/src/trade.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/trade.c.o -MF CMakeFiles/circle.dir/src/trade.c.o.d -o CMakeFiles/circle.dir/src/trade.c.o -c /home/krynn/code/src/trade.c
 
 CMakeFiles/circle.dir/src/trade.c.i: cmake_force
@@ -2567,7 +3169,7 @@ CMakeFiles/circle.dir/src/trade.c.s: cmake_force
 CMakeFiles/circle.dir/src/transport.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/transport.c.o: /home/krynn/code/src/transport.c
 CMakeFiles/circle.dir/src/transport.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_179) "Building C object CMakeFiles/circle.dir/src/transport.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_222) "Building C object CMakeFiles/circle.dir/src/transport.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/transport.c.o -MF CMakeFiles/circle.dir/src/transport.c.o.d -o CMakeFiles/circle.dir/src/transport.c.o -c /home/krynn/code/src/transport.c
 
 CMakeFiles/circle.dir/src/transport.c.i: cmake_force
@@ -2581,7 +3183,7 @@ CMakeFiles/circle.dir/src/transport.c.s: cmake_force
 CMakeFiles/circle.dir/src/transport_unified.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/transport_unified.c.o: /home/krynn/code/src/transport_unified.c
 CMakeFiles/circle.dir/src/transport_unified.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_180) "Building C object CMakeFiles/circle.dir/src/transport_unified.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_223) "Building C object CMakeFiles/circle.dir/src/transport_unified.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/transport_unified.c.o -MF CMakeFiles/circle.dir/src/transport_unified.c.o.d -o CMakeFiles/circle.dir/src/transport_unified.c.o -c /home/krynn/code/src/transport_unified.c
 
 CMakeFiles/circle.dir/src/transport_unified.c.i: cmake_force
@@ -2595,7 +3197,7 @@ CMakeFiles/circle.dir/src/transport_unified.c.s: cmake_force
 CMakeFiles/circle.dir/src/traps_new.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/traps_new.c.o: /home/krynn/code/src/traps_new.c
 CMakeFiles/circle.dir/src/traps_new.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_181) "Building C object CMakeFiles/circle.dir/src/traps_new.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_224) "Building C object CMakeFiles/circle.dir/src/traps_new.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/traps_new.c.o -MF CMakeFiles/circle.dir/src/traps_new.c.o.d -o CMakeFiles/circle.dir/src/traps_new.c.o -c /home/krynn/code/src/traps_new.c
 
 CMakeFiles/circle.dir/src/traps_new.c.i: cmake_force
@@ -2609,7 +3211,7 @@ CMakeFiles/circle.dir/src/traps_new.c.s: cmake_force
 CMakeFiles/circle.dir/src/treasure.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/treasure.c.o: /home/krynn/code/src/treasure.c
 CMakeFiles/circle.dir/src/treasure.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_182) "Building C object CMakeFiles/circle.dir/src/treasure.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_225) "Building C object CMakeFiles/circle.dir/src/treasure.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/treasure.c.o -MF CMakeFiles/circle.dir/src/treasure.c.o.d -o CMakeFiles/circle.dir/src/treasure.c.o -c /home/krynn/code/src/treasure.c
 
 CMakeFiles/circle.dir/src/treasure.c.i: cmake_force
@@ -2623,7 +3225,7 @@ CMakeFiles/circle.dir/src/treasure.c.s: cmake_force
 CMakeFiles/circle.dir/src/treasure_const.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/treasure_const.c.o: /home/krynn/code/src/treasure_const.c
 CMakeFiles/circle.dir/src/treasure_const.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_183) "Building C object CMakeFiles/circle.dir/src/treasure_const.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_226) "Building C object CMakeFiles/circle.dir/src/treasure_const.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/treasure_const.c.o -MF CMakeFiles/circle.dir/src/treasure_const.c.o.d -o CMakeFiles/circle.dir/src/treasure_const.c.o -c /home/krynn/code/src/treasure_const.c
 
 CMakeFiles/circle.dir/src/treasure_const.c.i: cmake_force
@@ -2637,7 +3239,7 @@ CMakeFiles/circle.dir/src/treasure_const.c.s: cmake_force
 CMakeFiles/circle.dir/src/utils.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/utils.c.o: /home/krynn/code/src/utils.c
 CMakeFiles/circle.dir/src/utils.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_184) "Building C object CMakeFiles/circle.dir/src/utils.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_227) "Building C object CMakeFiles/circle.dir/src/utils.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/utils.c.o -MF CMakeFiles/circle.dir/src/utils.c.o.d -o CMakeFiles/circle.dir/src/utils.c.o -c /home/krynn/code/src/utils.c
 
 CMakeFiles/circle.dir/src/utils.c.i: cmake_force
@@ -2651,7 +3253,7 @@ CMakeFiles/circle.dir/src/utils.c.s: cmake_force
 CMakeFiles/circle.dir/src/vehicles.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/vehicles.c.o: /home/krynn/code/src/vehicles.c
 CMakeFiles/circle.dir/src/vehicles.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_185) "Building C object CMakeFiles/circle.dir/src/vehicles.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_228) "Building C object CMakeFiles/circle.dir/src/vehicles.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/vehicles.c.o -MF CMakeFiles/circle.dir/src/vehicles.c.o.d -o CMakeFiles/circle.dir/src/vehicles.c.o -c /home/krynn/code/src/vehicles.c
 
 CMakeFiles/circle.dir/src/vehicles.c.i: cmake_force
@@ -2665,7 +3267,7 @@ CMakeFiles/circle.dir/src/vehicles.c.s: cmake_force
 CMakeFiles/circle.dir/src/vehicles_commands.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/vehicles_commands.c.o: /home/krynn/code/src/vehicles_commands.c
 CMakeFiles/circle.dir/src/vehicles_commands.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_186) "Building C object CMakeFiles/circle.dir/src/vehicles_commands.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_229) "Building C object CMakeFiles/circle.dir/src/vehicles_commands.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/vehicles_commands.c.o -MF CMakeFiles/circle.dir/src/vehicles_commands.c.o.d -o CMakeFiles/circle.dir/src/vehicles_commands.c.o -c /home/krynn/code/src/vehicles_commands.c
 
 CMakeFiles/circle.dir/src/vehicles_commands.c.i: cmake_force
@@ -2679,7 +3281,7 @@ CMakeFiles/circle.dir/src/vehicles_commands.c.s: cmake_force
 CMakeFiles/circle.dir/src/vehicles_transport.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/vehicles_transport.c.o: /home/krynn/code/src/vehicles_transport.c
 CMakeFiles/circle.dir/src/vehicles_transport.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_187) "Building C object CMakeFiles/circle.dir/src/vehicles_transport.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_230) "Building C object CMakeFiles/circle.dir/src/vehicles_transport.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/vehicles_transport.c.o -MF CMakeFiles/circle.dir/src/vehicles_transport.c.o.d -o CMakeFiles/circle.dir/src/vehicles_transport.c.o -c /home/krynn/code/src/vehicles_transport.c
 
 CMakeFiles/circle.dir/src/vehicles_transport.c.i: cmake_force
@@ -2693,7 +3295,7 @@ CMakeFiles/circle.dir/src/vehicles_transport.c.s: cmake_force
 CMakeFiles/circle.dir/src/vessels.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/vessels.c.o: /home/krynn/code/src/vessels.c
 CMakeFiles/circle.dir/src/vessels.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_188) "Building C object CMakeFiles/circle.dir/src/vessels.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_231) "Building C object CMakeFiles/circle.dir/src/vessels.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/vessels.c.o -MF CMakeFiles/circle.dir/src/vessels.c.o.d -o CMakeFiles/circle.dir/src/vessels.c.o -c /home/krynn/code/src/vessels.c
 
 CMakeFiles/circle.dir/src/vessels.c.i: cmake_force
@@ -2707,7 +3309,7 @@ CMakeFiles/circle.dir/src/vessels.c.s: cmake_force
 CMakeFiles/circle.dir/src/vessels_autopilot.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/vessels_autopilot.c.o: /home/krynn/code/src/vessels_autopilot.c
 CMakeFiles/circle.dir/src/vessels_autopilot.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_189) "Building C object CMakeFiles/circle.dir/src/vessels_autopilot.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_232) "Building C object CMakeFiles/circle.dir/src/vessels_autopilot.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/vessels_autopilot.c.o -MF CMakeFiles/circle.dir/src/vessels_autopilot.c.o.d -o CMakeFiles/circle.dir/src/vessels_autopilot.c.o -c /home/krynn/code/src/vessels_autopilot.c
 
 CMakeFiles/circle.dir/src/vessels_autopilot.c.i: cmake_force
@@ -2721,7 +3323,7 @@ CMakeFiles/circle.dir/src/vessels_autopilot.c.s: cmake_force
 CMakeFiles/circle.dir/src/vessels_db.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/vessels_db.c.o: /home/krynn/code/src/vessels_db.c
 CMakeFiles/circle.dir/src/vessels_db.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_190) "Building C object CMakeFiles/circle.dir/src/vessels_db.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_233) "Building C object CMakeFiles/circle.dir/src/vessels_db.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/vessels_db.c.o -MF CMakeFiles/circle.dir/src/vessels_db.c.o.d -o CMakeFiles/circle.dir/src/vessels_db.c.o -c /home/krynn/code/src/vessels_db.c
 
 CMakeFiles/circle.dir/src/vessels_db.c.i: cmake_force
@@ -2735,7 +3337,7 @@ CMakeFiles/circle.dir/src/vessels_db.c.s: cmake_force
 CMakeFiles/circle.dir/src/vessels_docking.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/vessels_docking.c.o: /home/krynn/code/src/vessels_docking.c
 CMakeFiles/circle.dir/src/vessels_docking.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_191) "Building C object CMakeFiles/circle.dir/src/vessels_docking.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_234) "Building C object CMakeFiles/circle.dir/src/vessels_docking.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/vessels_docking.c.o -MF CMakeFiles/circle.dir/src/vessels_docking.c.o.d -o CMakeFiles/circle.dir/src/vessels_docking.c.o -c /home/krynn/code/src/vessels_docking.c
 
 CMakeFiles/circle.dir/src/vessels_docking.c.i: cmake_force
@@ -2749,7 +3351,7 @@ CMakeFiles/circle.dir/src/vessels_docking.c.s: cmake_force
 CMakeFiles/circle.dir/src/vessels_rooms.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/vessels_rooms.c.o: /home/krynn/code/src/vessels_rooms.c
 CMakeFiles/circle.dir/src/vessels_rooms.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_192) "Building C object CMakeFiles/circle.dir/src/vessels_rooms.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_235) "Building C object CMakeFiles/circle.dir/src/vessels_rooms.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/vessels_rooms.c.o -MF CMakeFiles/circle.dir/src/vessels_rooms.c.o.d -o CMakeFiles/circle.dir/src/vessels_rooms.c.o -c /home/krynn/code/src/vessels_rooms.c
 
 CMakeFiles/circle.dir/src/vessels_rooms.c.i: cmake_force
@@ -2763,7 +3365,7 @@ CMakeFiles/circle.dir/src/vessels_rooms.c.s: cmake_force
 CMakeFiles/circle.dir/src/weather.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/weather.c.o: /home/krynn/code/src/weather.c
 CMakeFiles/circle.dir/src/weather.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_193) "Building C object CMakeFiles/circle.dir/src/weather.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_236) "Building C object CMakeFiles/circle.dir/src/weather.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/weather.c.o -MF CMakeFiles/circle.dir/src/weather.c.o.d -o CMakeFiles/circle.dir/src/weather.c.o -c /home/krynn/code/src/weather.c
 
 CMakeFiles/circle.dir/src/weather.c.i: cmake_force
@@ -2777,7 +3379,7 @@ CMakeFiles/circle.dir/src/weather.c.s: cmake_force
 CMakeFiles/circle.dir/src/wilderness.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/wilderness.c.o: /home/krynn/code/src/wilderness.c
 CMakeFiles/circle.dir/src/wilderness.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_194) "Building C object CMakeFiles/circle.dir/src/wilderness.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_237) "Building C object CMakeFiles/circle.dir/src/wilderness.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/wilderness.c.o -MF CMakeFiles/circle.dir/src/wilderness.c.o.d -o CMakeFiles/circle.dir/src/wilderness.c.o -c /home/krynn/code/src/wilderness.c
 
 CMakeFiles/circle.dir/src/wilderness.c.i: cmake_force
@@ -2791,7 +3393,7 @@ CMakeFiles/circle.dir/src/wilderness.c.s: cmake_force
 CMakeFiles/circle.dir/src/wilderness_kb.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/wilderness_kb.c.o: /home/krynn/code/src/wilderness_kb.c
 CMakeFiles/circle.dir/src/wilderness_kb.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_195) "Building C object CMakeFiles/circle.dir/src/wilderness_kb.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_238) "Building C object CMakeFiles/circle.dir/src/wilderness_kb.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/wilderness_kb.c.o -MF CMakeFiles/circle.dir/src/wilderness_kb.c.o.d -o CMakeFiles/circle.dir/src/wilderness_kb.c.o -c /home/krynn/code/src/wilderness_kb.c
 
 CMakeFiles/circle.dir/src/wilderness_kb.c.i: cmake_force
@@ -2805,7 +3407,7 @@ CMakeFiles/circle.dir/src/wilderness_kb.c.s: cmake_force
 CMakeFiles/circle.dir/src/zedit.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/zedit.c.o: /home/krynn/code/src/zedit.c
 CMakeFiles/circle.dir/src/zedit.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_196) "Building C object CMakeFiles/circle.dir/src/zedit.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_239) "Building C object CMakeFiles/circle.dir/src/zedit.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/zedit.c.o -MF CMakeFiles/circle.dir/src/zedit.c.o.d -o CMakeFiles/circle.dir/src/zedit.c.o -c /home/krynn/code/src/zedit.c
 
 CMakeFiles/circle.dir/src/zedit.c.i: cmake_force
@@ -2819,7 +3421,7 @@ CMakeFiles/circle.dir/src/zedit.c.s: cmake_force
 CMakeFiles/circle.dir/src/zmalloc.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/zmalloc.c.o: /home/krynn/code/src/zmalloc.c
 CMakeFiles/circle.dir/src/zmalloc.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_197) "Building C object CMakeFiles/circle.dir/src/zmalloc.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_240) "Building C object CMakeFiles/circle.dir/src/zmalloc.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/zmalloc.c.o -MF CMakeFiles/circle.dir/src/zmalloc.c.o.d -o CMakeFiles/circle.dir/src/zmalloc.c.o -c /home/krynn/code/src/zmalloc.c
 
 CMakeFiles/circle.dir/src/zmalloc.c.i: cmake_force
@@ -2833,7 +3435,7 @@ CMakeFiles/circle.dir/src/zmalloc.c.s: cmake_force
 CMakeFiles/circle.dir/src/zone_procs.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/zone_procs.c.o: /home/krynn/code/src/zone_procs.c
 CMakeFiles/circle.dir/src/zone_procs.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_198) "Building C object CMakeFiles/circle.dir/src/zone_procs.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_241) "Building C object CMakeFiles/circle.dir/src/zone_procs.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/zone_procs.c.o -MF CMakeFiles/circle.dir/src/zone_procs.c.o.d -o CMakeFiles/circle.dir/src/zone_procs.c.o -c /home/krynn/code/src/zone_procs.c
 
 CMakeFiles/circle.dir/src/zone_procs.c.i: cmake_force
@@ -2847,7 +3449,7 @@ CMakeFiles/circle.dir/src/zone_procs.c.s: cmake_force
 CMakeFiles/circle.dir/src/movement.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/movement.c.o: /home/krynn/code/src/movement.c
 CMakeFiles/circle.dir/src/movement.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_199) "Building C object CMakeFiles/circle.dir/src/movement.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_242) "Building C object CMakeFiles/circle.dir/src/movement.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/movement.c.o -MF CMakeFiles/circle.dir/src/movement.c.o.d -o CMakeFiles/circle.dir/src/movement.c.o -c /home/krynn/code/src/movement.c
 
 CMakeFiles/circle.dir/src/movement.c.i: cmake_force
@@ -2861,7 +3463,7 @@ CMakeFiles/circle.dir/src/movement.c.s: cmake_force
 CMakeFiles/circle.dir/src/movement_validation.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/movement_validation.c.o: /home/krynn/code/src/movement_validation.c
 CMakeFiles/circle.dir/src/movement_validation.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_200) "Building C object CMakeFiles/circle.dir/src/movement_validation.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_243) "Building C object CMakeFiles/circle.dir/src/movement_validation.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/movement_validation.c.o -MF CMakeFiles/circle.dir/src/movement_validation.c.o.d -o CMakeFiles/circle.dir/src/movement_validation.c.o -c /home/krynn/code/src/movement_validation.c
 
 CMakeFiles/circle.dir/src/movement_validation.c.i: cmake_force
@@ -2875,7 +3477,7 @@ CMakeFiles/circle.dir/src/movement_validation.c.s: cmake_force
 CMakeFiles/circle.dir/src/movement_cost.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/movement_cost.c.o: /home/krynn/code/src/movement_cost.c
 CMakeFiles/circle.dir/src/movement_cost.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_201) "Building C object CMakeFiles/circle.dir/src/movement_cost.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_244) "Building C object CMakeFiles/circle.dir/src/movement_cost.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/movement_cost.c.o -MF CMakeFiles/circle.dir/src/movement_cost.c.o.d -o CMakeFiles/circle.dir/src/movement_cost.c.o -c /home/krynn/code/src/movement_cost.c
 
 CMakeFiles/circle.dir/src/movement_cost.c.i: cmake_force
@@ -2889,7 +3491,7 @@ CMakeFiles/circle.dir/src/movement_cost.c.s: cmake_force
 CMakeFiles/circle.dir/src/movement_position.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/movement_position.c.o: /home/krynn/code/src/movement_position.c
 CMakeFiles/circle.dir/src/movement_position.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_202) "Building C object CMakeFiles/circle.dir/src/movement_position.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_245) "Building C object CMakeFiles/circle.dir/src/movement_position.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/movement_position.c.o -MF CMakeFiles/circle.dir/src/movement_position.c.o.d -o CMakeFiles/circle.dir/src/movement_position.c.o -c /home/krynn/code/src/movement_position.c
 
 CMakeFiles/circle.dir/src/movement_position.c.i: cmake_force
@@ -2903,7 +3505,7 @@ CMakeFiles/circle.dir/src/movement_position.c.s: cmake_force
 CMakeFiles/circle.dir/src/movement_doors.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/movement_doors.c.o: /home/krynn/code/src/movement_doors.c
 CMakeFiles/circle.dir/src/movement_doors.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_203) "Building C object CMakeFiles/circle.dir/src/movement_doors.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_246) "Building C object CMakeFiles/circle.dir/src/movement_doors.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/movement_doors.c.o -MF CMakeFiles/circle.dir/src/movement_doors.c.o.d -o CMakeFiles/circle.dir/src/movement_doors.c.o -c /home/krynn/code/src/movement_doors.c
 
 CMakeFiles/circle.dir/src/movement_doors.c.i: cmake_force
@@ -2917,7 +3519,7 @@ CMakeFiles/circle.dir/src/movement_doors.c.s: cmake_force
 CMakeFiles/circle.dir/src/movement_falling.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/movement_falling.c.o: /home/krynn/code/src/movement_falling.c
 CMakeFiles/circle.dir/src/movement_falling.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_204) "Building C object CMakeFiles/circle.dir/src/movement_falling.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_247) "Building C object CMakeFiles/circle.dir/src/movement_falling.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/movement_falling.c.o -MF CMakeFiles/circle.dir/src/movement_falling.c.o.d -o CMakeFiles/circle.dir/src/movement_falling.c.o -c /home/krynn/code/src/movement_falling.c
 
 CMakeFiles/circle.dir/src/movement_falling.c.i: cmake_force
@@ -2931,7 +3533,7 @@ CMakeFiles/circle.dir/src/movement_falling.c.s: cmake_force
 CMakeFiles/circle.dir/src/movement_messages.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/movement_messages.c.o: /home/krynn/code/src/movement_messages.c
 CMakeFiles/circle.dir/src/movement_messages.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_205) "Building C object CMakeFiles/circle.dir/src/movement_messages.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_248) "Building C object CMakeFiles/circle.dir/src/movement_messages.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/movement_messages.c.o -MF CMakeFiles/circle.dir/src/movement_messages.c.o.d -o CMakeFiles/circle.dir/src/movement_messages.c.o -c /home/krynn/code/src/movement_messages.c
 
 CMakeFiles/circle.dir/src/movement_messages.c.i: cmake_force
@@ -2945,7 +3547,7 @@ CMakeFiles/circle.dir/src/movement_messages.c.s: cmake_force
 CMakeFiles/circle.dir/src/movement_tracks.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/movement_tracks.c.o: /home/krynn/code/src/movement_tracks.c
 CMakeFiles/circle.dir/src/movement_tracks.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_206) "Building C object CMakeFiles/circle.dir/src/movement_tracks.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_249) "Building C object CMakeFiles/circle.dir/src/movement_tracks.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/movement_tracks.c.o -MF CMakeFiles/circle.dir/src/movement_tracks.c.o.d -o CMakeFiles/circle.dir/src/movement_tracks.c.o -c /home/krynn/code/src/movement_tracks.c
 
 CMakeFiles/circle.dir/src/movement_tracks.c.i: cmake_force
@@ -2959,7 +3561,7 @@ CMakeFiles/circle.dir/src/movement_tracks.c.s: cmake_force
 CMakeFiles/circle.dir/src/movement_events.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/movement_events.c.o: /home/krynn/code/src/movement_events.c
 CMakeFiles/circle.dir/src/movement_events.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_207) "Building C object CMakeFiles/circle.dir/src/movement_events.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_250) "Building C object CMakeFiles/circle.dir/src/movement_events.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/movement_events.c.o -MF CMakeFiles/circle.dir/src/movement_events.c.o.d -o CMakeFiles/circle.dir/src/movement_events.c.o -c /home/krynn/code/src/movement_events.c
 
 CMakeFiles/circle.dir/src/movement_events.c.i: cmake_force
@@ -2973,7 +3575,7 @@ CMakeFiles/circle.dir/src/movement_events.c.s: cmake_force
 CMakeFiles/circle.dir/src/systems/pubsub/pubsub_handlers.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/systems/pubsub/pubsub_handlers.c.o: /home/krynn/code/src/systems/pubsub/pubsub_handlers.c
 CMakeFiles/circle.dir/src/systems/pubsub/pubsub_handlers.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_208) "Building C object CMakeFiles/circle.dir/src/systems/pubsub/pubsub_handlers.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_251) "Building C object CMakeFiles/circle.dir/src/systems/pubsub/pubsub_handlers.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/systems/pubsub/pubsub_handlers.c.o -MF CMakeFiles/circle.dir/src/systems/pubsub/pubsub_handlers.c.o.d -o CMakeFiles/circle.dir/src/systems/pubsub/pubsub_handlers.c.o -c /home/krynn/code/src/systems/pubsub/pubsub_handlers.c
 
 CMakeFiles/circle.dir/src/systems/pubsub/pubsub_handlers.c.i: cmake_force
@@ -2987,7 +3589,7 @@ CMakeFiles/circle.dir/src/systems/pubsub/pubsub_handlers.c.s: cmake_force
 CMakeFiles/circle.dir/src/systems/pubsub/pubsub_db.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/systems/pubsub/pubsub_db.c.o: /home/krynn/code/src/systems/pubsub/pubsub_db.c
 CMakeFiles/circle.dir/src/systems/pubsub/pubsub_db.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_209) "Building C object CMakeFiles/circle.dir/src/systems/pubsub/pubsub_db.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_252) "Building C object CMakeFiles/circle.dir/src/systems/pubsub/pubsub_db.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/systems/pubsub/pubsub_db.c.o -MF CMakeFiles/circle.dir/src/systems/pubsub/pubsub_db.c.o.d -o CMakeFiles/circle.dir/src/systems/pubsub/pubsub_db.c.o -c /home/krynn/code/src/systems/pubsub/pubsub_db.c
 
 CMakeFiles/circle.dir/src/systems/pubsub/pubsub_db.c.i: cmake_force
@@ -3001,7 +3603,7 @@ CMakeFiles/circle.dir/src/systems/pubsub/pubsub_db.c.s: cmake_force
 CMakeFiles/circle.dir/src/systems/pubsub/pubsub_commands.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/systems/pubsub/pubsub_commands.c.o: /home/krynn/code/src/systems/pubsub/pubsub_commands.c
 CMakeFiles/circle.dir/src/systems/pubsub/pubsub_commands.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_210) "Building C object CMakeFiles/circle.dir/src/systems/pubsub/pubsub_commands.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_253) "Building C object CMakeFiles/circle.dir/src/systems/pubsub/pubsub_commands.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/systems/pubsub/pubsub_commands.c.o -MF CMakeFiles/circle.dir/src/systems/pubsub/pubsub_commands.c.o.d -o CMakeFiles/circle.dir/src/systems/pubsub/pubsub_commands.c.o -c /home/krynn/code/src/systems/pubsub/pubsub_commands.c
 
 CMakeFiles/circle.dir/src/systems/pubsub/pubsub_commands.c.i: cmake_force
@@ -3015,7 +3617,7 @@ CMakeFiles/circle.dir/src/systems/pubsub/pubsub_commands.c.s: cmake_force
 CMakeFiles/circle.dir/src/systems/pubsub/pubsub_queue.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/systems/pubsub/pubsub_queue.c.o: /home/krynn/code/src/systems/pubsub/pubsub_queue.c
 CMakeFiles/circle.dir/src/systems/pubsub/pubsub_queue.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_211) "Building C object CMakeFiles/circle.dir/src/systems/pubsub/pubsub_queue.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_254) "Building C object CMakeFiles/circle.dir/src/systems/pubsub/pubsub_queue.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/systems/pubsub/pubsub_queue.c.o -MF CMakeFiles/circle.dir/src/systems/pubsub/pubsub_queue.c.o.d -o CMakeFiles/circle.dir/src/systems/pubsub/pubsub_queue.c.o -c /home/krynn/code/src/systems/pubsub/pubsub_queue.c
 
 CMakeFiles/circle.dir/src/systems/pubsub/pubsub_queue.c.i: cmake_force
@@ -3029,7 +3631,7 @@ CMakeFiles/circle.dir/src/systems/pubsub/pubsub_queue.c.s: cmake_force
 CMakeFiles/circle.dir/src/systems/pubsub/pubsub_spatial.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/systems/pubsub/pubsub_spatial.c.o: /home/krynn/code/src/systems/pubsub/pubsub_spatial.c
 CMakeFiles/circle.dir/src/systems/pubsub/pubsub_spatial.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_212) "Building C object CMakeFiles/circle.dir/src/systems/pubsub/pubsub_spatial.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_255) "Building C object CMakeFiles/circle.dir/src/systems/pubsub/pubsub_spatial.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/systems/pubsub/pubsub_spatial.c.o -MF CMakeFiles/circle.dir/src/systems/pubsub/pubsub_spatial.c.o.d -o CMakeFiles/circle.dir/src/systems/pubsub/pubsub_spatial.c.o -c /home/krynn/code/src/systems/pubsub/pubsub_spatial.c
 
 CMakeFiles/circle.dir/src/systems/pubsub/pubsub_spatial.c.i: cmake_force
@@ -3043,7 +3645,7 @@ CMakeFiles/circle.dir/src/systems/pubsub/pubsub_spatial.c.s: cmake_force
 CMakeFiles/circle.dir/src/systems/pubsub/pubsub_event_handlers.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/systems/pubsub/pubsub_event_handlers.c.o: /home/krynn/code/src/systems/pubsub/pubsub_event_handlers.c
 CMakeFiles/circle.dir/src/systems/pubsub/pubsub_event_handlers.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_213) "Building C object CMakeFiles/circle.dir/src/systems/pubsub/pubsub_event_handlers.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_256) "Building C object CMakeFiles/circle.dir/src/systems/pubsub/pubsub_event_handlers.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/systems/pubsub/pubsub_event_handlers.c.o -MF CMakeFiles/circle.dir/src/systems/pubsub/pubsub_event_handlers.c.o.d -o CMakeFiles/circle.dir/src/systems/pubsub/pubsub_event_handlers.c.o -c /home/krynn/code/src/systems/pubsub/pubsub_event_handlers.c
 
 CMakeFiles/circle.dir/src/systems/pubsub/pubsub_event_handlers.c.i: cmake_force
@@ -3057,7 +3659,7 @@ CMakeFiles/circle.dir/src/systems/pubsub/pubsub_event_handlers.c.s: cmake_force
 CMakeFiles/circle.dir/src/systems/spatial/spatial_core.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/systems/spatial/spatial_core.c.o: /home/krynn/code/src/systems/spatial/spatial_core.c
 CMakeFiles/circle.dir/src/systems/spatial/spatial_core.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_214) "Building C object CMakeFiles/circle.dir/src/systems/spatial/spatial_core.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_257) "Building C object CMakeFiles/circle.dir/src/systems/spatial/spatial_core.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/systems/spatial/spatial_core.c.o -MF CMakeFiles/circle.dir/src/systems/spatial/spatial_core.c.o.d -o CMakeFiles/circle.dir/src/systems/spatial/spatial_core.c.o -c /home/krynn/code/src/systems/spatial/spatial_core.c
 
 CMakeFiles/circle.dir/src/systems/spatial/spatial_core.c.i: cmake_force
@@ -3071,7 +3673,7 @@ CMakeFiles/circle.dir/src/systems/spatial/spatial_core.c.s: cmake_force
 CMakeFiles/circle.dir/src/systems/spatial/spatial_visual.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/systems/spatial/spatial_visual.c.o: /home/krynn/code/src/systems/spatial/spatial_visual.c
 CMakeFiles/circle.dir/src/systems/spatial/spatial_visual.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_215) "Building C object CMakeFiles/circle.dir/src/systems/spatial/spatial_visual.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_258) "Building C object CMakeFiles/circle.dir/src/systems/spatial/spatial_visual.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/systems/spatial/spatial_visual.c.o -MF CMakeFiles/circle.dir/src/systems/spatial/spatial_visual.c.o.d -o CMakeFiles/circle.dir/src/systems/spatial/spatial_visual.c.o -c /home/krynn/code/src/systems/spatial/spatial_visual.c
 
 CMakeFiles/circle.dir/src/systems/spatial/spatial_visual.c.i: cmake_force
@@ -3085,7 +3687,7 @@ CMakeFiles/circle.dir/src/systems/spatial/spatial_visual.c.s: cmake_force
 CMakeFiles/circle.dir/src/systems/spatial/spatial_audio.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/systems/spatial/spatial_audio.c.o: /home/krynn/code/src/systems/spatial/spatial_audio.c
 CMakeFiles/circle.dir/src/systems/spatial/spatial_audio.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_216) "Building C object CMakeFiles/circle.dir/src/systems/spatial/spatial_audio.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_259) "Building C object CMakeFiles/circle.dir/src/systems/spatial/spatial_audio.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/systems/spatial/spatial_audio.c.o -MF CMakeFiles/circle.dir/src/systems/spatial/spatial_audio.c.o.d -o CMakeFiles/circle.dir/src/systems/spatial/spatial_audio.c.o -c /home/krynn/code/src/systems/spatial/spatial_audio.c
 
 CMakeFiles/circle.dir/src/systems/spatial/spatial_audio.c.i: cmake_force
@@ -3099,7 +3701,7 @@ CMakeFiles/circle.dir/src/systems/spatial/spatial_audio.c.s: cmake_force
 CMakeFiles/circle.dir/src/systems/terrainbridge/terrain_bridge.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/systems/terrainbridge/terrain_bridge.c.o: /home/krynn/code/src/systems/terrainbridge/terrain_bridge.c
 CMakeFiles/circle.dir/src/systems/terrainbridge/terrain_bridge.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_217) "Building C object CMakeFiles/circle.dir/src/systems/terrainbridge/terrain_bridge.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_260) "Building C object CMakeFiles/circle.dir/src/systems/terrainbridge/terrain_bridge.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/systems/terrainbridge/terrain_bridge.c.o -MF CMakeFiles/circle.dir/src/systems/terrainbridge/terrain_bridge.c.o.d -o CMakeFiles/circle.dir/src/systems/terrainbridge/terrain_bridge.c.o -c /home/krynn/code/src/systems/terrainbridge/terrain_bridge.c
 
 CMakeFiles/circle.dir/src/systems/terrainbridge/terrain_bridge.c.i: cmake_force
@@ -3113,7 +3715,7 @@ CMakeFiles/circle.dir/src/systems/terrainbridge/terrain_bridge.c.s: cmake_force
 CMakeFiles/circle.dir/src/systems/region_hints/region_hints.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/systems/region_hints/region_hints.c.o: /home/krynn/code/src/systems/region_hints/region_hints.c
 CMakeFiles/circle.dir/src/systems/region_hints/region_hints.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_218) "Building C object CMakeFiles/circle.dir/src/systems/region_hints/region_hints.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_261) "Building C object CMakeFiles/circle.dir/src/systems/region_hints/region_hints.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/systems/region_hints/region_hints.c.o -MF CMakeFiles/circle.dir/src/systems/region_hints/region_hints.c.o.d -o CMakeFiles/circle.dir/src/systems/region_hints/region_hints.c.o -c /home/krynn/code/src/systems/region_hints/region_hints.c
 
 CMakeFiles/circle.dir/src/systems/region_hints/region_hints.c.i: cmake_force
@@ -3127,7 +3729,7 @@ CMakeFiles/circle.dir/src/systems/region_hints/region_hints.c.s: cmake_force
 CMakeFiles/circle.dir/src/systems/narrative_weaver/narrative_weaver.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/systems/narrative_weaver/narrative_weaver.c.o: /home/krynn/code/src/systems/narrative_weaver/narrative_weaver.c
 CMakeFiles/circle.dir/src/systems/narrative_weaver/narrative_weaver.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_219) "Building C object CMakeFiles/circle.dir/src/systems/narrative_weaver/narrative_weaver.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_262) "Building C object CMakeFiles/circle.dir/src/systems/narrative_weaver/narrative_weaver.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/systems/narrative_weaver/narrative_weaver.c.o -MF CMakeFiles/circle.dir/src/systems/narrative_weaver/narrative_weaver.c.o.d -o CMakeFiles/circle.dir/src/systems/narrative_weaver/narrative_weaver.c.o -c /home/krynn/code/src/systems/narrative_weaver/narrative_weaver.c
 
 CMakeFiles/circle.dir/src/systems/narrative_weaver/narrative_weaver.c.i: cmake_force
@@ -3141,7 +3743,7 @@ CMakeFiles/circle.dir/src/systems/narrative_weaver/narrative_weaver.c.s: cmake_f
 CMakeFiles/circle.dir/src/systems/intermud3/i3_client.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/systems/intermud3/i3_client.c.o: /home/krynn/code/src/systems/intermud3/i3_client.c
 CMakeFiles/circle.dir/src/systems/intermud3/i3_client.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_220) "Building C object CMakeFiles/circle.dir/src/systems/intermud3/i3_client.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_263) "Building C object CMakeFiles/circle.dir/src/systems/intermud3/i3_client.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/systems/intermud3/i3_client.c.o -MF CMakeFiles/circle.dir/src/systems/intermud3/i3_client.c.o.d -o CMakeFiles/circle.dir/src/systems/intermud3/i3_client.c.o -c /home/krynn/code/src/systems/intermud3/i3_client.c
 
 CMakeFiles/circle.dir/src/systems/intermud3/i3_client.c.i: cmake_force
@@ -3155,7 +3757,7 @@ CMakeFiles/circle.dir/src/systems/intermud3/i3_client.c.s: cmake_force
 CMakeFiles/circle.dir/src/systems/intermud3/i3_commands.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/systems/intermud3/i3_commands.c.o: /home/krynn/code/src/systems/intermud3/i3_commands.c
 CMakeFiles/circle.dir/src/systems/intermud3/i3_commands.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_221) "Building C object CMakeFiles/circle.dir/src/systems/intermud3/i3_commands.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_264) "Building C object CMakeFiles/circle.dir/src/systems/intermud3/i3_commands.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/systems/intermud3/i3_commands.c.o -MF CMakeFiles/circle.dir/src/systems/intermud3/i3_commands.c.o.d -o CMakeFiles/circle.dir/src/systems/intermud3/i3_commands.c.o -c /home/krynn/code/src/systems/intermud3/i3_commands.c
 
 CMakeFiles/circle.dir/src/systems/intermud3/i3_commands.c.i: cmake_force
@@ -3169,7 +3771,7 @@ CMakeFiles/circle.dir/src/systems/intermud3/i3_commands.c.s: cmake_force
 CMakeFiles/circle.dir/src/systems/intermud3/i3_utils.c.o: CMakeFiles/circle.dir/flags.make
 CMakeFiles/circle.dir/src/systems/intermud3/i3_utils.c.o: /home/krynn/code/src/systems/intermud3/i3_utils.c
 CMakeFiles/circle.dir/src/systems/intermud3/i3_utils.c.o: CMakeFiles/circle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_222) "Building C object CMakeFiles/circle.dir/src/systems/intermud3/i3_utils.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_265) "Building C object CMakeFiles/circle.dir/src/systems/intermud3/i3_utils.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/circle.dir/src/systems/intermud3/i3_utils.c.o -MF CMakeFiles/circle.dir/src/systems/intermud3/i3_utils.c.o.d -o CMakeFiles/circle.dir/src/systems/intermud3/i3_utils.c.o -c /home/krynn/code/src/systems/intermud3/i3_utils.c
 
 CMakeFiles/circle.dir/src/systems/intermud3/i3_utils.c.i: cmake_force
@@ -3212,6 +3814,39 @@ circle_OBJECTS = \
 "CMakeFiles/circle.dir/src/char_descs.c.o" \
 "CMakeFiles/circle.dir/src/clan.c.o" \
 "CMakeFiles/circle.dir/src/clan_economy.c.o" \
+"CMakeFiles/circle.dir/src/clan_buff_queries.c.o" \
+"CMakeFiles/circle.dir/src/clan_buff_activation.c.o" \
+"CMakeFiles/circle.dir/src/clan_buff_commit.c.o" \
+"CMakeFiles/circle.dir/src/clan_buff_lifecycle.c.o" \
+"CMakeFiles/circle.dir/src/clan_buff_runtime.c.o" \
+"CMakeFiles/circle.dir/src/clan_buff_commands.c.o" \
+"CMakeFiles/circle.dir/src/clan_combat.c.o" \
+"CMakeFiles/circle.dir/src/clan_web_content.c.o" \
+"CMakeFiles/circle.dir/src/clan_web_content_runtime.c.o" \
+"CMakeFiles/circle.dir/src/clan_web.c.o" \
+"CMakeFiles/circle.dir/src/clan_web_runtime.c.o" \
+"CMakeFiles/circle.dir/src/clan_quartermaster.c.o" \
+"CMakeFiles/circle.dir/src/clan_quartermaster_runtime.c.o" \
+"CMakeFiles/circle.dir/src/clan_delivery.c.o" \
+"CMakeFiles/circle.dir/src/clan_delivery_runtime.c.o" \
+"CMakeFiles/circle.dir/src/clan_expedition_enrollment.c.o" \
+"CMakeFiles/circle.dir/src/clan_expedition_runtime.c.o" \
+"CMakeFiles/circle.dir/src/clan_expeditions.c.o" \
+"CMakeFiles/circle.dir/src/clan_expedition_world.c.o" \
+"CMakeFiles/circle.dir/src/clan_objectives.c.o" \
+"CMakeFiles/circle.dir/src/clan_objective_runtime.c.o" \
+"CMakeFiles/circle.dir/src/clan_sources.c.o" \
+"CMakeFiles/circle.dir/src/clan_qm_services.c.o" \
+"CMakeFiles/circle.dir/src/clan_enchant.c.o" \
+"CMakeFiles/circle.dir/src/clan_access.c.o" \
+"CMakeFiles/circle.dir/src/clan_status.c.o" \
+"CMakeFiles/circle.dir/src/clan_commands.c.o" \
+"CMakeFiles/circle.dir/src/clan_awards.c.o" \
+"CMakeFiles/circle.dir/src/clan_policy.c.o" \
+"CMakeFiles/circle.dir/src/clan_progression.c.o" \
+"CMakeFiles/circle.dir/src/clan_repository.c.o" \
+"CMakeFiles/circle.dir/src/clan_boot.c.o" \
+"CMakeFiles/circle.dir/src/clan_persistence.c.o" \
 "CMakeFiles/circle.dir/src/clan_edit.c.o" \
 "CMakeFiles/circle.dir/src/clan_transactions.c.o" \
 "CMakeFiles/circle.dir/src/class.c.o" \
@@ -3230,6 +3865,10 @@ circle_OBJECTS = \
 "CMakeFiles/circle.dir/src/db_startup_init.c.o" \
 "CMakeFiles/circle.dir/src/db_admin_commands.c.o" \
 "CMakeFiles/circle.dir/src/deities.c.o" \
+"CMakeFiles/circle.dir/src/religion.c.o" \
+"CMakeFiles/circle.dir/src/religion_tasks.c.o" \
+"CMakeFiles/circle.dir/src/religion_blessing.c.o" \
+"CMakeFiles/circle.dir/src/restring.c.o" \
 "CMakeFiles/circle.dir/src/desc_engine.c.o" \
 "CMakeFiles/circle.dir/src/dg_comm.c.o" \
 "CMakeFiles/circle.dir/src/discord_bridge.c.o" \
@@ -3293,9 +3932,14 @@ circle_OBJECTS = \
 "CMakeFiles/circle.dir/src/limits.c.o" \
 "CMakeFiles/circle.dir/src/lists.c.o" \
 "CMakeFiles/circle.dir/src/magic.c.o" \
+"CMakeFiles/circle.dir/src/spell_batch_final.c.o" \
 "CMakeFiles/circle.dir/src/epic_magic.c.o" \
 "CMakeFiles/circle.dir/src/mail.c.o" \
 "CMakeFiles/circle.dir/src/medit.c.o" \
+"CMakeFiles/circle.dir/src/epic_feats.c.o" \
+"CMakeFiles/circle.dir/src/epic_feats2.c.o" \
+"CMakeFiles/circle.dir/src/epic_feats3.c.o" \
+"CMakeFiles/circle.dir/src/class_improvements.c.o" \
 "CMakeFiles/circle.dir/src/metamagic_science.c.o" \
 "CMakeFiles/circle.dir/src/missions.c.o" \
 "CMakeFiles/circle.dir/src/mob_act.c.o" \
@@ -3350,6 +3994,7 @@ circle_OBJECTS = \
 "CMakeFiles/circle.dir/src/spec_procs.c.o" \
 "CMakeFiles/circle.dir/src/specs.artifacts.c.o" \
 "CMakeFiles/circle.dir/src/casting_visuals.c.o" \
+"CMakeFiles/circle.dir/src/spellhelp.c.o" \
 "CMakeFiles/circle.dir/src/spell_parser.c.o" \
 "CMakeFiles/circle.dir/src/spell_prep.c.o" \
 "CMakeFiles/circle.dir/src/spellbook_scroll.c.o" \
@@ -3438,6 +4083,39 @@ circle_EXTERNAL_OBJECTS =
 /home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/char_descs.c.o
 /home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/clan.c.o
 /home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/clan_economy.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/clan_buff_queries.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/clan_buff_activation.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/clan_buff_commit.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/clan_buff_lifecycle.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/clan_buff_runtime.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/clan_buff_commands.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/clan_combat.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/clan_web_content.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/clan_web_content_runtime.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/clan_web.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/clan_web_runtime.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/clan_quartermaster.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/clan_quartermaster_runtime.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/clan_delivery.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/clan_delivery_runtime.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/clan_expedition_enrollment.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/clan_expedition_runtime.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/clan_expeditions.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/clan_expedition_world.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/clan_objectives.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/clan_objective_runtime.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/clan_sources.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/clan_qm_services.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/clan_enchant.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/clan_access.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/clan_status.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/clan_commands.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/clan_awards.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/clan_policy.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/clan_progression.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/clan_repository.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/clan_boot.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/clan_persistence.c.o
 /home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/clan_edit.c.o
 /home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/clan_transactions.c.o
 /home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/class.c.o
@@ -3456,6 +4134,10 @@ circle_EXTERNAL_OBJECTS =
 /home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/db_startup_init.c.o
 /home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/db_admin_commands.c.o
 /home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/deities.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/religion.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/religion_tasks.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/religion_blessing.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/restring.c.o
 /home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/desc_engine.c.o
 /home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/dg_comm.c.o
 /home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/discord_bridge.c.o
@@ -3519,9 +4201,14 @@ circle_EXTERNAL_OBJECTS =
 /home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/limits.c.o
 /home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/lists.c.o
 /home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/magic.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/spell_batch_final.c.o
 /home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/epic_magic.c.o
 /home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/mail.c.o
 /home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/medit.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/epic_feats.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/epic_feats2.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/epic_feats3.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/class_improvements.c.o
 /home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/metamagic_science.c.o
 /home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/missions.c.o
 /home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/mob_act.c.o
@@ -3576,6 +4263,7 @@ circle_EXTERNAL_OBJECTS =
 /home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/spec_procs.c.o
 /home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/specs.artifacts.c.o
 /home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/casting_visuals.c.o
+/home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/spellhelp.c.o
 /home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/spell_parser.c.o
 /home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/spell_prep.c.o
 /home/krynn/code/bin/circle: CMakeFiles/circle.dir/src/spellbook_scroll.c.o
@@ -3638,7 +4326,7 @@ circle_EXTERNAL_OBJECTS =
 /home/krynn/code/bin/circle: /usr/lib/x86_64-linux-gnu/libcrypto.so
 /home/krynn/code/bin/circle: /usr/lib/x86_64-linux-gnu/libjson-c.so
 /home/krynn/code/bin/circle: CMakeFiles/circle.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_223) "Linking C executable /home/krynn/code/bin/circle"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=$(CMAKE_PROGRESS_266) "Linking C executable /home/krynn/code/bin/circle"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/circle.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

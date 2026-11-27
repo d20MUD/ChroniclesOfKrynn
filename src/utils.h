@@ -100,6 +100,7 @@ bool is_spell_restoreable(int spell);
 bool check_poison_resist(struct char_data *ch, struct char_data *victim, int casttype, int level);
 int get_poison_save_mod(struct char_data *ch, struct char_data *victim);
 int is_immune_to_crits(struct char_data *attacker, struct char_data *target);
+bool fortification_blocks(struct char_data *target, int sides);
 sbyte is_immune_fear(struct char_data *ch, struct char_data *victim, sbyte display);
 sbyte is_immune_mind_affecting(struct char_data *ch, struct char_data *victim, sbyte display);
 sbyte is_immune_charm(struct char_data *ch, struct char_data *victim, sbyte display);

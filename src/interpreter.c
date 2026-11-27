@@ -21,6 +21,7 @@
 #include "legendary_earnings.h"
 #include "legendary_transaction.h"
 #include "structs.h"
+#include "spell_batch_final.h"
 #include "class_improvements.h"
 #include "housing.h"
 #include "auction_house.h"
@@ -4563,6 +4564,7 @@ cpp_extern const struct command_info cmd_info[] = {
      ACTION_NONE,
      {0, 0},
      can_surpriseaccuracy},
+    {"spellchoice", "spellchoice", POS_RECLINING, do_spellchoice, 1, 0, FALSE, ACTION_NONE, {0, 0}, NULL},
     {"struggle", "struggle", POS_RECLINING, do_struggle, 1, 0, FALSE, ACTION_NONE, {0, 0}, NULL},
     {"seekerarrow",
      "seekerarrow",
@@ -6006,7 +6008,16 @@ void command_interpreter(struct char_data *ch, char *argument)
       //    } else if (HAS_WAIT(ch) && complete_cmd_info[cmd].ignore_wait == FALSE) {
       //      send_to_char(ch, "You need to wait longer before you are able to do that.\r\n");
     }
+  else if (affected_by_spell(ch, PSIONIC_CRYSTALLINE_BONDS) &&
+           (complete_cmd_info[cmd].actions_required != ACTION_NONE ||
+            complete_cmd_info[cmd].command_pointer == do_process_attack) &&
+           complete_cmd_info[cmd].command_pointer != do_gen_cast &&
+           complete_cmd_info[cmd].command_pointer != do_struggle &&
+           complete_cmd_info[cmd].command_pointer != do_spellchoice) {
+    send_to_char(ch, "The crystalline bonds prevent that physical action. Try struggle.\r\n");
+  }
   else if (!IS_NPC(ch) &&
+           !(complete_cmd_info[cmd].command_pointer == do_stand && final_batch_fervor(ch, FERVOR_RISE)) &&
            !(complete_cmd_info[cmd].command_pointer == do_newcraft &&
              complete_cmd_info[cmd].subcmd == SCMD_NEWCRAFT_HARVEST && is_harvest_cancel_request(line)) &&
            !(complete_cmd_info[cmd].command_pointer == do_gen_cast &&

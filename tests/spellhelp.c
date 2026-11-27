@@ -12,6 +12,7 @@
 #include "modify.h"
 #include "act.h"
 #include "spellhelp.h"
+#include "mob_spellslots.h"
 #include <assert.h>
 #include "perfmon.h"
 
@@ -28,12 +29,13 @@ const char *position_types[NUM_POSITIONS + 1];
 const char *spell_schools[NUM_SCHOOLS + 1];
 static char output[65536];
 void load_batch_registration(void);
+void load_first_batch_class_access(void);
 void free_batch_registration(void);
 void load_psionic_registration(void);
 void free_psionic_registration(void);
 
 bool is_spellnum_psionic(int id) { return id >= PSIONIC_POWER_START && id <= PSIONIC_POWER_END; }
-int get_spell_circle(int id, int cls) { return (spell_info[id].min_level[cls]+1)/2; }
+
 size_t send_to_char(struct char_data *ch, const char *format, ...)
 {
   va_list ap;
@@ -298,13 +300,19 @@ int main(void)
   assert(strstr(output,"Global damage bonus:") && strstr(output,"-10% (90% of normal damage)"));
   /* Load the actual spello() implementation and literal calls for this batch. */
   load_batch_registration();
-  for(i=1; i<=550; i++) {
+  load_first_batch_class_access();
+  assert(get_spell_circle(SPELL_EAR_PIERCING_SCREAM,CLASS_BARD)==1);
+  assert(get_spell_circle(SPELL_HOLY_SMITE,CLASS_INQUISITOR)==4);
+  assert(get_spell_circle(SPELL_FRIGID_TOUCH,CLASS_SORCERER)==2);
+  command(&ch,"orders wrath"); assert(strstr(output,"Lawful power"));
+  command(&ch,"order's wrath"); assert(strstr(output,"Lawful power"));
+  for(i=1; i<=565; i++) {
     struct spell_info_type registration_before=spell_info[i];
     struct config_data config_before=config_info;
     struct char_data player_before=ch;
     struct player_special_data special_before=ps;
     text=render_checked(i);
-    if((i>=325 && i<=381) || i==485 || i==490 || (i>=541 && i<=550)) {
+    if((i>=325 && i<=381) || i==485 || i==490 || (i==549 || i>=562)) {
       assert(!text && !spellhelp_public(i));
       assert(!memcmp(&registration_before,&spell_info[i],sizeof(registration_before)));
       assert(!memcmp(&config_before,&config_info,sizeof(config_before)));
@@ -873,14 +881,35 @@ int main(void)
 
   /* Full production psionic metadata; every definition is read-only and reviewed. */
   load_psionic_registration();
-  for(i=1499;i<=1605;i++) {
+  load_first_batch_class_access();
+  assert(get_spell_circle(PSIONIC_HAIL_OF_CRYSTALS,CLASS_PSIONICIST)==5);
+  command(&ch,"reconstruction");
+  assert(strstr(output,"manifester level") && !strstr(output,"Global damage bonus:"));
+  command(&ch,"blessing of fervor");
+  assert(strstr(output,"SPELLCHOICE FERVOR") && strstr(output,"level 7 (circle 4)"));
+  command(&ch,"crystalline bonds");
+  assert(strstr(output,"STRUGGLE") && strstr(output,"level 7 (circle 4)") && !strstr(output,"Global damage bonus:"));
+  command(&ch,"thorn body");assert(!strstr(output,"Global damage bonus:"));
+  command(&ch,"battlesense");
+  assert(strstr(output,"SPELLCHOICE BATTLESENSE") && strstr(output,"level 5 (circle 3)"));
+  assert(get_spell_circle(SPELL_RIGHTEOUS_MIGHT,CLASS_INQUISITOR)==5);
+  assert(get_spell_circle(SPELL_THORN_BODY,CLASS_ALCHEMIST)==3);
+  command(&ch,"natural healing");
+  assert(strstr(output,"3 hit points") && strstr(output,"level 1 (circle 1)") && !strstr(output,"Global damage bonus:"));
+  command(&ch,"burst of speed");
+  assert(strstr(output,"20 feet") && strstr(output,"level 12 (circle 3)"));
+  assert(get_spell_circle(SPELL_BONESHATTER,CLASS_CLERIC)==5);
+  assert(get_spell_circle(PSIONIC_EXPOSE_WEAKNESS,CLASS_PSIONICIST)==3);
+  command(&ch,"energy missile");
+  assert(strstr(output,"five eligible enemies") && strstr(output,"level 3 (circle 2)"));
+  for(i=1499;i<=1618;i++) {
     struct spell_info_type psi_info_before=spell_info[i];
     struct psionic_power_data psi_power_before=psionic_powers[i];
     struct config_data psi_config_before=config_info;
     struct char_data psi_player_before=ch;
     struct player_special_data psi_special_before=ps;
     text=render_checked(i);
-    if(i==1499 || i==1605) {
+    if(i==1499 || i==1610 || i==1614 || i>=1617) {
       assert(!text && !spellhelp_public(i));
     } else {
       assert(text && !strstr(text,"Detailed effects are not yet documented"));
@@ -1020,7 +1049,7 @@ int main(void)
   free_psionic_registration();
   puts("spellhelp: all registered psionic powers, retired definitions, perk IDs, augmentation, damage settings, and read-only state passed.");
   free_batch_registration();
-  puts("spellhelp defined spell IDs through 540 (541-550 outside ordinary spell list): public, legacy, internal, unfinished and campaign-dependent entries, implemented outcomes, colors, alignment, and read-only rendering passed.");
+  puts("spellhelp defined spell IDs through 564 (549 and 562-564 internal, 565 outside ordinary spell list): public, legacy, internal, unfinished and campaign-dependent entries, implemented outcomes, colors, alignment, and read-only rendering passed.");
   puts("spellhelp: lookup, ambiguity, public filtering, metadata, detailed entries, coverage, and read-only behavior passed.");
   return 0;
 }

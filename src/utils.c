@@ -1165,7 +1165,7 @@ int compute_current_size(struct char_data *ch)
   {
     size = IS_SIVAK_FORM(ch) ? active_sivak_form(ch)->size : race_list[GET_RACE(ch)].size;
     if (affected_by_spell(ch, ABILITY_AUGMENT_PHYSICALITY) ||
-        affected_by_spell(ch, SPELL_ENLARGE_PERSON))
+        affected_by_spell(ch, SPELL_ENLARGE_PERSON) || affected_by_spell(ch, SPELL_RIGHTEOUS_MIGHT))
       size++;
     if (affected_by_spell(ch, SPELL_SHRINK_PERSON))
       size--;
@@ -1174,7 +1174,7 @@ int compute_current_size(struct char_data *ch)
   { // wildshaped
     size = race_list[racenum].size;
     if (affected_by_spell(ch, ABILITY_AUGMENT_PHYSICALITY) ||
-        affected_by_spell(ch, SPELL_ENLARGE_PERSON))
+        affected_by_spell(ch, SPELL_ENLARGE_PERSON) || affected_by_spell(ch, SPELL_RIGHTEOUS_MIGHT))
       size++;
     if (affected_by_spell(ch, SPELL_SHRINK_PERSON))
       size--;
@@ -1206,7 +1206,8 @@ int compute_object_size(struct obj_data *obj)
     root = root->in_obj;
   bearer = root->worn_by ? root->worn_by : root->carried_by;
   size = GET_OBJ_SIZE(obj);
-  if (bearer && affected_by_spell(bearer, ABILITY_AUGMENT_PHYSICALITY) && size < SIZE_COLOSSAL)
+  if (bearer && (affected_by_spell(bearer, ABILITY_AUGMENT_PHYSICALITY) ||
+                 affected_by_spell(bearer, SPELL_RIGHTEOUS_MIGHT)) && size < SIZE_COLOSSAL)
     size++;
   return size;
 }
@@ -1483,6 +1484,14 @@ int color_count(char *bufptr)
 
 /* determines if you can crit this target based on attacker
      added attacker so we can account for powerful beings that can critical hit through anything potentially -zusuk */
+/* Expose Weakness makes probabilistic fortification keep the worse of two
+ * rolls. True anatomical/feature immunities remain separate and unchanged. */
+bool fortification_blocks(struct char_data *target, int sides)
+{
+  return dice(1, sides) == 1 &&
+         (!affected_by_spell(target, PSIONIC_EXPOSE_WEAKNESS) || dice(1, sides) == 1);
+}
+
 int is_immune_to_crits(struct char_data *attacker, struct char_data *target)
 {
   int powerful_being = 0;
@@ -1525,10 +1534,10 @@ int is_immune_to_crits(struct char_data *attacker, struct char_data *target)
   }
 
   /* preserve organs as 25% of stopping crits */
-  if (!IS_NPC(target) && (KNOWS_DISCOVERY(target, ALC_DISC_PRESERVE_ORGANS) && dice(1, 4) == 1))
+  if (!IS_NPC(target) && (KNOWS_DISCOVERY(target, ALC_DISC_PRESERVE_ORGANS) && fortification_blocks(target, 4)))
     return TRUE; /* avoided this crit! */
 
-  if (affected_by_spell(target, SPELL_SHIELD_OF_FORTIFICATION) && dice(1, 4) == 1)
+  if (affected_by_spell(target, SPELL_SHIELD_OF_FORTIFICATION) && fortification_blocks(target, 4))
     return TRUE; /* avoided this crit! */
 
   if (affected_by_spell(target, PSIONIC_BODY_OF_IRON))

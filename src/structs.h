@@ -298,6 +298,7 @@
 #define RAFF_DIFFICULT_TERRAIN (1 << 13)
 #define RAFF_SACRED_SPACE (1 << 14)
 #define RAFF_KAPAK_ACID (1 << 15)
+#define RAFF_FROST_FALL (1 << 16)
 /** The total number of Room Affections */
 #define NUM_RAFF 16
 
@@ -6695,6 +6696,9 @@ struct raff_node
   int dc;               // save dc, if specified
   bool special;         // true if a special affect associated with the room affect applies
 
+  long caster_uid;       /* frost fall: runtime identity, safe after extraction */
+  int caster_level;
+  int caster_class;
   struct raff_node *next; /* link to the next node */
 };
 
@@ -8327,6 +8331,12 @@ struct char_data
   int epic_summon_doctrine;
   time_t epic_summon_expiry;
   bool epic_manifest_damaged; /* Damage since the last manifestation concentration check. */
+  int spell_fervor_choice;       /**< Runtime choices for subsequent casts; zero is default. */
+  int spell_battlesense_choice;
+  bool spell_bonds_size_choice;
+  int spell_bonds_last_damage;
+  bool spell_vine_used;
+  bool spell_portent_half_critical;
   struct affected_type *affected;        /**< affected by what spells    */
   struct obj_data *equipment[NUM_WEARS]; /**< Equipment array            */
 

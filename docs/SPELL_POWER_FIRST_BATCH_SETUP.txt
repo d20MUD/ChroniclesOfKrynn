@@ -1,0 +1,102 @@
+FIRST SPELL AND PSIONIC POWER BATCH
+
+Implements the suggested first batch from SPELL_AND_PSIONIC_POWER_CANDIDATES.md:
+eight spells and five powers. Levels below mean levels in that class, not total
+multiclass character level. Normal learning, preparation, known-power selection,
+ability requirements, and resource costs still apply.
+
+SPELLS AND CLASS ACCESS
+
+Ear-Piercing Scream: Wizard 1, Sorcerer 1, Bard 1, Inquisitor 1.
+Frigid Touch: Wizard 3, Sorcerer 4, Druid 3.
+Frost Fall: Wizard 3, Sorcerer 4, Druid 3.
+Burst of Radiance: Wizard 3, Sorcerer 4, Cleric 3, Druid 3.
+Holy Smite: Cleric 7, Inquisitor 10.
+Unholy Blight: Cleric 7, Inquisitor 10.
+Order's Wrath: Cleric 7, Inquisitor 10.
+Chaos Hammer: Cleric 7, Inquisitor 10.
+
+POWERS AND CLASS ACCESS
+
+Destiny Dissonance: Psionicist 1; base cost 1 PSP; no augmentation.
+Energy Missile: Psionicist 3; base cost 3 PSP; augment in steps of 1 PSP.
+Energy Cone: Psionicist 5; base cost 5 PSP; augment in steps of 1 PSP.
+Reconstruction: Psionicist 3; base cost 3 PSP; augment in steps of 2 PSP.
+Hail of Crystals: Psionicist 9; base cost 9 PSP; augment in steps of 1 PSP.
+
+COMMAND EXAMPLES
+
+  spellhelp ear-piercing scream
+  spellhelp frigid touch
+  spellhelp frost fall
+  spellhelp burst of radiance
+  spellhelp orders wrath
+  spellhelp reconstruction
+  spellhelp energy missile
+  spellhelp hail of crystals
+
+  cast 'ear-piercing scream' target
+  cast 'frigid touch' target
+  cast 'frost fall'
+  cast 'burst of radiance'
+  cast 'holy smite'
+  cast 'unholy blight'
+  cast 'orders wrath'
+  cast 'chaos hammer'
+
+  manifest energytype fire
+  manifest 0 'energy missile'
+  manifest 2 'energy cone'
+  manifest 0 'destiny dissonance' target
+  manifest 2 'reconstruction' construct
+  manifest 0 'hail of crystals' target
+
+The registered casting name is "orders wrath", without an apostrophe, because
+CAST uses single quotes to delimit spell names. SPELLHELP also accepts the
+source spelling "order's wrath". All other names match the examples above.
+
+MECHANICAL NOTES
+
+* All room attacks use the existing group, contained-AoE, and PK protections.
+  Energy Missile strikes at most five eligible targets, once each. Energy Cone
+  uses the same room-wide area model as existing cone spells.
+* Alignment bursts protect their matching alignment. Opposed targets take full
+  damage; targets neutral on the relevant axis take half and no condition.
+  A successful save halves that damage again and prevents the condition.
+* Burst of Radiance can affect non-evil enemies' sight, but damages only evil
+  creatures. Its Reflex save changes blindness to dazzling, not damage.
+* Frigid Touch rolls a melee touch. A critical touch doubles its damage dice and
+  extends staggering to ten rounds. Spellstrike does not roll another touch.
+* Frost Fall initially deals 2d6 cold and can stagger for one round. One patch
+  per room remains for max(1, caster level / 2) rounds; later pulses deal 1d6 cold
+  without stagger. Recasting replaces the patch. Pulses stop when the caster
+  leaves or is extracted, or the room becomes peaceful or no-magic. Periodic
+  pulses do not retain the original cast's metamagic. Room LOOK shows the frost.
+* Reconstruction repairs only surviving constructs without the listed golem
+  magic-immunity feats. It uses the existing construct-repair path, avoiding the
+  generic golem half-healing penalty. It cannot repair objects or resurrect.
+* Hail of Crystals has a ranged-touch direct impact followed by an explosion,
+  even when the impact misses or kills its target. The explosion uses normal
+  area protections and allows a Reflex save. Neither stage allows PR.
+* New ordinary powers use explicit epic metadata rather than an old numeric-ID
+  cutoff, preserving support from ordinary-power epic feats.
+* Class circle reporting now uses exclusive level bands, so first-circle Bard
+  and Inquisitor spells are not mislabeled as fifth-circle in SPELLHELP.
+
+DEPLOYMENT
+
+Rebuild the server and restart it to load registrations and class assignments.
+SPELLHELP text is native data in src/spellhelp.c and follows that same build.
+No SQL migration or help-table import is required. Existing saved spell IDs have
+not been renumbered. Later additions are documented in SPELL_POWER_SECOND_BATCH_SETUP.txt
+and SPELL_POWER_FINAL_BATCH_SETUP.txt; the original shortlist is now complete.
+
+FOCUSED VALIDATION
+
+  python3 tests/run_spell_batch.py
+  python3 tests/run_spellhelp.py --sanitize
+
+These cover the new native rule blocks, alignment and condition behavior, touch
+misses/criticals, augmentation, target caps, construct eligibility, hail stages,
+frost caster lifetime/state restoration, ordinary-power epic support, exact class
+assignments, production registrations, circle reporting and SPELLHELP rendering.

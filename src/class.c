@@ -4616,6 +4616,38 @@ void load_class_list(void)
   feat_assignment(CLASS_WIZARD, FEAT_CONSTRUCT_STONE_GOLEM, Y, 25, N);
   /**** spell assign ****/
   /* cantrips */
+  /* First spell batch. */
+  /* Second spell batch. */
+  spell_assignment(CLASS_CLERIC, SPELL_DEFENDING_BONE, 3);
+  spell_assignment(CLASS_INQUISITOR, SPELL_DEFENDING_BONE, 4);
+  spell_assignment(CLASS_WIZARD, SPELL_DEFENDING_BONE, 3);
+  spell_assignment(CLASS_SORCERER, SPELL_DEFENDING_BONE, 4);
+  spell_assignment(CLASS_CLERIC, SPELL_RIGHTEOUS_MIGHT, 9);
+  spell_assignment(CLASS_INQUISITOR, SPELL_RIGHTEOUS_MIGHT, 13);
+  spell_assignment(CLASS_ALCHEMIST, SPELL_THORN_BODY, 7);
+  spell_assignment(CLASS_DRUID, SPELL_THORN_BODY, 7);
+  spell_assignment(CLASS_ALCHEMIST, SPELL_VINE_STRIKE, 4);
+  spell_assignment(CLASS_BLACKGUARD, SPELL_VINE_STRIKE, 10);
+  spell_assignment(CLASS_DRUID, SPELL_VINE_STRIKE, 3);
+  spell_assignment(CLASS_RANGER, SPELL_VINE_STRIKE, 10);
+  spell_assignment(CLASS_WIZARD, SPELL_VINE_STRIKE, 3);
+  spell_assignment(CLASS_SORCERER, SPELL_VINE_STRIKE, 4);
+  spell_assignment(CLASS_BARD, SPELL_DAZZLING_BLADE, 1);
+  spell_assignment(CLASS_WIZARD, SPELL_DAZZLING_BLADE, 1);
+  spell_assignment(CLASS_SORCERER, SPELL_DAZZLING_BLADE, 1);
+  spell_assignment(CLASS_CLERIC, SPELL_DEBILITATING_PORTENT, 7);
+  spell_assignment(CLASS_CLERIC, SPELL_BLESSING_OF_FERVOR, 7);
+  spell_assignment(CLASS_PSIONICIST, PSIONIC_CRYSTALLINE_BONDS, 7);
+  spell_assignment(CLASS_PSIONICIST, PSIONIC_BATTLESENSE, 5);
+
+  spell_assignment(CLASS_WIZARD, SPELL_BURNING_DISARM, 1);
+  spell_assignment(CLASS_WIZARD, SPELL_BONESHAKER, 3);
+  spell_assignment(CLASS_WIZARD, SPELL_BONESHATTER, 7);
+  spell_assignment(CLASS_WIZARD, SPELL_STRICKEN_HEART, 3);
+  spell_assignment(CLASS_WIZARD, SPELL_EAR_PIERCING_SCREAM, 1);
+  spell_assignment(CLASS_WIZARD, SPELL_FRIGID_TOUCH, 3);
+  spell_assignment(CLASS_WIZARD, SPELL_FROST_FALL, 3);
+  spell_assignment(CLASS_WIZARD, SPELL_BURST_OF_RADIANCE, 3);
   spell_assignment(CLASS_WIZARD, SPELL_ACID_SPLASH, 0);
   spell_assignment(CLASS_WIZARD, SPELL_RAY_OF_FROST, 0);
   spell_assignment(CLASS_WIZARD, SPELL_FIRE_BOLT, 0);
@@ -4979,6 +5011,16 @@ void load_class_list(void)
   feat_assignment(CLASS_CLERIC, FEAT_GREAT_CHARISMA, Y, NOASSIGN_FEAT, N);
   /**** spell assign ****/
   /* cantrips */
+  /* First spell batch. */
+  /* Second spell batch. */
+  spell_assignment(CLASS_CLERIC, SPELL_BURNING_DISARM, 1);
+  spell_assignment(CLASS_CLERIC, SPELL_BONESHAKER, 3);
+  spell_assignment(CLASS_CLERIC, SPELL_BONESHATTER, 9);
+  spell_assignment(CLASS_CLERIC, SPELL_BURST_OF_RADIANCE, 3);
+  spell_assignment(CLASS_CLERIC, SPELL_HOLY_SMITE, 7);
+  spell_assignment(CLASS_CLERIC, SPELL_UNHOLY_BLIGHT, 7);
+  spell_assignment(CLASS_CLERIC, SPELL_ORDERS_WRATH, 7);
+  spell_assignment(CLASS_CLERIC, SPELL_CHAOS_HAMMER, 7);
   spell_assignment(CLASS_CLERIC, SPELL_DISRUPT_UNDEAD, 0);
   spell_assignment(CLASS_CLERIC, SPELL_CONTINUAL_LIGHT, 0);
   spell_assignment(CLASS_CLERIC, SPELL_ENHANCED_DIPLOMACY, 0);
@@ -5652,6 +5694,12 @@ void load_class_list(void)
   /* no class feats */
   /**** spell assign ****/
   /* cantrips */
+  /* First spell batch. */
+  /* Second spell batch. */
+  spell_assignment(CLASS_DRUID, SPELL_BURNING_DISARM, 1);
+  spell_assignment(CLASS_DRUID, SPELL_FRIGID_TOUCH, 3);
+  spell_assignment(CLASS_DRUID, SPELL_FROST_FALL, 3);
+  spell_assignment(CLASS_DRUID, SPELL_BURST_OF_RADIANCE, 3);
   spell_assignment(CLASS_DRUID, SPELL_CONTINUAL_LIGHT, 0);
   spell_assignment(CLASS_DRUID, SPELL_ENHANCED_DIPLOMACY, 0);
   spell_assignment(CLASS_DRUID, SPELL_FLARE, 0);
@@ -6028,6 +6076,16 @@ void load_class_list(void)
   feat_assignment(CLASS_SORCERER, FEAT_CONSTRUCT_STONE_GOLEM, Y, 25, N);
   /**** spell assign ****/
   /* cantrips */
+  /* First spell batch. */
+  /* Second spell batch. */
+  spell_assignment(CLASS_SORCERER, SPELL_BURNING_DISARM, 1);
+  spell_assignment(CLASS_SORCERER, SPELL_BONESHAKER, 4);
+  spell_assignment(CLASS_SORCERER, SPELL_BONESHATTER, 8);
+  spell_assignment(CLASS_SORCERER, SPELL_STRICKEN_HEART, 4);
+  spell_assignment(CLASS_SORCERER, SPELL_EAR_PIERCING_SCREAM, 1);
+  spell_assignment(CLASS_SORCERER, SPELL_FRIGID_TOUCH, 4);
+  spell_assignment(CLASS_SORCERER, SPELL_FROST_FALL, 4);
+  spell_assignment(CLASS_SORCERER, SPELL_BURST_OF_RADIANCE, 4);
   spell_assignment(CLASS_SORCERER, SPELL_ACID_SPLASH, 0);
   spell_assignment(CLASS_SORCERER, SPELL_RAY_OF_FROST, 0);
   spell_assignment(CLASS_SORCERER, SPELL_FIRE_BOLT, 0);
@@ -6443,6 +6501,8 @@ void load_class_list(void)
   /**** spell assign ****/
   /*              class num      spell                   level acquired */
   /* 1st circle */
+  /* Second spell batch. */
+  spell_assignment(CLASS_PALADIN, SPELL_BURST_OF_SPEED, 12);
   spell_assignment(CLASS_PALADIN, SPELL_CURE_LIGHT, 6);
   spell_assignment(CLASS_PALADIN, SPELL_ENDURANCE, 6);
   spell_assignment(CLASS_PALADIN, SPELL_SHIELD_OF_FAITH, 6);
@@ -6645,6 +6705,9 @@ void load_class_list(void)
   /*              class num      spell                   level acquired */
   /* 1st circle */
   // spell_assignment(CLASS_BLACKGUARD, SPELL_COMMAND, 6);
+  /* Second spell batch. */
+  spell_assignment(CLASS_BLACKGUARD, SPELL_BONESHAKER, 6);
+  spell_assignment(CLASS_BLACKGUARD, SPELL_BURST_OF_SPEED, 12);
   spell_assignment(CLASS_BLACKGUARD, SPELL_DETECT_POISON, 6);
   spell_assignment(CLASS_BLACKGUARD, SPELL_DOOM, 6);
   spell_assignment(CLASS_BLACKGUARD, SPELL_CAUSE_LIGHT_WOUNDS, 6);
@@ -6815,6 +6878,8 @@ void load_class_list(void)
   /**** spell assignment *****/
   /*              class num      spell                   level acquired */
   /* 1st circle */
+  /* Second spell batch. */
+  spell_assignment(CLASS_RANGER, SPELL_BURST_OF_SPEED, 12);
   spell_assignment(CLASS_RANGER, SPELL_CURE_LIGHT, 6);
   spell_assignment(CLASS_RANGER, SPELL_CHARM_ANIMAL, 6);
   spell_assignment(CLASS_RANGER, SPELL_FAERIE_FIRE, 6);
@@ -6956,6 +7021,8 @@ void load_class_list(void)
 
   /**** spell assign ****/
   /* cantrips */
+  /* First spell batch. */
+  spell_assignment(CLASS_BARD, SPELL_EAR_PIERCING_SCREAM, 1);
   spell_assignment(CLASS_BARD, SPELL_CONTINUAL_LIGHT, 0);
   spell_assignment(CLASS_BARD, SPELL_ENHANCED_DIPLOMACY, 0);
   spell_assignment(CLASS_BARD, SPELL_FLARE, 0);
@@ -7160,6 +7227,15 @@ void load_class_list(void)
   /**** spell assign ****/
   /*              class num      spell                   level acquired */
   /* 1st circle */
+  /* First discipline-power batch. */
+  spell_assignment(CLASS_PSIONICIST, PSIONIC_NATURAL_HEALING, 1);
+  spell_assignment(CLASS_PSIONICIST, PSIONIC_CORROSIVE_AURA, 1);
+  spell_assignment(CLASS_PSIONICIST, PSIONIC_EXPOSE_WEAKNESS, 5);
+  spell_assignment(CLASS_PSIONICIST, PSIONIC_ENERGY_MISSILE, 3);
+  spell_assignment(CLASS_PSIONICIST, PSIONIC_ENERGY_CONE, 5);
+  spell_assignment(CLASS_PSIONICIST, PSIONIC_DESTINY_DISSONANCE, 1);
+  spell_assignment(CLASS_PSIONICIST, PSIONIC_RECONSTRUCTION, 3);
+  spell_assignment(CLASS_PSIONICIST, PSIONIC_HAIL_OF_CRYSTALS, 9);
   spell_assignment(CLASS_PSIONICIST, PSIONIC_BROKER, 1);
   spell_assignment(CLASS_PSIONICIST, PSIONIC_CALL_TO_MIND, 1);
   spell_assignment(CLASS_PSIONICIST, PSIONIC_CATFALL, 1);
@@ -8963,6 +9039,8 @@ void load_class_list(void)
   /* spell/concoction assigns */
 
   /* concoction circle 1 */
+  /* Second spell batch. */
+  spell_assignment(CLASS_ALCHEMIST, SPELL_BURST_OF_SPEED, 7);
   spell_assignment(CLASS_ALCHEMIST, SPELL_CURE_LIGHT, 1);
   spell_assignment(CLASS_ALCHEMIST, SPELL_ENLARGE_PERSON, 1);
   spell_assignment(CLASS_ALCHEMIST, SPELL_EXPEDITIOUS_RETREAT, 1);
@@ -9172,6 +9250,16 @@ void load_class_list(void)
   /* no spell assignment */
 
   /* cantrips */
+  /* First spell batch. */
+  /* Second spell batch. */
+  spell_assignment(CLASS_INQUISITOR, SPELL_BONESHAKER, 4);
+  spell_assignment(CLASS_INQUISITOR, SPELL_STRICKEN_HEART, 4);
+  spell_assignment(CLASS_INQUISITOR, SPELL_BURST_OF_SPEED, 7);
+  spell_assignment(CLASS_INQUISITOR, SPELL_EAR_PIERCING_SCREAM, 1);
+  spell_assignment(CLASS_INQUISITOR, SPELL_HOLY_SMITE, 10);
+  spell_assignment(CLASS_INQUISITOR, SPELL_UNHOLY_BLIGHT, 10);
+  spell_assignment(CLASS_INQUISITOR, SPELL_ORDERS_WRATH, 10);
+  spell_assignment(CLASS_INQUISITOR, SPELL_CHAOS_HAMMER, 10);
   spell_assignment(CLASS_INQUISITOR, SPELL_ACID_SPLASH, 0);
   spell_assignment(CLASS_INQUISITOR, SPELL_CONTINUAL_LIGHT, 0);
   spell_assignment(CLASS_INQUISITOR, SPELL_DISRUPT_UNDEAD, 0);

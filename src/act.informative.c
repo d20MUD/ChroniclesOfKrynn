@@ -1931,6 +1931,9 @@ void look_at_room(struct char_data *ch, int ignore_brief)
       (!IS_SET_AR(ROOM_FLAGS(target_room), ROOM_FOG) || GET_LEVEL(ch) >= LVL_IMMORT || bloodline_sees_weather(ch)))
     do_auto_exits(ch);
 
+  if (ROOM_AFFECTED(target_room, RAFF_FROST_FALL))
+    send_to_char(ch, "\tCBiting magical frost covers the ground.\tn\r\n");
+
   /* Special hazard: acid pool (blocks seeing contents) */
   if (ROOM_AFFECTED(ch->in_room, RAFF_KAPAK_ACID))
   {

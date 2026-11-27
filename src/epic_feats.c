@@ -207,7 +207,8 @@ int epic_feat_rank(struct char_data *ch, int feat)
 
 int epic_augmentation_discount(struct char_data *ch, int spell, int augmentation)
 {
-  if (spell < PSIONIC_POWER_START || spell >= PSIONIC_IMPALE_MIND ||
+  if (spell < PSIONIC_POWER_START || spell > PSIONIC_POWER_END ||
+      psionic_powers[spell].is_epic ||
       !epic_feat_rank(ch, FEAT_EPIC_AUGMENTATION_EFFICIENCY))
     return 0;
   return MIN(2, MAX(0, augmentation));
@@ -216,7 +217,8 @@ int epic_augmentation_discount(struct char_data *ch, int spell, int augmentation
 bool epic_power_choice(struct char_data *ch, int power)
 {
   int i, circle;
-  if (power < PSIONIC_POWER_START || power > PSIONIC_POWER_END || power >= PSIONIC_IMPALE_MIND ||
+  if (power < PSIONIC_POWER_START || power > PSIONIC_POWER_END || psionic_powers[power].is_epic ||
+      spell_info[power].no_player ||
       power == PSIONIC_RAZOR_STORM || power == PSIONIC_PSYCHOKINETIC_THRASHING ||
       power == PSIONIC_EPIC_PSIONIC_WARD ||
       spell_info[power].min_level[CLASS_PSIONICIST] >= LVL_IMMORT ||

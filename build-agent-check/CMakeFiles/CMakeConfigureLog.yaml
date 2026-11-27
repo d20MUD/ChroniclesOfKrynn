@@ -5446,3 +5446,43 @@ events:
       variable: "_run_result"
       cached: true
 ...
+
+---
+events:
+  -
+    kind: "try_run-v1"
+    backtrace:
+      - "CMakeLists.txt:100 (try_run)"
+      - "CMakeLists.txt:275 (check_run_return_value)"
+    directories:
+      source: "/home/krynn/code/build-agent-check/CMakeFiles/CMakeTmp"
+      binary: "/home/krynn/code/build-agent-check/CMakeFiles/CMakeTmp"
+    cmakeVariables:
+      CMAKE_C_FLAGS: " -Wall -Wno-char-subscripts"
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "_compile_result"
+      cached: true
+      stdout: |
+        Change Dir: '/home/krynn/code/build-agent-check/CMakeFiles/CMakeTmp'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_b5a3d/fast
+        gmake[1]: Entering directory '/home/krynn/code/build-agent-check/CMakeFiles/CMakeTmp'
+        /usr/bin/gmake  -f CMakeFiles/cmTC_b5a3d.dir/build.make CMakeFiles/cmTC_b5a3d.dir/build
+        gmake[2]: Entering directory '/home/krynn/code/build-agent-check/CMakeFiles/CMakeTmp'
+        Building C object CMakeFiles/cmTC_b5a3d.dir/check_run_HAVE_UNSAFE_CRYPT.c.o
+        /usr/bin/cc   -Wall -Wno-char-subscripts  -std=gnu90 -o CMakeFiles/cmTC_b5a3d.dir/check_run_HAVE_UNSAFE_CRYPT.c.o -c /home/krynn/code/build-agent-check/check_run_HAVE_UNSAFE_CRYPT.c
+        /home/krynn/code/build-agent-check/check_run_HAVE_UNSAFE_CRYPT.c:4:1: error: expected identifier or ‘(’ before numeric constant
+            4 | 1 ? "#include <crypt.h>" : ""
+              | ^
+        gmake[2]: *** [CMakeFiles/cmTC_b5a3d.dir/build.make:81: CMakeFiles/cmTC_b5a3d.dir/check_run_HAVE_UNSAFE_CRYPT.c.o] Error 1
+        gmake[2]: Leaving directory '/home/krynn/code/build-agent-check/CMakeFiles/CMakeTmp'
+        gmake[1]: *** [Makefile:134: cmTC_b5a3d/fast] Error 2
+        gmake[1]: Leaving directory '/home/krynn/code/build-agent-check/CMakeFiles/CMakeTmp'
+        
+      exitCode: 2
+    runResult:
+      variable: "_run_result"
+      cached: true
+...

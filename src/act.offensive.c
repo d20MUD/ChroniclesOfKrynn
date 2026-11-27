@@ -15,6 +15,7 @@
 #include "legendary_foundations.h"
 #include "legendary_techniques.h"
 #include "structs.h"
+#include "spell_batch_final.h"
 #include "class_improvements.h"
 #include "utils.h"
 #include "epic_feats2.h"
@@ -12563,7 +12564,7 @@ int perform_feint(struct char_data *ch, struct char_data *vict)
 
   /* calculate our final bluff skill check (feint attempt) */
   bluff_skill_check =
-      d20(ch) + compute_ability(ch, ABILITY_BLUFF) + (HAS_FEAT(ch, FEAT_IMPROVED_FEINT) ? 4 : 0);
+      d20(ch) + compute_ability(ch, ABILITY_BLUFF) + final_batch_blade_bonus(ch) + (HAS_FEAT(ch, FEAT_IMPROVED_FEINT) ? 4 : 0);
   if (IS_NPC(vict) && GET_NPC_RACE(vict) != RACE_TYPE_HUMANOID)
   {
     if (HAS_FEAT(ch, FEAT_IMPROVED_FEINT))

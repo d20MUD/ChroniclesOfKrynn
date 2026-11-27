@@ -9,6 +9,7 @@
 #include "conf.h"
 #include "sysdep.h"
 #include "structs.h"
+#include "spell_batch_final.h"
 #include "utils.h"
 #include "comm.h"
 #include "interpreter.h"
@@ -354,6 +355,10 @@ ACMD(do_grapple)
           "engaging with a successful grapple!!\tn",
           FALSE, ch, NULL, vict, TO_NOTVICT);
       set_grapple(ch, vict);
+      {
+        int thorns = final_batch_thorns(ch, vict, ATTACK_TYPE_UNARMED);
+        if (thorns > 0 && damage(vict, ch, thorns, SPELL_THORN_BODY, DAM_PUNCTURE, FALSE) < 0) return;
+      }
     }
     else
     {
@@ -383,6 +388,7 @@ ACMD(do_grapple)
  * as opposed to the current setup */
 ACMD(do_struggle)
 {
+  if (final_batch_struggle(ch)) return;
   UNUSED(argument);
   if (!GRAPPLE_ATTACKER(ch) || !AFF_FLAGGED(ch, AFF_GRAPPLED))
   {

@@ -115,12 +115,12 @@ clean: CMakeFiles/webster.dir/clean
 CMakeFiles/circle.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/circle.dir/build.make CMakeFiles/circle.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/circle.dir/build.make CMakeFiles/circle.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93 "Built target circle"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94 "Built target circle"
 .PHONY : CMakeFiles/circle.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/circle.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/krynn/code/build-agent-check/CMakeFiles 92
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/krynn/code/build-agent-check/CMakeFiles 93
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/circle.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/krynn/code/build-agent-check/CMakeFiles 0
 .PHONY : CMakeFiles/circle.dir/rule
@@ -132,7 +132,7 @@ circle: CMakeFiles/circle.dir/rule
 # codegen rule for target.
 CMakeFiles/circle.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/circle.dir/build.make CMakeFiles/circle.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93 "Finished codegen for target circle"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94 "Finished codegen for target circle"
 .PHONY : CMakeFiles/circle.dir/codegen
 
 # clean rule for target.
@@ -211,7 +211,7 @@ CMakeFiles/asciipasswd.dir/clean:
 CMakeFiles/plrtoascii.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/plrtoascii.dir/build.make CMakeFiles/plrtoascii.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/plrtoascii.dir/build.make CMakeFiles/plrtoascii.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=94 "Built target plrtoascii"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=95 "Built target plrtoascii"
 .PHONY : CMakeFiles/plrtoascii.dir/all
 
 # Build rule for subdir invocation for target.
@@ -228,7 +228,7 @@ plrtoascii: CMakeFiles/plrtoascii.dir/rule
 # codegen rule for target.
 CMakeFiles/plrtoascii.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/plrtoascii.dir/build.make CMakeFiles/plrtoascii.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=94 "Finished codegen for target plrtoascii"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=95 "Finished codegen for target plrtoascii"
 .PHONY : CMakeFiles/plrtoascii.dir/codegen
 
 # clean rule for target.
@@ -243,12 +243,12 @@ CMakeFiles/plrtoascii.dir/clean:
 CMakeFiles/rebuildAsciiIndex.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/rebuildAsciiIndex.dir/build.make CMakeFiles/rebuildAsciiIndex.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/rebuildAsciiIndex.dir/build.make CMakeFiles/rebuildAsciiIndex.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=95 "Built target rebuildAsciiIndex"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num= "Built target rebuildAsciiIndex"
 .PHONY : CMakeFiles/rebuildAsciiIndex.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/rebuildAsciiIndex.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/krynn/code/build-agent-check/CMakeFiles 1
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/krynn/code/build-agent-check/CMakeFiles 0
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/rebuildAsciiIndex.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/krynn/code/build-agent-check/CMakeFiles 0
 .PHONY : CMakeFiles/rebuildAsciiIndex.dir/rule
@@ -260,7 +260,7 @@ rebuildAsciiIndex: CMakeFiles/rebuildAsciiIndex.dir/rule
 # codegen rule for target.
 CMakeFiles/rebuildAsciiIndex.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/rebuildAsciiIndex.dir/build.make CMakeFiles/rebuildAsciiIndex.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=95 "Finished codegen for target rebuildAsciiIndex"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num= "Finished codegen for target rebuildAsciiIndex"
 .PHONY : CMakeFiles/rebuildAsciiIndex.dir/codegen
 
 # clean rule for target.
@@ -275,12 +275,12 @@ CMakeFiles/rebuildAsciiIndex.dir/clean:
 CMakeFiles/rebuildMailIndex.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/rebuildMailIndex.dir/build.make CMakeFiles/rebuildMailIndex.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/rebuildMailIndex.dir/build.make CMakeFiles/rebuildMailIndex.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num= "Built target rebuildMailIndex"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=96 "Built target rebuildMailIndex"
 .PHONY : CMakeFiles/rebuildMailIndex.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/rebuildMailIndex.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/krynn/code/build-agent-check/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/krynn/code/build-agent-check/CMakeFiles 1
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/rebuildMailIndex.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/krynn/code/build-agent-check/CMakeFiles 0
 .PHONY : CMakeFiles/rebuildMailIndex.dir/rule
@@ -292,7 +292,7 @@ rebuildMailIndex: CMakeFiles/rebuildMailIndex.dir/rule
 # codegen rule for target.
 CMakeFiles/rebuildMailIndex.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/rebuildMailIndex.dir/build.make CMakeFiles/rebuildMailIndex.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num= "Finished codegen for target rebuildMailIndex"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=96 "Finished codegen for target rebuildMailIndex"
 .PHONY : CMakeFiles/rebuildMailIndex.dir/codegen
 
 # clean rule for target.
@@ -307,7 +307,7 @@ CMakeFiles/rebuildMailIndex.dir/clean:
 CMakeFiles/shopconv.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/shopconv.dir/build.make CMakeFiles/shopconv.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/shopconv.dir/build.make CMakeFiles/shopconv.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=96 "Built target shopconv"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=97 "Built target shopconv"
 .PHONY : CMakeFiles/shopconv.dir/all
 
 # Build rule for subdir invocation for target.
@@ -324,7 +324,7 @@ shopconv: CMakeFiles/shopconv.dir/rule
 # codegen rule for target.
 CMakeFiles/shopconv.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/shopconv.dir/build.make CMakeFiles/shopconv.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=96 "Finished codegen for target shopconv"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=97 "Finished codegen for target shopconv"
 .PHONY : CMakeFiles/shopconv.dir/codegen
 
 # clean rule for target.
@@ -339,12 +339,12 @@ CMakeFiles/shopconv.dir/clean:
 CMakeFiles/sign.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/sign.dir/build.make CMakeFiles/sign.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/sign.dir/build.make CMakeFiles/sign.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=97 "Built target sign"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num= "Built target sign"
 .PHONY : CMakeFiles/sign.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/sign.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/krynn/code/build-agent-check/CMakeFiles 1
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/krynn/code/build-agent-check/CMakeFiles 0
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/sign.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/krynn/code/build-agent-check/CMakeFiles 0
 .PHONY : CMakeFiles/sign.dir/rule
@@ -356,7 +356,7 @@ sign: CMakeFiles/sign.dir/rule
 # codegen rule for target.
 CMakeFiles/sign.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/sign.dir/build.make CMakeFiles/sign.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num=97 "Finished codegen for target sign"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/krynn/code/build-agent-check/CMakeFiles --progress-num= "Finished codegen for target sign"
 .PHONY : CMakeFiles/sign.dir/codegen
 
 # clean rule for target.

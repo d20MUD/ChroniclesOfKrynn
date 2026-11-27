@@ -1,0 +1,177 @@
+FINAL SPELL AND PSIONIC POWER BATCH
+
+Completes the original shortlist with seven spells and two powers. All 20 spells
+and 10 powers are now implemented. This guide records the native MUD adaptations;
+source tabletop descriptions remain linked in SPELL_AND_PSIONIC_POWER_CANDIDATES.md.
+
+CLASS ACCESS
+
+Defending Bone: Cleric 3, Inquisitor 4, Wizard 3, Sorcerer 4.
+Righteous Might: Cleric 9, Inquisitor 13.
+Thorn Body: Alchemist 7, Druid 7.
+Vine Strike: Alchemist 4, Blackguard 10, Druid 3, Ranger 10, Wizard 3, Sorcerer 4.
+Dazzling Blade: Bard 1, Wizard 1, Sorcerer 1.
+Debilitating Portent: Cleric 7.
+Blessing of Fervor: Cleric 7.
+Crystalline Bonds: Psionicist 7; 7 PSP; augmentation in steps of 2 PSP.
+Battlesense: Psionicist 5; 5 PSP; augmentation in steps of 2 PSP, maximum 8 extra.
+
+Levels mean levels in that class, not total multiclass level. Normal learning,
+preparation, known-power selection, ability requirements and resource costs apply.
+
+COMMANDS
+
+  spellhelp defending bone
+  spellhelp righteous might
+  spellhelp thorn body
+  spellhelp vine strike
+  spellhelp dazzling blade
+  spellhelp debilitating portent
+  spellhelp blessing of fervor
+  spellhelp crystalline bonds
+  spellhelp battlesense
+
+  cast 'defending bone'
+  cast 'righteous might'
+  cast 'thorn body'
+  cast 'vine strike'
+  cast 'dazzling blade'
+  spellchoice blade enemy
+  cast 'debilitating portent' enemy
+  spellchoice portent enemy
+
+  spellchoice fervor defense
+  cast 'blessing of fervor'
+  spellchoice fervor speed
+  cast 'blessing of fervor'
+  spellchoice fervor attack
+  cast 'blessing of fervor'
+  spellchoice fervor rise
+  cast 'blessing of fervor'
+  stand
+
+  spellchoice bonds damage
+  manifest 2 'crystalline bonds' enemy
+  spellchoice bonds size
+  manifest 2 'crystalline bonds' enemy
+  struggle
+
+  spellchoice battlesense attack
+  manifest 0 'battlesense'
+  spellchoice battlesense armor
+  manifest 2 'battlesense'
+  spellchoice battlesense damage
+  manifest 4 'battlesense'
+  spellchoice battlesense speed
+  manifest 0 'battlesense'
+
+Use spellchoice alone for syntax. Preferences affect subsequent casts, never an
+existing effect. They reset on login to fervor defense, battlesense attack, and
+bonds damage. Augmentation still obeys existing manifester-level/PSP limits.
+
+MECHANICAL NOTES AND ADAPTATIONS
+
+Defending Bone is self only. It grants DR 5/bludgeoning with an absorption pool of
+5 per caster level, capped at 50, lasting 1200 rounds per level (capped at 30000).
+Unarmed bludgeoning and appropriate bludgeoning weapons bypass it. Pool absorption
+cannot exceed the pool remaining. The bone cannot be cast while another native
+flat or bypassable DR source is present, and is suppressed if one appears later.
+It uses normal native DR bypass/penetration and is removed when the pool expires.
+
+Righteous Might is self only, for one round per caster level. It gives one size
+category, +4 Strength and Constitution, -2 Dexterity, +2 natural armor, and DR 5,
+which becomes DR 10 at caster level 15. Evil casters and negative channelers gain
+DR/good; other casters gain DR/evil. It excludes Enlarge Person, Shrink Person and
+Augment Physicality in both directions. Native shape and equipment calculations
+apply: carried/worn equipment grows, then reverts when dropped or transferred.
+Saved base equipment sizes and movement speed do not change.
+
+Thorn Body lasts one round per caster level. Close melee hits provoke 1d6 + caster
+level piercing retaliation (level bonus capped at 15). Reach weapons and ranged
+attacks are exempt. Successfully grappling the caster, or hitting while in that
+grapple, instead deals 2d6 + the capped level bonus. Natural and unarmed hits gain
+1d6 damage. Retaliation does not recursively trigger another thorn retaliation.
+
+Vine Strike lasts 20 rounds per caster level. The first successful natural/unarmed
+hit each round gains 1d6 and attempts entanglement. The once-per-round choice is
+the native substitute for selecting one particular natural weapon. Reflex avoids
+entanglement and grants one round of protection against further vine entanglement;
+spell resistance applies to the restraint. Failed saves entangle for the buff's
+remaining duration. STRUGGLE removes these vines for a standard action, and later
+hits can entangle again. Incorporeal targets cannot be entangled. Free Movement
+and Slip the Bonds prevent the restraint.
+
+Dazzling Blade enchants the caster's currently wielded metal weapon for 20 rounds
+per level. Feints and disarm offense/defense gain +1, plus +1 per three caster levels,
+up to +5 at level 12. The same weapon must remain wielded for its bonus to work.
+The effect belongs to the caster; transferring the weapon does not transfer it.
+SPELLCHOICE BLADE enemy costs a swift action and consumes the enchantment to blind
+for one round, Will changing blindness to dazzling. Spell resistance and mental/
+sight immunity apply. This discharge obeys normal room/AoE/group/PK protections.
+The enchantment does not make the weapon silver.
+
+Debilitating Portent lasts one round per caster level. It allows no initial save,
+but spell resistance and mind-affecting immunity apply. Each outgoing normal damage
+packet allows Will against 10 + half caster level + caster Wisdom bonus; failure
+halves that packet. The native model rolls separately for different targets or
+packets, rather than once for an entire multi-target spell. Self damage, Thorn Body
+retaliation and Crystalline Bonds periodic damage do not receive this reduction.
+SPELLCHOICE PORTENT enemy arms the caster's existing omen for a swift action. It
+then consumes the omen on that enemy's next confirmed physical or touch critical,
+preventing the critical multiplier and halving the hit. This explicit arming rule
+replaces the tabletop immediate-action reaction prompt.
+
+Blessing of Fervor affects the caster and grouped allies present in the room for
+one round per caster level. Group membership is treated as consent. The caster
+chooses one shared mode before casting, fixed for that cast:
+  defense: +2 attack, +2 dodge AC, +2 Reflex.
+  speed: +30 feet of movement speed.
+  attack: one extra full-attack strike, sharing the existing Haste/speed-weapon cap.
+  rise: standing uses a swift action and avoids standing-provoked opportunity attacks.
+Haste suppresses Fervor's bonuses while active; neither effect is destroyed. Normal
+dodge defenses apply. There is no per-round prompt or spell-modification mode.
+
+Crystalline Bonds uses initial Reflex negates and no power resistance. Free
+Movement and Slip the Bonds block it. It affects
+Medium or smaller corporeal targets by default. Initial damage is 3d6 piercing;
+subsequent positive-duration rounds deal 1d6 for one round per manifester level.
+Every two extra PSP add +1 to the save and escape DC. In damage mode each step adds
+1d6 recurring damage; in size mode each step instead permits one larger size category.
+The creature is entangled, gagged, and unable to make normal attacks or ordinary
+spells; it is not paralyzed. Mental powers remain possible with Concentration DC
+20 + half the last continuous damage actually dealt. STRUGGLE costs a standard
+action and rolls d20 + the better of Strength modifier and Escape Artist against
+DC 20 + augmentation steps. Bonds are a dispellable affect, not a separate object
+that allies can attack. Recurring damage uses native AoE/group/PK protections and
+is suppressed in peaceful/no-magic rooms, when the caster is absent, and after a
+process restart. Restraint can still be escaped or dispelled if damage is suppressed.
+
+Battlesense affects the caster and grouped allies present for one round per level.
+They retain the effect when leaving the room. Mind-affecting immunity prevents it.
+Choose attack (+1), armor (+1 AC), damage (+2 weapon damage), or speed (+5 feet).
+Each two extra PSP repeats that same benefit, up to five copies: +5 attack/AC,
++10 weapon damage or +25 feet. This adaptation uses willing group membership instead
+of a collective. It provides one scalable chosen benefit, without mixed choices
+or an immediate Aid Another action.
+
+BUILD, DEPLOYMENT AND SQL
+
+  cmake --build /tmp/luminari-religion-build -j4
+  python3 tests/run_spell_batch.py
+  python3 tests/run_spell_batch_final.py
+  python3 tests/run_spellhelp.py --sanitize
+
+New native implementation: src/spell_batch_final.c and .h, integrated into magic,
+combat, movement, casting, groups, grapple escape, size handling and command dispatch.
+Both CMakeLists.txt and Makefile.am include the new module.
+
+Rebuild and restart the server to load registrations and native SPELLHELP entries.
+No SQL migrations or help-table imports are required. Existing saved IDs remain
+unchanged. Public spells use 555-561; internal affects use 562-564. Public powers
+use 1615-1616; 1617 is an internal recurring-damage identifier.
+
+Thorn Body, Vine Strike and Crystalline Bonds use direct native damage paths;
+global spell-damage settings do not multiply their listed dice.
+
+The native rules and help harnesses run with address/undefined-behavior sanitizers.
+Live gameplay verification requires restarting the dev server on port 4301.

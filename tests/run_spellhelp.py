@@ -22,15 +22,15 @@ numbers = {name:int(number) for name,number in re.findall(
 spello = re.search(r'^void spello\([^;]*?\)\n\{.*?^}', source, re.M|re.S).group()
 calls = [(match[1],match[0]) for match in re.finditer(
     r'\bspello\(\s*((?:SPELL_\w+|ALC_DISC_AFFECT_PSYCHOKINETIC|PSYCHOKINETIC_FEAR))\s*,.*?\);', source, re.S)
-    if 1 <= numbers.get(match[1],0) <= 550]
-assert len(calls)==463
+    if 1 <= numbers.get(match[1],0) <= 565]
+assert len(calls)==487
 headers = ''.join('#include "'+header+'"\n' for header in
     ['conf.h','sysdep.h','structs.h','utils.h','spells.h','domains_schools.h','psionics.h'])
 production = headers + '\nconst char *unused_wearoff="!UNUSED WEAROFF!";\n' + spello
 production += '''
 void load_batch_registration(void) {
   int i;
-  for(i=1;i<=550;i++) {
+  for(i=1;i<=565;i++) {
     memset(&spell_info[i],0,sizeof(spell_info[i]));
     spell_info[i].name="!UNUSED!";
   }
@@ -47,13 +47,13 @@ production += '\n'.join(
     if symbol in {'SPELL_MINOR_RAPID_BUFF','SPELL_RAPID_BUFF','SPELL_GREATER_RAPID_BUFF'}
     else call for symbol,call in calls)
 for match in re.finditer(r'spell_info\[((?:SPELL_\w+|ALC_DISC_AFFECT_PSYCHOKINETIC|PSYCHOKINETIC_FEAR))\]\.(?:touch_spell|is_cantrip|no_player|cant_cast|ritual_spell)\s*=\s*(?:TRUE|FALSE|true|false)\s*;', source):
-    if 1 <= numbers.get(match[1],0) <= 550:
+    if 1 <= numbers.get(match[1],0) <= 565:
         production += '\n' + match[0]
 production += '''
 }
 void free_batch_registration(void) {
   int i;
-  for(i=1;i<=550;i++) {
+  for(i=1;i<=565;i++) {
     free((char *)spell_info[i].wear_off_msg);
     spell_info[i].wear_off_msg=NULL;
   }
@@ -62,9 +62,13 @@ void free_batch_registration(void) {
 # Compile actual psiono() and all active literal registrations too.
 psi_source = c_code((root/'src/psionics.c').read_text())
 psi_calls = re.findall(r'\bpsiono\(\s*PSIONIC_\w+\s*,.*?\);', psi_source, re.S)
-assert len(psi_calls) == 87
+assert len(psi_calls) == 100
 for function in ('unused_psionic_power', 'psiono', 'epic_psionic_power'):
     production += '\n' + re.search(r'^void '+function+r'\([^;]*?\)\n\{.*?^}', psi_source, re.M|re.S).group()
+mob_source = (root/'src/mob_spellslots.c').read_text()
+a = mob_source.index('int get_spell_circle(')
+production += '\nbool spell_is_cantrip(int id) { return spell_info[id].is_cantrip; }\n'
+production += mob_source[a:mob_source.index('\n}',a)+2]+'\n'
 production += """
 void load_psionic_registration(void) {
   int i;
@@ -76,6 +80,7 @@ void load_psionic_registration(void) {
   }
 """
 production += '\n'.join(psi_calls)
+production += '\nspell_info[PSIONIC_CRYSTALLINE_BONDS_TICK].no_player = true;\nspell_info[PSIONIC_CORROSIVE_AURA_DAMAGE].no_player = true;\nspell_info[PSIONIC_HAIL_OF_CRYSTALS_IMPACT].no_player = true;\nspell_info[PSIONIC_DESTINY_DISSONANCE].touch_spell = true;\n'
 production += '\n'.join(re.findall(r'\bepic_psionic_power\(PSIONIC_\w+\);', psi_source))
 production += """
 }
@@ -87,6 +92,18 @@ void free_psionic_registration(void) {
   }
 }
 """
+# Load the new literal class assignments so help verifies real access/circles.
+class_source = c_code((root/'src/class.c').read_text())
+new_spell_ids = {symbol for symbol,n in numbers.items() if 541 <= n <= 564}
+new_power_ids = {'PSIONIC_ENERGY_MISSILE','PSIONIC_ENERGY_CONE','PSIONIC_DESTINY_DISSONANCE',
+                 'PSIONIC_RECONSTRUCTION','PSIONIC_HAIL_OF_CRYSTALS',
+                 'PSIONIC_NATURAL_HEALING','PSIONIC_CORROSIVE_AURA','PSIONIC_EXPOSE_WEAKNESS',
+                 'PSIONIC_CRYSTALLINE_BONDS','PSIONIC_BATTLESENSE'}
+production += '\nvoid load_first_batch_class_access(void) {\n'
+for cls,symbol,level in re.findall(r'spell_assignment\(CLASS_(\w+),\s*((?:SPELL_|PSIONIC_)\w+),\s*(\d+)\)',class_source):
+    if symbol in new_spell_ids | new_power_ids:
+        production += f'spell_info[{symbol}].min_level[CLASS_{cls}]={level};\n'
+production += '}\n'
 with tempfile.TemporaryDirectory(prefix='spellhelp-') as tmp:
     binary = Path(tmp)/'spellhelp'
     registrations = Path(tmp)/'registrations.c'
@@ -99,7 +116,7 @@ with tempfile.TemporaryDirectory(prefix='spellhelp-') as tmp:
 entries = json.loads(subprocess.check_output([
     'python3', str(root/'tools/audit_spellhelp.py'), '--json', '--since', 'HEAD'], text=True))
 reviewed = [entry for entry in entries if entry['coverage'].startswith('core entry')]
-assert len(reviewed) == 586
+assert len(reviewed) == 623
 for entry in reviewed:
     assert entry['references'] and isinstance(entry['review_needed'], bool)
     assert set(entry['review_sources']) & {'src/magic.c', 'src/spells.c'}
@@ -151,12 +168,12 @@ tenth = sorted((entry for entry in entries if entry.get('number') in range(451,5
 assert [entry['number'] for entry in tenth] == [n for n in range(451,501) if n not in (485,490)]
 assert all(entry['coverage'].startswith('core entry') for entry in tenth)
 assert [entry['number'] for entry in tenth if entry['availability'] != 'registered'] == [486]
-eleventh = sorted((entry for entry in entries if entry.get('number') in range(501,551)), key=lambda entry:entry['number'])
-assert [entry['number'] for entry in eleventh] == list(range(501,541))
+eleventh = sorted((entry for entry in entries if entry.get('number') in range(501,566)), key=lambda entry:entry['number'])
+assert [entry['number'] for entry in eleventh] == list(range(501,565))
 assert all(entry['coverage'].startswith('core entry') for entry in eleventh)
-assert not set(numbers.values()) & set(range(541,551))
-powers = sorted((entry for entry in entries if entry.get('number') in range(1500,1605)), key=lambda entry:entry['number'])
-assert [entry['number'] for entry in powers] == list(range(1500,1605))
+assert set(range(541,550)) <= set(numbers.values())
+powers = sorted((entry for entry in entries if entry.get('number') in range(1500,1618)), key=lambda entry:entry['number'])
+assert [entry['number'] for entry in powers] == list(range(1500,1618))
 assert all(entry['coverage'].startswith('core entry') for entry in powers)
-assert sum(entry['availability'] == 'registered' for entry in powers) == 87
-print('Spellhelp audit index: 586 records; ordinary spells complete; all 87 registered powers and 18 retired/perk IDs reviewed.')
+assert sum(entry['availability'] == 'registered' for entry in powers) == 100
+print('Spellhelp audit index: 623 records; ordinary spells complete; all 97 public powers and 18 retired/perk IDs reviewed.')

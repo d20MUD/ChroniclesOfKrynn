@@ -613,6 +613,7 @@ set(SRC_C_FILES
     src/limits.c
     src/lists.c
     src/magic.c
+    src/spell_batch_final.c
     src/epic_magic.c
     src/mail.c
     src/medit.c

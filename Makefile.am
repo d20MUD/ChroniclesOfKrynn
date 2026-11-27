@@ -188,6 +188,8 @@ circle_SOURCES = \
 	src/limits.c \
 	src/lists.c \
 	src/magic.c \
+	src/spell_batch_final.c \
+	src/spell_batch_final.h \
 	src/epic_magic.c \
 	src/mail.c \
 	src/medit.c \

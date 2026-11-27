@@ -11,6 +11,7 @@
 #include "sysdep.h"
 #include "legendary_techniques.h"
 #include "structs.h"
+#include "spell_batch_final.h"
 #include "utils.h"
 #include "epic_feats3.h"
 #include "epic_feats2.h"
@@ -152,6 +153,12 @@ static int mag_pspcost(struct char_data *ch, int spellnum)
    FALSE = failure and spell should be aborted */
 bool concentration_check(struct char_data *ch, int spellnum)
 {
+  if (affected_by_spell(ch, PSIONIC_CRYSTALLINE_BONDS) &&
+      !skill_check(ch, ABILITY_CONCENTRATION, final_batch_bonds_dc(ch))) {
+    send_to_char(ch, "The tightening crystal disrupts your mental focus!\r\n");
+    resetCastingData(ch);
+    return FALSE;
+  }
   if (epic_ward_surge_active(ch))
     return TRUE;
   /* concentration check */
@@ -203,7 +210,8 @@ bool concentration_check(struct char_data *ch, int spellnum)
   }
 
   if (ch->epic_manifest_damaged && CASTING_CLASS(ch) == CLASS_PSIONICIST &&
-      spellnum >= PSIONIC_POWER_START && spellnum < PSIONIC_IMPALE_MIND &&
+      spellnum >= PSIONIC_POWER_START && spellnum <= PSIONIC_POWER_END &&
+      !psionic_powers[spellnum].is_epic &&
       epic_feat_rank(ch, FEAT_EPIC_MANIFESTING_POISE))
     concentration_dc -= epic_typed_increment(ch, APPLY_SKILL, ABILITY_CONCENTRATION,
                                              BONUS_TYPE_CIRCUMSTANCE, 4);
@@ -1250,7 +1258,8 @@ SAVING_WILL here...  */
                  spell_info[spellnum].name);
     return (1);
   }
-  if (spell_info[spellnum].touch_spell && casttype != CAST_WEAPON_SPELL && cvict)
+  if (spell_info[spellnum].touch_spell && spellnum != SPELL_FRIGID_TOUCH &&
+      spellnum != SPELL_STRICKEN_HEART && spellnum != PSIONIC_DESTINY_DISSONANCE && casttype != CAST_WEAPON_SPELL && cvict)
   {
     GET_TOUCH_SPELL_QUEUED(caster) = spellnum;
     if (!attack_roll(caster, cvict, ATTACK_TYPE_PRIMARY, true, 1))
@@ -1331,6 +1340,9 @@ SAVING_WILL here...  */
   if (IS_SET(routines, MAG_MANUAL))
     switch (spellnum)
     {
+    case PSIONIC_HAIL_OF_CRYSTALS:
+      mag_hail_of_crystals(spell_level, caster, cvict, ovict, metamagic, savetype, casttype);
+      break;
     case SPELL_GIRD_ALLIES:
       MANUAL_SPELL(spell_gird_allies);
       break;
@@ -4447,6 +4459,9 @@ return;
   }
 
   /* Check verbal requirements after resolving the prepared casting class. */
+  if (affected_by_spell(ch, PSIONIC_CRYSTALLINE_BONDS) && !is_spellnum_psionic(spellnum)) {
+    send_to_char(ch, "The crystalline bonds prevent the gestures of ordinary casting. Try struggle.\r\n"); return;
+  }
   if (AFF_FLAGGED(ch, AFF_SILENCED) && !is_spellnum_psionic(spellnum) &&
       !is_alchemist_extract(ch, spellnum))
   {
@@ -5067,6 +5082,77 @@ void mag_assign_spells(void)
   /* transmutation */
 
   // shared
+
+  /* Final candidate batch: group choices are selected before casting. */
+  spello(SPELL_DEFENDING_BONE, "defending bone", 40, 30, 1, POS_FIGHTING,
+         TAR_CHAR_ROOM | TAR_SELF_ONLY, FALSE, MAG_AFFECTS,
+         "The defending bone crumbles.", 2, 6, NECROMANCY, FALSE);
+  spello(SPELL_RIGHTEOUS_MIGHT, "righteous might", 65, 55, 1, POS_FIGHTING,
+         TAR_CHAR_ROOM | TAR_SELF_ONLY, FALSE, MAG_AFFECTS,
+         "Your righteous might fades.", 5, 15, TRANSMUTATION, FALSE);
+  spello(SPELL_THORN_BODY, "thorn body", 55, 45, 1, POS_FIGHTING,
+         TAR_CHAR_ROOM | TAR_SELF_ONLY, FALSE, MAG_AFFECTS,
+         "The thorns on your body recede.", 4, 12, TRANSMUTATION, FALSE);
+  spello(SPELL_VINE_STRIKE, "vine strike", 40, 30, 1, POS_FIGHTING,
+         TAR_CHAR_ROOM | TAR_SELF_ONLY, FALSE, MAG_AFFECTS,
+         "Your vine-bearing bristles disappear.", 1, 6, CONJURATION, FALSE);
+  spello(SPELL_DAZZLING_BLADE, "dazzling blade", 30, 20, 1, POS_FIGHTING,
+         TAR_CHAR_ROOM | TAR_SELF_ONLY, FALSE, MAG_AFFECTS,
+         "Your weapon loses its dazzling sheen.", 1, 3, ILLUSION, FALSE);
+  spello(SPELL_DEBILITATING_PORTENT, "debilitating portent", 60, 50, 1, POS_FIGHTING,
+         TAR_CHAR_ROOM | TAR_FIGHT_VICT | TAR_NOT_SELF, TRUE, MAG_AFFECTS,
+         "The omen of failure surrounding you fades.", 4, 12, ENCHANTMENT, FALSE);
+  spello(SPELL_BLESSING_OF_FERVOR, "blessing of fervor", 60, 50, 1, POS_FIGHTING,
+         TAR_IGNORE, FALSE, MAG_GROUPS,
+         "Your divine fervor fades.", 4, 12, TRANSMUTATION, FALSE);
+  spello(SPELL_VINE_STRIKE_BIND, "vine strike entanglement", 0, 0, 1, POS_FIGHTING, TAR_CHAR_ROOM, TRUE, MAG_AFFECTS, "The entangling vines wither away.", 1, 3, NOSCHOOL, FALSE);
+  spell_info[SPELL_VINE_STRIKE_BIND].no_player = true;
+  spello(SPELL_VINE_STRIKE_RESIST, "vine strike resistance", 0, 0, 1, POS_FIGHTING, TAR_CHAR_ROOM, TRUE, MAG_AFFECTS, NULL, 1, 3, NOSCHOOL, FALSE);
+  spell_info[SPELL_VINE_STRIKE_RESIST].no_player = true;
+  spello(SPELL_DAZZLING_BLADE_FLASH, "dazzling blade flash", 0, 0, 1, POS_FIGHTING, TAR_CHAR_ROOM, TRUE, MAG_AFFECTS, "Your vision clears.", 1, 3, NOSCHOOL, FALSE);
+  spell_info[SPELL_DAZZLING_BLADE_FLASH].no_player = true;
+
+  /* Second mechanics-compatible batch. Touch attacks are resolved in mag_damage
+   * so a missed touch cannot apply its associated condition. */
+  spello(SPELL_BURNING_DISARM, "burning disarm", 30, 20, 1, POS_FIGHTING,
+         TAR_CHAR_ROOM | TAR_FIGHT_VICT | TAR_NOT_SELF, TRUE, MAG_DAMAGE,
+         "The heat fades.", 1, 3, TRANSMUTATION, FALSE);
+  spello(SPELL_BONESHAKER, "boneshaker", 40, 30, 1, POS_FIGHTING,
+         TAR_CHAR_ROOM | TAR_FIGHT_VICT | TAR_NOT_SELF, TRUE, MAG_DAMAGE,
+         "Your bones stop rattling.", 2, 6, NECROMANCY, FALSE);
+  spello(SPELL_BONESHATTER, "boneshatter", 60, 50, 1, POS_FIGHTING,
+         TAR_CHAR_ROOM | TAR_FIGHT_VICT | TAR_NOT_SELF, TRUE, MAG_DAMAGE,
+         "Your bones recover from the painful shattering.", 4, 12, NECROMANCY, FALSE);
+  spello(SPELL_STRICKEN_HEART, "stricken heart", 40, 30, 1, POS_FIGHTING,
+         TAR_CHAR_ROOM | TAR_FIGHT_VICT | TAR_NOT_SELF, TRUE, MAG_DAMAGE,
+         "The staggering pain in your heart fades.", 2, 6, NECROMANCY, FALSE);
+  spello(SPELL_BURST_OF_SPEED, "burst of speed", 45, 35, 1, POS_FIGHTING,
+         TAR_CHAR_ROOM | TAR_SELF_ONLY, FALSE, MAG_AFFECTS,
+         "Your sudden burst of speed ends.", 1, 3, TRANSMUTATION, FALSE);
+  spell_info[SPELL_STRICKEN_HEART].touch_spell = true;
+
+  /* First mechanics-compatible batch. */
+  spello(SPELL_EAR_PIERCING_SCREAM, "ear-piercing scream", 30, 20, 1, POS_FIGHTING, TAR_CHAR_ROOM | TAR_FIGHT_VICT | TAR_NOT_SELF, TRUE,
+         MAG_DAMAGE, "Your ears stop ringing.", 1, 3, EVOCATION, FALSE);
+  spello(SPELL_FRIGID_TOUCH, "frigid touch", 40, 30, 1, POS_FIGHTING, TAR_CHAR_ROOM | TAR_FIGHT_VICT | TAR_NOT_SELF, TRUE,
+         MAG_DAMAGE, "The staggering chill leaves your limbs.", 2, 6, EVOCATION, FALSE);
+  spello(SPELL_FROST_FALL, "frost fall", 45, 35, 1, POS_FIGHTING, TAR_IGNORE, TRUE,
+         MAG_AREAS | MAG_ROOM, "The lingering frost melts away.", 2, 6, EVOCATION, FALSE);
+  spello(SPELL_BURST_OF_RADIANCE, "burst of radiance", 45, 35, 1, POS_FIGHTING, TAR_IGNORE, TRUE,
+         MAG_AREAS, "Your vision clears of the brilliant radiance.", 2, 6, EVOCATION, FALSE);
+  spello(SPELL_HOLY_SMITE, "holy smite", 60, 50, 1, POS_FIGHTING, TAR_IGNORE, TRUE,
+         MAG_AREAS, "The holy radiance fades from your eyes.", 4, 12, EVOCATION, FALSE);
+  spello(SPELL_UNHOLY_BLIGHT, "unholy blight", 60, 50, 1, POS_FIGHTING, TAR_IGNORE, TRUE,
+         MAG_AREAS, "The unholy sickness leaves you.", 4, 12, EVOCATION, FALSE);
+  spello(SPELL_ORDERS_WRATH, "orders wrath", 60, 50, 1, POS_FIGHTING, TAR_IGNORE, TRUE,
+         MAG_AREAS, "The oppressive force of order releases you.", 4, 12, EVOCATION, FALSE);
+  spello(SPELL_CHAOS_HAMMER, "chaos hammer", 60, 50, 1, POS_FIGHTING, TAR_IGNORE, TRUE,
+         MAG_AREAS, "The chaotic force slowing you subsides.", 4, 12, EVOCATION, FALSE);
+  spello(SPELL_FROST_FALL_TICK, "frost fall damage", 0, 0, 1, POS_FIGHTING, TAR_CHAR_ROOM, TRUE,
+         MAG_DAMAGE, "The frost melts away.", 1, 3, EVOCATION, FALSE);
+  spell_info[SPELL_FROST_FALL_TICK].no_player = true;
+  spell_info[SPELL_FRIGID_TOUCH].touch_spell = true;
+
   spello(SPELL_INFRAVISION, "infravision", 0, 0, 0, POS_FIGHTING, // enchant
          TAR_CHAR_ROOM, FALSE, MAG_AFFECTS, "Your night vision seems to fade.", 13, 13,
          TRANSMUTATION,

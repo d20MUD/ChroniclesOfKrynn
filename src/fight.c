@@ -19,6 +19,7 @@
 #include "legendary_equipment.h"
 #include "legendary_earnings.h"
 #include "structs.h"
+#include "spell_batch_final.h"
 #include "religion.h"
 #include "class_improvements.h"
 #include "clan_enchant.h"
@@ -1276,7 +1277,9 @@ bool has_dex_bonus_to_ac(struct char_data *attacker, struct char_data *ch)
   }
 
   /* ch is flat-footed WITHOUT uncanny dodge feat or perk */
-  if ((AFF_FLAGGED(ch, AFF_FLAT_FOOTED) && !HAS_FEAT(ch, FEAT_UNCANNY_DODGE) &&
+  if (((AFF_FLAGGED(ch, AFF_FLAT_FOOTED) ||
+        get_char_affect_modifier(ch, PSIONIC_EXPOSE_WEAKNESS, APPLY_SPECIAL) >= 6) &&
+       !HAS_FEAT(ch, FEAT_UNCANNY_DODGE) &&
        !has_uncanny_dodge(ch)))
   {
     if (DEBUGMODE)
@@ -1365,7 +1368,7 @@ bool is_flanked(struct char_data *attacker, struct char_data *ch)
   if (affected_by_spell(ch, PSIONIC_UBIQUITUS_VISION))
     return FALSE;
 
-  if (affected_by_spell(ch, SPELL_SHIELD_OF_FORTIFICATION) && dice(1, 4) == 1)
+  if (affected_by_spell(ch, SPELL_SHIELD_OF_FORTIFICATION) && fortification_blocks(ch, 4))
     return FALSE;
 
   if (HAS_SUBRACE(ch, SUBRACE_SWARM))
@@ -1386,6 +1389,11 @@ bool is_flanked(struct char_data *attacker, struct char_data *ch)
         return FALSE;
     }
   }
+
+  if (affected_by_spell(ch, PSIONIC_EXPOSE_WEAKNESS) &&
+      get_char_affect_modifier(ch, PSIONIC_EXPOSE_WEAKNESS, APPLY_SPECIAL) < 6 &&
+      !HAS_FEAT(ch, FEAT_IMPROVED_UNCANNY_DODGE))
+    return TRUE;
 
   /* most common scenario - check for both feat and perk */
   if (FIGHTING(ch) && (FIGHTING(ch) != attacker) && !HAS_FEAT(ch, FEAT_IMPROVED_UNCANNY_DODGE) &&
@@ -2273,6 +2281,11 @@ static int compute_armor_class_with_decoy(struct char_data *attacker, struct cha
 
   /* This context denotes a real physical weapon attack, not a ray or maneuver. */
   if (weapon_attack) bonuses[BONUS_TYPE_CIRCUMSTANCE] += class_guard_ac(ch);
+
+  bonuses[BONUS_TYPE_CIRCUMSTANCE] += final_batch_bonus(ch, APPLY_AC_NEW) -
+    (final_batch_fervor(ch, FERVOR_DEFENSE) ? 2 : 0);
+  if (final_batch_fervor(ch, FERVOR_DEFENSE) && has_dex_bonus_to_ac(attacker, ch))
+    bonuses[BONUS_TYPE_DODGE] += 2;
 
   /* Add up all the bonuses */
   if (is_touch)
@@ -7365,6 +7378,7 @@ static int resolve_damage(struct char_data *ch, struct char_data *victim, int da
    * bonus packets are debited only here, after immunity/avoidance resolved. */
   if (origin & LEG_ORIGIN_BONUS)
     dam = MIN(dam, origin_ceiling);
+  if (!origin && !original_self_damage) dam = final_batch_outgoing(ch, dam, w_type);
   dam = legendary_combat_packet(ch, victim, dam, w_type, dam_type, origin, technique,
                                 &legendary_bonus);
 #ifdef LEGENDARY_NATIVE_PROBE
@@ -8033,6 +8047,7 @@ int compute_damage_bonus(struct char_data *ch, struct char_data *vict, struct ob
 
   /* damroll (should be mostly just gear, spell affections) */
   dambonus += GET_DAMROLL(ch);
+  dambonus += final_batch_bonus(ch, APPLY_DAMROLL);
   if (wielded && (GET_OBJ_TYPE(wielded) == ITEM_WEAPON || GET_OBJ_TYPE(wielded) == ITEM_FIREWEAPON))
     dambonus += class_rhythm_bonus(ch, APPLY_DAMROLL);
 
@@ -10056,6 +10071,9 @@ int is_critical_hit(struct char_data *ch, struct obj_data *wielded, int diceroll
   int threat_range, confirm_die = bloodline_conviction_roll(ch, d20(ch), BLOODLINE_ROLL_ATTACK), confirm_roll = confirm_die + calc_bab;
   int powerful_being = 0;
 
+  if (victim && affected_by_spell(victim, PSIONIC_EXPOSE_WEAKNESS))
+    confirm_roll += 4;
+
   /* Critical Awareness perk bonuses (Fighter) */
   if (has_perk(ch, PERK_FIGHTER_CRITICAL_AWARENESS_1))
   {
@@ -10098,7 +10116,7 @@ int is_critical_hit(struct char_data *ch, struct obj_data *wielded, int diceroll
       is_judgement_possible(FIGHTING(ch), ch, INQ_JUDGEMENT_PROTECTION))
     confirm_roll -= get_judgement_bonus(FIGHTING(ch), INQ_JUDGEMENT_PROTECTION);
 
-  if (FIGHTING(ch) && KNOWS_DISCOVERY(FIGHTING(ch), ALC_DISC_PRESERVE_ORGANS) && dice(1, 4) == 1 &&
+  if (FIGHTING(ch) && KNOWS_DISCOVERY(FIGHTING(ch), ALC_DISC_PRESERVE_ORGANS) && fortification_blocks(FIGHTING(ch), 4) &&
       !(FIGHTING(ch)->preserve_organs_procced))
   {
     if (!IS_POWERFUL_BEING(ch))
@@ -11107,6 +11125,8 @@ int handle_warding(struct char_data *ch, struct char_data *victim, int dam)
 bool weapon_bypasses_dr(struct obj_data *weapon, struct damage_reduction_type *dr,
                         struct char_data *ch, int attack_type)
 {
+  if (dr->spell == SPELL_DEFENDING_BONE && attack_type == ATTACK_TYPE_UNARMED)
+    return TRUE; /* Unarmed strikes deal bludgeoning damage. */
   bool passed = FALSE;
   int i = 0;
 
@@ -11239,7 +11259,8 @@ static int apply_damage_reduction_epic(struct char_data *ch, struct char_data *v
     if (church.amount) dr = &church;
   }
   for (cur = GET_DR(victim); cur; cur = cur->next)
-    if (!weapon_bypasses_dr(wielded, cur, ch, attack_type) && (!dr || dr->amount < cur->amount))
+    if ((cur->spell != SPELL_DEFENDING_BONE || !final_batch_other_dr(victim)) &&
+        !weapon_bypasses_dr(wielded, cur, ch, attack_type) && (!dr || dr->amount < cur->amount))
       dr = cur;
   if (!dr) return dam;
 
@@ -11252,6 +11273,7 @@ static int apply_damage_reduction_epic(struct char_data *ch, struct char_data *v
   {
     int effective_dr = dr->amount;
     int previous_dr = effective_dr;
+    if (dr->spell == SPELL_DEFENDING_BONE) effective_dr = MIN(effective_dr, dr->max_damage);
     if (affected_by_spell(victim, AFFECT_EPIC_RUIN))
       effective_dr = MAX(0, effective_dr - 10);
 
@@ -11825,6 +11847,8 @@ int compute_attack_bonus_full(struct char_data *ch,     /* Attacker */
   /* Initialize bonuses to 0 */
   for (i = 0; i < NUM_BONUS_TYPES; i++)
     bonuses[i] = 0;
+
+  calc_bab += final_batch_bonus(ch, APPLY_HITROLL);
 
   if (display)
   {
@@ -13198,6 +13222,7 @@ int compute_cmb(struct char_data *ch,     /* Attacker */
   case COMBAT_MANEUVER_TYPE_KICK:
     break;
   case COMBAT_MANEUVER_TYPE_DISARM:
+    cm_bonus += final_batch_blade_bonus(ch);
     if (HAS_FEAT(ch, FEAT_IMPROVED_DISARM))
       cm_bonus += 2;
     break;
@@ -13259,6 +13284,7 @@ int compute_cmd(struct char_data *vict,   /* Defender */
   case COMBAT_MANEUVER_TYPE_KICK:
     break;
   case COMBAT_MANEUVER_TYPE_DISARM:
+    cm_defense += final_batch_blade_bonus(vict);
     if (HAS_FEAT(vict, FEAT_IMPROVED_DISARM))
       cm_defense += 2;
     break;
@@ -13618,7 +13644,7 @@ int attack_roll_with_critical(struct char_data *ch,     /* Attacker */
   if (diceroll >= critical_threshold &&
       is_critical_hit(ch, NULL, diceroll, attack_bonus, victim_ac, victim, critical_threshold) &&
       !IS_IMMUNE_CRITS(ch, victim))
-    return 999;
+    return final_batch_cancel_critical(ch) ? 0 : 999;
   int result = ((attack_bonus + diceroll) - victim_ac);
 
   //  if (attack_type == ATTACK_TYPE_RANGED) {
@@ -14100,7 +14126,7 @@ static int can_sneak_attack_anatomy(struct char_data *ch,struct char_data *victi
     return FALSE;
 
   /* preserve organs defended from this sneak attack */
-  if (FIGHTING(ch) && KNOWS_DISCOVERY(victim, ALC_DISC_PRESERVE_ORGANS) && dice(1, 4) == 1 &&
+  if (FIGHTING(ch) && KNOWS_DISCOVERY(victim, ALC_DISC_PRESERVE_ORGANS) && fortification_blocks(victim, 4) &&
       !FIGHTING(ch)->preserve_organs_procced)
     return FALSE;
 
@@ -15195,6 +15221,7 @@ int handle_successful_attack(struct char_data *ch, struct char_data *victim,
   dam += compute_hit_damage(ch, victim, w_type, diceroll, 0, is_critical, attack_type, dam_type);
   dam += class_seam_damage(ch, victim, attack_type);
   dam += class_opening_damage(ch, victim);
+  dam += final_batch_natural_hit(ch, victim, attack_type);
   if (type == TYPE_ATTACK_OF_OPPORTUNITY && has_teamwork_feat(ch, FEAT_PAIRED_OPPORTUNISTS))
     dam += 2;
   dam += powerful_blow_bonus;     /* ornir is going to yell at me for this :p  -zusuk */
@@ -15749,6 +15776,12 @@ int handle_successful_attack(struct char_data *ch, struct char_data *victim,
     REMOVE_BIT_AR(AFF_FLAGS(ch), AFF_VAMPIRIC_TOUCH);
   }
 
+  if (dam > 0) {
+    int thorns = final_batch_thorns(ch, victim, attack_type);
+    if (thorns > 0 && damage(victim, ch, thorns, SPELL_THORN_BODY, DAM_PUNCTURE, FALSE) < 0)
+      return HIT_MISS;
+  }
+
   // damage inflicting shields, like fire shield
   damage_shield_check(ch, victim, attack_type, dam, dam_type);
 
@@ -15953,6 +15986,8 @@ int hit(struct char_data *ch, struct char_data *victim, int type, int dam_type, 
   struct ranged_shot_context context = {ch, NULL, FALSE, current_shot};
   int result;
   long attacker_id;
+  if (ch) ch->spell_portent_half_critical = FALSE;
+  if (ch && affected_by_spell(ch, PSIONIC_CRYSTALLINE_BONDS)) return HIT_MISS;
   if (!class_reaction_allow_hit()) return HIT_MISS;
   if (!ch || !victim || IN_ROOM(ch) == NOWHERE || IN_ROOM(ch) != IN_ROOM(victim))
     return HIT_MISS;
@@ -16403,7 +16438,7 @@ static int resolve_weapon_hit(struct char_data *ch, struct char_data *victim, in
       !IS_IMMUNE_CRITS(ch, victim))
   {
     can_hit = TRUE;
-    is_critical = TRUE;
+    is_critical = !final_batch_cancel_critical(ch);
     /* old critical message was here -zusuk */
   }
   else if (diceroll == 20)
@@ -17475,7 +17510,7 @@ int perform_attacks(struct char_data *ch, int mode, int phase)
   }
 
   /* Haste or equivalent gives one extra attack, ranged or melee, at max BAB. */
-  if (AFF_FLAGGED(ch, AFF_HASTE) || (!IS_NPC(ch) && HAS_FEAT(ch, FEAT_BLINDING_SPEED)) ||
+  if (AFF_FLAGGED(ch, AFF_HASTE) || final_batch_fervor(ch, FERVOR_ATTACK) || (!IS_NPC(ch) && HAS_FEAT(ch, FEAT_BLINDING_SPEED)) ||
       (has_speed_weapon(ch)))
   {
     ranged_attacks++;
@@ -17921,7 +17956,7 @@ int perform_attacks(struct char_data *ch, int mode, int phase)
 
   /* haste or equivalent? */
   if (!dragon_disciple_natural_routine && !VITAL_STRIKING(ch) &&
-      (AFF_FLAGGED(ch, AFF_HASTE) || (!IS_NPC(ch) && HAS_FEAT(ch, FEAT_BLINDING_SPEED)) ||
+      (AFF_FLAGGED(ch, AFF_HASTE) || final_batch_fervor(ch, FERVOR_ATTACK) || (!IS_NPC(ch) && HAS_FEAT(ch, FEAT_BLINDING_SPEED)) ||
        has_speed_weapon(ch)))
   {
     numAttacks++;

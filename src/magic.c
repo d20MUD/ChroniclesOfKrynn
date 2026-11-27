@@ -14,6 +14,7 @@
 #include "legendary_techniques.h"
 #include "legendary_earnings.h"
 #include "structs.h"
+#include "spell_batch_final.h"
 #include "religion.h"
 #include <limits.h>
 #include "class_improvements.h"
@@ -57,6 +58,7 @@
 #include "wilderness.h"
 #include "perks.h"
 #include "crafting_new.h"
+#include "craft.h"
 #include "moon_bonus_spells.h"
 
 // external
@@ -68,6 +70,8 @@ bool can_add_mummy_dust_follower(struct char_data *ch);
 
 
 /* local file scope function prototypes */
+static void frost_fall_tick(struct raff_node *raff);
+static void corrosive_aura_update(void);
 static void perform_mag_groups(int level, struct char_data *ch, struct char_data *tch,
                                struct obj_data *obj, int spellnum, int savetype, int casttype);
 
@@ -474,6 +478,7 @@ int compute_mag_saves(struct char_data *vict, int type, int modifier)
   saves += MAX(bloodline_fated_bonus(vict), bloodline_affect_bonus(vict, AFFECT_DESTINED_ARCANA));
   saves += bloodline_affect_bonus(vict, AFFECT_TOUCH_OF_DESTINY);
   saves += class_rally_save(vict, type);
+  if (type == SAVING_REFL) saves += final_batch_bonus(vict, APPLY_SAVING_REFL);
   return MIN(99, saves);
 }
 
@@ -1427,6 +1432,8 @@ void affect_update(void)
 
   update_count++;
   legendary_affect_round();
+  corrosive_aura_update();
+  final_batch_round();
 
   for (i = character_list; i; i = next_char)
   {                      /* go through everything */
@@ -1511,6 +1518,8 @@ void affect_update(void)
 
     if (raff->timer <= 0)
       rem_room_aff(raff);
+    else if (raff->spell == SPELL_FROST_FALL)
+      frost_fall_tick(raff);
   }
 
   /* Log performance metrics every 100 updates (10 minutes) only if affects processed is high */
@@ -1588,6 +1597,147 @@ void mag_loops(int level, struct char_data *ch, struct char_data *victim, struct
 // default    ->  magic resistance
 // returns damage, -1 if dead
 
+/* Alignment bursts share one saving throw for damage and their condition.
+ * 0 = protected, 1 = neutral on this axis, 2 = opposed alignment. */
+static int batch_alignment_scale(int spell, struct char_data *victim)
+{
+  switch (spell) {
+  case SPELL_HOLY_SMITE: return IS_GOOD(victim) ? 0 : IS_EVIL(victim) ? 2 : 1;
+  case SPELL_UNHOLY_BLIGHT: return IS_EVIL(victim) ? 0 : IS_GOOD(victim) ? 2 : 1;
+  case SPELL_ORDERS_WRATH: return IS_LAWFUL(victim) ? 0 : IS_CHAOTIC(victim) ? 2 : 1;
+  case SPELL_CHAOS_HAMMER: return IS_CHAOTIC(victim) ? 0 : IS_LAWFUL(victim) ? 2 : 1;
+  default: return 2;
+  }
+}
+
+/* Race categories provide the existing anatomy model. Boneshaker's undead
+ * puppetry and five-foot reposition are intentionally not cross-room commands. */
+static bool batch_bone_target(struct char_data *victim, bool carapace)
+{
+  return victim && !IS_INCORPOREAL(victim) && !IS_OOZE(victim) &&
+         !IS_PLANT(victim) && !IS_ELEMENTAL(victim) && !IS_CONSTRUCT(victim) &&
+         (carapace || (!IS_UNDEAD(victim) && GET_RACE(victim) != RACE_TYPE_VERMIN));
+}
+
+static int burning_disarm_slot(struct char_data *victim)
+{
+  const int slots[] = {WEAR_WIELD_2H, WEAR_WIELD_1, WEAR_WIELD_OFFHAND,
+                       WEAR_HOLD_2H, WEAR_HOLD_1, WEAR_HOLD_2};
+  size_t i;
+  for (i = 0; i < sizeof(slots)/sizeof(*slots); i++)
+    if (GET_EQ(victim, slots[i]) &&
+        IS_CONDUCTIVE_METAL(GET_OBJ_MATERIAL(GET_EQ(victim, slots[i]))))
+      return slots[i];
+  return -1;
+}
+
+static void second_batch_damage_condition(struct char_data *ch, struct char_data *victim,
+                                           int spell, int level, bool saved, bool critical)
+{
+  struct affected_type af;
+  int slot;
+  if (spell == SPELL_BURNING_DISARM && saved) {
+    slot = burning_disarm_slot(victim);
+    if (slot >= 0 && !OBJ_FLAGGED(GET_EQ(victim, slot), ITEM_NODROP)) {
+      struct obj_data *item = unequip_char(victim, slot);
+      act("The searing heat forces you to stop wielding or holding $p!", FALSE, victim, item, 0, TO_CHAR);
+      act("$n stops wielding or holding $p to escape its searing heat!", FALSE, victim, item, 0, TO_ROOM);
+      /* Normal disarm custody: the victim retains the item. */
+      obj_to_char(item, victim);
+    }
+    return;
+  }
+  if (spell == SPELL_STRICKEN_HEART) {
+    if (IS_IMMUNE_CRITS(ch, victim)) return;
+    new_affect(&af); af.spell = spell; af.duration = critical ? 10 : 1;
+    SET_BIT_AR(af.bitvector, AFF_STAGGERED);
+    affect_join(victim, &af, FALSE, FALSE, FALSE, FALSE);
+    send_to_char(victim, "A black pain in your heart leaves you staggered!\r\n");
+  } else if (spell == SPELL_BONESHATTER) {
+    /* A weaker recast cannot erase an existing exhausted state. */
+    if (saved && get_char_affect_modifier(victim, spell, APPLY_SPECIAL) == 6) return;
+    new_affect(&af); af.spell = spell; af.duration = MAX(1, level) * 10;
+    af.location = APPLY_SPECIAL; af.modifier = saved ? 2 : 6;
+    SET_BIT_AR(af.bitvector, AFF_FATIGUED);
+    affect_join(victim, &af, FALSE, FALSE, FALSE, FALSE);
+    if (!saved) {
+      af.location = APPLY_STR; af.modifier = -4;
+      affect_join(victim, &af, FALSE, FALSE, FALSE, FALSE);
+      af.location = APPLY_DEX;
+      affect_join(victim, &af, FALSE, FALSE, FALSE, FALSE);
+    }
+    send_to_char(victim, "The pain in your shattered bones leaves you %s!\r\n",
+                 saved ? "fatigued" : "exhausted");
+  }
+}
+
+static bool batch_damage_spell(int spell)
+{
+  return (spell >= SPELL_EAR_PIERCING_SCREAM && spell <= SPELL_FROST_FALL_TICK) ||
+         spell == PSIONIC_ENERGY_MISSILE || spell == PSIONIC_ENERGY_CONE ||
+         spell == PSIONIC_HAIL_OF_CRYSTALS || spell == PSIONIC_HAIL_OF_CRYSTALS_IMPACT ||
+         (spell >= SPELL_BURNING_DISARM && spell <= SPELL_STRICKEN_HEART) ||
+         spell == PSIONIC_CORROSIVE_AURA_DAMAGE;
+}
+
+static bool batch_area_limit(int spell, int *targets)
+{
+  return spell != PSIONIC_ENERGY_MISSILE || (*targets)++ < 5;
+}
+
+static void batch_damage_condition(struct char_data *victim, int spell,
+                                   bool saved, bool critical)
+{
+  struct affected_type af;
+  int bit = -1, duration = 1;
+  switch (spell) {
+  case SPELL_EAR_PIERCING_SCREAM:
+    if (!saved && can_stun(victim)) bit = AFF_DAZED;
+    break;
+  case SPELL_FRIGID_TOUCH:
+    if (!HAS_FEAT(victim, FEAT_COLD_IMMUNITY)) { bit = AFF_STAGGERED; duration = critical ? 10 : 1; }
+    break;
+  case SPELL_FROST_FALL:
+    if (!saved && !HAS_FEAT(victim, FEAT_COLD_IMMUNITY)) bit = AFF_STAGGERED;
+    break;
+  case SPELL_BURST_OF_RADIANCE:
+    if (can_blind(victim)) bit = saved ? AFF_DAZZLED : AFF_BLIND;
+    duration = dice(1, 4);
+    break;
+  case SPELL_HOLY_SMITE:
+    if (!saved && IS_EVIL(victim) && can_blind(victim)) bit = AFF_BLIND;
+    break;
+  case SPELL_UNHOLY_BLIGHT:
+    if (!saved && IS_GOOD(victim) && can_nauseate(victim)) bit = AFF_SICKENED;
+    duration = dice(1, 4);
+    break;
+  case SPELL_ORDERS_WRATH:
+    if (!saved && IS_CHAOTIC(victim) && can_stun(victim)) bit = AFF_DAZED;
+    break;
+  case SPELL_CHAOS_HAMMER:
+    if (!saved && IS_LAWFUL(victim)) bit = AFF_SLOW;
+    duration = dice(1, 6);
+    break;
+  default: break;
+  }
+  if (bit < 0) return;
+  new_affect(&af);
+  af.spell = spell;
+  af.duration = duration;
+  SET_BIT_AR(af.bitvector, bit);
+  affect_join(victim, &af, FALSE, FALSE, FALSE, FALSE);
+  if (bit == AFF_BLIND) {
+    af.location = APPLY_HITROLL; af.modifier = -4;
+    affect_join(victim, &af, FALSE, FALSE, FALSE, FALSE);
+    af.location = APPLY_AC_NEW;
+    affect_join(victim, &af, FALSE, FALSE, FALSE, FALSE);
+  } else if (bit == AFF_DAZZLED) {
+    af.location = APPLY_HITROLL; af.modifier = -1;
+    affect_join(victim, &af, FALSE, FALSE, FALSE, FALSE);
+  }
+  send_to_char(victim, "You are affected by %s.\r\n", spell_info[spell].name);
+}
+
 int mag_damage(int level, struct char_data *ch, struct char_data *victim, struct obj_data *wpn,
                int spellnum, int metamagic, int savetype, int casttype)
 {
@@ -1595,6 +1745,7 @@ int mag_damage(int level, struct char_data *ch, struct char_data *victim, struct
       bonus = 0, mag_resist = TRUE, spell_school = NOSCHOOL, save_negates = FALSE,
       mag_resist_bonus = 0, dc_mod = 0;
   char desc[200];
+  bool batch_critical = false;
 
   if (victim == NULL || ch == NULL)
     return (0);
@@ -1624,6 +1775,117 @@ int mag_damage(int level, struct char_data *ch, struct char_data *victim, struct
    */
   switch (spellnum)
   {
+
+  case SPELL_EAR_PIERCING_SCREAM:
+    element = DAM_SOUND; save = SAVING_FORT;
+    num_dice = MAX(1, MIN(5, level / 2)); size_dice = 6;
+    break;
+  case SPELL_FRIGID_TOUCH:
+  {
+    int roll = casttype == CAST_WEAPON_SPELL ? 0 :
+      attack_roll_with_critical(ch, victim, ATTACK_TYPE_UNARMED, TRUE, 1, 20);
+    if (roll < 0) {
+      act("Your freezing touch misses $N.", FALSE, ch, 0, victim, TO_CHAR);
+      return 0;
+    }
+    batch_critical = roll == 999;
+    element = DAM_COLD; save = -1;
+    num_dice = batch_critical ? 8 : 4; size_dice = 6;
+    break;
+  }
+  case SPELL_FROST_FALL:
+  case SPELL_FROST_FALL_TICK:
+    element = DAM_COLD; save = SAVING_FORT;
+    num_dice = spellnum == SPELL_FROST_FALL ? 2 : 1; size_dice = 6;
+    break;
+  case SPELL_BURST_OF_RADIANCE:
+    element = DAM_LIGHT; save = SAVING_REFL;
+    num_dice = MIN(5, MAX(1, level)); size_dice = 4;
+    break;
+  case SPELL_HOLY_SMITE:
+  case SPELL_UNHOLY_BLIGHT:
+  case SPELL_ORDERS_WRATH:
+  case SPELL_CHAOS_HAMMER:
+    if (!batch_alignment_scale(spellnum, victim)) return 0;
+    save = SAVING_WILL;
+    element = spellnum == SPELL_HOLY_SMITE ? DAM_HOLY :
+              spellnum == SPELL_UNHOLY_BLIGHT ? DAM_UNHOLY :
+              spellnum == SPELL_CHAOS_HAMMER ? DAM_CHAOS : DAM_ENERGY;
+    if (batch_alignment_scale(spellnum, victim) == 2 && IS_OUTSIDER(victim)) {
+      num_dice = MIN(10, MAX(1, level)); size_dice = 6;
+    } else {
+      num_dice = MAX(1, MIN(5, level / 2)); size_dice = 8;
+    }
+    break;
+  case PSIONIC_ENERGY_MISSILE:
+  case PSIONIC_ENERGY_CONE:
+    element = IS_NPC(ch) ? DAM_FIRE : GET_PSIONIC_ENERGY_TYPE(ch);
+    if (element != DAM_FIRE && element != DAM_COLD && element != DAM_ELECTRIC && element != DAM_SOUND)
+      element = DAM_FIRE;
+    save = element == DAM_COLD ? SAVING_FORT : SAVING_REFL;
+    num_dice = (spellnum == PSIONIC_ENERGY_MISSILE ? 3 : 5) + GET_AUGMENT_PSP(ch);
+    size_dice = 6;
+    bonus = element == DAM_SOUND ? -num_dice : element == DAM_ELECTRIC ? 0 : num_dice;
+    GET_DC_BONUS(ch) += GET_AUGMENT_PSP(ch) / 2 + (element == DAM_ELECTRIC ? 2 : 0);
+    mag_resist_bonus = element == DAM_ELECTRIC ? -2 : 0;
+    break;
+  case PSIONIC_HAIL_OF_CRYSTALS:
+    mag_resist = FALSE; element = DAM_SLICE; save = SAVING_REFL;
+    num_dice = 9 + GET_AUGMENT_PSP(ch); size_dice = 4;
+    break;
+  case PSIONIC_HAIL_OF_CRYSTALS_IMPACT:
+    mag_resist = FALSE; element = DAM_BLUDGEON; save = -1;
+    num_dice = 5; size_dice = 4;
+    break;
+  case SPELL_BURNING_DISARM:
+  {
+    int slot = burning_disarm_slot(victim);
+    if (slot < 0) {
+      send_to_char(ch, "Your target holds no metal item that you can heat.\r\n");
+      return 0;
+    }
+    element = DAM_FIRE; save = OBJ_FLAGGED(GET_EQ(victim, slot), ITEM_NODROP) ? -1 : SAVING_REFL;
+    num_dice = MIN(5, MAX(1, level)); size_dice = 4;
+    break;
+  }
+  case SPELL_BONESHAKER:
+    if (!batch_bone_target(victim, false)) {
+      send_to_char(ch, "Boneshaker requires a living target with a skeleton.\r\n");
+      return 0;
+    }
+    element = DAM_BLUDGEON; save = SAVING_FORT;
+    num_dice = 3 + MAX(1, level) / 2; size_dice = 6;
+    break;
+  case SPELL_BONESHATTER:
+    if (!batch_bone_target(victim, true)) {
+      send_to_char(ch, "Your target has no suitable bones or carapace to shatter.\r\n");
+      return 0;
+    }
+    element = DAM_BLUDGEON; save = SAVING_FORT;
+    num_dice = MIN(15, MAX(1, level)); size_dice = 6;
+    break;
+  case SPELL_STRICKEN_HEART:
+  {
+    int roll;
+    if (!IS_LIVING(victim) || is_immune_death_magic(ch, victim, TRUE)) return 0;
+    roll = casttype == CAST_WEAPON_SPELL ? 0 :
+      attack_roll_with_critical(ch, victim, ATTACK_TYPE_UNARMED, TRUE, 1, 20);
+    if (roll < 0) {
+      act("Your blackened touch misses $N.", FALSE, ch, 0, victim, TO_CHAR);
+      return 0;
+    }
+    batch_critical = roll == 999;
+    element = DAM_NEGATIVE; save = -1;
+    num_dice = batch_critical ? 4 : 2; size_dice = 6;
+    break;
+  }
+  case PSIONIC_CORROSIVE_AURA_DAMAGE:
+    element = DAM_ACID; save = SAVING_REFL;
+    num_dice = MAX(1, get_char_affect_modifier(ch, PSIONIC_CORROSIVE_AURA, APPLY_SPECIAL));
+    GET_DC_BONUS(ch) += (num_dice - 1) / 2;
+    size_dice = 6;
+    break;
+
     /*******************************************\
       || ------------ SPECIAL SPELLS ----------- ||
       \*******************************************/
@@ -3619,7 +3881,7 @@ int mag_damage(int level, struct char_data *ch, struct char_data *victim, struct
     return 1;
 
   // resistances to magic, message in mag_resistance
-  if (dam && mag_resist && casttype != CAST_DEVICE)
+  if ((dam || spellnum == SPELL_BURST_OF_RADIANCE) && mag_resist && casttype != CAST_DEVICE)
   {
     if (process_iron_golem_immunity(ch, victim, element, dam))
       ;
@@ -3802,6 +4064,32 @@ int mag_damage(int level, struct char_data *ch, struct char_data *victim, struct
     dam /= 2;
   else if (spellnum == WARLOCK_CRITICAL_ELDRITCH_BLAST)
     dam *= 2;
+  else if (batch_damage_spell(spellnum))
+  {
+    bool saved = save != -1 && savingthrow_full(ch, victim, save, race_bonus + dc_mod,
+                                                casttype, level, spell_school,
+                                                spellnum == SPELL_FROST_FALL_TICK ? SPELL_FROST_FALL :
+                                                spellnum == PSIONIC_CORROSIVE_AURA_DAMAGE ? PSIONIC_CORROSIVE_AURA : spellnum);
+    if (spellnum == SPELL_BURST_OF_RADIANCE) {
+      /* Only evil creatures take damage, and the flash save never halves it. */
+      if (!IS_EVIL(victim)) dam = 0;
+    } else if (saved) {
+      if ((save == SAVING_REFL && (HAS_FEAT(victim, FEAT_EVASION) ||
+                                  HAS_FEAT(victim, FEAT_IMPROVED_EVASION))) ||
+          (save != SAVING_REFL && HAS_FEAT(victim, FEAT_STALWART))) dam = 0;
+      else dam /= 2;
+    } else if (save == SAVING_REFL && HAS_FEAT(victim, FEAT_IMPROVED_EVASION))
+      dam /= 2;
+    if (spellnum == SPELL_BURNING_DISARM) {
+      if (saved) dam = 0;
+      if (IN_ROOM(victim) != NOWHERE && SECT(IN_ROOM(victim)) == SECT_UNDERWATER) dam /= 2;
+    }
+    second_batch_damage_condition(ch, victim, spellnum, level, saved, batch_critical);
+    if (batch_alignment_scale(spellnum, victim) == 1) dam /= 2;
+    batch_damage_condition(victim, spellnum, saved, batch_critical);
+    if (dam == 0)
+      return damage(ch, victim, 0, spellnum, element, FALSE);
+  }
   else if (dam && (save != -1))
   {
     // saving throw for half damage if applies
@@ -4284,6 +4572,62 @@ void mag_affects_full(int level, struct char_data *ch, struct char_data *victim,
 
   switch (spellnum)
   {
+
+  case SPELL_DEFENDING_BONE:
+  case SPELL_RIGHTEOUS_MIGHT:
+  case SPELL_THORN_BODY:
+  case SPELL_VINE_STRIKE:
+  case SPELL_DAZZLING_BLADE:
+  case SPELL_DEBILITATING_PORTENT:
+  case SPELL_BLESSING_OF_FERVOR:
+  case PSIONIC_CRYSTALLINE_BONDS:
+  case PSIONIC_BATTLESENSE:
+    final_batch_affect(level, ch, victim, spellnum, metamagic);
+    return;
+
+  case SPELL_BURST_OF_SPEED:
+    if (victim != ch) return;
+    af[0].duration = 1;
+    af[0].location = APPLY_SPECIAL;
+    af[0].modifier = compute_gear_armor_type(ch) >= ARMOR_TYPE_MEDIUM ? 10 : 20;
+    to_vict = "Your movements accelerate in a sudden burst of speed!";
+    break;
+  case PSIONIC_CORROSIVE_AURA:
+    if (victim != ch) return;
+    af[0].duration = level;
+    af[0].location = APPLY_SPECIAL;
+    af[0].modifier = 1 + GET_AUGMENT_PSP(ch);
+    af[0].specific = GET_CASTING_CLASS(ch);
+    af[0].epic_cl = level;
+    to_vict = "A mist of corrosive acid swirls around you.";
+    to_room = "A mist of corrosive acid swirls around $n.";
+    break;
+  case PSIONIC_EXPOSE_WEAKNESS:
+    if (power_resistance(ch, victim, 0) ||
+        savingthrow_full(ch, victim, SAVING_FORT, 0, casttype, level, NOSCHOOL, spellnum)) return;
+    /* An unaugmented recast cannot remove the stronger flat-footed effect. */
+    if (GET_AUGMENT_PSP(ch) < 6 &&
+        get_char_affect_modifier(victim, spellnum, APPLY_SPECIAL) >= 6) return;
+    af[0].duration = level;
+    af[0].location = APPLY_SPECIAL;
+    af[0].modifier = GET_AUGMENT_PSP(ch) >= 6 ? 6 : 0;
+    if (GET_AUGMENT_PSP(ch) >= 6) SET_BIT_AR(af[0].bitvector, AFF_FLAT_FOOTED);
+    to_vict = "Your movements betray your defenses, exposing your weaknesses!";
+    to_room = "$n moves clumsily, exposing $s weaknesses!";
+    break;
+
+  case PSIONIC_DESTINY_DISSONANCE:
+    if (!IS_LIVING(victim) || !can_nauseate(victim) || power_resistance(ch, victim, 0)) return;
+    if (casttype != CAST_WEAPON_SPELL &&
+        attack_roll(ch, victim, ATTACK_TYPE_UNARMED, TRUE, 1) < 0) {
+      act("You fail to touch $N.", FALSE, ch, 0, victim, TO_CHAR);
+      return;
+    }
+    af[0].duration = level;
+    SET_BIT_AR(af[0].bitvector, AFF_SICKENED);
+    to_vict = "Conflicting visions of your future leave you sickened.";
+    to_room = "$n reels from conflicting visions of the future.";
+    break;
     // poisons
 
   case POISON_TYPE_SCORPION_WEAK:
@@ -8160,6 +8504,7 @@ void mag_affects_full(int level, struct char_data *ch, struct char_data *victim,
     break;
 
   case SPELL_ENLARGE_PERSON: // transmutation
+    if (affected_by_spell(victim, SPELL_RIGHTEOUS_MIGHT)) return;
     af[0].location = APPLY_SIZE;
     af[0].duration = (level * 12) + 100;
     af[0].modifier = 1;
@@ -9814,6 +10159,7 @@ void mag_affects_full(int level, struct char_data *ch, struct char_data *victim,
     break;
 
   case SPELL_SHRINK_PERSON: // transmutation
+    if (affected_by_spell(victim, SPELL_RIGHTEOUS_MIGHT)) return;
     af[0].location = APPLY_SIZE;
     af[0].duration = (level * 12) + 100;
     af[0].modifier = -1;
@@ -10968,6 +11314,10 @@ static void perform_mag_groups(int level, struct char_data *ch, struct char_data
 {
   switch (spellnum)
   {
+  case SPELL_BLESSING_OF_FERVOR:
+  case PSIONIC_BATTLESENSE:
+    mag_affects(level, ch, tch, obj, spellnum, savetype, casttype, 0);
+    break;
   case WARLOCK_FLEE_THE_SCENE:
     mag_affects(level, ch, tch, obj, WARLOCK_FLEE_THE_SCENE, savetype, casttype, 0);
     break;
@@ -11531,6 +11881,7 @@ void mag_areas(int level, struct char_data *ch, struct obj_data *obj, int spelln
   const char *to_char = NULL, *to_room = NULL;
   int isEffect = FALSE, is_eff_and_dam = FALSE, is_uneffect = FALSE;
   int temp_meta = 0, temp_class;
+  int batch_targets = 0, batch_dc = ch ? GET_DC_BONUS(ch) : 0;
 
   if (ch == NULL)
     return;
@@ -11544,6 +11895,34 @@ void mag_areas(int level, struct char_data *ch, struct obj_data *obj, int spelln
    * the damaging part of the spell.   */
   switch (spellnum)
   {
+
+  case SPELL_FROST_FALL:
+    to_char = "You cover the area in biting frost!";
+    to_room = "$n covers the area in biting frost!";
+    break;
+  case SPELL_BURST_OF_RADIANCE:
+    to_char = "You release a brilliant burst of radiance!";
+    to_room = "$n releases a brilliant burst of radiance!";
+    break;
+  case SPELL_HOLY_SMITE:
+  case SPELL_UNHOLY_BLIGHT:
+  case SPELL_ORDERS_WRATH:
+  case SPELL_CHAOS_HAMMER:
+    to_char = "You unleash a burst of aligned power!";
+    to_room = "$n unleashes a burst of aligned power!";
+    break;
+  case PSIONIC_ENERGY_MISSILE:
+    to_char = "You launch a volley of energy missiles!";
+    to_room = "$n launches a volley of energy missiles!";
+    break;
+  case PSIONIC_ENERGY_CONE:
+    to_char = "You project a cone of destructive energy!";
+    to_room = "$n projects a cone of destructive energy!";
+    break;
+  case PSIONIC_HAIL_OF_CRYSTALS:
+    to_char = "Your crystal explodes in a hail of slashing fragments!";
+    to_room = "A crystal explodes in a hail of slashing fragments!";
+    break;
   case SPELL_AURAK_DEATH_THROES:
     to_char = "Your dying body erupts in a burst of magical force!";
     to_room = "$n erupts in a burst of magical force!";
@@ -11936,6 +12315,8 @@ void mag_areas(int level, struct char_data *ch, struct obj_data *obj, int spelln
 
     if (aoeOK(ch, tch, spellnum))
     {
+      if (!batch_area_limit(spellnum, &batch_targets)) break;
+      if (batch_damage_spell(spellnum)) GET_DC_BONUS(ch) = batch_dc;
       if (spellnum == ABILITY_CHANNEL_POSITIVE_ENERGY && (!IS_UNDEAD(tch) || is_player_grouped(ch, tch)))
         continue;
       else if (spellnum == ABILITY_CHANNEL_NEGATIVE_ENERGY && IS_UNDEAD(tch))
@@ -12011,6 +12392,123 @@ void mag_areas(int level, struct char_data *ch, struct obj_data *obj, int spelln
 
     } /* end aoeOK */
   } /* for loop for cycling through room chars */
+  if (batch_damage_spell(spellnum)) GET_DC_BONUS(ch) = 0;
+}
+
+/* Resolve direct impact first; the explosion still occurs after a miss or kill.
+ * Runtime UID lookup avoids using a caster pointer invalidated by reflection. */
+void mag_hail_of_crystals(int level, struct char_data *ch, struct char_data *victim,
+                          struct obj_data *obj, int metamagic, int savetype, int casttype)
+{
+  long uid;
+  if (!ch || !victim) return;
+  uid = GET_ID(ch);
+  if (attack_roll(ch, victim, ATTACK_TYPE_PSIONICS, TRUE, 1) >= 0)
+    mag_damage(level, ch, victim, obj, PSIONIC_HAIL_OF_CRYSTALS_IMPACT,
+               metamagic, savetype, casttype);
+  ch = find_char(uid);
+  if (ch && GET_POS(ch) > POS_DEAD)
+    mag_areas(level, ch, obj, PSIONIC_HAIL_OF_CRYSTALS, metamagic, savetype, casttype);
+}
+
+/* A sustained hostile room patch uses the normal AoE filters on every tick.
+ * Stop when its caster leaves or is extracted; never deal unattributed damage. */
+static void frost_fall_tick(struct raff_node *raff)
+{
+  struct char_data *caster = find_char(raff->caster_uid), *victim, *next;
+  int old_class, old_dc, old_spell, old_casting_class;
+  if (!caster || GET_POS(caster) <= POS_DEAD || IN_ROOM(caster) != raff->room ||
+      ROOM_FLAGGED(raff->room, ROOM_PEACEFUL) || ROOM_FLAGGED(raff->room, ROOM_NOMAGIC)) {
+    raff->timer = 0;
+    return;
+  }
+  old_class = GET_CASTING_CLASS(caster);
+  old_casting_class = CASTING_CLASS(caster);
+  old_dc = GET_DC_BONUS(caster);
+  old_spell = CASTING_SPELLNUM(caster);
+  GET_CASTING_CLASS(caster) = raff->caster_class;
+  CASTING_CLASS(caster) = raff->caster_class;
+  CASTING_SPELLNUM(caster) = SPELL_FROST_FALL;
+  for (victim = world[raff->room].people; victim; victim = next) {
+    next = victim->next_in_room;
+    GET_DC_BONUS(caster) = 0;
+    if (aoeOK(caster, victim, SPELL_FROST_FALL))
+      mag_damage(raff->caster_level, caster, victim, NULL, SPELL_FROST_FALL_TICK,
+                 0, SAVING_FORT, CAST_SPELL);
+    caster = find_char(raff->caster_uid);
+    if (!caster || IN_ROOM(caster) != raff->room) break;
+  }
+  if (caster) {
+    GET_CASTING_CLASS(caster) = old_class;
+    CASTING_CLASS(caster) = old_casting_class;
+    GET_DC_BONUS(caster) = old_dc;
+    CASTING_SPELLNUM(caster) = old_spell;
+  }
+}
+
+/* Snapshot identities before damage: targets and aura casters may be extracted
+ * by damage or reflection. Preserve a pending cast's class, DC and spell state. */
+static void corrosive_aura_tick(struct char_data *caster)
+{
+  struct affected_type *af;
+  struct char_data *victim;
+  long caster_uid = GET_ID(caster), *targets;
+  room_rnum room = IN_ROOM(caster);
+  size_t count = 0, i = 0;
+  int level, old_class, old_casting_class, old_spell, old_dc;
+  if (room == NOWHERE || GET_POS(caster) <= POS_DEAD ||
+      ROOM_FLAGGED(room, ROOM_PEACEFUL) || ROOM_FLAGGED(room, ROOM_NOMAGIC)) return;
+  for (af = caster->affected; af && af->spell != PSIONIC_CORROSIVE_AURA; af = af->next) {}
+  if (!af || af->duration <= 0) return;
+  level = MAX(1, af->epic_cl);
+  for (victim = world[room].people; victim; victim = victim->next_in_room) count++;
+  targets = calloc(count ? count : 1, sizeof(*targets));
+  if (!targets) return;
+  for (victim = world[room].people; victim; victim = victim->next_in_room)
+    targets[i++] = GET_ID(victim);
+  old_class = GET_CASTING_CLASS(caster);
+  old_casting_class = CASTING_CLASS(caster);
+  old_spell = CASTING_SPELLNUM(caster);
+  old_dc = GET_DC_BONUS(caster);
+  GET_CASTING_CLASS(caster) = CASTING_CLASS(caster) = CLASS_PSIONICIST;
+  CASTING_SPELLNUM(caster) = PSIONIC_CORROSIVE_AURA;
+  for (i = 0; i < count; i++) {
+    caster = find_char(caster_uid);
+    if (!caster || GET_POS(caster) <= POS_DEAD || IN_ROOM(caster) != room ||
+        !affected_by_spell(caster, PSIONIC_CORROSIVE_AURA)) break;
+    victim = find_char(targets[i]);
+    GET_DC_BONUS(caster) = 0;
+    if (victim && IN_ROOM(victim) == room && aoeOK(caster, victim, PSIONIC_CORROSIVE_AURA_DAMAGE))
+      mag_damage(level, caster, victim, NULL, PSIONIC_CORROSIVE_AURA_DAMAGE,
+                 0, SAVING_REFL, CAST_SPELL);
+  }
+  caster = find_char(caster_uid);
+  if (caster) {
+    GET_CASTING_CLASS(caster) = old_class;
+    CASTING_CLASS(caster) = old_casting_class;
+    CASTING_SPELLNUM(caster) = old_spell;
+    GET_DC_BONUS(caster) = old_dc;
+  }
+  free(targets);
+}
+
+static void corrosive_aura_update(void)
+{
+  struct char_data *caster;
+  long *casters;
+  size_t count = 0, i = 0;
+  for (caster = character_list; caster; caster = caster->next)
+    if (affected_by_spell(caster, PSIONIC_CORROSIVE_AURA)) count++;
+  if (!count) return;
+  casters = calloc(count, sizeof(*casters));
+  if (!casters) return;
+  for (caster = character_list; caster; caster = caster->next)
+    if (affected_by_spell(caster, PSIONIC_CORROSIVE_AURA)) casters[i++] = GET_ID(caster);
+  for (i = 0; i < count; i++) {
+    caster = find_char(casters[i]);
+    if (caster) corrosive_aura_tick(caster);
+  }
+  free(casters);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -13618,7 +14116,8 @@ void mag_points(int level, struct char_data *ch, struct char_data *victim, struc
   /* Golems can be healed by magical/psionic healing at 1/2 efficiency */
   /* The efficiency reduction is handled in process_healing() */
 
-  if (casttype == CAST_WEAPON_POISON || casttype == CAST_WEAPON_SPELL)
+  if (casttype == CAST_WEAPON_POISON || casttype == CAST_WEAPON_SPELL ||
+      spellnum == PSIONIC_RECONSTRUCTION)
     ;
   else
     /* bards, alchemists and summoners also get some healing spells */
@@ -13880,6 +14379,30 @@ void mag_points(int level, struct char_data *ch, struct char_data *victim, struc
     to_vict = "$n \twcures some wounds\tn on you.";
     break;
 
+  case PSIONIC_NATURAL_HEALING:
+    if (victim != ch || !IS_LIVING(ch)) {
+      send_to_char(ch, "Natural Healing can only restore your own living body.\r\n");
+      return;
+    }
+    healing = 3 * (1 + GET_AUGMENT_PSP(ch));
+    to_char = "You accelerate your body's natural healing.";
+    to_notvict = "$n's wounds begin to close through sheer will.";
+    break;
+
+  case PSIONIC_RECONSTRUCTION:
+    if (!IS_CONSTRUCT(victim) || GET_HIT(victim) < 1 ||
+        HAS_FEAT(victim, FEAT_IRON_GOLEM_IMMUNITY) ||
+        HAS_FEAT(victim, FEAT_WOOD_GOLEM_IMMUNITY) ||
+        HAS_FEAT(victim, FEAT_STONE_GOLEM_IMMUNITY)) {
+      send_to_char(ch, "Reconstruction requires a surviving construct that is not immune to magic.\r\n");
+      return;
+    }
+    healing = dice(3 + GET_AUGMENT_PSP(ch) / 2, 8) + MAX(1, level);
+    to_char = "You reknit $N's damaged structure.";
+    to_vict = "$n repairs your damaged structure.";
+    to_notvict = "$n repairs $N's damaged structure.";
+    break;
+
   case PSIONIC_BODY_ADJUSTMENT:
 
     // we need to correct the psp cost below, because the power only benefits from 2 augment points at a time.
@@ -14062,7 +14585,10 @@ void mag_points(int level, struct char_data *ch, struct char_data *victim, struc
   }
 
   /* newer centralized function for points (modifying healing, move and psp in one place) */
-  process_healing(ch, victim, spellnum, healing, move, psp);
+  if (spellnum == PSIONIC_RECONSTRUCTION)
+    process_construct_repair(ch, victim, healing);
+  else
+    process_healing(ch, victim, spellnum, healing, move, psp);
 }
 
 void mag_unaffects(int level, struct char_data *ch, struct char_data *victim, struct obj_data *obj,
@@ -14138,6 +14664,8 @@ void mag_unaffects(int level, struct char_data *ch, struct char_data *victim, st
     break;
 
   case SPELL_REMOVE_CURSE:
+    if (affected_by_spell(victim, SPELL_UNHOLY_BLIGHT))
+      affect_from_char(victim, SPELL_UNHOLY_BLIGHT);
     spell = SPELL_CURSE;
     affect = AFF_CURSE;
     to_char = "You remove the curse from $N.";
@@ -14983,6 +15511,20 @@ void mag_room(int level, struct char_data *ch, struct obj_data *obj, int spellnu
   switch (spellnum)
   {
     /*******  ROOM EVENTS     ************/
+  case SPELL_FROST_FALL:
+  {
+    struct raff_node *old, *next;
+    /* Refresh one patch per room; never stack duplicate periodic damage. */
+    for (old = raff_list; old; old = next) {
+      next = old->next;
+      if (old->room == rnum && old->spell == SPELL_FROST_FALL) rem_room_aff(old);
+    }
+    aff = RAFF_FROST_FALL;
+    rounds = MAX(1, level / 2);
+    to_char = "Biting frost lingers across the ground.";
+    to_room = "Biting frost lingers across the ground.";
+    break;
+  }
   case SPELL_I_DARKNESS:
     IdNum = eDARKNESS;
     if (ROOM_FLAGGED(rnum, ROOM_DARK))
@@ -15353,6 +15895,11 @@ void mag_room(int level, struct char_data *ch, struct obj_data *obj, int spellnu
     raff->affection = aff;
     raff->ch = ch;
     raff->spell = spellnum;
+    if (spellnum == SPELL_FROST_FALL) {
+      raff->caster_uid = GET_ID(ch);
+      raff->caster_level = level;
+      raff->caster_class = GET_CASTING_CLASS(ch);
+    }
     raff->next = raff_list;
     raff_list = raff;
 
@@ -15382,6 +15929,9 @@ bool is_spell_mind_affecting(int snum)
 {
   switch (snum)
   {
+  case SPELL_DEBILITATING_PORTENT:
+  case SPELL_DAZZLING_BLADE:
+  case PSIONIC_BATTLESENSE:
   case PSIONIC_MIND_THRUST:
   case PSIONIC_IMPALE_MIND:
   case PSIONIC_DEADLY_FEAR:

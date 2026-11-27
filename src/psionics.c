@@ -73,6 +73,46 @@ void assign_psionic_powers(void)
   for (i = PSIONIC_POWER_START; i <= PSIONIC_POWER_END; i++)
     unused_psionic_power(i);
 
+  psiono(PSIONIC_CRYSTALLINE_BONDS, "crystalline bonds", 7, true, 2, 100, PSYCHOKINESIS,
+         TAR_CHAR_ROOM | TAR_FIGHT_VICT | TAR_NOT_SELF, true, MAG_AFFECTS,
+         "The crystalline coils binding you shatter.", 4);
+  psiono(PSIONIC_BATTLESENSE, "battlesense", 5, true, 2, 8, TELEPATHY,
+         TAR_IGNORE, false, MAG_GROUPS, "Your shared tactical awareness fades.", 3);
+  psiono(PSIONIC_CRYSTALLINE_BONDS_TICK, "crystalline bonds damage", 0, false, 0, 0, PSYCHOKINESIS,
+         TAR_CHAR_ROOM, true, MAG_DAMAGE, NULL, 1);
+  spell_info[PSIONIC_CRYSTALLINE_BONDS_TICK].no_player = true;
+
+  /* Second discipline-list batch. Aura augmentation is snapshotted in its affect. */
+  psiono(PSIONIC_NATURAL_HEALING, "natural healing", 1, true, 1, 100, PSYCHOMETABOLISM,
+         TAR_CHAR_ROOM | TAR_SELF_ONLY, false, MAG_POINTS, NULL, 1);
+  psiono(PSIONIC_CORROSIVE_AURA, "corrosive aura", 1, true, 1, 100, PSYCHOMETABOLISM,
+         TAR_CHAR_ROOM | TAR_SELF_ONLY, false, MAG_AFFECTS,
+         "The corrosive mist around you dissipates.", 1);
+  psiono(PSIONIC_EXPOSE_WEAKNESS, "expose weakness", 5, true, 6, 6, PSYCHOMETABOLISM,
+         TAR_CHAR_ROOM | TAR_FIGHT_VICT | TAR_NOT_SELF, true, MAG_AFFECTS,
+         "Your movements no longer expose your weaknesses.", 3);
+  psiono(PSIONIC_CORROSIVE_AURA_DAMAGE, "corrosive aura damage", 0, false, 0, 0, PSYCHOMETABOLISM,
+         TAR_CHAR_ROOM, true, MAG_DAMAGE, NULL, 1);
+  spell_info[PSIONIC_CORROSIVE_AURA_DAMAGE].no_player = true;
+
+  /* First discipline-list additions use the existing Psionicist class. */
+  psiono(PSIONIC_ENERGY_MISSILE, "energy missile", 3, true, 1, 100, PSYCHOKINESIS,
+         TAR_IGNORE, true, MAG_AREAS, NULL, 2);
+  psiono(PSIONIC_ENERGY_CONE, "energy cone", 5, true, 1, 100, PSYCHOKINESIS,
+         TAR_IGNORE, true, MAG_AREAS, NULL, 3);
+  psiono(PSIONIC_DESTINY_DISSONANCE, "destiny dissonance", 1, false, 0, 0, CLAIRSENTIENCE,
+         TAR_CHAR_ROOM | TAR_FIGHT_VICT | TAR_NOT_SELF, true, MAG_AFFECTS,
+         "The conflicting visions of your future fade.", 1);
+  psiono(PSIONIC_RECONSTRUCTION, "reconstruction", 3, true, 2, 100, METACREATIVITY,
+         TAR_CHAR_ROOM, false, MAG_POINTS, NULL, 2);
+  psiono(PSIONIC_HAIL_OF_CRYSTALS, "hail of crystals", 9, true, 1, 100, METACREATIVITY,
+         TAR_CHAR_ROOM | TAR_FIGHT_VICT | TAR_NOT_SELF, true, MAG_MANUAL, NULL, 5);
+
+  psiono(PSIONIC_HAIL_OF_CRYSTALS_IMPACT, "hail of crystals impact", 0, false, 0, 0, METACREATIVITY,
+         TAR_CHAR_ROOM, true, MAG_DAMAGE, NULL, 5);
+  spell_info[PSIONIC_HAIL_OF_CRYSTALS_IMPACT].no_player = true;
+  spell_info[PSIONIC_DESTINY_DISSONANCE].touch_spell = true;
+
   // level 1 psionic powers
   psiono(PSIONIC_BROKER, "broker", 1, true, 2, 100, PSYCHOMETABOLISM, TAR_CHAR_ROOM | TAR_SELF_ONLY,
          false, MAG_AFFECTS, "Your psychic persuasive edge expires.", 1);

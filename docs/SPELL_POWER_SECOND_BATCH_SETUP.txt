@@ -1,0 +1,125 @@
+SECOND SPELL AND PSIONIC POWER BATCH
+
+Adds five spells and three psionic powers from the candidate guide.
+Levels mean levels in the named class, not total character level. Normal learning,
+preparation, known-power selection, ability requirements and resource costs apply.
+
+SPELLS AND CLASS ACCESS
+
+Burning Disarm: Cleric 1, Druid 1, Wizard 1, Sorcerer 1.
+Boneshaker: Blackguard 6, Cleric 3, Inquisitor 4, Wizard 3, Sorcerer 4.
+Boneshatter: Cleric 9, Wizard 7, Sorcerer 8.
+Stricken Heart: Inquisitor 4, Wizard 3, Sorcerer 4.
+Burst of Speed: Alchemist 7, Blackguard 12, Inquisitor 7, Paladin 12, Ranger 12.
+
+POWERS AND CLASS ACCESS
+
+Natural Healing: Psionicist 1; base cost 1 PSP; augment in steps of 1 PSP.
+Corrosive Aura: Psionicist 1; base cost 1 PSP; augment in steps of 1 PSP.
+Expose Weakness: Psionicist 5; base cost 5 PSP; optional augmentation of 6 PSP.
+Existing manifester-level and power-point limits still cap augmentation.
+
+COMMAND EXAMPLES
+
+  spellhelp burning disarm
+  spellhelp boneshaker
+  spellhelp boneshatter
+  spellhelp stricken heart
+  spellhelp burst of speed
+  spellhelp natural healing
+  spellhelp corrosive aura
+  spellhelp expose weakness
+
+  cast 'burning disarm' target
+  cast 'boneshaker' target
+  cast 'boneshatter' target
+  cast 'stricken heart' target
+  cast 'burst of speed'
+
+  manifest 0 'natural healing'
+  manifest 2 'natural healing'
+  manifest 0 'corrosive aura'
+  manifest 2 'corrosive aura'
+  manifest 0 'expose weakness' target
+  manifest 6 'expose weakness' target
+
+MECHANICAL NOTES
+
+Burning Disarm heats the first held/wielded conductive metal item. It deals
+1d4 fire per caster level, capped at 5d4. A successful Reflex save instead unequips
+the item intact into its holder's inventory and avoids all damage. The item stays
+with its owner, following normal disarm custody, rather than becoming room loot. ITEM_NODROP items stay
+equipped and permit no save. Underwater damage is halved. Spell resistance applies.
+
+Boneshaker deals (3 + caster level / 2)d6 bludgeoning damage, Fortitude half.
+It requires a corporeal living skeleton, excluding oozes, plants, elementals,
+constructs and vermin. This batch implements the guide's damage adaptation;
+it does not reposition creatures or force undead actions.
+
+Boneshatter deals 1d6 bludgeoning damage per caster level, capped at 15d6.
+A successful Fortitude save halves damage and fatigues the target; failure
+exhausts it. The condition lasts caster level * 10 rounds. Native fatigue affects
+attack, armor and damage. Exhaustion additionally gives -4 Strength, -4 Dexterity
+and half movement speed. Slow and exhaustion do not compound movement halving.
+A weaker recast cannot overwrite exhaustion. Requires a corporeal creature with
+bones or carapace, including undead and vermin; excludes oozes, plants, elementals
+and constructs. Does not damage world objects. Spell resistance applies.
+
+Stricken Heart requires a melee touch against a living target and deals 2d6
+negative damage with no save. It staggers for one round. A critical touch deals
+4d6 and staggers for ten rounds. Death-magic immunity blocks the spell;
+critical/precision immunity prevents staggering. Spell resistance applies.
+Spellstrike uses the successful weapon hit rather than rolling another touch.
+
+Burst of Speed lasts one round. It adds 20 feet of movement speed, reduced to
+10 feet in medium/heavy armor. Movement-provoked attacks of opportunity are
+suppressed while active. Casting, combat maneuvers and other actions can still
+provoke. It grants no extra attacks. Mounted movement uses the mount's speed.
+
+Natural Healing restores 3 hit points to the living manifester, plus 3 per extra
+power point. Normal healing modifiers and maximum hit points apply. It cannot
+heal another creature, constructs or undead.
+
+Corrosive Aura lasts one round per manifester level. Each positive-duration
+round deals 1d6 acid to eligible enemies sharing the manifester's current room;
+each extra power point adds 1d6. Every two extra points add +1 save DC. Reflex
+halves each pulse; power resistance applies. Uses the existing room-based AoE,
+group and PK protections. Peaceful/no-magic rooms suppress pulses. The aura
+moves with its caster and stores its own augmentation independently of later
+manifestations. It does not immediately pulse on casting, and periodic pulses
+do not retain metamagic.
+
+Expose Weakness lasts one round per manifester level, Fortitude negates and
+power resistance applies. All attackers treat the target as flanked, subject
+to existing flanking defenses. They gain +4 to critical confirmation. Existing
+probabilistic fortification must succeed twice to block, reducing a 25% block
+to 6.25%; unconditional critical/precision immunity remains intact. Spending
+6 extra power points makes the target flat-footed instead of granting automatic
+flanking. Native uncanny-dodge defenses still apply. The augmented flat-footed
+state persists for the duration even after ordinary per-round flags are cleared.
+A weaker recast cannot remove the augmented effect.
+
+DEPLOYMENT
+
+Rebuild and restart the server. SPELLHELP data is compiled into src/spellhelp.c;
+no SQL migrations or help-table imports are required. Existing saved spell and
+power IDs are unchanged. New spells use IDs 550-554; powers use 1611-1613.
+ID 1614 is an internal aura damage handler and cannot be learned or manifested.
+
+VALIDATION
+
+  python3 tests/run_spell_batch.py
+  python3 tests/run_spellhelp.py --sanitize
+  cmake --build /tmp/luminari-religion-build -j4
+
+The native-rule harness covers both implemented batches, with address/undefined
+behavior sanitizers. The help harness covers native registrations, class levels,
+public/internal filtering, detailed rendering and audit coverage. Live gameplay
+verification requires a restart of the dev server.
+
+SUBSEQUENT FINAL BATCH
+
+These candidates are now implemented; see SPELL_POWER_FINAL_BATCH_SETUP.txt.
+
+Defending Bone, Righteous Might, Thorn Body, Vine Strike, Dazzling Blade,
+Debilitating Portent, Blessing of Fervor; Crystalline Bonds and Battlesense.

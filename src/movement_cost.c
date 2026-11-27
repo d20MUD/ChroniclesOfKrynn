@@ -12,6 +12,7 @@
 #include "sysdep.h"
 #include "legendary_foundations.h"
 #include "structs.h"
+#include "spell_batch_final.h"
 #include "utils.h"
 #include "comm.h"
 #include "interpreter.h"
@@ -86,6 +87,9 @@ int get_speed(struct char_data *ch, sbyte to_display)
   else if (affected_by_spell(ch, SPELL_EXPEDITIOUS_RETREAT))
     speed += 30;
 
+  speed += get_char_affect_modifier(ch, SPELL_BURST_OF_SPEED, APPLY_SPECIAL);
+  speed += final_batch_bonus(ch, APPLY_MOVE_SPEED);
+
   // Sprint doubles movement speed
   if (affected_by_spell(ch, SKILL_SPRINT))
     speed *= 2;
@@ -129,6 +133,8 @@ int get_speed(struct char_data *ch, sbyte to_display)
   if (!IS_NPC(ch) && PRF_FLAGGED(ch, PRF_AUTOSEARCH))
     speed /= 2;
   else if (AFF_FLAGGED(ch, AFF_SLOW))
+    speed /= 2;
+  else if (get_char_affect_modifier(ch, SPELL_BONESHATTER, APPLY_SPECIAL) == 6)
     speed /= 2;
   else if (AFF_FLAGGED(ch, AFF_ENTANGLED))
     speed /= 2;

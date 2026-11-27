@@ -141,7 +141,8 @@ int epic_rebuttal_roll(struct char_data *ch, int resistance, int roll)
   if (resistance > 0 && epic_feat_rank(ch, FEAT_EPIC_RESISTANCE_REBUTTAL) &&
       EPIC_SECOND(ch).rebuttal > time(NULL) && ch->epic_cast_context == CAST_SPELL &&
       ch->epic_spell_depth == 1 && ch->epic_spell_context >= PSIONIC_POWER_START &&
-      ch->epic_spell_context < PSIONIC_IMPALE_MIND)
+      ch->epic_spell_context <= PSIONIC_POWER_END &&
+      !psionic_powers[ch->epic_spell_context].is_epic)
   {
     EPIC_SECOND(ch).rebuttal = 0;
     save_char(ch, 0);

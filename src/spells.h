@@ -623,7 +623,32 @@
 #define SPELL_PROTECTION_FROM_POISON 539
 #define SPELL_PANACEA 540
 
-#define NUM_SPELLS 541
+/* First mechanics-compatible spell batch; append IDs to preserve saved data. */
+#define SPELL_EAR_PIERCING_SCREAM 541
+#define SPELL_FRIGID_TOUCH 542
+#define SPELL_FROST_FALL 543
+#define SPELL_BURST_OF_RADIANCE 544
+#define SPELL_HOLY_SMITE 545
+#define SPELL_UNHOLY_BLIGHT 546
+#define SPELL_ORDERS_WRATH 547
+#define SPELL_CHAOS_HAMMER 548
+#define SPELL_FROST_FALL_TICK 549 /* internal room damage, never learnable */
+#define SPELL_BURNING_DISARM 550
+#define SPELL_BONESHAKER 551
+#define SPELL_BONESHATTER 552
+#define SPELL_STRICKEN_HEART 553
+#define SPELL_BURST_OF_SPEED 554
+#define SPELL_DEFENDING_BONE 555
+#define SPELL_RIGHTEOUS_MIGHT 556
+#define SPELL_THORN_BODY 557
+#define SPELL_VINE_STRIKE 558
+#define SPELL_DAZZLING_BLADE 559
+#define SPELL_DEBILITATING_PORTENT 560
+#define SPELL_BLESSING_OF_FERVOR 561
+#define SPELL_VINE_STRIKE_BIND 562
+#define SPELL_VINE_STRIKE_RESIST 563
+#define SPELL_DAZZLING_BLADE_FLASH 564
+#define NUM_SPELLS 565
 #define LAST_SPELL_DEFINE NUM_SPELLS + 1
 
 #define MAX_SPELL_AFFECTS 6 /* change if more needed */
@@ -940,7 +965,20 @@
 #define PSIONIC_GRAVITY_WELL 1604
 
 /***************************************/
-#define PSIONIC_POWER_END 1605
+#define PSIONIC_ENERGY_MISSILE 1605
+#define PSIONIC_ENERGY_CONE 1606
+#define PSIONIC_DESTINY_DISSONANCE 1607
+#define PSIONIC_RECONSTRUCTION 1608
+#define PSIONIC_HAIL_OF_CRYSTALS 1609
+#define PSIONIC_HAIL_OF_CRYSTALS_IMPACT 1610 /* internal direct impact */
+#define PSIONIC_NATURAL_HEALING 1611
+#define PSIONIC_CORROSIVE_AURA 1612
+#define PSIONIC_EXPOSE_WEAKNESS 1613
+#define PSIONIC_CORROSIVE_AURA_DAMAGE 1614 /* internal aura pulse */
+#define PSIONIC_CRYSTALLINE_BONDS 1615
+#define PSIONIC_BATTLESENSE 1616
+#define PSIONIC_CRYSTALLINE_BONDS_TICK 1617
+#define PSIONIC_POWER_END 1618
 /***************************************/
 
 /** we're going to start warlock powers at 1649.
@@ -1866,6 +1904,8 @@ void mag_groups(int level, struct char_data *ch, struct obj_data *obj, int spell
                 int casttype);
 void mag_masses(int level, struct char_data *ch, struct obj_data *obj, int spellnum, int savetype,
                 int casttype, int metamagic);
+void mag_hail_of_crystals(int level, struct char_data *ch, struct char_data *victim,
+                          struct obj_data *obj, int metamagic, int savetype, int casttype);
 void mag_areas(int level, struct char_data *ch, struct obj_data *obj, int spellnum, int metamagic,
                int savetype, int casttype);
 void mag_summons(int level, struct char_data *ch, struct obj_data *obj, int spellnum, int savetype,

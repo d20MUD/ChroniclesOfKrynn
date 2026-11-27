@@ -104,10 +104,44 @@
   CMakeFiles/circle.dir/src/cedit.c.o \
   CMakeFiles/circle.dir/src/char_descs.c.o \
   CMakeFiles/circle.dir/src/clan.c.o \
+  CMakeFiles/circle.dir/src/clan_access.c.o \
+  CMakeFiles/circle.dir/src/clan_awards.c.o \
+  CMakeFiles/circle.dir/src/clan_boot.c.o \
+  CMakeFiles/circle.dir/src/clan_buff_activation.c.o \
+  CMakeFiles/circle.dir/src/clan_buff_commands.c.o \
+  CMakeFiles/circle.dir/src/clan_buff_commit.c.o \
+  CMakeFiles/circle.dir/src/clan_buff_lifecycle.c.o \
+  CMakeFiles/circle.dir/src/clan_buff_queries.c.o \
+  CMakeFiles/circle.dir/src/clan_buff_runtime.c.o \
+  CMakeFiles/circle.dir/src/clan_combat.c.o \
+  CMakeFiles/circle.dir/src/clan_commands.c.o \
+  CMakeFiles/circle.dir/src/clan_delivery.c.o \
+  CMakeFiles/circle.dir/src/clan_delivery_runtime.c.o \
   CMakeFiles/circle.dir/src/clan_economy.c.o \
   CMakeFiles/circle.dir/src/clan_edit.c.o \
+  CMakeFiles/circle.dir/src/clan_enchant.c.o \
+  CMakeFiles/circle.dir/src/clan_expedition_enrollment.c.o \
+  CMakeFiles/circle.dir/src/clan_expedition_runtime.c.o \
+  CMakeFiles/circle.dir/src/clan_expedition_world.c.o \
+  CMakeFiles/circle.dir/src/clan_expeditions.c.o \
+  CMakeFiles/circle.dir/src/clan_objective_runtime.c.o \
+  CMakeFiles/circle.dir/src/clan_objectives.c.o \
+  CMakeFiles/circle.dir/src/clan_persistence.c.o \
+  CMakeFiles/circle.dir/src/clan_policy.c.o \
+  CMakeFiles/circle.dir/src/clan_progression.c.o \
+  CMakeFiles/circle.dir/src/clan_qm_services.c.o \
+  CMakeFiles/circle.dir/src/clan_quartermaster.c.o \
+  CMakeFiles/circle.dir/src/clan_quartermaster_runtime.c.o \
+  CMakeFiles/circle.dir/src/clan_repository.c.o \
+  CMakeFiles/circle.dir/src/clan_sources.c.o \
+  CMakeFiles/circle.dir/src/clan_status.c.o \
   CMakeFiles/circle.dir/src/clan_transactions.c.o \
+  CMakeFiles/circle.dir/src/clan_web.c.o \
+  CMakeFiles/circle.dir/src/clan_web_content.c.o \
+  CMakeFiles/circle.dir/src/clan_web_content_runtime.c.o \
+  CMakeFiles/circle.dir/src/clan_web_runtime.c.o \
   CMakeFiles/circle.dir/src/class.c.o \
+  CMakeFiles/circle.dir/src/class_improvements.c.o \
   CMakeFiles/circle.dir/src/combat_modes.c.o \
   CMakeFiles/circle.dir/src/comm.c.o \
   CMakeFiles/circle.dir/src/config.c.o \
@@ -142,6 +176,9 @@
   CMakeFiles/circle.dir/src/dotenv.c.o \
   CMakeFiles/circle.dir/src/durable_file.c.o \
   CMakeFiles/circle.dir/src/encounters.c.o \
+  CMakeFiles/circle.dir/src/epic_feats.c.o \
+  CMakeFiles/circle.dir/src/epic_feats2.c.o \
+  CMakeFiles/circle.dir/src/epic_feats3.c.o \
   CMakeFiles/circle.dir/src/epic_magic.c.o \
   CMakeFiles/circle.dir/src/estate.c.o \
   CMakeFiles/circle.dir/src/evolutions.c.o \
@@ -253,6 +290,7 @@
   CMakeFiles/circle.dir/src/spell_parser.c.o \
   CMakeFiles/circle.dir/src/spell_prep.c.o \
   CMakeFiles/circle.dir/src/spellbook_scroll.c.o \
+  CMakeFiles/circle.dir/src/spellhelp.c.o \
   CMakeFiles/circle.dir/src/spells.c.o \
   CMakeFiles/circle.dir/src/staff_events.c.o \
   CMakeFiles/circle.dir/src/study.c.o \
@@ -660,6 +698,7 @@ CMakeFiles/circle.dir/src/act.informative.c.o: /home/krynn/code/src/act.informat
   /home/krynn/code/src/alchemy.h \
   /home/krynn/code/src/asciimap.h \
   /home/krynn/code/src/assign_wpn_armor.h \
+  /home/krynn/code/src/bloodlines.h \
   /home/krynn/code/src/boards.h \
   /home/krynn/code/src/bool.h \
   /home/krynn/code/src/campaign.h \
@@ -730,6 +769,22 @@ CMakeFiles/circle.dir/src/act.informative.c.o: /home/krynn/code/src/act.informat
   /usr/include/errno.h \
   /usr/include/features-time64.h \
   /usr/include/features.h \
+  /usr/include/inttypes.h \
+  /usr/include/json-c/arraylist.h \
+  /usr/include/json-c/debug.h \
+  /usr/include/json-c/json.h \
+  /usr/include/json-c/json_c_version.h \
+  /usr/include/json-c/json_config.h \
+  /usr/include/json-c/json_inttypes.h \
+  /usr/include/json-c/json_object.h \
+  /usr/include/json-c/json_object_iterator.h \
+  /usr/include/json-c/json_patch.h \
+  /usr/include/json-c/json_pointer.h \
+  /usr/include/json-c/json_tokener.h \
+  /usr/include/json-c/json_types.h \
+  /usr/include/json-c/json_util.h \
+  /usr/include/json-c/linkhash.h \
+  /usr/include/json-c/printbuf.h \
   /usr/include/limits.h \
   /usr/include/linux/errno.h \
   /usr/include/linux/limits.h \
@@ -740,6 +795,7 @@ CMakeFiles/circle.dir/src/act.informative.c.o: /home/krynn/code/src/act.informat
   /usr/include/mariadb/mariadb_version.h \
   /usr/include/mariadb/mysql.h \
   /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
   /usr/include/stdio.h \
   /usr/include/stdlib.h \
   /usr/include/string.h \
@@ -770,6 +826,8 @@ CMakeFiles/circle.dir/src/act.informative.c.o: /home/krynn/code/src/act.informat
   /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
   /usr/include/x86_64-linux-gnu/bits/select.h \
   /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
   /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
   /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
   /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
@@ -803,6 +861,7 @@ CMakeFiles/circle.dir/src/act.informative.c.o: /home/krynn/code/src/act.informat
   /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
   /usr/include/x86_64-linux-gnu/bits/waitflags.h \
   /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
   /usr/include/x86_64-linux-gnu/bits/wordsize.h \
   /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
   /usr/include/x86_64-linux-gnu/gnu/stubs.h \
@@ -814,6 +873,7 @@ CMakeFiles/circle.dir/src/act.informative.c.o: /home/krynn/code/src/act.informat
   /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
   /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
   /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h \
   /usr/lib/gcc/x86_64-linux-gnu/15/include/syslimits.h
 
 CMakeFiles/circle.dir/src/act.item.c.o: /home/krynn/code/src/act.item.c \
@@ -825,6 +885,8 @@ CMakeFiles/circle.dir/src/act.item.c.o: /home/krynn/code/src/act.item.c \
   /home/krynn/code/src/bool.h \
   /home/krynn/code/src/campaign.h \
   /home/krynn/code/src/clan.h \
+  /home/krynn/code/src/clan_access.h \
+  /home/krynn/code/src/clan_enchant.h \
   /home/krynn/code/src/class.h \
   /home/krynn/code/src/comm.h \
   /home/krynn/code/src/conf.h \
@@ -834,6 +896,7 @@ CMakeFiles/circle.dir/src/act.item.c.o: /home/krynn/code/src/act.item.c \
   /home/krynn/code/src/db.h \
   /home/krynn/code/src/dg_event.h \
   /home/krynn/code/src/dg_scripts.h \
+  /home/krynn/code/src/epic_feats.h \
   /home/krynn/code/src/feats.h \
   /home/krynn/code/src/fight.h \
   /home/krynn/code/src/genobj.h \
@@ -986,16 +1049,21 @@ CMakeFiles/circle.dir/src/act.offensive.c.o: /home/krynn/code/src/act.offensive.
   /home/krynn/code/src/actionqueues.h \
   /home/krynn/code/src/actions.h \
   /home/krynn/code/src/assign_wpn_armor.h \
+  /home/krynn/code/src/bloodlines.h \
   /home/krynn/code/src/bool.h \
   /home/krynn/code/src/campaign.h \
   /home/krynn/code/src/class.h \
+  /home/krynn/code/src/class_improvements.h \
   /home/krynn/code/src/comm.h \
   /home/krynn/code/src/conf.h \
   /home/krynn/code/src/constants.h \
   /home/krynn/code/src/db.h \
   /home/krynn/code/src/dg_event.h \
+  /home/krynn/code/src/dg_scripts.h \
   /home/krynn/code/src/domains_schools.h \
   /home/krynn/code/src/encounters.h \
+  /home/krynn/code/src/epic_feats.h \
+  /home/krynn/code/src/epic_feats2.h \
   /home/krynn/code/src/epic_magic.h \
   /home/krynn/code/src/evolutions.h \
   /home/krynn/code/src/feats.h \
@@ -1140,6 +1208,7 @@ CMakeFiles/circle.dir/src/act.other.c.o: /home/krynn/code/src/act.other.c \
   /home/krynn/code/src/dg_event.h \
   /home/krynn/code/src/dg_scripts.h \
   /home/krynn/code/src/domains_schools.h \
+  /home/krynn/code/src/epic_feats.h \
   /home/krynn/code/src/evolutions.h \
   /home/krynn/code/src/feats.h \
   /home/krynn/code/src/fight.h \
@@ -1157,6 +1226,7 @@ CMakeFiles/circle.dir/src/act.other.c.o: /home/krynn/code/src/act.other.c \
   /home/krynn/code/src/legendary_transaction.h \
   /home/krynn/code/src/lists.h \
   /home/krynn/code/src/mail.h \
+  /home/krynn/code/src/mob_utils.h \
   /home/krynn/code/src/modify.h \
   /home/krynn/code/src/mud_event.h \
   /home/krynn/code/src/mud_options.h \
@@ -1192,6 +1262,22 @@ CMakeFiles/circle.dir/src/act.other.c.o: /home/krynn/code/src/act.other.c \
   /usr/include/errno.h \
   /usr/include/features-time64.h \
   /usr/include/features.h \
+  /usr/include/inttypes.h \
+  /usr/include/json-c/arraylist.h \
+  /usr/include/json-c/debug.h \
+  /usr/include/json-c/json.h \
+  /usr/include/json-c/json_c_version.h \
+  /usr/include/json-c/json_config.h \
+  /usr/include/json-c/json_inttypes.h \
+  /usr/include/json-c/json_object.h \
+  /usr/include/json-c/json_object_iterator.h \
+  /usr/include/json-c/json_patch.h \
+  /usr/include/json-c/json_pointer.h \
+  /usr/include/json-c/json_tokener.h \
+  /usr/include/json-c/json_types.h \
+  /usr/include/json-c/json_util.h \
+  /usr/include/json-c/linkhash.h \
+  /usr/include/json-c/printbuf.h \
   /usr/include/limits.h \
   /usr/include/linux/errno.h \
   /usr/include/linux/limits.h \
@@ -1480,6 +1566,7 @@ CMakeFiles/circle.dir/src/act.wizard.c.o: /home/krynn/code/src/act.wizard.c \
   /usr/include/mariadb/mysql.h \
   /usr/include/pthread.h \
   /usr/include/sched.h \
+  /usr/include/signal.h \
   /usr/include/stdc-predef.h \
   /usr/include/stdint.h \
   /usr/include/stdio.h \
@@ -1514,6 +1601,18 @@ CMakeFiles/circle.dir/src/act.wizard.c.o: /home/krynn/code/src/act.wizard.c \
   /usr/include/x86_64-linux-gnu/bits/sched.h \
   /usr/include/x86_64-linux-gnu/bits/select.h \
   /usr/include/x86_64-linux-gnu/bits/setjmp.h \
+  /usr/include/x86_64-linux-gnu/bits/sigaction.h \
+  /usr/include/x86_64-linux-gnu/bits/sigcontext.h \
+  /usr/include/x86_64-linux-gnu/bits/sigevent-consts.h \
+  /usr/include/x86_64-linux-gnu/bits/siginfo-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/siginfo-consts.h \
+  /usr/include/x86_64-linux-gnu/bits/signal_ext.h \
+  /usr/include/x86_64-linux-gnu/bits/signum-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/signum-generic.h \
+  /usr/include/x86_64-linux-gnu/bits/sigstack.h \
+  /usr/include/x86_64-linux-gnu/bits/sigstksz.h \
+  /usr/include/x86_64-linux-gnu/bits/sigthread.h \
+  /usr/include/x86_64-linux-gnu/bits/ss_flags.h \
   /usr/include/x86_64-linux-gnu/bits/stat.h \
   /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
   /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
@@ -1535,15 +1634,23 @@ CMakeFiles/circle.dir/src/act.wizard.c.o: /home/krynn/code/src/act.wizard.c \
   /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigval_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/idtype_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sig_atomic_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigevent_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/siginfo_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigval_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/stack_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
   /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
   /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
   /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_sigstack.h \
   /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
   /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
   /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
@@ -1563,6 +1670,8 @@ CMakeFiles/circle.dir/src/act.wizard.c.o: /home/krynn/code/src/act.wizard.c \
   /usr/include/x86_64-linux-gnu/sys/stat.h \
   /usr/include/x86_64-linux-gnu/sys/time.h \
   /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/include/x86_64-linux-gnu/sys/ucontext.h \
+  /usr/include/x86_64-linux-gnu/sys/wait.h \
   /usr/lib/gcc/x86_64-linux-gnu/15/include/limits.h \
   /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
   /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
@@ -2388,12 +2497,15 @@ CMakeFiles/circle.dir/src/alchemy.c.o: /home/krynn/code/src/alchemy.c \
   /home/krynn/code/src/dg_event.h \
   /home/krynn/code/src/dg_scripts.h \
   /home/krynn/code/src/domains_schools.h \
+  /home/krynn/code/src/epic_feats2.h \
   /home/krynn/code/src/evolutions.h \
   /home/krynn/code/src/feats.h \
   /home/krynn/code/src/fight.h \
   /home/krynn/code/src/handler.h \
   /home/krynn/code/src/helpers.h \
   /home/krynn/code/src/interpreter.h \
+  /home/krynn/code/src/legendary.h \
+  /home/krynn/code/src/legendary_effects.h \
   /home/krynn/code/src/lists.h \
   /home/krynn/code/src/modify.h \
   /home/krynn/code/src/mud_event.h \
@@ -2421,6 +2533,7 @@ CMakeFiles/circle.dir/src/alchemy.c.o: /home/krynn/code/src/alchemy.c \
   /usr/include/linux/errno.h \
   /usr/include/linux/limits.h \
   /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
   /usr/include/stdio.h \
   /usr/include/stdlib.h \
   /usr/include/string.h \
@@ -2451,6 +2564,8 @@ CMakeFiles/circle.dir/src/alchemy.c.o: /home/krynn/code/src/alchemy.c \
   /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
   /usr/include/x86_64-linux-gnu/bits/select.h \
   /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
   /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
   /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
   /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
@@ -2484,6 +2599,7 @@ CMakeFiles/circle.dir/src/alchemy.c.o: /home/krynn/code/src/alchemy.c \
   /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
   /usr/include/x86_64-linux-gnu/bits/waitflags.h \
   /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
   /usr/include/x86_64-linux-gnu/bits/wordsize.h \
   /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
   /usr/include/x86_64-linux-gnu/gnu/stubs.h \
@@ -2495,6 +2611,7 @@ CMakeFiles/circle.dir/src/alchemy.c.o: /home/krynn/code/src/alchemy.c \
   /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
   /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
   /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h \
   /usr/lib/gcc/x86_64-linux-gnu/15/include/syslimits.h
 
 CMakeFiles/circle.dir/src/asciimap.c.o: /home/krynn/code/src/asciimap.c \
@@ -2631,6 +2748,7 @@ CMakeFiles/circle.dir/src/assign_wpn_armor.c.o: /home/krynn/code/src/assign_wpn_
   /home/krynn/code/src/dg_event.h \
   /home/krynn/code/src/domains_schools.h \
   /home/krynn/code/src/feats.h \
+  /home/krynn/code/src/fight.h \
   /home/krynn/code/src/handler.h \
   /home/krynn/code/src/helpers.h \
   /home/krynn/code/src/lists.h \
@@ -2740,6 +2858,7 @@ CMakeFiles/circle.dir/src/auction_house.c.o: /home/krynn/code/src/auction_house.
   /home/krynn/code/src/auction_house.h \
   /home/krynn/code/src/bool.h \
   /home/krynn/code/src/campaign.h \
+  /home/krynn/code/src/clan_access.h \
   /home/krynn/code/src/comm.h \
   /home/krynn/code/src/conf.h \
   /home/krynn/code/src/constants.h \
@@ -3098,10 +3217,14 @@ CMakeFiles/circle.dir/src/bardic_performance.c.o: /home/krynn/code/src/bardic_pe
   /home/krynn/code/src/bardic_performance.h \
   /home/krynn/code/src/bool.h \
   /home/krynn/code/src/campaign.h \
+  /home/krynn/code/src/class_improvements.h \
   /home/krynn/code/src/comm.h \
   /home/krynn/code/src/conf.h \
   /home/krynn/code/src/db.h \
   /home/krynn/code/src/dg_event.h \
+  /home/krynn/code/src/epic_feats.h \
+  /home/krynn/code/src/epic_feats2.h \
+  /home/krynn/code/src/epic_feats3.h \
   /home/krynn/code/src/feats.h \
   /home/krynn/code/src/fight.h \
   /home/krynn/code/src/handler.h \
@@ -3988,6 +4111,8 @@ CMakeFiles/circle.dir/src/clan.c.o: /home/krynn/code/src/clan.c \
   /home/krynn/code/src/campaign.h \
   /home/krynn/code/src/clan.h \
   /home/krynn/code/src/clan_benefits.h \
+  /home/krynn/code/src/clan_persistence.h \
+  /home/krynn/code/src/clan_progression.h \
   /home/krynn/code/src/clan_transactions.h \
   /home/krynn/code/src/comm.h \
   /home/krynn/code/src/conf.h \
@@ -4004,6 +4129,4285 @@ CMakeFiles/circle.dir/src/clan.c.o: /home/krynn/code/src/clan.c \
   /home/krynn/code/src/perfmon.h \
   /home/krynn/code/src/protocol.h \
   /home/krynn/code/src/screen.h \
+  /home/krynn/code/src/spells.h \
+  /home/krynn/code/src/structs.h \
+  /home/krynn/code/src/sysdep.h \
+  /home/krynn/code/src/utils.h \
+  /home/krynn/code/src/vnums.h \
+  /usr/include/alloca.h \
+  /usr/include/asm-generic/errno-base.h \
+  /usr/include/asm-generic/errno.h \
+  /usr/include/assert.h \
+  /usr/include/crypt.h \
+  /usr/include/ctype.h \
+  /usr/include/endian.h \
+  /usr/include/errno.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/limits.h \
+  /usr/include/linux/errno.h \
+  /usr/include/linux/limits.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
+  /usr/include/stdio.h \
+  /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/time.h \
+  /usr/include/unistd.h \
+  /usr/include/x86_64-linux-gnu/asm/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/confname.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/environments.h \
+  /usr/include/x86_64-linux-gnu/bits/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_core.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_posix.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
+  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/sys/time.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/limits.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/syslimits.h
+
+CMakeFiles/circle.dir/src/clan_access.c.o: /home/krynn/code/src/clan_access.c \
+  /home/krynn/code/src/bool.h \
+  /home/krynn/code/src/campaign.h \
+  /home/krynn/code/src/clan_access.h \
+  /home/krynn/code/src/clan_awards.h \
+  /home/krynn/code/src/clan_persistence.h \
+  /home/krynn/code/src/clan_progression.h \
+  /home/krynn/code/src/clan_repository.h \
+  /home/krynn/code/src/clan_rewards.h \
+  /home/krynn/code/src/comm.h \
+  /home/krynn/code/src/conf.h \
+  /home/krynn/code/src/db.h \
+  /home/krynn/code/src/helpers.h \
+  /home/krynn/code/src/lists.h \
+  /home/krynn/code/src/mud_options.h \
+  /home/krynn/code/src/mysql.h \
+  /home/krynn/code/src/perfmon.h \
+  /home/krynn/code/src/protocol.h \
+  /home/krynn/code/src/structs.h \
+  /home/krynn/code/src/sysdep.h \
+  /home/krynn/code/src/utils.h \
+  /home/krynn/code/src/vnums.h \
+  /usr/include/alloca.h \
+  /usr/include/asm-generic/errno-base.h \
+  /usr/include/asm-generic/errno.h \
+  /usr/include/assert.h \
+  /usr/include/crypt.h \
+  /usr/include/ctype.h \
+  /usr/include/endian.h \
+  /usr/include/errno.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/inttypes.h \
+  /usr/include/limits.h \
+  /usr/include/linux/errno.h \
+  /usr/include/linux/limits.h \
+  /usr/include/mariadb/ma_list.h \
+  /usr/include/mariadb/mariadb_com.h \
+  /usr/include/mariadb/mariadb_ctype.h \
+  /usr/include/mariadb/mariadb_stmt.h \
+  /usr/include/mariadb/mariadb_version.h \
+  /usr/include/mariadb/mysql.h \
+  /usr/include/pthread.h \
+  /usr/include/sched.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
+  /usr/include/stdio.h \
+  /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/time.h \
+  /usr/include/unistd.h \
+  /usr/include/x86_64-linux-gnu/asm/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/confname.h \
+  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/environments.h \
+  /usr/include/x86_64-linux-gnu/bits/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_core.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_posix.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/sched.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
+  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/sys/time.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/limits.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/syslimits.h
+
+CMakeFiles/circle.dir/src/clan_awards.c.o: /home/krynn/code/src/clan_awards.c \
+  /home/krynn/code/src/clan_awards.h \
+  /home/krynn/code/src/clan_progression.h \
+  /home/krynn/code/src/clan_repository.h \
+  /home/krynn/code/src/clan_rewards.h \
+  /usr/include/ctype.h \
+  /usr/include/endian.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/mariadb/ma_list.h \
+  /usr/include/mariadb/mariadb_com.h \
+  /usr/include/mariadb/mariadb_ctype.h \
+  /usr/include/mariadb/mariadb_stmt.h \
+  /usr/include/mariadb/mariadb_version.h \
+  /usr/include/mariadb/mysql.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/time.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h
+
+CMakeFiles/circle.dir/src/clan_boot.c.o: /home/krynn/code/src/clan_boot.c \
+  /home/krynn/code/src/bool.h \
+  /home/krynn/code/src/campaign.h \
+  /home/krynn/code/src/clan.h \
+  /home/krynn/code/src/clan_legacy_fields.h \
+  /home/krynn/code/src/clan_persistence.h \
+  /home/krynn/code/src/clan_progression.h \
+  /home/krynn/code/src/clan_repository.h \
+  /home/krynn/code/src/comm.h \
+  /home/krynn/code/src/conf.h \
+  /home/krynn/code/src/db.h \
+  /home/krynn/code/src/dotenv.h \
+  /home/krynn/code/src/helpers.h \
+  /home/krynn/code/src/lists.h \
+  /home/krynn/code/src/mud_options.h \
+  /home/krynn/code/src/mysql.h \
+  /home/krynn/code/src/perfmon.h \
+  /home/krynn/code/src/protocol.h \
+  /home/krynn/code/src/structs.h \
+  /home/krynn/code/src/sysdep.h \
+  /home/krynn/code/src/utils.h \
+  /home/krynn/code/src/vnums.h \
+  /usr/include/alloca.h \
+  /usr/include/asm-generic/errno-base.h \
+  /usr/include/asm-generic/errno.h \
+  /usr/include/assert.h \
+  /usr/include/crypt.h \
+  /usr/include/ctype.h \
+  /usr/include/endian.h \
+  /usr/include/errno.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/inttypes.h \
+  /usr/include/json-c/arraylist.h \
+  /usr/include/json-c/debug.h \
+  /usr/include/json-c/json.h \
+  /usr/include/json-c/json_c_version.h \
+  /usr/include/json-c/json_config.h \
+  /usr/include/json-c/json_inttypes.h \
+  /usr/include/json-c/json_object.h \
+  /usr/include/json-c/json_object_iterator.h \
+  /usr/include/json-c/json_patch.h \
+  /usr/include/json-c/json_pointer.h \
+  /usr/include/json-c/json_tokener.h \
+  /usr/include/json-c/json_types.h \
+  /usr/include/json-c/json_util.h \
+  /usr/include/json-c/linkhash.h \
+  /usr/include/json-c/printbuf.h \
+  /usr/include/limits.h \
+  /usr/include/linux/errno.h \
+  /usr/include/linux/limits.h \
+  /usr/include/mariadb/ma_list.h \
+  /usr/include/mariadb/mariadb_com.h \
+  /usr/include/mariadb/mariadb_ctype.h \
+  /usr/include/mariadb/mariadb_stmt.h \
+  /usr/include/mariadb/mariadb_version.h \
+  /usr/include/mariadb/mysql.h \
+  /usr/include/pthread.h \
+  /usr/include/sched.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
+  /usr/include/stdio.h \
+  /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/time.h \
+  /usr/include/unistd.h \
+  /usr/include/x86_64-linux-gnu/asm/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/confname.h \
+  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/environments.h \
+  /usr/include/x86_64-linux-gnu/bits/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_core.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_posix.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/sched.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
+  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/sys/time.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/limits.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/syslimits.h
+
+CMakeFiles/circle.dir/src/clan_buff_activation.c.o: /home/krynn/code/src/clan_buff_activation.c \
+  /home/krynn/code/src/clan_awards.h \
+  /home/krynn/code/src/clan_buff_activation.h \
+  /home/krynn/code/src/clan_buff_queries.h \
+  /home/krynn/code/src/clan_progression.h \
+  /home/krynn/code/src/clan_repository.h \
+  /home/krynn/code/src/clan_rewards.h \
+  /usr/include/ctype.h \
+  /usr/include/endian.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/mariadb/ma_list.h \
+  /usr/include/mariadb/mariadb_com.h \
+  /usr/include/mariadb/mariadb_ctype.h \
+  /usr/include/mariadb/mariadb_stmt.h \
+  /usr/include/mariadb/mariadb_version.h \
+  /usr/include/mariadb/mysql.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/time.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h
+
+CMakeFiles/circle.dir/src/clan_buff_commands.c.o: /home/krynn/code/src/clan_buff_commands.c \
+  /home/krynn/code/src/bool.h \
+  /home/krynn/code/src/campaign.h \
+  /home/krynn/code/src/clan.h \
+  /home/krynn/code/src/clan_buff_activation.h \
+  /home/krynn/code/src/clan_buff_commands.h \
+  /home/krynn/code/src/clan_buff_lifecycle.h \
+  /home/krynn/code/src/clan_buff_queries.h \
+  /home/krynn/code/src/clan_buff_runtime.h \
+  /home/krynn/code/src/clan_display.h \
+  /home/krynn/code/src/clan_persistence.h \
+  /home/krynn/code/src/clan_progression.h \
+  /home/krynn/code/src/clan_repository.h \
+  /home/krynn/code/src/clan_rewards.h \
+  /home/krynn/code/src/clan_status.h \
+  /home/krynn/code/src/comm.h \
+  /home/krynn/code/src/conf.h \
+  /home/krynn/code/src/db.h \
+  /home/krynn/code/src/helpers.h \
+  /home/krynn/code/src/legendary_identity.h \
+  /home/krynn/code/src/lists.h \
+  /home/krynn/code/src/mud_options.h \
+  /home/krynn/code/src/mysql.h \
+  /home/krynn/code/src/perfmon.h \
+  /home/krynn/code/src/protocol.h \
+  /home/krynn/code/src/structs.h \
+  /home/krynn/code/src/sysdep.h \
+  /home/krynn/code/src/utils.h \
+  /home/krynn/code/src/vnums.h \
+  /usr/include/alloca.h \
+  /usr/include/asm-generic/errno-base.h \
+  /usr/include/asm-generic/errno.h \
+  /usr/include/assert.h \
+  /usr/include/crypt.h \
+  /usr/include/ctype.h \
+  /usr/include/endian.h \
+  /usr/include/errno.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/inttypes.h \
+  /usr/include/json-c/arraylist.h \
+  /usr/include/json-c/debug.h \
+  /usr/include/json-c/json.h \
+  /usr/include/json-c/json_c_version.h \
+  /usr/include/json-c/json_config.h \
+  /usr/include/json-c/json_inttypes.h \
+  /usr/include/json-c/json_object.h \
+  /usr/include/json-c/json_object_iterator.h \
+  /usr/include/json-c/json_patch.h \
+  /usr/include/json-c/json_pointer.h \
+  /usr/include/json-c/json_tokener.h \
+  /usr/include/json-c/json_types.h \
+  /usr/include/json-c/json_util.h \
+  /usr/include/json-c/linkhash.h \
+  /usr/include/json-c/printbuf.h \
+  /usr/include/limits.h \
+  /usr/include/linux/errno.h \
+  /usr/include/linux/limits.h \
+  /usr/include/mariadb/ma_list.h \
+  /usr/include/mariadb/mariadb_com.h \
+  /usr/include/mariadb/mariadb_ctype.h \
+  /usr/include/mariadb/mariadb_stmt.h \
+  /usr/include/mariadb/mariadb_version.h \
+  /usr/include/mariadb/mysql.h \
+  /usr/include/pthread.h \
+  /usr/include/sched.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
+  /usr/include/stdio.h \
+  /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/time.h \
+  /usr/include/unistd.h \
+  /usr/include/x86_64-linux-gnu/asm/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/confname.h \
+  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/environments.h \
+  /usr/include/x86_64-linux-gnu/bits/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_core.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_posix.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/sched.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
+  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/sys/time.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/limits.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/syslimits.h
+
+CMakeFiles/circle.dir/src/clan_buff_commit.c.o: /home/krynn/code/src/clan_buff_commit.c \
+  /home/krynn/code/src/clan_buff_activation.h \
+  /home/krynn/code/src/clan_buff_queries.h \
+  /home/krynn/code/src/clan_progression.h \
+  /home/krynn/code/src/clan_repository.h \
+  /usr/include/asm-generic/errno-base.h \
+  /usr/include/asm-generic/errno.h \
+  /usr/include/ctype.h \
+  /usr/include/errno.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/inttypes.h \
+  /usr/include/json-c/arraylist.h \
+  /usr/include/json-c/debug.h \
+  /usr/include/json-c/json.h \
+  /usr/include/json-c/json_c_version.h \
+  /usr/include/json-c/json_config.h \
+  /usr/include/json-c/json_inttypes.h \
+  /usr/include/json-c/json_object.h \
+  /usr/include/json-c/json_object_iterator.h \
+  /usr/include/json-c/json_patch.h \
+  /usr/include/json-c/json_pointer.h \
+  /usr/include/json-c/json_tokener.h \
+  /usr/include/json-c/json_types.h \
+  /usr/include/json-c/json_util.h \
+  /usr/include/json-c/linkhash.h \
+  /usr/include/json-c/printbuf.h \
+  /usr/include/linux/errno.h \
+  /usr/include/mariadb/ma_list.h \
+  /usr/include/mariadb/mariadb_com.h \
+  /usr/include/mariadb/mariadb_ctype.h \
+  /usr/include/mariadb/mariadb_stmt.h \
+  /usr/include/mariadb/mariadb_version.h \
+  /usr/include/mariadb/mysql.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
+  /usr/include/stdio.h \
+  /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/time.h \
+  /usr/include/x86_64-linux-gnu/asm/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h
+
+CMakeFiles/circle.dir/src/clan_buff_lifecycle.c.o: /home/krynn/code/src/clan_buff_lifecycle.c \
+  /home/krynn/code/src/clan_awards.h \
+  /home/krynn/code/src/clan_buff_activation.h \
+  /home/krynn/code/src/clan_buff_lifecycle.h \
+  /home/krynn/code/src/clan_buff_queries.h \
+  /home/krynn/code/src/clan_progression.h \
+  /home/krynn/code/src/clan_repository.h \
+  /home/krynn/code/src/clan_rewards.h \
+  /usr/include/asm-generic/errno-base.h \
+  /usr/include/asm-generic/errno.h \
+  /usr/include/ctype.h \
+  /usr/include/errno.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/inttypes.h \
+  /usr/include/json-c/arraylist.h \
+  /usr/include/json-c/debug.h \
+  /usr/include/json-c/json.h \
+  /usr/include/json-c/json_c_version.h \
+  /usr/include/json-c/json_config.h \
+  /usr/include/json-c/json_inttypes.h \
+  /usr/include/json-c/json_object.h \
+  /usr/include/json-c/json_object_iterator.h \
+  /usr/include/json-c/json_patch.h \
+  /usr/include/json-c/json_pointer.h \
+  /usr/include/json-c/json_tokener.h \
+  /usr/include/json-c/json_types.h \
+  /usr/include/json-c/json_util.h \
+  /usr/include/json-c/linkhash.h \
+  /usr/include/json-c/printbuf.h \
+  /usr/include/linux/errno.h \
+  /usr/include/mariadb/ma_list.h \
+  /usr/include/mariadb/mariadb_com.h \
+  /usr/include/mariadb/mariadb_ctype.h \
+  /usr/include/mariadb/mariadb_stmt.h \
+  /usr/include/mariadb/mariadb_version.h \
+  /usr/include/mariadb/mysql.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
+  /usr/include/stdio.h \
+  /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/time.h \
+  /usr/include/x86_64-linux-gnu/asm/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h
+
+CMakeFiles/circle.dir/src/clan_buff_queries.c.o: /home/krynn/code/src/clan_buff_queries.c \
+  /home/krynn/code/src/clan_buff_queries.h \
+  /home/krynn/code/src/clan_progression.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h
+
+CMakeFiles/circle.dir/src/clan_buff_runtime.c.o: /home/krynn/code/src/clan_buff_runtime.c \
+  /home/krynn/code/src/bool.h \
+  /home/krynn/code/src/campaign.h \
+  /home/krynn/code/src/clan.h \
+  /home/krynn/code/src/clan_awards.h \
+  /home/krynn/code/src/clan_buff_activation.h \
+  /home/krynn/code/src/clan_buff_lifecycle.h \
+  /home/krynn/code/src/clan_buff_queries.h \
+  /home/krynn/code/src/clan_buff_runtime.h \
+  /home/krynn/code/src/clan_persistence.h \
+  /home/krynn/code/src/clan_progression.h \
+  /home/krynn/code/src/clan_repository.h \
+  /home/krynn/code/src/clan_rewards.h \
+  /home/krynn/code/src/comm.h \
+  /home/krynn/code/src/conf.h \
+  /home/krynn/code/src/db.h \
+  /home/krynn/code/src/helpers.h \
+  /home/krynn/code/src/lists.h \
+  /home/krynn/code/src/mud_options.h \
+  /home/krynn/code/src/mysql.h \
+  /home/krynn/code/src/perfmon.h \
+  /home/krynn/code/src/protocol.h \
+  /home/krynn/code/src/structs.h \
+  /home/krynn/code/src/sysdep.h \
+  /home/krynn/code/src/utils.h \
+  /home/krynn/code/src/vnums.h \
+  /usr/include/alloca.h \
+  /usr/include/asm-generic/errno-base.h \
+  /usr/include/asm-generic/errno.h \
+  /usr/include/assert.h \
+  /usr/include/crypt.h \
+  /usr/include/ctype.h \
+  /usr/include/endian.h \
+  /usr/include/errno.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/inttypes.h \
+  /usr/include/json-c/arraylist.h \
+  /usr/include/json-c/debug.h \
+  /usr/include/json-c/json.h \
+  /usr/include/json-c/json_c_version.h \
+  /usr/include/json-c/json_config.h \
+  /usr/include/json-c/json_inttypes.h \
+  /usr/include/json-c/json_object.h \
+  /usr/include/json-c/json_object_iterator.h \
+  /usr/include/json-c/json_patch.h \
+  /usr/include/json-c/json_pointer.h \
+  /usr/include/json-c/json_tokener.h \
+  /usr/include/json-c/json_types.h \
+  /usr/include/json-c/json_util.h \
+  /usr/include/json-c/linkhash.h \
+  /usr/include/json-c/printbuf.h \
+  /usr/include/limits.h \
+  /usr/include/linux/errno.h \
+  /usr/include/linux/limits.h \
+  /usr/include/mariadb/ma_list.h \
+  /usr/include/mariadb/mariadb_com.h \
+  /usr/include/mariadb/mariadb_ctype.h \
+  /usr/include/mariadb/mariadb_stmt.h \
+  /usr/include/mariadb/mariadb_version.h \
+  /usr/include/mariadb/mysql.h \
+  /usr/include/pthread.h \
+  /usr/include/sched.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
+  /usr/include/stdio.h \
+  /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/time.h \
+  /usr/include/unistd.h \
+  /usr/include/x86_64-linux-gnu/asm/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/confname.h \
+  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/environments.h \
+  /usr/include/x86_64-linux-gnu/bits/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_core.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_posix.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/sched.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
+  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/sys/time.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/limits.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/syslimits.h
+
+CMakeFiles/circle.dir/src/clan_combat.c.o: /home/krynn/code/src/clan_combat.c \
+  /home/krynn/code/src/clan_combat.h \
+  /home/krynn/code/src/clan_progression.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/limits.h \
+  /usr/include/linux/limits.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/limits.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/syslimits.h
+
+CMakeFiles/circle.dir/src/clan_commands.c.o: /home/krynn/code/src/clan_commands.c \
+  /home/krynn/code/src/bool.h \
+  /home/krynn/code/src/campaign.h \
+  /home/krynn/code/src/clan.h \
+  /home/krynn/code/src/clan_awards.h \
+  /home/krynn/code/src/clan_buff_queries.h \
+  /home/krynn/code/src/clan_buff_runtime.h \
+  /home/krynn/code/src/clan_commands.h \
+  /home/krynn/code/src/clan_display.h \
+  /home/krynn/code/src/clan_persistence.h \
+  /home/krynn/code/src/clan_progression.h \
+  /home/krynn/code/src/clan_repository.h \
+  /home/krynn/code/src/clan_rewards.h \
+  /home/krynn/code/src/clan_status.h \
+  /home/krynn/code/src/comm.h \
+  /home/krynn/code/src/conf.h \
+  /home/krynn/code/src/db.h \
+  /home/krynn/code/src/helpers.h \
+  /home/krynn/code/src/interpreter.h \
+  /home/krynn/code/src/lists.h \
+  /home/krynn/code/src/mud_options.h \
+  /home/krynn/code/src/mysql.h \
+  /home/krynn/code/src/perfmon.h \
+  /home/krynn/code/src/protocol.h \
+  /home/krynn/code/src/structs.h \
+  /home/krynn/code/src/sysdep.h \
+  /home/krynn/code/src/utils.h \
+  /home/krynn/code/src/vnums.h \
+  /usr/include/alloca.h \
+  /usr/include/asm-generic/errno-base.h \
+  /usr/include/asm-generic/errno.h \
+  /usr/include/assert.h \
+  /usr/include/crypt.h \
+  /usr/include/ctype.h \
+  /usr/include/endian.h \
+  /usr/include/errno.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/inttypes.h \
+  /usr/include/json-c/arraylist.h \
+  /usr/include/json-c/debug.h \
+  /usr/include/json-c/json.h \
+  /usr/include/json-c/json_c_version.h \
+  /usr/include/json-c/json_config.h \
+  /usr/include/json-c/json_inttypes.h \
+  /usr/include/json-c/json_object.h \
+  /usr/include/json-c/json_object_iterator.h \
+  /usr/include/json-c/json_patch.h \
+  /usr/include/json-c/json_pointer.h \
+  /usr/include/json-c/json_tokener.h \
+  /usr/include/json-c/json_types.h \
+  /usr/include/json-c/json_util.h \
+  /usr/include/json-c/linkhash.h \
+  /usr/include/json-c/printbuf.h \
+  /usr/include/limits.h \
+  /usr/include/linux/errno.h \
+  /usr/include/linux/limits.h \
+  /usr/include/mariadb/ma_list.h \
+  /usr/include/mariadb/mariadb_com.h \
+  /usr/include/mariadb/mariadb_ctype.h \
+  /usr/include/mariadb/mariadb_stmt.h \
+  /usr/include/mariadb/mariadb_version.h \
+  /usr/include/mariadb/mysql.h \
+  /usr/include/pthread.h \
+  /usr/include/sched.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
+  /usr/include/stdio.h \
+  /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/time.h \
+  /usr/include/unistd.h \
+  /usr/include/x86_64-linux-gnu/asm/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/confname.h \
+  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/environments.h \
+  /usr/include/x86_64-linux-gnu/bits/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_core.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_posix.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/sched.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
+  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/sys/time.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/limits.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/syslimits.h
+
+CMakeFiles/circle.dir/src/clan_delivery.c.o: /home/krynn/code/src/clan_delivery.c \
+  /home/krynn/code/src/clan_awards.h \
+  /home/krynn/code/src/clan_buff_queries.h \
+  /home/krynn/code/src/clan_contract_rotation.h \
+  /home/krynn/code/src/clan_delivery.h \
+  /home/krynn/code/src/clan_progression.h \
+  /home/krynn/code/src/clan_repository.h \
+  /home/krynn/code/src/clan_rewards.h \
+  /home/krynn/code/src/clan_status.h \
+  /home/krynn/code/src/crafting_recipes.h \
+  /usr/include/alloca.h \
+  /usr/include/ctype.h \
+  /usr/include/endian.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/inttypes.h \
+  /usr/include/json-c/arraylist.h \
+  /usr/include/json-c/debug.h \
+  /usr/include/json-c/json.h \
+  /usr/include/json-c/json_c_version.h \
+  /usr/include/json-c/json_config.h \
+  /usr/include/json-c/json_inttypes.h \
+  /usr/include/json-c/json_object.h \
+  /usr/include/json-c/json_object_iterator.h \
+  /usr/include/json-c/json_patch.h \
+  /usr/include/json-c/json_pointer.h \
+  /usr/include/json-c/json_tokener.h \
+  /usr/include/json-c/json_types.h \
+  /usr/include/json-c/json_util.h \
+  /usr/include/json-c/linkhash.h \
+  /usr/include/json-c/printbuf.h \
+  /usr/include/mariadb/ma_list.h \
+  /usr/include/mariadb/mariadb_com.h \
+  /usr/include/mariadb/mariadb_ctype.h \
+  /usr/include/mariadb/mariadb_stmt.h \
+  /usr/include/mariadb/mariadb_version.h \
+  /usr/include/mariadb/mysql.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
+  /usr/include/stdio.h \
+  /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/time.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h
+
+CMakeFiles/circle.dir/src/clan_delivery_runtime.c.o: /home/krynn/code/src/clan_delivery_runtime.c \
+  /home/krynn/code/src/bool.h \
+  /home/krynn/code/src/campaign.h \
+  /home/krynn/code/src/clan.h \
+  /home/krynn/code/src/clan_awards.h \
+  /home/krynn/code/src/clan_buff_queries.h \
+  /home/krynn/code/src/clan_buff_runtime.h \
+  /home/krynn/code/src/clan_delivery.h \
+  /home/krynn/code/src/clan_delivery_runtime.h \
+  /home/krynn/code/src/clan_display.h \
+  /home/krynn/code/src/clan_persistence.h \
+  /home/krynn/code/src/clan_progression.h \
+  /home/krynn/code/src/clan_repository.h \
+  /home/krynn/code/src/clan_rewards.h \
+  /home/krynn/code/src/clan_status.h \
+  /home/krynn/code/src/comm.h \
+  /home/krynn/code/src/conf.h \
+  /home/krynn/code/src/constants.h \
+  /home/krynn/code/src/crafting_new.h \
+  /home/krynn/code/src/crafting_recipes.h \
+  /home/krynn/code/src/db.h \
+  /home/krynn/code/src/handler.h \
+  /home/krynn/code/src/helpers.h \
+  /home/krynn/code/src/interpreter.h \
+  /home/krynn/code/src/lists.h \
+  /home/krynn/code/src/mud_options.h \
+  /home/krynn/code/src/mysql.h \
+  /home/krynn/code/src/perfmon.h \
+  /home/krynn/code/src/protocol.h \
+  /home/krynn/code/src/spec_abilities.h \
+  /home/krynn/code/src/structs.h \
+  /home/krynn/code/src/sysdep.h \
+  /home/krynn/code/src/utils.h \
+  /home/krynn/code/src/vnums.h \
+  /usr/include/alloca.h \
+  /usr/include/asm-generic/errno-base.h \
+  /usr/include/asm-generic/errno.h \
+  /usr/include/assert.h \
+  /usr/include/crypt.h \
+  /usr/include/ctype.h \
+  /usr/include/endian.h \
+  /usr/include/errno.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/inttypes.h \
+  /usr/include/json-c/arraylist.h \
+  /usr/include/json-c/debug.h \
+  /usr/include/json-c/json.h \
+  /usr/include/json-c/json_c_version.h \
+  /usr/include/json-c/json_config.h \
+  /usr/include/json-c/json_inttypes.h \
+  /usr/include/json-c/json_object.h \
+  /usr/include/json-c/json_object_iterator.h \
+  /usr/include/json-c/json_patch.h \
+  /usr/include/json-c/json_pointer.h \
+  /usr/include/json-c/json_tokener.h \
+  /usr/include/json-c/json_types.h \
+  /usr/include/json-c/json_util.h \
+  /usr/include/json-c/linkhash.h \
+  /usr/include/json-c/printbuf.h \
+  /usr/include/limits.h \
+  /usr/include/linux/errno.h \
+  /usr/include/linux/limits.h \
+  /usr/include/mariadb/ma_list.h \
+  /usr/include/mariadb/mariadb_com.h \
+  /usr/include/mariadb/mariadb_ctype.h \
+  /usr/include/mariadb/mariadb_stmt.h \
+  /usr/include/mariadb/mariadb_version.h \
+  /usr/include/mariadb/mysql.h \
+  /usr/include/pthread.h \
+  /usr/include/sched.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
+  /usr/include/stdio.h \
+  /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/time.h \
+  /usr/include/unistd.h \
+  /usr/include/x86_64-linux-gnu/asm/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/confname.h \
+  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/environments.h \
+  /usr/include/x86_64-linux-gnu/bits/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_core.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_posix.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/sched.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
+  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/sys/time.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/limits.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/syslimits.h
+
+CMakeFiles/circle.dir/src/clan_economy.c.o: /home/krynn/code/src/clan_economy.c \
+  /home/krynn/code/src/bool.h \
+  /home/krynn/code/src/campaign.h \
+  /home/krynn/code/src/clan.h \
+  /home/krynn/code/src/clan_persistence.h \
+  /home/krynn/code/src/clan_progression.h \
+  /home/krynn/code/src/comm.h \
+  /home/krynn/code/src/conf.h \
+  /home/krynn/code/src/constants.h \
+  /home/krynn/code/src/db.h \
+  /home/krynn/code/src/handler.h \
+  /home/krynn/code/src/helpers.h \
+  /home/krynn/code/src/interpreter.h \
+  /home/krynn/code/src/lists.h \
+  /home/krynn/code/src/mud_options.h \
+  /home/krynn/code/src/perfmon.h \
+  /home/krynn/code/src/protocol.h \
+  /home/krynn/code/src/shop.h \
+  /home/krynn/code/src/structs.h \
+  /home/krynn/code/src/sysdep.h \
+  /home/krynn/code/src/utils.h \
+  /home/krynn/code/src/vnums.h \
+  /usr/include/alloca.h \
+  /usr/include/asm-generic/errno-base.h \
+  /usr/include/asm-generic/errno.h \
+  /usr/include/assert.h \
+  /usr/include/crypt.h \
+  /usr/include/ctype.h \
+  /usr/include/endian.h \
+  /usr/include/errno.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/limits.h \
+  /usr/include/linux/errno.h \
+  /usr/include/linux/limits.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
+  /usr/include/stdio.h \
+  /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/time.h \
+  /usr/include/unistd.h \
+  /usr/include/x86_64-linux-gnu/asm/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/confname.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/environments.h \
+  /usr/include/x86_64-linux-gnu/bits/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_core.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_posix.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
+  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/sys/time.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/limits.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/syslimits.h
+
+CMakeFiles/circle.dir/src/clan_edit.c.o: /home/krynn/code/src/clan_edit.c \
+  /home/krynn/code/src/bool.h \
+  /home/krynn/code/src/campaign.h \
+  /home/krynn/code/src/clan.h \
+  /home/krynn/code/src/clan_persistence.h \
+  /home/krynn/code/src/clan_progression.h \
+  /home/krynn/code/src/comm.h \
+  /home/krynn/code/src/conf.h \
+  /home/krynn/code/src/db.h \
+  /home/krynn/code/src/genolc.h \
+  /home/krynn/code/src/help.h \
+  /home/krynn/code/src/helpers.h \
+  /home/krynn/code/src/ibt.h \
+  /home/krynn/code/src/improved-edit.h \
+  /home/krynn/code/src/interpreter.h \
+  /home/krynn/code/src/lists.h \
+  /home/krynn/code/src/modify.h \
+  /home/krynn/code/src/mud_options.h \
+  /home/krynn/code/src/oasis.h \
+  /home/krynn/code/src/perfmon.h \
+  /home/krynn/code/src/protocol.h \
+  /home/krynn/code/src/screen.h \
+  /home/krynn/code/src/structs.h \
+  /home/krynn/code/src/sysdep.h \
+  /home/krynn/code/src/utils.h \
+  /home/krynn/code/src/vnums.h \
+  /usr/include/alloca.h \
+  /usr/include/asm-generic/errno-base.h \
+  /usr/include/asm-generic/errno.h \
+  /usr/include/assert.h \
+  /usr/include/crypt.h \
+  /usr/include/ctype.h \
+  /usr/include/endian.h \
+  /usr/include/errno.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/limits.h \
+  /usr/include/linux/errno.h \
+  /usr/include/linux/limits.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
+  /usr/include/stdio.h \
+  /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/time.h \
+  /usr/include/unistd.h \
+  /usr/include/x86_64-linux-gnu/asm/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/confname.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/environments.h \
+  /usr/include/x86_64-linux-gnu/bits/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_core.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_posix.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
+  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/sys/time.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/limits.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/syslimits.h
+
+CMakeFiles/circle.dir/src/clan_enchant.c.o: /home/krynn/code/src/clan_enchant.c \
+  /home/krynn/code/src/bool.h \
+  /home/krynn/code/src/campaign.h \
+  /home/krynn/code/src/clan_enchant.h \
+  /home/krynn/code/src/comm.h \
+  /home/krynn/code/src/conf.h \
+  /home/krynn/code/src/db.h \
+  /home/krynn/code/src/helpers.h \
+  /home/krynn/code/src/lists.h \
+  /home/krynn/code/src/mud_options.h \
+  /home/krynn/code/src/perfmon.h \
+  /home/krynn/code/src/protocol.h \
+  /home/krynn/code/src/spec_abilities.h \
+  /home/krynn/code/src/structs.h \
+  /home/krynn/code/src/sysdep.h \
+  /home/krynn/code/src/utils.h \
+  /home/krynn/code/src/vnums.h \
+  /usr/include/alloca.h \
+  /usr/include/asm-generic/errno-base.h \
+  /usr/include/asm-generic/errno.h \
+  /usr/include/assert.h \
+  /usr/include/crypt.h \
+  /usr/include/ctype.h \
+  /usr/include/endian.h \
+  /usr/include/errno.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/limits.h \
+  /usr/include/linux/errno.h \
+  /usr/include/linux/limits.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdio.h \
+  /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/time.h \
+  /usr/include/unistd.h \
+  /usr/include/x86_64-linux-gnu/asm/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/confname.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/environments.h \
+  /usr/include/x86_64-linux-gnu/bits/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_core.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_posix.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
+  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/sys/time.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/limits.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/syslimits.h
+
+CMakeFiles/circle.dir/src/clan_expedition_enrollment.c.o: /home/krynn/code/src/clan_expedition_enrollment.c \
+  /home/krynn/code/src/clan_awards.h \
+  /home/krynn/code/src/clan_combat.h \
+  /home/krynn/code/src/clan_expedition_enrollment.h \
+  /home/krynn/code/src/clan_expeditions.h \
+  /home/krynn/code/src/clan_progression.h \
+  /home/krynn/code/src/clan_repository.h \
+  /home/krynn/code/src/clan_rewards.h \
+  /usr/include/alloca.h \
+  /usr/include/ctype.h \
+  /usr/include/endian.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/inttypes.h \
+  /usr/include/json-c/arraylist.h \
+  /usr/include/json-c/debug.h \
+  /usr/include/json-c/json.h \
+  /usr/include/json-c/json_c_version.h \
+  /usr/include/json-c/json_config.h \
+  /usr/include/json-c/json_inttypes.h \
+  /usr/include/json-c/json_object.h \
+  /usr/include/json-c/json_object_iterator.h \
+  /usr/include/json-c/json_patch.h \
+  /usr/include/json-c/json_pointer.h \
+  /usr/include/json-c/json_tokener.h \
+  /usr/include/json-c/json_types.h \
+  /usr/include/json-c/json_util.h \
+  /usr/include/json-c/linkhash.h \
+  /usr/include/json-c/printbuf.h \
+  /usr/include/mariadb/ma_list.h \
+  /usr/include/mariadb/mariadb_com.h \
+  /usr/include/mariadb/mariadb_ctype.h \
+  /usr/include/mariadb/mariadb_stmt.h \
+  /usr/include/mariadb/mariadb_version.h \
+  /usr/include/mariadb/mysql.h \
+  /usr/include/openssl/e_os2.h \
+  /usr/include/openssl/macros.h \
+  /usr/include/openssl/opensslv.h \
+  /usr/include/openssl/sha.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
+  /usr/include/stdio.h \
+  /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/time.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/openssl/configuration.h \
+  /usr/include/x86_64-linux-gnu/openssl/opensslconf.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h
+
+CMakeFiles/circle.dir/src/clan_expedition_runtime.c.o: /home/krynn/code/src/clan_expedition_runtime.c \
+  /home/krynn/code/src/bool.h \
+  /home/krynn/code/src/campaign.h \
+  /home/krynn/code/src/clan.h \
+  /home/krynn/code/src/clan_buff_queries.h \
+  /home/krynn/code/src/clan_buff_runtime.h \
+  /home/krynn/code/src/clan_combat.h \
+  /home/krynn/code/src/clan_display.h \
+  /home/krynn/code/src/clan_expedition_enrollment.h \
+  /home/krynn/code/src/clan_expeditions.h \
+  /home/krynn/code/src/clan_persistence.h \
+  /home/krynn/code/src/clan_progression.h \
+  /home/krynn/code/src/clan_repository.h \
+  /home/krynn/code/src/clan_rewards.h \
+  /home/krynn/code/src/clan_status.h \
+  /home/krynn/code/src/comm.h \
+  /home/krynn/code/src/conf.h \
+  /home/krynn/code/src/crafting_new.h \
+  /home/krynn/code/src/db.h \
+  /home/krynn/code/src/helpers.h \
+  /home/krynn/code/src/interpreter.h \
+  /home/krynn/code/src/lists.h \
+  /home/krynn/code/src/mud_options.h \
+  /home/krynn/code/src/mysql.h \
+  /home/krynn/code/src/perfmon.h \
+  /home/krynn/code/src/protocol.h \
+  /home/krynn/code/src/structs.h \
+  /home/krynn/code/src/sysdep.h \
+  /home/krynn/code/src/utils.h \
+  /home/krynn/code/src/vnums.h \
+  /usr/include/alloca.h \
+  /usr/include/asm-generic/errno-base.h \
+  /usr/include/asm-generic/errno.h \
+  /usr/include/assert.h \
+  /usr/include/crypt.h \
+  /usr/include/ctype.h \
+  /usr/include/endian.h \
+  /usr/include/errno.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/inttypes.h \
+  /usr/include/json-c/arraylist.h \
+  /usr/include/json-c/debug.h \
+  /usr/include/json-c/json.h \
+  /usr/include/json-c/json_c_version.h \
+  /usr/include/json-c/json_config.h \
+  /usr/include/json-c/json_inttypes.h \
+  /usr/include/json-c/json_object.h \
+  /usr/include/json-c/json_object_iterator.h \
+  /usr/include/json-c/json_patch.h \
+  /usr/include/json-c/json_pointer.h \
+  /usr/include/json-c/json_tokener.h \
+  /usr/include/json-c/json_types.h \
+  /usr/include/json-c/json_util.h \
+  /usr/include/json-c/linkhash.h \
+  /usr/include/json-c/printbuf.h \
+  /usr/include/limits.h \
+  /usr/include/linux/errno.h \
+  /usr/include/linux/limits.h \
+  /usr/include/mariadb/ma_list.h \
+  /usr/include/mariadb/mariadb_com.h \
+  /usr/include/mariadb/mariadb_ctype.h \
+  /usr/include/mariadb/mariadb_stmt.h \
+  /usr/include/mariadb/mariadb_version.h \
+  /usr/include/mariadb/mysql.h \
+  /usr/include/pthread.h \
+  /usr/include/sched.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
+  /usr/include/stdio.h \
+  /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/time.h \
+  /usr/include/unistd.h \
+  /usr/include/x86_64-linux-gnu/asm/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/confname.h \
+  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/environments.h \
+  /usr/include/x86_64-linux-gnu/bits/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_core.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_posix.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/sched.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
+  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/sys/time.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/limits.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/syslimits.h
+
+CMakeFiles/circle.dir/src/clan_expedition_world.c.o: /home/krynn/code/src/clan_expedition_world.c \
+  /home/krynn/code/src/bool.h \
+  /home/krynn/code/src/campaign.h \
+  /home/krynn/code/src/clan_expeditions.h \
+  /home/krynn/code/src/conf.h \
+  /home/krynn/code/src/db.h \
+  /home/krynn/code/src/helpers.h \
+  /home/krynn/code/src/lists.h \
+  /home/krynn/code/src/mud_options.h \
+  /home/krynn/code/src/perfmon.h \
+  /home/krynn/code/src/protocol.h \
+  /home/krynn/code/src/structs.h \
+  /home/krynn/code/src/sysdep.h \
+  /home/krynn/code/src/utils.h \
+  /home/krynn/code/src/vnums.h \
+  /usr/include/alloca.h \
+  /usr/include/asm-generic/errno-base.h \
+  /usr/include/asm-generic/errno.h \
+  /usr/include/assert.h \
+  /usr/include/crypt.h \
+  /usr/include/ctype.h \
+  /usr/include/endian.h \
+  /usr/include/errno.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/inttypes.h \
+  /usr/include/json-c/arraylist.h \
+  /usr/include/json-c/debug.h \
+  /usr/include/json-c/json.h \
+  /usr/include/json-c/json_c_version.h \
+  /usr/include/json-c/json_config.h \
+  /usr/include/json-c/json_inttypes.h \
+  /usr/include/json-c/json_object.h \
+  /usr/include/json-c/json_object_iterator.h \
+  /usr/include/json-c/json_patch.h \
+  /usr/include/json-c/json_pointer.h \
+  /usr/include/json-c/json_tokener.h \
+  /usr/include/json-c/json_types.h \
+  /usr/include/json-c/json_util.h \
+  /usr/include/json-c/linkhash.h \
+  /usr/include/json-c/printbuf.h \
+  /usr/include/limits.h \
+  /usr/include/linux/errno.h \
+  /usr/include/linux/limits.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
+  /usr/include/stdio.h \
+  /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/time.h \
+  /usr/include/unistd.h \
+  /usr/include/x86_64-linux-gnu/asm/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/confname.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/environments.h \
+  /usr/include/x86_64-linux-gnu/bits/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_core.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_posix.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
+  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/sys/time.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/limits.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/syslimits.h
+
+CMakeFiles/circle.dir/src/clan_expeditions.c.o: /home/krynn/code/src/clan_expeditions.c \
+  /home/krynn/code/src/clan_expeditions.h \
+  /usr/include/alloca.h \
+  /usr/include/endian.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/inttypes.h \
+  /usr/include/json-c/arraylist.h \
+  /usr/include/json-c/debug.h \
+  /usr/include/json-c/json.h \
+  /usr/include/json-c/json_c_version.h \
+  /usr/include/json-c/json_config.h \
+  /usr/include/json-c/json_inttypes.h \
+  /usr/include/json-c/json_object.h \
+  /usr/include/json-c/json_object_iterator.h \
+  /usr/include/json-c/json_patch.h \
+  /usr/include/json-c/json_pointer.h \
+  /usr/include/json-c/json_tokener.h \
+  /usr/include/json-c/json_types.h \
+  /usr/include/json-c/json_util.h \
+  /usr/include/json-c/linkhash.h \
+  /usr/include/json-c/printbuf.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
+  /usr/include/stdio.h \
+  /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h
+
+CMakeFiles/circle.dir/src/clan_objective_runtime.c.o: /home/krynn/code/src/clan_objective_runtime.c \
+  /home/krynn/code/src/bool.h \
+  /home/krynn/code/src/campaign.h \
+  /home/krynn/code/src/clan.h \
+  /home/krynn/code/src/clan_awards.h \
+  /home/krynn/code/src/clan_buff_queries.h \
+  /home/krynn/code/src/clan_buff_runtime.h \
+  /home/krynn/code/src/clan_display.h \
+  /home/krynn/code/src/clan_objective_runtime.h \
+  /home/krynn/code/src/clan_objectives.h \
+  /home/krynn/code/src/clan_persistence.h \
+  /home/krynn/code/src/clan_progression.h \
+  /home/krynn/code/src/clan_repository.h \
+  /home/krynn/code/src/clan_rewards.h \
+  /home/krynn/code/src/clan_status.h \
+  /home/krynn/code/src/comm.h \
+  /home/krynn/code/src/conf.h \
+  /home/krynn/code/src/constants.h \
+  /home/krynn/code/src/crafting_new.h \
+  /home/krynn/code/src/db.h \
+  /home/krynn/code/src/helpers.h \
+  /home/krynn/code/src/interpreter.h \
+  /home/krynn/code/src/lists.h \
+  /home/krynn/code/src/mud_options.h \
+  /home/krynn/code/src/mysql.h \
+  /home/krynn/code/src/perfmon.h \
+  /home/krynn/code/src/protocol.h \
+  /home/krynn/code/src/structs.h \
+  /home/krynn/code/src/sysdep.h \
+  /home/krynn/code/src/utils.h \
+  /home/krynn/code/src/vnums.h \
+  /usr/include/alloca.h \
+  /usr/include/asm-generic/errno-base.h \
+  /usr/include/asm-generic/errno.h \
+  /usr/include/assert.h \
+  /usr/include/crypt.h \
+  /usr/include/ctype.h \
+  /usr/include/endian.h \
+  /usr/include/errno.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/inttypes.h \
+  /usr/include/json-c/arraylist.h \
+  /usr/include/json-c/debug.h \
+  /usr/include/json-c/json.h \
+  /usr/include/json-c/json_c_version.h \
+  /usr/include/json-c/json_config.h \
+  /usr/include/json-c/json_inttypes.h \
+  /usr/include/json-c/json_object.h \
+  /usr/include/json-c/json_object_iterator.h \
+  /usr/include/json-c/json_patch.h \
+  /usr/include/json-c/json_pointer.h \
+  /usr/include/json-c/json_tokener.h \
+  /usr/include/json-c/json_types.h \
+  /usr/include/json-c/json_util.h \
+  /usr/include/json-c/linkhash.h \
+  /usr/include/json-c/printbuf.h \
+  /usr/include/limits.h \
+  /usr/include/linux/errno.h \
+  /usr/include/linux/limits.h \
+  /usr/include/mariadb/ma_list.h \
+  /usr/include/mariadb/mariadb_com.h \
+  /usr/include/mariadb/mariadb_ctype.h \
+  /usr/include/mariadb/mariadb_stmt.h \
+  /usr/include/mariadb/mariadb_version.h \
+  /usr/include/mariadb/mysql.h \
+  /usr/include/pthread.h \
+  /usr/include/sched.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
+  /usr/include/stdio.h \
+  /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/time.h \
+  /usr/include/unistd.h \
+  /usr/include/x86_64-linux-gnu/asm/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/confname.h \
+  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/environments.h \
+  /usr/include/x86_64-linux-gnu/bits/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_core.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_posix.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/sched.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
+  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/sys/time.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/limits.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/syslimits.h
+
+CMakeFiles/circle.dir/src/clan_objectives.c.o: /home/krynn/code/src/clan_objectives.c \
+  /home/krynn/code/src/clan_awards.h \
+  /home/krynn/code/src/clan_buff_queries.h \
+  /home/krynn/code/src/clan_contract_rotation.h \
+  /home/krynn/code/src/clan_objectives.h \
+  /home/krynn/code/src/clan_progression.h \
+  /home/krynn/code/src/clan_repository.h \
+  /home/krynn/code/src/clan_rewards.h \
+  /home/krynn/code/src/clan_status.h \
+  /usr/include/alloca.h \
+  /usr/include/ctype.h \
+  /usr/include/endian.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/inttypes.h \
+  /usr/include/json-c/arraylist.h \
+  /usr/include/json-c/debug.h \
+  /usr/include/json-c/json.h \
+  /usr/include/json-c/json_c_version.h \
+  /usr/include/json-c/json_config.h \
+  /usr/include/json-c/json_inttypes.h \
+  /usr/include/json-c/json_object.h \
+  /usr/include/json-c/json_object_iterator.h \
+  /usr/include/json-c/json_patch.h \
+  /usr/include/json-c/json_pointer.h \
+  /usr/include/json-c/json_tokener.h \
+  /usr/include/json-c/json_types.h \
+  /usr/include/json-c/json_util.h \
+  /usr/include/json-c/linkhash.h \
+  /usr/include/json-c/printbuf.h \
+  /usr/include/mariadb/ma_list.h \
+  /usr/include/mariadb/mariadb_com.h \
+  /usr/include/mariadb/mariadb_ctype.h \
+  /usr/include/mariadb/mariadb_stmt.h \
+  /usr/include/mariadb/mariadb_version.h \
+  /usr/include/mariadb/mysql.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
+  /usr/include/stdio.h \
+  /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/time.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h
+
+CMakeFiles/circle.dir/src/clan_persistence.c.o: /home/krynn/code/src/clan_persistence.c \
+  /home/krynn/code/src/bool.h \
+  /home/krynn/code/src/campaign.h \
+  /home/krynn/code/src/clan.h \
+  /home/krynn/code/src/clan_legacy_fields.h \
+  /home/krynn/code/src/clan_persistence.h \
+  /home/krynn/code/src/clan_progression.h \
+  /home/krynn/code/src/clan_repository.h \
+  /home/krynn/code/src/comm.h \
+  /home/krynn/code/src/conf.h \
+  /home/krynn/code/src/db.h \
+  /home/krynn/code/src/helpers.h \
+  /home/krynn/code/src/interpreter.h \
+  /home/krynn/code/src/lists.h \
+  /home/krynn/code/src/mud_options.h \
+  /home/krynn/code/src/mysql.h \
+  /home/krynn/code/src/perfmon.h \
+  /home/krynn/code/src/protocol.h \
+  /home/krynn/code/src/structs.h \
+  /home/krynn/code/src/sysdep.h \
+  /home/krynn/code/src/utils.h \
+  /home/krynn/code/src/vnums.h \
+  /usr/include/alloca.h \
+  /usr/include/asm-generic/errno-base.h \
+  /usr/include/asm-generic/errno.h \
+  /usr/include/assert.h \
+  /usr/include/crypt.h \
+  /usr/include/ctype.h \
+  /usr/include/endian.h \
+  /usr/include/errno.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/inttypes.h \
+  /usr/include/json-c/arraylist.h \
+  /usr/include/json-c/debug.h \
+  /usr/include/json-c/json.h \
+  /usr/include/json-c/json_c_version.h \
+  /usr/include/json-c/json_config.h \
+  /usr/include/json-c/json_inttypes.h \
+  /usr/include/json-c/json_object.h \
+  /usr/include/json-c/json_object_iterator.h \
+  /usr/include/json-c/json_patch.h \
+  /usr/include/json-c/json_pointer.h \
+  /usr/include/json-c/json_tokener.h \
+  /usr/include/json-c/json_types.h \
+  /usr/include/json-c/json_util.h \
+  /usr/include/json-c/linkhash.h \
+  /usr/include/json-c/printbuf.h \
+  /usr/include/limits.h \
+  /usr/include/linux/errno.h \
+  /usr/include/linux/limits.h \
+  /usr/include/mariadb/ma_list.h \
+  /usr/include/mariadb/mariadb_com.h \
+  /usr/include/mariadb/mariadb_ctype.h \
+  /usr/include/mariadb/mariadb_stmt.h \
+  /usr/include/mariadb/mariadb_version.h \
+  /usr/include/mariadb/mysql.h \
+  /usr/include/pthread.h \
+  /usr/include/sched.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
+  /usr/include/stdio.h \
+  /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/time.h \
+  /usr/include/unistd.h \
+  /usr/include/x86_64-linux-gnu/asm/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/confname.h \
+  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/environments.h \
+  /usr/include/x86_64-linux-gnu/bits/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_core.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_posix.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/sched.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
+  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/sys/time.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/limits.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/syslimits.h
+
+CMakeFiles/circle.dir/src/clan_policy.c.o: /home/krynn/code/src/clan_policy.c \
+  /home/krynn/code/src/clan_policy.h \
+  /home/krynn/code/src/clan_progression.h \
+  /usr/include/alloca.h \
+  /usr/include/asm-generic/errno-base.h \
+  /usr/include/asm-generic/errno.h \
+  /usr/include/ctype.h \
+  /usr/include/endian.h \
+  /usr/include/errno.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/inttypes.h \
+  /usr/include/json-c/arraylist.h \
+  /usr/include/json-c/debug.h \
+  /usr/include/json-c/json.h \
+  /usr/include/json-c/json_c_version.h \
+  /usr/include/json-c/json_config.h \
+  /usr/include/json-c/json_inttypes.h \
+  /usr/include/json-c/json_object.h \
+  /usr/include/json-c/json_object_iterator.h \
+  /usr/include/json-c/json_patch.h \
+  /usr/include/json-c/json_pointer.h \
+  /usr/include/json-c/json_tokener.h \
+  /usr/include/json-c/json_types.h \
+  /usr/include/json-c/json_util.h \
+  /usr/include/json-c/linkhash.h \
+  /usr/include/json-c/printbuf.h \
+  /usr/include/linux/errno.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
+  /usr/include/stdio.h \
+  /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/x86_64-linux-gnu/asm/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h
+
+CMakeFiles/circle.dir/src/clan_progression.c.o: /home/krynn/code/src/clan_progression.c \
+  /home/krynn/code/src/campaign.h \
+  /home/krynn/code/src/clan_pacing.h \
+  /home/krynn/code/src/clan_progression.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h
+
+CMakeFiles/circle.dir/src/clan_qm_services.c.o: /home/krynn/code/src/clan_qm_services.c \
+  /home/krynn/code/src/assign_wpn_armor.h \
+  /home/krynn/code/src/bool.h \
+  /home/krynn/code/src/campaign.h \
+  /home/krynn/code/src/clan.h \
+  /home/krynn/code/src/clan_awards.h \
+  /home/krynn/code/src/clan_buff_queries.h \
+  /home/krynn/code/src/clan_buff_runtime.h \
+  /home/krynn/code/src/clan_enchant.h \
+  /home/krynn/code/src/clan_persistence.h \
+  /home/krynn/code/src/clan_progression.h \
+  /home/krynn/code/src/clan_qm_services.h \
+  /home/krynn/code/src/clan_quartermaster.h \
+  /home/krynn/code/src/clan_repository.h \
+  /home/krynn/code/src/clan_rewards.h \
+  /home/krynn/code/src/clan_status.h \
+  /home/krynn/code/src/comm.h \
+  /home/krynn/code/src/conf.h \
+  /home/krynn/code/src/crafting_new.h \
+  /home/krynn/code/src/db.h \
+  /home/krynn/code/src/handler.h \
+  /home/krynn/code/src/helpers.h \
+  /home/krynn/code/src/interpreter.h \
+  /home/krynn/code/src/lists.h \
+  /home/krynn/code/src/mud_options.h \
+  /home/krynn/code/src/mysql.h \
+  /home/krynn/code/src/perfmon.h \
+  /home/krynn/code/src/protocol.h \
+  /home/krynn/code/src/spec_abilities.h \
+  /home/krynn/code/src/structs.h \
+  /home/krynn/code/src/sysdep.h \
+  /home/krynn/code/src/utils.h \
+  /home/krynn/code/src/vnums.h \
+  /usr/include/alloca.h \
+  /usr/include/asm-generic/errno-base.h \
+  /usr/include/asm-generic/errno.h \
+  /usr/include/assert.h \
+  /usr/include/crypt.h \
+  /usr/include/ctype.h \
+  /usr/include/endian.h \
+  /usr/include/errno.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/inttypes.h \
+  /usr/include/json-c/arraylist.h \
+  /usr/include/json-c/debug.h \
+  /usr/include/json-c/json.h \
+  /usr/include/json-c/json_c_version.h \
+  /usr/include/json-c/json_config.h \
+  /usr/include/json-c/json_inttypes.h \
+  /usr/include/json-c/json_object.h \
+  /usr/include/json-c/json_object_iterator.h \
+  /usr/include/json-c/json_patch.h \
+  /usr/include/json-c/json_pointer.h \
+  /usr/include/json-c/json_tokener.h \
+  /usr/include/json-c/json_types.h \
+  /usr/include/json-c/json_util.h \
+  /usr/include/json-c/linkhash.h \
+  /usr/include/json-c/printbuf.h \
+  /usr/include/limits.h \
+  /usr/include/linux/errno.h \
+  /usr/include/linux/limits.h \
+  /usr/include/mariadb/ma_list.h \
+  /usr/include/mariadb/mariadb_com.h \
+  /usr/include/mariadb/mariadb_ctype.h \
+  /usr/include/mariadb/mariadb_stmt.h \
+  /usr/include/mariadb/mariadb_version.h \
+  /usr/include/mariadb/mysql.h \
+  /usr/include/pthread.h \
+  /usr/include/sched.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
+  /usr/include/stdio.h \
+  /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/time.h \
+  /usr/include/unistd.h \
+  /usr/include/x86_64-linux-gnu/asm/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/confname.h \
+  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/environments.h \
+  /usr/include/x86_64-linux-gnu/bits/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_core.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_posix.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/sched.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
+  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/sys/time.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/limits.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/syslimits.h
+
+CMakeFiles/circle.dir/src/clan_quartermaster.c.o: /home/krynn/code/src/clan_quartermaster.c \
+  /home/krynn/code/src/clan_awards.h \
+  /home/krynn/code/src/clan_buff_queries.h \
+  /home/krynn/code/src/clan_pacing.h \
+  /home/krynn/code/src/clan_progression.h \
+  /home/krynn/code/src/clan_quartermaster.h \
+  /home/krynn/code/src/clan_repository.h \
+  /home/krynn/code/src/clan_rewards.h \
+  /home/krynn/code/src/clan_status.h \
+  /usr/include/alloca.h \
+  /usr/include/ctype.h \
+  /usr/include/endian.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/inttypes.h \
+  /usr/include/json-c/arraylist.h \
+  /usr/include/json-c/debug.h \
+  /usr/include/json-c/json.h \
+  /usr/include/json-c/json_c_version.h \
+  /usr/include/json-c/json_config.h \
+  /usr/include/json-c/json_inttypes.h \
+  /usr/include/json-c/json_object.h \
+  /usr/include/json-c/json_object_iterator.h \
+  /usr/include/json-c/json_patch.h \
+  /usr/include/json-c/json_pointer.h \
+  /usr/include/json-c/json_tokener.h \
+  /usr/include/json-c/json_types.h \
+  /usr/include/json-c/json_util.h \
+  /usr/include/json-c/linkhash.h \
+  /usr/include/json-c/printbuf.h \
+  /usr/include/mariadb/ma_list.h \
+  /usr/include/mariadb/mariadb_com.h \
+  /usr/include/mariadb/mariadb_ctype.h \
+  /usr/include/mariadb/mariadb_stmt.h \
+  /usr/include/mariadb/mariadb_version.h \
+  /usr/include/mariadb/mysql.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
+  /usr/include/stdio.h \
+  /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/time.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h
+
+CMakeFiles/circle.dir/src/clan_quartermaster_runtime.c.o: /home/krynn/code/src/clan_quartermaster_runtime.c \
+  /home/krynn/code/src/bool.h \
+  /home/krynn/code/src/campaign.h \
+  /home/krynn/code/src/clan.h \
+  /home/krynn/code/src/clan_awards.h \
+  /home/krynn/code/src/clan_buff_queries.h \
+  /home/krynn/code/src/clan_buff_runtime.h \
+  /home/krynn/code/src/clan_display.h \
+  /home/krynn/code/src/clan_persistence.h \
+  /home/krynn/code/src/clan_progression.h \
+  /home/krynn/code/src/clan_qm_services.h \
+  /home/krynn/code/src/clan_quartermaster.h \
+  /home/krynn/code/src/clan_repository.h \
+  /home/krynn/code/src/clan_rewards.h \
+  /home/krynn/code/src/clan_status.h \
+  /home/krynn/code/src/class.h \
+  /home/krynn/code/src/comm.h \
+  /home/krynn/code/src/conf.h \
+  /home/krynn/code/src/constants.h \
+  /home/krynn/code/src/crafting_new.h \
+  /home/krynn/code/src/db.h \
+  /home/krynn/code/src/estate.h \
+  /home/krynn/code/src/handler.h \
+  /home/krynn/code/src/helpers.h \
+  /home/krynn/code/src/interpreter.h \
+  /home/krynn/code/src/lists.h \
+  /home/krynn/code/src/mud_options.h \
+  /home/krynn/code/src/mysql.h \
+  /home/krynn/code/src/perfmon.h \
+  /home/krynn/code/src/protocol.h \
+  /home/krynn/code/src/spells.h \
+  /home/krynn/code/src/structs.h \
+  /home/krynn/code/src/sysdep.h \
+  /home/krynn/code/src/utils.h \
+  /home/krynn/code/src/vnums.h \
+  /usr/include/alloca.h \
+  /usr/include/asm-generic/errno-base.h \
+  /usr/include/asm-generic/errno.h \
+  /usr/include/assert.h \
+  /usr/include/crypt.h \
+  /usr/include/ctype.h \
+  /usr/include/endian.h \
+  /usr/include/errno.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/inttypes.h \
+  /usr/include/json-c/arraylist.h \
+  /usr/include/json-c/debug.h \
+  /usr/include/json-c/json.h \
+  /usr/include/json-c/json_c_version.h \
+  /usr/include/json-c/json_config.h \
+  /usr/include/json-c/json_inttypes.h \
+  /usr/include/json-c/json_object.h \
+  /usr/include/json-c/json_object_iterator.h \
+  /usr/include/json-c/json_patch.h \
+  /usr/include/json-c/json_pointer.h \
+  /usr/include/json-c/json_tokener.h \
+  /usr/include/json-c/json_types.h \
+  /usr/include/json-c/json_util.h \
+  /usr/include/json-c/linkhash.h \
+  /usr/include/json-c/printbuf.h \
+  /usr/include/limits.h \
+  /usr/include/linux/errno.h \
+  /usr/include/linux/limits.h \
+  /usr/include/mariadb/ma_list.h \
+  /usr/include/mariadb/mariadb_com.h \
+  /usr/include/mariadb/mariadb_ctype.h \
+  /usr/include/mariadb/mariadb_stmt.h \
+  /usr/include/mariadb/mariadb_version.h \
+  /usr/include/mariadb/mysql.h \
+  /usr/include/pthread.h \
+  /usr/include/sched.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
+  /usr/include/stdio.h \
+  /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/time.h \
+  /usr/include/unistd.h \
+  /usr/include/x86_64-linux-gnu/asm/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/confname.h \
+  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/environments.h \
+  /usr/include/x86_64-linux-gnu/bits/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_core.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_posix.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/sched.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
+  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/sys/time.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/limits.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/syslimits.h
+
+CMakeFiles/circle.dir/src/clan_repository.c.o: /home/krynn/code/src/clan_repository.c \
+  /home/krynn/code/src/clan_buff_queries.h \
+  /home/krynn/code/src/clan_legacy_fields.h \
+  /home/krynn/code/src/clan_progression.h \
+  /home/krynn/code/src/clan_repository.h \
+  /home/krynn/code/src/clan_repository_schema.inc \
+  /home/krynn/code/src/clan_rewards.h \
+  /home/krynn/code/src/clan_status.h \
+  /usr/include/alloca.h \
+  /usr/include/asm-generic/errno-base.h \
+  /usr/include/asm-generic/errno.h \
+  /usr/include/ctype.h \
+  /usr/include/endian.h \
+  /usr/include/errno.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/inttypes.h \
+  /usr/include/json-c/arraylist.h \
+  /usr/include/json-c/debug.h \
+  /usr/include/json-c/json.h \
+  /usr/include/json-c/json_c_version.h \
+  /usr/include/json-c/json_config.h \
+  /usr/include/json-c/json_inttypes.h \
+  /usr/include/json-c/json_object.h \
+  /usr/include/json-c/json_object_iterator.h \
+  /usr/include/json-c/json_patch.h \
+  /usr/include/json-c/json_pointer.h \
+  /usr/include/json-c/json_tokener.h \
+  /usr/include/json-c/json_types.h \
+  /usr/include/json-c/json_util.h \
+  /usr/include/json-c/linkhash.h \
+  /usr/include/json-c/printbuf.h \
+  /usr/include/limits.h \
+  /usr/include/linux/errno.h \
+  /usr/include/linux/limits.h \
+  /usr/include/mariadb/ma_list.h \
+  /usr/include/mariadb/mariadb_com.h \
+  /usr/include/mariadb/mariadb_ctype.h \
+  /usr/include/mariadb/mariadb_stmt.h \
+  /usr/include/mariadb/mariadb_version.h \
+  /usr/include/mariadb/mysql.h \
+  /usr/include/math.h \
+  /usr/include/openssl/asn1.h \
+  /usr/include/openssl/asn1err.h \
+  /usr/include/openssl/bio.h \
+  /usr/include/openssl/bioerr.h \
+  /usr/include/openssl/bn.h \
+  /usr/include/openssl/bnerr.h \
+  /usr/include/openssl/core.h \
+  /usr/include/openssl/core_dispatch.h \
+  /usr/include/openssl/crypto.h \
+  /usr/include/openssl/cryptoerr.h \
+  /usr/include/openssl/cryptoerr_legacy.h \
+  /usr/include/openssl/e_os2.h \
+  /usr/include/openssl/evp.h \
+  /usr/include/openssl/evperr.h \
+  /usr/include/openssl/indicator.h \
+  /usr/include/openssl/macros.h \
+  /usr/include/openssl/obj_mac.h \
+  /usr/include/openssl/objects.h \
+  /usr/include/openssl/objectserr.h \
+  /usr/include/openssl/opensslv.h \
+  /usr/include/openssl/params.h \
+  /usr/include/openssl/rand.h \
+  /usr/include/openssl/randerr.h \
+  /usr/include/openssl/safestack.h \
+  /usr/include/openssl/stack.h \
+  /usr/include/openssl/symhacks.h \
+  /usr/include/openssl/types.h \
+  /usr/include/pthread.h \
+  /usr/include/sched.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
+  /usr/include/stdio.h \
+  /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/time.h \
+  /usr/include/x86_64-linux-gnu/asm/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/flt-eval-method.h \
+  /usr/include/x86_64-linux-gnu/bits/fp-fast.h \
+  /usr/include/x86_64-linux-gnu/bits/fp-logb.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/libm-simd-decl-stubs.h \
+  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/math-vector.h \
+  /usr/include/x86_64-linux-gnu/bits/mathcalls-helper-functions.h \
+  /usr/include/x86_64-linux-gnu/bits/mathcalls-macros.h \
+  /usr/include/x86_64-linux-gnu/bits/mathcalls.h \
+  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/sched.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/openssl/configuration.h \
+  /usr/include/x86_64-linux-gnu/openssl/opensslconf.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/limits.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/syslimits.h
+
+CMakeFiles/circle.dir/src/clan_sources.c.o: /home/krynn/code/src/clan_sources.c \
+  /home/krynn/code/src/bool.h \
+  /home/krynn/code/src/campaign.h \
+  /home/krynn/code/src/clan_awards.h \
+  /home/krynn/code/src/clan_buff_queries.h \
+  /home/krynn/code/src/clan_buff_runtime.h \
+  /home/krynn/code/src/clan_combat.h \
+  /home/krynn/code/src/clan_expedition_enrollment.h \
+  /home/krynn/code/src/clan_expeditions.h \
+  /home/krynn/code/src/clan_objective_runtime.h \
+  /home/krynn/code/src/clan_objectives.h \
+  /home/krynn/code/src/clan_persistence.h \
+  /home/krynn/code/src/clan_progression.h \
+  /home/krynn/code/src/clan_repository.h \
+  /home/krynn/code/src/clan_rewards.h \
+  /home/krynn/code/src/clan_sources.h \
+  /home/krynn/code/src/clan_status.h \
+  /home/krynn/code/src/comm.h \
+  /home/krynn/code/src/conf.h \
+  /home/krynn/code/src/db.h \
+  /home/krynn/code/src/helpers.h \
+  /home/krynn/code/src/legendary_identity.h \
+  /home/krynn/code/src/lists.h \
+  /home/krynn/code/src/mud_options.h \
+  /home/krynn/code/src/mysql.h \
+  /home/krynn/code/src/perfmon.h \
+  /home/krynn/code/src/protocol.h \
+  /home/krynn/code/src/structs.h \
+  /home/krynn/code/src/sysdep.h \
+  /home/krynn/code/src/utils.h \
+  /home/krynn/code/src/vnums.h \
+  /usr/include/alloca.h \
+  /usr/include/asm-generic/errno-base.h \
+  /usr/include/asm-generic/errno.h \
+  /usr/include/assert.h \
+  /usr/include/crypt.h \
+  /usr/include/ctype.h \
+  /usr/include/endian.h \
+  /usr/include/errno.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/inttypes.h \
+  /usr/include/json-c/arraylist.h \
+  /usr/include/json-c/debug.h \
+  /usr/include/json-c/json.h \
+  /usr/include/json-c/json_c_version.h \
+  /usr/include/json-c/json_config.h \
+  /usr/include/json-c/json_inttypes.h \
+  /usr/include/json-c/json_object.h \
+  /usr/include/json-c/json_object_iterator.h \
+  /usr/include/json-c/json_patch.h \
+  /usr/include/json-c/json_pointer.h \
+  /usr/include/json-c/json_tokener.h \
+  /usr/include/json-c/json_types.h \
+  /usr/include/json-c/json_util.h \
+  /usr/include/json-c/linkhash.h \
+  /usr/include/json-c/printbuf.h \
+  /usr/include/limits.h \
+  /usr/include/linux/errno.h \
+  /usr/include/linux/limits.h \
+  /usr/include/mariadb/ma_list.h \
+  /usr/include/mariadb/mariadb_com.h \
+  /usr/include/mariadb/mariadb_ctype.h \
+  /usr/include/mariadb/mariadb_stmt.h \
+  /usr/include/mariadb/mariadb_version.h \
+  /usr/include/mariadb/mysql.h \
+  /usr/include/pthread.h \
+  /usr/include/sched.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
+  /usr/include/stdio.h \
+  /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/time.h \
+  /usr/include/unistd.h \
+  /usr/include/x86_64-linux-gnu/asm/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/confname.h \
+  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/environments.h \
+  /usr/include/x86_64-linux-gnu/bits/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_core.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_posix.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/sched.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
+  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/sys/time.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/limits.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/syslimits.h
+
+CMakeFiles/circle.dir/src/clan_status.c.o: /home/krynn/code/src/clan_status.c \
+  /home/krynn/code/src/clan_awards.h \
+  /home/krynn/code/src/clan_buff_queries.h \
+  /home/krynn/code/src/clan_display.h \
+  /home/krynn/code/src/clan_progression.h \
+  /home/krynn/code/src/clan_repository.h \
+  /home/krynn/code/src/clan_rewards.h \
+  /home/krynn/code/src/clan_status.h \
+  /usr/include/ctype.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/inttypes.h \
+  /usr/include/mariadb/ma_list.h \
+  /usr/include/mariadb/mariadb_com.h \
+  /usr/include/mariadb/mariadb_ctype.h \
+  /usr/include/mariadb/mariadb_stmt.h \
+  /usr/include/mariadb/mariadb_version.h \
+  /usr/include/mariadb/mysql.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
+  /usr/include/stdio.h \
+  /usr/include/string.h \
+  /usr/include/time.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h
+
+CMakeFiles/circle.dir/src/clan_transactions.c.o: /home/krynn/code/src/clan_transactions.c \
+  /home/krynn/code/src/bool.h \
+  /home/krynn/code/src/campaign.h \
+  /home/krynn/code/src/clan.h \
+  /home/krynn/code/src/clan_persistence.h \
+  /home/krynn/code/src/clan_progression.h \
+  /home/krynn/code/src/comm.h \
+  /home/krynn/code/src/conf.h \
+  /home/krynn/code/src/db.h \
+  /home/krynn/code/src/handler.h \
+  /home/krynn/code/src/helpers.h \
+  /home/krynn/code/src/interpreter.h \
+  /home/krynn/code/src/lists.h \
+  /home/krynn/code/src/mud_options.h \
+  /home/krynn/code/src/perfmon.h \
+  /home/krynn/code/src/protocol.h \
+  /home/krynn/code/src/structs.h \
+  /home/krynn/code/src/sysdep.h \
+  /home/krynn/code/src/utils.h \
+  /home/krynn/code/src/vnums.h \
+  /usr/include/alloca.h \
+  /usr/include/asm-generic/errno-base.h \
+  /usr/include/asm-generic/errno.h \
+  /usr/include/assert.h \
+  /usr/include/crypt.h \
+  /usr/include/ctype.h \
+  /usr/include/endian.h \
+  /usr/include/errno.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/limits.h \
+  /usr/include/linux/errno.h \
+  /usr/include/linux/limits.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
+  /usr/include/stdio.h \
+  /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/time.h \
+  /usr/include/unistd.h \
+  /usr/include/x86_64-linux-gnu/asm/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/confname.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/environments.h \
+  /usr/include/x86_64-linux-gnu/bits/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_core.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_posix.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
+  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/sys/time.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/limits.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/syslimits.h
+
+CMakeFiles/circle.dir/src/clan_web.c.o: /home/krynn/code/src/clan_web.c \
+  /home/krynn/code/src/clan_awards.h \
+  /home/krynn/code/src/clan_buff_activation.h \
+  /home/krynn/code/src/clan_buff_lifecycle.h \
+  /home/krynn/code/src/clan_buff_queries.h \
+  /home/krynn/code/src/clan_progression.h \
+  /home/krynn/code/src/clan_repository.h \
+  /home/krynn/code/src/clan_rewards.h \
+  /home/krynn/code/src/clan_web.h \
+  /home/krynn/code/src/clan_web_content.h \
+  /usr/include/alloca.h \
+  /usr/include/ctype.h \
+  /usr/include/endian.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/inttypes.h \
+  /usr/include/json-c/arraylist.h \
+  /usr/include/json-c/debug.h \
+  /usr/include/json-c/json.h \
+  /usr/include/json-c/json_c_version.h \
+  /usr/include/json-c/json_config.h \
+  /usr/include/json-c/json_inttypes.h \
+  /usr/include/json-c/json_object.h \
+  /usr/include/json-c/json_object_iterator.h \
+  /usr/include/json-c/json_patch.h \
+  /usr/include/json-c/json_pointer.h \
+  /usr/include/json-c/json_tokener.h \
+  /usr/include/json-c/json_types.h \
+  /usr/include/json-c/json_util.h \
+  /usr/include/json-c/linkhash.h \
+  /usr/include/json-c/printbuf.h \
+  /usr/include/mariadb/ma_list.h \
+  /usr/include/mariadb/mariadb_com.h \
+  /usr/include/mariadb/mariadb_ctype.h \
+  /usr/include/mariadb/mariadb_stmt.h \
+  /usr/include/mariadb/mariadb_version.h \
+  /usr/include/mariadb/mysql.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
+  /usr/include/stdio.h \
+  /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/time.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h
+
+CMakeFiles/circle.dir/src/clan_web_content.c.o: /home/krynn/code/src/clan_web_content.c \
+  /home/krynn/code/src/clan_awards.h \
+  /home/krynn/code/src/clan_buff_activation.h \
+  /home/krynn/code/src/clan_buff_queries.h \
+  /home/krynn/code/src/clan_combat.h \
+  /home/krynn/code/src/clan_delivery.h \
+  /home/krynn/code/src/clan_expedition_enrollment.h \
+  /home/krynn/code/src/clan_expeditions.h \
+  /home/krynn/code/src/clan_objectives.h \
+  /home/krynn/code/src/clan_progression.h \
+  /home/krynn/code/src/clan_quartermaster.h \
+  /home/krynn/code/src/clan_repository.h \
+  /home/krynn/code/src/clan_rewards.h \
+  /home/krynn/code/src/clan_status.h \
+  /home/krynn/code/src/clan_web.h \
+  /home/krynn/code/src/clan_web_content.h \
+  /usr/include/alloca.h \
+  /usr/include/ctype.h \
+  /usr/include/endian.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/inttypes.h \
+  /usr/include/json-c/arraylist.h \
+  /usr/include/json-c/debug.h \
+  /usr/include/json-c/json.h \
+  /usr/include/json-c/json_c_version.h \
+  /usr/include/json-c/json_config.h \
+  /usr/include/json-c/json_inttypes.h \
+  /usr/include/json-c/json_object.h \
+  /usr/include/json-c/json_object_iterator.h \
+  /usr/include/json-c/json_patch.h \
+  /usr/include/json-c/json_pointer.h \
+  /usr/include/json-c/json_tokener.h \
+  /usr/include/json-c/json_types.h \
+  /usr/include/json-c/json_util.h \
+  /usr/include/json-c/linkhash.h \
+  /usr/include/json-c/printbuf.h \
+  /usr/include/mariadb/ma_list.h \
+  /usr/include/mariadb/mariadb_com.h \
+  /usr/include/mariadb/mariadb_ctype.h \
+  /usr/include/mariadb/mariadb_stmt.h \
+  /usr/include/mariadb/mariadb_version.h \
+  /usr/include/mariadb/mysql.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
+  /usr/include/stdio.h \
+  /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/time.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h
+
+CMakeFiles/circle.dir/src/clan_web_content_runtime.c.o: /home/krynn/code/src/clan_web_content_runtime.c \
+  /home/krynn/code/src/bool.h \
+  /home/krynn/code/src/campaign.h \
+  /home/krynn/code/src/clan_awards.h \
+  /home/krynn/code/src/clan_buff_activation.h \
+  /home/krynn/code/src/clan_buff_queries.h \
+  /home/krynn/code/src/clan_buff_runtime.h \
+  /home/krynn/code/src/clan_delivery.h \
+  /home/krynn/code/src/clan_delivery_runtime.h \
+  /home/krynn/code/src/clan_expeditions.h \
+  /home/krynn/code/src/clan_objective_runtime.h \
+  /home/krynn/code/src/clan_objectives.h \
+  /home/krynn/code/src/clan_progression.h \
+  /home/krynn/code/src/clan_quartermaster.h \
+  /home/krynn/code/src/clan_repository.h \
+  /home/krynn/code/src/clan_rewards.h \
+  /home/krynn/code/src/clan_status.h \
+  /home/krynn/code/src/clan_web.h \
+  /home/krynn/code/src/clan_web_content.h \
+  /home/krynn/code/src/class.h \
+  /home/krynn/code/src/conf.h \
+  /home/krynn/code/src/constants.h \
+  /home/krynn/code/src/crafting_new.h \
+  /home/krynn/code/src/crafting_recipes.h \
+  /home/krynn/code/src/db.h \
+  /home/krynn/code/src/handler.h \
+  /home/krynn/code/src/helpers.h \
+  /home/krynn/code/src/lists.h \
+  /home/krynn/code/src/mud_options.h \
+  /home/krynn/code/src/perfmon.h \
+  /home/krynn/code/src/protocol.h \
+  /home/krynn/code/src/spells.h \
+  /home/krynn/code/src/structs.h \
+  /home/krynn/code/src/sysdep.h \
+  /home/krynn/code/src/utils.h \
+  /home/krynn/code/src/vnums.h \
+  /usr/include/alloca.h \
+  /usr/include/asm-generic/errno-base.h \
+  /usr/include/asm-generic/errno.h \
+  /usr/include/assert.h \
+  /usr/include/crypt.h \
+  /usr/include/ctype.h \
+  /usr/include/endian.h \
+  /usr/include/errno.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/inttypes.h \
+  /usr/include/json-c/arraylist.h \
+  /usr/include/json-c/debug.h \
+  /usr/include/json-c/json.h \
+  /usr/include/json-c/json_c_version.h \
+  /usr/include/json-c/json_config.h \
+  /usr/include/json-c/json_inttypes.h \
+  /usr/include/json-c/json_object.h \
+  /usr/include/json-c/json_object_iterator.h \
+  /usr/include/json-c/json_patch.h \
+  /usr/include/json-c/json_pointer.h \
+  /usr/include/json-c/json_tokener.h \
+  /usr/include/json-c/json_types.h \
+  /usr/include/json-c/json_util.h \
+  /usr/include/json-c/linkhash.h \
+  /usr/include/json-c/printbuf.h \
+  /usr/include/limits.h \
+  /usr/include/linux/errno.h \
+  /usr/include/linux/limits.h \
+  /usr/include/mariadb/ma_list.h \
+  /usr/include/mariadb/mariadb_com.h \
+  /usr/include/mariadb/mariadb_ctype.h \
+  /usr/include/mariadb/mariadb_stmt.h \
+  /usr/include/mariadb/mariadb_version.h \
+  /usr/include/mariadb/mysql.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
+  /usr/include/stdio.h \
+  /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/time.h \
+  /usr/include/unistd.h \
+  /usr/include/x86_64-linux-gnu/asm/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/confname.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/environments.h \
+  /usr/include/x86_64-linux-gnu/bits/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_core.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_posix.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
+  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/sys/time.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/limits.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/syslimits.h
+
+CMakeFiles/circle.dir/src/clan_web_runtime.c.o: /home/krynn/code/src/clan_web_runtime.c \
+  /home/krynn/code/src/bool.h \
+  /home/krynn/code/src/campaign.h \
+  /home/krynn/code/src/clan_buff_activation.h \
+  /home/krynn/code/src/clan_buff_queries.h \
+  /home/krynn/code/src/clan_buff_runtime.h \
+  /home/krynn/code/src/clan_persistence.h \
+  /home/krynn/code/src/clan_progression.h \
+  /home/krynn/code/src/clan_repository.h \
+  /home/krynn/code/src/clan_web.h \
+  /home/krynn/code/src/clan_web_content.h \
+  /home/krynn/code/src/comm.h \
+  /home/krynn/code/src/conf.h \
+  /home/krynn/code/src/db.h \
+  /home/krynn/code/src/helpers.h \
+  /home/krynn/code/src/interpreter.h \
+  /home/krynn/code/src/lists.h \
+  /home/krynn/code/src/mud_options.h \
+  /home/krynn/code/src/mysql.h \
+  /home/krynn/code/src/perfmon.h \
+  /home/krynn/code/src/protocol.h \
+  /home/krynn/code/src/structs.h \
+  /home/krynn/code/src/sysdep.h \
+  /home/krynn/code/src/utils.h \
+  /home/krynn/code/src/vnums.h \
+  /usr/include/alloca.h \
+  /usr/include/asm-generic/errno-base.h \
+  /usr/include/asm-generic/errno.h \
+  /usr/include/assert.h \
+  /usr/include/crypt.h \
+  /usr/include/ctype.h \
+  /usr/include/endian.h \
+  /usr/include/errno.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/inttypes.h \
+  /usr/include/json-c/arraylist.h \
+  /usr/include/json-c/debug.h \
+  /usr/include/json-c/json.h \
+  /usr/include/json-c/json_c_version.h \
+  /usr/include/json-c/json_config.h \
+  /usr/include/json-c/json_inttypes.h \
+  /usr/include/json-c/json_object.h \
+  /usr/include/json-c/json_object_iterator.h \
+  /usr/include/json-c/json_patch.h \
+  /usr/include/json-c/json_pointer.h \
+  /usr/include/json-c/json_tokener.h \
+  /usr/include/json-c/json_types.h \
+  /usr/include/json-c/json_util.h \
+  /usr/include/json-c/linkhash.h \
+  /usr/include/json-c/printbuf.h \
+  /usr/include/limits.h \
+  /usr/include/linux/errno.h \
+  /usr/include/linux/limits.h \
+  /usr/include/mariadb/ma_list.h \
+  /usr/include/mariadb/mariadb_com.h \
+  /usr/include/mariadb/mariadb_ctype.h \
+  /usr/include/mariadb/mariadb_stmt.h \
+  /usr/include/mariadb/mariadb_version.h \
+  /usr/include/mariadb/mysql.h \
+  /usr/include/pthread.h \
+  /usr/include/sched.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
+  /usr/include/stdio.h \
+  /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/time.h \
+  /usr/include/unistd.h \
+  /usr/include/x86_64-linux-gnu/asm/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/confname.h \
+  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/environments.h \
+  /usr/include/x86_64-linux-gnu/bits/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_core.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_posix.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/sched.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
+  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/sys/time.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/limits.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/syslimits.h
+
+CMakeFiles/circle.dir/src/class.c.o: /home/krynn/code/src/class.c \
+  /home/krynn/code/src/act.h \
+  /home/krynn/code/src/alchemy.h \
+  /home/krynn/code/src/assign_wpn_armor.h \
+  /home/krynn/code/src/backgrounds.h \
+  /home/krynn/code/src/bloodlines.h \
+  /home/krynn/code/src/bool.h \
+  /home/krynn/code/src/campaign.h \
+  /home/krynn/code/src/class.h \
+  /home/krynn/code/src/comm.h \
+  /home/krynn/code/src/conf.h \
+  /home/krynn/code/src/constants.h \
+  /home/krynn/code/src/db.h \
+  /home/krynn/code/src/dg_event.h \
+  /home/krynn/code/src/domains_schools.h \
+  /home/krynn/code/src/epic_feats.h \
+  /home/krynn/code/src/epic_feats2.h \
+  /home/krynn/code/src/epic_feats3.h \
+  /home/krynn/code/src/evolutions.h \
+  /home/krynn/code/src/feats.h \
+  /home/krynn/code/src/handler.h \
+  /home/krynn/code/src/helpers.h \
+  /home/krynn/code/src/interpreter.h \
+  /home/krynn/code/src/lists.h \
+  /home/krynn/code/src/modify.h \
+  /home/krynn/code/src/mud_event.h \
+  /home/krynn/code/src/mud_options.h \
+  /home/krynn/code/src/mudlim.h \
+  /home/krynn/code/src/perfmon.h \
+  /home/krynn/code/src/perks.h \
+  /home/krynn/code/src/pfdefaults.h \
+  /home/krynn/code/src/premadebuilds.h \
+  /home/krynn/code/src/protocol.h \
+  /home/krynn/code/src/race.h \
+  /home/krynn/code/src/spell_prep.h \
   /home/krynn/code/src/spells.h \
   /home/krynn/code/src/structs.h \
   /home/krynn/code/src/sysdep.h \
@@ -4099,369 +8503,31 @@ CMakeFiles/circle.dir/src/clan.c.o: /home/krynn/code/src/clan.c \
   /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
   /usr/lib/gcc/x86_64-linux-gnu/15/include/syslimits.h
 
-CMakeFiles/circle.dir/src/clan_economy.c.o: /home/krynn/code/src/clan_economy.c \
-  /home/krynn/code/src/bool.h \
-  /home/krynn/code/src/campaign.h \
-  /home/krynn/code/src/clan.h \
-  /home/krynn/code/src/comm.h \
-  /home/krynn/code/src/conf.h \
-  /home/krynn/code/src/constants.h \
-  /home/krynn/code/src/db.h \
-  /home/krynn/code/src/handler.h \
-  /home/krynn/code/src/helpers.h \
-  /home/krynn/code/src/interpreter.h \
-  /home/krynn/code/src/lists.h \
-  /home/krynn/code/src/mud_options.h \
-  /home/krynn/code/src/perfmon.h \
-  /home/krynn/code/src/protocol.h \
-  /home/krynn/code/src/shop.h \
-  /home/krynn/code/src/structs.h \
-  /home/krynn/code/src/sysdep.h \
-  /home/krynn/code/src/utils.h \
-  /home/krynn/code/src/vnums.h \
-  /usr/include/alloca.h \
-  /usr/include/asm-generic/errno-base.h \
-  /usr/include/asm-generic/errno.h \
-  /usr/include/assert.h \
-  /usr/include/crypt.h \
-  /usr/include/ctype.h \
-  /usr/include/endian.h \
-  /usr/include/errno.h \
-  /usr/include/features-time64.h \
-  /usr/include/features.h \
-  /usr/include/limits.h \
-  /usr/include/linux/errno.h \
-  /usr/include/linux/limits.h \
-  /usr/include/stdc-predef.h \
-  /usr/include/stdio.h \
-  /usr/include/stdlib.h \
-  /usr/include/string.h \
-  /usr/include/strings.h \
-  /usr/include/time.h \
-  /usr/include/unistd.h \
-  /usr/include/x86_64-linux-gnu/asm/errno.h \
-  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
-  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
-  /usr/include/x86_64-linux-gnu/bits/confname.h \
-  /usr/include/x86_64-linux-gnu/bits/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endianness.h \
-  /usr/include/x86_64-linux-gnu/bits/environments.h \
-  /usr/include/x86_64-linux-gnu/bits/errno.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn.h \
-  /usr/include/x86_64-linux-gnu/bits/getopt_core.h \
-  /usr/include/x86_64-linux-gnu/bits/getopt_posix.h \
-  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
-  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/long-double.h \
-  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
-  /usr/include/x86_64-linux-gnu/bits/select.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
-  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
-  /usr/include/x86_64-linux-gnu/bits/time.h \
-  /usr/include/x86_64-linux-gnu/bits/time64.h \
-  /usr/include/x86_64-linux-gnu/bits/timesize.h \
-  /usr/include/x86_64-linux-gnu/bits/types.h \
-  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
-  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
-  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
-  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
-  /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
-  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
-  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
-  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
-  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
-  /usr/include/x86_64-linux-gnu/sys/select.h \
-  /usr/include/x86_64-linux-gnu/sys/time.h \
-  /usr/include/x86_64-linux-gnu/sys/types.h \
-  /usr/lib/gcc/x86_64-linux-gnu/15/include/limits.h \
-  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
-  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
-  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
-  /usr/lib/gcc/x86_64-linux-gnu/15/include/syslimits.h
-
-CMakeFiles/circle.dir/src/clan_edit.c.o: /home/krynn/code/src/clan_edit.c \
-  /home/krynn/code/src/bool.h \
-  /home/krynn/code/src/campaign.h \
-  /home/krynn/code/src/clan.h \
-  /home/krynn/code/src/comm.h \
-  /home/krynn/code/src/conf.h \
-  /home/krynn/code/src/db.h \
-  /home/krynn/code/src/genolc.h \
-  /home/krynn/code/src/help.h \
-  /home/krynn/code/src/helpers.h \
-  /home/krynn/code/src/ibt.h \
-  /home/krynn/code/src/improved-edit.h \
-  /home/krynn/code/src/interpreter.h \
-  /home/krynn/code/src/lists.h \
-  /home/krynn/code/src/modify.h \
-  /home/krynn/code/src/mud_options.h \
-  /home/krynn/code/src/oasis.h \
-  /home/krynn/code/src/perfmon.h \
-  /home/krynn/code/src/protocol.h \
-  /home/krynn/code/src/screen.h \
-  /home/krynn/code/src/structs.h \
-  /home/krynn/code/src/sysdep.h \
-  /home/krynn/code/src/utils.h \
-  /home/krynn/code/src/vnums.h \
-  /usr/include/alloca.h \
-  /usr/include/asm-generic/errno-base.h \
-  /usr/include/asm-generic/errno.h \
-  /usr/include/assert.h \
-  /usr/include/crypt.h \
-  /usr/include/ctype.h \
-  /usr/include/endian.h \
-  /usr/include/errno.h \
-  /usr/include/features-time64.h \
-  /usr/include/features.h \
-  /usr/include/limits.h \
-  /usr/include/linux/errno.h \
-  /usr/include/linux/limits.h \
-  /usr/include/stdc-predef.h \
-  /usr/include/stdio.h \
-  /usr/include/stdlib.h \
-  /usr/include/string.h \
-  /usr/include/strings.h \
-  /usr/include/time.h \
-  /usr/include/unistd.h \
-  /usr/include/x86_64-linux-gnu/asm/errno.h \
-  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
-  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
-  /usr/include/x86_64-linux-gnu/bits/confname.h \
-  /usr/include/x86_64-linux-gnu/bits/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endianness.h \
-  /usr/include/x86_64-linux-gnu/bits/environments.h \
-  /usr/include/x86_64-linux-gnu/bits/errno.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn.h \
-  /usr/include/x86_64-linux-gnu/bits/getopt_core.h \
-  /usr/include/x86_64-linux-gnu/bits/getopt_posix.h \
-  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
-  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/long-double.h \
-  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
-  /usr/include/x86_64-linux-gnu/bits/select.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
-  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
-  /usr/include/x86_64-linux-gnu/bits/time.h \
-  /usr/include/x86_64-linux-gnu/bits/time64.h \
-  /usr/include/x86_64-linux-gnu/bits/timesize.h \
-  /usr/include/x86_64-linux-gnu/bits/types.h \
-  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
-  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
-  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
-  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
-  /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
-  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
-  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
-  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
-  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
-  /usr/include/x86_64-linux-gnu/sys/select.h \
-  /usr/include/x86_64-linux-gnu/sys/time.h \
-  /usr/include/x86_64-linux-gnu/sys/types.h \
-  /usr/lib/gcc/x86_64-linux-gnu/15/include/limits.h \
-  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
-  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
-  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
-  /usr/lib/gcc/x86_64-linux-gnu/15/include/syslimits.h
-
-CMakeFiles/circle.dir/src/clan_transactions.c.o: /home/krynn/code/src/clan_transactions.c \
-  /home/krynn/code/src/bool.h \
-  /home/krynn/code/src/campaign.h \
-  /home/krynn/code/src/clan.h \
-  /home/krynn/code/src/comm.h \
-  /home/krynn/code/src/conf.h \
-  /home/krynn/code/src/db.h \
-  /home/krynn/code/src/handler.h \
-  /home/krynn/code/src/helpers.h \
-  /home/krynn/code/src/interpreter.h \
-  /home/krynn/code/src/lists.h \
-  /home/krynn/code/src/mud_options.h \
-  /home/krynn/code/src/perfmon.h \
-  /home/krynn/code/src/protocol.h \
-  /home/krynn/code/src/structs.h \
-  /home/krynn/code/src/sysdep.h \
-  /home/krynn/code/src/utils.h \
-  /home/krynn/code/src/vnums.h \
-  /usr/include/alloca.h \
-  /usr/include/asm-generic/errno-base.h \
-  /usr/include/asm-generic/errno.h \
-  /usr/include/assert.h \
-  /usr/include/crypt.h \
-  /usr/include/ctype.h \
-  /usr/include/endian.h \
-  /usr/include/errno.h \
-  /usr/include/features-time64.h \
-  /usr/include/features.h \
-  /usr/include/limits.h \
-  /usr/include/linux/errno.h \
-  /usr/include/linux/limits.h \
-  /usr/include/stdc-predef.h \
-  /usr/include/stdio.h \
-  /usr/include/stdlib.h \
-  /usr/include/string.h \
-  /usr/include/strings.h \
-  /usr/include/time.h \
-  /usr/include/unistd.h \
-  /usr/include/x86_64-linux-gnu/asm/errno.h \
-  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
-  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
-  /usr/include/x86_64-linux-gnu/bits/confname.h \
-  /usr/include/x86_64-linux-gnu/bits/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endianness.h \
-  /usr/include/x86_64-linux-gnu/bits/environments.h \
-  /usr/include/x86_64-linux-gnu/bits/errno.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn.h \
-  /usr/include/x86_64-linux-gnu/bits/getopt_core.h \
-  /usr/include/x86_64-linux-gnu/bits/getopt_posix.h \
-  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
-  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/long-double.h \
-  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
-  /usr/include/x86_64-linux-gnu/bits/select.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
-  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
-  /usr/include/x86_64-linux-gnu/bits/time.h \
-  /usr/include/x86_64-linux-gnu/bits/time64.h \
-  /usr/include/x86_64-linux-gnu/bits/timesize.h \
-  /usr/include/x86_64-linux-gnu/bits/types.h \
-  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
-  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
-  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
-  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
-  /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
-  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
-  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
-  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
-  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
-  /usr/include/x86_64-linux-gnu/sys/select.h \
-  /usr/include/x86_64-linux-gnu/sys/time.h \
-  /usr/include/x86_64-linux-gnu/sys/types.h \
-  /usr/lib/gcc/x86_64-linux-gnu/15/include/limits.h \
-  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
-  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
-  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
-  /usr/lib/gcc/x86_64-linux-gnu/15/include/syslimits.h
-
-CMakeFiles/circle.dir/src/class.c.o: /home/krynn/code/src/class.c \
-  /home/krynn/code/src/act.h \
-  /home/krynn/code/src/alchemy.h \
+CMakeFiles/circle.dir/src/class_improvements.c.o: /home/krynn/code/src/class_improvements.c \
+  /home/krynn/code/src/actions.h \
   /home/krynn/code/src/assign_wpn_armor.h \
-  /home/krynn/code/src/backgrounds.h \
+  /home/krynn/code/src/bardic_performance.h \
   /home/krynn/code/src/bool.h \
   /home/krynn/code/src/campaign.h \
   /home/krynn/code/src/class.h \
+  /home/krynn/code/src/class_improvements.h \
   /home/krynn/code/src/comm.h \
   /home/krynn/code/src/conf.h \
-  /home/krynn/code/src/constants.h \
   /home/krynn/code/src/db.h \
   /home/krynn/code/src/dg_event.h \
+  /home/krynn/code/src/dg_scripts.h \
   /home/krynn/code/src/domains_schools.h \
-  /home/krynn/code/src/evolutions.h \
-  /home/krynn/code/src/feats.h \
+  /home/krynn/code/src/fight.h \
   /home/krynn/code/src/handler.h \
   /home/krynn/code/src/helpers.h \
   /home/krynn/code/src/interpreter.h \
   /home/krynn/code/src/lists.h \
-  /home/krynn/code/src/modify.h \
+  /home/krynn/code/src/missions.h \
   /home/krynn/code/src/mud_event.h \
   /home/krynn/code/src/mud_options.h \
-  /home/krynn/code/src/mudlim.h \
   /home/krynn/code/src/perfmon.h \
   /home/krynn/code/src/perks.h \
-  /home/krynn/code/src/pfdefaults.h \
-  /home/krynn/code/src/premadebuilds.h \
   /home/krynn/code/src/protocol.h \
-  /home/krynn/code/src/race.h \
-  /home/krynn/code/src/spell_prep.h \
   /home/krynn/code/src/spells.h \
   /home/krynn/code/src/structs.h \
   /home/krynn/code/src/sysdep.h \
@@ -4685,7 +8751,17 @@ CMakeFiles/circle.dir/src/comm.c.o: /home/krynn/code/src/comm.c \
   /home/krynn/code/src/bool.h \
   /home/krynn/code/src/campaign.h \
   /home/krynn/code/src/clan.h \
+  /home/krynn/code/src/clan_buff_activation.h \
+  /home/krynn/code/src/clan_buff_queries.h \
+  /home/krynn/code/src/clan_buff_runtime.h \
+  /home/krynn/code/src/clan_combat.h \
   /home/krynn/code/src/clan_economy.h \
+  /home/krynn/code/src/clan_expedition_enrollment.h \
+  /home/krynn/code/src/clan_expeditions.h \
+  /home/krynn/code/src/clan_progression.h \
+  /home/krynn/code/src/clan_repository.h \
+  /home/krynn/code/src/clan_sources.h \
+  /home/krynn/code/src/clan_web.h \
   /home/krynn/code/src/class.h \
   /home/krynn/code/src/comm.h \
   /home/krynn/code/src/conf.h \
@@ -4695,6 +8771,8 @@ CMakeFiles/circle.dir/src/comm.c.o: /home/krynn/code/src/comm.c \
   /home/krynn/code/src/dg_event.h \
   /home/krynn/code/src/dg_scripts.h \
   /home/krynn/code/src/discord_bridge.h \
+  /home/krynn/code/src/epic_feats2.h \
+  /home/krynn/code/src/epic_feats3.h \
   /home/krynn/code/src/fight.h \
   /home/krynn/code/src/genolc.h \
   /home/krynn/code/src/handler.h \
@@ -4710,6 +8788,7 @@ CMakeFiles/circle.dir/src/comm.c.o: /home/krynn/code/src/comm.c \
   /home/krynn/code/src/legendary_techniques.h \
   /home/krynn/code/src/lists.h \
   /home/krynn/code/src/mail.h \
+  /home/krynn/code/src/mob_utils.h \
   /home/krynn/code/src/modify.h \
   /home/krynn/code/src/msgedit.h \
   /home/krynn/code/src/mud_event.h \
@@ -4750,11 +8829,33 @@ CMakeFiles/circle.dir/src/comm.c.o: /home/krynn/code/src/comm.c \
   /usr/include/fcntl.h \
   /usr/include/features-time64.h \
   /usr/include/features.h \
+  /usr/include/inttypes.h \
+  /usr/include/json-c/arraylist.h \
+  /usr/include/json-c/debug.h \
+  /usr/include/json-c/json.h \
+  /usr/include/json-c/json_c_version.h \
+  /usr/include/json-c/json_config.h \
+  /usr/include/json-c/json_inttypes.h \
+  /usr/include/json-c/json_object.h \
+  /usr/include/json-c/json_object_iterator.h \
+  /usr/include/json-c/json_patch.h \
+  /usr/include/json-c/json_pointer.h \
+  /usr/include/json-c/json_tokener.h \
+  /usr/include/json-c/json_types.h \
+  /usr/include/json-c/json_util.h \
+  /usr/include/json-c/linkhash.h \
+  /usr/include/json-c/printbuf.h \
   /usr/include/limits.h \
   /usr/include/linux/errno.h \
   /usr/include/linux/limits.h \
   /usr/include/linux/posix_types.h \
   /usr/include/linux/stddef.h \
+  /usr/include/mariadb/ma_list.h \
+  /usr/include/mariadb/mariadb_com.h \
+  /usr/include/mariadb/mariadb_ctype.h \
+  /usr/include/mariadb/mariadb_stmt.h \
+  /usr/include/mariadb/mariadb_version.h \
+  /usr/include/mariadb/mysql.h \
   /usr/include/netdb.h \
   /usr/include/netinet/in.h \
   /usr/include/rpc/netdb.h \
@@ -5394,6 +9495,14 @@ CMakeFiles/circle.dir/src/crafting_new.c.o: /home/krynn/code/src/crafting_new.c 
   /home/krynn/code/src/bool.h \
   /home/krynn/code/src/brew.h \
   /home/krynn/code/src/campaign.h \
+  /home/krynn/code/src/clan_awards.h \
+  /home/krynn/code/src/clan_combat.h \
+  /home/krynn/code/src/clan_objective_runtime.h \
+  /home/krynn/code/src/clan_objectives.h \
+  /home/krynn/code/src/clan_progression.h \
+  /home/krynn/code/src/clan_repository.h \
+  /home/krynn/code/src/clan_rewards.h \
+  /home/krynn/code/src/clan_sources.h \
   /home/krynn/code/src/class.h \
   /home/krynn/code/src/comm.h \
   /home/krynn/code/src/conf.h \
@@ -5405,6 +9514,7 @@ CMakeFiles/circle.dir/src/crafting_new.c.o: /home/krynn/code/src/crafting_new.c 
   /home/krynn/code/src/dg_event.h \
   /home/krynn/code/src/dg_scripts.h \
   /home/krynn/code/src/domains_schools.h \
+  /home/krynn/code/src/epic_feats.h \
   /home/krynn/code/src/feats.h \
   /home/krynn/code/src/fight.h \
   /home/krynn/code/src/genolc.h \
@@ -5446,6 +9556,22 @@ CMakeFiles/circle.dir/src/crafting_new.c.o: /home/krynn/code/src/crafting_new.c 
   /usr/include/errno.h \
   /usr/include/features-time64.h \
   /usr/include/features.h \
+  /usr/include/inttypes.h \
+  /usr/include/json-c/arraylist.h \
+  /usr/include/json-c/debug.h \
+  /usr/include/json-c/json.h \
+  /usr/include/json-c/json_c_version.h \
+  /usr/include/json-c/json_config.h \
+  /usr/include/json-c/json_inttypes.h \
+  /usr/include/json-c/json_object.h \
+  /usr/include/json-c/json_object_iterator.h \
+  /usr/include/json-c/json_patch.h \
+  /usr/include/json-c/json_pointer.h \
+  /usr/include/json-c/json_tokener.h \
+  /usr/include/json-c/json_types.h \
+  /usr/include/json-c/json_util.h \
+  /usr/include/json-c/linkhash.h \
+  /usr/include/json-c/printbuf.h \
   /usr/include/limits.h \
   /usr/include/linux/errno.h \
   /usr/include/linux/limits.h \
@@ -5704,6 +9830,7 @@ CMakeFiles/circle.dir/src/crafts.c.o: /home/krynn/code/src/crafts.c \
   /home/krynn/code/src/perfmon.h \
   /home/krynn/code/src/protocol.h \
   /home/krynn/code/src/screen.h \
+  /home/krynn/code/src/spec_procs.h \
   /home/krynn/code/src/spells.h \
   /home/krynn/code/src/structs.h \
   /home/krynn/code/src/sysdep.h \
@@ -5809,7 +9936,20 @@ CMakeFiles/circle.dir/src/db.c.o: /home/krynn/code/src/db.c \
   /home/krynn/code/src/bool.h \
   /home/krynn/code/src/campaign.h \
   /home/krynn/code/src/clan.h \
+  /home/krynn/code/src/clan_buff_queries.h \
+  /home/krynn/code/src/clan_buff_runtime.h \
+  /home/krynn/code/src/clan_combat.h \
   /home/krynn/code/src/clan_economy.h \
+  /home/krynn/code/src/clan_expedition_enrollment.h \
+  /home/krynn/code/src/clan_expeditions.h \
+  /home/krynn/code/src/clan_persistence.h \
+  /home/krynn/code/src/clan_policy.h \
+  /home/krynn/code/src/clan_progression.h \
+  /home/krynn/code/src/clan_quartermaster.h \
+  /home/krynn/code/src/clan_repository.h \
+  /home/krynn/code/src/clan_rewards.h \
+  /home/krynn/code/src/clan_sources.h \
+  /home/krynn/code/src/clan_status.h \
   /home/krynn/code/src/class.h \
   /home/krynn/code/src/comm.h \
   /home/krynn/code/src/conf.h \
@@ -5821,6 +9961,7 @@ CMakeFiles/circle.dir/src/db.c.o: /home/krynn/code/src/db.c \
   /home/krynn/code/src/crafts.h \
   /home/krynn/code/src/db.h \
   /home/krynn/code/src/db_init.h \
+  /home/krynn/code/src/deities.h \
   /home/krynn/code/src/dg_event.h \
   /home/krynn/code/src/dg_scripts.h \
   /home/krynn/code/src/domains_schools.h \
@@ -5898,6 +10039,22 @@ CMakeFiles/circle.dir/src/db.c.o: /home/krynn/code/src/db.c \
   /usr/include/errno.h \
   /usr/include/features-time64.h \
   /usr/include/features.h \
+  /usr/include/inttypes.h \
+  /usr/include/json-c/arraylist.h \
+  /usr/include/json-c/debug.h \
+  /usr/include/json-c/json.h \
+  /usr/include/json-c/json_c_version.h \
+  /usr/include/json-c/json_config.h \
+  /usr/include/json-c/json_inttypes.h \
+  /usr/include/json-c/json_object.h \
+  /usr/include/json-c/json_object_iterator.h \
+  /usr/include/json-c/json_patch.h \
+  /usr/include/json-c/json_pointer.h \
+  /usr/include/json-c/json_tokener.h \
+  /usr/include/json-c/json_types.h \
+  /usr/include/json-c/json_util.h \
+  /usr/include/json-c/linkhash.h \
+  /usr/include/json-c/printbuf.h \
   /usr/include/limits.h \
   /usr/include/linux/errno.h \
   /usr/include/linux/limits.h \
@@ -7285,6 +11442,8 @@ CMakeFiles/circle.dir/src/dg_mobcmd.c.o: /home/krynn/code/src/dg_mobcmd.c \
   /home/krynn/code/src/bool.h \
   /home/krynn/code/src/campaign.h \
   /home/krynn/code/src/clan.h \
+  /home/krynn/code/src/clan_persistence.h \
+  /home/krynn/code/src/clan_progression.h \
   /home/krynn/code/src/comm.h \
   /home/krynn/code/src/conf.h \
   /home/krynn/code/src/constants.h \
@@ -7320,6 +11479,7 @@ CMakeFiles/circle.dir/src/dg_mobcmd.c.o: /home/krynn/code/src/dg_mobcmd.c \
   /usr/include/linux/errno.h \
   /usr/include/linux/limits.h \
   /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
   /usr/include/stdio.h \
   /usr/include/stdlib.h \
   /usr/include/string.h \
@@ -7350,6 +11510,8 @@ CMakeFiles/circle.dir/src/dg_mobcmd.c.o: /home/krynn/code/src/dg_mobcmd.c \
   /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
   /usr/include/x86_64-linux-gnu/bits/select.h \
   /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
   /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
   /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
   /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
@@ -7383,6 +11545,7 @@ CMakeFiles/circle.dir/src/dg_mobcmd.c.o: /home/krynn/code/src/dg_mobcmd.c \
   /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
   /usr/include/x86_64-linux-gnu/bits/waitflags.h \
   /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
   /usr/include/x86_64-linux-gnu/bits/wordsize.h \
   /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
   /usr/include/x86_64-linux-gnu/gnu/stubs.h \
@@ -7394,6 +11557,7 @@ CMakeFiles/circle.dir/src/dg_mobcmd.c.o: /home/krynn/code/src/dg_mobcmd.c \
   /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
   /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
   /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h \
   /usr/lib/gcc/x86_64-linux-gnu/15/include/syslimits.h
 
 CMakeFiles/circle.dir/src/dg_objcmd.c.o: /home/krynn/code/src/dg_objcmd.c \
@@ -8112,6 +12276,7 @@ CMakeFiles/circle.dir/src/discord_bridge.c.o: /home/krynn/code/src/discord_bridg
   /home/krynn/code/src/conf.h \
   /home/krynn/code/src/db.h \
   /home/krynn/code/src/discord_bridge.h \
+  /home/krynn/code/src/dotenv.h \
   /home/krynn/code/src/handler.h \
   /home/krynn/code/src/helpers.h \
   /home/krynn/code/src/interpreter.h \
@@ -8769,6 +12934,389 @@ CMakeFiles/circle.dir/src/encounters.c.o: /home/krynn/code/src/encounters.c \
   /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
   /usr/lib/gcc/x86_64-linux-gnu/15/include/syslimits.h
 
+CMakeFiles/circle.dir/src/epic_feats.c.o: /home/krynn/code/src/epic_feats.c \
+  /home/krynn/code/src/actions.h \
+  /home/krynn/code/src/bloodlines.h \
+  /home/krynn/code/src/bool.h \
+  /home/krynn/code/src/campaign.h \
+  /home/krynn/code/src/class.h \
+  /home/krynn/code/src/comm.h \
+  /home/krynn/code/src/conf.h \
+  /home/krynn/code/src/crafts.h \
+  /home/krynn/code/src/db.h \
+  /home/krynn/code/src/dg_event.h \
+  /home/krynn/code/src/epic_feats.h \
+  /home/krynn/code/src/epic_feats2.h \
+  /home/krynn/code/src/epic_feats3.h \
+  /home/krynn/code/src/feats.h \
+  /home/krynn/code/src/fight.h \
+  /home/krynn/code/src/handler.h \
+  /home/krynn/code/src/helpers.h \
+  /home/krynn/code/src/interpreter.h \
+  /home/krynn/code/src/lists.h \
+  /home/krynn/code/src/mud_event.h \
+  /home/krynn/code/src/mud_options.h \
+  /home/krynn/code/src/perfmon.h \
+  /home/krynn/code/src/protocol.h \
+  /home/krynn/code/src/psionics.h \
+  /home/krynn/code/src/spell_prep.h \
+  /home/krynn/code/src/spells.h \
+  /home/krynn/code/src/structs.h \
+  /home/krynn/code/src/sysdep.h \
+  /home/krynn/code/src/utils.h \
+  /home/krynn/code/src/vnums.h \
+  /usr/include/alloca.h \
+  /usr/include/asm-generic/errno-base.h \
+  /usr/include/asm-generic/errno.h \
+  /usr/include/assert.h \
+  /usr/include/crypt.h \
+  /usr/include/ctype.h \
+  /usr/include/endian.h \
+  /usr/include/errno.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/limits.h \
+  /usr/include/linux/errno.h \
+  /usr/include/linux/limits.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdio.h \
+  /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/time.h \
+  /usr/include/unistd.h \
+  /usr/include/x86_64-linux-gnu/asm/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/confname.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/environments.h \
+  /usr/include/x86_64-linux-gnu/bits/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_core.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_posix.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
+  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/sys/time.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/limits.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/syslimits.h
+
+CMakeFiles/circle.dir/src/epic_feats2.c.o: /home/krynn/code/src/epic_feats2.c \
+  /home/krynn/code/src/actions.h \
+  /home/krynn/code/src/alchemy.h \
+  /home/krynn/code/src/bool.h \
+  /home/krynn/code/src/campaign.h \
+  /home/krynn/code/src/class.h \
+  /home/krynn/code/src/comm.h \
+  /home/krynn/code/src/conf.h \
+  /home/krynn/code/src/constants.h \
+  /home/krynn/code/src/db.h \
+  /home/krynn/code/src/dg_event.h \
+  /home/krynn/code/src/dg_scripts.h \
+  /home/krynn/code/src/domains_schools.h \
+  /home/krynn/code/src/epic_feats.h \
+  /home/krynn/code/src/epic_feats2.h \
+  /home/krynn/code/src/evolutions.h \
+  /home/krynn/code/src/feats.h \
+  /home/krynn/code/src/fight.h \
+  /home/krynn/code/src/handler.h \
+  /home/krynn/code/src/helpers.h \
+  /home/krynn/code/src/interpreter.h \
+  /home/krynn/code/src/legendary.h \
+  /home/krynn/code/src/legendary_effects.h \
+  /home/krynn/code/src/legendary_identity.h \
+  /home/krynn/code/src/lists.h \
+  /home/krynn/code/src/mob_utils.h \
+  /home/krynn/code/src/mud_event.h \
+  /home/krynn/code/src/mud_options.h \
+  /home/krynn/code/src/perfmon.h \
+  /home/krynn/code/src/protocol.h \
+  /home/krynn/code/src/psionics.h \
+  /home/krynn/code/src/spell_prep.h \
+  /home/krynn/code/src/spells.h \
+  /home/krynn/code/src/structs.h \
+  /home/krynn/code/src/sysdep.h \
+  /home/krynn/code/src/utils.h \
+  /home/krynn/code/src/vnums.h \
+  /usr/include/alloca.h \
+  /usr/include/asm-generic/errno-base.h \
+  /usr/include/asm-generic/errno.h \
+  /usr/include/assert.h \
+  /usr/include/crypt.h \
+  /usr/include/ctype.h \
+  /usr/include/endian.h \
+  /usr/include/errno.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/limits.h \
+  /usr/include/linux/errno.h \
+  /usr/include/linux/limits.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
+  /usr/include/stdio.h \
+  /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/time.h \
+  /usr/include/unistd.h \
+  /usr/include/x86_64-linux-gnu/asm/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/confname.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/environments.h \
+  /usr/include/x86_64-linux-gnu/bits/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_core.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_posix.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
+  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/sys/time.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/limits.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/syslimits.h
+
+CMakeFiles/circle.dir/src/epic_feats3.c.o: /home/krynn/code/src/epic_feats3.c \
+  /home/krynn/code/src/actions.h \
+  /home/krynn/code/src/assign_wpn_armor.h \
+  /home/krynn/code/src/bool.h \
+  /home/krynn/code/src/campaign.h \
+  /home/krynn/code/src/class.h \
+  /home/krynn/code/src/comm.h \
+  /home/krynn/code/src/conf.h \
+  /home/krynn/code/src/db.h \
+  /home/krynn/code/src/dg_event.h \
+  /home/krynn/code/src/dg_scripts.h \
+  /home/krynn/code/src/epic_feats.h \
+  /home/krynn/code/src/epic_feats2.h \
+  /home/krynn/code/src/epic_feats3.h \
+  /home/krynn/code/src/evolutions.h \
+  /home/krynn/code/src/feats.h \
+  /home/krynn/code/src/fight.h \
+  /home/krynn/code/src/handler.h \
+  /home/krynn/code/src/helpers.h \
+  /home/krynn/code/src/interpreter.h \
+  /home/krynn/code/src/legendary.h \
+  /home/krynn/code/src/legendary_effects.h \
+  /home/krynn/code/src/lists.h \
+  /home/krynn/code/src/mob_utils.h \
+  /home/krynn/code/src/mud_event.h \
+  /home/krynn/code/src/mud_options.h \
+  /home/krynn/code/src/perfmon.h \
+  /home/krynn/code/src/protocol.h \
+  /home/krynn/code/src/psionics.h \
+  /home/krynn/code/src/spell_prep.h \
+  /home/krynn/code/src/spells.h \
+  /home/krynn/code/src/structs.h \
+  /home/krynn/code/src/sysdep.h \
+  /home/krynn/code/src/utils.h \
+  /home/krynn/code/src/vnums.h \
+  /usr/include/alloca.h \
+  /usr/include/asm-generic/errno-base.h \
+  /usr/include/asm-generic/errno.h \
+  /usr/include/assert.h \
+  /usr/include/crypt.h \
+  /usr/include/ctype.h \
+  /usr/include/endian.h \
+  /usr/include/errno.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/limits.h \
+  /usr/include/linux/errno.h \
+  /usr/include/linux/limits.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
+  /usr/include/stdio.h \
+  /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/time.h \
+  /usr/include/unistd.h \
+  /usr/include/x86_64-linux-gnu/asm/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/confname.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/environments.h \
+  /usr/include/x86_64-linux-gnu/bits/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_core.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_posix.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
+  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/sys/time.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/limits.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/syslimits.h
+
 CMakeFiles/circle.dir/src/epic_magic.c.o: /home/krynn/code/src/epic_magic.c \
   /home/krynn/code/src/bool.h \
   /home/krynn/code/src/campaign.h \
@@ -9027,6 +13575,7 @@ CMakeFiles/circle.dir/src/evolutions.c.o: /home/krynn/code/src/evolutions.c \
   /home/krynn/code/src/dg_event.h \
   /home/krynn/code/src/dg_scripts.h \
   /home/krynn/code/src/domains_schools.h \
+  /home/krynn/code/src/epic_feats3.h \
   /home/krynn/code/src/evolutions.h \
   /home/krynn/code/src/feats.h \
   /home/krynn/code/src/fight.h \
@@ -9142,6 +13691,7 @@ CMakeFiles/circle.dir/src/evolutions.c.o: /home/krynn/code/src/evolutions.c \
 CMakeFiles/circle.dir/src/feats.c.o: /home/krynn/code/src/feats.c \
   /home/krynn/code/src/alchemy.h \
   /home/krynn/code/src/assign_wpn_armor.h \
+  /home/krynn/code/src/bloodlines.h \
   /home/krynn/code/src/bool.h \
   /home/krynn/code/src/campaign.h \
   /home/krynn/code/src/class.h \
@@ -9152,6 +13702,8 @@ CMakeFiles/circle.dir/src/feats.c.o: /home/krynn/code/src/feats.c \
   /home/krynn/code/src/dg_event.h \
   /home/krynn/code/src/dg_scripts.h \
   /home/krynn/code/src/domains_schools.h \
+  /home/krynn/code/src/epic_feats.h \
+  /home/krynn/code/src/epic_feats2.h \
   /home/krynn/code/src/evolutions.h \
   /home/krynn/code/src/feats.h \
   /home/krynn/code/src/handler.h \
@@ -9281,10 +13833,16 @@ CMakeFiles/circle.dir/src/fight.c.o: /home/krynn/code/src/fight.c \
   /home/krynn/code/src/alchemy.h \
   /home/krynn/code/src/assign_wpn_armor.h \
   /home/krynn/code/src/backgrounds.h \
+  /home/krynn/code/src/bloodlines.h \
   /home/krynn/code/src/bool.h \
   /home/krynn/code/src/campaign.h \
   /home/krynn/code/src/clan.h \
+  /home/krynn/code/src/clan_combat.h \
+  /home/krynn/code/src/clan_enchant.h \
+  /home/krynn/code/src/clan_progression.h \
+  /home/krynn/code/src/clan_sources.h \
   /home/krynn/code/src/class.h \
+  /home/krynn/code/src/class_improvements.h \
   /home/krynn/code/src/comm.h \
   /home/krynn/code/src/conf.h \
   /home/krynn/code/src/constants.h \
@@ -9294,6 +13852,9 @@ CMakeFiles/circle.dir/src/fight.c.o: /home/krynn/code/src/fight.c \
   /home/krynn/code/src/dg_event.h \
   /home/krynn/code/src/dg_scripts.h \
   /home/krynn/code/src/domains_schools.h \
+  /home/krynn/code/src/epic_feats.h \
+  /home/krynn/code/src/epic_feats2.h \
+  /home/krynn/code/src/epic_feats3.h \
   /home/krynn/code/src/epic_magic.h \
   /home/krynn/code/src/evolutions.h \
   /home/krynn/code/src/feats.h \
@@ -9654,6 +14215,7 @@ CMakeFiles/circle.dir/src/genmob.c.o: /home/krynn/code/src/genmob.c \
   /usr/lib/gcc/x86_64-linux-gnu/15/include/syslimits.h
 
 CMakeFiles/circle.dir/src/genobj.c.o: /home/krynn/code/src/genobj.c \
+  /home/krynn/code/src/assign_wpn_armor.h \
   /home/krynn/code/src/boards.h \
   /home/krynn/code/src/bool.h \
   /home/krynn/code/src/campaign.h \
@@ -10350,6 +14912,8 @@ CMakeFiles/circle.dir/src/graph.c.o: /home/krynn/code/src/graph.c \
   /home/krynn/code/src/constants.h \
   /home/krynn/code/src/db.h \
   /home/krynn/code/src/dg_event.h \
+  /home/krynn/code/src/epic_feats.h \
+  /home/krynn/code/src/epic_feats2.h \
   /home/krynn/code/src/evolutions.h \
   /home/krynn/code/src/fight.h \
   /home/krynn/code/src/graph.h \
@@ -10587,9 +15151,12 @@ CMakeFiles/circle.dir/src/handler.c.o: /home/krynn/code/src/handler.c \
   /home/krynn/code/src/act.h \
   /home/krynn/code/src/actionqueues.h \
   /home/krynn/code/src/assign_wpn_armor.h \
+  /home/krynn/code/src/bloodlines.h \
   /home/krynn/code/src/bool.h \
   /home/krynn/code/src/campaign.h \
+  /home/krynn/code/src/clan_access.h \
   /home/krynn/code/src/class.h \
+  /home/krynn/code/src/class_improvements.h \
   /home/krynn/code/src/comm.h \
   /home/krynn/code/src/conf.h \
   /home/krynn/code/src/constants.h \
@@ -10597,6 +15164,7 @@ CMakeFiles/circle.dir/src/handler.c.o: /home/krynn/code/src/handler.c \
   /home/krynn/code/src/db.h \
   /home/krynn/code/src/dg_event.h \
   /home/krynn/code/src/dg_scripts.h \
+  /home/krynn/code/src/epic_feats2.h \
   /home/krynn/code/src/fight.h \
   /home/krynn/code/src/graph.h \
   /home/krynn/code/src/handler.h \
@@ -10610,6 +15178,7 @@ CMakeFiles/circle.dir/src/handler.c.o: /home/krynn/code/src/handler.c \
   /home/krynn/code/src/legendary_identity.h \
   /home/krynn/code/src/legendary_techniques.h \
   /home/krynn/code/src/lists.h \
+  /home/krynn/code/src/mob_utils.h \
   /home/krynn/code/src/mud_event.h \
   /home/krynn/code/src/mud_options.h \
   /home/krynn/code/src/perfmon.h \
@@ -10870,6 +15439,7 @@ CMakeFiles/circle.dir/src/help.c.o: /home/krynn/code/src/help.c \
   /home/krynn/code/src/dg_event.h \
   /home/krynn/code/src/evolutions.h \
   /home/krynn/code/src/feats.h \
+  /home/krynn/code/src/handler.h \
   /home/krynn/code/src/help.h \
   /home/krynn/code/src/helpers.h \
   /home/krynn/code/src/interpreter.h \
@@ -10882,6 +15452,7 @@ CMakeFiles/circle.dir/src/help.c.o: /home/krynn/code/src/help.c \
   /home/krynn/code/src/perks.h \
   /home/krynn/code/src/protocol.h \
   /home/krynn/code/src/race.h \
+  /home/krynn/code/src/spellhelp.h \
   /home/krynn/code/src/spells.h \
   /home/krynn/code/src/structs.h \
   /home/krynn/code/src/sysdep.h \
@@ -10897,6 +15468,22 @@ CMakeFiles/circle.dir/src/help.c.o: /home/krynn/code/src/help.c \
   /usr/include/errno.h \
   /usr/include/features-time64.h \
   /usr/include/features.h \
+  /usr/include/inttypes.h \
+  /usr/include/json-c/arraylist.h \
+  /usr/include/json-c/debug.h \
+  /usr/include/json-c/json.h \
+  /usr/include/json-c/json_c_version.h \
+  /usr/include/json-c/json_config.h \
+  /usr/include/json-c/json_inttypes.h \
+  /usr/include/json-c/json_object.h \
+  /usr/include/json-c/json_object_iterator.h \
+  /usr/include/json-c/json_patch.h \
+  /usr/include/json-c/json_pointer.h \
+  /usr/include/json-c/json_tokener.h \
+  /usr/include/json-c/json_types.h \
+  /usr/include/json-c/json_util.h \
+  /usr/include/json-c/linkhash.h \
+  /usr/include/json-c/printbuf.h \
   /usr/include/limits.h \
   /usr/include/linux/errno.h \
   /usr/include/linux/limits.h \
@@ -10909,6 +15496,7 @@ CMakeFiles/circle.dir/src/help.c.o: /home/krynn/code/src/help.c \
   /usr/include/pthread.h \
   /usr/include/sched.h \
   /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
   /usr/include/stdio.h \
   /usr/include/stdlib.h \
   /usr/include/string.h \
@@ -10942,6 +15530,8 @@ CMakeFiles/circle.dir/src/help.c.o: /home/krynn/code/src/help.c \
   /usr/include/x86_64-linux-gnu/bits/select.h \
   /usr/include/x86_64-linux-gnu/bits/setjmp.h \
   /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
   /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
   /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
   /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
@@ -10977,6 +15567,7 @@ CMakeFiles/circle.dir/src/help.c.o: /home/krynn/code/src/help.c \
   /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
   /usr/include/x86_64-linux-gnu/bits/waitflags.h \
   /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
   /usr/include/x86_64-linux-gnu/bits/wordsize.h \
   /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
   /usr/include/x86_64-linux-gnu/gnu/stubs.h \
@@ -10988,6 +15579,7 @@ CMakeFiles/circle.dir/src/help.c.o: /home/krynn/code/src/help.c \
   /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
   /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
   /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h \
   /usr/lib/gcc/x86_64-linux-gnu/15/include/syslimits.h
 
 CMakeFiles/circle.dir/src/helpers.c.o: /home/krynn/code/src/helpers.c \
@@ -11645,6 +16237,7 @@ CMakeFiles/circle.dir/src/hunts.c.o: /home/krynn/code/src/hunts.c \
   /home/krynn/code/src/lists.h \
   /home/krynn/code/src/missions.h \
   /home/krynn/code/src/mud_options.h \
+  /home/krynn/code/src/mysql.h \
   /home/krynn/code/src/oasis.h \
   /home/krynn/code/src/perfmon.h \
   /home/krynn/code/src/protocol.h \
@@ -11669,7 +16262,15 @@ CMakeFiles/circle.dir/src/hunts.c.o: /home/krynn/code/src/hunts.c \
   /usr/include/limits.h \
   /usr/include/linux/errno.h \
   /usr/include/linux/limits.h \
+  /usr/include/mariadb/ma_list.h \
+  /usr/include/mariadb/mariadb_com.h \
+  /usr/include/mariadb/mariadb_ctype.h \
+  /usr/include/mariadb/mariadb_stmt.h \
+  /usr/include/mariadb/mariadb_version.h \
+  /usr/include/mariadb/mysql.h \
   /usr/include/math.h \
+  /usr/include/pthread.h \
+  /usr/include/sched.h \
   /usr/include/stdc-predef.h \
   /usr/include/stdio.h \
   /usr/include/stdlib.h \
@@ -11681,6 +16282,7 @@ CMakeFiles/circle.dir/src/hunts.c.o: /home/krynn/code/src/hunts.c \
   /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
   /usr/include/x86_64-linux-gnu/bits/byteswap.h \
   /usr/include/x86_64-linux-gnu/bits/confname.h \
+  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
   /usr/include/x86_64-linux-gnu/bits/endian.h \
   /usr/include/x86_64-linux-gnu/bits/endianness.h \
   /usr/include/x86_64-linux-gnu/bits/environments.h \
@@ -11707,7 +16309,9 @@ CMakeFiles/circle.dir/src/hunts.c.o: /home/krynn/code/src/hunts.c \
   /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
   /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
   /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/sched.h \
   /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
   /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
   /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
   /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
@@ -11731,7 +16335,9 @@ CMakeFiles/circle.dir/src/hunts.c.o: /home/krynn/code/src/hunts.c \
   /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
   /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
   /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
   /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
   /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
@@ -11996,7 +16602,22 @@ CMakeFiles/circle.dir/src/interpreter.c.o: /home/krynn/code/src/interpreter.c \
   /home/krynn/code/src/campaign.h \
   /home/krynn/code/src/char_descs.h \
   /home/krynn/code/src/clan.h \
+  /home/krynn/code/src/clan_awards.h \
+  /home/krynn/code/src/clan_buff_queries.h \
+  /home/krynn/code/src/clan_buff_runtime.h \
+  /home/krynn/code/src/clan_combat.h \
+  /home/krynn/code/src/clan_delivery_runtime.h \
+  /home/krynn/code/src/clan_expedition_enrollment.h \
+  /home/krynn/code/src/clan_expeditions.h \
+  /home/krynn/code/src/clan_objective_runtime.h \
+  /home/krynn/code/src/clan_objectives.h \
+  /home/krynn/code/src/clan_progression.h \
+  /home/krynn/code/src/clan_quartermaster.h \
+  /home/krynn/code/src/clan_repository.h \
+  /home/krynn/code/src/clan_rewards.h \
+  /home/krynn/code/src/clan_status.h \
   /home/krynn/code/src/class.h \
+  /home/krynn/code/src/class_improvements.h \
   /home/krynn/code/src/combat_modes.h \
   /home/krynn/code/src/comm.h \
   /home/krynn/code/src/conf.h \
@@ -12011,6 +16632,7 @@ CMakeFiles/circle.dir/src/interpreter.c.o: /home/krynn/code/src/interpreter.c \
   /home/krynn/code/src/dg_scripts.h \
   /home/krynn/code/src/discord_bridge.h \
   /home/krynn/code/src/domains_schools.h \
+  /home/krynn/code/src/epic_feats.h \
   /home/krynn/code/src/evolutions.h \
   /home/krynn/code/src/feats.h \
   /home/krynn/code/src/fight.h \
@@ -12082,6 +16704,22 @@ CMakeFiles/circle.dir/src/interpreter.c.o: /home/krynn/code/src/interpreter.c \
   /usr/include/errno.h \
   /usr/include/features-time64.h \
   /usr/include/features.h \
+  /usr/include/inttypes.h \
+  /usr/include/json-c/arraylist.h \
+  /usr/include/json-c/debug.h \
+  /usr/include/json-c/json.h \
+  /usr/include/json-c/json_c_version.h \
+  /usr/include/json-c/json_config.h \
+  /usr/include/json-c/json_inttypes.h \
+  /usr/include/json-c/json_object.h \
+  /usr/include/json-c/json_object_iterator.h \
+  /usr/include/json-c/json_patch.h \
+  /usr/include/json-c/json_pointer.h \
+  /usr/include/json-c/json_tokener.h \
+  /usr/include/json-c/json_types.h \
+  /usr/include/json-c/json_util.h \
+  /usr/include/json-c/linkhash.h \
+  /usr/include/json-c/printbuf.h \
   /usr/include/limits.h \
   /usr/include/linux/errno.h \
   /usr/include/linux/limits.h \
@@ -12699,11 +17337,15 @@ CMakeFiles/circle.dir/src/legendary_effects.c.o: /home/krynn/code/src/legendary_
   /home/krynn/code/src/actions.h \
   /home/krynn/code/src/bool.h \
   /home/krynn/code/src/campaign.h \
+  /home/krynn/code/src/clan_combat.h \
+  /home/krynn/code/src/clan_progression.h \
+  /home/krynn/code/src/clan_sources.h \
   /home/krynn/code/src/comm.h \
   /home/krynn/code/src/conf.h \
   /home/krynn/code/src/db.h \
   /home/krynn/code/src/dg_event.h \
   /home/krynn/code/src/durable_file.h \
+  /home/krynn/code/src/epic_feats2.h \
   /home/krynn/code/src/estate.h \
   /home/krynn/code/src/fight.h \
   /home/krynn/code/src/handler.h \
@@ -13389,6 +18031,7 @@ CMakeFiles/circle.dir/src/legendary_techniques.c.o: /home/krynn/code/src/legenda
   /home/krynn/code/src/constants.h \
   /home/krynn/code/src/db.h \
   /home/krynn/code/src/dg_event.h \
+  /home/krynn/code/src/epic_feats.h \
   /home/krynn/code/src/fight.h \
   /home/krynn/code/src/handler.h \
   /home/krynn/code/src/helpers.h \
@@ -13881,9 +18524,14 @@ CMakeFiles/circle.dir/src/magic.c.o: /home/krynn/code/src/magic.c \
   /home/krynn/code/src/act.h \
   /home/krynn/code/src/alchemy.h \
   /home/krynn/code/src/assign_wpn_armor.h \
+  /home/krynn/code/src/bloodlines.h \
   /home/krynn/code/src/bool.h \
   /home/krynn/code/src/campaign.h \
+  /home/krynn/code/src/clan_combat.h \
+  /home/krynn/code/src/clan_progression.h \
+  /home/krynn/code/src/clan_sources.h \
   /home/krynn/code/src/class.h \
+  /home/krynn/code/src/class_improvements.h \
   /home/krynn/code/src/combat_modes.h \
   /home/krynn/code/src/comm.h \
   /home/krynn/code/src/conf.h \
@@ -13893,6 +18541,9 @@ CMakeFiles/circle.dir/src/magic.c.o: /home/krynn/code/src/magic.c \
   /home/krynn/code/src/dg_event.h \
   /home/krynn/code/src/dg_scripts.h \
   /home/krynn/code/src/domains_schools.h \
+  /home/krynn/code/src/epic_feats.h \
+  /home/krynn/code/src/epic_feats2.h \
+  /home/krynn/code/src/epic_feats3.h \
   /home/krynn/code/src/epic_magic.h \
   /home/krynn/code/src/evolutions.h \
   /home/krynn/code/src/feats.h \
@@ -13922,6 +18573,7 @@ CMakeFiles/circle.dir/src/magic.c.o: /home/krynn/code/src/magic.c \
   /home/krynn/code/src/spatial_core.h \
   /home/krynn/code/src/spatial_visual.h \
   /home/krynn/code/src/spec_procs.h \
+  /home/krynn/code/src/spell_prep.h \
   /home/krynn/code/src/spells.h \
   /home/krynn/code/src/structs.h \
   /home/krynn/code/src/sysdep.h \
@@ -14141,6 +18793,7 @@ CMakeFiles/circle.dir/src/medit.c.o: /home/krynn/code/src/medit.c \
   /home/krynn/code/src/conf.h \
   /home/krynn/code/src/constants.h \
   /home/krynn/code/src/db.h \
+  /home/krynn/code/src/deities.h \
   /home/krynn/code/src/dg_olc.h \
   /home/krynn/code/src/dg_scripts.h \
   /home/krynn/code/src/feats.h \
@@ -15797,8 +20450,10 @@ CMakeFiles/circle.dir/src/movement.c.o: /home/krynn/code/src/movement.c \
   /home/krynn/code/src/act.h \
   /home/krynn/code/src/actions.h \
   /home/krynn/code/src/assign_wpn_armor.h \
+  /home/krynn/code/src/blocker_stealth.h \
   /home/krynn/code/src/bool.h \
   /home/krynn/code/src/campaign.h \
+  /home/krynn/code/src/clan_access.h \
   /home/krynn/code/src/class.h \
   /home/krynn/code/src/comm.h \
   /home/krynn/code/src/conf.h \
@@ -15807,6 +20462,7 @@ CMakeFiles/circle.dir/src/movement.c.o: /home/krynn/code/src/movement.c \
   /home/krynn/code/src/dg_event.h \
   /home/krynn/code/src/dg_scripts.h \
   /home/krynn/code/src/encounters.h \
+  /home/krynn/code/src/epic_feats.h \
   /home/krynn/code/src/fight.h \
   /home/krynn/code/src/handler.h \
   /home/krynn/code/src/help.h \
@@ -15946,6 +20602,7 @@ CMakeFiles/circle.dir/src/movement.c.o: /home/krynn/code/src/movement.c \
 CMakeFiles/circle.dir/src/movement_cost.c.o: /home/krynn/code/src/movement_cost.c \
   /home/krynn/code/src/act.h \
   /home/krynn/code/src/assign_wpn_armor.h \
+  /home/krynn/code/src/bloodlines.h \
   /home/krynn/code/src/bool.h \
   /home/krynn/code/src/campaign.h \
   /home/krynn/code/src/class.h \
@@ -16819,6 +21476,7 @@ CMakeFiles/circle.dir/src/movement_tracks.c.o: /home/krynn/code/src/movement_tra
 CMakeFiles/circle.dir/src/movement_validation.c.o: /home/krynn/code/src/movement_validation.c \
   /home/krynn/code/src/act.h \
   /home/krynn/code/src/actions.h \
+  /home/krynn/code/src/bloodlines.h \
   /home/krynn/code/src/bool.h \
   /home/krynn/code/src/campaign.h \
   /home/krynn/code/src/class.h \
@@ -16827,6 +21485,9 @@ CMakeFiles/circle.dir/src/movement_validation.c.o: /home/krynn/code/src/movement
   /home/krynn/code/src/constants.h \
   /home/krynn/code/src/db.h \
   /home/krynn/code/src/dg_event.h \
+  /home/krynn/code/src/epic_feats2.h \
+  /home/krynn/code/src/epic_feats3.h \
+  /home/krynn/code/src/evolutions.h \
   /home/krynn/code/src/feats.h \
   /home/krynn/code/src/fight.h \
   /home/krynn/code/src/handler.h \
@@ -17049,6 +21710,7 @@ CMakeFiles/circle.dir/src/msgedit.c.o: /home/krynn/code/src/msgedit.c \
 
 CMakeFiles/circle.dir/src/mud_event.c.o: /home/krynn/code/src/mud_event.c \
   /home/krynn/code/src/act.h \
+  /home/krynn/code/src/bloodlines.h \
   /home/krynn/code/src/bool.h \
   /home/krynn/code/src/brew.h \
   /home/krynn/code/src/campaign.h \
@@ -17285,6 +21947,8 @@ CMakeFiles/circle.dir/src/mud_event_list.c.o: /home/krynn/code/src/mud_event_lis
 CMakeFiles/circle.dir/src/mysql.c.o: /home/krynn/code/src/mysql.c \
   /home/krynn/code/src/bool.h \
   /home/krynn/code/src/campaign.h \
+  /home/krynn/code/src/clan_progression.h \
+  /home/krynn/code/src/clan_repository.h \
   /home/krynn/code/src/comm.h \
   /home/krynn/code/src/conf.h \
   /home/krynn/code/src/db.h \
@@ -17324,6 +21988,7 @@ CMakeFiles/circle.dir/src/mysql.c.o: /home/krynn/code/src/mysql.c \
   /usr/include/pthread.h \
   /usr/include/sched.h \
   /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
   /usr/include/stdio.h \
   /usr/include/stdlib.h \
   /usr/include/string.h \
@@ -17357,6 +22022,8 @@ CMakeFiles/circle.dir/src/mysql.c.o: /home/krynn/code/src/mysql.c \
   /usr/include/x86_64-linux-gnu/bits/select.h \
   /usr/include/x86_64-linux-gnu/bits/setjmp.h \
   /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
   /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
   /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
   /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
@@ -17392,6 +22059,7 @@ CMakeFiles/circle.dir/src/mysql.c.o: /home/krynn/code/src/mysql.c \
   /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
   /usr/include/x86_64-linux-gnu/bits/waitflags.h \
   /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
   /usr/include/x86_64-linux-gnu/bits/wordsize.h \
   /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
   /usr/include/x86_64-linux-gnu/gnu/stubs.h \
@@ -17403,9 +22071,11 @@ CMakeFiles/circle.dir/src/mysql.c.o: /home/krynn/code/src/mysql.c \
   /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
   /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
   /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h \
   /usr/lib/gcc/x86_64-linux-gnu/15/include/syslimits.h
 
 CMakeFiles/circle.dir/src/mysql_boards.c.o: /home/krynn/code/src/mysql_boards.c \
+  /home/krynn/code/src/act.h \
   /home/krynn/code/src/bool.h \
   /home/krynn/code/src/campaign.h \
   /home/krynn/code/src/char_descs.h \
@@ -18663,6 +23333,7 @@ CMakeFiles/circle.dir/src/perlin.c.o: /home/krynn/code/src/perlin.c \
 CMakeFiles/circle.dir/src/player_shop.c.o: /home/krynn/code/src/player_shop.c \
   /home/krynn/code/src/bool.h \
   /home/krynn/code/src/campaign.h \
+  /home/krynn/code/src/clan_access.h \
   /home/krynn/code/src/comm.h \
   /home/krynn/code/src/conf.h \
   /home/krynn/code/src/db.h \
@@ -18793,11 +23464,18 @@ CMakeFiles/circle.dir/src/player_shop.c.o: /home/krynn/code/src/player_shop.c \
 
 CMakeFiles/circle.dir/src/players.c.o: /home/krynn/code/src/players.c \
   /home/krynn/code/src/alchemy.h \
+  /home/krynn/code/src/blocker_stealth.h \
+  /home/krynn/code/src/bloodlines.h \
   /home/krynn/code/src/bool.h \
   /home/krynn/code/src/campaign.h \
   /home/krynn/code/src/char_descs.h \
   /home/krynn/code/src/clan.h \
+  /home/krynn/code/src/clan_buff_runtime.h \
+  /home/krynn/code/src/clan_delivery_runtime.h \
+  /home/krynn/code/src/clan_persistence.h \
+  /home/krynn/code/src/clan_progression.h \
   /home/krynn/code/src/class.h \
+  /home/krynn/code/src/class_improvements.h \
   /home/krynn/code/src/comm.h \
   /home/krynn/code/src/conf.h \
   /home/krynn/code/src/config.h \
@@ -18807,7 +23485,11 @@ CMakeFiles/circle.dir/src/players.c.o: /home/krynn/code/src/players.c \
   /home/krynn/code/src/dg_event.h \
   /home/krynn/code/src/dg_scripts.h \
   /home/krynn/code/src/durable_file.h \
+  /home/krynn/code/src/epic_feats.h \
+  /home/krynn/code/src/epic_feats2.h \
+  /home/krynn/code/src/epic_feats3.h \
   /home/krynn/code/src/epic_magic.h \
+  /home/krynn/code/src/estate.h \
   /home/krynn/code/src/evolutions.h \
   /home/krynn/code/src/genolc.h \
   /home/krynn/code/src/handler.h \
@@ -19200,6 +23882,11 @@ CMakeFiles/circle.dir/src/protocol.c.o: /home/krynn/code/src/protocol.c \
   /home/krynn/code/src/act.h \
   /home/krynn/code/src/bool.h \
   /home/krynn/code/src/campaign.h \
+  /home/krynn/code/src/clan_buff_activation.h \
+  /home/krynn/code/src/clan_buff_queries.h \
+  /home/krynn/code/src/clan_progression.h \
+  /home/krynn/code/src/clan_repository.h \
+  /home/krynn/code/src/clan_web.h \
   /home/krynn/code/src/comm.h \
   /home/krynn/code/src/conf.h \
   /home/krynn/code/src/db.h \
@@ -19229,10 +23916,33 @@ CMakeFiles/circle.dir/src/protocol.c.o: /home/krynn/code/src/protocol.c \
   /usr/include/errno.h \
   /usr/include/features-time64.h \
   /usr/include/features.h \
+  /usr/include/inttypes.h \
+  /usr/include/json-c/arraylist.h \
+  /usr/include/json-c/debug.h \
+  /usr/include/json-c/json.h \
+  /usr/include/json-c/json_c_version.h \
+  /usr/include/json-c/json_config.h \
+  /usr/include/json-c/json_inttypes.h \
+  /usr/include/json-c/json_object.h \
+  /usr/include/json-c/json_object_iterator.h \
+  /usr/include/json-c/json_patch.h \
+  /usr/include/json-c/json_pointer.h \
+  /usr/include/json-c/json_tokener.h \
+  /usr/include/json-c/json_types.h \
+  /usr/include/json-c/json_util.h \
+  /usr/include/json-c/linkhash.h \
+  /usr/include/json-c/printbuf.h \
   /usr/include/limits.h \
   /usr/include/linux/errno.h \
   /usr/include/linux/limits.h \
+  /usr/include/mariadb/ma_list.h \
+  /usr/include/mariadb/mariadb_com.h \
+  /usr/include/mariadb/mariadb_ctype.h \
+  /usr/include/mariadb/mariadb_stmt.h \
+  /usr/include/mariadb/mariadb_version.h \
+  /usr/include/mariadb/mysql.h \
   /usr/include/stdc-predef.h \
+  /usr/include/stdint.h \
   /usr/include/stdio.h \
   /usr/include/stdlib.h \
   /usr/include/string.h \
@@ -19263,6 +23973,8 @@ CMakeFiles/circle.dir/src/protocol.c.o: /home/krynn/code/src/protocol.c \
   /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
   /usr/include/x86_64-linux-gnu/bits/select.h \
   /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
   /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
   /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
   /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
@@ -19296,6 +24008,7 @@ CMakeFiles/circle.dir/src/protocol.c.o: /home/krynn/code/src/protocol.c \
   /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
   /usr/include/x86_64-linux-gnu/bits/waitflags.h \
   /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
   /usr/include/x86_64-linux-gnu/bits/wordsize.h \
   /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
   /usr/include/x86_64-linux-gnu/gnu/stubs.h \
@@ -19307,6 +24020,7 @@ CMakeFiles/circle.dir/src/protocol.c.o: /home/krynn/code/src/protocol.c \
   /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
   /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
   /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h \
   /usr/lib/gcc/x86_64-linux-gnu/15/include/syslimits.h
 
 CMakeFiles/circle.dir/src/psionics.c.o: /home/krynn/code/src/psionics.c \
@@ -19324,6 +24038,7 @@ CMakeFiles/circle.dir/src/psionics.c.o: /home/krynn/code/src/psionics.c \
   /home/krynn/code/src/dg_event.h \
   /home/krynn/code/src/dg_scripts.h \
   /home/krynn/code/src/domains_schools.h \
+  /home/krynn/code/src/epic_feats.h \
   /home/krynn/code/src/fight.h \
   /home/krynn/code/src/grapple.h \
   /home/krynn/code/src/handler.h \
@@ -19689,6 +24404,7 @@ CMakeFiles/circle.dir/src/quest.c.o: /home/krynn/code/src/quest.c \
   /home/krynn/code/src/campaign.h \
   /home/krynn/code/src/comm.h \
   /home/krynn/code/src/conf.h \
+  /home/krynn/code/src/constants.h \
   /home/krynn/code/src/db.h \
   /home/krynn/code/src/db_init.h \
   /home/krynn/code/src/dg_event.h \
@@ -19711,6 +24427,7 @@ CMakeFiles/circle.dir/src/quest.c.o: /home/krynn/code/src/quest.c \
   /home/krynn/code/src/protocol.h \
   /home/krynn/code/src/quest.h \
   /home/krynn/code/src/screen.h \
+  /home/krynn/code/src/spells.h \
   /home/krynn/code/src/structs.h \
   /home/krynn/code/src/sysdep.h \
   /home/krynn/code/src/utils.h \
@@ -19725,6 +24442,22 @@ CMakeFiles/circle.dir/src/quest.c.o: /home/krynn/code/src/quest.c \
   /usr/include/errno.h \
   /usr/include/features-time64.h \
   /usr/include/features.h \
+  /usr/include/inttypes.h \
+  /usr/include/json-c/arraylist.h \
+  /usr/include/json-c/debug.h \
+  /usr/include/json-c/json.h \
+  /usr/include/json-c/json_c_version.h \
+  /usr/include/json-c/json_config.h \
+  /usr/include/json-c/json_inttypes.h \
+  /usr/include/json-c/json_object.h \
+  /usr/include/json-c/json_object_iterator.h \
+  /usr/include/json-c/json_patch.h \
+  /usr/include/json-c/json_pointer.h \
+  /usr/include/json-c/json_tokener.h \
+  /usr/include/json-c/json_types.h \
+  /usr/include/json-c/json_util.h \
+  /usr/include/json-c/linkhash.h \
+  /usr/include/json-c/printbuf.h \
   /usr/include/limits.h \
   /usr/include/linux/errno.h \
   /usr/include/linux/limits.h \
@@ -21125,9 +25858,11 @@ CMakeFiles/circle.dir/src/sedit.c.o: /home/krynn/code/src/sedit.c \
 
 CMakeFiles/circle.dir/src/shop.c.o: /home/krynn/code/src/shop.c \
   /home/krynn/code/src/act.h \
+  /home/krynn/code/src/assign_wpn_armor.h \
   /home/krynn/code/src/backgrounds.h \
   /home/krynn/code/src/bool.h \
   /home/krynn/code/src/campaign.h \
+  /home/krynn/code/src/clan_access.h \
   /home/krynn/code/src/clan_economy.h \
   /home/krynn/code/src/comm.h \
   /home/krynn/code/src/conf.h \
@@ -21255,6 +25990,7 @@ CMakeFiles/circle.dir/src/spec_abilities.c.o: /home/krynn/code/src/spec_abilitie
   /home/krynn/code/src/assign_wpn_armor.h \
   /home/krynn/code/src/bool.h \
   /home/krynn/code/src/campaign.h \
+  /home/krynn/code/src/clan_enchant.h \
   /home/krynn/code/src/class.h \
   /home/krynn/code/src/comm.h \
   /home/krynn/code/src/conf.h \
@@ -21495,6 +26231,7 @@ CMakeFiles/circle.dir/src/spec_procs.c.o: /home/krynn/code/src/spec_procs.c \
   /home/krynn/code/src/alchemy.h \
   /home/krynn/code/src/assign_wpn_armor.h \
   /home/krynn/code/src/backgrounds.h \
+  /home/krynn/code/src/bloodlines.h \
   /home/krynn/code/src/bool.h \
   /home/krynn/code/src/campaign.h \
   /home/krynn/code/src/clan.h \
@@ -21506,6 +26243,8 @@ CMakeFiles/circle.dir/src/spec_procs.c.o: /home/krynn/code/src/spec_procs.c \
   /home/krynn/code/src/dg_event.h \
   /home/krynn/code/src/dg_scripts.h \
   /home/krynn/code/src/domains_schools.h \
+  /home/krynn/code/src/epic_feats.h \
+  /home/krynn/code/src/epic_feats2.h \
   /home/krynn/code/src/evolutions.h \
   /home/krynn/code/src/feats.h \
   /home/krynn/code/src/fight.h \
@@ -21647,6 +26386,7 @@ CMakeFiles/circle.dir/src/spell_parser.c.o: /home/krynn/code/src/spell_parser.c 
   /home/krynn/code/src/actions.h \
   /home/krynn/code/src/alchemy.h \
   /home/krynn/code/src/assign_wpn_armor.h \
+  /home/krynn/code/src/bloodlines.h \
   /home/krynn/code/src/bool.h \
   /home/krynn/code/src/campaign.h \
   /home/krynn/code/src/casting_visuals.h \
@@ -21659,6 +26399,9 @@ CMakeFiles/circle.dir/src/spell_parser.c.o: /home/krynn/code/src/spell_parser.c 
   /home/krynn/code/src/dg_event.h \
   /home/krynn/code/src/dg_scripts.h \
   /home/krynn/code/src/domains_schools.h \
+  /home/krynn/code/src/epic_feats.h \
+  /home/krynn/code/src/epic_feats2.h \
+  /home/krynn/code/src/epic_feats3.h \
   /home/krynn/code/src/epic_magic.h \
   /home/krynn/code/src/evolutions.h \
   /home/krynn/code/src/fight.h \
@@ -21783,6 +26526,7 @@ CMakeFiles/circle.dir/src/spell_parser.c.o: /home/krynn/code/src/spell_parser.c 
   /usr/lib/gcc/x86_64-linux-gnu/15/include/syslimits.h
 
 CMakeFiles/circle.dir/src/spell_prep.c.o: /home/krynn/code/src/spell_prep.c \
+  /home/krynn/code/src/bloodlines.h \
   /home/krynn/code/src/bool.h \
   /home/krynn/code/src/campaign.h \
   /home/krynn/code/src/class.h \
@@ -21792,6 +26536,7 @@ CMakeFiles/circle.dir/src/spell_prep.c.o: /home/krynn/code/src/spell_prep.c \
   /home/krynn/code/src/db.h \
   /home/krynn/code/src/dg_event.h \
   /home/krynn/code/src/domains_schools.h \
+  /home/krynn/code/src/epic_feats.h \
   /home/krynn/code/src/handler.h \
   /home/krynn/code/src/helpers.h \
   /home/krynn/code/src/interpreter.h \
@@ -22014,6 +26759,120 @@ CMakeFiles/circle.dir/src/spellbook_scroll.c.o: /home/krynn/code/src/spellbook_s
   /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
   /usr/lib/gcc/x86_64-linux-gnu/15/include/syslimits.h
 
+CMakeFiles/circle.dir/src/spellhelp.c.o: /home/krynn/code/src/spellhelp.c \
+  /home/krynn/code/src/bool.h \
+  /home/krynn/code/src/campaign.h \
+  /home/krynn/code/src/comm.h \
+  /home/krynn/code/src/conf.h \
+  /home/krynn/code/src/constants.h \
+  /home/krynn/code/src/db.h \
+  /home/krynn/code/src/dg_scripts.h \
+  /home/krynn/code/src/domains_schools.h \
+  /home/krynn/code/src/helpers.h \
+  /home/krynn/code/src/interpreter.h \
+  /home/krynn/code/src/lists.h \
+  /home/krynn/code/src/mob_spellslots.h \
+  /home/krynn/code/src/modify.h \
+  /home/krynn/code/src/mud_options.h \
+  /home/krynn/code/src/perfmon.h \
+  /home/krynn/code/src/protocol.h \
+  /home/krynn/code/src/psionics.h \
+  /home/krynn/code/src/spellhelp.h \
+  /home/krynn/code/src/spells.h \
+  /home/krynn/code/src/structs.h \
+  /home/krynn/code/src/sysdep.h \
+  /home/krynn/code/src/utils.h \
+  /home/krynn/code/src/vnums.h \
+  /usr/include/alloca.h \
+  /usr/include/asm-generic/errno-base.h \
+  /usr/include/asm-generic/errno.h \
+  /usr/include/assert.h \
+  /usr/include/crypt.h \
+  /usr/include/ctype.h \
+  /usr/include/endian.h \
+  /usr/include/errno.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/limits.h \
+  /usr/include/linux/errno.h \
+  /usr/include/linux/limits.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdio.h \
+  /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/time.h \
+  /usr/include/unistd.h \
+  /usr/include/x86_64-linux-gnu/asm/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/confname.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/environments.h \
+  /usr/include/x86_64-linux-gnu/bits/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_core.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_posix.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
+  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/sys/time.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/limits.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/15/include/syslimits.h
+
 CMakeFiles/circle.dir/src/spells.c.o: /home/krynn/code/src/spells.c \
   /home/krynn/code/src/act.h \
   /home/krynn/code/src/actions.h \
@@ -22029,6 +26888,7 @@ CMakeFiles/circle.dir/src/spells.c.o: /home/krynn/code/src/spells.c \
   /home/krynn/code/src/dg_event.h \
   /home/krynn/code/src/dg_scripts.h \
   /home/krynn/code/src/domains_schools.h \
+  /home/krynn/code/src/epic_feats3.h \
   /home/krynn/code/src/epic_magic.h \
   /home/krynn/code/src/evolutions.h \
   /home/krynn/code/src/feats.h \
@@ -22272,6 +27132,7 @@ CMakeFiles/circle.dir/src/staff_events.c.o: /home/krynn/code/src/staff_events.c 
 CMakeFiles/circle.dir/src/study.c.o: /home/krynn/code/src/study.c \
   /home/krynn/code/src/alchemy.h \
   /home/krynn/code/src/assign_wpn_armor.h \
+  /home/krynn/code/src/bloodlines.h \
   /home/krynn/code/src/bool.h \
   /home/krynn/code/src/campaign.h \
   /home/krynn/code/src/class.h \
@@ -22281,6 +27142,8 @@ CMakeFiles/circle.dir/src/study.c.o: /home/krynn/code/src/study.c \
   /home/krynn/code/src/db.h \
   /home/krynn/code/src/dg_event.h \
   /home/krynn/code/src/domains_schools.h \
+  /home/krynn/code/src/epic_feats.h \
+  /home/krynn/code/src/epic_feats3.h \
   /home/krynn/code/src/evolutions.h \
   /home/krynn/code/src/feats.h \
   /home/krynn/code/src/handler.h \
@@ -24135,6 +28998,7 @@ CMakeFiles/circle.dir/src/systems/terrainbridge/terrain_bridge.c.o: /home/krynn/
   /home/krynn/code/src/comm.h \
   /home/krynn/code/src/conf.h \
   /home/krynn/code/src/db.h \
+  /home/krynn/code/src/dotenv.h \
   /home/krynn/code/src/helpers.h \
   /home/krynn/code/src/lists.h \
   /home/krynn/code/src/modify.h \
@@ -25374,6 +30238,7 @@ CMakeFiles/circle.dir/src/utils.c.o: /home/krynn/code/src/utils.c \
   /home/krynn/code/src/alchemy.h \
   /home/krynn/code/src/assign_wpn_armor.h \
   /home/krynn/code/src/backgrounds.h \
+  /home/krynn/code/src/bloodlines.h \
   /home/krynn/code/src/bool.h \
   /home/krynn/code/src/campaign.h \
   /home/krynn/code/src/char_descs.h \
@@ -25387,6 +30252,8 @@ CMakeFiles/circle.dir/src/utils.c.o: /home/krynn/code/src/utils.c \
   /home/krynn/code/src/dg_event.h \
   /home/krynn/code/src/dg_scripts.h \
   /home/krynn/code/src/domains_schools.h \
+  /home/krynn/code/src/epic_feats2.h \
+  /home/krynn/code/src/epic_feats3.h \
   /home/krynn/code/src/epic_magic.h \
   /home/krynn/code/src/evolutions.h \
   /home/krynn/code/src/feats.h \
@@ -27177,15 +32044,11 @@ CMakeFiles/circle.dir/src/zone_procs.c.o: /home/krynn/code/src/zone_procs.c \
 
 /home/krynn/code/src/zmalloc.c:
 
-/usr/include/gd_io.h:
-
 /usr/include/gd.h:
 
 /home/krynn/code/src/vessels_autopilot.c:
 
 /home/krynn/code/src/vehicles_transport.c:
-
-/home/krynn/code/src/vehicles.c:
 
 /home/krynn/code/src/treasure_const.c:
 
@@ -27204,22 +32067,6 @@ CMakeFiles/circle.dir/src/zone_procs.c.o: /home/krynn/code/src/zone_procs.c \
 /home/krynn/code/src/systems/pubsub/pubsub_event_handlers.c:
 
 /home/krynn/code/src/systems/pubsub/pubsub_commands.c:
-
-/usr/include/json-c/json_types.h:
-
-/usr/include/json-c/json_tokener.h:
-
-/usr/include/json-c/json_patch.h:
-
-/usr/include/json-c/json_object.h:
-
-/usr/include/json-c/json_inttypes.h:
-
-/usr/include/json-c/json_config.h:
-
-/usr/include/json-c/json_c_version.h:
-
-/usr/include/json-c/json.h:
 
 /home/krynn/code/src/spell_prep.c:
 
@@ -27248,8 +32095,6 @@ CMakeFiles/circle.dir/src/zone_procs.c.o: /home/krynn/code/src/zone_procs.c \
 /home/krynn/code/src/protocol.c:
 
 /home/krynn/code/src/premadebuilds.c:
-
-/home/krynn/code/src/prefedit.c:
 
 /home/krynn/code/src/templates.h:
 
@@ -27293,6 +32138,8 @@ CMakeFiles/circle.dir/src/zone_procs.c.o: /home/krynn/code/src/zone_procs.c \
 
 /home/krynn/code/src/movement.h:
 
+/home/krynn/code/src/blocker_stealth.h:
+
 /home/krynn/code/src/mob_spellslots.c:
 
 /home/krynn/code/src/mob_spells.c:
@@ -27321,43 +32168,11 @@ CMakeFiles/circle.dir/src/zone_procs.c.o: /home/krynn/code/src/zone_procs.c \
 
 /home/krynn/code/src/limits.c:
 
-/usr/include/openssl/symhacks.h:
-
-/usr/include/openssl/randerr.h:
-
-/usr/include/openssl/params.h:
-
-/home/krynn/code/src/random.c:
-
-/usr/include/openssl/objects.h:
-
-/home/krynn/code/src/transport_unified.c:
-
-/usr/include/openssl/indicator.h:
-
-/usr/include/openssl/evperr.h:
-
-/home/krynn/code/src/oasis_delete.c:
-
-/usr/include/openssl/cryptoerr_legacy.h:
-
-/usr/include/openssl/bioerr.h:
-
-/usr/include/openssl/bio.h:
-
-/usr/include/openssl/asn1err.h:
-
-/usr/include/openssl/asn1.h:
-
 /home/krynn/code/src/mysql.c:
 
 /home/krynn/code/src/legendary_identity.c:
 
 /usr/include/x86_64-linux-gnu/sys/file.h:
-
-/usr/include/x86_64-linux-gnu/openssl/configuration.h:
-
-/usr/include/openssl/sha.h:
 
 /home/krynn/code/src/spec_abilities.c:
 
@@ -27365,13 +32180,9 @@ CMakeFiles/circle.dir/src/zone_procs.c.o: /home/krynn/code/src/zone_procs.c \
 
 /home/krynn/code/src/legendary_earnings.c:
 
-/usr/include/inttypes.h:
-
 /home/krynn/code/src/kdtree.c:
 
 /home/krynn/code/src/bedit.h:
-
-/home/krynn/code/src/interpreter.c:
 
 /home/krynn/code/src/improved-edit.c:
 
@@ -27386,8 +32197,6 @@ CMakeFiles/circle.dir/src/zone_procs.c.o: /home/krynn/code/src/zone_procs.c \
 /home/krynn/code/src/hlquest.c:
 
 /home/krynn/code/src/help.c:
-
-/home/krynn/code/src/hedit.h:
 
 /home/krynn/code/src/house.c:
 
@@ -27423,25 +32232,15 @@ CMakeFiles/circle.dir/src/zone_procs.c.o: /home/krynn/code/src/zone_procs.c \
 
 /home/krynn/code/src/evolutions.c:
 
-/usr/include/x86_64-linux-gnu/bits/mathcalls-macros.h:
+/home/krynn/code/src/epic_feats2.c:
 
-/usr/include/x86_64-linux-gnu/bits/math-vector.h:
-
-/usr/include/x86_64-linux-gnu/bits/libm-simd-decl-stubs.h:
-
-/usr/include/x86_64-linux-gnu/bits/fp-fast.h:
-
-/usr/include/x86_64-linux-gnu/bits/flt-eval-method.h:
+/home/krynn/code/src/spellhelp.c:
 
 /home/krynn/code/src/prefedit.h:
-
-/home/krynn/code/src/encounters.c:
 
 /home/krynn/code/src/durable_file.h:
 
 /home/krynn/code/src/durable_file.c:
-
-/home/krynn/code/src/dotenv.c:
 
 /home/krynn/code/src/domain_powers.c:
 
@@ -27450,8 +32249,6 @@ CMakeFiles/circle.dir/src/zone_procs.c.o: /home/krynn/code/src/zone_procs.c \
 /home/krynn/code/src/movement_events.h:
 
 /home/krynn/code/src/dg_triggers.c:
-
-/home/krynn/code/src/dg_scripts.c:
 
 /home/krynn/code/src/dg_olc.c:
 
@@ -27466,12 +32263,6 @@ CMakeFiles/circle.dir/src/zone_procs.c.o: /home/krynn/code/src/zone_procs.c \
 /home/krynn/code/src/deities.c:
 
 /home/krynn/code/src/spatial_visual.h:
-
-/home/krynn/code/src/modify.c:
-
-/usr/include/openssl/e_os2.h:
-
-/home/krynn/code/src/spatial_audio.h:
 
 /home/krynn/code/src/perlin.h:
 
@@ -27491,19 +32282,7 @@ CMakeFiles/circle.dir/src/zone_procs.c.o: /home/krynn/code/src/zone_procs.c \
 
 /home/krynn/code/src/crafting_recipes.c:
 
-/home/krynn/code/src/crafting_recipes.h:
-
-/home/krynn/code/src/systems/pubsub/pubsub_db.c:
-
-/usr/include/openssl/objectserr.h:
-
-/home/krynn/code/src/craft.c:
-
 /home/krynn/code/src/config.h:
-
-/home/krynn/code/src/legendary.c:
-
-/usr/include/x86_64-linux-gnu/sys/wait.h:
 
 /usr/include/x86_64-linux-gnu/sys/uio.h:
 
@@ -27513,13 +32292,275 @@ CMakeFiles/circle.dir/src/zone_procs.c.o: /home/krynn/code/src/zone_procs.c \
 
 /usr/include/x86_64-linux-gnu/bits/uio_lim.h:
 
-/usr/include/x86_64-linux-gnu/bits/types/struct_rusage.h:
+/usr/include/x86_64-linux-gnu/bits/netdb.h:
+
+/usr/include/x86_64-linux-gnu/bits/fcntl-linux.h:
+
+/usr/include/rpc/netdb.h:
+
+/usr/include/arpa/telnet.h:
+
+/home/krynn/code/src/vessels.h:
+
+/usr/include/gdfx.h:
+
+/home/krynn/code/src/systems/spatial/spatial_audio.c:
+
+/home/krynn/code/src/systems/intermud3/i3_client.h:
+
+/home/krynn/code/src/new_mail.h:
+
+/home/krynn/code/src/legendary_earnings.h:
+
+/home/krynn/code/src/comm.c:
+
+/home/krynn/code/src/combat_modes.c:
+
+/home/krynn/code/src/class_improvements.c:
+
+/home/krynn/code/src/clan_web_runtime.c:
+
+/home/krynn/code/src/clan_web_content_runtime.c:
+
+/home/krynn/code/src/clan_web_content.h:
+
+/home/krynn/code/src/clan_web.h:
+
+/usr/include/netinet/in.h:
+
+/home/krynn/code/src/clan_web.c:
+
+/home/krynn/code/src/clan_status.c:
+
+/home/krynn/code/src/clan_sources.h:
+
+/usr/include/x86_64-linux-gnu/bits/math-vector.h:
+
+/usr/include/x86_64-linux-gnu/bits/libm-simd-decl-stubs.h:
+
+/usr/include/x86_64-linux-gnu/bits/fp-fast.h:
+
+/usr/include/x86_64-linux-gnu/bits/flt-eval-method.h:
+
+/usr/include/openssl/symhacks.h:
+
+/usr/include/openssl/randerr.h:
+
+/usr/include/openssl/params.h:
+
+/home/krynn/code/src/systems/pubsub/pubsub_db.c:
+
+/home/krynn/code/src/craft.c:
+
+/usr/include/openssl/objectserr.h:
+
+/home/krynn/code/src/random.c:
+
+/usr/include/openssl/objects.h:
+
+/home/krynn/code/src/transport_unified.c:
+
+/usr/include/openssl/indicator.h:
+
+/usr/include/openssl/evperr.h:
+
+/home/krynn/code/src/oasis_delete.c:
+
+/usr/include/openssl/cryptoerr_legacy.h:
+
+/usr/include/openssl/bioerr.h:
+
+/usr/include/openssl/bio.h:
+
+/usr/include/openssl/asn1err.h:
+
+/usr/include/openssl/asn1.h:
+
+/home/krynn/code/src/clan_repository.c:
+
+/home/krynn/code/src/clan_qm_services.h:
+
+/home/krynn/code/src/interpreter.c:
+
+/home/krynn/code/src/clan_qm_services.c:
+
+/home/krynn/code/src/clan_pacing.h:
+
+/home/krynn/code/src/clan_policy.c:
+
+/home/krynn/code/src/clan_objective_runtime.c:
+
+/home/krynn/code/src/clan_expeditions.c:
+
+/usr/include/x86_64-linux-gnu/bits/mathcalls-macros.h:
+
+/home/krynn/code/src/clan_expedition_world.c:
+
+/home/krynn/code/src/clan_expedition_runtime.c:
+
+/usr/include/x86_64-linux-gnu/openssl/configuration.h:
+
+/usr/include/openssl/sha.h:
+
+/home/krynn/code/src/modify.c:
+
+/home/krynn/code/src/spatial_audio.h:
+
+/usr/include/openssl/e_os2.h:
+
+/home/krynn/code/src/clan_expeditions.h:
+
+/home/krynn/code/src/clan_expedition_enrollment.c:
+
+/home/krynn/code/src/clan_economy.c:
+
+/home/krynn/code/src/clan_delivery_runtime.h:
+
+/home/krynn/code/src/crafting_recipes.h:
+
+/home/krynn/code/src/clan_quartermaster.h:
+
+/home/krynn/code/src/clan_delivery.h:
+
+/home/krynn/code/src/clan_buff_runtime.c:
+
+/home/krynn/code/src/clan_buff_lifecycle.c:
+
+/home/krynn/code/src/clan_buff_commit.c:
+
+/home/krynn/code/src/clan_status.h:
+
+/home/krynn/code/src/clan_display.h:
+
+/home/krynn/code/src/clan_buff_runtime.h:
+
+/usr/include/gd_io.h:
+
+/home/krynn/code/src/clan_delivery_runtime.c:
+
+/home/krynn/code/src/clan_buff_commands.h:
+
+/home/krynn/code/src/clan_buff_activation.c:
+
+/home/krynn/code/src/dg_scripts.c:
+
+/home/krynn/code/src/clan_legacy_fields.h:
+
+/home/krynn/code/src/clan_boot.c:
+
+/home/krynn/code/src/clan_repository.h:
+
+/home/krynn/code/src/clan_awards.h:
+
+/home/krynn/code/src/clan_transactions.h:
+
+/home/krynn/code/src/clan_objective_runtime.h:
+
+/home/krynn/code/src/clan_progression.h:
+
+/home/krynn/code/src/clan_persistence.h:
+
+/home/krynn/code/src/clan_benefits.h:
+
+/home/krynn/code/src/movement_doors.c:
+
+/home/krynn/code/src/clan.c:
+
+/home/krynn/code/src/casting_visuals.c:
+
+/home/krynn/code/src/brew.h:
+
+/home/krynn/code/src/boards.c:
+
+/home/krynn/code/src/epic_feats3.c:
+
+/home/krynn/code/src/epic_feats3.h:
+
+/home/krynn/code/src/wilderness.c:
+
+/home/krynn/code/src/clan_objectives.h:
+
+/home/krynn/code/src/bardic_performance.h:
+
+/home/krynn/code/src/bardic_performance.c:
+
+/home/krynn/code/src/backgrounds.c:
+
+/home/krynn/code/src/dg_mobcmd.c:
+
+/home/krynn/code/src/crafting_new.c:
+
+/home/krynn/code/src/clan_buff_lifecycle.h:
+
+/home/krynn/code/src/clan_buff_queries.h:
+
+/home/krynn/code/src/estate.h:
+
+/home/krynn/code/src/auction_house.h:
+
+/home/krynn/code/src/auction_house.c:
+
+/home/krynn/code/src/asciimap.c:
+
+/home/krynn/code/src/alchemy.c:
+
+/usr/include/x86_64-linux-gnu/sys/socket.h:
+
+/usr/include/x86_64-linux-gnu/curl/options.h:
+
+/usr/include/x86_64-linux-gnu/curl/mprintf.h:
+
+/usr/include/x86_64-linux-gnu/curl/curl.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/struct_osockaddr.h:
+
+/usr/include/x86_64-linux-gnu/bits/sockaddr.h:
+
+/home/krynn/code/src/systems/pubsub/pubsub_handlers.c:
+
+/home/krynn/code/src/spatial_core.h:
+
+/usr/include/x86_64-linux-gnu/asm/sockios.h:
+
+/home/krynn/code/src/msgedit.c:
+
+/usr/include/x86_64-linux-gnu/asm/posix_types.h:
+
+/usr/include/linux/posix_types.h:
+
+/home/krynn/code/src/movement_tracks.c:
+
+/usr/include/asm-generic/sockios.h:
+
+/home/krynn/code/src/dotenv.h:
+
+/home/krynn/code/src/ai_security.c:
+
+/home/krynn/code/src/dg_handler.c:
+
+/home/krynn/code/src/ai_events.c:
+
+/home/krynn/code/src/aedit.c:
+
+/home/krynn/code/src/actions.c:
+
+/home/krynn/code/src/legendary.c:
+
+/usr/include/x86_64-linux-gnu/sys/wait.h:
+
+/usr/include/x86_64-linux-gnu/curl/multi.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/stack_t.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/sigval_t.h:
 
 /home/krynn/code/src/shop.c:
 
 /usr/include/x86_64-linux-gnu/bits/types/siginfo_t.h:
+
+/home/krynn/code/src/msgedit.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/sigevent_t.h:
 
 /usr/include/x86_64-linux-gnu/bits/fp-logb.h:
 
@@ -27537,6 +32578,8 @@ CMakeFiles/circle.dir/src/zone_procs.c.o: /home/krynn/code/src/zone_procs.c \
 
 /usr/include/x86_64-linux-gnu/bits/sigstack.h:
 
+/home/krynn/code/src/clan_objectives.c:
+
 /usr/include/x86_64-linux-gnu/bits/siginfo-consts.h:
 
 /usr/include/x86_64-linux-gnu/bits/siginfo-arch.h:
@@ -27545,159 +32588,59 @@ CMakeFiles/circle.dir/src/zone_procs.c.o: /home/krynn/code/src/zone_procs.c \
 
 /usr/include/x86_64-linux-gnu/bits/sigcontext.h:
 
-/usr/include/x86_64-linux-gnu/bits/netdb.h:
+/home/krynn/code/src/wilderness_kb.h:
 
-/usr/include/x86_64-linux-gnu/bits/fcntl-linux.h:
+/home/krynn/code/src/kdtree.h:
 
-/usr/include/rpc/netdb.h:
+/home/krynn/code/src/genshp.h:
 
-/usr/include/netinet/in.h:
+/home/krynn/code/src/staff_events.c:
 
-/usr/include/arpa/telnet.h:
+/home/krynn/code/src/copyover_diagnostic.h:
 
-/home/krynn/code/src/vessels.h:
+/home/krynn/code/src/act.wizard.c:
 
-/usr/include/gdfx.h:
+/usr/include/x86_64-linux-gnu/sys/stat.h:
 
-/home/krynn/code/src/systems/spatial/spatial_audio.c:
+/home/krynn/code/src/estate.c:
 
-/home/krynn/code/src/systems/intermud3/i3_client.h:
+/usr/include/signal.h:
 
-/home/krynn/code/src/new_mail.h:
+/usr/include/x86_64-linux-gnu/bits/struct_stat.h:
 
-/usr/include/x86_64-linux-gnu/bits/types/sigevent_t.h:
+/home/krynn/code/src/shop.h:
 
-/home/krynn/code/src/msgedit.h:
+/home/krynn/code/src/legendary_foundations.c:
 
-/home/krynn/code/src/legendary_earnings.h:
+/home/krynn/code/src/house.h:
 
-/home/krynn/code/src/clan_economy.h:
+/home/krynn/code/src/genolc.h:
 
-/home/krynn/code/src/comm.c:
+/home/krynn/code/src/legendary_techniques.h:
 
-/home/krynn/code/src/combat_modes.c:
+/home/krynn/code/src/legendary_foundations.h:
 
-/home/krynn/code/src/ibt.h:
+/usr/include/x86_64-linux-gnu/bits/mathcalls-helper-functions.h:
 
-/home/krynn/code/src/clan_economy.c:
+/home/krynn/code/src/evolutions.h:
 
-/home/krynn/code/src/clan_transactions.h:
+/home/krynn/code/src/epic_feats2.h:
 
-/home/krynn/code/src/clan_benefits.h:
+/home/krynn/code/src/actionqueues.h:
 
-/home/krynn/code/src/movement_doors.c:
+/home/krynn/code/src/traps.h:
 
-/home/krynn/code/src/clan.c:
+/home/krynn/code/src/spec_abilities.h:
 
-/home/krynn/code/src/casting_visuals.c:
+/home/krynn/code/src/legendary_transaction.h:
 
-/home/krynn/code/src/brew.h:
+/home/krynn/code/src/systems/narrative_weaver/narrative_weaver.h:
 
-/home/krynn/code/src/boards.c:
+/home/krynn/code/src/legendary_store.h:
 
-/home/krynn/code/src/wilderness.c:
-
-/home/krynn/code/src/bardic_performance.h:
-
-/home/krynn/code/src/bardic_performance.c:
-
-/home/krynn/code/src/backgrounds.c:
-
-/home/krynn/code/src/dg_mobcmd.c:
-
-/home/krynn/code/src/crafting_new.c:
-
-/home/krynn/code/src/estate.h:
-
-/home/krynn/code/src/auction_house.h:
-
-/home/krynn/code/src/auction_house.c:
-
-/home/krynn/code/src/asciimap.c:
-
-/home/krynn/code/src/alchemy.c:
-
-/usr/include/x86_64-linux-gnu/sys/socket.h:
-
-/usr/include/x86_64-linux-gnu/curl/options.h:
-
-/usr/include/x86_64-linux-gnu/bits/types/stack_t.h:
-
-/usr/include/x86_64-linux-gnu/curl/multi.h:
-
-/usr/include/x86_64-linux-gnu/curl/mprintf.h:
-
-/usr/include/x86_64-linux-gnu/curl/curl.h:
-
-/usr/include/x86_64-linux-gnu/bits/types/struct_osockaddr.h:
-
-/usr/include/x86_64-linux-gnu/curl/urlapi.h:
-
-CMakeFiles/circle.dir/src/systems/intermud3/i3_commands.c.o:
-
-/usr/include/x86_64-linux-gnu/bits/sigthread.h:
-
-CMakeFiles/circle.dir/src/systems/intermud3/i3_client.c.o:
-
-/usr/lib/x86_64-linux-gnu/libjpeg.so.8:
-
-CMakeFiles/circle.dir/src/spells.c.o:
-
-CMakeFiles/circle.dir/src/movement_events.c.o:
-
-/usr/lib/x86_64-linux-gnu/libjson-c.so:
-
-/home/krynn/code/src/dg_wldcmd.c:
-
-/usr/lib/x86_64-linux-gnu/libpng16.so.16:
-
-CMakeFiles/circle.dir/src/pubsub.c.o:
-
-CMakeFiles/circle.dir/src/perfmon.c.o:
-
-CMakeFiles/circle.dir/src/systems/intermud3/i3_utils.c.o:
-
-/usr/include/unistd.h:
-
-CMakeFiles/circle.dir/src/spec_abilities.c.o:
-
-CMakeFiles/circle.dir/src/constants.c.o:
-
-/usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h:
-
-CMakeFiles/circle.dir/src/roleplay.c.o:
-
-CMakeFiles/circle.dir/src/resource_descriptions.c.o:
-
-/home/krynn/code/src/cedit.c:
-
-CMakeFiles/circle.dir/src/ai_security.c.o:
-
-CMakeFiles/circle.dir/src/resource_depletion.c.o:
+/home/krynn/code/src/legendary_equipment.h:
 
 /home/krynn/code/src/legendary.h:
-
-CMakeFiles/circle.dir/src/premadebuilds.c.o:
-
-/usr/include/x86_64-linux-gnu/bits/byteswap.h:
-
-/home/krynn/code/src/spec_procs.h:
-
-/home/krynn/code/src/resource_descriptions.c:
-
-/home/krynn/code/src/helpers.c:
-
-/home/krynn/code/src/asciimap.h:
-
-/home/krynn/code/src/perfmon.c:
-
-CMakeFiles/circle.dir/src/routing.c.o:
-
-/usr/include/x86_64-linux-gnu/bits/in.h:
-
-CMakeFiles/circle.dir/src/objsave.c.o:
-
-/home/krynn/code/src/ai_security.c:
 
 /home/krynn/code/src/oasis_copy.c:
 
@@ -27705,33 +32648,33 @@ CMakeFiles/circle.dir/src/objsave.c.o:
 
 CMakeFiles/circle.dir/src/oasis_delete.c.o:
 
+/home/krynn/code/src/perfmon.c:
+
+/home/krynn/code/src/class_improvements.h:
+
+CMakeFiles/circle.dir/src/routing.c.o:
+
+/usr/include/json-c/json_inttypes.h:
+
 CMakeFiles/circle.dir/src/movement_messages.c.o:
 
+CMakeFiles/circle.dir/src/clan_repository.c.o:
+
 CMakeFiles/circle.dir/src/systems/terrainbridge/terrain_bridge.c.o:
-
-/home/krynn/code/src/mysql_boards.c:
-
-CMakeFiles/circle.dir/src/movement_doors.c.o:
-
-CMakeFiles/circle.dir/src/specs.artifacts.c.o:
 
 /home/krynn/code/src/clan_transactions.c:
 
 /usr/include/x86_64-linux-gnu/bits/select.h:
 
-/home/krynn/code/src/vessels.c:
-
-/home/krynn/code/src/legendary_transaction.c:
-
-/usr/include/x86_64-linux-gnu/bits/time.h:
+/usr/include/json-c/json_object.h:
 
 /home/krynn/code/src/legendary_techniques.c:
 
 CMakeFiles/circle.dir/src/moon_bonus_spells.c.o:
 
-/usr/include/x86_64-linux-gnu/bits/sigaction.h:
-
 /usr/include/arpa/inet.h:
+
+/usr/include/x86_64-linux-gnu/bits/sigaction.h:
 
 /home/krynn/code/src/bool.h:
 
@@ -27745,21 +32688,25 @@ CMakeFiles/circle.dir/src/moon_bonus_spells.c.o:
 
 CMakeFiles/circle.dir/src/mob_spellslots.c.o:
 
-/home/krynn/code/src/actionqueues.h:
-
 CMakeFiles/circle.dir/src/mob_psionic.c.o:
 
 CMakeFiles/circle.dir/src/mob_act.c.o:
 
 CMakeFiles/circle.dir/src/lists.c.o:
 
-CMakeFiles/circle.dir/src/systems/pubsub/pubsub_event_handlers.c.o:
-
-/usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h:
-
 /home/krynn/code/src/psionics.c:
 
 CMakeFiles/circle.dir/src/movement_validation.c.o:
+
+CMakeFiles/circle.dir/src/movement_events.c.o:
+
+/usr/lib/x86_64-linux-gnu/libjson-c.so:
+
+/home/krynn/code/src/dg_wldcmd.c:
+
+/usr/lib/x86_64-linux-gnu/libpng16.so.16:
+
+CMakeFiles/circle.dir/src/spells.c.o:
 
 CMakeFiles/circle.dir/src/legendary_store.c.o:
 
@@ -27767,29 +32714,21 @@ CMakeFiles/circle.dir/src/legendary_foundations.c.o:
 
 CMakeFiles/circle.dir/src/legendary_effects.c.o:
 
-CMakeFiles/circle.dir/src/shop.c.o:
-
-/home/krynn/code/src/act.h:
-
 /home/krynn/code/src/pubsub.h:
 
 CMakeFiles/circle.dir/src/legendary_earnings.c.o:
 
-/home/krynn/code/src/legendary_equipment.h:
-
-/home/krynn/code/src/spec_abilities.h:
-
 CMakeFiles/circle.dir/src/legendary_commands.c.o:
-
-/usr/include/openssl/types.h:
-
-CMakeFiles/circle.dir/src/introduce.c.o:
 
 CMakeFiles/circle.dir/src/hunts.c.o:
 
 /home/krynn/code/src/db_admin_commands.c:
 
+/home/krynn/code/src/clan_combat.h:
+
 CMakeFiles/circle.dir/src/epic_magic.c.o:
+
+CMakeFiles/circle.dir/src/epic_feats2.c.o:
 
 CMakeFiles/circle.dir/src/help.c.o:
 
@@ -27811,15 +32750,11 @@ CMakeFiles/circle.dir/src/movement_tracks.c.o:
 
 CMakeFiles/circle.dir/src/handler.c.o:
 
-CMakeFiles/circle.dir/src/genzon.c.o:
-
 CMakeFiles/circle.dir/src/genqst.c.o:
 
 /home/krynn/code/src/hedit.c:
 
 CMakeFiles/circle.dir/src/genolc.c.o:
-
-/usr/include/x86_64-linux-gnu/bits/posix_opt.h:
 
 CMakeFiles/circle.dir/src/gain.c.o:
 
@@ -27829,47 +32764,21 @@ CMakeFiles/circle.dir/src/fight.c.o:
 
 CMakeFiles/circle.dir/src/evolutions.c.o:
 
-/usr/include/x86_64-linux-gnu/bits/sockaddr.h:
-
 CMakeFiles/circle.dir/src/estate.c.o:
-
-CMakeFiles/circle.dir/src/spec_assign.c.o:
-
-CMakeFiles/circle.dir/src/genwld.c.o:
 
 /usr/lib/x86_64-linux-gnu/libstdc++.so.6:
 
 /home/krynn/code/src/mud_event.h:
 
-/usr/lib/x86_64-linux-gnu/libc.so.6:
-
-/usr/include/json-c/json_pointer.h:
-
-CMakeFiles/circle.dir/src/dotenv.c.o:
-
 /usr/include/assert.h:
 
 /home/krynn/code/src/act.informative.c:
 
+/home/krynn/code/src/clan_rewards.h:
+
 /home/krynn/code/src/assign_wpn_armor.h:
 
-CMakeFiles/circle.dir/src/race.c.o:
-
-CMakeFiles/circle.dir/src/magic.c.o:
-
-/home/krynn/code/src/weather.c:
-
-/usr/lib/x86_64-linux-gnu/libkeyutils.so.1:
-
-/home/krynn/code/src/systems/pubsub/pubsub_queue.c:
-
-/usr/include/linux/stddef.h:
-
 CMakeFiles/circle.dir/src/domains_schools.c.o:
-
-CMakeFiles/circle.dir/src/dg_scripts.c.o:
-
-CMakeFiles/circle.dir/src/act.item.c.o:
 
 /usr/lib/x86_64-linux-gnu/libbrotlicommon.so.1:
 
@@ -27879,9 +32788,15 @@ CMakeFiles/circle.dir/src/mail.c.o:
 
 CMakeFiles/circle.dir/src/dg_wldcmd.c.o:
 
-CMakeFiles/circle.dir/src/quest.c.o:
+CMakeFiles/circle.dir/src/dg_scripts.c.o:
 
-CMakeFiles/circle.dir/src/dg_olc.c.o:
+CMakeFiles/circle.dir/src/act.item.c.o:
+
+/home/krynn/code/src/clan_expedition_enrollment.h:
+
+/home/krynn/code/src/ban.h:
+
+CMakeFiles/circle.dir/src/dg_variables.c.o:
 
 /home/krynn/code/src/moon_bonus_spells.c:
 
@@ -27889,7 +32804,129 @@ CMakeFiles/circle.dir/src/dg_objcmd.c.o:
 
 /usr/lib/x86_64-linux-gnu/libp11-kit.so.0:
 
+/home/krynn/code/src/clan_enchant.c:
+
+CMakeFiles/circle.dir/src/ibt.c.o:
+
+/home/krynn/code/src/vessels_db.c:
+
+/home/krynn/code/src/clan_quartermaster.c:
+
+CMakeFiles/circle.dir/src/dg_handler.c.o:
+
+CMakeFiles/circle.dir/src/dg_comm.c.o:
+
+/home/krynn/code/src/systems/pubsub/pubsub_spatial.c:
+
+/usr/include/openssl/bnerr.h:
+
+CMakeFiles/circle.dir/src/talents.c.o:
+
+/home/krynn/code/src/dg_olc.h:
+
+/home/krynn/code/src/resource_regeneration.h:
+
+CMakeFiles/circle.dir/src/deities.c.o:
+
+/home/krynn/code/src/desc_engine.c:
+
+CMakeFiles/circle.dir/src/genshp.c.o:
+
+/home/krynn/code/src/mob_utils.h:
+
+CMakeFiles/circle.dir/src/db_init_data.c.o:
+
+CMakeFiles/circle.dir/src/systems/spatial/spatial_core.c.o:
+
+/home/krynn/code/src/spellhelp.h:
+
+/usr/include/mariadb/ma_list.h:
+
+/usr/include/x86_64-linux-gnu/bits/errno.h:
+
+/home/krynn/code/src/genwld.c:
+
+/home/krynn/code/src/craft.h:
+
+/home/krynn/code/src/templates.c:
+
+CMakeFiles/circle.dir/src/msgedit.c.o:
+
+CMakeFiles/circle.dir/src/db_init.c.o:
+
+/usr/include/x86_64-linux-gnu/asm/posix_types_64.h:
+
+/home/krynn/code/src/item.h:
+
+CMakeFiles/circle.dir/src/house.c.o:
+
+/usr/lib/x86_64-linux-gnu/libgssapi_krb5.so.2:
+
+CMakeFiles/circle.dir/src/db.c.o:
+
+/home/krynn/code/src/systems/pubsub/pubsub_queue.c:
+
+/usr/include/linux/stddef.h:
+
+CMakeFiles/circle.dir/src/clan_qm_services.c.o:
+
+/usr/include/x86_64-linux-gnu/bits/stdlib-float.h:
+
+CMakeFiles/circle.dir/src/graph.c.o:
+
+CMakeFiles/circle.dir/src/dg_mobcmd.c.o:
+
+CMakeFiles/circle.dir/src/transport_unified.c.o:
+
+/usr/include/strings.h:
+
+CMakeFiles/circle.dir/src/class_improvements.c.o:
+
+/home/krynn/code/src/mud_event_list.c:
+
+/home/krynn/code/src/constants.c:
+
+CMakeFiles/circle.dir/src/mob_memory.c.o:
+
+/usr/include/x86_64-linux-gnu/bits/socket_type.h:
+
+CMakeFiles/circle.dir/src/limits.c.o:
+
+/usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h:
+
+CMakeFiles/circle.dir/src/clan_web_content_runtime.c.o:
+
+CMakeFiles/circle.dir/src/clan_web.c.o:
+
+CMakeFiles/circle.dir/src/comm.c.o:
+
+CMakeFiles/circle.dir/src/class.c.o:
+
+/home/krynn/code/src/db_init_data.c:
+
+CMakeFiles/circle.dir/src/clan_transactions.c.o:
+
+CMakeFiles/circle.dir/src/legendary_equipment.c.o:
+
+CMakeFiles/circle.dir/src/systems/spatial/spatial_visual.c.o:
+
+CMakeFiles/circle.dir/src/clan_status.c.o:
+
+CMakeFiles/circle.dir/src/staff_events.c.o:
+
+CMakeFiles/circle.dir/src/clan_sources.c.o:
+
+CMakeFiles/circle.dir/src/clan_quartermaster.c.o:
+
 /usr/lib/x86_64-linux-gnu/libpsl.so.5:
+
+CMakeFiles/circle.dir/src/metamagic_science.c.o:
+
+/usr/include/x86_64-linux-gnu/bits/timesize.h:
+
+/usr/include/zconf.h:
+
+/home/krynn/code/src/spell_prep.h:
 
 /home/krynn/code/src/db_init.c:
 
@@ -27899,45 +32936,73 @@ CMakeFiles/circle.dir/src/dg_objcmd.c.o:
 
 CMakeFiles/circle.dir/src/desc_engine.c.o:
 
-/usr/lib/x86_64-linux-gnu/libfreetype.so.6:
-
 CMakeFiles/circle.dir/src/mob_class.c.o:
 
-CMakeFiles/circle.dir/src/vehicles_commands.c.o:
-
-CMakeFiles/circle.dir/src/bardic_performance.c.o:
-
 CMakeFiles/circle.dir/src/zmalloc.c.o:
-
-CMakeFiles/circle.dir/src/perks.c.o:
 
 /usr/lib/x86_64-linux-gnu/libkrb5.so.3:
 
 /usr/lib/x86_64-linux-gnu/libsharpyuv.so.0:
 
-CMakeFiles/circle.dir/src/perlin.c.o:
+/home/krynn/code/src/ibt.h:
 
-/usr/include/x86_64-linux-gnu/bits/stdio_lim.h:
+CMakeFiles/circle.dir/src/clan_access.c.o:
+
+CMakeFiles/circle.dir/src/feats.c.o:
+
+CMakeFiles/circle.dir/src/bedit.c.o:
+
+CMakeFiles/circle.dir/src/clan_buff_runtime.c.o:
+
+/home/krynn/code/src/db_startup_init.c:
+
+/usr/include/x86_64-linux-gnu/bits/endianness.h:
+
+CMakeFiles/circle.dir/src/magic.c.o:
+
+/home/krynn/code/src/weather.c:
+
+/usr/lib/x86_64-linux-gnu/libkeyutils.so.1:
+
+CMakeFiles/circle.dir/src/race.c.o:
 
 /usr/lib/x86_64-linux-gnu/libk5crypto.so.3:
 
-CMakeFiles/circle.dir/src/metamagic_science.c.o:
-
-/usr/include/x86_64-linux-gnu/bits/timesize.h:
-
-/usr/lib/x86_64-linux-gnu/libcrypt.so:
+/home/krynn/code/src/clan_policy.h:
 
 /usr/lib/x86_64-linux-gnu/libjbig.so.0:
 
+CMakeFiles/circle.dir/src/epic_feats.c.o:
+
 /usr/lib/x86_64-linux-gnu/libhogweed.so.6:
 
+CMakeFiles/circle.dir/src/dg_misc.c.o:
+
+/usr/lib/x86_64-linux-gnu/libgmp.so.10:
+
 /usr/lib/x86_64-linux-gnu/libgnutls.so.30:
+
+/home/krynn/code/src/dotenv.c:
+
+CMakeFiles/circle.dir/src/clan_expedition_world.c.o:
+
+/home/krynn/code/src/act.offensive.c:
+
+/usr/lib/x86_64-linux-gnu/librtmp.so.1:
 
 /home/krynn/code/src/ban.c:
 
 /home/krynn/code/src/act.comm.c:
 
+/usr/lib/x86_64-linux-gnu/libfreetype.so.6:
+
 /usr/lib/x86_64-linux-gnu/libffi.so.8:
+
+/home/krynn/code/src/psionics.h:
+
+CMakeFiles/circle.dir/src/oasis.c.o:
+
+/usr/lib/x86_64-linux-gnu/libc_nonshared.a:
 
 /usr/lib/x86_64-linux-gnu/libXdmcp.so.6:
 
@@ -27949,39 +33014,27 @@ CMakeFiles/circle.dir/src/metamagic_science.c.o:
 
 /usr/include/x86_64-linux-gnu/gnu/stubs-64.h:
 
-CMakeFiles/circle.dir/src/char_descs.c.o:
-
-CMakeFiles/circle.dir/src/graph.c.o:
-
-CMakeFiles/circle.dir/src/dg_mobcmd.c.o:
-
-CMakeFiles/circle.dir/src/transport_unified.c.o:
-
-/usr/include/strings.h:
-
-CMakeFiles/circle.dir/src/spellbook_scroll.c.o:
-
-/usr/include/x86_64-linux-gnu/bits/stdlib-float.h:
-
 /usr/lib/x86_64-linux-gnu/libexpat.so.1:
 
-/home/krynn/code/src/traps.h:
+CMakeFiles/circle.dir/src/modify.c.o:
+
+CMakeFiles/circle.dir/src/db_startup_init.c.o:
+
+/home/krynn/code/src/clan_delivery.c:
+
+CMakeFiles/circle.dir/src/bsd-snprintf.c.o:
 
 /usr/lib/x86_64-linux-gnu/libdeflate.so.0:
 
-/usr/include/x86_64-linux-gnu/bits/local_lim.h:
+CMakeFiles/circle.dir/src/clan_objectives.c.o:
+
+CMakeFiles/circle.dir/src/clan_buff_lifecycle.c.o:
 
 CMakeFiles/circle.dir/src/hlqedit.c.o:
 
 /usr/lib/x86_64-linux-gnu/libpthread.a:
 
 CMakeFiles/circle.dir/src/clan_edit.c.o:
-
-/usr/include/x86_64-linux-gnu/bits/stdint-intn.h:
-
-CMakeFiles/circle.dir/src/genobj.c.o:
-
-CMakeFiles/circle.dir/src/mud_event_list.c.o:
 
 CMakeFiles/circle.dir/src/dg_event.c.o:
 
@@ -27997,67 +33050,51 @@ CMakeFiles/circle.dir/src/dg_event.c.o:
 
 CMakeFiles/circle.dir/src/auction_house.c.o:
 
+/home/krynn/code/src/backgrounds.h:
+
+CMakeFiles/circle.dir/src/crafting_recipes.c.o:
+
+CMakeFiles/circle.dir/src/dg_db_scripts.c.o:
+
 CMakeFiles/circle.dir/src/brew.c.o:
 
 CMakeFiles/circle.dir/src/legendary_techniques.c.o:
+
+/usr/include/asm-generic/posix_types.h:
+
+CMakeFiles/circle.dir/src/new_mail.c.o:
 
 /home/krynn/code/src/systems/intermud3/i3_commands.c:
 
 /usr/include/features.h:
 
-/usr/include/x86_64-linux-gnu/sys/types.h:
-
 /usr/include/asm-generic/socket.h:
 
+/usr/include/x86_64-linux-gnu/sys/types.h:
+
 /usr/lib/x86_64-linux-gnu/libmvec.so.1:
-
-/usr/include/json-c/printbuf.h:
-
-/home/krynn/code/src/gain.c:
-
-CMakeFiles/circle.dir/src/oasis_copy.c.o:
-
-/usr/lib/x86_64-linux-gnu/libX11.so.6:
-
-/usr/lib/x86_64-linux-gnu/libcrypto.so:
-
-CMakeFiles/circle.dir/src/genmob.c.o:
 
 CMakeFiles/circle.dir/src/durable_file.c.o:
 
 CMakeFiles/circle.dir/src/ai_cache.c.o:
 
-/home/krynn/code/src/legendary_identity.h:
-
-/home/krynn/code/src/sysdep.h:
-
-CMakeFiles/circle.dir/src/encounters.c.o:
-
-CMakeFiles/circle.dir/src/dg_misc.c.o:
-
 /home/krynn/code/src/clan.h:
 
-/usr/include/openssl/opensslv.h:
+/home/krynn/code/src/encounters.c:
 
-CMakeFiles/circle.dir/src/improved-edit.c.o:
-
-/home/krynn/code/src/hlquest.h:
-
-CMakeFiles/circle.dir/src/staff_events.c.o:
-
-/usr/lib/x86_64-linux-gnu/libgssapi_krb5.so.2:
-
-CMakeFiles/circle.dir/src/house.c.o:
-
-CMakeFiles/circle.dir/src/ibt.c.o:
-
-/home/krynn/code/src/vessels_db.c:
-
-CMakeFiles/circle.dir/src/dg_handler.c.o:
+CMakeFiles/circle.dir/src/clan_progression.c.o:
 
 /usr/include/x86_64-linux-gnu/curl/curlver.h:
 
 CMakeFiles/circle.dir/src/ai_service.c.o:
+
+CMakeFiles/circle.dir/src/clan_buff_commit.c.o:
+
+CMakeFiles/circle.dir/src/db_admin_commands.c.o:
+
+/home/krynn/code/src/legendary_equipment.c:
+
+/home/krynn/code/src/crafts.h:
 
 /home/krynn/code/src/resource_system.c:
 
@@ -28065,27 +33102,27 @@ CMakeFiles/circle.dir/src/ai_service.c.o:
 
 CMakeFiles/circle.dir/src/actionqueues.c.o:
 
-CMakeFiles/circle.dir/src/db.c.o:
+/home/krynn/code/src/mob_psionic.c:
 
-CMakeFiles/circle.dir/src/feats.c.o:
+/home/krynn/code/src/clan_buff_commands.c:
 
-CMakeFiles/circle.dir/src/bedit.c.o:
+/usr/lib/x86_64-linux-gnu/crtn.o:
 
-CMakeFiles/circle.dir/src/limits.c.o:
+/usr/include/x86_64-linux-gnu/curl/header.h:
 
-/usr/include/x86_64-linux-gnu/bits/socket_type.h:
+CMakeFiles/circle.dir/src/vehicles_transport.c.o:
 
-/usr/include/json-c/json_object_iterator.h:
+/home/krynn/code/src/vessels_rooms.c:
 
-/home/krynn/code/src/account.h:
+/home/krynn/code/src/players.c:
 
-CMakeFiles/circle.dir/src/psionics.c.o:
+/usr/include/x86_64-linux-gnu/bits/waitflags.h:
 
-/home/krynn/code/src/utils.c:
+/home/krynn/code/src/clan_access.h:
 
-/usr/include/openssl/obj_mac.h:
+/usr/include/asm-generic/bitsperlong.h:
 
-/usr/lib/x86_64-linux-gnu/libwebp.so.7:
+CMakeFiles/circle.dir/src/copyover_diagnostic.c.o:
 
 /usr/lib/x86_64-linux-gnu/libLerc.so.4:
 
@@ -28101,10 +33138,6 @@ CMakeFiles/circle.dir/src/vessels_db.c.o:
 
 /usr/lib/x86_64-linux-gnu/libXau.so.6:
 
-CMakeFiles/circle.dir/src/rank.c.o:
-
-/home/krynn/code/src/epic_magic.h:
-
 CMakeFiles/circle.dir/src/asciimap.c.o:
 
 /home/krynn/code/src/feats.h:
@@ -28113,33 +33146,39 @@ CMakeFiles/circle.dir/src/asciimap.c.o:
 
 /usr/lib/x86_64-linux-gnu/crti.o:
 
+CMakeFiles/circle.dir/src/clan_expeditions.c.o:
+
 /usr/lib/x86_64-linux-gnu/libldap.so.2:
 
 /usr/include/x86_64-linux-gnu/bits/types/struct_sigstack.h:
 
 /usr/lib/x86_64-linux-gnu/libz.so.1:
 
+/home/krynn/code/src/terrain_bridge.h:
+
+CMakeFiles/circle.dir/src/crafts.c.o:
+
+CMakeFiles/circle.dir/src/clan_buff_queries.c.o:
+
 /usr/lib/x86_64-linux-gnu/liblber.so.2:
 
-/home/krynn/code/src/oasis.h:
+CMakeFiles/circle.dir/src/housing.c.o:
 
-CMakeFiles/circle.dir/src/resource_system.c.o:
+/home/krynn/code/src/metamagic_science.h:
 
-/usr/include/x86_64-linux-gnu/bits/types/clock_t.h:
+/usr/include/x86_64-linux-gnu/bits/wordsize.h:
 
-/home/krynn/code/src/dg_handler.c:
+/home/krynn/code/src/mail.c:
 
-/home/krynn/code/src/ai_events.c:
+/usr/lib/x86_64-linux-gnu/libcurl.so:
 
-/home/krynn/code/src/templates.c:
+CMakeFiles/circle.dir/src/epic_feats3.c.o:
 
-CMakeFiles/circle.dir/src/msgedit.c.o:
+CMakeFiles/circle.dir/src/clan_commands.c.o:
 
-CMakeFiles/circle.dir/src/db_init.c.o:
+/home/krynn/code/src/act.comm.do_spec_comm.c:
 
-CMakeFiles/circle.dir/src/db_startup_init.c.o:
-
-CMakeFiles/circle.dir/src/modify.c.o:
+/home/krynn/code/src/epic_feats.c:
 
 /usr/lib/x86_64-linux-gnu/libidn2.so.0:
 
@@ -28148,10 +33187,6 @@ CMakeFiles/circle.dir/src/boards.c.o:
 CMakeFiles/circle.dir/src/ban.c.o:
 
 /usr/lib/gcc/x86_64-linux-gnu/15/crtbeginS.o:
-
-/usr/include/json-c/arraylist.h:
-
-CMakeFiles/circle.dir/src/mob_race.c.o:
 
 /home/krynn/code/src/treasure.c:
 
@@ -28167,6 +33202,14 @@ CMakeFiles/circle.dir/src/interpreter.c.o:
 
 CMakeFiles/circle.dir/src/clan.c.o:
 
+/home/krynn/code/src/vessels.c:
+
+/home/krynn/code/src/legendary_transaction.c:
+
+/usr/include/x86_64-linux-gnu/bits/time.h:
+
+CMakeFiles/circle.dir/src/clan_buff_commands.c.o:
+
 /home/krynn/code/src/mob_race.h:
 
 /home/krynn/code/src/protocol.h:
@@ -28175,99 +33218,69 @@ CMakeFiles/circle.dir/src/clan.c.o:
 
 /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h:
 
-CMakeFiles/circle.dir/src/dg_comm.c.o:
-
-/home/krynn/code/src/systems/pubsub/pubsub_spatial.c:
-
-/usr/include/openssl/bnerr.h:
-
-CMakeFiles/circle.dir/src/talents.c.o:
-
 /home/krynn/code/src/traps_new.c:
 
 /usr/include/openssl/cryptoerr.h:
 
 CMakeFiles/circle.dir/src/hsedit.c.o:
 
+/usr/include/json-c/json_config.h:
+
 /home/krynn/code/src/zone_procs.c:
 
 /usr/lib/x86_64-linux-gnu/libssl.so:
 
-CMakeFiles/circle.dir/src/sedit.c.o:
+/home/krynn/code/src/hedit.h:
 
-CMakeFiles/circle.dir/src/legendary_transaction.c.o:
+CMakeFiles/circle.dir/src/clan_boot.c.o:
 
-/home/krynn/code/src/mob_psionic.c:
-
-/usr/lib/x86_64-linux-gnu/crtn.o:
-
-/usr/include/x86_64-linux-gnu/curl/header.h:
-
-CMakeFiles/circle.dir/src/vehicles_transport.c.o:
-
-/home/krynn/code/src/vessels_rooms.c:
-
-/home/krynn/code/src/players.c:
-
-/usr/include/x86_64-linux-gnu/bits/waitflags.h:
+CMakeFiles/circle.dir/src/spellbook_scroll.c.o:
 
 /home/krynn/code/src/brew.c:
 
 /usr/lib/gcc/x86_64-linux-gnu/15/libgcc.a:
 
+/home/krynn/code/src/utils.c:
+
+/usr/include/openssl/obj_mac.h:
+
+/usr/lib/x86_64-linux-gnu/libwebp.so.7:
+
+/home/krynn/code/src/account.h:
+
+/usr/include/json-c/json_object_iterator.h:
+
+CMakeFiles/circle.dir/src/psionics.c.o:
+
 /usr/lib/x86_64-linux-gnu/libzstd.so.1:
 
 /home/krynn/code/src/player_shop.h:
 
-/home/krynn/code/src/act.other.c:
+CMakeFiles/circle.dir/src/constants.c.o:
+
+CMakeFiles/circle.dir/src/spec_abilities.c.o:
+
+/usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h:
 
 CMakeFiles/circle.dir/src/alchemy.c.o:
+
+CMakeFiles/circle.dir/src/clan_combat.c.o:
 
 /home/krynn/code/src/systems/intermud3/i3_utils.c:
 
 CMakeFiles/circle.dir/src/zone_procs.c.o:
 
-CMakeFiles/circle.dir/src/act.comm.c.o:
+CMakeFiles/circle.dir/src/genmob.c.o:
 
-/usr/include/openssl/core_dispatch.h:
-
-CMakeFiles/circle.dir/src/random_names.c.o:
-
-/usr/lib/x86_64-linux-gnu/libheif.so.1:
-
-/usr/lib/x86_64-linux-gnu/libmariadb.so:
-
-CMakeFiles/circle.dir/src/redit.c.o:
-
-/home/krynn/code/src/comm.h:
-
-/usr/lib/x86_64-linux-gnu/libgmp.so.10:
-
-CMakeFiles/circle.dir/src/comm.c.o:
-
-CMakeFiles/circle.dir/src/class.c.o:
+/usr/lib/x86_64-linux-gnu/libcrypto.so:
 
 CMakeFiles/circle.dir/src/act.comm.do_spec_comm.c.o:
 
-CMakeFiles/circle.dir/src/qedit.c.o:
-
-CMakeFiles/circle.dir/src/players.c.o:
-
-CMakeFiles/circle.dir/src/prefedit.c.o:
-
-/home/krynn/code/src/dg_olc.h:
-
-/home/krynn/code/src/resource_regeneration.h:
-
-CMakeFiles/circle.dir/src/deities.c.o:
-
-/home/krynn/code/src/mud_event_list.c:
-
-/home/krynn/code/src/constants.c:
-
-CMakeFiles/circle.dir/src/mob_memory.c.o:
+/usr/include/json-c/json_c_version.h:
 
 /home/krynn/code/src/movement_messages.c:
+
+/home/krynn/code/src/clan_sources.c:
 
 CMakeFiles/circle.dir/src/act.informative.c.o:
 
@@ -28275,35 +33288,55 @@ CMakeFiles/circle.dir/src/act.informative.c.o:
 
 /home/krynn/code/src/char_descs.h:
 
+/usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h:
+
+/home/krynn/code/src/ai_service.c:
+
+/usr/include/x86_64-linux-gnu/sys/ucontext.h:
+
+/home/krynn/code/src/resource_depletion.h:
+
 /home/krynn/code/src/systems/region_hints/region_hints.c:
 
 CMakeFiles/circle.dir/src/grapple.c.o:
 
-/home/krynn/code/src/wilderness_kb.h:
-
-CMakeFiles/circle.dir/src/random.c.o:
-
 CMakeFiles/circle.dir/src/act.offensive.c.o:
 
-/usr/lib/x86_64-linux-gnu/librtmp.so.1:
+/usr/lib/x86_64-linux-gnu/libjpeg.so.8:
 
-/home/krynn/code/src/act.offensive.c:
+/usr/include/x86_64-linux-gnu/bits/sigthread.h:
+
+CMakeFiles/circle.dir/src/systems/intermud3/i3_client.c.o:
 
 CMakeFiles/circle.dir/src/act.social.c.o:
 
-/usr/lib/x86_64-linux-gnu/libunistring.so.5:
+/usr/include/x86_64-linux-gnu/bits/types/struct_rusage.h:
 
-CMakeFiles/circle.dir/src/treasure.c.o:
+CMakeFiles/circle.dir/src/clan_persistence.c.o:
 
-CMakeFiles/circle.dir/src/hlquest.c.o:
+/home/krynn/code/src/vehicles.c:
 
-CMakeFiles/circle.dir/src/tedit.c.o:
+CMakeFiles/circle.dir/src/clan_delivery_runtime.c.o:
 
-CMakeFiles/circle.dir/src/act.wizard.c.o:
+CMakeFiles/circle.dir/src/dg_olc.c.o:
+
+CMakeFiles/circle.dir/src/quest.c.o:
+
+/usr/include/openssl/types.h:
+
+CMakeFiles/circle.dir/src/introduce.c.o:
+
+/usr/lib/x86_64-linux-gnu/libcrypt.so:
+
+CMakeFiles/circle.dir/src/clan_objective_runtime.c.o:
 
 CMakeFiles/circle.dir/src/config.c.o:
 
 /home/krynn/code/src/staff_events.h:
+
+/home/krynn/code/src/clan_contract_rotation.h:
+
+/home/krynn/code/src/clan_commands.c:
 
 CMakeFiles/circle.dir/src/dg_triggers.c.o:
 
@@ -28315,19 +33348,13 @@ CMakeFiles/circle.dir/src/dg_triggers.c.o:
 
 CMakeFiles/circle.dir/src/actions.c.o:
 
-/home/krynn/code/src/msgedit.c:
-
-/usr/include/x86_64-linux-gnu/asm/posix_types.h:
-
 CMakeFiles/circle.dir/src/aedit.c.o:
-
-CMakeFiles/circle.dir/src/protocol.c.o:
-
-/usr/include/x86_64-linux-gnu/bits/posix2_lim.h:
 
 CMakeFiles/circle.dir/src/mud_event.c.o:
 
 CMakeFiles/circle.dir/src/clan_economy.c.o:
+
+CMakeFiles/circle.dir/src/resource_descriptions.c.o:
 
 /home/krynn/code/src/metamagic_science.c:
 
@@ -28361,67 +33388,201 @@ CMakeFiles/circle.dir/src/casting_visuals.c.o:
 
 CMakeFiles/circle.dir/src/cedit.c.o:
 
+CMakeFiles/circle.dir/src/clan_awards.c.o:
+
 CMakeFiles/circle.dir/src/medit.c.o:
-
-CMakeFiles/circle.dir/src/dg_variables.c.o:
-
-/home/krynn/code/src/ban.h:
-
-/home/krynn/code/src/db_init_data.c:
-
-CMakeFiles/circle.dir/src/clan_transactions.c.o:
-
-CMakeFiles/circle.dir/src/legendary_equipment.c.o:
-
-CMakeFiles/circle.dir/src/systems/spatial/spatial_visual.c.o:
-
-CMakeFiles/circle.dir/src/bsd-snprintf.c.o:
 
 /usr/include/x86_64-linux-gnu/curl/websockets.h:
 
-CMakeFiles/circle.dir/src/combat_modes.c.o:
-
 CMakeFiles/circle.dir/src/legendary.c.o:
 
-CMakeFiles/circle.dir/src/housing.c.o:
+CMakeFiles/circle.dir/src/combat_modes.c.o:
 
-/home/krynn/code/src/metamagic_science.h:
+CMakeFiles/circle.dir/src/genzon.c.o:
 
-/usr/include/x86_64-linux-gnu/bits/wordsize.h:
+/home/krynn/code/src/mysql_boards.c:
 
-/home/krynn/code/src/mail.c:
+CMakeFiles/circle.dir/src/movement_doors.c.o:
 
-/usr/lib/x86_64-linux-gnu/libcurl.so:
+CMakeFiles/circle.dir/src/clan_buff_activation.c.o:
 
-CMakeFiles/circle.dir/src/db_admin_commands.c.o:
+/usr/include/x86_64-linux-gnu/bits/time64.h:
 
-/home/krynn/code/src/legendary_equipment.c:
+CMakeFiles/circle.dir/src/treasure.c.o:
 
-/home/krynn/code/src/crafts.h:
+/usr/lib/x86_64-linux-gnu/libunistring.so.5:
 
-/home/krynn/code/src/desc_engine.c:
+CMakeFiles/circle.dir/src/hlquest.c.o:
 
-CMakeFiles/circle.dir/src/genshp.c.o:
+CMakeFiles/circle.dir/src/tedit.c.o:
 
-/home/krynn/code/src/mob_utils.h:
+/home/krynn/code/src/prefedit.c:
 
-CMakeFiles/circle.dir/src/db_init_data.c.o:
+/home/krynn/code/src/bloodlines.h:
 
-CMakeFiles/circle.dir/src/systems/spatial/spatial_core.c.o:
+/usr/include/openssl/core_dispatch.h:
 
-/usr/include/mariadb/ma_list.h:
+CMakeFiles/circle.dir/src/random_names.c.o:
 
-/usr/include/x86_64-linux-gnu/bits/errno.h:
+/usr/lib/x86_64-linux-gnu/libheif.so.1:
 
-/home/krynn/code/src/genwld.c:
+/usr/lib/x86_64-linux-gnu/libmariadb.so:
 
-/home/krynn/code/src/craft.h:
+CMakeFiles/circle.dir/src/act.comm.c.o:
 
-/home/krynn/code/src/backgrounds.h:
+CMakeFiles/circle.dir/src/act.wizard.c.o:
 
-CMakeFiles/circle.dir/src/crafting_recipes.c.o:
+/usr/include/openssl/opensslv.h:
 
-CMakeFiles/circle.dir/src/dg_db_scripts.c.o:
+/home/krynn/code/src/hlquest.h:
+
+CMakeFiles/circle.dir/src/improved-edit.c.o:
+
+CMakeFiles/circle.dir/src/clan_enchant.c.o:
+
+/home/krynn/code/src/genmob.h:
+
+/home/krynn/code/src/clan_awards.c:
+
+CMakeFiles/circle.dir/src/clan_quartermaster_runtime.c.o:
+
+/usr/lib/x86_64-linux-gnu/libX11.so.6:
+
+/home/krynn/code/src/gain.c:
+
+/usr/include/json-c/printbuf.h:
+
+CMakeFiles/circle.dir/src/oasis_copy.c.o:
+
+/usr/include/x86_64-linux-gnu/bits/in.h:
+
+CMakeFiles/circle.dir/src/objsave.c.o:
+
+/home/krynn/code/src/act.other.c:
+
+CMakeFiles/circle.dir/src/clan_policy.c.o:
+
+/usr/include/x86_64-linux-gnu/bits/posix_opt.h:
+
+CMakeFiles/circle.dir/src/clan_delivery.c.o:
+
+CMakeFiles/circle.dir/src/char_descs.c.o:
+
+/home/krynn/code/src/clan_economy.h:
+
+CMakeFiles/circle.dir/src/clan_expedition_enrollment.c.o:
+
+CMakeFiles/circle.dir/src/clan_expedition_runtime.c.o:
+
+CMakeFiles/circle.dir/src/perfmon.c.o:
+
+CMakeFiles/circle.dir/src/systems/intermud3/i3_utils.c.o:
+
+/usr/include/unistd.h:
+
+CMakeFiles/circle.dir/src/perks.c.o:
+
+CMakeFiles/circle.dir/src/perlin.c.o:
+
+/usr/include/x86_64-linux-gnu/bits/stdio_lim.h:
+
+CMakeFiles/circle.dir/src/systems/pubsub/pubsub_event_handlers.c.o:
+
+/home/krynn/code/src/legendary_identity.h:
+
+CMakeFiles/circle.dir/src/encounters.c.o:
+
+/home/krynn/code/src/sysdep.h:
+
+CMakeFiles/circle.dir/src/genobj.c.o:
+
+CMakeFiles/circle.dir/src/mud_event_list.c.o:
+
+/usr/include/x86_64-linux-gnu/bits/stdint-intn.h:
+
+CMakeFiles/circle.dir/src/players.c.o:
+
+CMakeFiles/circle.dir/src/prefedit.c.o:
+
+CMakeFiles/circle.dir/src/transport.c.o:
+
+/usr/include/x86_64-linux-gnu/bits/libc-header-start.h:
+
+CMakeFiles/circle.dir/src/premadebuilds.c.o:
+
+/usr/include/x86_64-linux-gnu/bits/byteswap.h:
+
+/home/krynn/code/src/spec_procs.h:
+
+/home/krynn/code/src/resource_descriptions.c:
+
+/home/krynn/code/src/helpers.c:
+
+/home/krynn/code/src/asciimap.h:
+
+CMakeFiles/circle.dir/src/protocol.c.o:
+
+/usr/include/x86_64-linux-gnu/bits/posix2_lim.h:
+
+CMakeFiles/circle.dir/src/pubsub.c.o:
+
+/home/krynn/code/src/talents.h:
+
+CMakeFiles/circle.dir/src/spell_parser.c.o:
+
+CMakeFiles/circle.dir/src/qedit.c.o:
+
+CMakeFiles/circle.dir/src/random.c.o:
+
+/home/krynn/code/src/epic_magic.h:
+
+CMakeFiles/circle.dir/src/rank.c.o:
+
+CMakeFiles/circle.dir/src/redit.c.o:
+
+/home/krynn/code/src/clan_repository_schema.inc:
+
+/home/krynn/code/src/comm.h:
+
+CMakeFiles/circle.dir/src/resource_depletion.c.o:
+
+/usr/include/json-c/json.h:
+
+/home/krynn/code/src/oasis.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/clock_t.h:
+
+CMakeFiles/circle.dir/src/resource_system.c.o:
+
+CMakeFiles/circle.dir/src/roleplay.c.o:
+
+CMakeFiles/circle.dir/src/legendary_transaction.c.o:
+
+CMakeFiles/circle.dir/src/sedit.c.o:
+
+CMakeFiles/circle.dir/src/bardic_performance.c.o:
+
+CMakeFiles/circle.dir/src/vehicles_commands.c.o:
+
+CMakeFiles/circle.dir/src/shop.c.o:
+
+/home/krynn/code/src/act.h:
+
+/usr/include/inttypes.h:
+
+CMakeFiles/circle.dir/src/genwld.c.o:
+
+CMakeFiles/circle.dir/src/spec_assign.c.o:
+
+/home/krynn/code/src/clan_web_content.c:
+
+CMakeFiles/circle.dir/src/specs.artifacts.c.o:
+
+/usr/include/x86_64-linux-gnu/bits/local_lim.h:
+
+/usr/include/x86_64-linux-gnu/curl/urlapi.h:
+
+CMakeFiles/circle.dir/src/systems/intermud3/i3_commands.c.o:
 
 /usr/lib/x86_64-linux-gnu/libsasl2.so.2:
 
@@ -28430,12 +33591,6 @@ CMakeFiles/circle.dir/src/systems/narrative_weaver/narrative_weaver.c.o:
 CMakeFiles/circle.dir/src/resource_regeneration.c.o:
 
 /usr/include/stdc-predef.h:
-
-/home/krynn/code/src/aedit.c:
-
-/usr/include/json-c/linkhash.h:
-
-CMakeFiles/circle.dir/src/systems/pubsub/pubsub_commands.c.o:
 
 CMakeFiles/circle.dir/src/systems/pubsub/pubsub_db.c.o:
 
@@ -28448,8 +33603,6 @@ CMakeFiles/circle.dir/src/systems/pubsub/pubsub_handlers.c.o:
 /home/krynn/code/src/handler.h:
 
 CMakeFiles/circle.dir/src/systems/pubsub/pubsub_spatial.c.o:
-
-/home/krynn/code/src/genolc.h:
 
 /usr/lib/x86_64-linux-gnu/libimagequant.so.0:
 
@@ -28464,12 +33617,6 @@ CMakeFiles/circle.dir/src/systems/spatial/spatial_audio.c.o:
 CMakeFiles/circle.dir/src/templates.c.o:
 
 CMakeFiles/circle.dir/src/trade.c.o:
-
-/home/krynn/code/src/kdtree.h:
-
-/usr/include/x86_64-linux-gnu/bits/libc-header-start.h:
-
-CMakeFiles/circle.dir/src/transport.c.o:
 
 CMakeFiles/circle.dir/src/traps_new.c.o:
 
@@ -28523,23 +33670,31 @@ CMakeFiles/circle.dir/src/zedit.c.o:
 
 /home/krynn/code/src/account.c:
 
+/usr/include/x86_64-linux-gnu/bits/socket.h:
+
+/home/krynn/code/src/legendary_effects.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/15/libgcc_s.so:
+
+/usr/include/x86_64-linux-gnu/bits/long-double.h:
+
 /home/krynn/code/src/campaign.h:
 
 /usr/include/x86_64-linux-gnu/curl/system.h:
 
+CMakeFiles/circle.dir/src/clan_web_runtime.c.o:
+
 CMakeFiles/circle.dir/src/movement_cost.c.o:
 
 /home/krynn/code/src/class.h:
-
-CMakeFiles/circle.dir/src/spell_parser.c.o:
-
-/home/krynn/code/src/talents.h:
 
 /home/krynn/code/src/conf.h:
 
 /home/krynn/code/src/perlin.c:
 
 /home/krynn/code/src/constants.h:
+
+CMakeFiles/circle.dir/src/clan_web_content.c.o:
 
 /home/krynn/code/src/db.h:
 
@@ -28550,8 +33705,6 @@ CMakeFiles/circle.dir/src/spell_parser.c.o:
 /home/krynn/code/src/dg_scripts.h:
 
 /usr/include/ctype.h:
-
-/home/krynn/code/src/genmob.h:
 
 /usr/include/x86_64-linux-gnu/bits/signum-arch.h:
 
@@ -28597,15 +33750,19 @@ CMakeFiles/circle.dir/src/craft.c.o:
 
 /usr/include/crypt.h:
 
+/home/krynn/code/src/ai_cache.c:
+
+/usr/include/endian.h:
+
 CMakeFiles/circle.dir/src/player_shop.c.o:
 
 /usr/include/mariadb/mariadb_version.h:
 
 /usr/include/openssl/evp.h:
 
-CMakeFiles/circle.dir/src/crafting_new.c.o:
-
 /home/krynn/code/src/act.social.c:
+
+CMakeFiles/circle.dir/src/crafting_new.c.o:
 
 /usr/include/stdint.h:
 
@@ -28617,23 +33774,23 @@ CMakeFiles/circle.dir/src/crafting_new.c.o:
 
 /usr/include/linux/limits.h:
 
-/usr/include/json-c/json_util.h:
-
-/usr/include/mariadb/mariadb_ctype.h:
-
 /usr/include/mariadb/mariadb_stmt.h:
 
 /usr/include/x86_64-linux-gnu/asm/socket.h:
 
 /usr/include/x86_64-linux-gnu/bits/wchar.h:
 
-CMakeFiles/circle.dir/src/vessels.c.o:
+/home/krynn/code/src/clan_buff_activation.h:
 
 CMakeFiles/circle.dir/src/mob_spells.c.o:
+
+CMakeFiles/circle.dir/src/vessels.c.o:
 
 CMakeFiles/circle.dir/src/systems/pubsub/pubsub_queue.c.o:
 
 /usr/include/mariadb/mysql.h:
+
+/usr/include/json-c/json_tokener.h:
 
 /usr/include/netdb.h:
 
@@ -28675,19 +33832,17 @@ CMakeFiles/circle.dir/src/assign_wpn_armor.c.o:
 
 /usr/include/x86_64-linux-gnu/bits/confname.h:
 
+CMakeFiles/circle.dir/src/spellhelp.c.o:
+
+CMakeFiles/circle.dir/src/mob_race.c.o:
+
+/usr/include/json-c/arraylist.h:
+
 /usr/include/x86_64-linux-gnu/bits/cpu-set.h:
-
-/home/krynn/code/src/item.h:
-
-/usr/include/x86_64-linux-gnu/asm/posix_types_64.h:
 
 /usr/include/x86_64-linux-gnu/bits/mathcalls.h:
 
 /usr/include/x86_64-linux-gnu/bits/endian.h:
-
-/home/krynn/code/src/db_startup_init.c:
-
-/usr/include/x86_64-linux-gnu/bits/endianness.h:
 
 /home/krynn/code/src/systems/narrative_weaver/narrative_weaver.c:
 
@@ -28699,6 +33854,8 @@ CMakeFiles/circle.dir/src/act.other.c.o:
 
 /usr/include/x86_64-linux-gnu/bits/floatn-common.h:
 
+/home/krynn/code/src/clan_commands.h:
+
 /usr/include/x86_64-linux-gnu/bits/floatn.h:
 
 /home/krynn/code/src/fight.h:
@@ -28708,6 +33865,8 @@ CMakeFiles/circle.dir/src/act.other.c.o:
 /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h:
 
 /usr/include/x86_64-linux-gnu/bits/sched.h:
+
+/home/krynn/code/src/clan_combat.c:
 
 /home/krynn/code/src/mail.h:
 
@@ -28719,8 +33878,6 @@ CMakeFiles/circle.dir/src/act.other.c.o:
 
 /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h:
 
-/usr/include/x86_64-linux-gnu/bits/time64.h:
-
 /usr/include/x86_64-linux-gnu/bits/signal_ext.h:
 
 CMakeFiles/circle.dir/src/movement.c.o:
@@ -28728,12 +33885,6 @@ CMakeFiles/circle.dir/src/movement.c.o:
 /usr/include/x86_64-linux-gnu/bits/types.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/__FILE.h:
-
-/home/krynn/code/src/systems/pubsub/pubsub_handlers.c:
-
-/home/krynn/code/src/spatial_core.h:
-
-/usr/include/x86_64-linux-gnu/asm/sockios.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h:
 
@@ -28753,14 +33904,6 @@ CMakeFiles/circle.dir/src/ai_events.c.o:
 
 /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h:
 
-/usr/include/json-c/debug.h:
-
-/home/krynn/code/src/hlqedit.c:
-
-/home/krynn/code/src/utils.h:
-
-/usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h:
-
 CMakeFiles/circle.dir/src/movement_position.c.o:
 
 /home/krynn/code/src/treasure.h:
@@ -28769,21 +33912,15 @@ CMakeFiles/circle.dir/src/mysql.c.o:
 
 /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h:
 
+/home/krynn/code/src/clan_persistence.c:
+
 /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h:
 
-/home/krynn/code/src/systems/narrative_weaver/narrative_weaver.h:
+/home/krynn/code/src/mudlim.h:
 
-/home/krynn/code/src/legendary_store.h:
-
-CMakeFiles/circle.dir/src/copyover_diagnostic.c.o:
-
-/usr/include/asm-generic/bitsperlong.h:
-
-/home/krynn/code/src/act.wizard.c:
+/usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h:
-
-/home/krynn/code/src/legendary_transaction.h:
 
 /home/krynn/code/src/epic_magic.c:
 
@@ -28813,6 +33950,8 @@ CMakeFiles/circle.dir/src/copyover_diagnostic.c.o:
 
 /usr/include/x86_64-linux-gnu/bits/unistd_ext.h:
 
+/home/krynn/code/src/clan_buff_queries.c:
+
 /usr/include/x86_64-linux-gnu/bits/stat.h:
 
 /usr/include/x86_64-linux-gnu/bits/waitstatus.h:
@@ -28823,6 +33962,10 @@ CMakeFiles/circle.dir/src/copyover_diagnostic.c.o:
 
 /home/krynn/code/src/modify.h:
 
+/home/krynn/code/src/genzon.h:
+
+/usr/include/x86_64-linux-gnu/sys/time.h:
+
 /usr/lib/gcc/x86_64-linux-gnu/15/include/limits.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/15/include/stdarg.h:
@@ -28831,17 +33974,23 @@ CMakeFiles/circle.dir/src/copyover_diagnostic.c.o:
 
 /usr/lib/gcc/x86_64-linux-gnu/15/include/stddef.h:
 
+/home/krynn/code/src/dg_variables.c:
+
+/home/krynn/code/src/actionqueues.c:
+
+/usr/lib/gcc/x86_64-linux-gnu/15/include/syslimits.h:
+
 /home/krynn/code/src/ai_service.h:
 
 /usr/include/openssl/bn.h:
+
+/home/krynn/code/src/clan_access.c:
 
 /home/krynn/code/src/pfdefaults.h:
 
 /home/krynn/code/src/improved-edit.h:
 
 /home/krynn/code/src/quest.h:
-
-/home/krynn/code/src/act.comm.do_spec_comm.c:
 
 /home/krynn/code/src/alchemy.h:
 
@@ -28865,11 +34014,11 @@ CMakeFiles/circle.dir/src/study.c.o:
 
 /home/krynn/code/src/roleplay.h:
 
-CMakeFiles/circle.dir/src/new_mail.c.o:
-
-/usr/include/asm-generic/posix_types.h:
+/home/krynn/code/src/clan_progression.c:
 
 /home/krynn/code/src/housing.h:
+
+/home/krynn/code/src/clan_quartermaster_runtime.c:
 
 /home/krynn/code/src/missions.h:
 
@@ -28889,10 +34038,6 @@ CMakeFiles/circle.dir/src/helpers.c.o:
 
 /home/krynn/code/src/race.h:
 
-/home/krynn/code/src/legendary_foundations.c:
-
-/home/krynn/code/src/house.h:
-
 /usr/include/pthread.h:
 
 /home/krynn/code/src/resource_system.h:
@@ -28907,6 +34052,40 @@ CMakeFiles/circle.dir/src/missions.c.o:
 
 /home/krynn/code/src/wilderness.h:
 
+/home/krynn/code/src/hlqedit.c:
+
+/home/krynn/code/src/utils.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h:
+
+/usr/include/json-c/debug.h:
+
+/home/krynn/code/src/cedit.c:
+
+CMakeFiles/circle.dir/src/ai_security.c.o:
+
+/home/krynn/code/src/epic_feats.h:
+
+/usr/include/json-c/json_patch.h:
+
+CMakeFiles/circle.dir/src/dotenv.c.o:
+
+/usr/include/json-c/json_pointer.h:
+
+/usr/include/json-c/json_types.h:
+
+/usr/include/mariadb/mariadb_ctype.h:
+
+/usr/include/json-c/json_util.h:
+
+CMakeFiles/circle.dir/src/systems/pubsub/pubsub_commands.c.o:
+
+/usr/include/json-c/linkhash.h:
+
+/home/krynn/code/src/transport_unified.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h:
+
 /home/krynn/code/src/region_hints.h:
 
 CMakeFiles/circle.dir/src/mob_utils.c.o:
@@ -28919,90 +34098,8 @@ CMakeFiles/circle.dir/src/spell_prep.c.o:
 
 /home/krynn/code/src/actions.h:
 
-/home/krynn/code/src/estate.c:
+/usr/lib/x86_64-linux-gnu/libc.so.6:
 
-/usr/include/signal.h:
-
-/usr/include/x86_64-linux-gnu/bits/struct_stat.h:
+/home/krynn/code/src/clan_enchant.h:
 
 /home/krynn/code/src/hunts.h:
-
-/usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h:
-
-/home/krynn/code/src/mudlim.h:
-
-/home/krynn/code/src/transport_unified.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/15/include/stdint.h:
-
-/usr/include/x86_64-linux-gnu/bits/mathcalls-helper-functions.h:
-
-/home/krynn/code/src/evolutions.h:
-
-/home/krynn/code/src/legendary_foundations.h:
-
-/home/krynn/code/src/legendary_techniques.h:
-
-CMakeFiles/circle.dir/src/oasis.c.o:
-
-/usr/lib/x86_64-linux-gnu/libc_nonshared.a:
-
-/home/krynn/code/src/psionics.h:
-
-/home/krynn/code/src/shop.h:
-
-/home/krynn/code/src/spell_prep.h:
-
-/usr/include/zconf.h:
-
-/usr/include/x86_64-linux-gnu/sys/stat.h:
-
-/home/krynn/code/src/staff_events.c:
-
-/home/krynn/code/src/copyover_diagnostic.h:
-
-/home/krynn/code/src/genshp.h:
-
-/usr/include/x86_64-linux-gnu/sys/time.h:
-
-/home/krynn/code/src/genzon.h:
-
-CMakeFiles/circle.dir/src/crafts.c.o:
-
-/home/krynn/code/src/terrain_bridge.h:
-
-/home/krynn/code/src/dg_variables.c:
-
-/usr/lib/gcc/x86_64-linux-gnu/15/include/syslimits.h:
-
-/home/krynn/code/src/actionqueues.c:
-
-/home/krynn/code/src/actions.c:
-
-/usr/include/endian.h:
-
-/home/krynn/code/src/ai_cache.c:
-
-/usr/include/x86_64-linux-gnu/sys/ucontext.h:
-
-/usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h:
-
-/home/krynn/code/src/resource_depletion.h:
-
-/home/krynn/code/src/ai_service.c:
-
-/home/krynn/code/src/dotenv.h:
-
-/home/krynn/code/src/movement_tracks.c:
-
-/usr/include/asm-generic/sockios.h:
-
-/usr/include/linux/posix_types.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/15/libgcc_s.so:
-
-/usr/include/x86_64-linux-gnu/bits/long-double.h:
-
-/home/krynn/code/src/legendary_effects.h:
-
-/usr/include/x86_64-linux-gnu/bits/socket.h:

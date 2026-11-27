@@ -490,7 +490,8 @@ ACMDU(do_augment_physicality)
     return;
   }
   if (affected_by_spell(ch, ABILITY_AUGMENT_PHYSICALITY) ||
-      affected_by_spell(ch, SPELL_ENLARGE_PERSON) || GET_SIZE(ch) >= SIZE_COLOSSAL)
+      affected_by_spell(ch, SPELL_ENLARGE_PERSON) || affected_by_spell(ch, SPELL_RIGHTEOUS_MIGHT) ||
+      GET_SIZE(ch) >= SIZE_COLOSSAL)
   {
     send_to_char(ch, "You cannot augment your size further in your current state.\r\n");
     return;

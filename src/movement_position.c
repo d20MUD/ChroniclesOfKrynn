@@ -11,6 +11,7 @@
 #include "conf.h"
 #include "sysdep.h"
 #include "structs.h"
+#include "spell_batch_final.h"
 #include "utils.h"
 #include "comm.h"
 #include "interpreter.h"
@@ -73,6 +74,7 @@ ACMD(do_stand)
     send_to_char(ch, "You can't, you are pinned! (try struggle or grapple <target>).\r\n");
     return;
   }
+  if (final_batch_fervor(ch, FERVOR_RISE) && !is_action_available(ch, atSWIFT, TRUE)) return;
   switch (GET_POS(ch))
   {
   case POS_STANDING:
@@ -86,9 +88,10 @@ ACMD(do_stand)
     /* Will be sitting after a successful bash and may still be fighting. */
     ch->legendary_knockdown=false;
     GET_POS(ch) = FIGHTING(ch) ? POS_FIGHTING : POS_STANDING;
-    USE_MOVE_ACTION(ch);
+    if (final_batch_fervor(ch, FERVOR_RISE)) USE_SWIFT_ACTION(ch);
+    else USE_MOVE_ACTION(ch);
 
-    if (FIGHTING(ch))
+    if (FIGHTING(ch) && !final_batch_fervor(ch, FERVOR_RISE))
       attacks_of_opportunity(ch, 0);
 
     break;
@@ -98,9 +101,10 @@ ACMD(do_stand)
     change_position(ch, POS_STANDING);
     /* Were they sitting in something. */
     char_from_furniture(ch);
-    USE_MOVE_ACTION(ch);
+    if (final_batch_fervor(ch, FERVOR_RISE)) USE_SWIFT_ACTION(ch);
+    else USE_MOVE_ACTION(ch);
 
-    if (FIGHTING(ch))
+    if (FIGHTING(ch) && !final_batch_fervor(ch, FERVOR_RISE))
       attacks_of_opportunity(ch, 0);
 
     break;
@@ -110,9 +114,10 @@ ACMD(do_stand)
     change_position(ch, POS_STANDING);
     /* Were they sitting in something. */
     char_from_furniture(ch);
-    USE_MOVE_ACTION(ch);
+    if (final_batch_fervor(ch, FERVOR_RISE)) USE_SWIFT_ACTION(ch);
+    else USE_MOVE_ACTION(ch);
 
-    if (FIGHTING(ch))
+    if (FIGHTING(ch) && !final_batch_fervor(ch, FERVOR_RISE))
       attacks_of_opportunity(ch, 0);
 
     break;
